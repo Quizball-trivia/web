@@ -5,6 +5,9 @@ import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug, previousGamePag
 import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
 import { canAccessDemos } from "@/lib/demos-access";
+import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerSlug } from "@/features/partner/partnerHosts";
+import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
+import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
@@ -72,10 +75,16 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
-function buildCsp(nonce: string, pathname = ""): string {
-  const isDevelopment = process.env.NODE_ENV === "development";
+function frameAncestors(pathname: string, partner: PartnerSlug | null, isDevelopment: boolean): string {
+  // Only the partner host may be embedded, and only by the partner; next.config drops X-Frame-Options for the same hosts.
+  if (partner) return `frame-ancestors ${partnerFrameAncestors().join(" ")}`;
   // Local development only: the games playground frames its own preview page.
-  const framable = isDevelopment && pathname.startsWith("/dev/games/preview");
+  if (isDevelopment && pathname.startsWith("/dev/games/preview")) return "frame-ancestors 'self'";
+  return "frame-ancestors 'none'";
+}
+
+function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = null): string {
+  const isDevelopment = process.env.NODE_ENV === "development";
   const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
   const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
   const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
@@ -111,7 +120,7 @@ function buildCsp(nonce: string, pathname = ""): string {
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    framable ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
+    frameAncestors(pathname, partner, isDevelopment),
     "form-action 'self'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -125,10 +134,72 @@ function buildCsp(nonce: string, pathname = ""): string {
   ].join("; ");
 }
 
+/**
+ * A partner host serves only its namespace: every path is rewritten under /partner/<slug>, so the Quizball app,
+ * the geo/locale redirects and the SEO routes are unreachable from it.
+ */
+function partnerHostResponse(req: NextRequest, partner: PartnerSlug, nonce: string, csp: string): NextResponse {
+  const { pathname } = req.nextUrl;
+  const basePath = partnerBasePath(partner);
+  const alreadyInNamespace = pathname === basePath || pathname.startsWith(`${basePath}/`);
+  const internalPath = alreadyInNamespace ? pathname : `${basePath}${pathname === "/" ? "" : pathname}`;
+  const hasLaunchToken = req.nextUrl.searchParams.has(PARTNER_LAUNCH_TOKEN_PARAM);
+
+  // Next serialises the original request URL into the page's Flight data, so the page must never be rendered
+  // for a URL that carries the token. Browsers keep a redirect's fragment but never send it to a server or in a
+  // Referer; the capture script reads it from there before hydration.
+  if (hasLaunchToken && (req.method === "GET" || req.method === "HEAD")) {
+    const url = req.nextUrl.clone();
+    const token = url.searchParams.get(PARTNER_LAUNCH_TOKEN_PARAM) ?? "";
+    url.searchParams.delete(PARTNER_LAUNCH_TOKEN_PARAM);
+    url.hash = `${PARTNER_LAUNCH_TOKEN_PARAM}=${encodeURIComponent(token)}`;
+    const redirect = NextResponse.redirect(url, 307);
+    redirect.headers.set("Content-Security-Policy", csp);
+    redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
+    redirect.headers.set("Cache-Control", "private, no-store");
+    redirect.headers.set("Referrer-Policy", "no-referrer");
+    return redirect;
+  }
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", internalPath);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+
+  let res: NextResponse;
+  if (alreadyInNamespace && !hasLaunchToken) {
+    res = NextResponse.next({ request: { headers: requestHeaders } });
+  } else {
+    // Defensive (non-GET): the render never receives the token as a search param.
+    const url = req.nextUrl.clone();
+    url.pathname = internalPath;
+    url.searchParams.delete(PARTNER_LAUNCH_TOKEN_PARAM);
+    res = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+  }
+  res.headers.set("Content-Security-Policy", csp);
+  res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  // The launch URL carries a one-time token: never cache it, never send it on in a Referer.
+  res.headers.set("Cache-Control", "private, no-store");
+  res.headers.set("Referrer-Policy", "no-referrer");
+  res.headers.set("x-nonce", nonce);
+  return res;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
-  const csp = buildCsp(nonce, pathname);
+  const partner = partnerFromHost(req.headers.get("host"));
+  const csp = buildCsp(nonce, pathname, partner);
+
+  if (partner) return partnerHostResponse(req, partner, nonce, csp);
+
+  if (isPartnerNamespacePath(pathname) || isPartnerNamespacePath(decodedPath(pathname))) {
+    return new NextResponse("Not found", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp, "X-Robots-Tag": "noindex, nofollow" },
+    });
+  }
+
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);

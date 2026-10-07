@@ -26,6 +26,32 @@ let connectionPingSample: (() => void) | null = null;
 const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+
+/**
+ * A non-Supabase principal's handshake token (the Freecroco partner view): when set, the socket authenticates only
+ * with it (fetched afresh on every connection attempt), never with Supabase cookies or sessions.
+ */
+export interface RealtimeTokenSource {
+  getToken: () => Promise<string | null>;
+  /** The server refused the token (session ended): no Supabase recovery, the owner decides what to show. */
+  onAuthRefused?: (error: Error) => void;
+}
+let tokenSource: RealtimeTokenSource | null = null;
+
+/** Installs (or removes, with null) the token source; the socket is rebuilt so its options match the principal. */
+export function setRealtimeTokenSource(source: RealtimeTokenSource | null): void {
+  if (tokenSource === source) return;
+  tokenSource = source;
+  if (socketInstance) {
+    socketInstance.removeAllListeners();
+    socketInstance.disconnect();
+    socketInstance = null;
+  }
+}
+
+export function isTokenSourceRealtime(): boolean {
+  return tokenSource !== null;
+}
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let connectInFlight: Promise<void> | null = null;
 let connectAttemptId = 0;
@@ -164,6 +190,7 @@ function wait(ms: number): Promise<void> {
 }
 
 async function ensureValidAccessToken(): Promise<string | null> {
+  if (tokenSource) return tokenSource.getToken();
   const guestToken = getGuestPrincipalToken();
   if (guestToken) return guestToken;
   const currentToken = await getSupabaseAccessToken();
@@ -333,7 +360,8 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
         .catch(() => cb({ token: undefined }));
     },
     transports: ['websocket'],
-    withCredentials: true,
+    // A token-source principal is bearer-only: never pair it with Quizball's cookies.
+    withCredentials: tokenSource === null,
   });
   socket.on('connect', () => {
     authRecoveryConsecutiveFailures = 0;
@@ -362,6 +390,11 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       ...socketSnapshot(socket),
     });
     if (isAuthConnectError(error.message)) {
+      if (tokenSource) {
+        markRealtimeConnectionError(error.message);
+        tokenSource.onAuthRefused?.(error);
+        return;
+      }
       if (getGuestPrincipalToken()) {
         markGuestPrincipalRefused();
         markRealtimeConnectionError(error.message);

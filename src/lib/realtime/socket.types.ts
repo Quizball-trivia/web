@@ -2018,6 +2018,8 @@ export type WlAnswerAck =
 
 export interface ServerToClientEvents {
   'error': (data: ErrorPayload) => void;
+  /** Partner (Freecroco) socket: its partner session ended; the socket closes right after. */
+  'partner:session_ended': (data: { reason: string }) => void;
   'wl:phase': (data: WlPhaseEventPayload) => void;
   'wl:dispatch': (data: WlDispatchEventPayload) => void;
   'wl:clue_reveal': (data: WlClueRevealEventPayload) => void;

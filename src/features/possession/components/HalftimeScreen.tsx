@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { getI18nText } from '@/lib/utils/i18n';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
+import { useHideRank } from '@/contexts/HideRankContext';
 
 interface HalftimeScreenProps {
   visible: boolean;
@@ -111,6 +112,7 @@ export function HalftimeScreen({
   onBanPhaseShown,
   isPenaltyBan = false,
 }: HalftimeScreenProps) {
+  const hideRank = useHideRank();
   const { t, locale } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [showBanPhase, setShowBanPhase] = useState(false);
@@ -266,12 +268,14 @@ export function HalftimeScreen({
                 <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                   {playerName}
                 </div>
+                {!hideRank && (
                 <span
                   className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
                   style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
                 >
                   {playerRankPoints != null ? `${playerRankPoints} RP` : '— RP'}
                 </span>
+                )}
               </div>
             </div>
 
@@ -302,12 +306,14 @@ export function HalftimeScreen({
                 <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                   {opponentName}
                 </div>
+                {!hideRank && (
                 <span
                   className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
                   style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
                 >
                   {opponentRankPoints != null ? `${opponentRankPoints} RP` : '— RP'}
                 </span>
+                )}
               </div>
             </div>
           </div>

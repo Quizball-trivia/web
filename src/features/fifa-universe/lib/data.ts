@@ -5,7 +5,6 @@ import {
   PLAYABLE_EDITIONS,
   type FifaCard,
   type FifaCardDifficulty,
-  type FifaCardStats,
   type FifaEdition,
 } from '@/features/mini-games/data/guessFifaCard';
 import { EDITION_LABEL, editionNum, rand, shuffle } from '@/features/mini-games/lib/guessCard';
@@ -13,23 +12,9 @@ import { EDITION_LABEL, editionNum, rand, shuffle } from '@/features/mini-games/
 export type { FifaCard, FifaEdition, FifaCardDifficulty };
 export { FIFA_CARDS, PLAYABLE_EDITIONS, EDITION_LABEL, editionNum, rand, shuffle };
 
-export type StatKey = keyof FifaCardStats;
-export const STAT_KEYS: StatKey[] = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'];
-export type BattleStat = StatKey | 'overall';
-export const BATTLE_STATS: BattleStat[] = ['pac', 'sho', 'pas', 'dri', 'def', 'phy', 'overall'];
-
-export const STAT_LABEL: Record<BattleStat, string> = {
-  pac: 'PACE',
-  sho: 'SHOOTING',
-  pas: 'PASSING',
-  dri: 'DRIBBLING',
-  def: 'DEFENDING',
-  phy: 'PHYSICAL',
-  overall: 'OVERALL',
-};
-export const STAT_SHORT: Record<BattleStat, string> = {
-  pac: 'PAC', sho: 'SHO', pas: 'PAS', dri: 'DRI', def: 'DEF', phy: 'PHY', overall: 'OVR',
-};
+export { STAT_KEYS, BATTLE_STATS, STAT_LABEL, STAT_SHORT } from './stats';
+export type { StatKey, BattleStat } from './stats';
+import type { BattleStat } from './stats';
 
 export const statValue = (card: FifaCard, stat: BattleStat): number =>
   stat === 'overall' ? card.overall : card.stats[stat];

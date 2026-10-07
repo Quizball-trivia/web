@@ -36,6 +36,7 @@ type FakeSocket = {
   disconnect: ReturnType<typeof vi.fn>;
   emit: ReturnType<typeof vi.fn>;
   on: ReturnType<typeof vi.fn>;
+  removeAllListeners?: ReturnType<typeof vi.fn>;
   io: { on: ReturnType<typeof vi.fn> };
 };
 
@@ -302,5 +303,37 @@ describe('reconnect storm protection', () => {
     handlers.get('connect_error')!({ message: 'websocket error' });
     expect(trackFailed).toHaveBeenCalledTimes(11);
     expect(trackFailed).toHaveBeenLastCalledWith('websocket error (+15 suppressed)');
+  });
+});
+
+describe('socket-client token source (partner view)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  it('authenticates only with the token source, bearer-only, and never falls back to Supabase', async () => {
+    const { socket, handlers } = createFakeSocket();
+    socket.removeAllListeners = vi.fn();
+    ioMock.mockReturnValue(socket);
+    const client = await import('../socket-client');
+    const onAuthRefused = vi.fn();
+    client.setRealtimeTokenSource({ getToken: async () => 'partner-token', onAuthRefused });
+    client.getSocket();
+
+    const options = ioMock.mock.calls[0]?.[1] as { withCredentials: boolean; auth: (cb: (data: unknown) => void) => void };
+    expect(options.withCredentials).toBe(false);
+    const auth = await new Promise((resolve) => options.auth(resolve));
+    expect(auth).toEqual({ token: 'partner-token' });
+    expect(getSupabaseAccessTokenMock).not.toHaveBeenCalled();
+
+    handlers.get('connect_error')?.(new Error('Authentication required'));
+    expect(onAuthRefused).toHaveBeenCalledTimes(1);
+    expect(refreshSessionMock).not.toHaveBeenCalled();
+    expect(client.isTokenSourceRealtime()).toBe(true);
+
+    client.setRealtimeTokenSource(null);
+    expect(client.isTokenSourceRealtime()).toBe(false);
+    expect(socket.disconnect).toHaveBeenCalled();
   });
 });

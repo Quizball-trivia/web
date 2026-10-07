@@ -1,8 +1,11 @@
 import Image from "next/image";
 
 import { DemoModeIcon } from "./DemoModeIcon";
-import { FifaModeArt } from "@/features/fifa-universe/FifaModeArt";
+import dynamic from "next/dynamic";
 import { isFifaSlug } from "@/features/fifa-universe/registry";
+
+// Split out: it carries the whole FIFA card dataset, which pages without FIFA tiles (the partner view) must not load.
+const FifaModeArt = dynamic(() => import("@/features/fifa-universe/FifaModeArt").then((m) => m.FifaModeArt));
 
 // Every illustrated tile ships in public/. Do not derive artwork locations
 // from the authentication server: another environment may not have that bucket.

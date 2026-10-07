@@ -9,11 +9,19 @@ vi.mock('next/navigation', () => ({
   usePathname: () => navigation.pathname,
 }));
 
+const dynamicImports = vi.hoisted(() => ({ count: 0 }));
+
 vi.mock('next/dynamic', () => ({
+  // route-providers declares FullProviders first, then PartnerProviders.
   default: () => {
+    const name = ++dynamicImports.count === 1 ? 'full-providers' : 'partner-providers';
     const queryClient = new QueryClient();
-    return function MockFullProviders({ children }: { children: ReactNode }) {
-      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return function MockDynamicProviders({ children }: { children: ReactNode }) {
+      return (
+        <div data-testid={name}>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </div>
+      );
     };
   },
 }));
@@ -45,6 +53,21 @@ describe('RouteProviders', () => {
 
     expect(screen.getByTestId('seo-providers')).toBeInTheDocument();
     expect(screen.getByText('quiz hub')).toBeInTheDocument();
+  });
+
+  it('gives partner hosts their own provider tree on every path', () => {
+    for (const pathname of ['/partner/freecroco', '/en/football-quiz', '/dev/games']) {
+      navigation.pathname = pathname;
+      const view = render(
+        <RouteProviders partner="freecroco" isSeoRoute={false}>
+          <p>partner home</p>
+        </RouteProviders>,
+      );
+      expect(screen.getByTestId('partner-providers')).toBeInTheDocument();
+      expect(screen.queryByTestId('full-providers')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('seo-providers')).not.toBeInTheDocument();
+      view.unmount();
+    }
   });
 
   it('switches to full providers when Play Ranked navigates to signup', () => {

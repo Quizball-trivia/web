@@ -38,9 +38,10 @@ export function MatchStatsDropdown({
   totalQuestions: number;
   playerScore: number;
   opponentScore: number;
-  xpEarned: number;
-  level: number | null;
-  xpToNextLevel: number | null;
+  /** Omitted = no XP footer (partner views have no Quizball progression). */
+  xpEarned?: number;
+  level?: number | null;
+  xpToNextLevel?: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
   t: LocaleT;
@@ -119,9 +120,9 @@ function StatsPanel({
   totalQuestions: number;
   playerScore: number;
   opponentScore: number;
-  xpEarned: number;
-  level: number | null;
-  xpToNextLevel: number | null;
+  xpEarned?: number;
+  level?: number | null;
+  xpToNextLevel?: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
   t: LocaleT;
@@ -179,25 +180,27 @@ function StatsPanel({
       </div>
 
       {/* XP footer */}
-      <div className="flex items-center justify-center gap-2 border-t border-white/10 px-5 py-3.5 sm:px-6">
-        {xpEarned > 0 ? (
-          <>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">{t('results.xp')}</span>
-            <span className="text-[18px] font-semibold tabular-nums text-brand-green">
-              +{xpEarned}
-            </span>
-            {level != null && xpToNextLevel != null && (
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-cyan">
-                {t('results.levelAndXpToNext', { level, xp: xpToNextLevel })}
+      {xpEarned !== undefined && (
+        <div className="flex items-center justify-center gap-2 border-t border-white/10 px-5 py-3.5 sm:px-6">
+          {xpEarned > 0 ? (
+            <>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">{t('results.xp')}</span>
+              <span className="text-[18px] font-semibold tabular-nums text-brand-green">
+                +{xpEarned}
               </span>
-            )}
-          </>
-        ) : (
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
-            {t('results.noXpEarned')}
-          </span>
-        )}
-      </div>
+              {level != null && xpToNextLevel != null && (
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-cyan">
+                  {t('results.levelAndXpToNext', { level, xp: xpToNextLevel })}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+              {t('results.noXpEarned')}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

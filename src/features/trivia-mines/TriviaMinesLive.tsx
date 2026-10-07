@@ -27,19 +27,41 @@ const HEARTBEAT_MS = 10_000;
 type Locale = ReturnType<typeof useLocale>["locale"];
 const text = (value: { en: string; ka: string; es?: string; tr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : value.en) || value.en;
 
+/** Partner play (Freecroco): free, start 100 points, no wallet, coins or live feeds; the host shows the result. */
+export interface TriviaMinesPartnerMode {
+  labels: {
+    start: string;
+    points: string;
+    startPoints: string;
+    play: string;
+    cashOut: (points: string) => string;
+    finish: string;
+    playReturned: string;
+    playReturnedBody: string;
+    exit: string;
+  };
+  onFinished: (state: TriviaMinesState) => void;
+  onExit: () => void;
+}
+
 /** Trivia Mines, live: the board is held server-side; every pick, scout and cash-out is a request. */
-export function TriviaMinesLive({ backHref = "/play", client, sample }: {
+export function TriviaMinesLive({ backHref = "/play", client, sample, partner }: {
   backHref?: string;
   /** Round engine; defaults to the live API. The public sneak peek passes a client-side sample engine. */
   client?: Pick<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats"> & Omit<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats">;
   /** Sneak-peek mode: practice coins instead of the wallet, no heartbeat, no live activity or runs board. */
   sample?: { coins: number; onPlayAgain?: () => void; onExit?: () => void };
+  /** Partner mode; pass the partner engine as `client`. */
+  partner?: TriviaMinesPartnerMode;
 }) {
+  // Neither the sneak peek nor a partner page reports Quizball analytics or touches the wallet.
+  const quiet = Boolean(sample || partner);
+  const coin = (size: number) => (partner ? null : <CoinIcon size={size} />);
   const api = useMemo(() => client ?? triviaMinesApi, [client]);
   const { t, locale } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: wallet } = useStoreWallet({ enabled: !sample });
+  const { data: wallet } = useStoreWallet({ enabled: !quiet });
   const [state, setState] = useState<TriviaMinesState | null>(null);
   const [resumed, setResumed] = useState(false);
   const [stake, setStake] = useState(100);
@@ -54,7 +76,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
   const [qLeft, setQLeft] = useState(0);
   const nonceRef = useRef<string | null>(null);
   const settledTrackedRef = useRef<string | null>(null);
-  useEffect(() => { if (!sample) settleOnce(settledTrackedRef, "trivia_mines", state, state?.opened.length); }, [sample, state]);
+  useEffect(() => { if (!quiet) settleOnce(settledTrackedRef, "trivia_mines", state, state?.opened.length); }, [quiet, state]);
 
   // Resume an open round (refresh, second tab) before offering a new stake.
   useEffect(() => {
@@ -87,8 +109,8 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.phase, state?.question?.question_id]);
 
-  const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); if (!sample) trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
-  const refreshWallet = useCallback(() => { if (!sample) void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }); }, [queryClient, sample]);
+  const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); if (!quiet) trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
+  const refreshWallet = useCallback(() => { if (!quiet) void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }); }, [queryClient, quiet]);
   const stateRef = useRef<TriviaMinesState | null>(null);
   useEffect(() => { stateRef.current = state; }, [state]);
   /** Re-sync with the server; when our round is no longer active (sweeper, lost response), fetch it in its settled form. */
@@ -113,7 +135,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
     try {
       const s = await api.start(stake, nonce);
       nonceRef.current = null; setState(s); refreshWallet();
-      if (!sample) trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
+      if (!quiet) trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
     } catch (e) {
       await recover(e);
       if (e instanceof TriviaMinesApiError && e.status < 500) nonceRef.current = null;
@@ -155,27 +177,39 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
     try {
       const s = await api.cashout(state.round_id, state.state_version);
       playCash();
-      setFlight(flightFrom(origin, (s.payout_coins ?? 0) * 17 + 3));
-      window.setTimeout(() => setFlight(null), 1200);
+      if (!partner) {
+        setFlight(flightFrom(origin, (s.payout_coins ?? 0) * 17 + 3));
+        window.setTimeout(() => setFlight(null), 1200);
+      }
       setState(s); refreshWallet();
     }
     catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
 
-  const balance = sample ? sample.coins : wallet?.coins ?? 0;
+  const balance = partner ? Number.POSITIVE_INFINITY : sample ? sample.coins : wallet?.coins ?? 0;
   const settled = state && state.status !== "active";
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
+    <div className={partner ? "flex flex-1 flex-col text-white" : "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
       <MoneyFlight flight={flight} />
       <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pb-28 pt-4 md:pb-8", state ? "max-w-md lg:max-w-4xl" : "max-w-md")}>
         <div className="mb-3 flex items-center justify-between">
-          <button type="button" onClick={() => { if (sample?.onExit) sample.onExit(); else router.push(backHref); }} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
+          <button type="button" onClick={() => { if (partner) partner.onExit(); else if (sample?.onExit) sample.onExit(); else router.push(backHref); }} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
         </div>
 
         {/* Start card — same family as the Guess the Goal card, in brand blue */}
-        {!state && (
+        {!state && partner && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 rounded-[20px] bg-brand-blue p-4 text-center text-white md:p-5">
+            <p className="text-base font-black uppercase tracking-wide text-brand-yellow" style={poppins} data-testid="trivia-mines-start-points">{partner.labels.startPoints}</p>
+            {error && <p className="text-xs font-bold text-white" style={poppins}>{error}</p>}
+            <button type="button" data-testid="trivia-mines-play" onClick={start} disabled={busy || !resumed} className="font-poppins inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-[20px] bg-brand-green text-[18px] uppercase tracking-wide text-white transition-all hover:brightness-110 disabled:opacity-60">
+              {partner.labels.play}
+            </button>
+          </motion.div>
+        )}
+
+        {!state && !partner && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 rounded-[20px] bg-brand-blue p-4 text-center text-white md:p-5">
             <p className="text-[11px] font-black uppercase tracking-wide text-white/75" style={poppins}>{t("triviaMines.stake")}</p>
             <div className="flex w-full items-center justify-center gap-2">
@@ -206,12 +240,12 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
           </motion.div>
         )}
 
-        <div className="mb-1 flex items-center gap-3">
+        {!partner && <div className="mb-1 flex items-center gap-3">
           {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
           <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString()}</span>
-        </div>
+        </div>}
 
-        {!state && !sample && <RunsBoard runs={topRuns} className="mt-4" />}
+        {!state && !quiet && <RunsBoard runs={topRuns} className="mt-4" />}
 
         {/* Board */}
         {state && (
@@ -219,12 +253,12 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
           <div>
             <div className="mb-3 grid grid-cols-3 text-center">
               <div>
-                <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("triviaMines.stake")}</div>
-                <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{state.stake_coins.toLocaleString()}</div>
+                <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{partner ? partner.labels.start : t("triviaMines.stake")}</div>
+                <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}>{coin(14)}{state.stake_coins.toLocaleString()}</div>
               </div>
               <div>
-                <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{settled ? (state.status === "cashed" ? t("triviaMines.banked") : t("triviaMines.tackled")) : t("triviaMines.pot")}</div>
-                <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}><CoinIcon size={14} />{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString()}</div>
+                <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{settled && !(partner && state.status === "expired") ? (state.status === "cashed" ? t("triviaMines.banked") : t("triviaMines.tackled")) : partner ? partner.labels.points : t("triviaMines.pot")}</div>
+                <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}>{coin(14)}{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString()}</div>
               </div>
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("triviaMines.multiplier")}</div>
@@ -243,6 +277,8 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
                   <motion.button
                     key={i}
                     type="button"
+                    data-testid="trivia-mines-tile"
+                    data-tile={i}
                     whileTap={!locked && !opened && !flagged ? { scale: 0.92 } : undefined}
                     disabled={locked || opened || flagged}
                     onClick={() => pick(i)}
@@ -264,11 +300,11 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
 
             {!settled && state.phase === "picking" && (
               <div className="mt-4 flex gap-2">
-                <button type="button" onClick={scout} disabled={busy || state.scouts_left <= 0 || state.flagged.length >= state.defender_count} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-blue text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
+                <button type="button" data-testid="trivia-mines-scout" onClick={scout} disabled={busy || state.scouts_left <= 0 || state.flagged.length >= state.defender_count} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-blue text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
                   <Eye className="size-4" /> {t("triviaMines.scout", { n: String(state.scouts_left) })}
                 </button>
-                <button type="button" onClick={cashout} disabled={busy || state.opened.length === 0} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-green text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
-                  <CoinIcon size={16} /> {t("triviaMines.cashOut", { pot: state.pot_coins.toLocaleString() })}
+                <button type="button" data-testid="trivia-mines-cashout" onClick={cashout} disabled={busy || state.opened.length === 0} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-green text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
+                  {coin(16)} {partner ? partner.labels.cashOut(state.pot_coins.toLocaleString()) : t("triviaMines.cashOut", { pot: state.pot_coins.toLocaleString() })}
                 </button>
               </div>
             )}
@@ -288,7 +324,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
                     {state.question.options.map((opt) => {
                       const st = !answerResult ? (selected === opt.id ? "picked" : "idle") : opt.id === answerResult.correct ? "correct" : selected === opt.id ? "wrong" : "dim";
                       return (
-                        <button key={opt.id} type="button" disabled={Boolean(selected)} onClick={() => answer(opt.id)} className={cn("flex items-center justify-between rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-semibold transition-colors", st === "correct" ? "border-brand-green bg-brand-green text-white" : st === "wrong" ? "border-brand-red-soft bg-brand-red-soft text-white" : st === "picked" ? "border-brand-yellow bg-brand-yellow text-black" : st === "dim" ? "border-white/10 text-white/40" : "border-white/25 bg-white/10 text-white hover:border-white")} style={poppins}>
+                        <button key={opt.id} type="button" data-testid="trivia-mines-option" disabled={Boolean(selected)} onClick={() => answer(opt.id)} className={cn("flex items-center justify-between rounded-xl border-2 px-3 py-2.5 text-left text-[13px] font-semibold transition-colors", st === "correct" ? "border-brand-green bg-brand-green text-white" : st === "wrong" ? "border-brand-red-soft bg-brand-red-soft text-white" : st === "picked" ? "border-brand-yellow bg-brand-yellow text-black" : st === "dim" ? "border-white/10 text-white/40" : "border-white/25 bg-white/10 text-white hover:border-white")} style={poppins}>
                           <span>{text(opt.text, locale)}</span>
                           {st === "correct" && <Check className="size-4 shrink-0 text-brand-green-light" />}{st === "wrong" && <X className="size-4 shrink-0 text-brand-red-soft" />}
                         </button>
@@ -299,15 +335,30 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
                 </motion.div>
               )}
             </AnimatePresence>
-            {!sample && <RunsBoard runs={topRuns} className="mt-4" />}
+            {!quiet && <RunsBoard runs={topRuns} className="mt-4" />}
           </div>
 
-            {settled && (
+            {settled && partner && state.status === "expired" && (
+              // Left before touching the board: the play was returned, so there are no points and no result to send.
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-[20px] bg-brand-blue px-4 py-3 text-center text-white" data-testid="trivia-mines-play-returned">
+                <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{partner.labels.playReturned}</p>
+                <p className="mt-1 text-xs font-semibold text-white/75" style={poppins}>{partner.labels.playReturnedBody}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { setState(null); setError(null); }} className="font-poppins h-12 rounded-[20px] bg-brand-yellow text-[15px] font-black uppercase tracking-wide text-black">
+                    {partner.labels.play}
+                  </button>
+                  <button type="button" onClick={partner.onExit} className="font-poppins h-12 rounded-[20px] bg-white/10 text-[15px] font-black uppercase tracking-wide text-white">
+                    {partner.labels.exit}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+            {settled && !(partner && state.status === "expired") && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 rounded-[20px] px-4 py-3 text-center text-white", state.status === "cashed" ? "bg-brand-green" : "bg-brand-blue")}>
                 <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{state.status === "cashed" ? t("triviaMines.banked") : state.status === "lost" ? t("triviaMines.tackled") : t("triviaMines.refunded")}</p>
-                <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}><CoinIcon size={20} />{(state.status === "cashed" ? state.payout_coins ?? 0 : state.status === "expired" ? state.stake_coins : 0).toLocaleString()}</p>
-                <button type="button" onClick={() => { setState(null); setError(null); }} className="font-poppins mt-3 h-12 w-full rounded-[20px] bg-brand-yellow text-[15px] font-black uppercase tracking-wide text-black transition-all active:translate-y-[2px]">
-                  {t("triviaMines.playAgain")}
+                <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}>{coin(20)}{(state.status === "cashed" ? state.payout_coins ?? 0 : state.status === "expired" ? state.stake_coins : 0).toLocaleString()}</p>
+                <button type="button" data-testid="trivia-mines-finish" onClick={() => { if (partner) partner.onFinished(state); else { setState(null); setError(null); } }} className="font-poppins mt-3 h-12 w-full rounded-[20px] bg-brand-yellow text-[15px] font-black uppercase tracking-wide text-black transition-all active:translate-y-[2px]">
+                  {partner ? partner.labels.finish : t("triviaMines.playAgain")}
                 </button>
               </motion.div>
             )}

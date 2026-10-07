@@ -492,23 +492,54 @@ function RoadScene(props: RoadSceneProps) {
   return <RoadToGoalPitch {...props} onFailure={showFallback} />;
 }
 
+/** The live engine for a partner (Freecroco) play: points instead of coins, no stake, wallet or fairness proof. */
+export interface RoadToGoalPartnerClient {
+  start(startId: string): Promise<RoadToGoalState>;
+  current(): Promise<RoadToGoalState | null>;
+  get(roundId: string): Promise<RoadToGoalState>;
+  answer: typeof roadToGoalApi.answer;
+  continue: typeof roadToGoalApi.continue;
+  cashout: typeof roadToGoalApi.cashout;
+}
+
+export interface RoadToGoalPartnerMode {
+  client: RoadToGoalPartnerClient;
+  /** Replaces the coin/stake wording; the stake picker shows `startLabel` instead. */
+  copy: Partial<Record<keyof typeof COPY.en, string>>;
+  startLabel: string;
+  finishLabel: string;
+  /** The run is over: the host shows the points and their delivery. */
+  onFinished: (state: RoadToGoalState) => void;
+  onExit: () => void;
+}
+
 export function RoadToGoal({
   backHref,
-  live = false,
+  live: liveProp = false,
   sample,
+  partner,
   newRunsEnabled = true,
 }: {
   backHref?: string;
   live?: boolean;
   /** Sneak peek: frozen bank, practice wallet, live survival odds, no server. */
   sample?: CoinSampleMode;
+  /** Partner play: the live flow on the partner's endpoints, free (start 100 points, no luck roll). */
+  partner?: RoadToGoalPartnerMode;
   newRunsEnabled?: boolean;
 } = {}) {
+  const live = liveProp || Boolean(partner);
+  const api = partner?.client ?? roadToGoalApi;
   const locale = useMiniLocale();
   const { t: tApp } = useLocale();
-  const copy = COPY[locale] ?? COPY.en;
+  const copy = { ...(COPY[locale] ?? COPY.en), ...partner?.copy };
   const bank = useMemo(() => sample?.questions ?? getTrivia(locale), [locale, sample]);
-  const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: live });
+  const { data: wallet, isError: walletError, refetch: refetchWalletQuery } = useStoreWallet({ enabled: live && !partner });
+  const hasPartner = Boolean(partner);
+  const refetchWallet = useCallback(
+    async () => { if (!hasPartner) await refetchWalletQuery(); },
+    [hasPartner, refetchWalletQuery],
+  );
   const [balance, setBalance] = useState(1_000);
   const [stake, setStake] = useState(25);
   const [run, setRun] = useState<TriviaQuestion[]>([]);
@@ -557,6 +588,8 @@ export function RoadToGoal({
   // Sample-only paths reached from effects: the sneak peek has no page analytics and settles late answers itself.
   const sampleRef = useRef(sample);
   sampleRef.current = sample;
+  // Partner pages carry no Quizball analytics.
+  const quietRef = useRef(Boolean(sample || partner));
   const sampleLateRef = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -569,7 +602,7 @@ export function RoadToGoal({
   }, [liveState?.round_id, phase, progress]);
 
   useEffect(() => {
-    if (sampleRef.current) return;
+    if (quietRef.current) return;
     const context = analyticsContextRef.current;
     const mountedAt = Date.now();
     let activeStartedAt = document.visibilityState === 'hidden' ? null : mountedAt;
@@ -687,12 +720,13 @@ export function RoadToGoal({
   const reconcileLive = useCallback(async (roundId?: string) => {
     lastReconcileFailedRef.current = false;
     try {
-      let state = roundId ? await roadToGoalApi.get(roundId) : await roadToGoalApi.current();
-      if (!state && !roundId) {
+      let state = roundId ? await api.get(roundId) : await api.current();
+      // A partner play is one run a day: an older finished run is never brought back on open.
+      if (!state && !roundId && !hasPartner) {
         const storedRoundId = readLastRoadToGoalRound();
         if (storedRoundId) {
           try {
-            state = await roadToGoalApi.get(storedRoundId);
+            state = await api.get(storedRoundId);
           } catch (error) {
             if (!(error instanceof RoadToGoalApiError && error.status === 404)) throw error;
             forgetRoadToGoalRound(storedRoundId);
@@ -714,7 +748,7 @@ export function RoadToGoal({
           pendingMutationRef.current = null;
         }
         applyLiveState(state);
-        if (state.status !== 'active') {
+        if (state.status !== 'active' && !hasPartner) {
           try {
             await loadProof(state.round_id);
           } catch {
@@ -741,7 +775,7 @@ export function RoadToGoal({
       setLiveError(locale === 'ka' ? 'კავშირი შეფერხდა — სცადე ხელახლა' : 'Connection interrupted — try again');
       return null;
     }
-  }, [applyLiveState, loadProof, locale, refetchWallet]);
+  }, [api, applyLiveState, hasPartner, loadProof, locale, refetchWallet]);
 
   useEffect(() => {
     if (!live) return;
@@ -851,7 +885,7 @@ export function RoadToGoal({
     : sample ? payoutForClearedZones(stake, Math.min(progress + 1, ZONES)) : Math.round(stake * nextMultiplier);
   const questionDuration = liveState?.question?.duration_ms ?? questionMs;
   const timePercent = Math.min(100, (remaining / questionDuration) * 100);
-  const effectiveBalance = live ? wallet?.coins ?? 0 : sample ? sample.wallet.coins : balance;
+  const effectiveBalance = partner ? Number.POSITIVE_INFINITY : live ? wallet?.coins ?? 0 : sample ? sample.wallet.coins : balance;
   const correctAnswer = question && question.answer >= 0
     ? question.options[question.answer]
     : undefined;
@@ -880,6 +914,7 @@ export function RoadToGoal({
     applyLiveState(state);
     pendingMutationRef.current = null;
     if (state.status !== 'active') {
+      if (partner) return;
       try {
         await loadProof(state.round_id);
       } catch {
@@ -916,13 +951,13 @@ export function RoadToGoal({
 
   const start = async () => {
     if (effectiveBalance < stake || busy) return;
-    if (!sample) trackRoadToGoalStartRequested({
+    if (!sample && !partner) trackRoadToGoalStartRequested({
       mode: analyticsMode,
       stakeCoins: stake,
       autoCashoutZone: live ? autoCashoutZone : null,
     });
     if (live) {
-      if (!newRunsEnabled || !wallet || !resumed) return;
+      if (!newRunsEnabled || (!partner && !wallet) || !resumed) return;
       const startIntent = {
         kind: 'start',
         stake: stake as 10 | 25 | 50,
@@ -934,6 +969,14 @@ export function RoadToGoal({
       setBusy(true);
       setLiveError(null);
       try {
+        if (partner) {
+          const state = await partner.client.start(pending.nonce);
+          pendingMutationRef.current = null;
+          setSelected(null);
+          runStartedAtRef.current = Date.now();
+          applyLiveState(state);
+          return;
+        }
         const commitment: RoadToGoalCommitment = await roadToGoalApi.prepare({
           stake: stake as 10 | 25 | 50,
           requestNonce: pending.nonce,
@@ -1017,7 +1060,7 @@ export function RoadToGoal({
       setBusy(true);
       setLiveError(null);
       try {
-        const result = await roadToGoalApi.answer({
+        const result = await api.answer({
           roundId: state.round_id,
           questionId: state.question.question_id,
           optionId,
@@ -1120,7 +1163,7 @@ export function RoadToGoal({
       if (!pending) return;
       setBusy(true);
       try {
-        const next = await roadToGoalApi.continue({
+        const next = await api.continue({
           roundId: state.round_id,
           expectedVersion: state.state_version,
           requestNonce: pending.nonce,
@@ -1167,7 +1210,7 @@ export function RoadToGoal({
       if (!pending) return;
       setBusy(true);
       try {
-        const next = await roadToGoalApi.cashout({
+        const next = await api.cashout({
           roundId: state.round_id,
           expectedVersion: state.state_version,
           requestNonce: pending.nonce,
@@ -1231,6 +1274,11 @@ export function RoadToGoal({
     setRemaining(questionMs);
   };
 
+  const finishOrReset = () => {
+    if (partner && liveStateRef.current) partner.onFinished(liveStateRef.current);
+    else reset();
+  };
+
   const answerState = (index: number) => {
     if (selected === null || !question) return 'idle';
     if (index === question.answer) return 'correct';
@@ -1241,13 +1289,13 @@ export function RoadToGoal({
   return (
     <MiniGameShell
       backHref={backHref}
-      onBack={sample?.onExit}
+      onBack={partner?.onExit ?? sample?.onExit}
       title={copy.title}
       subtitle={copy.subtitle}
       accent="#58CC02"
       wide
-      disclaimer={!sample}
-      headerRight={<StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
+      disclaimer={!sample && !partner}
+      headerRight={partner ? undefined : <StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
     >
       {sample && (
         <div className="mt-1 px-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp('coinSample.practiceChip')}</div>
@@ -1278,6 +1326,9 @@ export function RoadToGoal({
                 </div>
 
                 <div className="rounded-xl border border-white/20 bg-game-stadium-overlay/45 p-2 sm:p-2.5 backdrop-blur-sm">
+                  {partner ? (
+                    <div className="font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow" data-testid="road-to-goal-start-points">{partner.startLabel}</div>
+                  ) : (<>
                   <div className="mb-2 font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-white/65">{copy.stake}</div>
                   <div className="grid grid-cols-3 gap-2">
                     {STAKES.map((value, index) => {
@@ -1301,8 +1352,9 @@ export function RoadToGoal({
                     })}
                   </div>
 
-                  {live && <LiveActivityStrip fetchStats={roadToGoalApi.stats} className="mb-2" />}
-                  {live && (
+                  </>)}
+                  {live && !partner && <LiveActivityStrip fetchStats={roadToGoalApi.stats} className="mb-2" />}
+                  {live && !partner && (
                     <div className="mt-2 grid gap-2 border-t border-white/10 pt-2">
                       <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
                         {locale === 'ka' ? 'კლიენტის seed' : 'Client seed'}
@@ -1334,11 +1386,12 @@ export function RoadToGoal({
 
                   <button
                     type="button"
+                    data-testid="road-to-goal-kickoff"
                     onClick={start}
                     disabled={
                       effectiveBalance < stake
                       || busy
-                      || (live && (!newRunsEnabled || !wallet || !resumed))
+                      || (live && (!newRunsEnabled || (!partner && !wallet) || !resumed))
                     }
                     className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
                   >
@@ -1395,7 +1448,7 @@ export function RoadToGoal({
                   </div>
                 )}
                 <p className="mt-3 font-poppins text-xs font-black leading-snug text-white">{question.q}</p>
-                {live && liveState?.question && (
+                {live && !partner && liveState?.question && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <div className="rounded-lg border border-brand-green/35 bg-brand-green/10 px-2 py-1.5 text-center">
                       <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{locale === 'ka' ? 'სწორი პასუხი' : 'Correct answer'}</div>
@@ -1414,6 +1467,7 @@ export function RoadToGoal({
                       <button
                         key={option}
                         type="button"
+                        data-testid="road-to-goal-option"
                         disabled={phase !== 'question' || selected !== null}
                         onClick={() => answer(index)}
                         className={`flex min-h-10 items-center justify-between rounded-xl border-2 px-3 py-2 text-left font-poppins text-[11px] font-bold transition-all ${
@@ -1450,10 +1504,10 @@ export function RoadToGoal({
                   <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
                 </div>
                 <div className="mt-3 grid gap-2">
-                  <button type="button" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
+                  <button type="button" data-testid="road-to-goal-continue" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     {fill(copy.continue, { zone: progress + 1 })}
                   </button>
-                  <button type="button" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
+                  <button type="button" data-testid="road-to-goal-cashout" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     <LockKeyhole className="size-4" /> {fill(copy.cashOut, { amount: points(currentReturn) })}
                   </button>
                 </div>
@@ -1474,8 +1528,8 @@ export function RoadToGoal({
                     {fill(copy.correctWas, { answer: correctAnswer })}
                   </p>
                 )}
-                <button type="button" onClick={reset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
-                  <RotateCcw className="size-4" /> {copy.newRun}
+                <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                  {partner ? partner.finishLabel : <><RotateCcw className="size-4" /> {copy.newRun}</>}
                 </button>
               </motion.div>
             )}
@@ -1490,8 +1544,8 @@ export function RoadToGoal({
                   {fill(copy.cashedBody, { zones: progress, mult: currentMultiplier.toFixed(2) })}
                 </p>
                 <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout)}</div>
-                <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
-                  <RotateCcw className="size-4" /> {copy.startAgain}
+                <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                  {partner ? partner.finishLabel : <><RotateCcw className="size-4" /> {copy.startAgain}</>}
                 </button>
               </motion.div>
             )}
@@ -1506,8 +1560,8 @@ export function RoadToGoal({
                 <div className="mt-4 rounded-2xl bg-brand-green px-6 py-3 font-poppins text-xl font-black text-game-ink">
                   {fill(copy.won, { amount: points(payout) })}
                 </div>
-                <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 font-poppins text-sm font-black uppercase text-white transition-[background,transform] hover:bg-white/15 active:scale-[0.99]">
-                  <RotateCcw className="size-4" /> {copy.startAgain}
+                <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 font-poppins text-sm font-black uppercase text-white transition-[background,transform] hover:bg-white/15 active:scale-[0.99]">
+                  {partner ? partner.finishLabel : <><RotateCcw className="size-4" /> {copy.startAgain}</>}
                 </button>
               </motion.div>
             )}

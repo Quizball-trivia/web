@@ -5,6 +5,9 @@ import { motion } from 'motion/react';
 import { ClubCrest } from '@/features/mini-games/components/Badges';
 import { type FifaCard, STAT_KEYS, STAT_SHORT, editionLabel } from '../lib/data';
 import { Flag } from './ui';
+import { Silhouette } from './Silhouette';
+
+export { Silhouette };
 
 const GOLD_BG = [
   'radial-gradient(135% 85% at 50% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 40%)',
@@ -141,16 +144,6 @@ function Face({ card, height }: { card: FifaCard; height: number }) {
   return <img src={src} alt="" onError={() => setFailed(true)} className="w-auto object-contain drop-shadow-[0_4px_6px_rgba(60,44,8,0.4)]" style={{ height }} />;
 }
 
-export function Silhouette({ height }: { height: number }) {
-  return (
-    <svg viewBox="0 0 120 150" style={{ height }} className="w-auto" aria-hidden>
-      <g fill="#33270a" fillOpacity="0.22">
-        <circle cx="60" cy="46" r="30" />
-        <path d="M14 150c0-30 20-52 46-52s46 22 46 52z" />
-      </g>
-    </svg>
-  );
-}
 
 /** Six-stat strip in card colours, optionally masking / highlighting one stat. */
 export function StatStrip({

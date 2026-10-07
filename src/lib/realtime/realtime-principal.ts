@@ -25,6 +25,8 @@ export interface GuestPrincipal {
 
 export type RealtimePrincipal =
   | { kind: "member"; userId: string }
+  /** A partner player (Freecroco view): the socket authenticates with the partner token source. */
+  | { kind: "partner"; userId: string }
   | { kind: "guest"; userId: string; guest: GuestPrincipal }
   | { kind: "none"; userId: null };
 
@@ -44,6 +46,12 @@ export const useGuestPrincipalStore = create<GuestPrincipalState>((set) => ({
   setGuest: (guest) => set({ guest, status: "ready" }),
   setStatus: (status) => set({ status }),
   clear: () => set({ guest: null, status: "idle" }),
+}));
+
+/** Set by the partner view while a partner game owns the realtime connection. */
+export const usePartnerRealtimeStore = create<{ userId: string | null; setUserId: (userId: string | null) => void }>((set) => ({
+  userId: null,
+  setUserId: (userId) => set({ userId }),
 }));
 
 let inflight: Promise<GuestPrincipal | null> | null = null;
@@ -127,11 +135,13 @@ export function useRealtimePrincipal(): RealtimePrincipal {
   const authUserId = useAuthStore((state) => state.user?.id ?? null);
   const guest = useGuestPrincipalStore((state) => state.guest);
   const clearGuest = useGuestPrincipalStore((state) => state.clear);
+  const partnerUserId = usePartnerRealtimeStore((state) => state.userId);
   // Signing in (or out) ends the guest identity: never two principals, and a
   // logged-out member does not silently continue as the previous guest.
   useEffect(() => {
     if (authStatus !== "anonymous" && guest) clearGuest();
   }, [authStatus, guest, clearGuest]);
+  if (partnerUserId) return { kind: "partner", userId: partnerUserId };
   if (authStatus === "authenticated" && authUserId) return { kind: "member", userId: authUserId };
   if (authStatus === "anonymous" && guest) return { kind: "guest", userId: guest.userId, guest };
   return { kind: "none", userId: null };

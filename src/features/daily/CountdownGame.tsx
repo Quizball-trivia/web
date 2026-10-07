@@ -150,10 +150,6 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
     [currentQuestion, foundAnswers]
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
   // Auto-accept while typing, like the ranked countdown: once the input is 3+
   // chars, after a short debounce we test it against the answers — a match is
   // added and the field clears, so the player never has to press Enter/Send.
@@ -185,10 +181,10 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
     };
   }, [inputValue, checkAnswer]);
 
-  // Manual submit on Enter — same as the Send button. No answer suggestions are
+  // Manual submit on Enter or the Send button. No answer suggestions are
   // ever shown (they'd leak the answers); a guess is only revealed once accepted.
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim()) {
+  const submitInput = () => {
+    if (inputValue.trim()) {
       playSfx(checkAnswer(inputValue) ? "dailyCorrect" : "wrongAnswer");
       setInputValue("");
     }
@@ -240,111 +236,18 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
           />
         }
       >
-        <div className="w-full space-y-2.5">
-        {/* Category badge + prompt — plain text, no card chrome (like ranked) */}
-        <div className="space-y-1.5 px-1 text-center">
-          <span className="inline-flex items-center rounded-[7px] bg-brand-cyan px-2.5 py-1 text-[11px] font-fun font-black uppercase tracking-[0.14em] text-white">
-            {currentQuestion.category}
-          </span>
-          <p className="text-lg font-black font-fun leading-snug text-white">{currentQuestion.prompt}</p>
-        </div>
-
-        {/* Input — flat blue Figma pill with Send icon, matching ranked. */}
-        <div>
-          <div className="relative">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleInputKeyDown}
-              placeholder={t("dailyGames.pressEnterPlaceholder")}
-              autoComplete="off"
-              autoCapitalize="off"
-              className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none"
-              style={{
-                fontWeight: 600,
-                letterSpacing: '0.08em',
-                boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (inputValue.trim()) {
-                  playSfx(checkAnswer(inputValue) ? "dailyCorrect" : "wrongAnswer");
-                  setInputValue("");
-                }
-              }}
-              disabled={!inputValue.trim()}
-              aria-label={t("dailyGames.submitAnswer")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex size-9 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
-            >
-              <Send className="size-4" />
-            </button>
-          </div>
-          <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
-            <Lightbulb className="size-3.5 text-brand-orange" />{t('dailyGames.spellingTip')}
-          </p>
-        </div>
-
-        {/* Recent Answer Feedback */}
-        {recentAnswer && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-in fade-in zoom-in duration-300">
-            <div className="bg-surface-card rounded-[20px] border border-brand-green-light/40 p-6 px-8">
-              <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-brand-green-light flex items-center justify-center">
-                  <Check className="size-6 text-white" />
-                </div>
-                <div>
-                  <div className="text-sm text-brand-slate">{t('dailyGames.correctExclaim')}</div>
-                  <div className="text-xl font-black text-white">{recentAnswer}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Answers found — soft list with green chips, matching ranked. */}
-        <div className="px-1.5 sm:px-0">
-          <div className="mb-2 flex items-center justify-between gap-2 px-1">
-            <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
-              {t("dailyGames.answersFound")}
-            </h3>
-            <span className="inline-flex items-center rounded-[7px] bg-brand-cyan/15 px-2 py-0.5 text-[11px] font-fun font-black text-brand-cyan">
-              {foundAnswers.length}
-            </span>
-          </div>
-          {foundAnswers.length === 0 ? (
-            <p className="py-2.5 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
-              {t("dailyGames.noAnswersYet")}
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-1.5">
-              {foundAnswers.map((answer) => (
-                <div
-                  key={answer}
-                  className="rounded-[8px] border border-brand-green/20 bg-transparent px-3 py-2 text-sm font-fun font-black text-brand-green"
-                >
-                  {answer}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Skip / Next Round — green submit-button style, matching the other
-            daily challenges' primary action. */}
-        <button
-          onClick={handleSkipRound}
-          className="w-full py-3.5 rounded-[20px] font-black uppercase tracking-wide text-white bg-brand-green hover:bg-brand-green-deep active:translate-y-[1px] transition-all flex items-center justify-center gap-2"
-        >
-          <ArrowRight className="size-4" />
-          {currentRound >= totalRounds - 1
-            ? t("dailyGames.viewResults")
-            : t("dailyGames.skipToNextRound")}
-        </button>
-        </div>
+        <CountdownBoard
+          category={currentQuestion.category}
+          prompt={currentQuestion.prompt}
+          inputRef={inputRef}
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          onSubmit={submitInput}
+          recentAnswer={recentAnswer}
+          foundAnswers={foundAnswers}
+          isLastRound={currentRound >= totalRounds - 1}
+          onSkip={handleSkipRound}
+        />
       </DailyGameStage>
 
       <QuitGameDialog
@@ -352,6 +255,140 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
       />
+    </div>
+  );
+}
+
+export interface CountdownBoardProps {
+  category: string;
+  prompt: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  onSubmit: () => void;
+  recentAnswer: string | null;
+  foundAnswers: string[];
+  isLastRound: boolean;
+  onSkip: () => void;
+}
+
+/** Prompt, answer input, found list and next-round button, shared by the daily game and its Freecroco partner version. */
+export function CountdownBoard({
+  category,
+  prompt,
+  inputRef,
+  inputValue,
+  onInputChange,
+  onSubmit,
+  recentAnswer,
+  foundAnswers,
+  isLastRound,
+  onSkip,
+}: CountdownBoardProps) {
+  const { t } = useLocale();
+  return (
+    <div className="w-full space-y-2.5">
+    {/* Category badge + prompt — plain text, no card chrome (like ranked) */}
+    <div className="space-y-1.5 px-1 text-center">
+      <span className="inline-flex items-center rounded-[7px] bg-brand-cyan px-2.5 py-1 text-[11px] font-fun font-black uppercase tracking-[0.14em] text-white">
+        {category}
+      </span>
+      <p className="text-lg font-black font-fun leading-snug text-white">{prompt}</p>
+    </div>
+
+    {/* Input — flat blue Figma pill with Send icon, matching ranked. */}
+    <div>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSubmit();
+          }}
+          placeholder={t("dailyGames.pressEnterPlaceholder")}
+          autoComplete="off"
+          autoCapitalize="off"
+          className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none"
+          style={{
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
+          }}
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!inputValue.trim()}
+          aria-label={t("dailyGames.submitAnswer")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex size-9 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+        >
+          <Send className="size-4" />
+        </button>
+      </div>
+      <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
+        <Lightbulb className="size-3.5 text-brand-orange" />{t('dailyGames.spellingTip')}
+      </p>
+    </div>
+
+    {/* Recent Answer Feedback */}
+    {recentAnswer && (
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-in fade-in zoom-in duration-300">
+        <div className="bg-surface-card rounded-[20px] border border-brand-green-light/40 p-6 px-8">
+          <div className="flex items-center gap-3">
+            <div className="size-12 rounded-full bg-brand-green-light flex items-center justify-center">
+              <Check className="size-6 text-white" />
+            </div>
+            <div>
+              <div className="text-sm text-brand-slate">{t('dailyGames.correctExclaim')}</div>
+              <div className="text-xl font-black text-white">{recentAnswer}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Answers found — soft list with green chips, matching ranked. */}
+    <div className="px-1.5 sm:px-0">
+      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
+          {t("dailyGames.answersFound")}
+        </h3>
+        <span className="inline-flex items-center rounded-[7px] bg-brand-cyan/15 px-2 py-0.5 text-[11px] font-fun font-black text-brand-cyan">
+          {foundAnswers.length}
+        </span>
+      </div>
+      {foundAnswers.length === 0 ? (
+        <p className="py-2.5 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
+          {t("dailyGames.noAnswersYet")}
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-1.5">
+          {foundAnswers.map((answer) => (
+            <div
+              key={answer}
+              className="rounded-[8px] border border-brand-green/20 bg-transparent px-3 py-2 text-sm font-fun font-black text-brand-green"
+            >
+              {answer}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Skip / Next Round — green submit-button style, matching the other
+        daily challenges' primary action. */}
+    <button
+      onClick={onSkip}
+      data-testid="daily-countdown-skip"
+      className="w-full py-3.5 rounded-[20px] font-black uppercase tracking-wide text-white bg-brand-green hover:bg-brand-green-deep active:translate-y-[1px] transition-all flex items-center justify-center gap-2"
+    >
+      <ArrowRight className="size-4" />
+      {isLastRound
+        ? t("dailyGames.viewResults")
+        : t("dailyGames.skipToNextRound")}
+    </button>
     </div>
   );
 }

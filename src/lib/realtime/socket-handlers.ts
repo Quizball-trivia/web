@@ -1,4 +1,4 @@
-import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
+import { getSocket, getSocketDebugSnapshot, isTokenSourceRealtime, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
@@ -73,7 +73,8 @@ import type {
 // Module-level ref so handlers always read the latest queryClient
 // without needing to tear down and re-register all listeners.
 let _queryClient: QueryClient | null = null;
-let _handlersRegistered = false;
+/** The socket instance the handlers are on: a rebuilt socket (a new principal's) needs them again. */
+let _registeredSocket: ReturnType<typeof getSocket> | null = null;
 const GRID_RESYNC_THROTTLE_MS = 1_000;
 const GRID_CANCEL_BUSY_MAX_RETRIES = 3;
 const GRID_CANCEL_BUSY_RETRY_MS = 800;
@@ -147,11 +148,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     _queryClient = queryClient;
   }
 
-  // If handlers are already registered on this socket, skip re-registration
-  if (_handlersRegistered) return;
-  _handlersRegistered = true;
-
   const socket = getSocket();
+  // If handlers are already registered on this socket, skip re-registration
+  if (_registeredSocket === socket) return;
+  _registeredSocket = socket;
+
   const store = useRealtimeMatchStore.getState();
 
   socket.on('session:state', (data: SessionStatePayload) => {
@@ -740,7 +741,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all', 'weekendLeague.all'],
       });
     }
-    void getMe()
+    // A partner view has no Quizball account to refresh.
+    if (!isTokenSourceRealtime()) void getMe()
       .then((user) => {
         const current = useAuthStore.getState().user;
         if (current?.id === user.id) {
@@ -1053,7 +1055,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
 /** Reset registration state (for testing or socket reconnect). */
 export function resetSocketHandlers(): void {
-  _handlersRegistered = false;
+  _registeredSocket = null;
   pendingRoomReopen = null;
   lastActiveRead = null;
   clearGridCancelBusy();

@@ -173,85 +173,17 @@ export function HighLowGame({
           />
         }
       >
-        <div className="w-full">
-        {/* Question card */}
-        <div
-          className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
-          style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontWeight: 700,
-            fontSize: 'clamp(15px, 1.9vw, 26px)',
-          }}
-        >
-          <p className="text-white/50 uppercase tracking-wider mb-1" style={{ fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 600 }}>
-            {currentRound.statLabel}
-          </p>
-          <p className="leading-snug">{currentRound.prompt}</p>
-        </div>
-
-        {/* Matchup counter */}
-        <div className="mt-3 text-center text-sm text-white/50" style={poppins}>
-          {copy.matchup} {currentMatchupIndex + 1}/{currentRound.matchups.length}
-        </div>
-
-        {/* VS buttons — two big yellow-bordered cards */}
-        <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
-          <button
-            type="button"
-            disabled={roundResolved}
-            onClick={() => handlePick("left")}
-            className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
-            style={{
-              border: '2px solid #FFE500',
-              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
-              cursor: roundResolved ? 'default' : 'pointer',
-              opacity: roundResolved ? 0.6 : 1,
-            }}
-          >
-            <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
-              {copy.pick}
-            </span>
-            <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {displaySides.left.name}
-            </span>
-          </button>
-
-          <span className="text-white/35" style={{ ...poppins, fontSize: 'clamp(14px, 1.6vw, 20px)' }}>VS</span>
-
-          <button
-            type="button"
-            disabled={roundResolved}
-            onClick={() => handlePick("right")}
-            className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
-            style={{
-              border: '2px solid #FFE500',
-              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
-              cursor: roundResolved ? 'default' : 'pointer',
-              opacity: roundResolved ? 0.6 : 1,
-            }}
-          >
-            <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
-              {copy.pick}
-            </span>
-            <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {displaySides.right.name}
-            </span>
-          </button>
-        </div>
-
-        {/* Instruction (result is shown via the fly-in splash). */}
-        {!roundResolved && (
-          <p className="mt-3 text-center text-sm text-white/50" style={poppins}>
-            {copy.higherValueInstruction}
-          </p>
-        )}
-
-        {/* Score */}
-        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">{copy.score}</span>
-          <span className="text-white">{roundScore}</span>
-        </div>
-        </div>
+        <HighLowBoard
+          statLabel={currentRound.statLabel}
+          prompt={currentRound.prompt}
+          matchupIndex={currentMatchupIndex}
+          matchupCount={currentRound.matchups.length}
+          leftName={displaySides.left.name}
+          rightName={displaySides.right.name}
+          disabled={roundResolved}
+          onPick={handlePick}
+          score={roundScore}
+        />
       </DailyGameStage>
 
       <QuitGameDialog
@@ -270,6 +202,129 @@ export function HighLowGame({
         total={session.roundCount}
         onDone={(nextPath) => onComplete(roundScore, nextPath)}
       />
+    </div>
+  );
+}
+
+export interface HighLowBoardProps {
+  statLabel: string;
+  prompt: string;
+  matchupIndex: number;
+  matchupCount: number;
+  leftName: string;
+  rightName: string;
+  disabled: boolean;
+  onPick: (side: "left" | "right") => void;
+  score: number;
+  /** Values of the matchup just picked, when the server reveals them (partner play). */
+  revealedValues?: { left: number; right: number } | null;
+}
+
+/** Stat card and the two pick buttons, shared by the daily game and its Freecroco partner version. */
+export function HighLowBoard({
+  statLabel,
+  prompt,
+  matchupIndex,
+  matchupCount,
+  leftName,
+  rightName,
+  disabled,
+  onPick,
+  score,
+  revealedValues = null,
+}: HighLowBoardProps) {
+  const copy = getDailyChallengeCopy();
+  return (
+    <div className="w-full">
+    {/* Question card */}
+    <div
+      className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
+      style={{
+        fontFamily: "'Poppins', sans-serif",
+        fontWeight: 700,
+        fontSize: 'clamp(15px, 1.9vw, 26px)',
+      }}
+    >
+      <p className="text-white/50 uppercase tracking-wider mb-1" style={{ fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 600 }}>
+        {statLabel}
+      </p>
+      <p className="leading-snug">{prompt}</p>
+    </div>
+
+    {/* Matchup counter */}
+    <div className="mt-3 text-center text-sm text-white/50" style={poppins}>
+      {copy.matchup} {matchupIndex + 1}/{matchupCount}
+    </div>
+
+    {/* VS buttons — two big yellow-bordered cards */}
+    <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onPick("left")}
+        data-testid="daily-highlow-pick" data-side="left"
+        className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
+        style={{
+          border: '2px solid #FFE500',
+          boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+          cursor: disabled ? 'default' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
+        <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
+          {copy.pick}
+        </span>
+        <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
+          {leftName}
+        </span>
+        {revealedValues && (
+          <span className="mt-2 text-brand-yellow" style={{ ...poppins, fontSize: 'clamp(16px, 2vw, 26px)' }}>
+            {revealedValues.left}
+          </span>
+        )}
+      </button>
+
+      <span className="text-white/35" style={{ ...poppins, fontSize: 'clamp(14px, 1.6vw, 20px)' }}>VS</span>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onPick("right")}
+        data-testid="daily-highlow-pick" data-side="right"
+        className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
+        style={{
+          border: '2px solid #FFE500',
+          boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+          cursor: disabled ? 'default' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
+        <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
+          {copy.pick}
+        </span>
+        <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
+          {rightName}
+        </span>
+        {revealedValues && (
+          <span className="mt-2 text-brand-yellow" style={{ ...poppins, fontSize: 'clamp(16px, 2vw, 26px)' }}>
+            {revealedValues.right}
+          </span>
+        )}
+      </button>
+    </div>
+
+    {/* Instruction (result is shown via the fly-in splash). */}
+    {!disabled && (
+      <p className="mt-3 text-center text-sm text-white/50" style={poppins}>
+        {copy.higherValueInstruction}
+      </p>
+    )}
+
+    {/* Score */}
+    <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+      <span className="text-white/55">{copy.score}</span>
+      <span className="text-white">{score}</span>
+    </div>
     </div>
   );
 }

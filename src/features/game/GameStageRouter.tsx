@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { markSeason3Return } from '@/features/season3/season3.repo';
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,12 +9,14 @@ import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
+import type { MatchResultSummary } from "./results/results.types";
 import { CancelledMatchScreen } from "./CancelledMatchScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { RealtimePartyQuizScreen } from "@/features/party/RealtimePartyQuizScreen";
 import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen";
 import { usePartyRewards } from "@/features/party/usePartyRewards";
 import { getSocket } from "@/lib/realtime/socket-client";
+import type { MatchFinalResultsPayload } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
@@ -55,8 +57,25 @@ function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } 
   return typeof opponentInfo.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponentInfo.id);
 }
 
-export function GameStageRouter() {
+/** A partner view (Freecroco) runs ranked here: its own exit and result screen, no tickets, store or rematch. */
+export interface GameStageRouterPartnerMode {
+  onExit: () => void;
+  renderResult: (result: {
+    matchId: string | null;
+    final: MatchFinalResultsPayload | null;
+    /** Null for a cancelled match. */
+    summary: MatchResultSummary | null;
+    cancelled: boolean;
+  }) => ReactNode;
+}
+
+export function GameStageRouter({ partner }: { partner?: GameStageRouterPartnerMode } = {}) {
   const router = useRouter();
+  const leaveGame = useCallback((mode: "push" | "replace") => {
+    if (partner) partner.onExit();
+    else if (mode === "push") router.push("/play");
+    else router.replace("/play");
+  }, [partner, router]);
   const { t, locale } = useLocale();
   useEnsureGuestPrincipal(locale);
   const {
@@ -104,7 +123,7 @@ export function GameStageRouter() {
   // since the real count isn't known yet) and the click handler additionally
   // revalidates against a live fetch before entering matchmaking.
   const queryClient = useQueryClient();
-  const { data: storeWallet, isFetching: walletFetching } = useStoreWallet();
+  const { data: storeWallet, isFetching: walletFetching } = useStoreWallet({ enabled: !partner });
   const hasRankedTicket = (storeWallet?.tickets ?? 0) >= 1;
   const playAgainDisabled = matchType === "ranked" && (walletFetching || !hasRankedTicket);
   const playAgainHint =
@@ -263,16 +282,16 @@ export function GameStageRouter() {
     resetRealtime();
     clearRankedMatchmaking();
     resetGameSession();
-    router.push("/play");
+    leaveGame("push");
   }, [
     clearRankedMatchmaking,
     config?.matchType,
     config?.mode,
+    leaveGame,
     matchType,
     realtimeMatch,
     resetGameSession,
     resetRealtime,
-    router,
     socket,
     stage,
   ]);
@@ -408,9 +427,9 @@ export function GameStageRouter() {
       !realtimeMatch.finalResults &&
       !cancelledMatch
     ) {
-      router.replace("/play");
+      leaveGame("replace");
     }
-  }, [cancelledMatch, realtimeMatch.finalResults, stage, router]);
+  }, [cancelledMatch, realtimeMatch.finalResults, stage, leaveGame]);
 
   useEffect(() => {
     const isDeadMatchStage =
@@ -432,15 +451,15 @@ export function GameStageRouter() {
     resetRealtime();
     clearRankedMatchmaking();
     resetGameSession();
-    router.replace("/play");
+    leaveGame("replace");
   }, [
     cancelledMatch,
     clearRankedMatchmaking,
+    leaveGame,
     realtimeMatch.finalResults,
     realtimeMatch.matchId,
     resetGameSession,
     resetRealtime,
-    router,
     sessionState?.state,
     stage,
   ]);
@@ -448,8 +467,8 @@ export function GameStageRouter() {
   useEffect(() => {
     if (!partyDropout || realtimeMatch.finalResults) return;
     resetGameSession();
-    router.replace("/play");
-  }, [partyDropout, realtimeMatch.finalResults, resetGameSession, router]);
+    leaveGame("replace");
+  }, [partyDropout, realtimeMatch.finalResults, resetGameSession, leaveGame]);
 
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
@@ -516,14 +535,17 @@ export function GameStageRouter() {
       useRankedMatchmakingStore.getState().markRankedCancelRequested();
       getSocket().emit("ranked:queue_leave");
       logger.info("Socket emit ranked:queue_leave");
-      getSocket().emit("lobby:leave");
-      logger.info("Socket emit lobby:leave during ranked matchmaking cleanup");
+      // A partner socket has no lobby commands; the queue leave closes its ranked lobby server-side.
+      if (!partner) {
+        getSocket().emit("lobby:leave");
+        logger.info("Socket emit lobby:leave during ranked matchmaking cleanup");
+      }
     } else {
       getSocket().emit("lobby:leave");
       logger.info("Socket emit lobby:leave");
     }
     exitToPlay("matchmaking_exit");
-  }, [exitToPlay, matchType]);
+  }, [exitToPlay, matchType, partner]);
 
   const matchmakingDebugInfo = useMemo(
     () => ({
@@ -555,6 +577,10 @@ export function GameStageRouter() {
       socketId,
     ]
   );
+
+  if (cancelledMatch && partner) {
+    return <>{partner.renderResult({ matchId: cancelledMatch.matchId, final: null, summary: null, cancelled: true })}</>;
+  }
 
   if (cancelledMatch) {
     return (
@@ -749,26 +775,44 @@ export function GameStageRouter() {
         realtimeMatch?.questions?.[i]?.opponentIsCorrect
       );
 
+      const matchSummary: MatchResultSummary = {
+        selfUserId,
+        playerUsername: player.username,
+        playerAvatar: playerGameAvatar,
+        playerAvatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
+        opponentUsername: opponent.username,
+        opponentAvatar: opponentGameAvatar,
+        opponentAvatarCustomization: opponent.avatarCustomization,
+        playerScore: playerDisplayScore,
+        opponentScore: opponentDisplayScore,
+        playerCorrect: myStats?.correctAnswers ?? 0,
+        opponentCorrect: opponentStats?.correctAnswers ?? 0,
+        totalQuestions: totalQuestionsPlayed,
+        playerQuestionResults,
+        opponentQuestionResults,
+        finalWinnerId: final?.winnerId,
+        isDraw: final?.isDraw,
+        winnerDecisionMethod: final?.winnerDecisionMethod ?? null,
+      };
+
+      if (partner && !isPartyQuizMatch) {
+        const cancelled = final?.cancelledNoContest === true;
+        return (
+          <>
+            {partner.renderResult({
+              matchId: final?.matchId ?? null,
+              final,
+              summary: cancelled ? null : matchSummary,
+              cancelled,
+            })}
+          </>
+        );
+      }
+
       return (
         <RealtimeResultsScreen
+          {...matchSummary}
           matchType={matchType}
-          playerUsername={player.username}
-          playerAvatar={playerGameAvatar}
-          playerAvatarCustomization={authUser?.avatar_customization ?? player.avatarCustomization}
-          opponentUsername={opponent.username}
-          opponentAvatar={opponentGameAvatar}
-          opponentAvatarCustomization={opponent.avatarCustomization}
-          playerScore={playerDisplayScore}
-          opponentScore={opponentDisplayScore}
-          playerCorrect={myStats?.correctAnswers ?? 0}
-          opponentCorrect={opponentStats?.correctAnswers ?? 0}
-          totalQuestions={totalQuestionsPlayed}
-          playerQuestionResults={playerQuestionResults}
-          opponentQuestionResults={opponentQuestionResults}
-          selfUserId={selfUserId}
-          finalWinnerId={final?.winnerId}
-          isDraw={final?.isDraw}
-          winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
           cancelledNoContest={final?.cancelledNoContest === true}
           preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? stableRankedProfile.rp : undefined}
           opponentId={finalOpponentUserId}
