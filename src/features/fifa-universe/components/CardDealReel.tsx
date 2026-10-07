@@ -14,7 +14,7 @@ const BACKS = 22;
  * reel (strip anchored at the viewport centre), but it deals a card back rather
  * than picking an edition — the flip into the locked board happens next.
  */
-export function CardDealReel({ onDone, cardNumber }: { onDone: () => void; cardNumber: number }) {
+export function CardDealReel({ onDone, cardNumber, hint }: { onDone: () => void; cardNumber: number; hint?: string }) {
   const t = useMiniT();
   const reduceMotion = useReducedMotion();
   const [landed, setLanded] = useState(false);
@@ -58,7 +58,7 @@ export function CardDealReel({ onDone, cardNumber }: { onDone: () => void; cardN
           ))}
         </motion.div>
       </div>
-      <p className="mt-5 font-poppins text-xs font-semibold text-white/35">{t('Buy clues on the card, name the player, keep your coins')}</p>
+      <p className="mt-5 font-poppins text-xs font-semibold text-white/35">{hint ?? t('Buy clues on the card, name the player, keep your coins')}</p>
     </div>
   );
 }

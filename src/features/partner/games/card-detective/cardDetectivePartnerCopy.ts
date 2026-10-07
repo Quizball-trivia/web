@@ -10,6 +10,7 @@ interface CardDetectiveCopy {
   quitBody: string;
   send: string;
   tryAgain: string;
+  dealHint: string;
   somethingWrong: string;
   noPlaysLeft: string;
   pointsTotal: (n: number) => string;
@@ -35,6 +36,7 @@ const COPY: Record<PartnerLocale, CardDetectiveCopy> = {
     quitBody: "The game ends now with the points you have earned so far.",
     send: "Send",
     tryAgain: "Try again",
+    dealHint: "Open clues on the card and name the player: fewer clues, more points",
     somethingWrong: "Something went wrong — try again",
     noPlaysLeft: "No plays left today",
     pointsTotal: (n) => `${n} pts`,
@@ -57,6 +59,7 @@ const COPY: Record<PartnerLocale, CardDetectiveCopy> = {
     quitBody: "თამაში ახლა დასრულდება იმ ქულებით, რაც უკვე დააგროვე.",
     send: "გაგზავნა",
     tryAgain: "თავიდან ცდა",
+    dealHint: "გახსენი მინიშნებები ბარათზე და გამოიცანი მოთამაშე: რაც ნაკლები მინიშნება, მით მეტი ქულა",
     somethingWrong: "რაღაც შეცდომა მოხდა — სცადე თავიდან",
     noPlaysLeft: "დღეს თამაშები აღარ დაგრჩა",
     pointsTotal: (n) => `${n} ქულა`,

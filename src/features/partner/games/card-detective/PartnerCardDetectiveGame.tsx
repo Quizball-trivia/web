@@ -292,7 +292,7 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
       <AnimatePresence mode="wait">
         {phase === "deal" && current ? (
           <motion.div key={`deal-${current.ref}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex min-h-[420px] flex-col justify-center">
-            <CardDealReel cardNumber={play?.index ?? 0} onDone={() => setPhase((p) => (p === "deal" ? "play" : p))} />
+            <CardDealReel cardNumber={play?.index ?? 0} hint={copy.dealHint} onDone={() => setPhase((p) => (p === "deal" ? "play" : p))} />
           </motion.div>
         ) : boardData ? (
           <motion.div
