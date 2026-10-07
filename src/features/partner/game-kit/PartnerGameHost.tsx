@@ -30,7 +30,8 @@ export function PartnerGameHost({ gameId, registry }: { gameId: PartnerGameId; r
   const [opened, setOpened] = useState(gameId === "ranked");
   if (!opened && games.isFetchedAfterMount && !games.isFetching) {
     // Only a successful, current-day answer can turn the game into a result; anything else just opens the game.
-    const fresh = !games.isError && games.data && Date.parse(games.data.resetsAt) > Date.now();
+    // A day that had already ended when the answer arrived (a request straddling Tbilisi midnight) is not current.
+    const fresh = !games.isError && games.data && Date.parse(games.data.resetsAt) > games.dataUpdatedAt;
     const tile = fresh ? games.data?.games.find((g) => g.gameId === gameId) : undefined;
     if (tile && tile.playsLeft === 0 && !tile.inProgress && tile.lastResult) {
       setFinished({ playId: tile.lastResult.playId, score: tile.lastResult.score });

@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PartnerGameTile } from "../api/partnerApi.types";
 
-type Games = { isFetchedAfterMount: boolean; isFetching?: boolean; isError?: boolean; data: { resetsAt: string; games: PartnerGameTile[] } };
+type Games = { isFetchedAfterMount: boolean; isFetching?: boolean; isError?: boolean; dataUpdatedAt?: number; data: { resetsAt: string; games: PartnerGameTile[] } };
 const tomorrow = () => new Date(Date.now() + 3_600_000).toISOString();
 const games = vi.hoisted(() => ({ value: {} as Games }));
-vi.mock("../hooks/usePartnerGames", () => ({ partnerGamesQueryKey: ["partner", "me", "games"], usePartnerGames: () => games.value }));
+vi.mock("../hooks/usePartnerGames", () => ({ partnerGamesQueryKey: ["partner", "me", "games"], usePartnerGames: () => ({ dataUpdatedAt: Date.now(), ...games.value }) }));
 vi.mock("../PartnerSessionProvider", () => ({ usePartnerSession: () => ({ api: { game: vi.fn() } }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
