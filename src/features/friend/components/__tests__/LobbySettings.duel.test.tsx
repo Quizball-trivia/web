@@ -68,7 +68,7 @@ describe("LobbySettings duel rooms", () => {
     const onUpdate = renderSettings(makeLobby("friendly_possession", null, [{}, {}]));
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     fireEvent.click(screen.getByRole("button", { name: "friend.duelTabUltimo" }));
-    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith({ gameMode: "duel", duelGame: "ultimo" }));
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith({ gameMode: "duel", duelGame: "ultimo", roomGame: null }));
   });
 
   it("the host can switch a room into a duel game (and between duel games)", async () => {
@@ -76,7 +76,7 @@ describe("LobbySettings duel rooms", () => {
     // Let the mount-time settings reset run first, as it does before any real tap.
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     fireEvent.click(screen.getByRole("button", { name: "friend.duelTabPistas" }));
-    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith({ gameMode: "duel", duelGame: "pistas" }));
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith({ gameMode: "duel", duelGame: "pistas", roomGame: null }));
     expect(screen.getByText("friend.duelPistas")).toBeTruthy();
   });
 

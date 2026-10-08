@@ -50,7 +50,7 @@ export interface PublicGameMeta {
 /** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
 export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || isFullGameDemo(demoSlug);
 /** Buscaminas, Pistas, Último, Minuto and Stat Sniper (Aproximado): the page runs the real daily (not a sample), and the engine owns its exit. */
-export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto", "daily-statSniper"]);
+export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto", "daily-statSniper", "shared-player", "name-chain"]);
 export const isFullGameDemo = (demoSlug: string | undefined): boolean => FULL_GAME_DEMO_SLUGS.has(demoSlug ?? "");
 const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 /** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
@@ -70,6 +70,9 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "pistas", slug: "football-clues", group: "daily", guest: "demo", demoSlug: "pistas", page: true, card: true, destination: { kind: "page" }, related: ["buscaminas", "ultimo", "cardDetective", "grid"], order: -0.5 },
   { modeId: "minuto", slug: "guess-the-goal-minute", group: "daily", guest: "demo", demoSlug: "minuto", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "ultimo", "buscaminas", "grid"], order: -0.75 },
   { modeId: "ultimo", slug: "last-answer-standing", group: "daily", guest: "demo", demoSlug: "ultimo", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "buscaminas", "grid"], order: -0.25 },
+  // The two word games (2026-10): the page plays the real daily; "play with friends" opens a 2–6 room of the same game.
+  { modeId: "sharedPlayer", slug: "played-for-both-clubs", group: "daily", guest: "demo", demoSlug: "shared-player", page: true, card: true, destination: { kind: "page" }, related: ["nameChain", "grid", "pistas"], order: -0.9 },
+  { modeId: "nameChain", slug: "football-name-chain", group: "daily", guest: "demo", demoSlug: "name-chain", page: true, card: true, destination: { kind: "page" }, related: ["sharedPlayer", "ultimo", "pistas"], order: -0.85 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
   { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
   { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },

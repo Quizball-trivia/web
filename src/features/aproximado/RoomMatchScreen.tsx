@@ -48,10 +48,14 @@ export function RoomMatchScreen({ matchId }: { matchId: string }) {
 }
 
 function RoomMatch({ matchId }: { matchId: string }) {
+  return <AproximadoRoomMatch room={useRoom(matchId)} />;
+}
+
+/** The Aproximado match on a room connection (also every room's screen until its first state says which game it is). */
+export function AproximadoRoomMatch({ room }: { room: ReturnType<typeof useRoom> }) {
   const router = useRouter();
   const { locale } = useLocale();
   const copy = aproximadoCopy(locale);
-  const room = useRoom(matchId);
   // Party Quiz layout by default; ?ui=classic shows the earlier seat-strip layout (for comparing).
   const layout = useSearchParams().get("ui") === "classic" ? "classic" : "party";
   const { snapshot, error, fatal, clearError } = room;

@@ -911,6 +911,12 @@ export function useFriendLobbyLogic({
     logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
 
+  const handleRoomOptions = useCallback((options: Record<string, unknown> | null) => {
+    if (!activeLobby || activeLobby.settings.gameMode !== "room_game") return;
+    getSocket().emit("lobby:room_options", { lobbyId: activeLobby.lobbyId, options });
+    logger.info("Socket emit lobby:room_options", { lobbyId: activeLobby.lobbyId });
+  }, [activeLobby]);
+
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
     if (!activeLobby) return;
 
@@ -1090,6 +1096,7 @@ export function useFriendLobbyLogic({
       copyCode,
       handleReadyToggle,
       handleUpdateSettings,
+      handleRoomOptions,
       handleStartMatch,
       handleLeaveLobby,
       handleInviteRetry,
