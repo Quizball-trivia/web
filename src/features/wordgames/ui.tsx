@@ -202,15 +202,16 @@ export function ReportLink({ label, thanks, onReport }: { label: string; thanks:
 export function useResendRetained(room: { retained: unknown; connected: boolean; resendRetained: () => void }): boolean {
   const { connected, resendRetained } = room;
   const open = room.retained !== null;
+  // Monotonic time: a device clock set back must not stop the retries.
   const lastSend = useRef(0);
-  useEffect(() => { if (open) lastSend.current = Date.now(); }, [open]);
+  useEffect(() => { if (open) lastSend.current = performance.now(); }, [open]);
   useEffect(() => {
     if (!open || !connected) return;
     // Never at once: a refusal (rate limited, room busy) puts the answer straight back here, and an immediate resend
     // would turn that into a loop. The beat is kept across those transitions by the time of the last send.
     const tick = () => {
-      if (Date.now() - lastSend.current < RESEND_EVERY_MS) return;
-      lastSend.current = Date.now();
+      if (performance.now() - lastSend.current < RESEND_EVERY_MS) return;
+      lastSend.current = performance.now();
       resendRetained();
     };
     const timer = window.setInterval(tick, 500);

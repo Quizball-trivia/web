@@ -270,13 +270,14 @@ export function useRoomConnection<C>(matchId: string, games: readonly string[], 
   // disagree about how long ago the last snapshot was, neither is trusted and the server is asked again.
   useEffect(() => {
     if (!socket) return;
-    let asked = 0;
+    // The throttle runs on the monotonic clock: a wall clock set back must not silence it.
+    let asked = -Infinity;
     const check = () => {
       const clock = clockRef.current;
       if (!clock || !socket.connected) return;
       const drift = Math.abs((Date.now() - clock.wallMs) - (performance.now() - clock.perfMs));
-      if (drift < 1_500 || Date.now() - asked < 5_000) return;
-      asked = Date.now();
+      if (drift < 1_500 || performance.now() - asked < 5_000) return;
+      asked = performance.now();
       socket.emit("room:resync", { matchId, locale, games: gamesRef.current });
     };
     const timer = window.setInterval(check, 1_000);

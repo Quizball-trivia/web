@@ -68,6 +68,11 @@ export function RoomGameOptions({ options, canEdit, onChange }: {
   }, [echoed]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (change: Partial<SharedPlayerOptions>) => {
     if (!canEdit) return;
+    // A choice the server never echoed (refused, lost) is forgotten: the next one builds on what the room shows.
+    if (awaiting.current && wallClock() - awaiting.current.since >= 4_000) {
+      awaiting.current = null;
+      latest.current = current;
+    }
     const next = { ...latest.current, ...change };
     latest.current = next;
     awaiting.current = { key: keyOf(next), since: wallClock() };

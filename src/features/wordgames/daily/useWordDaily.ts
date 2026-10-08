@@ -105,7 +105,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     // After a correction or a new Argentine day the cached index is stale.
     api.boards(boardsAttempt > 0 || today !== firstTodayRef.current)
       .then((data) => { if (!cancelled) setVersions(data.days ?? {}); })
-      .catch(() => { if (!cancelled) setVersions(null); });
+      // Only a first load that fails is an error screen; a refresh that fails keeps what was loaded.
+      .catch(() => { if (!cancelled) setVersions((loaded) => loaded ?? null); });
     return () => { cancelled = true; };
   }, [api, boardsAttempt, today]);
 
@@ -141,9 +142,6 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
           setView("play");
           setChosenDay(day);
           if (!startedRef.current) { startedRef.current = true; handlers.current.onEvent?.("start"); }
-        } else {
-          // Nothing to show for this player and board on the end or play screens of the previous one.
-          setView((v) => (v === "end" || v === "play" ? "intro" : v));
         }
       })
       .catch(() => {});
@@ -160,6 +158,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     const before = runRef.current?.state ?? null;
     if (!accept(next)) return;
     setEntry({ owner: o, day: d, run: next });
+    // A running clock is never left behind another screen, whichever move or re-sync opened it.
+    if (next.state.open) setView("play");
     if (result) handlers.current.onResult?.(result, next.state, typed ?? "");
     if (next.state.done && before && !before.done) {
       handlers.current.onEvent?.("complete", { score: next.state.score });

@@ -139,7 +139,11 @@ interface InviteJoinFailure {
 export function newRoomPathFor(room: LobbyJoinRoomInfo | null): string {
   if (room?.gameMode === "auction" || room?.gameMode === "football_grid") return `/friend/room/new?game=${room.gameMode}`;
   if (room?.gameMode === "duel" && room.duelGame) return `/friend/room/new?duel=${room.duelGame}`;
-  if (room?.gameMode === "room_game") return "/friend/room/new?room=aproximado";
+  // The same room game when it is known and offered here, else the first one offered.
+  if (room?.gameMode === "room_game") {
+    const game = ROOM_GAMES_ENABLED.find((enabled) => enabled === room.roomGame) ?? ROOM_GAMES_ENABLED[0];
+    return game ? `/friend/room/new?room=${game}` : "/friend/room/new";
+  }
   return "/friend/room/new";
 }
 

@@ -1523,6 +1523,8 @@ export interface LobbyJoinRoomInfo {
   roomState: "open" | "in_progress" | "ended" | "unknown";
   gameMode: string | null;
   duelGame: string | null;
+  /** The room game of a room-game room (absent from servers that predate it). */
+  roomGame?: string | null;
   hostNickname: string | null;
 }
 

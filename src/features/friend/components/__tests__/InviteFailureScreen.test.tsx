@@ -66,5 +66,9 @@ describe("refused invite: a way forward for each reason", () => {
     expect(newRoomPathFor({ roomState: "ended", gameMode: "duel", duelGame: "pistas", hostNickname: null })).toBe("/friend/room/new?duel=pistas");
     expect(newRoomPathFor(room("ended", "friendly_possession"))).toBe("/friend/room/new");
     expect(newRoomPathFor(null)).toBe("/friend/room/new");
+    // A room game keeps its game when it is offered here; an unknown or missing one falls back to the first offered.
+    expect(newRoomPathFor({ roomState: "in_progress", gameMode: "room_game", duelGame: null, roomGame: "name_chain", hostNickname: null })).toBe("/friend/room/new?room=name_chain");
+    expect(newRoomPathFor({ roomState: "in_progress", gameMode: "room_game", duelGame: null, roomGame: "not_a_game", hostNickname: null })).toBe("/friend/room/new?room=shared_player");
+    expect(newRoomPathFor({ roomState: "in_progress", gameMode: "room_game", duelGame: null, hostNickname: null })).toBe("/friend/room/new?room=shared_player");
   });
 });
