@@ -23,6 +23,10 @@ type DownloadCopy = {
   features: Array<{ title: string; body: string }>;
   privacy: string;
   terms: string;
+  officialNote: string;
+  rankedScreenshot: string;
+  rankedAlt: string;
+  rankedCaption: string;
 };
 
 export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
@@ -46,6 +50,10 @@ export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
       { title: 'Daily games & Party Quiz', body: 'Try daily football challenges or invite your friends to a private quiz lobby.' },
     ],
     privacy: 'Privacy policy', terms: 'Terms of service',
+    officialNote: 'The official Quizball app from quizball.io, published by Quizball LLC.',
+    rankedScreenshot: '/assets/download/ranked-en.png',
+    rankedAlt: 'Quizball Ranked gameplay on an Android phone: football possession, a question and four answers.',
+    rankedCaption: 'Ranked 1v1. Real Android gameplay.',
   },
   ka: {
     metaTitle: 'Quizball Android-ზე — ჩამოტვირთე Google Play-დან',
@@ -67,6 +75,10 @@ export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
       { title: 'ყოველდღიური თამაშები და Party Quiz', body: 'სცადე ყოველდღიური საფეხბურთო გამოწვევები ან მოიწვიე მეგობრები პირად ქვიზ-ოთახში.' },
     ],
     privacy: 'კონფიდენციალურობის პოლიტიკა', terms: 'მომსახურების პირობები',
+    officialNote: 'Quizball-ის ოფიციალური აპი quizball.io-დან. გამომცემელი: Quizball LLC.',
+    rankedScreenshot: '/assets/download/ranked-en.png',
+    rankedAlt: 'Quizball-ის რეიტინგული თამაში Android ტელეფონზე: ბურთის ფლობა, კითხვა და ოთხი პასუხი. ინგლისური ვერსია.',
+    rankedCaption: 'რეიტინგული 1v1 Android-ზე · ინგლისური ვერსია',
   },
   es: {
     metaTitle: 'Quizball para Android — Descarga oficial en Google Play',
@@ -88,6 +100,10 @@ export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
       { title: 'Retos diarios y Party Quiz', body: 'Prueba los retos diarios de fútbol o invita a tus amigos a una sala privada de trivia.' },
     ],
     privacy: 'Política de privacidad', terms: 'Términos del servicio',
+    officialNote: 'La app oficial de Quizball de quizball.io, publicada por Quizball LLC.',
+    rankedScreenshot: '/assets/download/ranked-es.png',
+    rankedAlt: 'Una partida clasificatoria de Quizball en un móvil Android: posesión, una pregunta y cuatro respuestas.',
+    rankedCaption: 'Clasificatorio 1v1. Partida real en Android.',
   },
   tr: {
     metaTitle: 'Android için Quizball — Google Play’den resmî indirme',
@@ -109,6 +125,10 @@ export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
       { title: 'Günlük görevler ve Party Quiz', body: 'Günlük futbol görevlerini dene veya arkadaşlarını özel bir quiz lobisine davet et.' },
     ],
     privacy: 'Gizlilik politikası', terms: 'Hizmet şartları',
+    officialNote: 'Quizball LLC tarafından yayınlanan, quizball.io’nun resmî Quizball uygulaması.',
+    rankedScreenshot: '/assets/download/ranked-tr.png',
+    rankedAlt: 'Android telefonda Quizball dereceli maçı: topa sahip olma, bir soru ve dört yanıt.',
+    rankedCaption: 'Dereceli 1v1. Android’de gerçek oyun.',
   },
 };
 

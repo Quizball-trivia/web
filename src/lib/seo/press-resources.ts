@@ -1,5 +1,7 @@
 import type { KnowledgeIndexLocale } from "./football-knowledge-index";
 
+export const PRESS_LAST_UPDATED = "2026-10-07";
+
 export interface PressResourcesCopy {
   metaTitle: string;
   metaDescription: string;
@@ -26,6 +28,7 @@ export interface PressResourcesCopy {
   methodologyLink: string;
   aboutLink: string;
   quizzesLink: string;
+  downloadLink: string;
   contactHeading: string;
   contactBody: string;
   legalNote: string;
@@ -42,13 +45,14 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     title: "Verified QuizBall facts and brand resources",
     intro:
       "A product-only reference for journalists, reviewers, directories and researchers who need an accurate description of QuizBall.",
-    updated: "Last updated: 30 August 2026",
+    updated: "Last updated: 7 October 2026",
     factsHeading: "Verified product facts",
     facts: [
       "QuizBall is an independent 1v1 multiplayer football trivia game.",
+      "Quizball LLC publishes Quizball at quizball.io and the official Android app on Google Play (io.quizball.mobile).",
       "Correct answers affect possession, attacking momentum and goals in football-style matches.",
       "Players can use ranked play, friendly matches and football knowledge modes including Auction, Football Grid and Tic-Tac-Toe.",
-      "QuizBall publishes free topic quizzes in English and Spanish; its interface also supports Georgian.",
+      "QuizBall publishes free topic quizzes in English and Spanish; its interface supports English, Georgian, Spanish and Turkish.",
       "Public search quizzes and the ranked-match question pool have separate publication controls.",
       "QuizBall documents how football questions are researched, reviewed, updated and corrected.",
     ],
@@ -71,6 +75,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     methodologyLink: "Editorial methodology",
     aboutLink: "About QuizBall",
     quizzesLink: "Free football quizzes",
+    downloadLink: "Official Quizball Android download",
     contactHeading: "Questions or verification requests",
     contactBody:
       "For product facts, corrections or permission questions, contact support@quizball.io. Please include the page or claim you want verified.",
@@ -87,13 +92,14 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     title: "Datos verificados y recursos de marca de QuizBall",
     intro:
       "Una referencia centrada en el producto para periodistas, reseñas, directorios e investigadores que necesiten describir QuizBall con precisión.",
-    updated: "Última actualización: 30 de agosto de 2026",
+    updated: "Última actualización: 7 de octubre de 2026",
     factsHeading: "Datos verificados del producto",
     facts: [
       "QuizBall es un juego independiente de trivia de fútbol multijugador 1 contra 1.",
+      "Quizball LLC publica Quizball en quizball.io y la app oficial para Android en Google Play (io.quizball.mobile).",
       "Las respuestas correctas influyen en la posesión, el impulso ofensivo y los goles de cada partido.",
       "Incluye partidas clasificatorias, amistosos y modos de conocimiento como Subasta, Football Grid y Tres en raya.",
-      "QuizBall publica quizzes temáticos gratuitos en inglés y español; la interfaz también admite georgiano.",
+      "QuizBall publica quizzes temáticos gratuitos en inglés y español; la interfaz admite inglés, georgiano, español y turco.",
       "Los quizzes públicos y el banco de preguntas clasificatorias tienen controles de publicación separados.",
       "QuizBall explica públicamente cómo investiga, revisa, actualiza y corrige sus preguntas.",
     ],
@@ -116,6 +122,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     methodologyLink: "Metodología editorial",
     aboutLink: "Acerca de QuizBall",
     quizzesLink: "Quizzes de fútbol gratis",
+    downloadLink: "Descarga oficial de Quizball para Android",
     contactHeading: "Preguntas o solicitudes de verificación",
     contactBody:
       "Para verificar datos, comunicar correcciones o consultar permisos, escribe a support@quizball.io e incluye la página o afirmación correspondiente.",

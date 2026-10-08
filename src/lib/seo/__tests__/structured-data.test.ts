@@ -18,6 +18,7 @@ describe("site structured data", () => {
 
     expect(organization).toMatchObject({
       "@type": "Organization",
+      legalName: "Quizball LLC",
       logo: {
         url: "https://quizball.io/assets/brand/quizball-icon-512.png",
         width: 512,
@@ -27,6 +28,8 @@ describe("site structured data", () => {
       publishingPrinciples: "https://quizball.io/en/editorial-methodology",
     });
     expect(website).toMatchObject({
+      name: "Quizball",
+      alternateName: ["QuizBall", "quizball.io"],
       publisher: { "@id": SITE_SCHEMA_IDS.organization },
       about: { "@id": SITE_SCHEMA_IDS.game },
     });
@@ -38,6 +41,7 @@ describe("site structured data", () => {
     });
     expect(game).not.toHaveProperty("applicationCategory");
     expect(game).not.toHaveProperty("operatingSystem");
+    expect(graph.filter((node) => node["@type"] === "WebSite")).toHaveLength(1);
   });
 
   it("contains only the official profiles from the shared social-link source", () => {
@@ -53,6 +57,17 @@ describe("site structured data", () => {
 });
 
 describe("editorial page structured data", () => {
+  it("allows an edited page to supply its actual update date", () => {
+    expect(buildEditorialPageStructuredData({
+      locale: "en",
+      path: "/press",
+      title: "Press resources",
+      description: "Verified product facts.",
+      pageType: "WebPage",
+      dateModified: "2026-10-07",
+    }).dateModified).toBe("2026-10-07");
+  });
+
   it("describes the localized methodology page as part of the site entity graph", () => {
     expect(buildEditorialPageStructuredData({
       locale: "es",

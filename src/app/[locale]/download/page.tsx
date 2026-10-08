@@ -39,17 +39,19 @@ export default async function DownloadPage({ params }: { params: Params }) {
         </Link>
         <nav aria-label={copy.languagesLabel} className="flex flex-wrap gap-1">
           {LANGUAGE_OPTIONS.map((option) => (
-            <Link key={option.code} href={downloadPath(option.code)} hrefLang={option.code} lang={option.code} aria-current={option.code === locale ? 'page' : undefined}
+            // A full navigation refreshes the server-derived <html lang>, which
+            // Next's persistent root layout does not update on a client transition.
+            <a key={option.code} href={downloadPath(option.code)} hrefLang={option.code} lang={option.code} aria-current={option.code === locale ? 'page' : undefined}
               className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-yellow ${option.code === locale ? 'bg-brand-yellow text-black' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
               {option.nativeName}
-            </Link>
+            </a>
           ))}
         </nav>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
-        <section className="relative isolate overflow-hidden rounded-[24px] bg-brand-blue px-6 py-10 md:px-12 md:py-16">
-          <Image src="/assets/ranked-icon.webp" alt="" width={360} height={360} sizes="360px" className="pointer-events-none absolute -right-12 top-16 -z-10 hidden rotate-12 opacity-15 md:block" />
+        <section className="relative isolate grid gap-10 overflow-hidden rounded-[24px] bg-brand-blue px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center lg:gap-12 xl:px-12">
+          <div className="min-w-0">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-brand-yellow">
             <Smartphone className="size-4 shrink-0" aria-hidden /> {copy.eyebrow}
           </p>
@@ -64,6 +66,15 @@ export default async function DownloadPage({ params }: { params: Params }) {
             <Link href={`/${locale}`} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 hover:text-brand-yellow focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{copy.browserCta}</Link>
           </div>
           <p className="mt-5 text-xs font-medium leading-5 text-white/80">{copy.free}</p>
+          <p className="mt-2 max-w-2xl text-xs leading-5 text-white/75">{copy.officialNote}</p>
+          </div>
+          <figure className="mx-auto w-full max-w-[260px] lg:max-w-[280px]">
+            <div className="relative rounded-[2.15rem] border-2 border-white/40 bg-surface-page-alt p-1.5 shadow-[0_24px_48px_rgba(0,0,0,0.4)]">
+              <span aria-hidden className="absolute -right-1 top-24 h-9 w-1 rounded-r-sm bg-white/50" />
+              <Image src={copy.rankedScreenshot} alt={copy.rankedAlt} width={1080} height={2424} sizes="(min-width: 1024px) 280px, 260px" priority className="h-auto w-full rounded-[1.65rem]" />
+            </div>
+            <figcaption className="mt-5 text-center text-xs font-semibold leading-5 text-white/85">{copy.rankedCaption}</figcaption>
+          </figure>
         </section>
 
         <section className="pt-10 md:pt-14" aria-labelledby="download-features">

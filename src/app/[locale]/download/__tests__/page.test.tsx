@@ -21,6 +21,15 @@ describe('official Android download page', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelector('h1')?.textContent).toContain(DOWNLOAD_COPY[locale].title);
     expect(doc.querySelector(`a[href="${GOOGLE_PLAY_URL}"]`)?.textContent).toContain(DOWNLOAD_COPY[locale].storeCta);
+    expect(doc.querySelectorAll(`a[href="${GOOGLE_PLAY_URL}"]`)).toHaveLength(1);
+    expect(doc.body.textContent).toContain(DOWNLOAD_COPY[locale].officialNote);
+    expect(DOWNLOAD_COPY[locale].officialNote).toContain('Quizball LLC');
+    expect(DOWNLOAD_COPY[locale].officialNote).toContain('quizball.io');
+    const screenshot = doc.querySelector(`img[alt="${DOWNLOAD_COPY[locale].rankedAlt}"]`);
+    expect(screenshot).not.toBeNull();
+    expect(screenshot?.getAttribute('width')).toBe('1080');
+    expect(screenshot?.getAttribute('height')).toBe('2424');
+    expect(doc.querySelector('figcaption')?.textContent).toBe(DOWNLOAD_COPY[locale].rankedCaption);
     expect(doc.querySelector(`a[href="/${locale}"]`)).not.toBeNull();
     expect(doc.querySelectorAll('h1')).toHaveLength(1);
     for (const alternate of LOCALES) {
