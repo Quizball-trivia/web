@@ -29,7 +29,14 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   room_game: { capacity: 6, playable: 6, guestAllowed: true, hostStart: { min: 2, max: 6 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain"];
+
+/** Tab label, panel title and description of each room game. */
+export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey; title: MessageKey; description: MessageKey }>> = {
+  aproximado: { tab: "friend.roomTabAproximado", title: "friend.roomAproximado", description: "friend.roomGameDescription" },
+  shared_player: { tab: "friend.roomTabSharedPlayer", title: "friend.roomSharedPlayer", description: "friend.roomSharedPlayerDescription" },
+  name_chain: { tab: "friend.roomTabNameChain", title: "friend.roomNameChain", description: "friend.roomNameChainDescription" },
+};
 
 export function isRoomGameEnabled(value: unknown, enabled: readonly RoomGameId[] = ROOM_GAMES_ENABLED): value is RoomGameId {
   return ROOM_GAMES.includes(value as RoomGameId) && enabled.includes(value as RoomGameId);
@@ -62,9 +69,11 @@ export function canHostStart(mode: LobbyGameMode | null | undefined, memberCount
   return shape !== null && memberCount >= shape.min && memberCount <= shape.max;
 }
 
-/** One entry of the room's mode picker: a duel is one choice per game. */
-export type LobbyModeChoice = { gameMode: LobbyGameMode; duelGame: DuelGameId | null };
+/** One entry of the room's mode picker: a duel is one choice per game, and so is a room game. */
+export type LobbyModeChoice = { gameMode: LobbyGameMode; duelGame: DuelGameId | null; roomGame?: RoomGameId | null };
 
 export function modeChoiceKey(choice: LobbyModeChoice): string {
-  return choice.gameMode === "duel" ? `duel:${choice.duelGame}` : choice.gameMode;
+  if (choice.gameMode === "duel") return `duel:${choice.duelGame}`;
+  // A room that names no game (an older server) is the first room game.
+  return choice.gameMode === "room_game" ? `room_game:${choice.roomGame ?? ROOM_GAMES[0]}` : choice.gameMode;
 }

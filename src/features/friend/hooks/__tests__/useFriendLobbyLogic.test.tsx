@@ -6,6 +6,7 @@ import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
 import { useFriendRoomHandoffStore } from '@/stores/friendRoomHandoff.store';
 import type { LobbyState } from '@/lib/realtime/socket.types';
+import { ROOM_GAMES_ENABLED } from '@/lib/config';
 
 const mocks = vi.hoisted(() => ({
   socketEmit: vi.fn(),
@@ -1039,7 +1040,8 @@ describe('useFriendLobbyLogic room-game rooms', () => {
     useRealtimeMatchStore.getState().setLobby(makeLobby('ROOM01'));
     const { result, rerender } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
     act(() => result.current.actions.handleUpdateSettings({ gameMode: 'room_game' }));
-    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:update_settings', expect.objectContaining({ gameMode: 'room_game', roomGame: 'aproximado' }));
+    // Without a named game the first enabled one is sent.
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:update_settings', expect.objectContaining({ gameMode: 'room_game', roomGame: ROOM_GAMES_ENABLED[0] }));
     mocks.socketEmit.mockClear();
     act(() => useRealtimeMatchStore.getState().setLobby(roomLobby()));
     rerender();

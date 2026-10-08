@@ -51,6 +51,28 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "shared-player",
+    title: { en: "Played for Both", ka: "საერთო ფეხბურთელი", es: "Jugador en común", tr: "Ortak Futbolcu", },
+    description: {
+      en: "Two clubs, 10 seconds: name a footballer who played for both. 10 pairs a day.",
+      ka: "ორი კლუბი, 10 წამი: დაასახელე ფეხბურთელი, რომელმაც ორივეში ითამაშა. დღეში 10 წყვილი.",
+      es: "Dos clubes, 10 segundos: nombrá un futbolista que jugó en los dos. 10 pares por día.",
+      tr: "İki kulüp, 10 saniye: ikisinde de oynamış bir futbolcu yaz. Günde 10 eşleşme.",
+    },
+    group: "daily",
+  },
+  {
+    slug: "name-chain",
+    title: { en: "Football Name Chain", ka: "ბოლო ასოთი ფეხბურთელი", es: "Cadena de futbolistas", tr: "Son Harfle Futbolcu", },
+    description: {
+      en: "Name a footballer starting with the last letter of the previous one. 3 chains a day.",
+      ka: "დაასახელე ფეხბურთელი წინა სახელის ბოლო ასოზე. დღეში 3 ჯაჭვი.",
+      es: "Nombrá un futbolista que empiece con la última letra del anterior. 3 cadenas por día.",
+      tr: "Bir öncekinin son harfiyle başlayan futbolcuyu yaz. Günde 3 zincir.",
+    },
+    group: "daily",
+  },
+  {
     slug: "ultimo",
     title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Futbolcu Sayma Oyunu", },
     description: {

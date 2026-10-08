@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
-import type { DuelGameId, LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState, RoomGameId } from "@/lib/realtime/socket.types";
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey } from "@/lib/lobby/lobbyModes";
+import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, ROOM_GAME_LABEL_KEYS, ROOM_GAMES } from "@/lib/lobby/lobbyModes";
+import { RoomGameOptions } from "./RoomGameOptions";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -24,6 +25,8 @@ interface LobbySettingsProps {
   lobby: LobbyState | null;
   categories: CategorySummary[];
   onUpdateSettings: (settings: Partial<LobbySettingsState> & { isPublic?: boolean }) => void;
+  /** The host's choices for the room game (which clubs, how hard); null = the game's defaults. */
+  onRoomOptions?: (options: Record<string, unknown> | null) => void;
   settingsErrorVersion?: number;
 }
 
@@ -46,15 +49,18 @@ const DUEL_TAB_LABEL_KEYS: Record<DuelGameId, MessageKey> = {
   minuto: 'friend.duelTabMinuto',
 };
 
-/** The existing modes plus one tab per enabled duel game (and the room's own duel game, if it has one). */
-function modeTabs(currentDuelGame: DuelGameId | null, currentMode: LobbyGameMode): ModeTab[] {
+/** The existing modes plus one tab per enabled duel game and room game (and the room's own game, if it has one). */
+function modeTabs(currentDuelGame: DuelGameId | null, currentRoomGame: RoomGameId | null): ModeTab[] {
   const duelGames = currentDuelGame && !DUEL_GAMES_ENABLED.includes(currentDuelGame)
     ? [...DUEL_GAMES_ENABLED, currentDuelGame]
     : DUEL_GAMES_ENABLED;
+  const roomGames = currentRoomGame && !ROOM_GAMES_ENABLED.includes(currentRoomGame)
+    ? [...ROOM_GAMES_ENABLED, currentRoomGame]
+    : ROOM_GAMES_ENABLED;
   return [
     ...BASE_MODE_TABS,
     ...duelGames.map((duelGame): ModeTab => ({ choice: { gameMode: 'duel', duelGame }, labelKey: DUEL_TAB_LABEL_KEYS[duelGame] })),
-    ...(ROOM_GAMES_ENABLED.length > 0 || currentMode === 'room_game' ? [{ choice: { gameMode: 'room_game', duelGame: null }, labelKey: 'friend.roomTabAproximado' } satisfies ModeTab] : []),
+    ...roomGames.map((roomGame): ModeTab => ({ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: ROOM_GAME_LABEL_KEYS[roomGame].tab })),
   ];
 }
 
@@ -78,13 +84,15 @@ export function LobbySettings({
   lobby,
   categories,
   onUpdateSettings,
+  onRoomOptions,
   settingsErrorVersion = 0,
 }: LobbySettingsProps) {
   const { t } = useLocale();
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const serverDuelGame = serverMode === 'duel' ? settings?.duelGame ?? null : null;
-  const serverChoiceKey = modeChoiceKey({ gameMode: serverMode, duelGame: serverDuelGame });
+  const serverRoomGame = serverMode === 'room_game' ? settings?.roomGame ?? ROOM_GAMES[0] : null;
+  const serverChoiceKey = modeChoiceKey({ gameMode: serverMode, duelGame: serverDuelGame, roomGame: serverRoomGame });
   const memberCount = lobby?.members.length ?? 0;
   // Only party quiz seats more than 3, so past that the tabs disappear
   // entirely; at exactly 3 the tabs stay and per-tab capacity gating below
@@ -152,7 +160,8 @@ export function LobbySettings({
 
   const mode = optimisticMode?.gameMode ?? serverMode;
   const duelGame = optimisticMode ? optimisticMode.duelGame : serverDuelGame;
-  const currentChoiceKey = modeChoiceKey({ gameMode: mode, duelGame });
+  const roomGame = optimisticMode ? (optimisticMode.gameMode === 'room_game' ? optimisticMode.roomGame ?? ROOM_GAMES[0] : null) : serverRoomGame;
+  const currentChoiceKey = modeChoiceKey({ gameMode: mode, duelGame, roomGame });
   const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const isAuctionMode = mode === 'auction';
   const isFootballGridMode = mode === 'football_grid';
@@ -277,7 +286,7 @@ export function LobbySettings({
     const applied =
       (inFlight.isPublic === undefined || inFlight.isPublic === serverIsPublic) &&
       (inFlight.gameMode === undefined ||
-        modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null }) === serverChoiceKey) &&
+        modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null, roomGame: inFlight.roomGame ?? null }) === serverChoiceKey) &&
       (inFlight.friendlyRandom === undefined || inFlight.friendlyRandom === serverIsRandom) &&
       (inFlight.friendlyCategoryAId === undefined ||
         inFlight.friendlyCategoryAId === (settings?.friendlyCategoryAId ?? null));
@@ -389,16 +398,16 @@ export function LobbySettings({
     const pending = pendingChangesRef.current;
     const inFlight = inFlightChangesRef.current;
     const targetKey = pending.gameMode !== undefined
-      ? modeChoiceKey({ gameMode: pending.gameMode, duelGame: pending.duelGame ?? null })
+      ? modeChoiceKey({ gameMode: pending.gameMode, duelGame: pending.duelGame ?? null, roomGame: pending.roomGame ?? null })
       : inFlight?.gameMode !== undefined
-        ? modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null })
+        ? modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null, roomGame: inFlight.roomGame ?? null })
         : serverChoiceKey;
     const choiceKey = modeChoiceKey(choice);
     setOptimisticMode(choice);
     if (choiceKey !== targetKey) {
-      queueChange({ gameMode: choice.gameMode, duelGame: choice.duelGame });
+      queueChange({ gameMode: choice.gameMode, duelGame: choice.duelGame, roomGame: choice.gameMode === 'room_game' ? choice.roomGame ?? ROOM_GAMES[0] : null });
     } else {
-      clearPendingKeys(["gameMode", "duelGame"]);
+      clearPendingKeys(["gameMode", "duelGame", "roomGame"]);
       if (choiceKey === serverChoiceKey) {
         setOptimisticMode(null);
       }
@@ -588,7 +597,7 @@ export function LobbySettings({
             </div>
           ) : (
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
-              {modeTabs(serverDuelGame, serverMode).map(({ choice, labelKey }) => {
+              {modeTabs(serverDuelGame, serverRoomGame).map(({ choice, labelKey }) => {
                 const key = modeChoiceKey(choice);
                 const overCapacity = memberCount > LOBBY_MODES[choice.gameMode].playable;
                 const guestLocked = hasGuest && !LOBBY_MODES[choice.gameMode].guestAllowed;
@@ -634,7 +643,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || MODE_DESCRIPTION_KEYS[mode])}
+              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && ROOM_GAME_LABEL_KEYS[roomGame].description) || MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -905,8 +914,11 @@ export function LobbySettings({
               className="uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
             >
-              {t("friend.roomAproximado")}
+              {t(ROOM_GAME_LABEL_KEYS[roomGame ?? ROOM_GAMES[0]].title)}
             </h4>
+            {roomGame === 'shared_player' && roomGame === serverRoomGame && (
+              <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
           </div>
         )}
 

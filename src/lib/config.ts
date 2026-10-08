@@ -27,11 +27,17 @@ export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "
  * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas,ultimo".
  * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
  */
-/** Room games (2–6 players) offered in friend rooms, e.g. "aproximado". Mirrors the backend ROOM_GAMES_ENABLED. */
-export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = (process.env.NEXT_PUBLIC_ROOM_GAMES ?? "")
-  .split(",")
-  .map((game) => game.trim())
-  .filter((game): game is RoomGameId => game === "aproximado");
+const isRoomGameId = (game: string): game is RoomGameId => game === "aproximado" || game === "shared_player" || game === "name_chain";
+const roomGameList = (raw: string | undefined): RoomGameId[] => (raw ?? "").split(",").map((game) => game.trim()).filter(isRoomGameId);
+/** On without any configuration (as on the backend); NEXT_PUBLIC_ROOM_GAMES_DISABLED still switches one off. */
+const ROOM_GAMES_ON_BY_DEFAULT: readonly RoomGameId[] = ["shared_player", "name_chain"];
+const ROOM_GAMES_DISABLED = roomGameList(process.env.NEXT_PUBLIC_ROOM_GAMES_DISABLED);
+/**
+ * Room games (2–6 players) offered in friend rooms: the ones named in NEXT_PUBLIC_ROOM_GAMES (e.g. "aproximado") and
+ * the ones on by default, minus the disabled ones. Mirrors the backend's room.config.ts.
+ */
+export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = [...new Set([...roomGameList(process.env.NEXT_PUBLIC_ROOM_GAMES), ...ROOM_GAMES_ON_BY_DEFAULT])]
+  .filter((game) => !ROOM_GAMES_DISABLED.includes(game));
 
 export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
   .split(",")

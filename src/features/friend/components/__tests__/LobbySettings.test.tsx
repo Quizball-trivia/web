@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { LobbySettings } from "../LobbySettings";
 import type { LobbyGameMode, LobbyState } from "@/lib/realtime/socket.types";
 
+// These cases are about rooms without any room game (a big lobby is then locked to the party quiz).
+vi.mock("@/lib/config", async (original) => ({ ...(await original<typeof import("@/lib/config")>()), ROOM_GAMES_ENABLED: [] }));
+
 vi.mock("@/contexts/LocaleContext", () => ({
   useLocale: () => ({
     t: (key: string, params?: Record<string, string | number>) =>

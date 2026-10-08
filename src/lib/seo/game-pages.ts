@@ -69,6 +69,10 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu" },
   "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu" },
   "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki" },
+  // Names follow what people search (2026-10-08): "played for both clubs", "jugador en común", "ortak futbolcu oyunu",
+  // "football name chain", "son harfle futbolcu". KA follows EN.
+  "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu" },
+  "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -945,6 +949,74 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Her gün kapalı listeli beş futbol kategorisi gelir: bir Dünya Kupası kadrosu, Libertadores şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda say; süre her cevapla kısalır, 20 saniyeden 6'ya iner. Üst üste üç yanlış ya da süre bitince kategori sona erer.",
       howToPlay: ["Kategoriyi oku: liste kapalıdır, yani her cevap ya doğrudur ya yanlış.", "Cevapları art arda say. Süre 20 saniyeyle başlar ve her cevapla kısalır, 6 saniyeye kadar.", "Üst üste üç yanlış ya da süre bitince kategori sona erer. Her cevap 1 puan.", "Listenin tamamını say, +5 bonus kazan. Beş karelik sonucunu paylaş."],
       reward: "Önceki günleri hesapsız oyna; bugünün kategorileri, seri ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("played-for-both-clubs", "/ortak-futbolcu", "shared-player", {
+    en: {
+      metaTitle: "Played for Both — Name a Footballer Who Played for Both Clubs | QuizBall",
+      metaDescription: "A daily football game: two clubs appear and you have 10 seconds to name a player who played for both. 10 pairs a day, or race up to 5 friends online in a room.",
+      title: "Played for Both",
+      intro: "Two clubs appear on screen: Arsenal and Barcelona, Milan and Inter, Galatasaray and Fenerbahçe. You have 10 seconds to type a footballer who played for both. Ten pairs every day, a point for each one you find, and a daily leaderboard for the fastest.",
+      howToPlay: ["Two club crests are revealed at the same moment.", "Type any footballer who played for both clubs. The surname is enough, and small typos are forgiven.", "You have 10 seconds per pair. A wrong answer blocks you for 1 second, so guessing wildly does not pay.", "Find a pair for 1 point. With equal scores, the faster player ranks higher. Share your result or challenge your friends in a room."],
+      reward: "Play past days without an account; sign in for today's ten pairs and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "საერთო ფეხბურთელი — დაასახელე ფეხბურთელი, რომელმაც ორივე კლუბში ითამაშა | QuizBall",
+      metaDescription: "ყოველდღიური საფეხბურთო თამაში: ჩნდება ორი კლუბი და 10 წამში უნდა დაასახელო ფეხბურთელი, რომელმაც ორივეში ითამაშა. დღეში 10 წყვილი, ან ითამაშე მეგობრებთან ოთახში.",
+      title: "საერთო ფეხბურთელი",
+      intro: "ეკრანზე ორი კლუბი ჩნდება: არსენალი და ბარსელონა, მილანი და ინტერი, გალათასარაი და ფენერბაჰჩე. 10 წამი გაქვს, რომ დაწერო ფეხბურთელი, რომელმაც ორივეში ითამაშა. ყოველდღე ათი წყვილი, ყოველ ნაპოვნზე ერთი ქულა და დღის რეიტინგი ყველაზე სწრაფებისთვის.",
+      howToPlay: ["ორი კლუბის ემბლემა ერთდროულად ჩნდება.", "დაწერე ნებისმიერი ფეხბურთელი, რომელმაც ორივე კლუბში ითამაშა. გვარიც საკმარისია, მცირე შეცდომები გეპატიება.", "თითო წყვილზე 10 წამი გაქვს. არასწორი პასუხი 1 წამით გაჩერებს.", "ნაპოვნი წყვილი 1 ქულაა. თანაბარი ქულებისას უფრო სწრაფი მაღლა დგას. გააზიარე შედეგი ან გამოიწვიე მეგობრები ოთახში."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი ათი წყვილისთვის და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Jugador en común — Nombrá un futbolista que jugó en los dos clubes | QuizBall",
+      metaDescription: "Juego diario de fútbol: aparecen dos clubes y tenés 10 segundos para nombrar a un jugador que pasó por los dos. 10 pares por día, o competí con hasta 5 amigos en una sala.",
+      title: "Jugador en común",
+      intro: "Aparecen dos clubes en pantalla: Boca y River, Real Madrid y Barcelona, América y Chivas. Tenés 10 segundos para escribir un futbolista que jugó en los dos. Diez pares cada día, un punto por cada uno que encontrás y un ranking diario para los más rápidos.",
+      howToPlay: ["Los dos escudos aparecen al mismo tiempo.", "Escribí cualquier futbolista que jugó en los dos clubes. Alcanza con el apellido y se perdonan errores de tipeo.", "Tenés 10 segundos por par. Una respuesta incorrecta te frena 1 segundo, así que tirar nombres al azar no sirve.", "Cada par encontrado vale 1 punto. Con el mismo puntaje, el más rápido queda arriba. Compartí tu resultado o desafiá a tus amigos en una sala."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, los diez pares de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Ortak Futbolcu Bulma Oyunu — İki Takımda da Oynayan Futbolcuyu Bul | QuizBall",
+      metaDescription: "Günlük futbol oyunu: iki kulüp gösterilir ve ikisinde de oynamış bir futbolcuyu yazmak için 10 saniyen var. Günde 10 eşleşme; ya da arkadaşlarınla odada yarış.",
+      title: "Ortak Futbolcu Bulma Oyunu",
+      intro: "Ekrana iki kulüp gelir: Galatasaray ve Fenerbahçe, Beşiktaş ve Trabzonspor, Real Madrid ve Barcelona. İkisinde de oynamış bir futbolcuyu yazmak için 10 saniyen var. Her gün on eşleşme, bulduğun her biri için bir puan ve en hızlılar için günlük sıralama.",
+      howToPlay: ["İki kulübün arması aynı anda açılır.", "İkisinde de oynamış herhangi bir futbolcuyu yaz. Soyadı yeterli; küçük yazım hataları kabul edilir.", "Her eşleşme için 10 saniyen var. Yanlış cevap seni 1 saniye bekletir, yani rastgele isim yazmak işe yaramaz.", "Bulduğun her eşleşme 1 puan. Puanlar eşitse hızlı olan üstte yer alır. Sonucunu paylaş ya da arkadaşlarını odada yarışa çağır."],
+      reward: "Önceki günleri hesapsız oyna; bugünün on eşleşmesi ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("football-name-chain", "/son-harfle", "name-chain", {
+    en: {
+      metaTitle: "Football Name Chain — Last Letter Footballer Game | QuizBall",
+      metaDescription: "The football word chain game: name a footballer who starts with the last letter of the previous one. 10 seconds per name, three chains a day, or play with up to 5 friends.",
+      title: "Football Name Chain",
+      intro: "We give you a footballer; you answer with another one whose name starts with the last letter of his. Kane, then Eto'o, then Ozil, then Lewandowski. You have 10 seconds per name and the clock gets shorter as the chain grows. Three chains a day: how many footballers can you name?",
+      howToPlay: ["The game gives you a starting footballer and shows the letter you need.", "Type a footballer whose first name or surname starts with that letter. Anthony Martial counts for A and for M.", "You have 10 seconds per name; every five names the clock gets a second shorter. No footballer can be used twice.", "When the clock runs out the chain ends and a new one starts. Three chains a day; your score is every footballer you named."],
+      reward: "Play past days without an account; sign in for today's chains and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ბოლო ასოთი ფეხბურთელი — ფეხბურთელების ჯაჭვის თამაში | QuizBall",
+      metaDescription: "საფეხბურთო სიტყვების ჯაჭვი: დაასახელე ფეხბურთელი, რომლის სახელი წინა ფეხბურთელის ბოლო ასოთი იწყება. თითო სახელზე 10 წამი, დღეში სამი ჯაჭვი, ან ითამაშე მეგობრებთან.",
+      title: "ბოლო ასოთი ფეხბურთელი",
+      intro: "ჩვენ გაძლევთ ფეხბურთელს; შენ პასუხობ სხვით, რომლის სახელი მისი სახელის ბოლო ასოთი იწყება. თითო სახელზე 10 წამი გაქვს და ჯაჭვის ზრდასთან ერთად დრო მოკლდება. დღეში სამი ჯაჭვი: რამდენ ფეხბურთელს დაასახელებ?",
+      howToPlay: ["თამაში გაძლევს საწყის ფეხბურთელს და გიჩვენებს საჭირო ასოს.", "დაწერე ფეხბურთელი, რომლის სახელი ან გვარი ამ ასოთი იწყება. სახელები ლათინური ასოებით იწერება.", "თითო სახელზე 10 წამი გაქვს; ყოველ ხუთ სახელზე დრო ერთი წამით მოკლდება. ერთი ფეხბურთელი ორჯერ არ ითვლება.", "დროის ამოწურვისას ჯაჭვი მთავრდება და ახალი იწყება. დღეში სამი ჯაჭვი; შენი ქულა ყველა დასახელებული ფეხბურთელია."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი ჯაჭვებისთვის და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Cadena de futbolistas — El juego de la última letra | QuizBall",
+      metaDescription: "El juego de palabras encadenadas del fútbol: nombrá un futbolista que empiece con la última letra del anterior. 10 segundos por nombre, tres cadenas por día, o jugá con amigos.",
+      title: "Cadena de futbolistas",
+      intro: "Te damos un futbolista; vos respondés con otro cuyo nombre empiece con la última letra del suyo. Tenés 10 segundos por nombre y el reloj se acorta a medida que la cadena crece. Tres cadenas por día: ¿cuántos futbolistas podés nombrar?",
+      howToPlay: ["El juego te da un futbolista para empezar y te muestra la letra que necesitás.", "Escribí un futbolista cuyo nombre o apellido empiece con esa letra. Anthony Martial sirve para la A y para la M.", "Tenés 10 segundos por nombre; cada cinco nombres el reloj se acorta un segundo. Ningún futbolista vale dos veces.", "Cuando se acaba el reloj termina la cadena y empieza otra. Tres cadenas por día; tu puntaje es cada futbolista que nombraste."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las cadenas de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Son Harfle Futbolcu — Son Harften Futbolcu Bulma Oyunu | QuizBall",
+      metaDescription: "Futbolun kelime zinciri oyunu: bir önceki futbolcunun son harfiyle başlayan bir futbolcu yaz. Her isim için 10 saniye, günde üç zincir; ya da arkadaşlarınla oyna.",
+      title: "Son Harfle Futbolcu",
+      intro: "Biz bir futbolcu veriyoruz; sen, adının son harfiyle başlayan başka bir futbolcuyla cevap veriyorsun. Her isim için 10 saniyen var ve zincir uzadıkça süre kısalır. Günde üç zincir: kaç futbolcu sayabilirsin?",
+      howToPlay: ["Oyun başlangıç için bir futbolcu verir ve gereken harfi gösterir.", "Adı ya da soyadı o harfle başlayan bir futbolcu yaz. Anthony Martial hem A hem M için geçerlidir.", "Her isim için 10 saniyen var; her beş isimde süre bir saniye kısalır. Aynı futbolcu iki kez söylenemez.", "Süre bitince zincir biter ve yenisi başlar. Günde üç zincir; puanın saydığın bütün futbolculardır."],
+      reward: "Önceki günleri hesapsız oyna; bugünün zincirleri ve günün sıralaması için giriş yap.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {

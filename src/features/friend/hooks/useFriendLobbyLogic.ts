@@ -139,7 +139,11 @@ interface InviteJoinFailure {
 export function newRoomPathFor(room: LobbyJoinRoomInfo | null): string {
   if (room?.gameMode === "auction" || room?.gameMode === "football_grid") return `/friend/room/new?game=${room.gameMode}`;
   if (room?.gameMode === "duel" && room.duelGame) return `/friend/room/new?duel=${room.duelGame}`;
-  if (room?.gameMode === "room_game") return "/friend/room/new?room=aproximado";
+  // The same room game when it is known and offered here, else the first one offered.
+  if (room?.gameMode === "room_game") {
+    const game = ROOM_GAMES_ENABLED.find((enabled) => enabled === room.roomGame) ?? ROOM_GAMES_ENABLED[0];
+    return game ? `/friend/room/new?room=${game}` : "/friend/room/new";
+  }
   return "/friend/room/new";
 }
 
@@ -911,6 +915,12 @@ export function useFriendLobbyLogic({
     logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
 
+  const handleRoomOptions = useCallback((options: Record<string, unknown> | null) => {
+    if (!activeLobby || activeLobby.settings.gameMode !== "room_game") return;
+    getSocket().emit("lobby:room_options", { lobbyId: activeLobby.lobbyId, options });
+    logger.info("Socket emit lobby:room_options", { lobbyId: activeLobby.lobbyId });
+  }, [activeLobby]);
+
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
     if (!activeLobby) return;
 
@@ -920,7 +930,10 @@ export function useFriendLobbyLogic({
     };
     // Only a duel carries its game; leaving a duel drops it. Same for a room game.
     const duelGame = nextSettings.gameMode === "duel" ? nextSettings.duelGame ?? null : null;
-    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? ROOM_GAMES_ENABLED[0] ?? "aproximado" : null;
+    // A room that is already a room-game room without a named game predates the name (it is Aproximado, as the
+    // settings screen shows it): another change must not switch its game. A switch INTO room games takes the first offered.
+    const unnamedRoomGame = activeLobby.settings?.gameMode === "room_game" ? "aproximado" : ROOM_GAMES_ENABLED[0] ?? "aproximado";
+    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? unnamedRoomGame : null;
     const emit = {
       lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
@@ -1090,6 +1103,7 @@ export function useFriendLobbyLogic({
       copyCode,
       handleReadyToggle,
       handleUpdateSettings,
+      handleRoomOptions,
       handleStartMatch,
       handleLeaveLobby,
       handleInviteRetry,

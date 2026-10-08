@@ -245,6 +245,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
             lobby={lobby}
             categories={allCategories}
             onUpdateSettings={actions.handleUpdateSettings}
+            onRoomOptions={actions.handleRoomOptions}
             settingsErrorVersion={settingsErrorVersion}
           />
         </div>
