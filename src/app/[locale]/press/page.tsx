@@ -7,7 +7,8 @@ import { ArrowDownToLine, ArrowRight, CheckCircle2, ChevronLeft, Mail, Newspaper
 import { AppLogo } from "@/components/AppLogo";
 import { campaignHubPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 import type { KnowledgeIndexLocale } from "@/lib/seo/football-knowledge-index";
-import { getPressResourcesCopy } from "@/lib/seo/press-resources";
+import { getPressResourcesCopy, PRESS_LAST_UPDATED } from "@/lib/seo/press-resources";
+import { DOWNLOAD_COPY, GOOGLE_PLAY_URL } from "@/lib/seo/app-download";
 import {
   SITE_NAME,
   SITE_OG_IMAGE_ALT,
@@ -83,6 +84,7 @@ export default async function PressResourcesPage({
     title: copy.metaTitle,
     description: copy.metaDescription,
     pageType: "WebPage",
+    dateModified: PRESS_LAST_UPDATED,
   });
 
   return (
@@ -164,11 +166,15 @@ export default async function PressResourcesPage({
                 [`/${locale}/editorial-methodology`, copy.methodologyLink],
                 [`/${locale}/about`, copy.aboutLink],
                 [campaignHubPath(locale), copy.quizzesLink],
+                [`/${locale}/download`, copy.downloadLink],
               ].map(([href, label]) => (
                 <Link key={href} href={href} className="inline-flex items-center gap-2 font-semibold text-brand-cyan hover:underline">
                   {label}<ArrowRight className="size-4" aria-hidden />
                 </Link>
               ))}
+              <a href={GOOGLE_PLAY_URL} className="inline-flex items-center gap-2 font-semibold text-brand-cyan hover:underline">
+                {DOWNLOAD_COPY[locale].storeCta}<ArrowRight className="size-4" aria-hidden />
+              </a>
             </nav>
           </div>
         </section>

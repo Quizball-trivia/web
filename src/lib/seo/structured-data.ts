@@ -35,6 +35,7 @@ export function buildSiteStructuredData() {
         "@type": "Organization",
         "@id": SITE_SCHEMA_IDS.organization,
         name: SITE_NAME,
+        legalName: "Quizball LLC",
         alternateName: ["QuizBall", "Quiz Ball"],
         url: SITE_URL,
         description: SITE_DESCRIPTION,
@@ -61,7 +62,7 @@ export function buildSiteStructuredData() {
         "@type": "WebSite",
         "@id": SITE_SCHEMA_IDS.website,
         name: SITE_NAME,
-        alternateName: "QuizBall",
+        alternateName: ["QuizBall", "quizball.io"],
         url: SITE_URL,
         description: SITE_DESCRIPTION,
         publisher: { "@id": SITE_SCHEMA_IDS.organization },
@@ -109,6 +110,7 @@ interface EditorialPageStructuredDataInput {
   title: string;
   description: string;
   pageType: "AboutPage" | "WebPage";
+  dateModified?: string;
 }
 
 export function buildEditorialPageStructuredData({
@@ -117,6 +119,7 @@ export function buildEditorialPageStructuredData({
   title,
   description,
   pageType,
+  dateModified = "2026-08-30",
 }: EditorialPageStructuredDataInput) {
   const pageUrl = `${SITE_URL}/${locale}${path}`;
 
@@ -128,7 +131,7 @@ export function buildEditorialPageStructuredData({
     name: title,
     description,
     inLanguage: LANGUAGE_TAG[locale],
-    dateModified: "2026-08-30",
+    dateModified,
     isPartOf: { "@id": SITE_SCHEMA_IDS.website },
     about: { "@id": SITE_SCHEMA_IDS.organization },
     mainEntity: { "@id": SITE_SCHEMA_IDS.organization },
