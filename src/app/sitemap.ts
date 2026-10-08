@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
+import { DOWNLOAD_UPDATED_AT } from "@/lib/seo/app-download";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
@@ -35,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // "" = the locale homepage (/en, /ka, /es), which is the Football Games hub.
     ["", "weekly", 1.0],
     ["/about", "monthly", 0.7, editorialContentUpdated],
-    ["/download", "monthly", 0.8],
+    ["/download", "monthly", 0.8, new Date(DOWNLOAD_UPDATED_AT)],
     ["/editorial-methodology", "monthly", 0.6, editorialContentUpdated],
     ["/terms", "yearly", 0.3],
     ["/privacy", "yearly", 0.3],

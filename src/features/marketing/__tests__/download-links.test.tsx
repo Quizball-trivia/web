@@ -17,6 +17,8 @@ describe('Android discovery links in server-rendered pages', () => {
     const doc = new DOMParser().parseFromString(renderToStaticMarkup(<HubBody locale={locale} />), 'text/html');
     expect(doc.querySelector(`a[href="${downloadPath(locale)}"]`)?.textContent).toBe(DOWNLOAD_COPY[locale].homeCta);
     expect(doc.querySelector(`a[href="${GOOGLE_PLAY_URL}"]`)?.textContent).toContain(DOWNLOAD_COPY[locale].storeCta);
+    expect(doc.body.textContent).toContain(DOWNLOAD_COPY[locale].description);
+    expect(DOWNLOAD_COPY[locale].homeCta).toContain('Google Play');
   });
 
   it.each(LOCALES)('keeps the download link in both phone and desktop footer HTML for %s', (locale) => {

@@ -7,6 +7,7 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
 }));
 
 import sitemap from '../sitemap';
+import { DOWNLOAD_UPDATED_AT } from '@/lib/seo/app-download';
 
 describe('sitemap lastModified signals', () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe('sitemap lastModified signals', () => {
     for (const locale of ['en', 'ka', 'es', 'tr']) {
       const downloads = entries.filter((entry) => entry.url === `https://quizball.io/${locale}/download`);
       expect(downloads).toHaveLength(1);
-      expect(downloads[0].lastModified).toBeUndefined();
+      expect(downloads[0].lastModified).toEqual(new Date(DOWNLOAD_UPDATED_AT));
     }
     expect(entries.find((entry) => entry.url.endsWith('/en/about'))?.lastModified)
       .toEqual(new Date('2026-08-30T00:00:00.000Z'));
