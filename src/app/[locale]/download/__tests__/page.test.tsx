@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LOCALES } from '@/lib/i18n/locale';
-import { DOWNLOAD_COPY, GOOGLE_PLAY_URL, buildDownloadStructuredData } from '@/lib/seo/app-download';
+import { DOWNLOAD_COPY, DOWNLOAD_UPDATED_AT, GOOGLE_PLAY_URL, buildDownloadStructuredData } from '@/lib/seo/app-download';
 import { isLightweightSeoRoute } from '@/lib/seo/lightweight-routes';
 
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-nonce': 'test-download-nonce' }) }));
@@ -20,6 +20,8 @@ describe('official Android download page', () => {
     const html = renderToStaticMarkup(await DownloadPage({ params: Promise.resolve({ locale }) }));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelector('h1')?.textContent).toContain(DOWNLOAD_COPY[locale].title);
+    expect(doc.querySelector('h1')?.textContent).toContain('Quizball');
+    expect(doc.querySelector('h1')?.textContent).toContain('Android');
     expect(doc.querySelector(`a[href="${GOOGLE_PLAY_URL}"]`)?.textContent).toContain(DOWNLOAD_COPY[locale].storeCta);
     expect(doc.querySelectorAll(`a[href="${GOOGLE_PLAY_URL}"]`)).toHaveLength(1);
     expect(doc.body.textContent).toContain(DOWNLOAD_COPY[locale].officialNote);
@@ -38,8 +40,23 @@ describe('official Android download page', () => {
     const script = doc.querySelector('script[type="application/ld+json"]');
     expect(script?.getAttribute('nonce')).toBe('test-download-nonce');
     expect(JSON.parse(script?.textContent ?? '{}')).toMatchObject({
-      '@type': 'WebPage', inLanguage: locale, significantLink: GOOGLE_PLAY_URL,
+      '@type': 'WebPage', inLanguage: locale, significantLink: GOOGLE_PLAY_URL, dateModified: DOWNLOAD_UPDATED_AT,
     });
+    const data = JSON.parse(script?.textContent ?? '{}');
+    expect(data.breadcrumb.itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, name: DOWNLOAD_COPY[locale].homeLabel, item: `https://quizball.io/${locale}` },
+      { '@type': 'ListItem', position: 2, name: DOWNLOAD_COPY[locale].homeCta, item: `https://quizball.io/${locale}/download` },
+    ]);
+    expect(doc.querySelector(`main nav[aria-label="${DOWNLOAD_COPY[locale].homeCta}"] [aria-current="page"]`)?.textContent).toBe(DOWNLOAD_COPY[locale].homeCta);
+    expect(doc.querySelectorAll('ol li')).toHaveLength(3);
+    expect(doc.querySelectorAll('details')).toHaveLength(3);
+    for (const item of DOWNLOAD_COPY[locale].questions) {
+      // Useful installation answers must remain readable without JavaScript.
+      expect(doc.body.textContent).toContain(item.question);
+      expect(doc.body.textContent).toContain(item.answer);
+    }
+    expect(doc.querySelector('dl')?.textContent).toContain('io.quizball.mobile');
+    expect(doc.querySelector('dl')?.textContent).toContain('Quizball LLC');
   });
 
   it.each(LOCALES)('sets canonical and reciprocal alternates for %s without overriding indexability', async (locale) => {
@@ -61,6 +78,9 @@ describe('official Android download page', () => {
       expect(data).not.toHaveProperty('aggregateRating');
       expect(data).not.toHaveProperty('review');
       expect(data).not.toHaveProperty('interactionStatistic');
+      expect(data['@type']).toBe('WebPage');
+      // No invented app reviews or FAQ rich-result eligibility for a games page.
+      expect(data).not.toHaveProperty('mainEntity');
     }
   });
 

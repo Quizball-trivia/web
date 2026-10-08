@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowUpRight, Smartphone } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ChevronDown, Smartphone } from 'lucide-react';
 import { LOCALES, isLocale } from '@/lib/i18n/locale';
 import { LOCALES as LANGUAGE_OPTIONS } from '@/lib/i18n/messages';
 import { buildLocalizedMetadata } from '@/lib/i18n/metadata';
@@ -50,6 +50,10 @@ export default async function DownloadPage({ params }: { params: Params }) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
+        <nav aria-label={copy.homeCta} className="mb-5 flex flex-wrap items-center gap-2 text-xs text-white/65">
+          <Link href={`/${locale}`} className="underline underline-offset-4 hover:text-brand-yellow">{copy.homeLabel}</Link>
+          <span aria-hidden>/</span><span aria-current="page">{copy.homeCta}</span>
+        </nav>
         <section className="relative isolate grid gap-10 overflow-hidden rounded-[24px] bg-brand-blue px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center lg:gap-12 xl:px-12">
           <div className="min-w-0">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-brand-yellow">
@@ -89,6 +93,42 @@ export default async function DownloadPage({ params }: { params: Params }) {
             ))}
           </div>
           <p className="mt-6 max-w-3xl text-sm leading-6 text-white/70">{copy.accountNote}</p>
+        </section>
+
+        <section aria-labelledby="download-install" className="grid gap-8 pt-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] md:pt-14">
+          <div>
+            <h2 id="download-install" className="text-xl font-bold md:text-2xl">{copy.installTitle}</h2>
+            <ol className="mt-6 space-y-5">
+              {copy.installSteps.map((step, index) => (
+                <li key={step} className="flex items-start gap-4 text-sm leading-6 text-white/80">
+                  <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow font-bold text-black">{index + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="min-w-0 border-l-4 border-brand-yellow pl-5">
+            <h2 className="text-lg font-bold">{copy.identityTitle}</h2>
+            <dl className="mt-5 space-y-4 text-sm">
+              <div><dt className="text-white/60">{copy.publisherLabel}</dt><dd className="mt-1 font-semibold">Quizball LLC</dd></div>
+              <div><dt className="text-white/60">{copy.packageLabel}</dt><dd className="mt-1 font-mono [overflow-wrap:anywhere]">io.quizball.mobile</dd></div>
+            </dl>
+            <p className="mt-5 text-xs leading-5 text-white/70">{copy.officialNote}</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="download-questions" className="pt-10 md:pt-14">
+          <h2 id="download-questions" className="text-xl font-bold md:text-2xl">{copy.questionsTitle}</h2>
+          <div className="mt-5 divide-y divide-white/15 border-y border-white/15">
+            {copy.questions.map((item) => (
+              <details key={item.question} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                  <span>{item.question}</span><ChevronDown aria-hidden className="size-5 shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-white/75">{item.answer}</p>
+              </details>
+            ))}
+          </div>
         </section>
       </main>
 
