@@ -930,7 +930,10 @@ export function useFriendLobbyLogic({
     };
     // Only a duel carries its game; leaving a duel drops it. Same for a room game.
     const duelGame = nextSettings.gameMode === "duel" ? nextSettings.duelGame ?? null : null;
-    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? ROOM_GAMES_ENABLED[0] ?? "aproximado" : null;
+    // A room that is already a room-game room without a named game predates the name (it is Aproximado, as the
+    // settings screen shows it): another change must not switch its game. A switch INTO room games takes the first offered.
+    const unnamedRoomGame = activeLobby.settings?.gameMode === "room_game" ? "aproximado" : ROOM_GAMES_ENABLED[0] ?? "aproximado";
+    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? unnamedRoomGame : null;
     const emit = {
       lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
