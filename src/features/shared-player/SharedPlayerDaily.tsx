@@ -28,9 +28,12 @@ type Result = "ok" | "wrong" | "locked" | "late";
 export const sharedPlayerDailyApi = createWordDailyApi<SharedPlayerDailyState, Result, { day: string; pairs: PairResult[] }>("/api/v1/shared-player");
 const loadBoard = (day: string, locale: string) => sharedPlayerDailyApi.leaderboard(day, locale);
 
+/** Day 5 is 2026-10-10: from there a pair lasts twenty seconds, the four days before it ten (the server decides; this is the intro's wording). */
+const LONG_CLOCK_FROM_DAY = 5;
+
 export const sharedPlayerDailyGame = (locale: string): WordDailyGame => {
   const d = sharedPlayerDailyCopy(locale);
-  return { modeId: "sharedPlayer", route: "/ortak-futbolcu", roomGame: "shared_player", brand: sharedPlayerCopy(locale).brand, hero: "/assets/demos/game-modes/ortak-futbolcu.webp", calendar: SHARED_PLAYER_CALENDAR, tag: d.tag, lines: d.lines };
+  return { modeId: "sharedPlayer", route: "/ortak-futbolcu", roomGame: "shared_player", brand: sharedPlayerCopy(locale).brand, hero: "/assets/demos/game-modes/ortak-futbolcu.webp", calendar: SHARED_PLAYER_CALENDAR, tag: d.tag, lines: (dayNumber) => d.lines(dayNumber >= LONG_CLOCK_FROM_DAY ? 20 : 10) };
 };
 
 export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }: {

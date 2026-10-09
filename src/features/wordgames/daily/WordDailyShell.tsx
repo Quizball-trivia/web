@@ -28,7 +28,8 @@ export interface WordDailyGame {
   hero: string;
   calendar: WordDailyCalendar;
   tag: string;
-  lines: readonly string[];
+  /** The rules shown on the intro; a function when they depend on the day (its number). */
+  lines: readonly string[] | ((dayNumber: number) => readonly string[]);
 }
 
 export function Centered({ children }: { children: ReactNode }) {
@@ -81,7 +82,7 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
       <Brand words={game.brand} className="mt-5 text-3xl leading-none" />
       <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number} · {game.tag}</p>
       <ul className="mt-4 space-y-2 text-sm leading-snug text-white/85">
-        {game.lines.map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
+        {(typeof game.lines === "function" ? game.lines(number) : game.lines).map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
       </ul>
       {guestOnPastBoard && (
         <div className="mt-4 rounded-2xl border border-brand-yellow/60 bg-brand-yellow/10 px-4 py-3">
