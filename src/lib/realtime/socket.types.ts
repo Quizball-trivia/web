@@ -5,6 +5,16 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
+/**
+ * The game the sender's screen showed when they pressed Ready or Start. The server refuses the command
+ * (`LOBBY_SETTINGS_CHANGED`) when the room is on another game by the time it arrives.
+ */
+export interface LobbySeenGame {
+  gameMode: LobbyGameMode;
+  duelGame?: DuelGameId | null;
+  roomGame?: RoomGameId | null;
+}
+
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
 export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain';
@@ -1755,7 +1765,7 @@ export interface ClientToServerEvents {
     ack?: (result: LobbyJoinByCodeResult) => void
   ) => void;
   'lobby:leave': (data?: { correlationId?: string }, ack?: (result: LobbyLeaveResult) => void) => void;
-  'lobby:ready': (data: { ready: boolean }) => void;
+  'lobby:ready': (data: { ready: boolean; seen?: LobbySeenGame }) => void;
   /** Host only, room-game rooms: the game's options (null = back to its defaults). Changing them un-readies everyone. */
   'lobby:room_options': (data: { lobbyId?: string; options: Record<string, unknown> | null }) => void;
   'lobby:update_settings': (data: {
@@ -1770,7 +1780,7 @@ export interface ClientToServerEvents {
     friendlyCategoryBId?: string | null;
     isPublic?: boolean;
   }) => void;
-  'lobby:start': (data?: { lobbyId?: string }) => void;
+  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame }) => void;
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;

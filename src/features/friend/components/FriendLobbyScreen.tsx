@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { CheckCircle2, Loader2, LogOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,8 +10,13 @@ import { type FriendLobbyInviteSource, useFriendLobbyLogic } from "../hooks/useF
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 import { InviteFailureScreen } from "./InviteFailureScreen";
 import { useLocale } from "@/contexts/LocaleContext";
-import type { DuelGameId, RoomGameId } from "@/lib/realtime/socket.types";
-import { canHostStart, lobbyModeCapabilities } from "@/lib/lobby/lobbyModes";
+import type { DuelGameId, LobbySeenGame, RoomGameId } from "@/lib/realtime/socket.types";
+import { canHostStart, lobbyModeCapabilities, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { toast } from "sonner";
+
+type ShownGame = { lobbyId: string | null; choiceKey: string; game: LobbySeenGame };
+/** Longer than the server may itself wait for the room's lock (3.5 s) before it applies a change. */
+const SETTINGS_CONFIRM_TIMEOUT_MS = 6_000;
 
 interface FriendLobbyScreenProps {
   roomCode: string;
@@ -50,6 +56,78 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     actions
   } = useFriendLobbyLogic({ roomCode, isHost, inviteSource, newRoomDuelGame, newRoomRoomGame, newRoomGameMode });
   const displayedReady = optimisticReady ?? me?.isReady ?? false;
+  const lobbyId = lobby?.lobbyId ?? null;
+  const serverChoiceKey = settingsChoiceKey(lobby?.settings);
+  // A game change the server never answered counts as refused: it bumps this, which rolls the settings screen back.
+  const [abandonedVersion, setAbandonedVersion] = useState(0);
+  const rollbackVersion = settingsErrorVersion + abandonedVersion;
+  // What the settings screen shows and whether it still has changes on their way (see LobbySettings).
+  const [shownGame, setShownGame] = useState<ShownGame | null>(null);
+  const [settingsBusy, setSettingsBusy] = useState(false);
+  // The same two for the click handlers: a click right behind a change must see it before the next render does.
+  const shownGameRef = useRef<ShownGame | null>(null);
+  const settingsBusyRef = useRef(false);
+  const handleGameShown = useCallback((shown: ShownGame | null) => {
+    shownGameRef.current = shown;
+    setShownGame((current) => (current?.lobbyId === shown?.lobbyId && current?.choiceKey === shown?.choiceKey ? current : shown));
+    // The settings screen went away (the match is being prepared): that confirms nothing.
+    if (shown === null) setReadyHeld(null);
+  }, []);
+  // What Ready and Start tell the server they were pressed on: the game on this screen, in this room.
+  const seenNow = () => (shownGameRef.current?.lobbyId === lobbyId ? shownGameRef.current.game : null);
+  const handleSettingsBusy = useCallback((busy: boolean) => {
+    settingsBusyRef.current = busy;
+    setSettingsBusy(busy);
+  }, []);
+  // The screen shows a game the server does not hold (yet): a Ready or a Start now would be for the other game.
+  const gameUnconfirmed = (shown: ShownGame | null) => shown !== null && shown.lobbyId === lobbyId && shown.choiceKey !== serverChoiceKey;
+  const unconfirmedGame = gameUnconfirmed(shownGame) ? shownGame!.choiceKey : null;
+  const holding = unconfirmedGame !== null || settingsBusy;
+  const isHolding = () => gameUnconfirmed(shownGameRef.current) || settingsBusyRef.current;
+  useEffect(() => {
+    if (unconfirmedGame === null) return;
+    const timer = setTimeout(() => {
+      shownGameRef.current = null;
+      setShownGame(null);
+      setAbandonedVersion((version) => version + 1);
+      toast.error(t("friend.toastLobbyError"));
+    }, SETTINGS_CONFIRM_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [lobbyId, serverChoiceKey, t, unconfirmedGame]);
+
+  // A Ready pressed meanwhile is held, and sent as "ready" for the game it was pressed on once the screen and the
+  // server agree. It is dropped when the change is (refused or abandoned), when another game is chosen after it, or
+  // when the room it was pressed in is no longer there to ready in.
+  const [readyHeld, setReadyHeld] = useState<{ lobbyId: string; rollbackVersion: number; shown: ShownGame | null } | null>(null);
+  const heldValid = Boolean(
+    readyHeld && lobby && me && readyHeld.lobbyId === lobby.lobbyId && readyHeld.rollbackVersion === rollbackVersion
+      && (readyHeld.shown?.choiceKey ?? null) === (shownGame?.lobbyId === lobbyId ? shownGame.choiceKey : null)
+      && lobby.status === "waiting" && !displayedReady && !isSittingOutRoomGame && !isPreparingMatch && !isStartingMatch
+  );
+  const sentHeldRef = useRef<object | null>(null);
+  const handleSetReady = actions.handleSetReady;
+  useEffect(() => {
+    if (!readyHeld || (heldValid && holding)) return;
+    if (heldValid && sentHeldRef.current !== readyHeld) {
+      sentHeldRef.current = readyHeld;
+      handleSetReady(true, readyHeld.shown?.game);
+    }
+    const timer = setTimeout(() => setReadyHeld((held) => (held === readyHeld ? null : held)), 0);
+    return () => clearTimeout(timer);
+    // handleSetReady is the one of the render that found the wait over.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyHeld, heldValid, holding]);
+  const handleReadyClick = () => {
+    if (heldValid) setReadyHeld(null);
+    else if (lobby && !displayedReady && isHolding()) {
+      const shown = shownGameRef.current?.lobbyId === lobbyId ? shownGameRef.current : null;
+      setReadyHeld({ lobbyId: lobby.lobbyId, rollbackVersion, shown });
+    }
+    else actions.handleReadyToggle(seenNow());
+  };
+  const handleStartClick = () => {
+    if (!isHolding()) actions.handleStartMatch(seenNow());
+  };
   // Host has local `isStartingMatch`; non-host members infer "preparing"
   // from the broadcast lobby status flipping to "active" (server emits this
   // right after creating the match, before the match-start countdown fires).
@@ -90,7 +168,9 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
         lobby?.status === "waiting" &&
         canHostStart(settings?.gameMode, members.length) &&
         hasFriendlyCategories &&
-        !isStartingMatch
+        !isStartingMatch &&
+        // Not while the settings screen shows a game the server has not confirmed: it would start the other one.
+        !holding
     );
   const startLabel = isAuctionLobby
     ? t("friend.startAuction")
@@ -246,7 +326,9 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
             categories={allCategories}
             onUpdateSettings={actions.handleUpdateSettings}
             onRoomOptions={actions.handleRoomOptions}
-            settingsErrorVersion={settingsErrorVersion}
+            settingsErrorVersion={rollbackVersion}
+            onSavingChange={handleSettingsBusy}
+            onGameShown={handleGameShown}
           />
         </div>
 
@@ -274,8 +356,9 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
               </p>
 
               <button
-                onClick={actions.handleReadyToggle}
+                onClick={handleReadyClick}
                 disabled={!lobby || isSittingOutRoomGame}
+                aria-busy={heldValid}
                 className={cn(
                   "w-full min-h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-3 py-3 px-4 disabled:opacity-60 active:scale-[0.98]",
                   displayedReady
@@ -289,21 +372,25 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
                   letterSpacing: '0.04em',
                 }}
               >
-                <CheckCircle2
-                  className={cn(
-                    "size-7 shrink-0",
-                    displayedReady ? "text-brand-green-light" : "text-brand-yellow"
-                  )}
-                  strokeWidth={displayedReady ? 2 : 2.5}
-                />
+                {heldValid ? (
+                  <Loader2 className="size-7 shrink-0 animate-spin text-brand-yellow" />
+                ) : (
+                  <CheckCircle2
+                    className={cn(
+                      "size-7 shrink-0",
+                      displayedReady ? "text-brand-green-light" : "text-brand-yellow"
+                    )}
+                    strokeWidth={displayedReady ? 2 : 2.5}
+                  />
+                )}
                 <span className="text-center leading-tight">
-                  {displayedReady ? t("friend.readyTapToUnready") : t("friend.markReady")}
+                  {heldValid ? t("friend.savingSettings") : displayedReady ? t("friend.readyTapToUnready") : t("friend.markReady")}
                 </span>
               </button>
 
               {isHostStartableMode && (
                 <button
-                  onClick={actions.handleStartMatch}
+                  onClick={handleStartClick}
                   disabled={!canStartMatch}
                   className={cn(
                     "w-full h-14 rounded-[20px] uppercase transition-all flex items-center justify-center gap-2 active:scale-[0.98]",
