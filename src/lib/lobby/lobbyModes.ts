@@ -77,3 +77,13 @@ export function modeChoiceKey(choice: LobbyModeChoice): string {
   // A room that names no game (an older server) is the first room game.
   return choice.gameMode === "room_game" ? `room_game:${choice.roomGame ?? ROOM_GAMES[0]}` : choice.gameMode;
 }
+
+/** The key of the game a lobby's stored settings name: what its mode picker marks as selected. */
+export function settingsChoiceKey(settings: { gameMode: LobbyGameMode; duelGame?: DuelGameId | null; roomGame?: RoomGameId | null } | null | undefined): string {
+  const gameMode = settings?.gameMode ?? "friendly_possession";
+  return modeChoiceKey({
+    gameMode,
+    duelGame: gameMode === "duel" ? settings?.duelGame ?? null : null,
+    roomGame: gameMode === "room_game" ? settings?.roomGame ?? null : null,
+  });
+}
