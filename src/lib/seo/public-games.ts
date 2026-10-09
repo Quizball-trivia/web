@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
 import { GAME_PAGE_DETAILS } from "./game-page-details";
+export { engineEmitsEvents, FULL_GAME_DEMO_SLUGS, isFullGameDemo, SIGN_IN_PATH } from "./public-game-runtime";
 
 /**
  * Release manifest for the public games catalogue (homepage + game pages).
@@ -45,16 +46,6 @@ export interface PublicGameMeta {
   /** Locales whose practice engine is localised; others show it in English with a notice. Daily modes play the real localised set. */
   practiceLocales?: Locale[];
 }
-
-/** Daily engines report start/complete/replay themselves; other engines are timed from the outer Play control. */
-/** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
-export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || isFullGameDemo(demoSlug);
-/** Buscaminas, Pistas, Último, Minuto and Stat Sniper (Aproximado): the page runs the real daily (not a sample), and the engine owns its exit. */
-export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto", "daily-statSniper", "shared-player", "name-chain"]);
-export const isFullGameDemo = (demoSlug: string | undefined): boolean => FULL_GAME_DEMO_SLUGS.has(demoSlug ?? "");
-const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
-/** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
-export const SIGN_IN_PATH = "/play?signin=1";
 
 export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka", "es", "tr"] },

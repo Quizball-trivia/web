@@ -35,7 +35,7 @@ export function Providers({ children, initialLocale, geoCountry, cspNonce }: Pro
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} nonce={cspNonce}>
         <LocaleProvider initialLocale={initialLocale} geoCountry={geoCountry}>
           <CspNonceProvider nonce={cspNonce}>
             <PlayerProvider>

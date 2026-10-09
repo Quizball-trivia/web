@@ -19,12 +19,12 @@ function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale;
       className="group flex flex-col overflow-hidden rounded-xl bg-brand-blue transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className="relative aspect-video w-full overflow-hidden">
-        <DemoModeArt slug={game.artSlug} className="size-full transition-transform duration-300 group-hover:scale-[1.05]" />
+        <DemoModeArt slug={game.artSlug} sizes="(min-width: 1024px) 320px, (min-width: 768px) calc((100vw - 64px) / 3), calc((100vw - 44px) / 2)" className="size-full transition-transform duration-300 group-hover:scale-[1.05]" />
         <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{badge}</span>
       </div>
       <div className="p-3">
         <h3 className="line-clamp-2 text-sm font-semibold uppercase md:text-base">{text.title}</h3>
-        <p className="mt-1 line-clamp-2 text-xs text-white/70 md:text-sm">{text.intro}</p>
+        <p className="mt-1 line-clamp-2 text-xs text-white md:text-sm">{text.intro}</p>
         <span className="mt-2 inline-block text-xs font-bold uppercase tracking-wide text-brand-yellow">
           {game.destination.kind === "quiz" ? copy.quizPage : game.guest === "demo" ? copy.guest : copy.playLabel}
         </span>

@@ -13,8 +13,7 @@ import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboa
 import { StatSniperPageBoard } from "./public/StatSniperPageBoard";
 import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
-import { SharedPlayerDailyBoard } from "@/features/shared-player/SharedPlayerDaily";
-import { NameChainDailyBoard } from "@/features/name-chain/NameChainDaily";
+import { DeferredWordDailyBoard } from "./public/DeferredWordDailyBoard";
 import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
 import { SignInLink } from "./public/PublicLinks";
 import { PublicTopTen } from "./public/PublicTopTen";
@@ -134,7 +133,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
         </div>
         <div className="md:col-start-2 md:row-span-2 md:row-start-1">
           <div className="overflow-hidden rounded-2xl bg-brand-blue">
-            <div className="aspect-video w-full"><DemoModeArt slug={game.artSlug} className="size-full" /></div>
+            <div className="aspect-video w-full"><DemoModeArt slug={game.artSlug} className="size-full" priority sizes="(min-width: 1024px) 436px, (min-width: 768px) calc((100vw - 64px) / 2.2), calc(100vw - 32px)" /></div>
           </div>
           {botPlay && (
             <section aria-label={labels.ranked} className="mt-6 rounded-2xl bg-brand-blue p-5">
@@ -144,7 +143,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "sharedPlayer" ? <SharedPlayerDailyBoard locale={locale} className="mt-6" /> : game.modeId === "nameChain" ? <NameChainDailyBoard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "sharedPlayer" || game.modeId === "nameChain" ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">

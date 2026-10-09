@@ -6,7 +6,7 @@ import { LoaderCircle, Play } from "lucide-react";
 import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { trackPlayNowClick } from "@/lib/analytics/public-games.analytics";
 import { ensureGuestPrincipal } from "@/lib/realtime/realtime-principal";
-import { SIGN_IN_PATH } from "@/lib/seo/public-games";
+import { SIGN_IN_PATH } from "@/lib/seo/public-game-runtime";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLocale } from "@/contexts/LocaleContext";
 import { isSupportedLocale } from "@/lib/i18n/messages";
