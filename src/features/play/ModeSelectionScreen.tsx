@@ -37,6 +37,7 @@ import { useIsGuest } from '@/lib/auth/useIsGuest';
 import { useAuthStore } from '@/stores/auth.store';
 import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
+import { WinRateStat } from './WinRateStat';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -55,36 +56,6 @@ function shouldPlayEntranceAnimation() {
   }
 }
 
-
-/**
- * Renders the win-rate stat line ("13% win rate · 104 ranked games") with white
- * label text but the numeric values highlighted in brand yellow. The line is
- * split on " · " into its two halves; in both EN and KA each half starts with
- * its number, so we wrap the leading numeric token of each half in yellow.
- */
-function WinRateStat({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
-  const halves = text.split(' · ');
-  return (
-    <span className={className} style={style}>
-      {halves.map((half, i) => {
-        const match = half.match(/^(\d[\d.,]*%?)(.*)$/);
-        return (
-          <span key={i}>
-            {i > 0 && ' · '}
-            {match ? (
-              <>
-                <span className="text-brand-yellow">{match[1]}</span>
-                {match[2]}
-              </>
-            ) : (
-              half
-            )}
-          </span>
-        );
-      })}
-    </span>
-  );
-}
 
 function RpProgressBar({ current, target }: { current: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
@@ -556,7 +527,7 @@ export function ModeSelectionScreen({
               {!rankedProfileLoading && (
                 <WinRateStat
                   text={t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
-                  className="mt-2 block whitespace-nowrap text-[13px] uppercase leading-snug tracking-wide text-white"
+                  className="mt-2 block text-[13px] uppercase leading-snug tracking-wide text-white"
                   style={poppins}
                 />
               )}
