@@ -63,7 +63,7 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "name-chain",
-    title: { en: "Football Name Chain", ka: "ბოლო ასოთი ფეხბურთელი", es: "Cadena de futbolistas", tr: "Son Harfle Futbolcu", },
+    title: { en: "Football Name Chain", ka: "ფეხბურთელობანა", es: "Cadena de futbolistas", tr: "Son Harfle Futbolcu", },
     description: {
       en: "Name a footballer starting with the last letter of the previous one. 3 chains a day.",
       ka: "დაასახელე ფეხბურთელი წინა სახელის ბოლო ასოზე. დღეში 3 ჯაჭვი.",
