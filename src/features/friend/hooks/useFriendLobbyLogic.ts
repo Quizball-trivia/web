@@ -18,7 +18,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { logger } from "@/utils/logger";
-import type { DuelGameId, LobbyJoinRoomInfo, LobbySettings as LobbySettingsState, RoomGameId } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbyJoinRoomInfo, LobbySeenGame, LobbySettings as LobbySettingsState, RoomGameId } from "@/lib/realtime/socket.types";
 import { buildFriendInvitePath, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
@@ -86,6 +86,9 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
   DUEL_UNAVAILABLE: "friend.errorDuelUnavailable",
   ROOM_GAME_UNAVAILABLE: "friend.errorRoomGameUnavailable",
+  LOBBY_READY_LOCKED: "friend.errorReadyLocked",
+  LOBBY_SETTINGS_CHANGED: "friend.errorSettingsChanged",
+  LOBBY_SETTINGS_LOCKED: "friend.errorSettingsBusy",
 };
 
 /**
@@ -139,7 +142,11 @@ interface InviteJoinFailure {
 export function newRoomPathFor(room: LobbyJoinRoomInfo | null): string {
   if (room?.gameMode === "auction" || room?.gameMode === "football_grid") return `/friend/room/new?game=${room.gameMode}`;
   if (room?.gameMode === "duel" && room.duelGame) return `/friend/room/new?duel=${room.duelGame}`;
-  if (room?.gameMode === "room_game") return "/friend/room/new?room=aproximado";
+  // The same room game when it is known and offered here, else the first one offered.
+  if (room?.gameMode === "room_game") {
+    const game = ROOM_GAMES_ENABLED.find((enabled) => enabled === room.roomGame) ?? ROOM_GAMES_ENABLED[0];
+    return game ? `/friend/room/new?room=${game}` : "/friend/room/new";
+  }
   return "/friend/room/new";
 }
 
@@ -857,8 +864,14 @@ export function useFriendLobbyLogic({
       // game switched off) — rolls the optimistic tab back to what the server holds.
       error.code === "LOBBY_MODE_CAPACITY" ||
       error.code === "DUEL_UNAVAILABLE" ||
-      error.code === "ROOM_GAME_UNAVAILABLE";
-    const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
+      error.code === "ROOM_GAME_UNAVAILABLE" ||
+      // Refusals of a settings change that used to leave the chosen game on screen until it timed out.
+      error.code === "LOBBY_SETTINGS_LOCKED" ||
+      error.code === "LOBBY_MODE_REQUIRES_ACCOUNT" ||
+      error.code === "LOBBY_GUEST_LIMIT" ||
+      error.code === "CAPABILITY_REQUIRED" ||
+      // A Ready or Start pressed on a game the room had already left: the screen takes the server's settings.
+      error.code === "LOBBY_SETTINGS_CHANGED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
     // On an invite route the join's own reply reports a missing room (or finds the player's own active room behind the
     // code), so the server's duplicate "not found" event never toasts on its own.
@@ -877,12 +890,16 @@ export function useFriendLobbyLogic({
       // Out of the cleanup path (clearError() below re-runs this effect at once), so the rollback always lands.
       queueMicrotask(() => setSettingsErrorVersion((current) => current + 1));
     }
+    if (error.code === "LOBBY_SETTINGS_CHANGED") {
+      // The refused Ready never happened: without this the button would keep showing it.
+      queueMicrotask(() => setOptimisticReadyState(null));
+    }
     clearStartMatchTimeout();
     // clearError() changes this effect's dependencies immediately. Keep the
     // recovery update out of the effect cleanup path so it cannot be cancelled
     // while the host is returning from a failed server-side start.
     queueMicrotask(() => setIsStartingMatch(false));
-    if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
+    if (!isInviteTransitionBusy && !isInviteNotFound) {
       // Server messages are raw English: every code gets our own copy (a join failure, or a generic room error).
       toast.error(t(error.code === "LOBBY_JOIN_ERROR" ? inviteFailureKey(error.code) : LOBBY_ERROR_COPY_KEYS[error.code] ?? "friend.toastLobbyError"));
     }
@@ -903,13 +920,31 @@ export function useFriendLobbyLogic({
     }
   };
 
-  const handleReadyToggle = () => {
-    if (!me || !activeLobby) return;
-    const nextReady = !(optimisticReady ?? me.isReady);
-    setOptimisticReadyState({ value: nextReady, lobbyId: activeLobby.lobbyId });
-    getSocket().emit("lobby:ready", { ready: nextReady });
-    logger.info("Socket emit lobby:ready", { ready: nextReady });
+  /** `shown`: the game on the caller's screen when it differs from the stored settings (the host's unconfirmed choice). */
+  const seenGame = (shown?: LobbySeenGame | null): LobbySeenGame | undefined => {
+    if (shown) return shown;
+    const settings = activeLobby?.settings;
+    return settings && { gameMode: settings.gameMode, duelGame: settings.duelGame ?? null, roomGame: settings.roomGame ?? null };
   };
+
+  const handleSetReady = (ready: boolean, shown?: LobbySeenGame | null) => {
+    if (!me || !activeLobby) return;
+    setOptimisticReadyState({ value: ready, lobbyId: activeLobby.lobbyId });
+    const seen = ready ? seenGame(shown) : undefined;
+    getSocket().emit("lobby:ready", { ready, ...(seen && { seen }) });
+    logger.info("Socket emit lobby:ready", { ready, seen });
+  };
+
+  const handleReadyToggle = (shown?: LobbySeenGame | null) => {
+    if (!me) return;
+    handleSetReady(!(optimisticReady ?? me.isReady), shown);
+  };
+
+  const handleRoomOptions = useCallback((options: Record<string, unknown> | null) => {
+    if (!activeLobby || activeLobby.settings.gameMode !== "room_game") return;
+    getSocket().emit("lobby:room_options", { lobbyId: activeLobby.lobbyId, options });
+    logger.info("Socket emit lobby:room_options", { lobbyId: activeLobby.lobbyId });
+  }, [activeLobby]);
 
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
     if (!activeLobby) return;
@@ -920,7 +955,10 @@ export function useFriendLobbyLogic({
     };
     // Only a duel carries its game; leaving a duel drops it. Same for a room game.
     const duelGame = nextSettings.gameMode === "duel" ? nextSettings.duelGame ?? null : null;
-    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? ROOM_GAMES_ENABLED[0] ?? "aproximado" : null;
+    // A room that is already a room-game room without a named game predates the name (it is Aproximado, as the
+    // settings screen shows it): another change must not switch its game. A switch INTO room games takes the first offered.
+    const unnamedRoomGame = activeLobby.settings?.gameMode === "room_game" ? "aproximado" : ROOM_GAMES_ENABLED[0] ?? "aproximado";
+    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? unnamedRoomGame : null;
     const emit = {
       lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
@@ -951,7 +989,7 @@ export function useFriendLobbyLogic({
     logger.info("Socket emit lobby:update_settings", emit);
   }, [activeLobby]);
 
-  const handleStartMatch = () => {
+  const handleStartMatch = (shown?: LobbySeenGame | null) => {
     if (isStartingMatch) return;
     inviteJoinCancelledRef.current = true;
     terminalInviteJoinFailureRef.current = true;
@@ -962,7 +1000,8 @@ export function useFriendLobbyLogic({
       toast.error(t('friend.toastMatchStartTooLong'));
     }, 12000);
 
-    getSocket().emit("lobby:start");
+    const seen = seenGame(shown);
+    getSocket().emit("lobby:start", seen ? { seen } : undefined);
     logger.info("Socket emit lobby:start", {
       lobbyId: activeLobby?.lobbyId ?? null,
     });
@@ -1089,7 +1128,9 @@ export function useFriendLobbyLogic({
     actions: {
       copyCode,
       handleReadyToggle,
+      handleSetReady,
       handleUpdateSettings,
+      handleRoomOptions,
       handleStartMatch,
       handleLeaveLobby,
       handleInviteRetry,

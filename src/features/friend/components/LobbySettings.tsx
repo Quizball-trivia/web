@@ -3,16 +3,17 @@
 import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Check, Crosshair, Eye, EyeOff, Gavel, Grid3X3, Lock, Search, Shuffle, Swords, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
-import type { DuelGameId, LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySettingsState, LobbyState, RoomGameId } from "@/lib/realtime/socket.types";
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey } from "@/lib/lobby/lobbyModes";
+import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, ROOM_GAME_LABEL_KEYS, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { RoomGameOptions } from "./RoomGameOptions";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -24,7 +25,17 @@ interface LobbySettingsProps {
   lobby: LobbyState | null;
   categories: CategorySummary[];
   onUpdateSettings: (settings: Partial<LobbySettingsState> & { isPublic?: boolean }) => void;
+  /** The host's choices for the room game (which clubs, how hard); null = the game's defaults. */
+  onRoomOptions?: (options: Record<string, unknown> | null) => void;
   settingsErrorVersion?: number;
+  /** True while a change of this screen is queued or sent and not echoed by the server yet. */
+  onSavingChange?: (saving: boolean) => void;
+  /**
+   * The game this screen shows as selected (null once the screen is gone), told at the click and whenever it changes.
+   * While it is not the game the server holds, nobody should ready or start from this screen: the room would play
+   * the other one.
+   */
+  onGameShown?: (shown: { lobbyId: string | null; choiceKey: string; game: LobbySeenGame } | null) => void;
 }
 
 type SettingsPatch = Partial<LobbySettingsState> & { isPublic?: boolean };
@@ -46,15 +57,18 @@ const DUEL_TAB_LABEL_KEYS: Record<DuelGameId, MessageKey> = {
   minuto: 'friend.duelTabMinuto',
 };
 
-/** The existing modes plus one tab per enabled duel game (and the room's own duel game, if it has one). */
-function modeTabs(currentDuelGame: DuelGameId | null, currentMode: LobbyGameMode): ModeTab[] {
+/** The existing modes plus one tab per enabled duel game and room game (and the room's own game, if it has one). */
+function modeTabs(currentDuelGame: DuelGameId | null, currentRoomGame: RoomGameId | null): ModeTab[] {
   const duelGames = currentDuelGame && !DUEL_GAMES_ENABLED.includes(currentDuelGame)
     ? [...DUEL_GAMES_ENABLED, currentDuelGame]
     : DUEL_GAMES_ENABLED;
+  const roomGames = currentRoomGame && !ROOM_GAMES_ENABLED.includes(currentRoomGame)
+    ? [...ROOM_GAMES_ENABLED, currentRoomGame]
+    : ROOM_GAMES_ENABLED;
   return [
     ...BASE_MODE_TABS,
     ...duelGames.map((duelGame): ModeTab => ({ choice: { gameMode: 'duel', duelGame }, labelKey: DUEL_TAB_LABEL_KEYS[duelGame] })),
-    ...(ROOM_GAMES_ENABLED.length > 0 || currentMode === 'room_game' ? [{ choice: { gameMode: 'room_game', duelGame: null }, labelKey: 'friend.roomTabAproximado' } satisfies ModeTab] : []),
+    ...roomGames.map((roomGame): ModeTab => ({ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: ROOM_GAME_LABEL_KEYS[roomGame].tab })),
   ];
 }
 
@@ -73,18 +87,55 @@ const DUEL_DESCRIPTION_KEYS: Partial<Record<DuelGameId, MessageKey>> = {
   ultimo: 'friend.duelDescriptionUltimo',
 };
 
+/** What the server holds, as far as a settings patch is compared with it. */
+interface ServerSettingsView {
+  isPublic: boolean;
+  choiceKey: string;
+  /** More than two members made the room a party quiz: that is what a quiz choice becomes there. */
+  promotedToParty: boolean;
+  needsCategories: boolean;
+  isRandom: boolean;
+  categoryAId: string | null;
+  categoryBId: string | null;
+}
+
+/**
+ * Whether the server's settings already carry this patch. Compared the way the server stores them: a game without
+ * quiz categories, or random categories, makes the category fields moot (the server clears them).
+ */
+function patchApplied(patch: SettingsPatch, server: ServerSettingsView): boolean {
+  if (patch.isPublic !== undefined && patch.isPublic !== server.isPublic) return false;
+  if (patch.gameMode !== undefined
+    && modeChoiceKey({ gameMode: patch.gameMode, duelGame: patch.duelGame ?? null, roomGame: patch.roomGame ?? null }) !== server.choiceKey
+    && !(server.promotedToParty && LOBBY_MODES[patch.gameMode].promotesToPartyQuiz)) return false;
+  if (!server.needsCategories) return true;
+  if (patch.friendlyRandom !== undefined && patch.friendlyRandom !== server.isRandom) return false;
+  if (server.isRandom) return true;
+  if (patch.friendlyCategoryAId !== undefined && patch.friendlyCategoryAId !== server.categoryAId) return false;
+  if (patch.friendlyCategoryBId !== undefined && patch.friendlyCategoryBId !== server.categoryBId) {
+    // A second half equal to the first is stored as "none".
+    const sameAsFirst = patch.friendlyCategoryBId === (patch.friendlyCategoryAId ?? server.categoryAId);
+    if (!(sameAsFirst && server.categoryBId === null)) return false;
+  }
+  return true;
+}
+
 export function LobbySettings({
   isHost,
   lobby,
   categories,
   onUpdateSettings,
+  onRoomOptions,
   settingsErrorVersion = 0,
+  onSavingChange,
+  onGameShown,
 }: LobbySettingsProps) {
   const { t } = useLocale();
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const serverDuelGame = serverMode === 'duel' ? settings?.duelGame ?? null : null;
-  const serverChoiceKey = modeChoiceKey({ gameMode: serverMode, duelGame: serverDuelGame });
+  const serverRoomGame = serverMode === 'room_game' ? settings?.roomGame ?? ROOM_GAMES[0] : null;
+  const serverChoiceKey = settingsChoiceKey(settings);
   const memberCount = lobby?.members.length ?? 0;
   // Only party quiz seats more than 3, so past that the tabs disappear
   // entirely; at exactly 3 the tabs stay and per-tab capacity gating below
@@ -109,50 +160,35 @@ export function LobbySettings({
   const flushPendingChangesRef = useRef<() => void>(() => {});
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // --- Sync optimistic state when server confirms ---
+  const onSavingChangeRef = useRef(onSavingChange);
+  const onGameShownRef = useRef(onGameShown);
   useEffect(() => {
-    if (optimisticMode === null) return;
-    const hasPendingMode =
-      pendingChangesRef.current.gameMode !== undefined ||
-      inFlightChangesRef.current?.gameMode !== undefined;
-    if (hasPendingMode) {
-      return;
-    }
-
-    const timer = setTimeout(() => setOptimisticMode(null), 0);
-    return () => clearTimeout(timer);
-  }, [optimisticMode, serverChoiceKey]);
-
+    onSavingChangeRef.current = onSavingChange;
+    onGameShownRef.current = onGameShown;
+  });
+  const savingRef = useRef(false);
+  const syncSavingRef = useRef<() => void>(() => {});
+  const syncSaving = useCallback(() => {
+    const saving = Object.keys(pendingChangesRef.current).length > 0 || inFlightChangesRef.current !== null;
+    if (saving === savingRef.current) return;
+    savingRef.current = saving;
+    onSavingChangeRef.current?.(saving);
+  }, []);
   useEffect(() => {
-    if (optimisticPublic === null) return;
-    const hasPendingPublic =
-      pendingChangesRef.current.isPublic !== undefined ||
-      inFlightChangesRef.current?.isPublic !== undefined;
-    if (hasPendingPublic) {
-      return;
-    }
-
-    const timer = setTimeout(() => setOptimisticPublic(null), 0);
-    return () => clearTimeout(timer);
-  }, [optimisticPublic, serverIsPublic]);
-
-  useEffect(() => {
-    if (optimisticRandom === null) return;
-    const hasPendingRandom =
-      pendingChangesRef.current.friendlyRandom !== undefined ||
-      inFlightChangesRef.current?.friendlyRandom !== undefined;
-    if (hasPendingRandom) {
-      return;
-    }
-
-    const timer = setTimeout(() => setOptimisticRandom(null), 0);
-    return () => clearTimeout(timer);
-  }, [optimisticRandom, serverIsRandom]);
+    syncSavingRef.current = syncSaving;
+  }, [syncSaving]);
 
   const mode = optimisticMode?.gameMode ?? serverMode;
   const duelGame = optimisticMode ? optimisticMode.duelGame : serverDuelGame;
-  const currentChoiceKey = modeChoiceKey({ gameMode: mode, duelGame });
+  const roomGame = optimisticMode ? (optimisticMode.gameMode === 'room_game' ? optimisticMode.roomGame ?? ROOM_GAMES[0] : null) : serverRoomGame;
+  const currentChoiceKey = modeChoiceKey({ gameMode: mode, duelGame, roomGame });
+  const lobbyId = lobby?.lobbyId ?? null;
+  // Before the paint, so the lobby never offers Ready or Start for a game other than the one this screen shows.
+  useLayoutEffect(() => {
+    onGameShownRef.current?.({ lobbyId, choiceKey: currentChoiceKey, game: { gameMode: mode, duelGame, roomGame } });
+    // The key names the three fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChoiceKey, lobbyId]);
   const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const isAuctionMode = mode === 'auction';
   const isFootballGridMode = mode === 'football_grid';
@@ -171,6 +207,43 @@ export function LobbySettings({
   const [categorySearch, setCategorySearch] = useState("");
   const lastSentCategoryIdRef = useRef<string | null>(null);
   const handledErrorVersionRef = useRef(0);
+  const resentChoiceRef = useRef<LobbyModeChoice | null>(null);
+  const [displayedLobbyId, setDisplayedLobbyId] = useState(lobbyId);
+  if (lobbyId !== displayedLobbyId) {
+    // Another room: nothing chosen in the previous one is shown for it.
+    setDisplayedLobbyId(lobbyId);
+    setOptimisticMode(null);
+    setOptimisticPublic(null);
+    setOptimisticRandom(null);
+    setSelectedCategoryId(serverSelectedCategoryId);
+    setSelectedCategoryBId(serverSelectedCategoryBId);
+  }
+  const [rolledBackVersion, setRolledBackVersion] = useState(settingsErrorVersion);
+  if (settingsErrorVersion !== rolledBackVersion) {
+    // A refused or abandoned change: this same render shows the server's settings again, so the lobby is never
+    // one frame ahead of the screen (it offers Start as soon as the two agree).
+    setRolledBackVersion(settingsErrorVersion);
+    setOptimisticMode(null);
+    setOptimisticPublic(null);
+    setOptimisticRandom(null);
+    if (!serverIsRandom && isFriendlyMode) {
+      setSelectedCategoryId(serverSelectedCategoryId);
+      setSelectedCategoryBId(serverSelectedCategoryBId);
+    }
+  }
+  const serverView: ServerSettingsView = {
+    isPublic: serverIsPublic,
+    choiceKey: serverChoiceKey,
+    promotedToParty: serverMode === 'friendly_party_quiz' && memberCount > 2,
+    needsCategories: LOBBY_MODES[serverMode].needsCategories,
+    isRandom: serverIsRandom,
+    categoryAId: serverSelectedCategoryId,
+    categoryBId: serverSelectedCategoryBId,
+  };
+  const serverViewRef = useRef(serverView);
+  useEffect(() => {
+    serverViewRef.current = serverView;
+  });
   const canEdit = Boolean(isHost && lobby?.status === "waiting" && !lobby?.members.every((m) => m.isReady));
   const lastLobbyIdRef = useRef<string | null>(null);
 
@@ -210,8 +283,9 @@ export function LobbySettings({
       if (Object.keys(pendingChangesRef.current).length === 0) {
         clearFlushTimer();
       }
+      syncSaving();
     },
-    [clearFlushTimer]
+    [clearFlushTimer, syncSaving]
   );
 
   const flushPendingChanges = useCallback(() => {
@@ -223,7 +297,9 @@ export function LobbySettings({
     const pending = { ...pendingChangesRef.current };
     pendingChangesRef.current = {};
 
-    if (Object.keys(pending).length === 0) {
+    // The server answers a change it already holds with silence: waiting for that echo would be waiting for nothing.
+    if (Object.keys(pending).length === 0 || patchApplied(pending, serverViewRef.current)) {
+      syncSaving();
       return;
     }
 
@@ -245,8 +321,9 @@ export function LobbySettings({
       if (Object.keys(pendingChangesRef.current).length > 0) {
         flushPendingChangesRef.current();
       }
+      syncSavingRef.current();
     }, 3000);
-  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, onUpdateSettings]);
+  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, onUpdateSettings, syncSaving]);
 
   useEffect(() => {
     flushPendingChangesRef.current = flushPendingChanges;
@@ -254,7 +331,7 @@ export function LobbySettings({
 
   // --- Coalesced flush: merge pending changes into a single emit ---
   const queueChange = useCallback(
-    (changes: SettingsPatch) => {
+    (changes: SettingsPatch, immediate = false) => {
       if (Object.keys(changes).length === 0) {
         return;
       }
@@ -262,27 +339,49 @@ export function LobbySettings({
       Object.assign(pendingChangesRef.current, changes);
       if (!inFlightChangesRef.current) {
         clearFlushTimer();
-        flushTimerRef.current = setTimeout(() => {
+        // Which game is played goes out at once, with everything queued: Ready and Start wait for its confirmation.
+        if (immediate) flushPendingChanges();
+        else flushTimerRef.current = setTimeout(() => {
           flushPendingChanges();
         }, 350);
       }
+      syncSaving();
     },
-    [clearFlushTimer, flushPendingChanges]
+    [clearFlushTimer, flushPendingChanges, syncSaving]
   );
+
+  // Another room: its queue starts empty (its display was reset while rendering, above). Declared ahead of the
+  // acknowledgement below: another room's settings must never confirm (or receive) what was queued for this one.
+  useEffect(() => {
+    if (lastLobbyIdRef.current === lobbyId) return;
+    lastLobbyIdRef.current = lobbyId;
+
+    clearFlushTimer();
+    clearInFlightTimeout();
+    pendingChangesRef.current = {};
+    inFlightChangesRef.current = null;
+    lastSentCategoryIdRef.current = null;
+    syncSaving();
+  }, [clearFlushTimer, clearInFlightTimeout, lobbyId, syncSaving]);
+
+  // The queue's half of a rollback (the display's half is done while rendering, above).
+  useEffect(() => {
+    if (!settingsErrorVersion) return;
+    if (settingsErrorVersion === handledErrorVersionRef.current) return;
+    handledErrorVersionRef.current = settingsErrorVersion;
+
+    clearFlushTimer();
+    clearInFlightTimeout();
+    pendingChangesRef.current = {};
+    inFlightChangesRef.current = null;
+    lastSentCategoryIdRef.current = null;
+    syncSaving();
+  }, [clearFlushTimer, clearInFlightTimeout, settingsErrorVersion, syncSaving]);
 
   useEffect(() => {
     const inFlight = inFlightChangesRef.current;
     if (!inFlight) return;
-
-    const applied =
-      (inFlight.isPublic === undefined || inFlight.isPublic === serverIsPublic) &&
-      (inFlight.gameMode === undefined ||
-        modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null }) === serverChoiceKey) &&
-      (inFlight.friendlyRandom === undefined || inFlight.friendlyRandom === serverIsRandom) &&
-      (inFlight.friendlyCategoryAId === undefined ||
-        inFlight.friendlyCategoryAId === (settings?.friendlyCategoryAId ?? null));
-
-    if (!applied) return;
+    if (!patchApplied(inFlight, serverViewRef.current)) return;
 
     logger.info("Lobby settings update acknowledged", {
       lobbyId: lobby?.lobbyId ?? null,
@@ -293,38 +392,74 @@ export function LobbySettings({
     if (Object.keys(pendingChangesRef.current).length > 0) {
       flushPendingChanges();
     }
+    syncSaving();
   }, [
     clearInFlightTimeout,
     flushPendingChanges,
+    syncSaving,
     lobby,
     serverChoiceKey,
     serverIsPublic,
     serverIsRandom,
     settings?.friendlyCategoryAId,
+    settings?.friendlyCategoryBId,
   ]);
 
-  // Hard reset local settings transition state when switching lobbies.
+  // --- Sync optimistic state when server confirms (after the acknowledgement above, which clears what these read) ---
   useEffect(() => {
-    const lobbyId = lobby?.lobbyId ?? null;
-    if (lastLobbyIdRef.current === lobbyId) return;
-    lastLobbyIdRef.current = lobbyId;
+    if (optimisticMode === null) return;
+    const hasPendingMode =
+      pendingChangesRef.current.gameMode !== undefined ||
+      inFlightChangesRef.current?.gameMode !== undefined;
+    if (hasPendingMode) {
+      return;
+    }
 
-    clearFlushTimer();
-    clearInFlightTimeout();
-    pendingChangesRef.current = {};
-    inFlightChangesRef.current = null;
-    lastSentCategoryIdRef.current = null;
+    // Nothing is on its way and the server holds another game: an earlier request landed late, after the queue had
+    // given up on it. The choice still on screen is the latest one, so it is sent once more (once: a choice the
+    // server keeps turning into something else is dropped, and the screen shows what the server holds).
+    const optimisticKey = modeChoiceKey(optimisticMode);
+    const turnedIntoParty = serverMode === 'friendly_party_quiz' && memberCount > 2 && LOBBY_MODES[optimisticMode.gameMode].promotesToPartyQuiz;
+    if (optimisticKey !== serverChoiceKey && !turnedIntoParty && canEdit && resentChoiceRef.current !== optimisticMode) {
+      resentChoiceRef.current = optimisticMode;
+      queueChange({
+        gameMode: optimisticMode.gameMode, duelGame: optimisticMode.duelGame,
+        roomGame: optimisticMode.gameMode === 'room_game' ? optimisticMode.roomGame ?? ROOM_GAMES[0] : null,
+      }, true);
+      return;
+    }
 
-    const resetTimer = setTimeout(() => {
-      setOptimisticMode(null);
-      setOptimisticPublic(null);
-      setOptimisticRandom(null);
-      setSelectedCategoryId(serverSelectedCategoryId);
-      setSelectedCategoryBId(serverSelectedCategoryBId);
-    }, 0);
+    const timer = setTimeout(() => setOptimisticMode(null), 0);
+    return () => clearTimeout(timer);
+    // Re-run by a new choice or a new server game only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optimisticMode, serverChoiceKey]);
 
-    return () => clearTimeout(resetTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryId, serverSelectedCategoryBId]);
+  useEffect(() => {
+    if (optimisticPublic === null) return;
+    const hasPendingPublic =
+      pendingChangesRef.current.isPublic !== undefined ||
+      inFlightChangesRef.current?.isPublic !== undefined;
+    if (hasPendingPublic) {
+      return;
+    }
+
+    const timer = setTimeout(() => setOptimisticPublic(null), 0);
+    return () => clearTimeout(timer);
+  }, [optimisticPublic, serverIsPublic]);
+
+  useEffect(() => {
+    if (optimisticRandom === null) return;
+    const hasPendingRandom =
+      pendingChangesRef.current.friendlyRandom !== undefined ||
+      inFlightChangesRef.current?.friendlyRandom !== undefined;
+    if (hasPendingRandom) {
+      return;
+    }
+
+    const timer = setTimeout(() => setOptimisticRandom(null), 0);
+    return () => clearTimeout(timer);
+  }, [optimisticRandom, serverIsRandom]);
 
   // Sync server category → local (only when server confirms random is off)
   useEffect(() => {
@@ -351,58 +486,40 @@ export function LobbySettings({
     return () => clearTimeout(syncTimer);
   }, [hasCategoryTransitionInProgress, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, serverSelectedCategoryBId]);
 
-  useEffect(() => {
-    if (!settingsErrorVersion) return;
-    if (settingsErrorVersion === handledErrorVersionRef.current) return;
-    handledErrorVersionRef.current = settingsErrorVersion;
-
-    clearFlushTimer();
-    clearInFlightTimeout();
-    pendingChangesRef.current = {};
-    inFlightChangesRef.current = null;
-    lastSentCategoryIdRef.current = null;
-
-    const rollbackTimer = setTimeout(() => {
-      setOptimisticMode(null);
-      setOptimisticPublic(null);
-      setOptimisticRandom(null);
-      if (!serverIsRandom && isFriendlyMode) {
-        setSelectedCategoryId(serverSelectedCategoryId);
-        setSelectedCategoryBId(serverSelectedCategoryBId);
-      }
-    }, 0);
-
-    return () => clearTimeout(rollbackTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, serverSelectedCategoryBId, settingsErrorVersion]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       clearFlushTimer();
       clearInFlightTimeout();
+      if (savingRef.current) onSavingChangeRef.current?.(false);
+      onGameShownRef.current?.(null);
     };
   }, [clearFlushTimer, clearInFlightTimeout]);
 
   // --- Handlers ---
   const handleModeChange = (choice: LobbyModeChoice) => {
     if (!canEdit) return;
-    const pending = pendingChangesRef.current;
-    const inFlight = inFlightChangesRef.current;
-    const targetKey = pending.gameMode !== undefined
-      ? modeChoiceKey({ gameMode: pending.gameMode, duelGame: pending.duelGame ?? null })
-      : inFlight?.gameMode !== undefined
-        ? modeChoiceKey({ gameMode: inFlight.gameMode, duelGame: inFlight.duelGame ?? null })
-        : serverChoiceKey;
+    const keyOf = (patch: SettingsPatch | null) => patch?.gameMode !== undefined
+      ? modeChoiceKey({ gameMode: patch.gameMode, duelGame: patch.duelGame ?? null, roomGame: patch.roomGame ?? null })
+      : null;
+    const queuedKey = keyOf(pendingChangesRef.current);
+    // What the room is on once everything already sent has landed.
+    const sentKey = keyOf(inFlightChangesRef.current) ?? serverChoiceKey;
     const choiceKey = modeChoiceKey(choice);
     setOptimisticMode(choice);
-    if (choiceKey !== targetKey) {
-      queueChange({ gameMode: choice.gameMode, duelGame: choice.duelGame });
-    } else {
-      clearPendingKeys(["gameMode", "duelGame"]);
-      if (choiceKey === serverChoiceKey) {
-        setOptimisticMode(null);
-      }
+    // At the click, not a render later: a Ready pressed right behind it must already be held.
+    onGameShownRef.current?.({
+      lobbyId, choiceKey,
+      game: { gameMode: choice.gameMode, duelGame: choice.duelGame, roomGame: choice.gameMode === 'room_game' ? choice.roomGame ?? ROOM_GAMES[0] : null },
+    });
+    if (choiceKey === queuedKey) return;
+    if (choiceKey === sentKey) {
+      // Back on the game already sent or held: only a queued change to another game has to go.
+      clearPendingKeys(["gameMode", "duelGame", "roomGame"]);
+      if (choiceKey === serverChoiceKey) setOptimisticMode(null);
+      return;
     }
+    queueChange({ gameMode: choice.gameMode, duelGame: choice.duelGame, roomGame: choice.gameMode === 'room_game' ? choice.roomGame ?? ROOM_GAMES[0] : null }, true);
   };
 
   const toggleCategory = (catId: string) => {
@@ -588,7 +705,7 @@ export function LobbySettings({
             </div>
           ) : (
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
-              {modeTabs(serverDuelGame, serverMode).map(({ choice, labelKey }) => {
+              {modeTabs(serverDuelGame, serverRoomGame).map(({ choice, labelKey }) => {
                 const key = modeChoiceKey(choice);
                 const overCapacity = memberCount > LOBBY_MODES[choice.gameMode].playable;
                 const guestLocked = hasGuest && !LOBBY_MODES[choice.gameMode].guestAllowed;
@@ -634,7 +751,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || MODE_DESCRIPTION_KEYS[mode])}
+              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && ROOM_GAME_LABEL_KEYS[roomGame].description) || MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -905,8 +1022,11 @@ export function LobbySettings({
               className="uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
             >
-              {t("friend.roomAproximado")}
+              {t(ROOM_GAME_LABEL_KEYS[roomGame ?? ROOM_GAMES[0]].title)}
             </h4>
+            {roomGame === 'shared_player' && roomGame === serverRoomGame && (
+              <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
           </div>
         )}
 

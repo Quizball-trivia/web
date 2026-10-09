@@ -17,7 +17,7 @@ export const MOBILE_NAV_ITEMS = [
   { path: '/store', labelKey: 'navigation.store', icon: Gem },
 ] as const;
 
-export const HIDE_NAV_PATHS = ['/game', '/onboarding', '/pistas', '/ultimo', '/minuto'];
+export const HIDE_NAV_PATHS = ['/game', '/onboarding', '/pistas', '/ultimo', '/minuto', '/ortak-futbolcu', '/son-harfle'];
 export const HEADER_PATHS = ['/', '/play', '/events', '/leaderboard', '/social', '/profile', '/store', '/career', '/daily'];
 
 /** The mobile header shows on the listed app paths and on the public hub / game pages. */

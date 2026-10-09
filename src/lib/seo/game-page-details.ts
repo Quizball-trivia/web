@@ -283,6 +283,58 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı golü aynı anda görürsünüz. Herkes diğerininkini görmeden dakikasını yazar, sonra ikisi birden açılır: tam dakika 3 puan, değilse en yakın tahmin 1 puan alır.",
     ],
   },
+  "played-for-both-clubs": {
+    en: [
+      "Played for Both is the football game from the videos: two clubs, one question. Who played for both? Every day there are ten pairs, from rivals who rarely share a player to clubs with dozens of names in common.",
+      "You get 10 seconds per pair and you only need one footballer. Type the surname, the full name or the name he is known by; accents do not matter and small typos are forgiven. A wrong answer blocks the box for one second. Loans count: if he was a first-team player there, he is a valid answer.",
+      "New pairs arrive every day at midnight Argentina time. Without an account you play the previous days and see example answers for every pair; signed-in players get today's ten pairs and one ranked run on the daily leaderboard, where equal scores are split by speed. Today's answers stay hidden until the day is over.",
+      "It is even better with friends. Open a room, share the link and up to six of you race on the same pairs: in a 1v1 the first right answer takes the point, and with three or more the first scores 3, the second 2 and everyone else who finds one scores 1. The host picks the league: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig or the biggest clubs mixed.",
+    ],
+    ka: [
+      "„საერთო ფეხბურთელი“ ვიდეოებიდან ნაცნობი თამაშია: ორი კლუბი, ერთი კითხვა. ვინ ითამაშა ორივეში? ყოველდღე ათი წყვილია.",
+      "თითო წყვილზე 10 წამი გაქვს და მხოლოდ ერთი ფეხბურთელია საჭირო. დაწერე გვარი, სრული სახელი ან ის სახელი, რომლითაც ცნობილია; მცირე შეცდომები გეპატიება. არასწორი პასუხი ველს ერთი წამით კეტავს. იჯარაც ითვლება.",
+      "ახალი წყვილები ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ და ყველა წყვილის სამაგალითო პასუხებს ხედავ; ანგარიშით — დღევანდელ ათ წყვილს და დღის რეიტინგს, სადაც თანაბარ ქულებს სისწრაფე წყვეტს.",
+      "მეგობრებთან კიდევ უფრო საინტერესოა. გახსენი ოთახი, გააზიარე ბმული და ექვს მოთამაშემდე ერთსა და იმავე წყვილებზე შეეჯიბრეთ: ერთი ერთზე პირველი სწორი პასუხი იღებს ქულას, სამი ან მეტი მოთამაშისას პირველი 3 ქულას იღებს, მეორე 2-ს, დანარჩენები 1-ს. ლიგას ოთახის მფლობელი ირჩევს.",
+    ],
+    es: [
+      "Jugador en común es el juego de los videos: dos clubes, una pregunta. ¿Quién jugó en los dos? Cada día hay diez pares, desde clásicos que casi no comparten jugadores hasta clubes con decenas de nombres en común.",
+      "Tenés 10 segundos por par y alcanza con un solo futbolista. Escribí el apellido, el nombre completo o el apodo; los acentos no importan y se perdonan errores de tipeo. Una respuesta incorrecta bloquea la casilla un segundo. Las cesiones cuentan: si fue jugador del primer equipo, vale.",
+      "Los pares nuevos llegan cada día a la medianoche de Argentina. Sin cuenta jugás los días anteriores y ves respuestas de ejemplo de cada par; con tu cuenta jugás los diez pares de hoy y tenés una partida que cuenta para el ranking del día, donde el empate se define por velocidad. Las respuestas de hoy no se muestran hasta que termina el día.",
+      "Con amigos es todavía mejor. Abrí una sala, compartí el link y hasta seis juegan los mismos pares: en un 1 contra 1 la primera respuesta correcta se lleva el punto, y con tres o más el primero suma 3, el segundo 2 y los demás que acierten 1. El anfitrión elige la liga: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig o los clubes más grandes mezclados.",
+    ],
+    tr: [
+      "Ortak Futbolcu, videolardan bildiğin oyun: iki kulüp, tek soru. İkisinde de kim oynadı? Her gün on eşleşme var; neredeyse hiç ortak oyuncusu olmayan rakiplerden onlarca ortak ismi olan kulüplere kadar.",
+      "Her eşleşme için 10 saniyen var ve tek bir futbolcu yeterli. Soyadını, tam adını ya da bilinen adını yaz; Türkçe karakterler ve aksanlar fark etmez, küçük yazım hataları kabul edilir. Yanlış cevap kutuyu bir saniye kilitler. Kiralık dönemler de sayılır.",
+      "Yeni eşleşmeler her gün Arjantin saatiyle gece yarısı gelir. Hesapsız önceki günleri oynar ve her eşleşmenin örnek cevaplarını görürsün; hesapla bugünün on eşleşmesini oynar ve günün sıralamasına girersin. Puanlar eşitse hızlı olan üstte yer alır. Bugünün cevapları gün bitene kadar gösterilmez.",
+      "Arkadaşlarla daha da keyifli. Bir oda aç, linki paylaş; altı kişiye kadar aynı eşleşmelerde yarışın: 1'e 1'de ilk doğru cevap puanı alır, üç ya da daha fazla kişide ilk bilen 3, ikinci 2, bulan diğer herkes 1 puan alır. Ligi oda sahibi seçer: Süper Lig, Premier Lig, La Liga, Serie A, Bundesliga, Ligue 1 ya da büyük kulüpler karışık.",
+    ],
+  },
+  "football-name-chain": {
+    en: [
+      "Football Name Chain is the word chain game played with footballers. Each name has to start with the last letter of the one before, so one answer sets up the next: a chain that ends in a hard letter is a trap you set for yourself.",
+      "First name or surname both count, so Anthony Martial answers A and M, and the next letter is the last letter of the name he is known by. Accents are ignored: Özil starts with O. You have 10 seconds per name, a wrong answer costs only the time it took, and no footballer can be used twice in a day's run.",
+      "Every day has three chains, each from a different well-known footballer. Your score is every name across the three, and the clock shortens by a second every five names, down to six seconds. New chains arrive at midnight Argentina time; without an account you play the previous days, and signed-in players get today's chains and the daily leaderboard.",
+      "With friends it becomes a knockout. Open a room for 2 to 6 players and take turns on one shared chain: run out of time and you are out of the round, the last one standing takes the point, and the first to 3 points wins.",
+    ],
+    ka: [
+      "„ბოლო ასოთი ფეხბურთელი“ სიტყვების ჯაჭვის თამაშია ფეხბურთელებით. ყოველი სახელი წინა სახელის ბოლო ასოთი უნდა იწყებოდეს, ასე რომ ერთი პასუხი შემდეგს ამზადებს.",
+      "ითვლება სახელიც და გვარიც, ხოლო შემდეგი ასო იმ სახელის ბოლო ასოა, რომლითაც ფეხბურთელია ცნობილი. სახელები ლათინური ასოებით იწერება. თითო სახელზე 10 წამი გაქვს, არასწორი პასუხი მხოლოდ დროს გაკარგვინებს და ერთი ფეხბურთელი ორჯერ არ ითვლება.",
+      "ყოველდღე სამი ჯაჭვია, თითოეული სხვა ცნობილი ფეხბურთელიდან. შენი ქულა სამივე ჯაჭვის ყველა სახელია, ხოლო დრო ყოველ ხუთ სახელზე ერთი წამით მოკლდება, ექვს წამამდე. ახალი ჯაჭვები შუაღამისას ჩნდება (არგენტინის დროით); ანგარიშის გარეშე წინა დღეებს თამაშობ, ანგარიშით — დღევანდელს და დღის რეიტინგს.",
+      "მეგობრებთან ეს გამოვარდნის თამაშია. გახსენი ოთახი 2-დან 6 მოთამაშემდე და რიგრიგობით ითამაშეთ ერთ ჯაჭვზე: ვისაც დრო ამოეწურება, რაუნდიდან ვარდება, ბოლოს დარჩენილი იღებს ქულას, ხოლო პირველი, ვინც 3 ქულას დააგროვებს, იგებს.",
+    ],
+    es: [
+      "Cadena de futbolistas es el juego de las palabras encadenadas, pero con futbolistas. Cada nombre tiene que empezar con la última letra del anterior, así que una respuesta prepara la siguiente: una cadena que termina en una letra difícil es una trampa que te ponés vos mismo.",
+      "Vale el nombre o el apellido, así que Anthony Martial sirve para la A y para la M, y la letra siguiente es la última del nombre por el que se lo conoce. Los acentos no cuentan. Tenés 10 segundos por nombre, una respuesta incorrecta solo te cuesta el tiempo que tardaste y ningún futbolista vale dos veces en el día.",
+      "Cada día hay tres cadenas, cada una desde un futbolista conocido distinto. Tu puntaje es la suma de todos los nombres de las tres, y el reloj se acorta un segundo cada cinco nombres, hasta seis segundos. Las cadenas nuevas llegan a la medianoche de Argentina; sin cuenta jugás los días anteriores, y con tu cuenta las cadenas de hoy y el ranking del día.",
+      "Con amigos es por eliminación. Abrí una sala de 2 a 6 jugadores y jueguen por turnos sobre una misma cadena: al que se le acaba el tiempo queda fuera de la ronda, el último en pie se lleva el punto y gana el primero en llegar a 3.",
+    ],
+    tr: [
+      "Son Harfle Futbolcu, kelime zinciri oyununun futbolcularla oynanan hâli. Her isim bir öncekinin son harfiyle başlamak zorunda; yani verdiğin her cevap bir sonrakini hazırlar. Zor bir harfle biten isim, kendine kurduğun tuzaktır.",
+      "İsim de soyisim de sayılır: Anthony Martial hem A hem M için geçerlidir; sıradaki harf ise futbolcunun bilinen adının son harfidir. Harfler aksansız sayılır: Özil O ile başlar. Her isim için 10 saniyen var, yanlış cevap sadece zaman kaybettirir ve aynı futbolcu bir günde iki kez söylenemez.",
+      "Her gün üç zincir var; her biri farklı, tanınmış bir futbolcuyla başlar. Puanın üç zincirdeki bütün isimlerin toplamıdır ve süre her beş isimde bir saniye kısalır, altı saniyeye kadar. Yeni zincirler Arjantin saatiyle gece yarısı gelir; hesapsız önceki günleri oynarsın, hesapla bugünün zincirlerini ve günün sıralamasını.",
+      "Arkadaşlarla eleme oyununa dönüşür. 2-6 kişilik bir oda aç ve tek bir zincirde sırayla oynayın: süresi biten o turdan elenir, ayakta kalan son oyuncu puanı alır ve 3 puana ilk ulaşan kazanır.",
+    ],
+  },
   "last-answer-standing": {
     en: [
       "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",

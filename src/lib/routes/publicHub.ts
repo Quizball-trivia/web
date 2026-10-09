@@ -55,7 +55,7 @@ export function isGuestLobbyPath(pathname: string): boolean {
 export function isGuestAllowedPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   if (pathname === "/" || pathname === "/play") return true;
-  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas" || pathname === "/pistas" || pathname === "/ultimo" || pathname === "/minuto") return true;
+  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas" || pathname === "/pistas" || pathname === "/ultimo" || pathname === "/minuto" || pathname === "/ortak-futbolcu" || pathname === "/son-harfle") return true;
   if (GUEST_LOBBIES_ENABLED && isGuestLobbyPath(pathname)) return true;
   return isHubPath(pathname) || isPublicGamePath(pathname);
 }

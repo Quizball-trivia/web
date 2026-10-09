@@ -1424,7 +1424,7 @@ export interface paths {
                                 /** @enum {string|null} */
                                 duelGame: "buscaminas" | "pistas" | "ultimo" | "minuto" | null;
                                 /** @enum {string|null} */
-                                roomGame: "aproximado" | null;
+                                roomGame: "aproximado" | "shared_player" | "name_chain" | null;
                             }[];
                         };
                     };

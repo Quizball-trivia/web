@@ -46,6 +46,8 @@ import { isMiniGamesEnabled } from "@/lib/features/playModes";
 /** Real in-app destinations for the modes that have shipped a page. */
 const REAL_ROUTES: Record<string, string> = {
   minuto: "/minuto",
+  "shared-player": "/ortak-futbolcu",
+  "name-chain": "/son-harfle",
   "mini-final-third": "/free-kicks",
   "mini-road-to-goal": "/road-to-goal",
   "mini-guess-the-goal": "/guess-the-goal",
@@ -111,6 +113,8 @@ const ONLINE_SLUGS = new Set([
 // slugs are simply skipped, so a rename can't crash the Play screen.
 const DAILY_CHALLENGE_SLUGS = [
   "minuto",
+  "shared-player",
+  "name-chain",
   "daily-moneyDrop",
   "daily-countdown",
   "daily-trueFalse",

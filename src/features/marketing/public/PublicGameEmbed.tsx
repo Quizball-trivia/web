@@ -20,6 +20,8 @@ const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGam
 const PistasGame = dynamic(() => import("@/features/pistas/PistasGame").then((m) => m.PistasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const MinutoGame = dynamic(() => import("@/features/minuto/MinutoGame").then((m) => m.MinutoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const UltimoGame = dynamic(() => import("@/features/ultimo/UltimoGame").then((m) => m.UltimoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const SharedPlayerDaily = dynamic(() => import("@/features/shared-player/SharedPlayerDaily").then((m) => m.SharedPlayerDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const NameChainDaily = dynamic(() => import("@/features/name-chain/NameChainDaily").then((m) => m.NameChainDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const StatSniperPublicPlay = dynamic(() => import("./StatSniperPublicPlay").then((m) => m.StatSniperPublicPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
@@ -156,6 +158,10 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
             <MinutoGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "ultimo" ? (
             <UltimoGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : demoSlug === "shared-player" ? (
+            <SharedPlayerDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : demoSlug === "name-chain" ? (
+            <NameChainDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : dailyType === "statSniper" ? (
             <StatSniperPublicPlay locale={locale as Locale} modeId={modeId} pagePath={pagePath} playPath={playPath} onExit={exit} onEvent={onEngineEvent} onLeaveToRealGame={recordExit} onMember={() => { recordExit(); playInApp(); }} />
           ) : dailyType ? (

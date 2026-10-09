@@ -5,9 +5,19 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
+/**
+ * The game the sender's screen showed when they pressed Ready or Start. The server refuses the command
+ * (`LOBBY_SETTINGS_CHANGED`) when the room is on another game by the time it arrives.
+ */
+export interface LobbySeenGame {
+  gameMode: LobbyGameMode;
+  duelGame?: DuelGameId | null;
+  roomGame?: RoomGameId | null;
+}
+
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
-export type RoomGameId = 'aproximado';
+export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
 export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**
@@ -80,6 +90,8 @@ export interface LobbySettings {
   duelGame: DuelGameId | null;
   /** The game of a room-game room; null (or absent on older servers) for every other mode. */
   roomGame?: RoomGameId | null;
+  /** The host's choices for the room game (as the server validated them); absent or null = the game's defaults. */
+  roomOptions?: Record<string, unknown> | null;
   friendlyRandom: boolean;
   friendlyCategoryAId: string | null;
   friendlyCategoryBId: string | null;
@@ -1521,6 +1533,8 @@ export interface LobbyJoinRoomInfo {
   roomState: "open" | "in_progress" | "ended" | "unknown";
   gameMode: string | null;
   duelGame: string | null;
+  /** The room game of a room-game room (absent from servers that predate it). */
+  roomGame?: string | null;
   hostNickname: string | null;
 }
 
@@ -1751,7 +1765,9 @@ export interface ClientToServerEvents {
     ack?: (result: LobbyJoinByCodeResult) => void
   ) => void;
   'lobby:leave': (data?: { correlationId?: string }, ack?: (result: LobbyLeaveResult) => void) => void;
-  'lobby:ready': (data: { ready: boolean }) => void;
+  'lobby:ready': (data: { ready: boolean; seen?: LobbySeenGame }) => void;
+  /** Host only, room-game rooms: the game's options (null = back to its defaults). Changing them un-readies everyone. */
+  'lobby:room_options': (data: { lobbyId?: string; options: Record<string, unknown> | null }) => void;
   'lobby:update_settings': (data: {
     lobbyId?: string;
     gameMode: LobbyGameMode;
@@ -1764,7 +1780,7 @@ export interface ClientToServerEvents {
     friendlyCategoryBId?: string | null;
     isPublic?: boolean;
   }) => void;
-  'lobby:start': (data?: { lobbyId?: string }) => void;
+  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame }) => void;
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;
@@ -1782,10 +1798,13 @@ export interface ClientToServerEvents {
   'duel:command': (data: { matchId: string; commandId: string; command: unknown }) => void;
   'duel:resync': (data: { matchId: string; locale?: string }) => void;
   'duel:forfeit': (data: { matchId: string; commandId: string }) => void;
-  'room:ready': (data: { matchId: string; locale?: string }) => void;
+  /** `games`: the room games this screen can draw; the server seats nobody in a game their client did not list. */
+  'room:ready': (data: { matchId: string; locale?: string; games?: readonly string[] }) => void;
   'room:command': (data: { matchId: string; commandId: string; command: unknown }) => void;
-  'room:resync': (data: { matchId: string; locale?: string }) => void;
+  'room:resync': (data: { matchId: string; locale?: string; games?: readonly string[] }) => void;
   'room:leave': (data: { matchId: string; commandId: string }) => void;
+  /** A refused answer the player says was right (word games); stored for review, never answered. */
+  'room:report': (data: { matchId: string; round: number; text: string }) => void;
   /** Where this player stands in their room's match: answered with room:active + room:sitting_out. */
   'room:pointer': () => void;
   'grid:search_start': (data?: FootballGridSearchStartPayload) => void;

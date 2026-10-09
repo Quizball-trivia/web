@@ -13,6 +13,8 @@ import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboa
 import { StatSniperPageBoard } from "./public/StatSniperPageBoard";
 import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
+import { SharedPlayerDailyBoard } from "@/features/shared-player/SharedPlayerDaily";
+import { NameChainDailyBoard } from "@/features/name-chain/NameChainDaily";
 import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
 import { SignInLink } from "./public/PublicLinks";
 import { PublicTopTen } from "./public/PublicTopTen";
@@ -62,7 +64,21 @@ const STAT_SNIPER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   tr: { ...MINUTO_PAGE.tr, label: "Her gün 10 yeni futbol sayısı · hesap gerekmez", note: "10 gerçek futbol sayısı. Misafir olarak bugününkünü oynarsın; hesapla puanın sıralamaya girer." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
+const SHARED_PLAYER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...ULTIMO_PAGE.en, label: "10 new club pairs every day · no account needed", note: "10 pairs, 10 seconds each. As a guest you play past days; with an account, today's pairs and the leaderboard." },
+  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 10 ახალი წყვილი · ანგარიშის გარეშე", note: "10 წყვილი, თითოზე 10 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...ULTIMO_PAGE.es, label: "10 pares de clubes nuevos cada día · sin cuenta", note: "10 pares, 10 segundos cada uno. Sin cuenta jugás los días anteriores; con cuenta, los pares de hoy y el ranking." },
+  tr: { ...ULTIMO_PAGE.tr, label: "Her gün 10 yeni eşleşme · hesap gerekmez", note: "10 eşleşme, her biri 10 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün eşleşmelerini ve sıralamayı." },
+};
+
+const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...ULTIMO_PAGE.en, label: "3 new chains every day · no account needed", note: "3 chains, 10 seconds per name. As a guest you play past days; with an account, today's chains and the leaderboard." },
+  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 3 ახალი ჯაჭვი · ანგარიშის გარეშე", note: "3 ჯაჭვი, თითო სახელზე 10 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...ULTIMO_PAGE.es, label: "3 cadenas nuevas cada día · sin cuenta", note: "3 cadenas, 10 segundos por nombre. Sin cuenta jugás los días anteriores; con cuenta, las cadenas de hoy y el ranking." },
+  tr: { ...ULTIMO_PAGE.tr, label: "Her gün 3 yeni zincir · hesap gerekmez", note: "3 zincir, her isim için 10 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün zincirlerini ve sıralamayı." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -128,7 +144,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "sharedPlayer" ? <SharedPlayerDailyBoard locale={locale} className="mt-6" /> : game.modeId === "nameChain" ? <NameChainDailyBoard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">
