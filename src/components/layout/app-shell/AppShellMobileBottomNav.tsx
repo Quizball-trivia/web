@@ -19,10 +19,11 @@ interface AppShellMobileBottomNavProps {
   isPathActive: (path: string, exact?: boolean) => boolean;
   /** Home destination: the member Play or the guest's locale hub. */
   homeHref?: string;
+  prefetchRoutes?: boolean;
   socialBadgeCount: number;
 }
 
-export function AppShellMobileBottomNav({ isPathActive, homeHref = '/play', socialBadgeCount }: AppShellMobileBottomNavProps) {
+export function AppShellMobileBottomNav({ isPathActive, homeHref = '/play', prefetchRoutes = true, socialBadgeCount }: AppShellMobileBottomNavProps) {
   const { t } = useLocale();
   return (
     <div
@@ -37,6 +38,7 @@ export function AppShellMobileBottomNav({ isPathActive, homeHref = '/play', soci
             <Link
               key={item.path}
               href={item.path === '/play' ? homeHref : item.path}
+              prefetch={prefetchRoutes ? undefined : false}
               className={cn(
                 'relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-2 transition-colors',
                 isActive ? 'text-primary bg-secondary' : 'text-muted-foreground',

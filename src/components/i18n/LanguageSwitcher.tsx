@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -17,9 +17,11 @@ import { LOCALES as LOCALE_CODES, isLocale, type Locale } from "@/lib/i18n/local
 import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
-import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
-import { findPublicGameBySlug, isPublishedIn } from "@/lib/seo/public-games";
+
+const PublicLanguageLink = dynamic(() => import("./PublicLanguageLink").then((module) => module.PublicLanguageLink), {
+  ssr: false,
+  loading: () => <div role="status" className="h-12 animate-pulse rounded-xl bg-white/10"><span className="sr-only">…</span></div>,
+});
 
 interface LanguageSwitcherProps {
   // Server-rendered fallback locale used on the very first paint. After
@@ -36,31 +38,6 @@ interface LanguageSwitcherProps {
 const OPTIONS_BY_CODE = Object.fromEntries(
   LOCALE_OPTIONS.map((option) => [option.code, option]),
 ) as Record<Locale, (typeof LOCALE_OPTIONS)[number]>;
-
-// Swap the leading /:locale segment of the current path with the target locale.
-function swapLocale(pathname: string, target: Locale): string {
-  // Campaign quizzes have no Turkish edition yet; a Turkish switch on one lands on the English quiz.
-  const campaignPath = swapCampaignLocalePath(pathname, target === 'tr' ? 'en' : target);
-  if (campaignPath) return campaignPath;
-  const segments = pathname.split("/").filter(Boolean);
-  // Public game pages have translated folders and slugs (/es/juegos-de-futbol/subasta).
-  if (segments.length === 3 && isLocale(segments[0])) {
-    const source = segments[0];
-    if (segments[1] === PUBLIC_GAMES_FOLDER[source]) {
-      if (segments[2] === DAILY_COLLECTION_SLUG[source]) return isSeoPageLocale(target) ? dailyCollectionPath(target) : `/${target}`;
-      const entry = findGamePageByLocalizedSlug(source, segments[1], segments[2]);
-      if (entry) {
-        const game = findPublicGameBySlug(entry.slug);
-        return game && isPublishedIn(game, target) ? gamePagePath(entry, target) : `/${target}`;
-      }
-    }
-  }
-  if (segments.length === 0 || !isLocale(segments[0])) {
-    return `/${target}`;
-  }
-  segments[0] = target;
-  return `/${segments.join("/")}`;
-}
 
 const ITEM_CLASS = "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-white outline-none transition-colors hover:bg-white/10 focus:bg-white/10";
 
@@ -138,7 +115,6 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
   const queryString = searchParams.toString();
   const firstSegment = pathname.split("/").filter(Boolean)[0];
   const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
-  const activeOption = OPTIONS_BY_CODE[activeLocale];
 
   return (
     <LanguageMenu
@@ -146,22 +122,20 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
       locales={locales}
       className={className}
       renderItem={(code, option, active) => {
-        const localePath = swapLocale(pathname, code);
-        const href = queryString ? `${localePath}?${queryString}` : localePath;
         return (
-          <Link
-            href={href}
-            hrefLang={code}
-            lang={code}
+          <PublicLanguageLink
+            pathname={pathname}
+            queryString={queryString}
+            code={code}
+            active={active}
             // An explicit choice: persisted so leaving the localized pages
             // (creating a room, opening a game) keeps this language instead
             // of falling back to an earlier inferred one.
             onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect?.(code); }}
-            aria-current={active ? "page" : undefined}
             className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
           >
             <ItemBody option={option} active={active} />
-          </Link>
+          </PublicLanguageLink>
         );
       }}
     />

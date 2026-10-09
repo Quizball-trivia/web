@@ -25,15 +25,15 @@ describe("LanguageSwitcher", () => {
 
     await user.click(screen.getByRole("button", { name: /current language: english/i }));
 
-    expect(screen.getByRole("menuitem", { name: /english/i })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: /english/i })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("menuitem", { name: /español/i })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: /español/i })).toHaveAttribute(
       "href",
       "/es/about",
     );
-    expect(screen.getByRole("menuitem", { name: /ქართული/i })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: /ქართული/i })).toHaveAttribute(
       "href",
       "/ka/about",
     );
@@ -45,8 +45,8 @@ describe("LanguageSwitcher", () => {
 
     await user.click(screen.getByRole("button", { name: /current language: english/i }));
 
-    expect(screen.getByRole("menuitem", { name: /english/i })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /español/i })).toBeInTheDocument();
+    expect(await screen.findByRole("menuitem", { name: /english/i })).toBeInTheDocument();
+    expect(await screen.findByRole("menuitem", { name: /español/i })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: /ქართული/i })).not.toBeInTheDocument();
   });
 
@@ -57,9 +57,27 @@ describe("LanguageSwitcher", () => {
 
     await user.click(screen.getByRole("button", { name: /current language: english/i }));
 
-    expect(screen.getByRole("menuitem", { name: /español/i })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: /español/i })).toHaveAttribute(
       "href",
       "/es/about?ref=campaign&signup=1",
+    );
+  });
+
+  it.each([
+    ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", "tr", /español/i, "/es/juegos-de-futbol/jugador-en-comun"],
+    ["/en/football-games/football-name-chain", "en", /türkçe/i, "/tr/futbol-oyunlari/son-harfle-futbolcu"],
+    ["/es/quiz-de-futbol/adivina-el-jugador", "es", /türkçe/i, "/en/football-quiz/guess-the-player"],
+  ] as const)("keeps localized destinations after deferred loading on %s", async (pathname, locale, language, destination) => {
+    navigation.pathname = pathname;
+    navigation.search = "preview=public-test&ref=campaign";
+    const user = userEvent.setup();
+    render(<LanguageSwitcher locale={locale} />);
+
+    await user.click(screen.getByRole("button", { name: /current language/i }));
+
+    expect(await screen.findByRole("menuitem", { name: language })).toHaveAttribute(
+      "href",
+      `${destination}?preview=public-test&ref=campaign`,
     );
   });
 });

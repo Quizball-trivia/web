@@ -134,11 +134,12 @@ vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
 
 // Heavy children
 vi.mock('@/components/layout/Sidebar', () => ({
-  Sidebar: ({ currentPath, socialBadgeCount }: { currentPath: string; socialBadgeCount: number }) => (
+  Sidebar: ({ currentPath, socialBadgeCount, prefetchRoutes }: { currentPath: string; socialBadgeCount: number; prefetchRoutes?: boolean }) => (
     <aside
       data-testid="sidebar"
       data-current-path={currentPath}
       data-social-badge={socialBadgeCount}
+      data-prefetch-routes={String(prefetchRoutes)}
     />
   ),
 }));
@@ -303,6 +304,11 @@ function renderShell(children: React.ReactNode = <div data-testid="page-children
 // ---------------------------------------------------------------------------
 
 describe('AppShell — children + chrome', () => {
+  it.each(['loading', 'anonymous', 'authenticated'] as const)('preloads navigation only for authenticated members, not %s guests', (status) => {
+    seedAuth({ status, user: status === 'authenticated' ? defaultAuth.user : null });
+    renderShell();
+    expect(screen.getByTestId('sidebar')).toHaveAttribute('data-prefetch-routes', String(status === 'authenticated'));
+  });
   it('renders page children inside the shell', () => {
     renderShell(<div data-testid="page-children">My Page</div>);
     expect(screen.getByTestId('page-children')).toBeInTheDocument();
@@ -310,9 +316,16 @@ describe('AppShell — children + chrome', () => {
     expect(screen.getByText('My Page')).toBeInTheDocument();
   });
 
-  it('mounts the challenge invite prompt at the shell root', () => {
+  it('mounts the challenge invite prompt at the shell root for members', async () => {
     renderShell();
-    expect(screen.getByTestId('challenge-invite-prompt')).toBeInTheDocument();
+    expect(await screen.findByTestId('challenge-invite-prompt')).toBeInTheDocument();
+  });
+
+  it.each(['loading', 'anonymous'] as const)('does not load member invitations or notifications for %s guests', (status) => {
+    seedAuth({ status, user: null });
+    renderShell();
+    expect(screen.queryByTestId('challenge-invite-prompt')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('notifications')).not.toBeInTheDocument();
   });
 
   it('passes currentPath and the social badge count into the Sidebar', () => {
@@ -324,9 +337,9 @@ describe('AppShell — children + chrome', () => {
     expect(sidebar.getAttribute('data-social-badge')).toBe('2');
   });
 
-  it('forwards only unread notifications to NotificationsDropdown', () => {
+  it('forwards only unread notifications to NotificationsDropdown', async () => {
     renderShell();
-    const dropdowns = screen.getAllByTestId('notifications');
+    const dropdowns = await screen.findAllByTestId('notifications');
     expect(dropdowns.length).toBeGreaterThan(0);
     expect(dropdowns[0].getAttribute('data-badge')).toBe('0');
   });

@@ -59,3 +59,58 @@ Direct throttling and simulated throttling are different measurement methods; th
 The implementation is in the isolated `codex/word-games-mobile-performance` branch, rebased onto production `d629543e` after the Georgian naming update shipped during verification. Matched before and after measurements use the earlier `70a567a9` baseline; final rebased simulated checks are identified separately above. All 94 targeted tests and the production build passed again on the rebased version, and all eight HTML checks passed with the new Georgian name preserved. The original working checkout and its unrelated edits were left untouched. There are no database migrations, URL changes, indexing submissions or security policy relaxations in this fix.
 
 Next gate: review and deploy through staging, repeat the public PageSpeed mobile tests on all eight pages, and check guest launch, leaderboard loading and account navigation before promotion. Production performance and real user Core Web Vitals remain unverified for this change. The previous origin level field assessment cannot be treated as page specific data or an immediate before and after test.
+
+## Further optimization pass, 9 October
+
+The React performance guidelines were used to separate code by when the visitor needs it. The reporting guidance was used to retain the historical measurements above and distinguish the new local evidence from production results.
+
+| Remaining cost | Additional change |
+| --- | --- |
+| Opening the language selector's module imported the whole public game catalogue on every visit. | Load the translated route resolver when the language menu opens. Preserve translated slugs, query parameters, menu roles and the existing campaign fallback to English for Turkish. |
+| Displaying a ranking still imported a playable word-game engine. | Extract the ranking, sign-in link and small game definitions into standalone modules. The page ranking no longer imports either engine or its animation UI. |
+| Tiny avatar overlays downloaded their original 600px artwork. | Request responsive first-party thumbnails with the existing optimizer. Keep percentage positioning, hair masks, tints, custom CDN resolvers and un-sized preview consumers. |
+| Guest navigation fetched account-only destinations in the background. | Disable navigation prefetch for loading and anonymous visitors; retain member prefetch, destinations, return paths and the sign-in guard. |
+| Guest pages imported member reward, notification and friend invitation UI. | Defer those components until authenticated. Keep their underlying stores, receipt acknowledgements, polling, invitation actions and analytics unchanged. |
+
+### Additional verification
+
+- 206 targeted tests passed across 27 files in a sequential run. Coverage includes the earlier marketing and SEO tests, translated word-game and campaign links, avatar geometry and CDN compatibility, guest/member navigation, locale context, and reward receipt/polling behavior.
+- A prior run concurrent with the production build had six reward animation timing failures. All 23 reward-flow tests passed in isolation, then the entire selected suite passed sequentially. No assertion or animation timeout was weakened to make these pass.
+- All changed TypeScript/TSX files passed lint. The final production build, including TypeScript checking, passed and generated 277 pages.
+- All eight local page URLs returned 200, one H1, the expected production canonical, one eager/high-priority hero and no inline script missing its nonce.
+- Chrome verified deferred ranking appearance, language navigation from Turkish to the corresponding Spanish page, and Spanish/English guest intro opening and exit. A 390 by 844 mobile visual check showed the avatar layers and ranking rows rendering correctly without horizontal overflow. Visible avatar overlays used successful 32px/48px image requests instead of the raw originals.
+- After the final member-only loading change, clicking Social as a guest still opened the sign-in dialog on the current public page. No account was created and no gameplay round was started.
+
+These checks do not certify authenticated notification delivery, invitation acceptance, every avatar combination, completed signup, full gameplay sessions or production performance. Local analytics did not use a production PostHog key. One Chrome extension error was excluded from the application-error observations.
+
+### Measurement limitations and remaining work
+
+The default simulated mobile test still varies significantly between runs. Intermediate second-pass runs returned 74–80 before guest navigation prefetch was removed. After removing that prefetch and deferring reward UI, three runs per page returned median 79 for both representative pages, with downloads of 1.197 MB and 1.186 MB. Those runs did not establish a score improvement over the first-pass medians above. Final member-notification/invitation measurements are recorded below separately.
+
+The remaining shared payload includes authentication, analytics, all four language dictionaries and some animation code used by shared loading UI. Splitting locale dictionaries and more of the application provider tree is a larger follow-up requiring account/language and event-delivery regression checks. Render-blocking global CSS and fonts remain visible in the audits. Nothing in this pass removes tracking, weakens authentication, changes gameplay rules or changes indexing/URLs.
+
+### Final second-pass simulated mobile measurements
+
+Lighthouse 13.5.0 and Chrome 154; medians of three runs per page on the final local production build. The mobile preset uses default simulated throttling. These are after measurements, not a new tightly matched baseline test.
+
+| Page | Performance median and range | LCP median | Blocking time median | Download median |
+| --- | --- | --- | --- | --- |
+| Turkish shared player | 80, range 79–90 | 5.03 s | 124 ms | 1.193 MB |
+| English Name Chain | 80, range 76–84 | 4.98 s | 95 ms | 1.182 MB |
+
+Downloads were about 73 KB lower per representative page than the first-pass rebased measurements, roughly 6%. No account-only route prefetches appeared in any of these six navigations. Accessibility and best practices were 100 in all six runs; the console-error audit found none. Initial-load CLS stayed below 0.003.
+
+The default simulated performance score did **not** improve overall: the earlier first-pass medians were 86 and 81. Blocking time decreased on the Turkish page but increased on English Name Chain. The payload reduction is verified; a stable mobile score or LCP improvement from this extra pass is not. The single Turkish score of 90 is not a consistent 90+ pass.
+
+### Final second-pass desktop measurements
+
+Same build, Lighthouse 13.5.0 desktop preset; medians of three runs per page. These are local after measurements, not proof of a desktop improvement over a matched baseline.
+
+| Page | Performance median and range | LCP median | Blocking time median |
+| --- | --- | --- | --- |
+| Turkish shared player | 95, range 95–97 | 1.57 s | 0 ms |
+| English Name Chain | 95, range 95–95 | 1.55 s | 0 ms |
+
+Accessibility and best practices were 100 in all six desktop runs, with no console-error audit items. Initial-load CLS stayed below 0.017. One earlier desktop audit failed to record a navigation trace; it was retried rather than counted as a score.
+
+The branch remains local and has not been pushed, reviewed in a PR, deployed to staging or promoted to production. Before release, review the shared avatar and member-UI changes, validate authenticated notification/invitation/reward behavior on staging, and obtain real PageSpeed measurements there. A claim that every page or production Core Web Vitals is fixed would exceed the evidence.
