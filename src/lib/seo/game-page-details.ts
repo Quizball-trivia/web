@@ -286,25 +286,25 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
   "played-for-both-clubs": {
     en: [
       "Played for Both is the football game from the videos: two clubs, one question. Who played for both? Every day there are ten pairs, from rivals who rarely share a player to clubs with dozens of names in common.",
-      "You get 10 seconds per pair and you only need one footballer. Type the surname, the full name or the name he is known by; accents do not matter and small typos are forgiven. A wrong answer blocks the box for one second. Loans count: if he was a first-team player there, he is a valid answer.",
+      "You get 20 seconds per pair and you only need one footballer. Type the surname, the full name or the name he is known by; accents do not matter and small typos are forgiven. A wrong answer blocks the box for one second. Loans count: if he was a first-team player there, he is a valid answer.",
       "New pairs arrive every day at midnight Argentina time. Without an account you play the previous days and see example answers for every pair; signed-in players get today's ten pairs and one ranked run on the daily leaderboard, where equal scores are split by speed. Today's answers stay hidden until the day is over.",
       "It is even better with friends. Open a room, share the link and up to six of you race on the same pairs: in a 1v1 the first right answer takes the point, and with three or more the first scores 3, the second 2 and everyone else who finds one scores 1. The host picks the league: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig or the biggest clubs mixed.",
     ],
     ka: [
       "„საერთო ფეხბურთელი“ ვიდეოებიდან ნაცნობი თამაშია: ორი კლუბი, ერთი კითხვა. ვინ ითამაშა ორივეში? ყოველდღე ათი წყვილია.",
-      "თითო წყვილზე 10 წამი გაქვს და მხოლოდ ერთი ფეხბურთელია საჭირო. დაწერე გვარი, სრული სახელი ან ის სახელი, რომლითაც ცნობილია; მცირე შეცდომები გეპატიება. არასწორი პასუხი ველს ერთი წამით კეტავს. იჯარაც ითვლება.",
+      "თითო წყვილზე 20 წამი გაქვს და მხოლოდ ერთი ფეხბურთელია საჭირო. დაწერე გვარი, სრული სახელი ან ის სახელი, რომლითაც ცნობილია; მცირე შეცდომები გეპატიება. არასწორი პასუხი ველს ერთი წამით კეტავს. იჯარაც ითვლება.",
       "ახალი წყვილები ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ და ყველა წყვილის სამაგალითო პასუხებს ხედავ; ანგარიშით — დღევანდელ ათ წყვილს და დღის რეიტინგს, სადაც თანაბარ ქულებს სისწრაფე წყვეტს.",
       "მეგობრებთან კიდევ უფრო საინტერესოა. გახსენი ოთახი, გააზიარე ბმული და ექვს მოთამაშემდე ერთსა და იმავე წყვილებზე შეეჯიბრეთ: ერთი ერთზე პირველი სწორი პასუხი იღებს ქულას, სამი ან მეტი მოთამაშისას პირველი 3 ქულას იღებს, მეორე 2-ს, დანარჩენები 1-ს. ლიგას ოთახის მფლობელი ირჩევს.",
     ],
     es: [
       "Jugador en común es el juego de los videos: dos clubes, una pregunta. ¿Quién jugó en los dos? Cada día hay diez pares, desde clásicos que casi no comparten jugadores hasta clubes con decenas de nombres en común.",
-      "Tenés 10 segundos por par y alcanza con un solo futbolista. Escribí el apellido, el nombre completo o el apodo; los acentos no importan y se perdonan errores de tipeo. Una respuesta incorrecta bloquea la casilla un segundo. Las cesiones cuentan: si fue jugador del primer equipo, vale.",
+      "Tenés 20 segundos por par y alcanza con un solo futbolista. Escribí el apellido, el nombre completo o el apodo; los acentos no importan y se perdonan errores de tipeo. Una respuesta incorrecta bloquea la casilla un segundo. Las cesiones cuentan: si fue jugador del primer equipo, vale.",
       "Los pares nuevos llegan cada día a la medianoche de Argentina. Sin cuenta jugás los días anteriores y ves respuestas de ejemplo de cada par; con tu cuenta jugás los diez pares de hoy y tenés una partida que cuenta para el ranking del día, donde el empate se define por velocidad. Las respuestas de hoy no se muestran hasta que termina el día.",
       "Con amigos es todavía mejor. Abrí una sala, compartí el link y hasta seis juegan los mismos pares: en un 1 contra 1 la primera respuesta correcta se lleva el punto, y con tres o más el primero suma 3, el segundo 2 y los demás que acierten 1. El anfitrión elige la liga: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig o los clubes más grandes mezclados.",
     ],
     tr: [
       "Ortak Futbolcu, videolardan bildiğin oyun: iki kulüp, tek soru. İkisinde de kim oynadı? Her gün on eşleşme var; neredeyse hiç ortak oyuncusu olmayan rakiplerden onlarca ortak ismi olan kulüplere kadar.",
-      "Her eşleşme için 10 saniyen var ve tek bir futbolcu yeterli. Soyadını, tam adını ya da bilinen adını yaz; Türkçe karakterler ve aksanlar fark etmez, küçük yazım hataları kabul edilir. Yanlış cevap kutuyu bir saniye kilitler. Kiralık dönemler de sayılır.",
+      "Her eşleşme için 20 saniyen var ve tek bir futbolcu yeterli. Soyadını, tam adını ya da bilinen adını yaz; Türkçe karakterler ve aksanlar fark etmez, küçük yazım hataları kabul edilir. Yanlış cevap kutuyu bir saniye kilitler. Kiralık dönemler de sayılır.",
       "Yeni eşleşmeler her gün Arjantin saatiyle gece yarısı gelir. Hesapsız önceki günleri oynar ve her eşleşmenin örnek cevaplarını görürsün; hesapla bugünün on eşleşmesini oynar ve günün sıralamasına girersin. Puanlar eşitse hızlı olan üstte yer alır. Bugünün cevapları gün bitene kadar gösterilmez.",
       "Arkadaşlarla daha da keyifli. Bir oda aç, linki paylaş; altı kişiye kadar aynı eşleşmelerde yarışın: 1'e 1'de ilk doğru cevap puanı alır, üç ya da daha fazla kişide ilk bilen 3, ikinci 2, bulan diğer herkes 1 puan alır. Ligi oda sahibi seçer: Süper Lig, Premier Lig, La Liga, Serie A, Bundesliga, Ligue 1 ya da büyük kulüpler karışık.",
     ],

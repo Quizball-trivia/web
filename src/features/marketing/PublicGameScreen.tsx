@@ -65,10 +65,10 @@ const STAT_SNIPER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
 };
 
 const SHARED_PLAYER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
-  en: { ...ULTIMO_PAGE.en, label: "10 new club pairs every day · no account needed", note: "10 pairs, 10 seconds each. As a guest you play past days; with an account, today's pairs and the leaderboard." },
-  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 10 ახალი წყვილი · ანგარიშის გარეშე", note: "10 წყვილი, თითოზე 10 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
-  es: { ...ULTIMO_PAGE.es, label: "10 pares de clubes nuevos cada día · sin cuenta", note: "10 pares, 10 segundos cada uno. Sin cuenta jugás los días anteriores; con cuenta, los pares de hoy y el ranking." },
-  tr: { ...ULTIMO_PAGE.tr, label: "Her gün 10 yeni eşleşme · hesap gerekmez", note: "10 eşleşme, her biri 10 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün eşleşmelerini ve sıralamayı." },
+  en: { ...ULTIMO_PAGE.en, label: "10 new club pairs every day · no account needed", note: "10 pairs, 20 seconds each. As a guest you play past days; with an account, today's pairs and the leaderboard." },
+  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 10 ახალი წყვილი · ანგარიშის გარეშე", note: "10 წყვილი, თითოზე 20 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...ULTIMO_PAGE.es, label: "10 pares de clubes nuevos cada día · sin cuenta", note: "10 pares, 20 segundos cada uno. Sin cuenta jugás los días anteriores; con cuenta, los pares de hoy y el ranking." },
+  tr: { ...ULTIMO_PAGE.tr, label: "Her gün 10 yeni eşleşme · hesap gerekmez", note: "10 eşleşme, her biri 20 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün eşleşmelerini ve sıralamayı." },
 };
 
 const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
