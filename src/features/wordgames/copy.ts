@@ -225,12 +225,12 @@ const nameChainDaily = {
     shareText: (number: number, score: number, chains: string) => `Cadena de futbolistas #${number}: ${score} futbolistas (${chains})`,
   },
   ka: {
-    title: "ბოლო ასოთი ფეხბურთელი", tag: "დღეში 3 ჯაჭვი",
+    title: "ფეხბურთელობანა", tag: "დღეში 3 ჯაჭვი",
     lines: ["ჩვენ გაძლევთ ფეხბურთელს. შენ წერ სხვას, რომლის სახელი იმ სახელის ბოლო ასოთი იწყება.", "ითვლება სახელიც და გვარიც: Anthony Martial გამოდგება A-ზეც და M-ზეც.", "თითო პასუხზე 10 წამი გაქვს; ჯაჭვის ზრდასთან ერთად დრო მოკლდება. დღეში 3 ჯაჭვი: სულ რამდენი ფეხბურთელი?"],
     chainOf: (n: number, of: number) => `ჯაჭვი ${n}/${of}`, tooFast: "ძალიან სწრაფია! ცოტა დაიცადე.", late: "დრო უკვე ამოწურული იყო, პასუხი არ ჩაითვალა.",
     chainOver: "ჯაჭვი დასრულდა", capped: "ჯაჭვი შევსებულია!", soFar: (n: number) => `ჯერჯერობით ${n} ფეხბურთელი`, nextChain: "შემდეგი ჯაჭვი", finish: "შედეგის ნახვა",
     endTitle: "დღეისთვის დასრულდა", footballers: (n: number) => `${n} ფეხბურთელი`, longest: (n: number) => `ყველაზე გრძელი ჯაჭვი: ${n}`, chains: "ჯაჭვები", longestLabel: "ყველაზე გრძელი",
-    shareText: (number: number, score: number, chains: string) => `ბოლო ასოთი ფეხბურთელი #${number}: ${score} ფეხბურთელი (${chains})`,
+    shareText: (number: number, score: number, chains: string) => `ფეხბურთელობანა #${number}: ${score} ფეხბურთელი (${chains})`,
   },
 } as const;
 
