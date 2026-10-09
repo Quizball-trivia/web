@@ -167,7 +167,7 @@ const daily = {
 const sharedPlayerDaily = {
   tr: {
     title: "Ortak Futbolcu", tag: "Günün 10 eşleşmesi",
-    lines: ["Her gün 10 kulüp eşleşmesi.", "Her eşleşmede ikisinde de oynamış bir futbolcu yaz: 10 saniyen var.", "Bulduğun her eşleşme 1 puan. Hızlı olan sıralamada öne geçer."],
+    lines: ["Her gün 10 kulüp eşleşmesi.", "Her eşleşmede ikisinde de oynamış bir futbolcu yaz: 20 saniyen var.", "Bulduğun her eşleşme 1 puan. Hızlı olan sıralamada öne geçer."],
     pair: (n: number, of: number) => `Eşleşme ${n}/${of}`, found: "Doğru!", missed: "Süre doldu", yourAnswer: (name: string) => `Cevabın: ${name}`,
     answersTomorrow: (n: number) => `${n} doğru cevap var. İsimler gün bitince açılır.`, nextPair: "Sıradaki eşleşme", finish: "Sonucu gör",
     endTitle: "Bugünlük bitti", result: (n: number, of: number) => `${of} eşleşmenin ${n} tanesini buldun`, summary: "Eşleşmeler", notFound: "bulunamadı", late: "Süre dolmuştu, cevap sayılmadı.",
@@ -175,7 +175,7 @@ const sharedPlayerDaily = {
   },
   en: {
     title: "Played for Both", tag: "Ten pairs a day",
-    lines: ["Ten club pairs every day.", "For each pair, type a footballer who played for both: you have 10 seconds.", "Every pair you find is 1 point. Faster players rank higher."],
+    lines: ["Ten club pairs every day.", "For each pair, type a footballer who played for both: you have 20 seconds.", "Every pair you find is 1 point. Faster players rank higher."],
     pair: (n: number, of: number) => `Pair ${n}/${of}`, found: "Correct!", missed: "Time ran out", yourAnswer: (name: string) => `Your answer: ${name}`,
     answersTomorrow: (n: number) => `There are ${n} valid answers. The names open once the day is over.`, nextPair: "Next pair", finish: "See the result",
     endTitle: "Done for today", result: (n: number, of: number) => `You found ${n} of ${of} pairs`, summary: "Pairs", notFound: "not found", late: "Time had run out, the answer did not count.",
@@ -183,7 +183,7 @@ const sharedPlayerDaily = {
   },
   es: {
     title: "Jugador en común", tag: "10 pares cada día",
-    lines: ["Diez pares de clubes cada día.", "En cada par, escribí un futbolista que jugó en los dos: tenés 10 segundos.", "Cada par que encontrás vale 1 punto. El más rápido sube en el ranking."],
+    lines: ["Diez pares de clubes cada día.", "En cada par, escribí un futbolista que jugó en los dos: tenés 20 segundos.", "Cada par que encontrás vale 1 punto. El más rápido sube en el ranking."],
     pair: (n: number, of: number) => `Par ${n}/${of}`, found: "¡Correcto!", missed: "Se acabó el tiempo", yourAnswer: (name: string) => `Tu respuesta: ${name}`,
     answersTomorrow: (n: number) => `Hay ${n} respuestas válidas. Los nombres se ven cuando termina el día.`, nextPair: "Siguiente par", finish: "Ver el resultado",
     endTitle: "Listo por hoy", result: (n: number, of: number) => `Encontraste ${n} de ${of} pares`, summary: "Pares", notFound: "sin encontrar", late: "El tiempo ya había terminado; la respuesta no contó.",
@@ -191,7 +191,7 @@ const sharedPlayerDaily = {
   },
   ka: {
     title: "საერთო ფეხბურთელი", tag: "დღეში 10 წყვილი",
-    lines: ["ყოველდღე 10 კლუბის წყვილი.", "თითო წყვილზე დაწერე ფეხბურთელი, რომელმაც ორივეში ითამაშა: გაქვს 10 წამი.", "ყოველი ნაპოვნი წყვილი 1 ქულაა. უფრო სწრაფი რეიტინგში მაღლა დგას."],
+    lines: ["ყოველდღე 10 კლუბის წყვილი.", "თითო წყვილზე დაწერე ფეხბურთელი, რომელმაც ორივეში ითამაშა: გაქვს 20 წამი.", "ყოველი ნაპოვნი წყვილი 1 ქულაა. უფრო სწრაფი რეიტინგში მაღლა დგას."],
     pair: (n: number, of: number) => `წყვილი ${n}/${of}`, found: "სწორია!", missed: "დრო ამოიწურა", yourAnswer: (name: string) => `შენი პასუხი: ${name}`,
     answersTomorrow: (n: number) => `არის ${n} სწორი პასუხი. სახელები დღის დასრულების შემდეგ გაიხსნება.`, nextPair: "შემდეგი წყვილი", finish: "შედეგის ნახვა",
     endTitle: "დღეისთვის დასრულდა", result: (n: number, of: number) => `${of} წყვილიდან იპოვე ${n}`, summary: "წყვილები", notFound: "ვერ იპოვე", late: "დრო უკვე ამოწურული იყო, პასუხი არ ჩაითვალა.",
