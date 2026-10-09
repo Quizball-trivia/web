@@ -88,6 +88,7 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   ROOM_GAME_UNAVAILABLE: "friend.errorRoomGameUnavailable",
   LOBBY_READY_LOCKED: "friend.errorReadyLocked",
   LOBBY_SETTINGS_CHANGED: "friend.errorSettingsChanged",
+  LOBBY_SETTINGS_LOCKED: "friend.errorSettingsBusy",
 };
 
 /**

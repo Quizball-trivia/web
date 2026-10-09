@@ -1339,6 +1339,7 @@
     "savingSettings": "Ayarlar kaydediliyor…",
     "errorReadyLocked": "Herkes hazır olduğu için ayarlar kilitli. Oyunu değiştirmek için birinin hazır durumunu kaldırması gerekir.",
     "errorSettingsChanged": "Oyun az önce değiştirildi. Kontrol edip yeniden hazır ol.",
+    "errorSettingsBusy": "Oda başka bir değişikliği kaydediyor. Birazdan yeniden dene.",
     "startingMatch": "Maç başlıyor...",
     "preparingMatchSpinner": "Maç hazırlanıyor...",
     "matchHandoffDescription": "Seni maça alıyoruz...",

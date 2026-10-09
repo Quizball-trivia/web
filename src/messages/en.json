@@ -1339,6 +1339,7 @@
     "savingSettings": "Saving settings…",
     "errorReadyLocked": "Everyone is ready, so the settings are locked. Someone has to un-ready to change the game.",
     "errorSettingsChanged": "The game was changed just now. Check it and get ready again.",
+    "errorSettingsBusy": "The room is busy saving another change. Try again in a moment.",
     "startingMatch": "Starting Match...",
     "preparingMatchSpinner": "Preparing match...",
     "matchHandoffDescription": "Taking you to the game...",
