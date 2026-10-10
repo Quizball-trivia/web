@@ -63,6 +63,21 @@ describe("LanguageSwitcher", () => {
     );
   });
 
+  it("keeps the real language anchors available to keyboard roving focus", async () => {
+    const user = userEvent.setup();
+    render(<LanguageSwitcher locale="en" />);
+    const trigger = screen.getByRole("button", { name: /current language: english/i });
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+    const english = await screen.findByRole("menuitem", { name: /english/i });
+    const georgian = await screen.findByRole("menuitem", { name: /ქართული/i });
+    english.focus();
+    await user.keyboard("{ArrowDown}");
+    expect(georgian).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+  });
+
   it.each([
     ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", "tr", /español/i, "/es/juegos-de-futbol/jugador-en-comun"],
     ["/en/football-games/football-name-chain", "en", /türkçe/i, "/tr/futbol-oyunlari/son-harfle-futbolcu"],

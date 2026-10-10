@@ -1,6 +1,6 @@
 # QuizBall word game mobile performance
 
-The main loading defects have been corrected locally for Played for Both and Football Name Chain. Matched directly throttled mobile tests improved to a median performance score of 96 on two representative pages. The default simulated Lighthouse test still falls below 90, so this is a verified improvement, not a complete PageSpeed or production Core Web Vitals pass. Nothing has been deployed.
+Mobile is improved but **not fixed**. The latest local pass, on 10 October, reduced navigation downloads by 32.5% on Turkish Played for Both and 37.3% on English Football Name Chain against a matched baseline. Default simulated mobile performance medians are 83 and 79, with LCP still 4.42 s and 5.44 s. Desktop medians are 98 on both pages. All 2,273 tests passed, with 8 skipped, and the production build passed. Nothing has been pushed or deployed. The earlier passes and their different measurement methods are retained below; the latest evidence is in the 10 October section.
 
 ## Causes and implemented fixes
 
@@ -114,3 +114,85 @@ Same build, Lighthouse 13.5.0 desktop preset; medians of three runs per page. Th
 Accessibility and best practices were 100 in all six desktop runs, with no console-error audit items. Initial-load CLS stayed below 0.017. One earlier desktop audit failed to record a navigation trace; it was retried rather than counted as a score.
 
 The branch remains local and has not been pushed, reviewed in a PR, deployed to staging or promoted to production. Before release, review the shared avatar and member-UI changes, validate authenticated notification/invitation/reward behavior on staging, and obtain real PageSpeed measurements there. A claim that every page or production Core Web Vitals is fixed would exceed the evidence.
+
+## Further optimization pass, 10 October
+
+This pass follows the React performance guidelines to separate optional components, routing constants and language assets from the initial page. The reporting guidance preserves the earlier evidence and identifies the latest results separately. It does not remove authentication, tracking or game functionality to improve an audit score.
+
+### Changes implemented locally
+
+| Initial loading cost | Change |
+| --- | --- |
+| A closed sign-in dialog loaded forms and requested their availability. | Load the dialog on its first opening and retain its host after closing, so pending authentication and recovery state are not discarded by the loading boundary. Load the animated authentication loading screen only when needed. |
+| The root imported the complete flag-icons stylesheet. | Render the existing local SVG country flags without the global stylesheet. Preserve national and regional football flags and the existing flag-fill geometry. |
+| Client helpers imported all four translation dictionaries. | Separate the small locale configuration from translation data. Ship English fallback plus the server-selected non-English dictionary; load another language when selected. Keep interpolation, fallback, URL, storage and account-language rules. |
+| Guest route checks imported the entire public-game SEO catalogue. | Extract the unchanged localized folder and daily-collection constants. |
+| Authentication startup imported validation code only to normalize email. | Extract the unchanged trim/lowercase helper; keep the existing validation module and rules. |
+| A static logo imported the animation engine. | Load animation code only for an explicitly animated logo. Static logos retain their server-rendered artwork. |
+| The shared public-page template referenced unrelated leaderboard implementations. | Load only the selected board implementation. Word-game rankings retain their existing near-viewport loading boundary. |
+| Hero artwork had no responsive preload and downloaded the higher-quality image. | Add the responsive preload, retain high fetch priority and use the already-supported quality 60 for priority artwork. Non-priority artwork remains quality 75. |
+| Below-the-fold related artwork competed for downloads. | Mount decorative images when their reserved slots are near the viewport. Keep related headings, descriptions and links in server HTML. The games hub keeps its existing artwork behavior. |
+| The earlier deferred language-menu link registered a keyboard-focus item before its anchor existed. | Register the menu item inside the loaded link boundary. Add a keyboard regression test and repeat browser language navigation. |
+
+### Matched default simulated mobile measurements
+
+Baseline: this branch at `096ea225`, including the previous optimization pass. Both versions were production-built and served sequentially on `localhost:3000` with the same production public API and public authentication configuration. Neither local build used a production PostHog key. Chrome 154 and Lighthouse 13.5.0 were used throughout, with default simulated mobile settings: 150 ms network RTT, 1,638 Kbps download throughput, 4× CPU slowdown and a 412 × 823 viewport. No build or test suite ran concurrently with the final benchmarks.
+
+Each row is the median of three runs per version. Downloads mean decimal MB transferred during the audit navigation, not a whole gameplay session. These local HTTP/1.1 results are not measurements of production hosting or real-user Core Web Vitals.
+
+| Page | Performance before → after | Final score range | LCP before → after | Blocking time before → after | Downloads before → after |
+| --- | --- | --- | --- | --- | --- |
+| `/tr/futbol-oyunlari/ortak-futbolcu-oyunu` | 76 → 83 | 79–86 | 6.77 s → 4.42 s | 57.5 ms → 59.5 ms | 1.193 MB → 0.805 MB, down 32.5% |
+| `/en/football-games/football-name-chain` | 76 → 79 | 78–81 | 6.63 s → 5.44 s | 50.5 ms → 68 ms | 1.182 MB → 0.741 MB, down 37.3% |
+
+The final raw scores were 86/83/79 for Turkish and 79/81/78 for English. Accessibility and best practices were 100 in all six runs, with no console-error audit items. Initial-load CLS stayed below 0.003. Blocking time did not improve; the smaller download is not evidence that all execution costs improved.
+
+An intermediate build, before related-artwork deferral and the keyboard fix, returned medians 89 and 88. Those are not the final results. Neither the isolated intermediate score of 90 nor the smaller final download establishes a stable 90+ mobile pass.
+
+### Other mobile language variants
+
+The remaining six URLs received one final simulated run each. These are spot checks, not stable medians. The two representative medians above remain the primary comparison.
+
+| URL | Performance | LCP | Blocking time | Downloads |
+| --- | --- | --- | --- | --- |
+| `/tr/futbol-oyunlari/son-harfle-futbolcu` | 78 | 5.28 s | 104 ms | 0.874 MB |
+| `/en/football-games/played-for-both-clubs` | 79 | 5.39 s | 66 ms | 0.737 MB |
+| `/es/juegos-de-futbol/jugador-en-comun` | 77 | 5.65 s | 72 ms | 0.795 MB |
+| `/es/juegos-de-futbol/cadena-de-futbolistas` | 89 | 3.59 s | 83.5 ms | 0.798 MB |
+| `/ka/football-games/played-for-both-clubs` | 78 | 5.30 s | 82 ms | 0.790 MB |
+| `/ka/football-games/football-name-chain` | 81 | 4.70 s | 66 ms | 0.794 MB |
+
+All six spot checks returned accessibility 100, best practices 100 and no console-error audit items. Initial-load CLS was at most 0.003 across all twelve final mobile runs. Local pages are intentionally noindex, so their local SEO scores do not assess production indexing.
+
+### Final desktop measurements
+
+Same final build, Lighthouse 13.5.0 desktop preset; three runs per representative page. These are after measurements, not a new matched desktop baseline.
+
+| Page | Performance median and range | LCP median | Blocking time median |
+| --- | --- | --- | --- |
+| Turkish shared player | 98, range 97–98 | 1.20 s | 0 ms |
+| English Name Chain | 98, range 98–98 | 1.15 s | 0 ms |
+
+All six desktop runs returned accessibility 100, best practices 100 and no console-error audit items. Initial-load CLS stayed below 0.016.
+
+### Verification and limits
+
+- The full suite passed: 321 test files passed and 1 was skipped; 2,273 tests passed and 8 were skipped. No test assertions or timeouts were weakened.
+- Standalone TypeScript checking passed. The final production build, including its TypeScript check, passed and generated 277 pages.
+- Changed-file lint returned no errors. It reported one existing unused `tierVisual` warning in `ProfileWeb.tsx`; this pass changes only its locale import.
+- All eight local word-game URLs returned HTTP 200, one H1, their expected production self-canonical, all four language alternates and x-default, high-priority hero markup and a responsive image preload. Inline scripts retained their CSP nonces. Related headings, text and links remained in HTML. No sitemap, canonical, URL or security-policy change was made.
+- Chrome at 390 × 844 showed English Name Chain without horizontal overflow. The optimized hero remained readable. Rankings appeared when brought into view, and related artwork loaded successfully when scrolled into view.
+- Browser language navigation checked English → Spanish → Turkish Name Chain and Georgian → Spanish shared player. The final keyboard-menu check recorded no application error. One Chrome extension error was excluded from the application-error observation.
+- The sign-in panel loaded on first opening; the sign-up tab, alternative email/phone controls, closing and reopening worked. No authentication was submitted and no account was created.
+- Turkish Name Chain and Spanish shared-player guest intros opened without an account. Exit closed each dialog and cleared the play query. No round was started or completed.
+- Production analytics delivery, authenticated gameplay, account creation, reward/notification/invitation delivery, every other game mode and full-session layout stability remain unverified. The full automated suite does not replace those live checks.
+
+![English Name Chain mobile audit screenshot](word-games-mobile-2026-10-10-phone.jpg)
+
+### Remaining work and release gate
+
+The final audits still identify render-blocking shared CSS: approximately 49.6 KB transferred and 396 KB uncompressed, with estimated blocking savings around 1.0–1.2 s. Shared authentication, analytics, application controllers, fonts and routing also remain in the initial graph. These are measured remaining costs; a specific production improvement from splitting them has not yet been established.
+
+Further provider or style splitting affects more than these two game pages and needs authenticated navigation and gameplay regression checks. The target remains repeatable mobile performance of at least 90 and materially better LCP, not an isolated high score. No current mobile result justifies declaring that target met.
+
+The branch remains local: no PR, push, staging deployment or production promotion has occurred. Approval was requested for a PR and staging deployment to continue measurement on real hosting; production remains unchanged. The next gate is that approval, followed by staging performance and account/gameplay checks. This is a partial optimization result, not a completed mobile fix or release certification.

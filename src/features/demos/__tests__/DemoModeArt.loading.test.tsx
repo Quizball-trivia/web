@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
-  default: ({ src, sizes, loading, fetchPriority }: { src: string; sizes?: string; loading?: string; fetchPriority?: string }) => <span data-testid="image" data-src={src} data-sizes={sizes} data-loading={loading} data-priority={fetchPriority} />,
+  default: ({ src, sizes, loading, preload, fetchPriority, quality }: { src: string; sizes?: string; loading?: string; preload?: boolean; fetchPriority?: string; quality?: number }) => <span data-testid="image" data-src={src} data-sizes={sizes} data-loading={loading} data-preload={String(Boolean(preload))} data-fetchpriority={fetchPriority} data-quality={quality} />,
 }));
 vi.mock("next/dynamic", () => ({ default: () => () => null }));
 vi.mock("@/features/fifa-universe/FifaModeArtLazy", () => ({ FifaModeArtLazy: ({ slug, glyph }: { slug: string; glyph: boolean }) => <span data-testid="fifa-art" data-slug={slug} data-glyph={String(glyph)} /> }));
@@ -14,8 +14,10 @@ describe("DemoModeArt loading", () => {
     expect(screen.getByTestId("image")).toHaveAttribute("data-loading", "lazy");
     expect(screen.getByTestId("image")).not.toHaveAttribute("data-priority");
     view.rerender(<DemoModeArt slug={slug} priority sizes="436px" />);
-    expect(screen.getByTestId("image")).toHaveAttribute("data-loading", "eager");
-    expect(screen.getByTestId("image")).toHaveAttribute("data-priority", "high");
+    expect(screen.getByTestId("image")).toHaveAttribute("data-preload", "true");
+    expect(screen.getByTestId("image")).toHaveAttribute("data-fetchpriority", "high");
+    expect(screen.getByTestId("image")).toHaveAttribute("data-quality", "60");
+    expect(screen.getByTestId("image")).not.toHaveAttribute("data-loading");
     expect(screen.getByTestId("image")).toHaveAttribute("data-sizes", "436px");
     expect(screen.queryByTestId("fifa-art")).not.toBeInTheDocument();
   });

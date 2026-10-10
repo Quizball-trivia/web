@@ -125,8 +125,10 @@ export function DemoModeArt({ slug: rawSlug, className = "", priority = false, s
           alt=""
           fill
           sizes={sizes}
-          loading={priority ? "eager" : "lazy"}
+          quality={priority ? 60 : 75}
+          preload={priority}
           fetchPriority={priority ? "high" : undefined}
+          loading={priority ? undefined : "lazy"}
           className="object-contain object-center"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent" />

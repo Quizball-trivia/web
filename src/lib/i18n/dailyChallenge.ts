@@ -1,7 +1,8 @@
 "use client";
 
 import { storage, STORAGE_KEYS } from "@/utils/storage";
-import { normalizeLocale, translate } from "./messages";
+import { normalizeLocale } from "./locale-config";
+import { translate } from "./client-messages";
 
 export function getDailyChallengeLocale() {
   return normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, "en"));

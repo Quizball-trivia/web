@@ -9,7 +9,7 @@ import { ensureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { SIGN_IN_PATH } from "@/lib/seo/public-game-runtime";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLocale } from "@/contexts/LocaleContext";
-import { isSupportedLocale } from "@/lib/i18n/messages";
+import { isSupportedLocale } from "@/lib/i18n/locale-config";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 /**

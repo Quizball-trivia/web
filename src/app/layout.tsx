@@ -6,7 +6,6 @@ import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "@fontsource/poppins/800.css";
 import "@fontsource/poppins/900.css";
-import "flag-icons/css/flag-icons.min.css";
 import { RouteProviders } from "./route-providers";
 import {
   SITE_URL,
@@ -19,6 +18,7 @@ import {
   IS_PRODUCTION_DEPLOYMENT,
 } from "@/lib/seo/site";
 import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
+import { messages } from "@/lib/i18n/messages";
 import {
   buildSiteStructuredData,
   serializeJsonLd,
@@ -165,6 +165,7 @@ export default async function RootLayout({
           partner={partner}
           isSeoRoute={isSeoRoute}
           initialLocale={explicitLocale}
+          initialMessages={!partner && !isSeoRoute && explicitLocale && explicitLocale !== "en" ? messages[explicitLocale] : undefined}
           geoCountry={geoCountry}
           cspNonce={cspNonce}
         >

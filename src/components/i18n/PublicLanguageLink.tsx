@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { isLocale, type Locale } from "@/lib/i18n/locale";
 import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
@@ -39,5 +40,7 @@ export function PublicLanguageLink({ pathname, queryString, code, active, classN
 } & Omit<ComponentProps<typeof Link>, "href" | "onClick">) {
   const localePath = swapLocale(pathname, code);
   const href = queryString ? `${localePath}?${queryString}` : localePath;
-  return <Link {...linkProps} href={href} prefetch={false} hrefLang={code} lang={code} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>{children}</Link>;
+  // Register a roving-focus item only once its real anchor exists. A menu item
+  // outside the dynamic boundary registers a null ref while the chunk loads.
+  return <DropdownMenuItem asChild className="p-0 focus:bg-transparent"><Link {...linkProps} href={href} prefetch={false} hrefLang={code} lang={code} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>{children}</Link></DropdownMenuItem>;
 }

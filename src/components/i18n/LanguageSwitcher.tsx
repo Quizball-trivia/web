@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { Fragment } from "react";
 
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -14,8 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LOCALES as LOCALE_CODES, isLocale, type Locale } from "@/lib/i18n/locale";
-import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/messages";
+import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/locale-config";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/CountryFlag";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 const PublicLanguageLink = dynamic(() => import("./PublicLanguageLink").then((module) => module.PublicLanguageLink), {
@@ -44,10 +46,7 @@ const ITEM_CLASS = "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 
 function ItemBody({ option, active }: { option: (typeof LOCALE_OPTIONS)[number]; active: boolean }) {
   return (
     <>
-      <span
-        className={`fi fi-${option.countryCode} !size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]`}
-        aria-hidden
-      />
+      <CountryFlag code={option.countryCode} className="!size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-black leading-tight">{option.nativeName}</span>
         {option.nativeName !== option.name ? (
@@ -85,10 +84,7 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
             className,
           )}
         >
-          <span
-            className={`fi fi-${activeOption.countryCode} !h-5 !w-7 rounded-[3px]`}
-            aria-hidden
-          />
+          <CountryFlag code={activeOption.countryCode} className="!h-5 !w-7 rounded-[3px]" />
         </button>
       </DropdownMenuTrigger>
 
@@ -99,9 +95,9 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
       >
         <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{t("languageSwitcher.title")}</DropdownMenuLabel>
         {locales.map((code) => (
-          <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
+          <Fragment key={code}>
             {renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale)}
-          </DropdownMenuItem>
+          </Fragment>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -155,7 +151,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
       locales={locales}
       className={className}
       renderItem={(code, option, active) => (
-        <button
+        <DropdownMenuItem asChild className="p-0 focus:bg-transparent"><button
           type="button"
           lang={code}
           onClick={() => onSelect(code)}
@@ -163,7 +159,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
           className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
         >
           <ItemBody option={option} active={active} />
-        </button>
+        </button></DropdownMenuItem>
       )}
     />
   );

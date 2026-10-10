@@ -4,11 +4,13 @@ import { HOME_COPY } from "@/lib/seo/home-copy";
 import type { PublicSurface } from "@/lib/analytics/public-games.analytics";
 import { cardHref, type PublicGame } from "@/lib/seo/public-games";
 import { GameCardLink } from "./PublicLinks";
+import { DeferredCardArt } from "./DeferredCardArt";
 
-function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale; surface: PublicSurface }) {
+function GameCard({ game, locale, surface, deferArtwork }: { game: PublicGame; locale: Locale; surface: PublicSurface; deferArtwork?: boolean }) {
   const copy = HOME_COPY[locale].cards;
   const text = game.copy[locale];
   const badge = game.guest === "demo" ? copy.practice : copy.accountRequired;
+  const Art = deferArtwork ? DeferredCardArt : DemoModeArt;
   return (
     <GameCardLink
       href={cardHref(game, locale)}
@@ -19,7 +21,7 @@ function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale;
       className="group flex flex-col overflow-hidden rounded-xl bg-brand-blue transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
     >
       <div className="relative aspect-video w-full overflow-hidden">
-        <DemoModeArt slug={game.artSlug} sizes="(min-width: 1024px) 320px, (min-width: 768px) calc((100vw - 64px) / 3), calc((100vw - 44px) / 2)" className="size-full transition-transform duration-300 group-hover:scale-[1.05]" />
+        <Art slug={game.artSlug} sizes="(min-width: 1024px) 320px, (min-width: 768px) calc((100vw - 64px) / 3), calc((100vw - 44px) / 2)" className="size-full transition-transform duration-300 group-hover:scale-[1.05]" />
         <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{badge}</span>
       </div>
       <div className="p-3">
@@ -33,10 +35,10 @@ function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale;
   );
 }
 
-export function PublicCardGrid({ games, locale, surface = "public_home" }: { games: PublicGame[]; locale: Locale; surface?: PublicSurface }) {
+export function PublicCardGrid({ games, locale, surface = "public_home", deferArtwork = false }: { games: PublicGame[]; locale: Locale; surface?: PublicSurface; deferArtwork?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-      {games.map((game) => <GameCard key={game.modeId} game={game} locale={locale} surface={surface} />)}
+      {games.map((game) => <GameCard key={game.modeId} game={game} locale={locale} surface={surface} deferArtwork={deferArtwork} />)}
     </div>
   );
 }

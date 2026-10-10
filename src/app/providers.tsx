@@ -11,15 +11,17 @@ import { CspNonceProvider } from "@/contexts/CspNonceContext";
 import { PostHogPageView } from "@/components/PostHogProvider";
 import { AuthSessionBridge } from "@/components/auth/AuthSessionBridge";
 import type { Locale } from "@/lib/i18n/messages";
+import type { MessageDictionary } from "@/lib/i18n/client-messages";
 
 type ProvidersProps = {
   children: React.ReactNode;
   initialLocale?: Locale;
+  initialMessages?: MessageDictionary;
   geoCountry?: string | null;
   cspNonce?: string;
 };
 
-export function Providers({ children, initialLocale, geoCountry, cspNonce }: ProvidersProps) {
+export function Providers({ children, initialLocale, initialMessages, geoCountry, cspNonce }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -36,7 +38,7 @@ export function Providers({ children, initialLocale, geoCountry, cspNonce }: Pro
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} nonce={cspNonce}>
-        <LocaleProvider initialLocale={initialLocale} geoCountry={geoCountry}>
+        <LocaleProvider initialLocale={initialLocale} initialMessages={initialMessages} geoCountry={geoCountry}>
           <CspNonceProvider nonce={cspNonce}>
             <PlayerProvider>
               <AuthSessionBridge />

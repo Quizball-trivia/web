@@ -13,6 +13,7 @@ vi.mock("@/lib/realtime/realtime-principal", () => ({ ensureGuestPrincipal: vi.f
 vi.mock("@/features/demos/DemoModeArt", () => ({ DemoModeArt: ({ priority, sizes }: { priority?: boolean; sizes?: string }) => <div data-testid="art" data-priority={String(Boolean(priority))} data-sizes={sizes} /> }));
 vi.mock("../public/DeferredWordDailyBoard", () => ({ DeferredWordDailyBoard: ({ modeId, locale }: { modeId: string; locale: string }) => <div data-testid="word-board">{modeId}:{locale}</div> }));
 vi.mock("../public/PublicTopTen", () => ({ PublicTopTen: ({ board }: { board: string }) => <div data-testid="top-ten">{board}</div> }));
+vi.mock("../public/PublicPageBoard", () => ({ PublicPageBoard: ({ modeId }: { modeId: string }) => <div data-testid="top-ten">{modeId}</div> }));
 vi.mock("../public/PublicGameEmbed", () => ({
   PublicGameEmbed: ({ copy, variant }: { copy: { start: string }; variant?: string }) => <button type="button" data-variant={variant ?? "card"}>{copy.start}</button>,
 }));

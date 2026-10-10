@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/CountryFlag";
 import { footballGridStorageImageUrl } from "@/lib/football-grid/assets";
 import type { Locale } from "@/lib/i18n/locale";
 import { formatMinute, type MinuteValue, type MinutoGoalCard, type MinutoTeam } from "./minuto.logic";
@@ -27,11 +28,11 @@ function TeamBadge({ team, size = "md" }: { team: MinutoTeam; size?: "sm" | "md"
   const flagBox = { sm: "h-7 w-10", md: "h-12 w-[4.5rem] lg:h-16 lg:w-24", fluid: "aspect-[3/2] w-[20cqw]" }[size];
   const crestBox = { sm: "size-7", md: "size-14 lg:size-20", fluid: "size-[17cqw]" }[size];
   if (team.kind === "nation") {
-    // flag-icons' stylesheet loads after ours and fixes .fi's size and position, so the box sizes a wrapper and the flag
-    // is pinned to fill it inline.
+    // Pin the local flag artwork to its wrapper instead of downloading a
+    // global stylesheet for every country's flag.
     return (
       <span aria-hidden className={cn("relative inline-block shrink-0 overflow-hidden rounded-md shadow-md ring-1 ring-black/10", flagBox)}>
-        <span className={cn("fi", `fi-${team.flag}`)} style={FLAG_FILL} />
+        <CountryFlag code={team.flag ?? ""} style={FLAG_FILL} />
       </span>
     );
   }

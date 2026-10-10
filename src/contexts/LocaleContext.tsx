@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
-import { type Locale, type MessageKey, isSupportedLocale, normalizeLocale, translate } from '@/lib/i18n/messages';
+import type { MessageKey } from '@/lib/i18n/messages';
+import { type Locale, isSupportedLocale, normalizeLocale } from '@/lib/i18n/locale-config';
+import { cachedLocaleMessages, loadLocaleMessages, primeLocaleMessages, translate, translateDictionary, type MessageDictionary } from '@/lib/i18n/client-messages';
 import { inferLocaleFromBrowser } from '@/lib/i18n/infer-locale';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
@@ -33,6 +35,7 @@ interface LocaleProviderProps {
   // it takes precedence over localStorage so SEO pages render in the URL's
   // language on the FIRST paint, not after client hydration.
   initialLocale?: Locale;
+  initialMessages?: MessageDictionary;
   // Server-detected IP country (e.g. "GE"). Used only as a geo signal inside
   // the browser-inference fallback — it never overrides a saved choice, account
   // preference, or an explicit URL locale.
@@ -67,7 +70,25 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   };
 }
 
-export function LocaleProvider({ children, initialLocale, geoCountry }: LocaleProviderProps) {
+/** Load only a newly selected language; initial localized SSR uses its own props. */
+function useMessages(locale: Locale, initialLocale?: Locale, initialMessages?: MessageDictionary) {
+  const [loaded, setLoaded] = useState<{ locale: Locale; dictionary: MessageDictionary | undefined }>(() => ({ locale, dictionary: cachedLocaleMessages(locale) }));
+  const seed = locale === initialLocale ? initialMessages : undefined;
+  useEffect(() => {
+    if (seed) {
+      primeLocaleMessages(locale, seed);
+      return;
+    }
+    let active = true;
+    void loadLocaleMessages(locale).then((dictionary) => {
+      if (active) setLoaded({ locale, dictionary });
+    }).catch(() => { /* Keep English fallback on a failed chunk; a later selection retries. */ });
+    return () => { active = false; };
+  }, [locale, seed]);
+  return seed ?? (loaded.locale === locale ? loaded.dictionary : cachedLocaleMessages(locale));
+}
+
+export function LocaleProvider({ children, initialLocale, initialMessages, geoCountry }: LocaleProviderProps) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
   // usePathname updates on every client-side navigation, so we can derive the
@@ -164,7 +185,8 @@ export function LocaleProvider({ children, initialLocale, geoCountry }: LocalePr
     setLocaleState(newLocale);
   }, []);
 
-  const t = useCallback((key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params), [locale]);
+  const dictionary = useMessages(locale, initialLocale, initialMessages);
+  const t = useCallback((key: MessageKey, params?: Record<string, string | number>) => translateDictionary(dictionary, key, params), [dictionary]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<LocaleContextType>(() => ({
@@ -182,7 +204,8 @@ export function LocaleProvider({ children, initialLocale, geoCountry }: LocalePr
 
 /** A locale fixed by the caller (dev previews, tests): no storage, account or URL sync, follows `locale` as it changes. */
 export function FixedLocaleProvider({ locale, children }: { locale: Locale; children: React.ReactNode }) {
-  const value = useMemo<LocaleContextType>(() => ({ locale, setLocale: () => {}, t: (key, params) => translate(locale, key, params) }), [locale]);
+  const dictionary = useMessages(locale);
+  const value = useMemo<LocaleContextType>(() => ({ locale, setLocale: () => {}, t: (key, params) => translateDictionary(dictionary, key, params) }), [locale, dictionary]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 
