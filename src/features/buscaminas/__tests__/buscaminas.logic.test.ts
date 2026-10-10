@@ -33,11 +33,31 @@ describe("buscaminas calendar", () => {
     expect(releaseDay(new Date("2026-09-28T03:30:00Z"))).toBe("2026-09-28");
   });
 
-  it("clamps to the published range instead of cycling", () => {
-    expect(puzzleDayFor("2026-09-01")).toBe("2026-09-26");
-    expect(puzzleDayFor("2026-10-05")).toBe("2026-10-05");
-    expect(puzzleDayFor("2027-01-01")).toBe("2026-12-24");
-    expect(playableDays("2026-09-29")).toEqual(["2026-09-29", "2026-09-28", "2026-09-27", "2026-09-26"]);
+  it("clamps to the released days instead of cycling", () => {
+    expect(puzzleDayFor("2026-09-01", "2026-12-24")).toBe("2026-09-26");
+    expect(puzzleDayFor("2026-10-05", "2026-12-24")).toBe("2026-10-05");
+    expect(puzzleDayFor("2027-01-01", "2026-12-24")).toBe("2026-12-24");
+    expect(playableDays("2026-09-29", "2026-12-24")).toEqual(["2026-09-29", "2026-09-28", "2026-09-27", "2026-09-26"]);
+  });
+
+  it("takes the calendar's end from the board index, not from a fixed length", async () => {
+    const { lastReleasedDay, isLiveDay, addDays } = await import("../buscaminas.logic");
+    const run = (n: number) => Array.from({ length: n }, (_, i) => addDays("2026-09-26", i));
+    expect(lastReleasedDay(run(90))).toBe("2026-12-24");
+    // One more day in the index extends the calendar with no web release.
+    expect(lastReleasedDay(run(91))).toBe("2026-12-25");
+    expect(puzzleDayFor("2026-12-25", lastReleasedDay(run(91)))).toBe("2026-12-25");
+    expect(isLiveDay("2026-12-25", "2026-12-25", "2026-12-25")).toBe(true);
+    expect(isLiveDay("2026-12-25", "2026-12-25", "2026-12-24")).toBe(false);
+    // The server lists only released days (it ends the calendar at a hole), so the newest listed day is the end:
+    // a day missing in between (malformed, not served) does not cut the calendar short.
+    expect(lastReleasedDay([...run(2), "2026-09-29", "2026-09-30"])).toBe("2026-09-30");
+    expect(lastReleasedDay([])).toBeNull();
+    expect(playableDays("2026-10-05", null)).toEqual([]);
+    expect(isLiveDay("2026-10-05", "2026-10-05", null)).toBe(false);
+    // Until the index loads, today counts as released.
+    expect(puzzleDayFor("2027-03-01")).toBe("2027-03-01");
+    expect(isLiveDay("2027-03-01", "2027-03-01")).toBe(true);
   });
 
   it("streak counts consecutive finished days and forgives an unplayed today", () => {
@@ -57,6 +77,8 @@ describe("buscaminas guest board", () => {
     // Launch day has no yesterday: guests see the launch board (the server answers sign_in_for_today).
     expect(defaultDayFor("2026-09-26", false)).toBe("2026-09-26");
     // After the last published day nothing is live, so guests play the last board.
-    expect(defaultDayFor("2027-01-10", false)).toBe("2026-12-24");
+    expect(defaultDayFor("2027-01-10", false, "2026-12-24")).toBe("2026-12-24");
+    // With the board for that date released, a guest gets the day before it, as on any live day.
+    expect(defaultDayFor("2027-01-10", false, "2027-01-10")).toBe("2027-01-09");
   });
 });

@@ -68,5 +68,6 @@ export const minutoApi = {
   guess: (run: MinutoRun, minute: number, locale: string) => call<MinutoRun>("/guess", "POST", { ...move(run), minute }, locale),
   next: (run: MinutoRun, locale: string) => call<MinutoRun>("/next", "POST", move(run), locale),
   review: (day: string, locale: string) => call<MinutoReview>(`/review?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "none"),
-  leaderboard: (day: string, locale: string) => call<MinutoLeaderboard>(`/leaderboard?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
+  /** Without a day the server answers with its default board: today's while it is ranked, else the last released day's. */
+  leaderboard: (day: string | undefined, locale: string) => call<MinutoLeaderboard>(day ? `/leaderboard?day=${encodeURIComponent(day)}` : "/leaderboard", "GET", undefined, locale, "optional"),
 };

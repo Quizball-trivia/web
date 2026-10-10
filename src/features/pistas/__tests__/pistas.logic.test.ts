@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { CONTENT_START, LAST_DAY, RANKED_START, addDays, defaultDayFor, isLiveDay, latestDay, normalizeGuess, playableDays, pointsFor, puzzleNumber, resultEmoji, resultGrid } from "../pistas.logic";
+import { CONTENT_START, RANKED_START, addDays, defaultDayFor, isLiveDay, latestDay, normalizeGuess, playableDays, pointsFor, puzzleNumber, resultEmoji, resultGrid } from "../pistas.logic";
 import { decodePistasShare, encodePistasShare } from "../pistas.share";
+
+/** The 30th board. The calendar has no fixed end: later days exist once the server lists them. */
+const LAST_DAY = addDays(CONTENT_START, 29);
 
 describe("pistas calendar", () => {
   it("never offers a day before its release", () => {
     expect(latestDay(addDays(CONTENT_START, -1))).toBeNull();
     expect(playableDays(addDays(CONTENT_START, -1))).toEqual([]);
     expect(playableDays(CONTENT_START)).toEqual([CONTENT_START]);
-    expect(latestDay(addDays(LAST_DAY, 5))).toBe(LAST_DAY);
+    // No fixed end: the newest day the calendar can hold is always today (the board index says whether it is released).
+    expect(latestDay(addDays(LAST_DAY, 5))).toBe(addDays(LAST_DAY, 5));
   });
 
   it("ranks only today's board from the ranked start on", () => {
@@ -20,7 +24,8 @@ describe("pistas calendar", () => {
     expect(defaultDayFor(RANKED_START, true)).toBe(RANKED_START);
     expect(defaultDayFor(RANKED_START, false)).toBe(addDays(RANKED_START, -1));
     expect(defaultDayFor(CONTENT_START, false)).toBeNull();
-    expect(defaultDayFor(addDays(LAST_DAY, 3), false)).toBe(LAST_DAY);
+    expect(defaultDayFor(addDays(LAST_DAY, 3), false)).toBe(addDays(LAST_DAY, 2));
+    expect(isLiveDay(addDays(LAST_DAY, 3), addDays(LAST_DAY, 3))).toBe(true);
   });
 
   it("numbers boards from the first content day", () => {
@@ -71,6 +76,13 @@ describe("pistas scoring and share", () => {
     expect(decodePistasShare(code(0), LAST_DAY)).toBeNull();
     expect(decodePistasShare(code(99), addDays(LAST_DAY, 30))).toBeNull();
     expect(decodePistasShare(code(5), addDays(LAST_DAY, 30))).not.toBeNull();
+  });
+
+  it("round-trips board numbers past 999 (the calendar has no fixed end)", () => {
+    const solved = Array.from({ length: 10 }, () => ({ outcome: "solved" as const, clues: 1, points: pointsFor(1) }));
+    const code = encodePistasShare(1000, solved, "es");
+    expect(decodePistasShare(code, addDays(CONTENT_START, 999))).toMatchObject({ number: 1000 });
+    expect(decodePistasShare(code, addDays(CONTENT_START, 998))).toBeNull();
   });
 
   it("rejects a score the colour grid cannot add up to", () => {

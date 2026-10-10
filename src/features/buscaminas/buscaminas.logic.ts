@@ -4,10 +4,15 @@ export const TARGETS_PER_ROUND = 12;
 export const PERFECT_BONUS = 3;
 export const MAX_SCORE = ROUNDS_PER_DAY * (TARGETS_PER_ROUND + PERFECT_BONUS);
 
-/** The release calendar follows Buenos Aires: the launch audience is Argentine, so the new board lands at their midnight. */
+/**
+ * The release calendar follows Buenos Aires: the launch audience is Argentine, so the new board lands at their midnight.
+ * It has no fixed length: the server's board index (/boards) lists the released days, and the last of them ends the
+ * calendar. Helpers take that `lastDay`; while the index has not loaded it is `undefined` and today counts as released.
+ */
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
 export const LAUNCH_DAY = "2026-09-26";
-export const PUBLISHED_DAYS = 90;
+/** The calendar's last day: a date once the board index is known, null when it lists no board, undefined until it loads. */
+export type LastDay = string | null | undefined;
 
 export type Difficulty = "easy" | "medium" | "hard";
 
@@ -64,19 +69,24 @@ export function addDays(day: string, delta: number): string {
   return new Date(Date.parse(`${day}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
 }
 
-/** Published puzzle for a release day: before launch → the first; after the last → the last (never a silent re-run). */
-export function puzzleDayFor(today: string): string {
-  const n = dayNumber(today);
-  if (n < 1) return LAUNCH_DAY;
-  if (n > PUBLISHED_DAYS) return addDays(LAUNCH_DAY, PUBLISHED_DAYS - 1);
-  return today;
+/** The last released day in a board index: the newest day it lists (the server lists only released days). */
+export function lastReleasedDay(days: Iterable<string>): string | null {
+  let last: string | null = null;
+  for (const day of days) if (day >= LAUNCH_DAY && (last === null || day > last)) last = day;
+  return last;
+}
+
+/** Published puzzle for a release day: before launch → the first; after the last released day → that day (never a silent re-run). */
+export function puzzleDayFor(today: string, lastDay?: LastDay): string {
+  if (dayNumber(today) < 1) return LAUNCH_DAY;
+  return lastDay && today > lastDay ? lastDay : today;
 }
 
 /** Days a player may open: launch through today's puzzle, newest first. */
-export function playableDays(today: string): string[] {
-  const last = puzzleDayFor(today);
+export function playableDays(today: string, lastDay?: LastDay): string[] {
   const days: string[] = [];
-  for (let d = last; dayNumber(d) >= 1; d = addDays(d, -1)) days.push(d);
+  if (lastDay === null) return days;
+  for (let d = puzzleDayFor(today, lastDay); dayNumber(d) >= 1; d = addDays(d, -1)) days.push(d);
   return days;
 }
 
@@ -88,13 +98,14 @@ export const puzzleNumber = (day: string) => dayNumber(day);
  */
 export const GUESTS_PLAY_LIVE = false;
 
-/** Today's board is live (ranked) only inside the published range. */
-export const isLiveDay = (day: string, today: string) => day === today && dayNumber(today) >= 1 && dayNumber(today) <= PUBLISHED_DAYS;
+/** Today's board is live (ranked) only while today is a released day. */
+export const isLiveDay = (day: string, today: string, lastDay?: LastDay) =>
+  day === today && dayNumber(today) >= 1 && (lastDay === undefined || (lastDay !== null && today <= lastDay));
 
 /** The board a player lands on: today's for accounts, yesterday's for guests while today's is live. */
-export function defaultDayFor(today: string, signedIn: boolean): string {
-  const live = puzzleDayFor(today);
-  if (signedIn || GUESTS_PLAY_LIVE || !isLiveDay(live, today)) return live;
+export function defaultDayFor(today: string, signedIn: boolean, lastDay?: LastDay): string {
+  const live = puzzleDayFor(today, lastDay);
+  if (signedIn || GUESTS_PLAY_LIVE || !isLiveDay(live, today, lastDay)) return live;
   const yesterday = addDays(live, -1);
   return dayNumber(yesterday) >= 1 ? yesterday : live;
 }
