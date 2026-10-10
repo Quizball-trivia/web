@@ -21,6 +21,7 @@ import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/publicHub";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useLocale } from "@/contexts/LocaleContext";
+import { DeferredShellRealtime } from "./app-shell/DeferredShellRealtime";
 
 // Member notifications, invitations and rewards do not exist for guests. Load
 // their animated UI after authentication; their stores and delivery stay intact.
@@ -92,6 +93,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen text-foreground" data-shell="app">
+      <DeferredShellRealtime />
       {!isGuest && <ChallengeInvitePrompt />}
       <AppShellPageChrome />
 

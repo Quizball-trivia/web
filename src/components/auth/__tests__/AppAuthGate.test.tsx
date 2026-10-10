@@ -6,7 +6,8 @@ const state = vi.hoisted(() => ({ pathname: '/auction', status: 'anonymous', use
 vi.mock('next/navigation', () => ({ usePathname: () => state.pathname, useRouter: () => ({ replace: state.replace }) }));
 vi.mock('@/stores/auth.store', () => ({ useAuthStore: (selector: (value: typeof state) => unknown) => selector(state) }));
 vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ t: (key: string) => key }) }));
-vi.mock('@/lib/sounds/gameSounds', () => ({ stopBgm: vi.fn() }));
+const stopLoadedBgm = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/sounds/audioControl', () => ({ stopLoadedBgm }));
 vi.mock('@/lib/config', () => ({ GUEST_LOBBIES_ENABLED: true }));
 vi.mock('@/lib/realtime/realtime-principal', () => ({ useRealtimePrincipal: () => ({ kind: 'guest' }) }));
 vi.mock('@/features/auth/GuestAuthDialog', () => ({ GuestAuthDialog: () => {
@@ -65,5 +66,12 @@ describe('guest sign-in navigation through the shared app gate', () => {
     act(() => { state.pathname = '/onboarding'; state.user = { onboarding_complete: true } as User; });
     view.rerender(<AppAuthGate><div>Onboarding</div></AppAuthGate>);
     expect(state.replace).toHaveBeenLastCalledWith('/friend/room/ABC123');
+  });
+  it('stops already-loaded music synchronously before redirecting a signed-out player from a private route', () => {
+    state.pathname = '/profile';
+    render(<AppAuthGate><div>Profile</div></AppAuthGate>);
+    expect(stopLoadedBgm).toHaveBeenCalledWith(0);
+    expect(state.replace).toHaveBeenCalledWith('/play');
+    expect(stopLoadedBgm.mock.invocationCallOrder[0]).toBeLessThan(state.replace.mock.invocationCallOrder[0]);
   });
 });
