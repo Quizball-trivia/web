@@ -1,8 +1,9 @@
 "use client";
 
 import type React from "react";
+import { Fragment } from "react";
 
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -14,12 +15,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LOCALES as LOCALE_CODES, isLocale, type Locale } from "@/lib/i18n/locale";
-import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/messages";
+import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/locale-config";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/CountryFlag";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
-import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
-import { findPublicGameBySlug, isPublishedIn } from "@/lib/seo/public-games";
+
+const PublicLanguageLink = dynamic(() => import("./PublicLanguageLink").then((module) => module.PublicLanguageLink), {
+  ssr: false,
+  loading: () => <div role="status" className="h-12 animate-pulse rounded-xl bg-white/10"><span className="sr-only">…</span></div>,
+});
 
 interface LanguageSwitcherProps {
   // Server-rendered fallback locale used on the very first paint. After
@@ -37,40 +41,12 @@ const OPTIONS_BY_CODE = Object.fromEntries(
   LOCALE_OPTIONS.map((option) => [option.code, option]),
 ) as Record<Locale, (typeof LOCALE_OPTIONS)[number]>;
 
-// Swap the leading /:locale segment of the current path with the target locale.
-function swapLocale(pathname: string, target: Locale): string {
-  // Campaign quizzes have no Turkish edition yet; a Turkish switch on one lands on the English quiz.
-  const campaignPath = swapCampaignLocalePath(pathname, target === 'tr' ? 'en' : target);
-  if (campaignPath) return campaignPath;
-  const segments = pathname.split("/").filter(Boolean);
-  // Public game pages have translated folders and slugs (/es/juegos-de-futbol/subasta).
-  if (segments.length === 3 && isLocale(segments[0])) {
-    const source = segments[0];
-    if (segments[1] === PUBLIC_GAMES_FOLDER[source]) {
-      if (segments[2] === DAILY_COLLECTION_SLUG[source]) return isSeoPageLocale(target) ? dailyCollectionPath(target) : `/${target}`;
-      const entry = findGamePageByLocalizedSlug(source, segments[1], segments[2]);
-      if (entry) {
-        const game = findPublicGameBySlug(entry.slug);
-        return game && isPublishedIn(game, target) ? gamePagePath(entry, target) : `/${target}`;
-      }
-    }
-  }
-  if (segments.length === 0 || !isLocale(segments[0])) {
-    return `/${target}`;
-  }
-  segments[0] = target;
-  return `/${segments.join("/")}`;
-}
-
 const ITEM_CLASS = "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-white outline-none transition-colors hover:bg-white/10 focus:bg-white/10";
 
 function ItemBody({ option, active }: { option: (typeof LOCALE_OPTIONS)[number]; active: boolean }) {
   return (
     <>
-      <span
-        className={`fi fi-${option.countryCode} !size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]`}
-        aria-hidden
-      />
+      <CountryFlag code={option.countryCode} className="!size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-black leading-tight">{option.nativeName}</span>
         {option.nativeName !== option.name ? (
@@ -108,10 +84,7 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
             className,
           )}
         >
-          <span
-            className={`fi fi-${activeOption.countryCode} !h-5 !w-7 rounded-[3px]`}
-            aria-hidden
-          />
+          <CountryFlag code={activeOption.countryCode} className="!h-5 !w-7 rounded-[3px]" />
         </button>
       </DropdownMenuTrigger>
 
@@ -122,9 +95,9 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
       >
         <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{t("languageSwitcher.title")}</DropdownMenuLabel>
         {locales.map((code) => (
-          <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
+          <Fragment key={code}>
             {renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale)}
-          </DropdownMenuItem>
+          </Fragment>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -138,7 +111,6 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
   const queryString = searchParams.toString();
   const firstSegment = pathname.split("/").filter(Boolean)[0];
   const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
-  const activeOption = OPTIONS_BY_CODE[activeLocale];
 
   return (
     <LanguageMenu
@@ -146,22 +118,20 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
       locales={locales}
       className={className}
       renderItem={(code, option, active) => {
-        const localePath = swapLocale(pathname, code);
-        const href = queryString ? `${localePath}?${queryString}` : localePath;
         return (
-          <Link
-            href={href}
-            hrefLang={code}
-            lang={code}
+          <PublicLanguageLink
+            pathname={pathname}
+            queryString={queryString}
+            code={code}
+            active={active}
             // An explicit choice: persisted so leaving the localized pages
             // (creating a room, opening a game) keeps this language instead
             // of falling back to an earlier inferred one.
             onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect?.(code); }}
-            aria-current={active ? "page" : undefined}
             className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
           >
             <ItemBody option={option} active={active} />
-          </Link>
+          </PublicLanguageLink>
         );
       }}
     />
@@ -181,7 +151,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
       locales={locales}
       className={className}
       renderItem={(code, option, active) => (
-        <button
+        <DropdownMenuItem asChild className="p-0 focus:bg-transparent"><button
           type="button"
           lang={code}
           onClick={() => onSelect(code)}
@@ -189,7 +159,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
           className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
         >
           <ItemBody option={option} active={active} />
-        </button>
+        </button></DropdownMenuItem>
       )}
     />
   );

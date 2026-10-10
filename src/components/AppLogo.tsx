@@ -1,5 +1,9 @@
+"use client";
+
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import dynamic from 'next/dynamic';
+
+const AnimatedAppLogo = dynamic(() => import('./AnimatedAppLogo').then((module) => module.AnimatedAppLogo), { ssr: false });
 
 interface AppLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -60,17 +64,9 @@ export function AppLogo({ size = 'md', animated = false, className = "", iconOnl
 
   if (animated) {
     return (
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 200,
-          damping: 20
-        }}
-      >
+      <AnimatedAppLogo>
         <LogoContent config={config} className={className} iconOnly={iconOnly} />
-      </motion.div>
+      </AnimatedAppLogo>
     );
   }
 

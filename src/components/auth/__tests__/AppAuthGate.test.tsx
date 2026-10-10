@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@/lib/types';
 
@@ -11,7 +11,7 @@ vi.mock('@/lib/config', () => ({ GUEST_LOBBIES_ENABLED: true }));
 vi.mock('@/lib/realtime/realtime-principal', () => ({ useRealtimePrincipal: () => ({ kind: 'guest' }) }));
 vi.mock('@/features/auth/GuestAuthDialog', () => ({ GuestAuthDialog: () => {
   const open = useAuthPromptStore(value => value.isOpen);
-  return open ? <div role="dialog">Sign in</div> : null;
+  return <div data-testid="auth-dialog-host">{open ? <div role="dialog">Sign in</div> : null}</div>;
 } }));
 vi.mock('@/features/auth/AccountBannedScreen', () => ({ AccountBannedScreen: () => <div>Banned</div> }));
 vi.mock('@/components/shared/LoadingScreen', () => ({ LoadingScreen: () => <div>Loading</div> }));
@@ -28,11 +28,23 @@ describe('guest sign-in navigation through the shared app gate', () => {
     vi.clearAllMocks(); localStorage.removeItem(STORAGE_KEYS.POST_AUTH_REDIRECT);
     useAuthPromptStore.setState({ isOpen: false });
   });
-  it.each(['/auction', '/tic-tac-toe'])('opens the results sign-in dialog on fullscreen %s', pathname => {
+  it.each(['/auction', '/tic-tac-toe'])('opens the results sign-in dialog on fullscreen %s', async pathname => {
     state.pathname = pathname;
     render(<AppAuthGate><GuestResultsCta /></AppAuthGate>);
+    expect(screen.queryByTestId('auth-dialog-host')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('guest-results-cta'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+  it('does not mount a closed dialog until it is requested, then retains it across closing and reopening', async () => {
+    render(<AppAuthGate><GuestResultsCta /></AppAuthGate>);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('guest-results-cta'));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    act(() => useAuthPromptStore.getState().close());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('auth-dialog-host')).toBeInTheDocument();
+    act(() => useAuthPromptStore.getState().open());
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
   });
   it('returns a signed-in guest to the saved room after the guest UI unmounts', () => {
     rememberPostAuthRedirect('/friend/room/ABC123');

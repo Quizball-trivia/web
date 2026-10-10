@@ -12,7 +12,7 @@ import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.quer
 import { useRankedProfile, useUserRanks } from "@/lib/queries/ranked.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useLocale } from "@/contexts/LocaleContext";
-import { LOCALES, type Locale } from "@/lib/i18n/messages";
+import { LOCALES, type Locale } from "@/lib/i18n/locale-config";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { MAX_MATCHES_COUNT } from "@/lib/constants/matches";
 import { useEffect } from "react";

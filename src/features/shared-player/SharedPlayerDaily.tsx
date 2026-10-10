@@ -1,5 +1,6 @@
 "use client";
 
+import { sharedPlayerDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, X } from "lucide-react";
@@ -8,7 +9,7 @@ import { sharedPlayerCopy, sharedPlayerDailyCopy, wordDailyCopy, wordSharedCopy,
 import { createWordDailyApi, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
 import { isLiveDay, puzzleNumber, SHARED_PLAYER_CALENDAR } from "@/features/wordgames/daily/wordDaily.logic";
 import { useServerNow, useWordDaily } from "@/features/wordgames/daily/useWordDaily";
-import { DailyEnd, WordDailyLeaderboard, WordDailyScreen, type WordDailyGame } from "@/features/wordgames/daily/WordDailyShell";
+import { DailyEnd, WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
 import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins, useRefused } from "@/features/wordgames/ui";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
@@ -28,13 +29,7 @@ type Result = "ok" | "wrong" | "locked" | "late";
 export const sharedPlayerDailyApi = createWordDailyApi<SharedPlayerDailyState, Result, { day: string; pairs: PairResult[] }>("/api/v1/shared-player");
 const loadBoard = (day: string, locale: string) => sharedPlayerDailyApi.leaderboard(day, locale);
 
-/** Day 5 is 2026-10-10: from there a pair lasts twenty seconds, the four days before it ten (the server decides; this is the intro's wording). */
-const LONG_CLOCK_FROM_DAY = 5;
-
-export const sharedPlayerDailyGame = (locale: string): WordDailyGame => {
-  const d = sharedPlayerDailyCopy(locale);
-  return { modeId: "sharedPlayer", route: "/ortak-futbolcu", roomGame: "shared_player", brand: sharedPlayerCopy(locale).brand, hero: "/assets/demos/game-modes/ortak-futbolcu.webp", calendar: SHARED_PLAYER_CALENDAR, tag: d.tag, lines: (dayNumber) => d.lines(dayNumber >= LONG_CLOCK_FROM_DAY ? 20 : 10) };
-};
+export { sharedPlayerDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 
 export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   locale: string; onExit?: () => void; onEvent?: (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => void; initialDay?: string | null; onDay?: (day: string, newest: boolean) => void;
@@ -166,7 +161,4 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
   return <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void start()} onExit={onExit} play={play} end={end} />;
 }
 
-/** The day's ranking on its own (the public page shows it under the game). */
-export function SharedPlayerDailyBoard({ locale, className }: { locale: string; className?: string }) {
-  return <WordDailyLeaderboard game={sharedPlayerDailyGame(locale)} locale={locale} load={loadBoard} className={className} />;
-}
+export { SharedPlayerDailyBoard } from "@/features/wordgames/daily/WordDailyPageBoards";

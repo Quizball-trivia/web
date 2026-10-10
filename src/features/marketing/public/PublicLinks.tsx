@@ -10,7 +10,7 @@ import {
   trackGamesSignupClick,
   type PublicSurface,
 } from "@/lib/analytics/public-games.analytics";
-import { SIGN_IN_PATH } from "@/lib/seo/public-games";
+import { SIGN_IN_PATH } from "@/lib/seo/public-game-runtime";
 
 const useAccess = () => (useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest");
 
@@ -19,7 +19,7 @@ export function GameCardLink({ href, modeId, group, surface, destination, classN
   href: string; modeId: string; group: string; surface: PublicSurface; destination: "page" | "quiz" | "app"; className?: string; children: ReactNode;
 }) {
   return (
-    <Link href={href} className={className} onClick={() => trackGameCardClick({ modeId, surface, group, destination })}>
+    <Link href={href} prefetch={false} className={className} onClick={() => trackGameCardClick({ modeId, surface, group, destination })}>
       {children}
     </Link>
   );
@@ -37,11 +37,12 @@ export function SignInLink({ href = SIGN_IN_PATH, placement, modeId, returnTo, m
   const pathname = usePathname();
   const access = useAccess();
   if (access === "member") {
-    return <Link href={memberHref ?? returnTo ?? "/play"} className={className}>{memberLabel ?? children}</Link>;
+    return <Link href={memberHref ?? returnTo ?? "/play"} prefetch={false} className={className}>{memberLabel ?? children}</Link>;
   }
   return (
     <Link
       href={href}
+      prefetch={false}
       className={className}
       onClick={() => {
         rememberPostAuthRedirect(returnTo ?? pathname);

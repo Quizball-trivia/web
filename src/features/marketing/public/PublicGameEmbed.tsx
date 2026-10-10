@@ -10,7 +10,7 @@ import { type SessionKind, trackPlayNowClick, trackGameComplete, trackGameExit, 
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/locale";
-import { isFullGameDemo } from "@/lib/seo/public-games";
+import { isFullGameDemo } from "@/lib/seo/public-game-runtime";
 import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -138,7 +138,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
           ref={launchRef}
           type="button"
           onClick={start}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-green text-white hover:bg-brand-green-deep px-8 text-base font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-green text-black hover:bg-brand-green-deep px-8 text-base font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <Play className="size-5" /> {copy.start}
         </button>

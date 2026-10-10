@@ -1,9 +1,9 @@
 // Locale codes used by URL routing and SEO. messages.ts has a richer LOCALES
 // array (with flag/nativeName) for UI rendering — we deliberately keep this
 // list as plain strings so callers can iterate them as URL segments.
-import { isSupportedLocale, type Locale } from "./messages";
+import { isSupportedLocale, type Locale } from "./locale-config";
 
-export { isSupportedLocale as isLocale, type Locale } from "./messages";
+export { isSupportedLocale as isLocale, type Locale } from "./locale-config";
 
 export const LOCALES = ["en", "ka", "es", "tr"] as const satisfies readonly Locale[];
 

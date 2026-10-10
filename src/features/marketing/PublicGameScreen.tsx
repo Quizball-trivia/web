@@ -9,15 +9,9 @@ import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
 import { BuscaminasBanner } from "./public/BuscaminasBanner";
-import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
-import { StatSniperPageBoard } from "./public/StatSniperPageBoard";
-import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
-import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
-import { SharedPlayerDailyBoard } from "@/features/shared-player/SharedPlayerDaily";
-import { NameChainDailyBoard } from "@/features/name-chain/NameChainDaily";
-import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
+import { DeferredWordDailyBoard } from "./public/DeferredWordDailyBoard";
 import { SignInLink } from "./public/PublicLinks";
-import { PublicTopTen } from "./public/PublicTopTen";
+import { PublicPageBoard } from "./public/PublicPageBoard";
 
 const L: Record<SeoPageLocale, { compete: string; competeText: string; howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; guestDaily: string; startDaily: string; accountDaily: string; coinLabel: string; coinStart: string; coinNote: string; coinAccountText: string; member: string; english: string; noteDaily: string; loading: string; sampleFallback: string; accountTextDaily: string; playNow: string; playNowLabel: string; playNowNote: string; training: string; trainingText: string; ranked: string; rankedText: string }> = {
   en: { compete: "Play online", competeText: "Sign up to play real opponents online, earn ranked points and get on the leaderboards.", howTo: "How to play", details: "Rules and details", related: "Related games", all: "All football games", account: "Play the real thing", accountText: "The practice round above is a sample. Sign in to play today's real game, keep your results and earn coins.", start: "Play training", note: "No account needed. Sample content, bot opponents where relevant, virtual points only, nothing is saved.", exit: "Exit practice", guest: "Guest practice", guestDaily: "Sneak peek", startDaily: "Try the game", accountDaily: "Play for coins", member: "Play", english: "The practice round is in English for now.", noteDaily: "A fixed sample round, the same every day. No account needed; your sample score isn't saved.", accountTextDaily: "Sign in to play today's real challenge for coins and keep your streak.", loading: "Loading today's set…", sampleFallback: "Sample round (today's set could not be loaded)" , coinLabel: "Sneak peek · 1,000 practice coins", coinStart: "Try the game", coinNote: "A fixed sample with sample odds and practice coins. No account rewards; nothing is saved.", coinAccountText: "Sign in to stake real coins from your wallet, with the live odds and the day's leaderboards.", playNow: "Play now", playNowLabel: "Quick match", playNowNote: "No account needed. Jump straight into a match; nothing counts toward the rankings.", training: "Play training", trainingText: "Learn the rules in a short guided round before you play.", ranked: "Play ranked", rankedText: "Sign up to earn ranked points and get on the leaderboard." },
@@ -134,7 +128,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
         </div>
         <div className="md:col-start-2 md:row-span-2 md:row-start-1">
           <div className="overflow-hidden rounded-2xl bg-brand-blue">
-            <div className="aspect-video w-full"><DemoModeArt slug={game.artSlug} className="size-full" /></div>
+            <div className="aspect-video w-full"><DemoModeArt slug={game.artSlug} className="size-full" priority sizes="(min-width: 1024px) 436px, (min-width: 768px) calc((100vw - 64px) / 2.2), calc(100vw - 32px)" /></div>
           </div>
           {botPlay && (
             <section aria-label={labels.ranked} className="mt-6 rounded-2xl bg-brand-blue p-5">
@@ -143,8 +137,11 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
               <SignInLink placement="game_page_ranked" modeId={game.modeId} returnTo={game.playPath} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-yellow px-6 text-sm font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{labels.ranked}</SignInLink>
             </section>
           )}
-          {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "sharedPlayer" ? <SharedPlayerDailyBoard locale={locale} className="mt-6" /> : game.modeId === "nameChain" ? <NameChainDailyBoard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
+          {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain"
+            ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
+            : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
+              ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">
@@ -192,7 +189,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
           <h2 className="text-xl font-bold uppercase md:text-2xl">{labels.related}</h2>
           <Link href={`/${locale}`} className="text-sm font-bold uppercase tracking-wide text-brand-yellow hover:underline">{labels.all}</Link>
         </div>
-        <div className="mt-4"><PublicCardGrid games={related} locale={locale} surface="public_game" /></div>
+        <div className="mt-4"><PublicCardGrid games={related} locale={locale} surface="public_game" deferArtwork /></div>
       </section>
     </PublicPageFrame>
   );

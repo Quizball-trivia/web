@@ -1,7 +1,5 @@
 "use client";
 
-import { ChallengeInvitePrompt } from "@/components/layout/ChallengeInvitePrompt";
-import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 import type { AppShellProps } from "./app-shell/appShell.types";
@@ -9,8 +7,7 @@ import { useAppShellViewModel } from "./app-shell/useAppShellViewModel";
 import { AppShellPageChrome } from "./app-shell/AppShellPageChrome";
 import { AppShellLogoutDialog } from "./app-shell/AppShellLogoutDialog";
 import { AppShellBanners } from "./app-shell/AppShellBanners";
-import { EventAwardCeremony } from "@/components/shared/EventAwardCeremony";
-import { WlRewardCeremonyHost } from "@/features/weekend-league/rewards/WlRewardCeremonyHost";
+import dynamic from "next/dynamic";
 import { AppShellCurrencyPills } from "./app-shell/AppShellCurrencyPills";
 import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
@@ -24,6 +21,13 @@ import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/publicHub";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useLocale } from "@/contexts/LocaleContext";
+
+// Member notifications, invitations and rewards do not exist for guests. Load
+// their animated UI after authentication; their stores and delivery stay intact.
+const ChallengeInvitePrompt = dynamic(() => import("@/components/layout/ChallengeInvitePrompt").then((module) => module.ChallengeInvitePrompt), { ssr: false });
+const NotificationsDropdown = dynamic(() => import("@/components/layout/NotificationsDropdown").then((module) => module.NotificationsDropdown), { ssr: false });
+const EventAwardCeremony = dynamic(() => import("@/components/shared/EventAwardCeremony").then((module) => module.EventAwardCeremony), { ssr: false });
+const WlRewardCeremonyHost = dynamic(() => import("@/features/weekend-league/rewards/WlRewardCeremonyHost").then((module) => module.WlRewardCeremonyHost), { ssr: false });
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
@@ -88,13 +92,13 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen text-foreground" data-shell="app">
-      <ChallengeInvitePrompt />
+      {!isGuest && <ChallengeInvitePrompt />}
       <AppShellPageChrome />
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}
         <div className="hidden xl:block" onClickCapture={guestNavGuard}>
-          <Sidebar currentPath={vm.navPath} homeHref={homeHref} socialBadgeCount={socialBadgeCount} />
+          <Sidebar currentPath={vm.navPath} homeHref={homeHref} prefetchRoutes={!isGuest} socialBadgeCount={socialBadgeCount} />
         </div>
 
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
@@ -187,8 +191,8 @@ export function AppShell({ children }: AppShellProps) {
               <AppShellBanners variant="mobile" vm={vm} />
             </div>
             <main className="xl:p-6">{children}</main>
-            <EventAwardCeremony />
-            <WlRewardCeremonyHost />
+            {!isGuest && <EventAwardCeremony />}
+            {!isGuest && <WlRewardCeremonyHost />}
           </div>
         </div>
       </div>
@@ -199,6 +203,7 @@ export function AppShell({ children }: AppShellProps) {
           <AppShellMobileBottomNav
             isPathActive={isPathActive}
             homeHref={homeHref}
+            prefetchRoutes={!isGuest}
             socialBadgeCount={socialBadgeCount}
           />
         </div>

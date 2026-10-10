@@ -40,7 +40,7 @@ import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/li
 import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
 import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
-import { LOCALES, type Locale } from "@/lib/i18n/messages";
+import { LOCALES, type Locale } from "@/lib/i18n/locale-config";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
 import {
   DEFAULT_USER_PREFERENCES,

@@ -1,11 +1,8 @@
 import Image from "next/image";
 
 import { DemoModeIcon } from "./DemoModeIcon";
-import dynamic from "next/dynamic";
 import { isFifaSlug } from "@/features/fifa-universe/registry";
-
-// Split out: it carries the whole FIFA card dataset, which pages without FIFA tiles (the partner view) must not load.
-const FifaModeArt = dynamic(() => import("@/features/fifa-universe/FifaModeArt").then((m) => m.FifaModeArt));
+import { FifaModeArtLazy } from "@/features/fifa-universe/FifaModeArtLazy";
 
 // Every illustrated tile ships in public/. Do not derive artwork locations
 // from the authentication server: another environment may not have that bucket.
@@ -103,12 +100,12 @@ function hash(input: string): number {
 // The daily reuses the prototype card's artwork.
 const ART_ALIAS: Record<string, string> = { "daily-missingXi": "lab-missing-xi", "daily-passChain": "mini-pass-chain", "daily-statSniper": "mini-stat-sniper" };
 
-export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; className?: string }) {
+export function DemoModeArt({ slug: rawSlug, className = "", priority = false, sizes = "(min-width: 1024px) 50vw, 100vw" }: { slug: string; className?: string; priority?: boolean; sizes?: string }) {
   const slug = ART_ALIAS[rawSlug] ?? rawSlug;
   // Owner decision 2026-09-05: the Guess the Card daily uses the FIFA
   // collection's tile art (a real masked gold card on the pitch gradient).
   if (isFifaSlug(slug) || slug === "mini-guess-fifa-card" || slug === "daily-fifaCards") {
-    return <FifaModeArt slug={slug === "daily-fifaCards" ? "mini-guess-fifa-card" : slug} className={className} glyph={slug !== "daily-fifaCards"} />;
+    return <FifaModeArtLazy slug={slug === "daily-fifaCards" ? "mini-guess-fifa-card" : slug} className={className} glyph={slug !== "daily-fifaCards"} />;
   }
   // Ranked (the "match" engine) shows the hub hero's trophy on brand green.
   if (slug === "match") {
@@ -127,7 +124,11 @@ export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; c
             : `${GAME_MODE_IMAGE_BASE}/${slug}.webp`}
           alt=""
           fill
-          sizes="(min-width: 1024px) 50vw, 100vw"
+          sizes={sizes}
+          quality={priority ? 60 : 75}
+          preload={priority}
+          fetchPriority={priority ? "high" : undefined}
+          loading={priority ? undefined : "lazy"}
           className="object-contain object-center"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent" />

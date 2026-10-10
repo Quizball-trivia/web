@@ -1,7 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LocaleProvider, useLocale } from '../LocaleContext';
+import { messages } from '@/lib/i18n/messages';
+import { loadLocaleMessages } from '@/lib/i18n/client-messages';
 
 const mocks = vi.hoisted(() => ({
   pathname: '/play',
@@ -29,8 +32,8 @@ vi.mock('@/lib/i18n/infer-locale', () => ({
 }));
 
 function LocaleProbe() {
-  const { locale } = useLocale();
-  return <div data-testid="locale">{locale}</div>;
+  const { locale, t } = useLocale();
+  return <><div data-testid="locale">{locale}</div><div data-testid="translation">{t('welcome.signInTab')}</div></>;
 }
 
 describe('LocaleProvider', () => {
@@ -39,6 +42,23 @@ describe('LocaleProvider', () => {
     mocks.pathname = '/play';
     mocks.preferredLanguage = 'ka';
     mocks.inferredLocale = 'en';
+  });
+
+  it.each(['es', 'ka', 'tr'] as const)('renders seeded %s copy on the server before any dictionary effect', locale => {
+    mocks.pathname = `/${locale}/about`;
+    const html = renderToString(<LocaleProvider initialLocale={locale} initialMessages={messages[locale]}><LocaleProbe /></LocaleProvider>);
+    expect(html).toContain(messages[locale].welcome.signInTab);
+  });
+
+  it('updates translations when navigating away from the initially seeded language', async () => {
+    mocks.pathname = '/tr/about';
+    const view = render(<LocaleProvider initialLocale="tr" initialMessages={messages.tr}><LocaleProbe /></LocaleProvider>);
+    expect(screen.getByTestId('translation')).toHaveTextContent(messages.tr.welcome.signInTab);
+    mocks.pathname = '/es/about';
+    view.rerender(<LocaleProvider initialLocale="tr" initialMessages={messages.tr}><LocaleProbe /></LocaleProvider>);
+    await act(async () => { await loadLocaleMessages('es'); });
+    await waitFor(() => expect(screen.getByTestId('translation')).toHaveTextContent(messages.es.welcome.signInTab));
+    expect(screen.getByTestId('locale')).toHaveTextContent('es');
   });
 
   it('restores the saved user locale after a transient localized public route', async () => {

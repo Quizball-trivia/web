@@ -1,5 +1,6 @@
 "use client";
 
+import { nameChainDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
@@ -7,7 +8,7 @@ import { nameChainCopy, nameChainDailyCopy, wordDailyCopy, wordSharedCopy } from
 import { createWordDailyApi, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
 import { isLiveDay, NAME_CHAIN_CALENDAR, puzzleNumber } from "@/features/wordgames/daily/wordDaily.logic";
 import { useServerNow, useWordDaily } from "@/features/wordgames/daily/useWordDaily";
-import { DailyEnd, WordDailyLeaderboard, WordDailyScreen, type WordDailyGame } from "@/features/wordgames/daily/WordDailyShell";
+import { DailyEnd, WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
 import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins, useRefused } from "@/features/wordgames/ui";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
@@ -25,10 +26,7 @@ type Result = Verdict | "late" | "too_fast";
 export const nameChainDailyApi = createWordDailyApi<NameChainDailyState, Result, { day: string; starts: string[] }>("/api/v1/name-chain");
 const loadBoard = (day: string, locale: string) => nameChainDailyApi.leaderboard(day, locale);
 
-export const nameChainDailyGame = (locale: string): WordDailyGame => {
-  const d = nameChainDailyCopy(locale);
-  return { modeId: "nameChain", route: "/son-harfle", roomGame: "name_chain", brand: nameChainCopy(locale).brand, hero: "/assets/demos/game-modes/son-harfle.webp", calendar: NAME_CHAIN_CALENDAR, tag: d.tag, lines: d.lines };
-};
+export { nameChainDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 
 /** A name with the letter the chain hangs on picked out. */
 function Lettered({ name, className }: { name: string; className?: string }) {
@@ -186,7 +184,4 @@ export function NameChainDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   return <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void start()} onExit={onExit} play={play} end={end} />;
 }
 
-/** The day's ranking on its own (the public page shows it under the game). */
-export function NameChainDailyBoard({ locale, className }: { locale: string; className?: string }) {
-  return <WordDailyLeaderboard game={nameChainDailyGame(locale)} locale={locale} load={loadBoard} className={className} />;
-}
+export { NameChainDailyBoard } from "@/features/wordgames/daily/WordDailyPageBoards";

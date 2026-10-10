@@ -3,6 +3,7 @@
 
 import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle, tunedFrontHairPercent } from '@/lib/avatars/usePartTuning';
 import { useId } from 'react';
+import { getImageProps } from 'next/image';
 import { AVATAR_SLOTS, getAvatarPart } from '@/lib/avatars/parts';
 import type { AvatarCustomization } from '@/types/game';
 
@@ -15,7 +16,7 @@ const TINTS = {
 } as const;
 
 /** Shared by full previews, purchase modals, profile thumbnails and game avatars. */
-export function AvatarLayers({ customization, placement = "front", assetResolver }: { assetResolver?: (asset: string) => string; customization: AvatarCustomization; placement?: "front" | "back" }) {
+export function AvatarLayers({ customization, placement = "front", assetResolver, imageSizes }: { assetResolver?: (asset: string) => string; customization: AvatarCustomization; placement?: "front" | "back"; imageSizes?: string }) {
   const tuning = usePartTuning();
   const filterId = useId().replaceAll(':', '');
   const color = customization.hairColor;
@@ -38,10 +39,19 @@ export function AvatarLayers({ customization, placement = "front", assetResolver
       if (placement === 'front' && hairBehindFace && !splitHair) return null;
       const colored = slot === 'hair' && part.id !== 'hair_zidane' && tint;
       const pos = tunedPosition(part, tuning);
+      // Keep the existing overlay geometry, but request thumbnail pixels rather
+      // than the 600px original. Dedicated asset resolvers retain their own CDN.
+      const src = assetResolver?.(part.asset) ?? part.asset;
+      const responsive = imageSizes && !assetResolver && src.startsWith('/assets/')
+        ? getImageProps({ src, alt: '', width: 600, height: 600, quality: 60,
+          sizes: imageSizes.replace(/(\d+(?:\.\d+)?)px(?=\s*(?:,|$))/g, (_, px: string) => `${Math.ceil(Number(px) * pos.width / 100)}px`),
+        }).props
+        : null;
+      const image = { src: responsive?.src ?? src, srcSet: responsive?.srcSet, sizes: responsive?.sizes, loading: 'lazy' as const, decoding: 'async' as const };
       const position = { ...partTransformStyle(part, tuning), maskImage: splitHair && placement === "front" ? frontHairMask(frontPercent) : undefined, clipPath: part.id === 'earwear_headphones' && placement === 'front' ? 'inset(0 60% 0 0)' : part.clipPath, top: `${pos.top}%`, left: `${pos.left}%`, width: `${pos.width}%` };
       return <span key={slot} data-avatar-slot={slot} data-part-id={part.id}>
-        <img src={assetResolver?.(part.asset) ?? part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: colored && !partial ? `url(#${filterId})` : undefined }} />
-        {colored && partial && <img src={assetResolver?.(part.asset) ?? part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: `url(#${filterId})`, clipPath: color === 'blue_tips' ? 'inset(0 0 58% 0)' : 'polygon(38% 0, 53% 0, 65% 100%, 50% 100%)' }} />}
+        <img {...image} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: colored && !partial ? `url(#${filterId})` : undefined }} />
+        {colored && partial && <img {...image} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: `url(#${filterId})`, clipPath: color === 'blue_tips' ? 'inset(0 0 58% 0)' : 'polygon(38% 0, 53% 0, 65% 100%, 50% 100%)' }} />}
       </span>;
     })}
   </>;

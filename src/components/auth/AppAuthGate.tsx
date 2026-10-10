@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { AccountBannedScreen } from "@/features/auth/AccountBannedScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
 import { consumePostAuthRedirect, peekPostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
 import { stopBgm } from "@/lib/sounds/gameSounds";
 import { isGuestAllowedPath } from "@/lib/routes/publicHub";
-import { GuestAuthDialog } from "@/features/auth/GuestAuthDialog";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
+
+// A closed sign-in panel needs neither its form code nor its availability
+// requests. Keep it mounted after the first opening so closing the panel does
+// not discard auth notices, recovery state or a pending OAuth operation.
+const GuestAuthDialog = dynamic(() => import("@/features/auth/GuestAuthDialog").then((module) => module.GuestAuthDialog), { ssr: false });
+const LoadingScreen = dynamic(() => import("@/components/shared/LoadingScreen").then((module) => module.LoadingScreen), { ssr: false });
 
 type AppAuthGateProps = {
   children: React.ReactNode;
@@ -26,6 +31,8 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const isAuthPromptOpen = useAuthPromptStore((state) => state.isOpen);
   const closeAuthPrompt = useAuthPromptStore((state) => state.close);
+  const [hasOpenedAuthPrompt, setHasOpenedAuthPrompt] = useState(false);
+  if (isAuthPromptOpen && !hasOpenedAuthPrompt) setHasOpenedAuthPrompt(true);
   const hasBootstrapped = useRef(false);
   const isDevelopmentDevRoute = process.env.NODE_ENV === "development" && (pathname?.startsWith("/dev") ?? false);
 
@@ -73,7 +80,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   // This gate wraps both the normal app and fullscreen game routes. Owning
   // the prompt here keeps post-game sign-in available in either layout, and
   // navigation survives the guest UI unmounting after authentication.
-  const page = <>{children}{(status === "anonymous" || isAuthPromptOpen) && <GuestAuthDialog />}</>;
+  const page = <>{children}{(status === "anonymous" || isAuthPromptOpen) && (isAuthPromptOpen || hasOpenedAuthPrompt) && <GuestAuthDialog />}</>;
 
   if (isDevelopmentDevRoute) {
     return <>{children}</>;

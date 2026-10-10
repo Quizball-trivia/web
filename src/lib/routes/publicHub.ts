@@ -1,6 +1,6 @@
 import { GUEST_LOBBIES_ENABLED } from "@/lib/config";
 import { isLocale, type Locale } from "@/lib/i18n/locale";
-import { PUBLIC_GAMES_FOLDER } from "@/lib/seo/game-pages";
+import { PUBLIC_GAMES_FOLDER } from "@/lib/seo/game-page-paths";
 
 /**
  * The Play screen is the hub for members (/play) and for signed-out visitors
