@@ -206,6 +206,9 @@ describe('useRealtimeGameLogic', () => {
   });
 
   it('emits reveal ack exactly once when options unlock and re-emits for the next question', async () => {
+    // This test asserts the exact 499/500ms boundary. Wall-clock advancement
+    // must not move it forward while React's async act finishes on a busy CI worker.
+    vi.useFakeTimers({ shouldAdvanceTime: false });
     vi.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
     seedMatch();
     const store = useRealtimeMatchStore.getState();
