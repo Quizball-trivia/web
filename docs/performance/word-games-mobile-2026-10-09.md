@@ -1,6 +1,6 @@
 # QuizBall word game mobile performance
 
-Mobile is improved but **not fixed**. The latest local pass, on 10 October, reduced navigation downloads by 32.5% on Turkish Played for Both and 37.3% on English Football Name Chain against a matched baseline. Default simulated mobile performance medians are 83 and 79, with LCP still 4.42 s and 5.44 s. Desktop medians are 98 on both pages. All 2,273 tests passed, with 8 skipped, and the production build passed. Nothing has been pushed or deployed. The earlier passes and their different measurement methods are retained below; the latest evidence is in the 10 October section.
+Mobile is improved but **not fixed**. The latest local measurements, on 10 October, show 32.5% fewer navigation downloads on Turkish Played for Both and 37.3% fewer on English Football Name Chain against a matched baseline. Default simulated mobile performance medians are 83 and 79, with LCP still 4.42 s and 5.44 s. Desktop medians are 98 on both pages. The owner approved PR and staging verification; [PR 672](https://github.com/Quizball-trivia/web/pull/672) is open and its preview build passed. Staging verification is pending; production has not changed. The historical measurements and their different methods are retained below.
 
 ## Causes and implemented fixes
 
@@ -195,4 +195,10 @@ The final audits still identify render-blocking shared CSS: approximately 49.6 K
 
 Further provider or style splitting affects more than these two game pages and needs authenticated navigation and gameplay regression checks. The target remains repeatable mobile performance of at least 90 and materially better LCP, not an isolated high score. No current mobile result justifies declaring that target met.
 
-The branch remains local: no PR, push, staging deployment or production promotion has occurred. Approval was requested for a PR and staging deployment to continue measurement on real hosting; production remains unchanged. The next gate is that approval, followed by staging performance and account/gameplay checks. This is a partial optimization result, not a completed mobile fix or release certification.
+### Staging release preparation on 10 October
+
+The owner approved a PR and staging deployment. The branch was rebased onto current staging `9b4800cb`, preserving the newer Shared Player daily timing: historical days use ten seconds per pair and days from 10 October use twenty seconds. Twenty added regression tests cover the day-specific wording in all four languages. The rebased full suite passed sequentially with 2,293 tests passed and 8 skipped; standalone type-check passed. An earlier parallel run hit six reward-animation timeouts, while all 23 reward-flow tests passed in isolation. No assertions or timeouts were relaxed.
+
+CodeRabbit's local review identified a first-call translation regression in non-React daily-game and realtime notification consumers. A small synchronous subset now preserves their original localized text before language chunks load. Regression tests compare every subset value and interpolation against the canonical dictionaries; the complete dictionaries remain deferred rather than returning to the initial bundle.
+
+[PR 672](https://github.com/Quizball-trivia/web/pull/672) targets staging only. Its preview build passed. CI, review completion, the final build and hosted staging performance/gameplay checks are the remaining release gates. Production remains unchanged. The local scores above precede the latest rebase and translation follow-up, so they do not certify the hosted release or a stable 90+ mobile result.

@@ -13,7 +13,7 @@ import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
 import { normalizeLocale } from '@/lib/i18n/locale-config';
-import { translate } from '@/lib/i18n/client-messages';
+import { translateRuntimeCopy as translate } from '@/lib/i18n/runtime-messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
