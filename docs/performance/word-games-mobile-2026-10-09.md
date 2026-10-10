@@ -1,6 +1,6 @@
 # QuizBall word game mobile performance
 
-Mobile is improved but **not fixed**. The latest local measurements, on 10 October, show 32.5% fewer navigation downloads on Turkish Played for Both and 37.3% fewer on English Football Name Chain against a matched baseline. Default simulated mobile performance medians are 83 and 79, with LCP still 4.42 s and 5.44 s. Desktop medians are 98 on both pages. The owner approved PR and staging verification; [PR 672](https://github.com/Quizball-trivia/web/pull/672) is open and its preview build passed. Staging verification is pending; production has not changed. The historical measurements and their different methods are retained below.
+Mobile is improved but **not fixed**. [PR 672](https://github.com/Quizball-trivia/web/pull/672) is merged and deployed to staging only. On the official staging host, repeated default simulated mobile medians improved from 74 to 85 (Turkish Played for Both) and 74 to 86 (English Football Name Chain). Median LCP improved from 8.16 s to 4.34 s and 8.04 s to 4.13 s. These remain below the repeatable 90+ target. All twelve hosted mobile audits returned accessibility and best practices 100, with no console errors. Production has not changed. A further connection/audio-loading split is being tested; no performance benefit from that follow-up is established yet. Historical measurements and their different methods are retained below.
 
 ## Causes and implemented fixes
 
@@ -205,4 +205,31 @@ CodeRabbit's local review identified a first-call translation regression in non-
 
 Hosted staging before deployment (`dpl_DPLV6waUirCeoCur4Rr99sFucY3P`, commit `9b4800cb`) scored a mobile median of 74 on both representative pages over three runs each, with median LCP 8.16s (Turkish Shared Player) and 8.04s (English Name Chain). A branch-preview diagnostic scored medians 79 and 83, with LCP 4.81s and 4.58s. One isolated preview run scored 99; this is not a repeatable pass. Image response timing varied materially between preview runs, but the cache cause has not been verified. Branch-preview gameplay is blocked by the staging API's existing origin allowlist, whereas the official staging origin is allowed. No CORS or security settings were changed.
 
-Hosted official-staging after measurements and gameplay checks remain release gates. Production remains unchanged. The local scores above precede the latest rebase and translation follow-up, so they do not certify the hosted release or a stable 90+ mobile result.
+### Official staging verification after PR 672
+
+PR 672 merged to staging at `8eb5ad1305c846b938783241c626fa6ad9f84f87`. Deployment `dpl_AmvCD6muGiCygVgCLzPnGjqL1mJh` is READY and the official staging alias points to it. The reviewed head `3ee91c29` passed CI lint, type-check, build and 2,302 tests (8 skipped). CodeRabbit's two minor threads are resolved; its final local tracked-file review returned no findings.
+
+Same official staging origin, Chrome 154, Lighthouse 13.5.0 default simulated mobile, three independent runs per representative page. No foreground browser QA or builds ran alongside these hosted audits. The staging environment has no production PostHog key, so these do not certify production analytics or production performance.
+
+| Page | Performance before → after (after range) | Median LCP before → after | Median blocking time before → after | Median downloads before → after |
+| --- | --- | --- | --- | --- |
+| Turkish Played for Both | 74 → 85 (85–94) | 8.16 s → 4.34 s | 72 ms → 52 ms | 1.399 MB → 0.771 MB |
+| English Football Name Chain | 74 → 86 (86–93) | 8.04 s → 4.13 s | 62 ms → 53.5 ms | 1.389 MB → 0.707 MB |
+
+The other six language/game combinations each received one mobile spot check: Turkish Name Chain 79, English Played for Both 93, Spanish Played for Both 85, Spanish Name Chain 82, Georgian Played for Both 99 and Georgian Name Chain 86. These are not medians or evidence that every mobile page passes. All twelve audits returned accessibility 100, best practices 100, no console-error items and initial-load CLS below 0.004.
+
+All eight word-game pages returned HTTP 200, one H1, localized titles, staging self-canonicals, reciprocal en/ka/es/tr/x-default alternates and the expected staging noindex. Their CSP points to the staging API and Supabase project. Staging API `/health` and `/health/db` returned 200 with `ok=true`.
+
+Using the staging API only, one anonymous guest completed three archived Name Chain rounds by passing; the resulting session was done, contained three results and remained unranked. Archived Played for Both opened with the correct ten-second timer and remained unranked; its full ten-pair game was not completed. No account was created and no production API was used for these tests.
+
+The existing authenticated staging browser opened Name Chain, showed its intro/rankings and reopened an already-completed archived result. Closing returned to the public page. At 390 × 844, the hero loaded, the document had no horizontal overflow, and browser error/warning logs were empty. The browser was not logged out or otherwise altered to manufacture an anonymous session. A full anonymous browser gameplay/signup story and current staging notification/invitation delivery remain unverified.
+
+The production alias remained on `dpl_Ba8RJwuH9HpinxTj12DbyMbLciKU` after staging deployment. No main promotion took place.
+
+### Further connection and audio-loading split
+
+The landing still eagerly imports multiplayer handlers through the shell view model, even when its principal is unresolved/none. The follow-up moves the unchanged connection hook into an on-demand owner. It activates for members or resolved lobby guests and stays mounted after first activation, forwarding disabled and identity-switch states so the existing cleanup paths remain in place. Route children do not move or remount for this split.
+
+The shared sign-in guard also imports Howler just to call `stopBgm` before redirecting a signed-out visitor. A small synchronous registration bridge lets the guard stop music already loaded by a game, without loading audio on a fresh landing. Tests cover no-engine calls, fade forwarding, real engine registration and stop-before-redirect ordering.
+
+Initial local performance runs for this follow-up lacked public authentication build configuration and produced a client error page. Those scores are invalid and are excluded from all comparisons. Hosted measurement and full regression/review gates remain required before any follow-up merge. No new performance claim is made from passing unit tests.

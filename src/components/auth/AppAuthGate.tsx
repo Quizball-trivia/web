@@ -8,7 +8,7 @@ import { AccountBannedScreen } from "@/features/auth/AccountBannedScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
 import { consumePostAuthRedirect, peekPostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
-import { stopBgm } from "@/lib/sounds/gameSounds";
+import { stopLoadedBgm } from "@/lib/sounds/audioControl";
 import { isGuestAllowedPath } from "@/lib/routes/publicHub";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 
@@ -45,7 +45,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
     if (status === "anonymous" && !isGuestAllowedPath(pathname)) {
-      stopBgm(0);
+      stopLoadedBgm(0);
       rememberPostAuthRedirect(pathname);
       // The landing is retired — signed-out visitors land on the guest Play
       // page, where the header/nav offer the sign-in dialog.
