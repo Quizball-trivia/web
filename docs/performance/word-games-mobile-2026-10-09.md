@@ -1,6 +1,6 @@
 # QuizBall word game mobile performance
 
-Mobile is improved but **not fixed**. [PR 672](https://github.com/Quizball-trivia/web/pull/672) is merged and deployed to staging only. On the official staging host, repeated default simulated mobile medians improved from 74 to 85 (Turkish Played for Both) and 74 to 86 (English Football Name Chain). Median LCP improved from 8.16 s to 4.34 s and 8.04 s to 4.13 s. These remain below the repeatable 90+ target. All twelve hosted mobile audits returned accessibility and best practices 100, with no console errors. Production has not changed. A further connection/audio-loading split is being tested; no performance benefit from that follow-up is established yet. Historical measurements and their different methods are retained below.
+Mobile is improved but **not fixed**. [PR 672](https://github.com/Quizball-trivia/web/pull/672) and [PR 675](https://github.com/Quizball-trivia/web/pull/675) are merged and deployed to staging only. On the official staging host, the latest three-run default simulated mobile medians are 90 (Turkish Played for Both) and 87 (English Football Name Chain), versus 74 on both pages before these changes. Median LCP is 3.48 s and 3.84 s, versus 8.16 s and 8.04 s. Other language spot checks still score below 90. All twelve latest hosted mobile audits returned accessibility and best practices 100, with no console errors. Production has not changed. Historical measurements and their different methods are retained below; individual high scores are not a repeatable mobile pass.
 
 ## Causes and implemented fixes
 
@@ -232,4 +232,31 @@ The landing still eagerly imports multiplayer handlers through the shell view mo
 
 The shared sign-in guard also imports Howler just to call `stopBgm` before redirecting a signed-out visitor. A small synchronous registration bridge lets the guard stop music already loaded by a game, without loading audio on a fresh landing. Tests cover no-engine calls, fade forwarding, real engine registration and stop-before-redirect ordering.
 
-Initial local performance runs for this follow-up lacked public authentication build configuration and produced a client error page. Those scores are invalid and are excluded from all comparisons. Hosted measurement and full regression/review gates remain required before any follow-up merge. No new performance claim is made from passing unit tests.
+Initial local performance runs for this follow-up lacked public authentication build configuration and produced a client error page. Those scores are invalid and are excluded from all comparisons. No performance claim is made from passing unit tests.
+
+### Official staging verification after PR 675, 10 October
+
+PR 675 merged at `93b2ed920eadea168f56b9d0846b5a645d0081ce` at 17:04 Tbilisi. Official staging deployment `dpl_6sqnr6YMgf526oGbLDoabwyRvYR5` is READY. CI passed lint, type-check, the production build and the complete suite: 2,310 passed, 8 skipped. CodeRabbit CLI reviewed all twelve implementation files with zero findings and separately reviewed the timing-test follow-up with zero findings. The GitHub CodeRabbit review was rate-limited, so its successful skip/status is not presented as a full GitHub review.
+
+One test at the exact 499/500 ms reveal-acknowledgement boundary failed with an automatically advancing fake clock under CI load. That test now uses a deterministic manually advanced clock. Its assertions and the application timing are unchanged; the full CI rerun passed.
+
+Same official staging origin and default Lighthouse 13.5.0 simulated mobile configuration as the hosted baseline above. No local build, full test suite or foreground browser QA ran during this batch. These sequential batches do not isolate infrastructure or network variation.
+
+| Page | Scores across three runs | Median performance | Median LCP | Median blocking time | Median downloads |
+| --- | --- | --- | --- | --- | --- |
+| Turkish Played for Both | 90 / 82 / 95 | 90 | 3.48 s | 54 ms | 0.751 MB |
+| English Football Name Chain | 97 / 86 / 87 | 87 | 3.84 s | 49.5 ms | 0.687 MB |
+
+Compared with the same-host baseline before PR 672, total audit downloads are about 46% lower for Turkish and 51% lower for English. Compared with PR 672, the connection/audio split removes about 20 KB from each audit navigation. The score difference alone does not prove the split caused a stable score improvement.
+
+The six other mobile spot checks returned: Turkish Name Chain 75; English Played for Both 79; Spanish Played for Both 85; Spanish Name Chain 81; Georgian Played for Both 79; Georgian Name Chain 85. All twelve mobile audits returned accessibility 100, best practices 100 and zero console-error audit items; initial CLS was at most 0.0026. The target of repeatable 90+ across the tested pages remains unmet.
+
+All eight word-game URLs passed the staging HTML checks again: HTTP 200, one H1, localized single-brand titles, staging self-canonical, reciprocal language alternates, expected noindex, structured data and staging-specific CSP destinations. Both staging API health endpoints returned 200 with `ok=true`. Anonymous archived Name Chain completion and archived Played for Both opening remained unranked. The existing authenticated browser opened and exited the Name Chain intro on staging; the 390 × 844 layout had no horizontal overflow. No account was created or logged out. These do not certify complete member gameplay, multiplayer reconnection or production event delivery.
+
+Separate desktop checks on the PR 672 staging deployment returned medians 86 and 82, not the historical local 98 scores. Blocking time was zero in all six desktop runs, but response timing varied. A staging-only Vercel feedback-toolbar iframe was blocked by the existing CSP and affected best-practices scoring; application security was not relaxed. Desktop on the PR 675 deployment has not yet been freshly measured.
+
+### Further profile-artwork loading candidate
+
+The signed-out shell did not render profile artwork but still imported its catalogue through the profile-menu module. Defer only the existing avatar implementation, retaining the member trigger, username, RP, profile/settings/logout actions and an exact 44 × 62 placeholder. Guest pages no longer need that artwork catalogue in the initial graph.
+
+Three new tests check desktop/mobile placeholder geometry, resolution of the existing implementation and stable member controls after loading. Together with the existing shell and avatar-layer tests, 53 targeted tests passed. Changed-file lint and the production build passed. CodeRabbit CLI reviewed both changed code files with zero findings. The local initial script graph decreased from 30 to 29 scripts and from 508,085 to 499,633 compressed bytes, about 1.7%. This is a payload result, not proof of faster real-user loading. Full CI and hosted verification remain required for this candidate.
