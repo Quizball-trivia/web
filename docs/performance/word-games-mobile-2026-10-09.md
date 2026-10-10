@@ -113,7 +113,7 @@ Same build, Lighthouse 13.5.0 desktop preset; medians of three runs per page. Th
 
 Accessibility and best practices were 100 in all six desktop runs, with no console-error audit items. Initial-load CLS stayed below 0.017. One earlier desktop audit failed to record a navigation trace; it was retried rather than counted as a score.
 
-The branch remains local and has not been pushed, reviewed in a PR, deployed to staging or promoted to production. Before release, review the shared avatar and member-UI changes, validate authenticated notification/invitation/reward behavior on staging, and obtain real PageSpeed measurements there. A claim that every page or production Core Web Vitals is fixed would exceed the evidence.
+At the time of this pass, the branch was local and had not been pushed, reviewed in a PR, deployed to staging or promoted to production. Before release, review the shared avatar and member-UI changes, validate authenticated notification/invitation/reward behavior on staging, and obtain real PageSpeed measurements there. A claim that every page or production Core Web Vitals is fixed would exceed the evidence.
 
 ## Further optimization pass, 10 October
 
@@ -201,4 +201,8 @@ The owner approved a PR and staging deployment. The branch was rebased onto curr
 
 CodeRabbit's local review identified a first-call translation regression in non-React daily-game and realtime notification consumers. A small synchronous subset now preserves their original localized text before language chunks load. Regression tests compare every subset value and interpolation against the canonical dictionaries; the complete dictionaries remain deferred rather than returning to the initial bundle.
 
-[PR 672](https://github.com/Quizball-trivia/web/pull/672) targets staging only. Its preview build passed. CI, review completion, the final build and hosted staging performance/gameplay checks are the remaining release gates. Production remains unchanged. The local scores above precede the latest rebase and translation follow-up, so they do not certify the hosted release or a stable 90+ mobile result.
+[PR 672](https://github.com/Quizball-trivia/web/pull/672) targets staging only. At head `acf523ca`, CI passed lint, type-check, production build and the complete test suite (2,300 passed, 8 skipped). The local production build also passed. CodeRabbit's full PR review completed with two minor findings: a historical status sentence and responsive avatar sizing that also scaled media-query breakpoints. Both are corrected in the follow-up; two regression tests preserve the 640px and 768px breakpoints while scaling image slot widths. The focused follow-up suite passed all 11 tests, changed-file lint and standalone type-check.
+
+Hosted staging before deployment (`dpl_DPLV6waUirCeoCur4Rr99sFucY3P`, commit `9b4800cb`) scored a mobile median of 74 on both representative pages over three runs each, with median LCP 8.16s (Turkish Shared Player) and 8.04s (English Name Chain). A branch-preview diagnostic scored medians 79 and 83, with LCP 4.81s and 4.58s. One isolated preview run scored 99; this is not a repeatable pass. Image response timing varied materially between preview runs, but the cache cause has not been verified. Branch-preview gameplay is blocked by the staging API's existing origin allowlist, whereas the official staging origin is allowed. No CORS or security settings were changed.
+
+Hosted official-staging after measurements and gameplay checks remain release gates. Production remains unchanged. The local scores above precede the latest rebase and translation follow-up, so they do not certify the hosted release or a stable 90+ mobile result.

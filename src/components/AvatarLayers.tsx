@@ -44,7 +44,7 @@ export function AvatarLayers({ customization, placement = "front", assetResolver
       const src = assetResolver?.(part.asset) ?? part.asset;
       const responsive = imageSizes && !assetResolver && src.startsWith('/assets/')
         ? getImageProps({ src, alt: '', width: 600, height: 600, quality: 60,
-          sizes: imageSizes.replace(/(\d+(?:\.\d+)?)px/g, (_, px: string) => `${Math.ceil(Number(px) * pos.width / 100)}px`),
+          sizes: imageSizes.replace(/(\d+(?:\.\d+)?)px(?=\s*(?:,|$))/g, (_, px: string) => `${Math.ceil(Number(px) * pos.width / 100)}px`),
         }).props
         : null;
       const image = { src: responsive?.src ?? src, srcSet: responsive?.srcSet, sizes: responsive?.sizes, loading: 'lazy' as const, decoding: 'async' as const };

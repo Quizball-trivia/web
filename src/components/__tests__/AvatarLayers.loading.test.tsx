@@ -27,4 +27,15 @@ describe('AvatarLayers thumbnails', () => {
     expect(container.querySelector('img')).toHaveAttribute('src', '/assets/store/jersey_green.webp?v=2');
     expect(container.querySelector('img')).not.toHaveAttribute('srcset');
   });
+
+  it.each([
+    { sizes: '(min-width: 640px) 38px, 32px', breakpoint: 640, slots: [38, 32] },
+    { sizes: '(min-width: 768px) 115px, 103px', breakpoint: 768, slots: [115, 103] },
+  ])('preserves the $breakpoint px layout breakpoint while scaling slot widths', ({ sizes, breakpoint, slots }) => {
+    const { container } = render(<AvatarLayers customization={customization} imageSizes={sizes} />);
+    const image = container.querySelector<HTMLImageElement>('img')!;
+    const partWidth = Number.parseFloat(image.style.width) / 100;
+    expect(image.sizes).toBe(`(min-width: ${breakpoint}px) ${Math.ceil(slots[0] * partWidth)}px, ${Math.ceil(slots[1] * partWidth)}px`);
+    expect(image.srcset).toContain('w=32');
+  });
 });
