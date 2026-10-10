@@ -18,8 +18,12 @@ export function useMyEventAwards() {
   });
 }
 
+const USER_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function useUserEventAwards(userId: string | undefined) {
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  // The player context holds a placeholder id until the real profile loads; the API rejects anything but a user id.
+  const isUserId = !!userId && USER_ID_RE.test(userId);
   return useQuery({
     queryKey: queryKeys.eventAwards.user(userId ?? ''),
     queryFn: async () => {
@@ -27,7 +31,7 @@ export function useUserEventAwards(userId: string | undefined) {
       if (error) throw new Error('Failed to fetch event awards');
       return data;
     },
-    enabled: isAuthenticated && !!userId,
+    enabled: isAuthenticated && isUserId,
     staleTime: 5 * 60 * 1000,
   });
 }
