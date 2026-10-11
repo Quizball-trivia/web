@@ -569,8 +569,9 @@ export function GridLocalScreen() {
               theirScore={score(2)}
             />
           </div>
-          <div className="mx-auto mt-6 max-w-[26rem]">
+          <div className="mx-auto mt-6 max-w-[26rem] text-left">
             <MatchBoard state={state} selfUserId={SEAT_ID[1]} locale={locale} selectedCell={null} onSelect={() => {}} />
+            <GridRulesPanel board={deal.board} locale={locale} />
           </div>
           <div className="mx-auto mt-7 max-w-xl space-y-3">
             {seriesOver ? (
