@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import "@fontsource/poppins/400.css";
-import "@fontsource/poppins/500.css";
-import "@fontsource/poppins/600.css";
-import "@fontsource/poppins/700.css";
-import "@fontsource/poppins/800.css";
-import "@fontsource/poppins/900.css";
+import "../styles/poppins.css";
 import { RouteProviders } from "./route-providers";
 import {
   SITE_URL,
@@ -27,6 +22,7 @@ import { partnerFromHost } from "@/features/partner/partnerHosts";
 import { PARTNER_LAUNCH_CAPTURE_SCRIPT } from "@/features/partner/partnerLaunchToken";
 import "../styles/globals.css";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
+import { WordGameFontPreloads } from "./word-game-font-preloads";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -152,6 +148,7 @@ export default async function RootLayout({
             dangerouslySetInnerHTML={{ __html: PARTNER_LAUNCH_CAPTURE_SCRIPT }}
           />
         )}
+        <WordGameFontPreloads initialPathname={pathname} />
         {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
         {!partner && (
           <script

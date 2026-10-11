@@ -1,0 +1,38 @@
+{
+  "name-chain": {
+    "avif": {
+      "384": "/assets/demos/word-heroes/son-harfle-384.c4aea5dc54dc.avif",
+      "640": "/assets/demos/word-heroes/son-harfle-640.58e5b709d627.avif",
+      "750": "/assets/demos/word-heroes/son-harfle-750.14fdf412091c.avif",
+      "1080": "/assets/demos/word-heroes/son-harfle-1080.b014999c8fdf.avif",
+      "1200": "/assets/demos/word-heroes/son-harfle-1200.5cd2703d82a0.avif",
+      "1600": "/assets/demos/word-heroes/son-harfle-1600.be5c7356dcb3.avif"
+    },
+    "webp": {
+      "384": "/assets/demos/word-heroes/son-harfle-384.bc3dde1cc729.webp",
+      "640": "/assets/demos/word-heroes/son-harfle-640.4a9fffa3624a.webp",
+      "750": "/assets/demos/word-heroes/son-harfle-750.9a6b001a3ead.webp",
+      "1080": "/assets/demos/word-heroes/son-harfle-1080.a01e9197a299.webp",
+      "1200": "/assets/demos/word-heroes/son-harfle-1200.b5a105fb7212.webp",
+      "1600": "/assets/demos/word-heroes/son-harfle-1600.2a0092e28e71.webp"
+    }
+  },
+  "shared-player": {
+    "avif": {
+      "384": "/assets/demos/word-heroes/ortak-futbolcu-384.178baffac81d.avif",
+      "640": "/assets/demos/word-heroes/ortak-futbolcu-640.17d644817254.avif",
+      "750": "/assets/demos/word-heroes/ortak-futbolcu-750.04c70a0d27ab.avif",
+      "1080": "/assets/demos/word-heroes/ortak-futbolcu-1080.2eefb11d7a68.avif",
+      "1200": "/assets/demos/word-heroes/ortak-futbolcu-1200.fb08ee2c9963.avif",
+      "1600": "/assets/demos/word-heroes/ortak-futbolcu-1600.3dfb3d216a25.avif"
+    },
+    "webp": {
+      "384": "/assets/demos/word-heroes/ortak-futbolcu-384.040120326c6b.webp",
+      "640": "/assets/demos/word-heroes/ortak-futbolcu-640.a2202bda6440.webp",
+      "750": "/assets/demos/word-heroes/ortak-futbolcu-750.214066c9e28d.webp",
+      "1080": "/assets/demos/word-heroes/ortak-futbolcu-1080.d30f22b344c4.webp",
+      "1200": "/assets/demos/word-heroes/ortak-futbolcu-1200.49b6c3c16201.webp",
+      "1600": "/assets/demos/word-heroes/ortak-futbolcu-1600.66110a0c7530.webp"
+    }
+  }
+}

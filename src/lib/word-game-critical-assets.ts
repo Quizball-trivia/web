@@ -1,0 +1,22 @@
+import fontAssets from "./word-game-font-assets.json";
+
+// Public word-game pages only: do not add speculative preloads to other screens.
+const WORD_GAME_PATHS = new Set([
+  "/en/football-games/football-name-chain",
+  "/en/football-games/played-for-both-clubs",
+  "/es/juegos-de-futbol/cadena-de-futbolistas",
+  "/es/juegos-de-futbol/jugador-en-comun",
+  "/ka/football-games/football-name-chain",
+  "/ka/football-games/played-for-both-clubs",
+  "/tr/futbol-oyunlari/son-harfle-futbolcu",
+  "/tr/futbol-oyunlari/ortak-futbolcu-oyunu",
+]);
+
+export function wordGameFontPreloads(pathname: string): string[] {
+  if (!WORD_GAME_PATHS.has(pathname.replace(/\/$/, ""))) return [];
+  // These four weights were requested above the fold in the mobile traces.
+  const subsets = pathname.startsWith("/tr/") ? ["latin", "latin-ext"] : ["latin"];
+  return subsets.flatMap((subset) => [400, 600, 700, 900].map((weight) =>
+    fontAssets[`poppins-${subset}-${weight}` as keyof typeof fontAssets],
+  ));
+}
