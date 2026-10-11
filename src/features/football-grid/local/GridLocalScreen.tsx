@@ -202,15 +202,16 @@ export function GridLocalScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [options, setOptions] = useState<{ key: string; items: FootballGridOption[] | null } | null>(null);
-  const [deadline, setDeadline] = useState<number | null>(null);
+  /** The running turn's clock, kept with the turn it belongs to so the two can never be read apart. */
+  const [clock, setClock] = useState<LocalSnapshot['deadline']>(null);
+  const deadline = clock?.at ?? null;
   const [confirmDraw, setConfirmDraw] = useState(false);
   /** typing[seat]: that player chose "type it instead" in a pick-from-four series. */
   const [typing, setTyping] = useState<Record<LocalSeat, boolean>>({ 1: false, 2: false });
   const playedBoardIds = useRef<string[]>([]);
   /** Who moves first on the board being dealt: a retry after a failed deal asks for the same game. */
   const dealMover = useRef<LocalSeat>(1);
-  /** The turn the clock on screen belongs to, and a clock carried over a reload for its own turn only. */
-  const deadlineTurn = useRef<string | null>(null);
+  /** A clock carried over a reload, for its own turn only. */
   const restoredDeadline = useRef<LocalSnapshot['deadline']>(null);
   const pendingRef = useRef(false);
   /** Changes whenever the game on screen is replaced or left: an answer still on its way to an older game is dropped. */
@@ -294,7 +295,7 @@ export function GridLocalScreen() {
 
   /** Folds a finished game into the series and moves to the screen that follows it. */
   const finishGame = useCallback((finished: LocalGame) => {
-    setDeadline(null);
+    setClock(null);
     setSelectedCell(null);
     const next = recordLocalGame(series, finished, settings.rounds);
     setSeries(next);
@@ -313,7 +314,7 @@ export function GridLocalScreen() {
     }
     // Three in a line: the board stays up with the line crossed out, then the result.
     const token = gameToken.current;
-    setDeadline(null);
+    setClock(null);
     window.setTimeout(() => { if (token === gameToken.current) finishGame(next); }, GRID_WIN_LINE_HOLD_MS);
   }, [finishGame]);
 
@@ -323,19 +324,19 @@ export function GridLocalScreen() {
     const carried = restoredDeadline.current;
     // A clock carried over a reload serves the turn it was running for and no other.
     if (turnKey && carried && carried.turn !== turnKey) restoredDeadline.current = null;
-    deadlineTurn.current = turnKey;
-    if (turnKey && carried?.turn === turnKey) setDeadline(carried.at);
-    else setDeadline(turnKey && settings.turnSeconds > 0 ? Date.now() + settings.turnSeconds * 1_000 : null);
+    if (turnKey && carried?.turn === turnKey) setClock(carried);
+    else setClock(turnKey && settings.turnSeconds > 0 ? { turn: turnKey, at: Date.now() + settings.turnSeconds * 1_000 } : null);
   }, [settings.turnSeconds, turnKey]);
   useEffect(() => {
     const snapshot = localSnapshotOf({
       stage, settings, names, deal, game, series, opener, blocked, typing,
       played: playedBoardIds.current,
-      deadline: turnKey && deadline !== null && deadlineTurn.current === turnKey ? { turn: turnKey, at: deadline } : null,
+      // Between a turn ending and the next clock being set, the clock on hand is the old turn's: it is not kept.
+      deadline: clock && clock.turn === turnKey ? clock : null,
     });
     if (!snapshot) return;
     try { window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(snapshot)); } catch { /* storage blocked: a reload starts over */ }
-  }, [blocked, deadline, deal, game, names, opener, series, settings, stage, turnKey, typing]);
+  }, [blocked, clock, deal, game, names, opener, series, settings, stage, turnKey, typing]);
 
   const expireTurn = useCallback((current: LocalGame) => {
     setFeedback(undefined);

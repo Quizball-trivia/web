@@ -85,6 +85,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const [feedback, setFeedback] = useState<Feedback>(undefined);
   const [pending, setPending] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [kickOffFailed, setKickOffFailed] = useState(false);
   /** data: null = the rankings could not be fetched (the player can ask again). */
   const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard | null } | null>(null);
   const [boardAttempt, setBoardAttempt] = useState(0);
@@ -203,9 +204,15 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     const mine = generation.current;
     pendingRef.current = true;
     setPending(true);
+    setKickOffFailed(false);
     try {
-      apply(await gridDailyApi.kickOff({ runId: run.run.id, version: run.run.version }, locale), mine);
+      if (apply(await gridDailyApi.kickOff({ runId: run.run.id, version: run.run.version }, locale), mine)) {
+        // The button the player pressed is gone: keyboard focus moves to the board that replaced it.
+        window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-grid-anchor^="cell-"]:not([disabled])')?.focus());
+      }
     } catch {
+      // If the kick-off did land (or another tab made it), the resync shows the board and this line is never seen.
+      setKickOffFailed(true);
       await resync(mine);
     } finally {
       pendingRef.current = false;
@@ -266,6 +273,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
             ))}
           </div>
           <p className="mx-auto mt-5 max-w-xs text-center text-sm font-semibold text-white/70">{copy.kickOffNote}</p>
+          {kickOffFailed && <p role="alert" data-daily-kickoff-error className="mx-auto mt-3 max-w-xs text-center text-sm font-bold text-brand-red-soft">{copy.kickOffFailed}</p>}
           <button type="button" disabled={pending} onClick={() => void kickOff()} data-daily-action="kickoff"
             className="mt-4 h-14 w-full rounded-2xl bg-brand-green text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50">
             {copy.kickOff}
