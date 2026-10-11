@@ -46,7 +46,7 @@ for (const [slug, sourceName] of [["name-chain", "son-harfle"], ["shared-player"
   const variants = {};
   for (const format of ["avif", "webp"]) {
     variants[format] = {};
-    for (const width of [384, 640, 750, 1080, 1200, 1600]) {
+    for (const width of [384, 640, 672, 720, 750, 1080, 1200, 1600]) {
       const image = sharp(source).resize({ width });
       // Retain the quality setting and source geometry. Higher encoder effort
       // and 4:2:0 chroma reduce decorative art transfers; WebP remains the fallback.

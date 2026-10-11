@@ -7,6 +7,8 @@ import * as esChain from "@/app/[locale]/(hub)/juegos-de-futbol/cadena-de-futbol
 import * as esShared from "@/app/[locale]/(hub)/juegos-de-futbol/jugador-en-comun/page";
 import * as trChain from "@/app/[locale]/(hub)/futbol-oyunlari/son-harfle-futbolcu/page";
 import * as trShared from "@/app/[locale]/(hub)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
+import { findPublishedGame } from "@/lib/seo/public-games";
+import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
 vi.mock("../PublicGameScreen", () => ({ PublicGameScreen: () => null }));
 vi.mock("../DailyCollectionScreen", () => ({ DailyCollectionScreen: () => null }));
@@ -40,6 +42,10 @@ describe("fixed word landing route parity", () => {
       expect(route.module.dynamicParams).toBe(false);
       for (const { locale } of route.module.generateStaticParams()) {
         count++;
+        expect(isLightweightSeoRoute(`/${locale}/${route.folder}/${route.slug}`)).toBe(false);
+        const game = findPublishedGame(locale, route.folder, route.slug);
+        expect(game?.modeId).toBe(route.slug === "football-name-chain" || route.slug === "cadena-de-futbolistas" || route.slug === "son-harfle-futbolcu" ? "nameChain" : "sharedPlayer");
+        expect(game?.demoSlug).toBe(game?.modeId === "nameChain" ? "name-chain" : "shared-player");
         const params = Promise.resolve({ locale });
         expect(await route.module.generateMetadata({ params })).toEqual(
           await publicGameMetadata(route.folder, Promise.resolve({ locale, slug: route.slug })),
