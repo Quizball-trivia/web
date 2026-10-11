@@ -231,7 +231,8 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
       // The kick-off may have landed all the same (a lost answer, or another tab made it): only a run the server
       // still holds as not started is a failure to tell the player about.
       const fresh = await resync(mine);
-      if (fresh && fresh.state.startedAt === null && !fresh.state.done) setKickOffFailed(true);
+      // Still this load: a page that has moved on to another day or account must not inherit the message.
+      if (mine === generation.current && fresh && fresh.state.startedAt === null && !fresh.state.done) setKickOffFailed(true);
     } finally {
       pendingRef.current = false;
       setPending(false);
