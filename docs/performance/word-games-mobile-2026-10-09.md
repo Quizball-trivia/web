@@ -1,6 +1,6 @@
 # QuizBall word game mobile performance
 
-Mobile is improved but **not fixed**. [PR 672](https://github.com/Quizball-trivia/web/pull/672) and [PR 675](https://github.com/Quizball-trivia/web/pull/675) are merged and deployed to staging only. On the official staging host, the latest three-run default simulated mobile medians are 90 (Turkish Played for Both) and 87 (English Football Name Chain), versus 74 on both pages before these changes. Median LCP is 3.48 s and 3.84 s, versus 8.16 s and 8.04 s. Other language spot checks still score below 90. All twelve latest hosted mobile audits returned accessibility and best practices 100, with no console errors. Production has not changed. Historical measurements and their different methods are retained below; individual high scores are not a repeatable mobile pass.
+Mobile is improved but **not fixed**. [PR 672](https://github.com/Quizball-trivia/web/pull/672), [PR 675](https://github.com/Quizball-trivia/web/pull/675) and [PR 676](https://github.com/Quizball-trivia/web/pull/676) are merged and deployed to staging only. The latest default simulated mobile medians across the eight language/game pages range from 64 to 98: English 90/92, Spanish 84/85, Turkish 83/64, Georgian 83/98 (Played for Both / Name Chain). Each is the median of three runs, not a selected best result. All 24 latest mobile audits returned accessibility and best practices 100, with no console errors. Compared with the pre-change representative baseline, audit downloads are about 47% lower on Turkish Played for Both and 51% lower on English Name Chain. Loading and network response still vary materially; production has not changed, and the repeatable mobile 90+ goal remains unmet. Historical measurements and their different methods are retained below.
 
 ## Causes and implemented fixes
 
@@ -255,8 +255,59 @@ All eight word-game URLs passed the staging HTML checks again: HTTP 200, one H1,
 
 Separate desktop checks on the PR 672 staging deployment returned medians 86 and 82, not the historical local 98 scores. Blocking time was zero in all six desktop runs, but response timing varied. A staging-only Vercel feedback-toolbar iframe was blocked by the existing CSP and affected best-practices scoring; application security was not relaxed. Desktop on the PR 675 deployment has not yet been freshly measured.
 
-### Further profile-artwork loading candidate
+### Profile-artwork loading follow-up, PR 676
 
 The signed-out shell did not render profile artwork but still imported its catalogue through the profile-menu module. Defer only the existing avatar implementation, retaining the member trigger, username, RP, profile/settings/logout actions and an exact 44 × 62 placeholder. Guest pages no longer need that artwork catalogue in the initial graph.
 
-Three new tests check desktop/mobile placeholder geometry, resolution of the existing implementation and stable member controls after loading. Together with the existing shell and avatar-layer tests, 53 targeted tests passed. Changed-file lint and the production build passed. CodeRabbit CLI reviewed both changed code files with zero findings. The local initial script graph decreased from 30 to 29 scripts and from 508,085 to 499,633 compressed bytes, about 1.7%. This is a payload result, not proof of faster real-user loading. Full CI and hosted verification remain required for this candidate.
+Three new tests check desktop/mobile placeholder geometry, resolution of the existing implementation and stable member controls after loading. Together with the existing shell and avatar-layer tests, 53 targeted tests passed. Changed-file lint and the production build passed. CodeRabbit CLI reviewed both changed code files with zero findings. The local initial script graph decreased from 30 to 29 scripts and from 508,085 to 499,633 compressed bytes, about 1.7%. This is a payload result, not proof of faster real-user loading.
+
+[PR 676](https://github.com/Quizball-trivia/web/pull/676) merged to staging at `096b9883110d176192be896ce47a028c68b16874`, 17:25 Tbilisi. Deployment `dpl_cL1N1AqtnBNU9LzoXJ6rKbMGoE6j` is READY and serves the official staging alias. CI at head `c344c8ed` passed lint, type-check, all 2,313 tests (8 skipped) and the 277-page production build. GitHub CodeRabbit explicitly skipped because reviews are disabled for the staging base; the CLI review above is the actual code-review evidence. Greptile did not review because its trial credits are exhausted. Neither limit nor setting was changed.
+
+A parallel local full-suite run failed seven tests in unrelated auction/grid training and partner Card Detective files, beginning with two training-screen timeouts and cascading missing-element failures. The unchanged full suite passed sequentially: 326 files passed, one skipped; 2,313 tests passed, eight skipped. CI also passed independently. No assertions, timeouts or gameplay code were altered for this follow-up. These results are consistent with load-sensitive test timing, not proof that the test harness is entirely free of flakes.
+
+All eight latest staging word-game HTML checks passed again, including HTTP 200, single H1, localized title, self-canonical, reciprocal alternates, noindex, two structured-data blocks and staging API/Supabase CSP destinations. Each now references 29 initial scripts. Both API health checks passed. The existing member browser loaded its avatar/frame successfully, opened both desktop and 390 × 844 mobile profile menus with Profile, Settings and Log out intact, and closed them with Escape. There was no horizontal overflow or application warning/error in that fresh check. No logout, authentication submission, room creation or game result was triggered. The temporary viewport was reset and the owned test tab was closed.
+
+### Final eight-page hosted mobile batch after PR 676
+
+All eight URLs were tested three times using the official staging origin, default simulated Lighthouse 13.5.0 mobile settings and Chrome 154. No build, test suite or foreground browser QA competed with these 24 audits. Raw artifacts are `/tmp/quizball-word-hosted-after-676-20261010-<name>-<run>.json`; the table below records all runs, not a selected subset. These are laboratory measurements from this machine, not PageSpeed Insights or field Core Web Vitals.
+
+| URL | Scores in run order | Median | Median LCP | Median blocking time | Median downloads |
+| --- | --- | --- | --- | --- | --- |
+| `/tr/futbol-oyunlari/ortak-futbolcu-oyunu` | 83 / 78 / 91 | 83 | 4.49 s | 100 ms | 0.742 MB |
+| `/en/football-games/football-name-chain` | 92 / 97 / 83 | 92 | 2.65 s | 49.5 ms | 0.677 MB |
+| `/tr/futbol-oyunlari/son-harfle-futbolcu` | 64 / 78 / 60 | 64 | 5.66 s | 60 ms | 0.784 MB |
+| `/en/football-games/played-for-both-clubs` | 89 / 90 / 98 | 90 | 3.59 s | 66 ms | 0.676 MB |
+| `/es/juegos-de-futbol/jugador-en-comun` | 77 / 84 / 86 | 84 | 4.26 s | 70 ms | 0.734 MB |
+| `/es/juegos-de-futbol/cadena-de-futbolistas` | 85 / 82 / 98 | 85 | 4.21 s | 64 ms | 0.735 MB |
+| `/ka/football-games/played-for-both-clubs` | 84 / 83 / 79 | 83 | 4.29 s | 46.5 ms | 0.732 MB |
+| `/ka/football-games/football-name-chain` | 99 / 80 / 98 | 98 | 2.01 s | 27.5 ms | 0.736 MB |
+
+Accessibility and best practices were 100 in all 24 runs, the console audit recorded zero errors, and initial-load CLS was at most 0.0028. A high median does not mean every run passes, and English Played for Both still has an LCP above 2.5 s despite its performance score of 90. These changes do not establish a field Core Web Vitals pass.
+
+The extra avatar split reduced audit downloads by approximately 9 KB. It does not establish a stable score benefit: the representative Turkish median moved from 90 to 83 between batches while English moved from 87 to 92. Infrastructure/network conditions were not experimentally isolated, so neither movement is attributed solely to that code change. Relative to the same-host pre-672 baseline, median total navigation bytes are 47.0% lower on Turkish Played for Both and 51.3% lower on English Name Chain.
+
+Measured remaining costs include roughly 46 KB of global CSS, font discovery after the font stylesheet, authentication/analytics/shared-shell scripts and the selected non-English dictionary in the document. First document transfers were approximately 60 KB on Turkish versus 16 KB on English in inspected runs. This explains a larger transferred document, not every timing difference. One Turkish Name Chain run had observed time to first byte 1.99 s and hero resource duration 3.31 s; another run of Turkish Played for Both had 0.26 s and 0.40 s respectively. Those observed trace breakdowns are distinct from the simulated LCP figures in the table. A precise CDN, origin or local-network cause has not been established.
+
+The current production alias remains on `dpl_Ba8RJwuH9HpinxTj12DbyMbLciKU`. No production promotion is authorized or performed. Before any larger public-layout replacement, the owner was asked whether to preserve existing app navigation or use a lighter public landing layout. No such redesign has been implemented.
+
+Two final desktop spot checks on PR 676 returned Turkish Played for Both 97 (LCP 1.15 s) and English Name Chain 89 (LCP 1.53 s). These are single runs, not medians. Both had zero blocking time and accessibility 100. Best practices was 92 because the staging Vercel feedback-toolbar iframe was blocked by the existing CSP; no other console-error item was recorded. The policy was not relaxed.
+
+A fresh Google-hosted PageSpeed test was not completed: the browser connection reset while opening the service. An earlier public PageSpeed API request had returned a daily-quota 429. None of the laboratory scores above is presented as a fresh Google-hosted or real-user result. The owner asked what the proposed lighter navigation would look like; that is a request for clarification, not approval to redesign the public layout.
+
+## 11 October — preserve navigation; critical fonts and hero assets
+
+The owner explicitly chose to keep the current navigation and continue on staging only. The lighter-navigation concept is not implemented. This pass preserves full navigation, authentication, analytics, game engines, localized content and the existing hero artwork.
+
+Poppins now uses checked-in, content-addressed copies of the same package files and equivalent CSS, preserving all six weights and all three subsets, including WOFF fallbacks. Four Latin weights used on these eight landings are hinted during server rendering; Turkish also hints their Latin Extended counterparts. A small route-aware component updates these hints on client-side language navigation. Other routes do not receive speculative font hints.
+
+The two priority word-game illustrations have checked-in responsive AVIF variants with WebP fallback, generated from the unchanged source images. Matching responsive preloads remove the first-visit image-transform dependency. Lazy non-hero artwork and other games retain their existing image behavior. Content hashes make one-year immutable caching safe; the unhashed SIL license remains revalidated. Every generated file is included in Git, not generated during deployment. Tests verify asset hashes, all dimensions/formats and equivalence with the original font CSS.
+
+Local validation: the production-mode staging-configured build compiled, type-checked and generated all 277 pages. The two-worker full-suite run failed overall: 328 files and 2,331 tests passed, eight tests were skipped, and the auction-training file had three failures. In that same run, its first test exceeded the unchanged five-second timeout and two subsequent assertions failed. The unchanged three-test file then passed in a separate isolated run (4.72 s for the first test). No tests, timeouts or training behavior were weakened. Independent CI remains the release gate.
+
+Browser checks confirmed the existing mobile navigation, no horizontal overflow, completed hero downloads, English-to-Turkish client navigation, eight Turkish font hints and opening of the localized sign-in panel. The local guest launch cannot validate gameplay: the staging API correctly returned 403 `CORS origin not allowed` for the temporary localhost origin. Both word-game board endpoints returned 200 for the official staging origin. Gameplay must be verified there after deployment; no CORS or security setting was changed.
+
+CodeRabbit CLI completed its uncommitted review. Its unhashed-license cache finding was fixed. Its deployment-asset concern is addressed by checking in all public assets/manifests and integrity tests, rather than adding an unnecessary build-time generation step. A prior interrupted review's route-persistence concern was fixed with the route-aware hint component and regression tests. Hosted mobile 90+ on every page is not yet established for this pass.
+
+The complete committed-file review found no code issues and one reporting clarification: the failed full-suite run must not be described as a passing suite. The wording above now explicitly separates that failed run from the passing isolated rerun.
+
+Six fresh local default-simulated mobile audits at candidate `9325f8e2` returned Turkish Played for Both **97 / 93 / 95**, median **95**, median LCP **2.48 s**, TBT **52.5 ms**, downloads **0.779 MB**; English Name Chain **94 / 96 / 92**, median **94**, LCP **2.86 s**, TBT **65 ms**, downloads **0.714 MB**. All six had accessibility/best-practices 100, CLS zero and no console-audit errors. Raw artifacts: `/tmp/quizball-word-local-after-critical-v2-20261011-<name>-<run>.json`. These are local lab results, not hosted/Google PageSpeed/field results. No build, local tests or foreground browser QA ran during the batch; other development processes on this shared machine were not stopped. The earlier local comparison had asset-generation work overlapping part of collection, so it is not used as a controlled score baseline.

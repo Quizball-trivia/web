@@ -3,6 +3,7 @@ import Image from "next/image";
 import { DemoModeIcon } from "./DemoModeIcon";
 import { isFifaSlug } from "@/features/fifa-universe/registry";
 import { FifaModeArtLazy } from "@/features/fifa-universe/FifaModeArtLazy";
+import { WordGameHeroImage } from "./WordGameHeroImage";
 
 // Every illustrated tile ships in public/. Do not derive artwork locations
 // from the authentication server: another environment may not have that bucket.
@@ -118,7 +119,9 @@ export function DemoModeArt({ slug: rawSlug, className = "", priority = false, s
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
       <div className={`relative overflow-hidden bg-game-art-night ${className}`} aria-hidden>
-        <Image
+        {priority && (slug === "name-chain" || slug === "shared-player") ? (
+          <WordGameHeroImage slug={slug} sizes={sizes} />
+        ) : <Image
           src={LOCAL_MODE_IMAGES.has(slug)
             ? `/assets/demos/game-modes/${LOCAL_MODE_IMAGES.get(slug)}.webp`
             : `${GAME_MODE_IMAGE_BASE}/${slug}.webp`}
@@ -130,7 +133,7 @@ export function DemoModeArt({ slug: rawSlug, className = "", priority = false, s
           fetchPriority={priority ? "high" : undefined}
           loading={priority ? undefined : "lazy"}
           className="object-contain object-center"
-        />
+        />}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
     );
