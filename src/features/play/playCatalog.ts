@@ -58,7 +58,10 @@ export interface PlayPopularity {
   games: Record<string, { players_7d: number; players_3d: number } | undefined>;
 }
 
-/** The endpoint's answer, kept only where it is well formed: anything else is treated as no numbers at all. */
+/**
+ * The endpoint's answer, kept only where it is well formed. Null when nothing usable is left, so a broken or empty
+ * answer is handled like a failed read (the numbers already held are not thrown away for it).
+ */
 export function parsePlayPopularity(body: unknown): PlayPopularity | null {
   if (typeof body !== "object" || body === null) return null;
   const { generated_at, games } = body as { generated_at?: unknown; games?: unknown };
@@ -69,6 +72,7 @@ export function parsePlayPopularity(body: unknown): PlayPopularity | null {
     const { players_7d, players_3d } = (row ?? {}) as { players_7d?: unknown; players_3d?: unknown };
     if (count(players_7d) && count(players_3d)) kept[key] = { players_7d, players_3d };
   }
+  if (Object.keys(kept).length === 0) return null;
   return { generated_at: typeof generated_at === "string" ? generated_at : null, games: kept };
 }
 
