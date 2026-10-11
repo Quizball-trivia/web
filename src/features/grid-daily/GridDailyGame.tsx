@@ -86,6 +86,8 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const [pending, setPending] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
   const [kickOffFailed, setKickOffFailed] = useState(false);
+  /** The last guess was refused because the run had moved on elsewhere (another tab): nothing was spent. */
+  const [movedElsewhere, setMovedElsewhere] = useState(false);
   /** data: null = the rankings could not be fetched (the player can ask again). */
   const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard | null } | null>(null);
   const [boardAttempt, setBoardAttempt] = useState(0);
@@ -101,6 +103,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     const mine = ++generation.current;
     setLoad({ kind: "loading" });
     setKickOffFailed(false);
+    setMovedElsewhere(false);
     setSelectedCell(null);
     setAnswer("");
     setFeedback(undefined);
@@ -205,14 +208,18 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     const mine = generation.current;
     pendingRef.current = true;
     setPending(true);
+    setMovedElsewhere(false);
     try {
       const result = await gridDailyApi.guess({ day, runId: run.run.id, version: run.run.version, cellIndex: selectedCell, text: answer.trim() }, locale);
       if (!apply(result, mine)) return;
       setFeedback(result.outcome);
       if (result.outcome !== "ambiguous") { setSelectedCell(null); setAnswer(""); }
-    } catch {
+    } catch (error) {
       // Refused, or no answer at all (the guess may have landed): either way the server's run is the truth.
-      await resync(mine);
+      const stale = error instanceof DailyGameApiError && error.message === "stale_state";
+      const fresh = await resync(mine);
+      // The screen quietly catching up would leave the player wondering where the guess went.
+      if (stale && fresh && mine === generation.current) setMovedElsewhere(true);
     } finally {
       pendingRef.current = false;
       setPending(false);
@@ -376,14 +383,14 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
 
         <div className="mt-4">
           <MatchBoard state={state} selfUserId={SELF} locale={locale} selectedCell={selectedCell}
-            onSelect={(cell) => { if (!pending) { setSelectedCell(cell); setAnswer(""); setFeedback(undefined); } }} />
+            onSelect={(cell) => { if (!pending) { setSelectedCell(cell); setAnswer(""); setFeedback(undefined); setMovedElsewhere(false); } }} />
         </div>
 
         {!done && (
           <>
-            <p role="status" data-daily-feedback={feedback ?? ""} className={cn("mt-3 min-h-5 text-center text-xs font-bold",
-              feedback === "correct" ? "text-brand-green-light" : feedback === "ambiguous" ? "text-brand-yellow" : feedback ? "text-brand-red-soft" : "text-white/55")}>
-              {feedbackLine ?? copy.tapCell}
+            <p role="status" data-daily-feedback={movedElsewhere ? "moved" : feedback ?? ""} className={cn("mt-3 min-h-5 text-center text-xs font-bold",
+              movedElsewhere || feedback === "ambiguous" ? "text-brand-yellow" : feedback === "correct" ? "text-brand-green-light" : feedback ? "text-brand-red-soft" : "text-white/55")}>
+              {movedElsewhere ? copy.movedElsewhere : feedbackLine ?? copy.tapCell}
             </p>
             <FootballGridTurnPanel
               state={state}
