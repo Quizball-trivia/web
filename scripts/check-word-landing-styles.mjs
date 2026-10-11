@@ -4,49 +4,16 @@ import path from "node:path";
 import { gzipSync } from "node:zlib";
 import postcss from "postcss";
 import tailwind from "@tailwindcss/postcss";
-import ts from "typescript";
+import { resolveWordStyleClosure, renderWordStyleSources } from "./lib/word-landing-style-closure.mjs";
 
 const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const styleDirectory = path.join(root, "src/styles");
 const criticalText = read("src/styles/word-landing-utilities.css");
-const sources = [...criticalText.matchAll(/@source "([^"]+)";/g)].map((match) => path.resolve(styleDirectory, match[1]));
-const covered = (file) => sources.some((source) => file === source || file.startsWith(`${source}${path.sep}`));
-
-// Static dependencies plus shell/auth/board boundaries which can render without Play.
-const entries = [
-  "src/app/layout.tsx", "src/app/providers.tsx", "src/app/seo-providers.tsx",
-  "src/components/layout/AppShell.tsx", "src/components/auth/AppAuthGate.tsx",
-  "src/features/marketing/PublicGameScreen.tsx", "src/features/auth/GuestAuthDialog.tsx",
-  "src/components/layout/ChallengeInvitePrompt.tsx", "src/components/layout/NotificationsDropdown.tsx",
-  "src/components/shared/EventAwardCeremony.tsx", "src/features/weekend-league/rewards/WlRewardCeremonyHost.tsx",
-  "src/features/wordgames/daily/WordDailyPageBoards.tsx", "src/components/TierFrameAvatar.tsx",
-];
-const visited = new Set();
-const absentSources = [];
-function resolveImport(from, name) {
-  const absolute = name.startsWith("@/") ? path.join(root, "src", name.slice(2)) : name.startsWith(".") ? path.resolve(path.dirname(from), name) : null;
-  if (!absolute) return null;
-  for (const suffix of ["", ".tsx", ".ts", "/index.tsx", "/index.ts"]) {
-    const file = absolute + suffix;
-    if (/\.tsx?$/.test(file) && fs.existsSync(file) && fs.statSync(file).isFile()) return file;
-  }
-  return null;
-}
-function visit(file) {
-  if (visited.has(file)) return;
-  visited.add(file);
-  const text = fs.readFileSync(file, "utf8");
-  if (/\bclassName\b/.test(text) && !covered(file)) absentSources.push(path.relative(root, file));
-  const ast = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
-  for (const node of ast.statements) {
-    if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier)) continue;
-    const dependency = resolveImport(file, node.moduleSpecifier.text);
-    if (dependency) visit(dependency);
-  }
-}
-for (const entry of entries) visit(path.join(root, entry));
-if (absentSources.length) throw new Error(`Critical render dependencies missing: ${absentSources.join(", ")}`);
+// Resolve independently from physical route/layout roots, not from the manifest.
+const closure = resolveWordStyleClosure({ root });
+const freshManifest = renderWordStyleSources(closure.files);
+if (read("src/styles/word-landing-sources.css") !== freshManifest) throw new Error("Stale word style manifest; regenerate with scripts/generate-word-landing-sources.mjs --write.");
 
 const wordSlugs = new Map([
   ["football-games", ["football-name-chain", "played-for-both-clubs"]],
@@ -104,8 +71,8 @@ const equivalent = base
   .replace('@layer theme, base, components, utilities;\n@import "tailwindcss/theme.css" layer(theme);\n@import "tailwindcss/preflight.css" layer(base);', '@import "tailwindcss";')
   .replace('@import "./theme-tokens.css";', read("src/styles/theme-tokens.css"));
 const compiled = [];
-const renderClosureSheet = criticalText.replace(/@source "[^"]+";/g, "")
-  + [...visited].map((file) => `\n@source "${file}";`).join("");
+const renderClosureSheet = criticalText.replace('@import "./word-landing-sources.css";', "")
+  + closure.files.map((file) => `\n@source "${path.join(root, file)}";`).join("");
 for (const [name, css] of [
   ["monolithic", equivalent], ["base", base],
   ["word", criticalText], ["application", read("src/styles/application-utilities.css")],
@@ -122,7 +89,17 @@ if (missing.length) throw new Error(`Missing ${missing.length} contextual declar
 const readyBeforePlay = new Set([...declarations(compiled[1].root), ...declarations(compiled[2].root)]);
 const missingBeforePlay = [...declarations(compiled[4].root)].filter((declaration) => !readyBeforePlay.has(declaration));
 if (missingBeforePlay.length) throw new Error(`Render closure needs app-only CSS: ${missingBeforePlay.slice(0, 8).join("\n")}`);
+// Import expansion can change harmless whitespace/comments. Preserve every
+// ordered rule, at-rule and declaration, but not formatting/source locations.
+const orderedRules = (nodes) => nodes.filter((node) => node.type !== "comment").map((node) => ({
+  type: node.type, selector: node.selector, name: node.name, params: node.params,
+  prop: node.prop, value: node.value, important: Boolean(node.important),
+  ...(node.nodes ? { nodes: orderedRules(node.nodes) } : {}),
+}));
+if (JSON.stringify(orderedRules(compiled[2].root.nodes)) !== JSON.stringify(orderedRules(compiled[4].root.nodes))) {
+  throw new Error("Generated sheet differs from independently compiled fresh closure (ordering/rules included).");
+}
 for (const engine of ["src/features/shared-player/SharedPlayerDaily.tsx", "src/features/name-chain/NameChainDaily.tsx"]) {
   if (!read(engine).includes('import "@/styles/application-utilities.css";')) throw new Error(`Lazy engine lacks stylesheet dependency: ${engine}`);
 }
-console.log(JSON.stringify({ checkedPages, criticalModules: visited.size, contextualDeclarations: complete.size, missing: 0, missingBeforePlay: 0 }));
+console.log(JSON.stringify({ checkedPages, criticalModules: closure.files.length, dynamicBoundaries: closure.boundaries.length, manifestFresh: true, identicalCriticalOutput: true, contextualDeclarations: complete.size, missing: 0, missingBeforePlay: 0 }));
