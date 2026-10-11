@@ -5,7 +5,7 @@
 import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ScrollText, Swords, Dumbbell, Users } from 'lucide-react';
+import { CalendarDays, ScrollText, Swords, Dumbbell, Smartphone, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -115,6 +115,8 @@ export function FootballGridModeModal({
   onFindOnline,
   onTraining,
   onPlayWithFriend,
+  onSamePhone,
+  onDailyGrid,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -123,6 +125,10 @@ export function FootballGridModeModal({
   onTraining?: () => void;
   /** Friend room (link or code); open to guests once guest lobbies ship. */
   onPlayWithFriend?: () => void;
+  /** Two players on this device; needs no account. */
+  onSamePhone?: () => void;
+  /** One board a day, played alone. */
+  onDailyGrid?: () => void;
 }) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -239,6 +245,41 @@ export function FootballGridModeModal({
                 >
                   <Dumbbell className="size-4 shrink-0" strokeWidth={2.5} />
                   <span className="whitespace-nowrap leading-normal">{t('play.guestDemoCta')}</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {(onSamePhone || onDailyGrid) && (
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+              {onSamePhone && (
+                <button
+                  type="button"
+                  onClick={onSamePhone}
+                  data-grid-mode="same-phone"
+                  className={cn(
+                    'flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-white/10 px-2 uppercase text-white transition-colors hover:bg-white/15',
+                    !onDailyGrid && 'col-span-2',
+                  )}
+                  style={{ fontSize: 'clamp(11px, 2vw, 13px)', ...poppins }}
+                >
+                  <Smartphone className="size-4 shrink-0" strokeWidth={2.5} />
+                  <span className="whitespace-nowrap leading-normal">{t('play.gridSamePhone')}</span>
+                </button>
+              )}
+              {onDailyGrid && (
+                <button
+                  type="button"
+                  onClick={onDailyGrid}
+                  data-grid-mode="daily"
+                  className={cn(
+                    'flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-white/10 px-2 uppercase text-white transition-colors hover:bg-white/15',
+                    !onSamePhone && 'col-span-2',
+                  )}
+                  style={{ fontSize: 'clamp(11px, 2vw, 13px)', ...poppins }}
+                >
+                  <CalendarDays className="size-4 shrink-0" strokeWidth={2.5} />
+                  <span className="whitespace-nowrap leading-normal">{t('play.gridDaily')}</span>
                 </button>
               )}
             </div>

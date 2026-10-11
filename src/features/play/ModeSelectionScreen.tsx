@@ -1007,6 +1007,8 @@ export function ModeSelectionScreen({
         }}
         onTraining={startGridTraining}
         onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); void startFriendRoom('football_grid'); }}
+        onSamePhone={() => { setGridModalOpen(false); router.push('/tic-tac-toe/local'); }}
+        onDailyGrid={() => { setGridModalOpen(false); router.push('/daily-grid'); }}
       />
       {gridTraining && (
         <TrainingOfferModal

@@ -55,7 +55,9 @@ export function isGuestLobbyPath(pathname: string): boolean {
 export function isGuestAllowedPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   if (pathname === "/" || pathname === "/play") return true;
-  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas" || pathname === "/pistas" || pathname === "/ultimo" || pathname === "/minuto" || pathname === "/ortak-futbolcu" || pathname === "/son-harfle") return true;
+  // Same-phone Tic Tac Toe keeps the game on the device: no account and no guest session.
+  if (pathname === "/tic-tac-toe/local") return true;
+  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas" || pathname === "/pistas" || pathname === "/ultimo" || pathname === "/minuto" || pathname === "/ortak-futbolcu" || pathname === "/son-harfle" || pathname === "/daily-grid") return true;
   if (GUEST_LOBBIES_ENABLED && isGuestLobbyPath(pathname)) return true;
   return isHubPath(pathname) || isPublicGamePath(pathname);
 }

@@ -1007,6 +1007,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     });
     useFootballGridStore.getState().setRematch(data);
   });
+  socket.on('grid:options', (data) => {
+    useFootballGridStore.getState().setOptions(data);
+  });
   socket.on('grid:report_received', ({ attemptId }) => {
     logger.info('Socket event grid:report_received', { attemptId });
     useFootballGridStore.getState().markAttemptReported(attemptId);

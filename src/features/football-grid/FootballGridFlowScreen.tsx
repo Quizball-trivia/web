@@ -3,7 +3,7 @@
 import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
 import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
-import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { AlertTriangle, Check, LoaderCircle, UserRoundSearch } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +12,8 @@ import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { FootballGridPortrait } from './components/FootballGridPortrait';
+import { GridWinLine } from './components/GridWinLine';
+import { GRID_WIN_LINE_HOLD_MS, gridWinLine } from './winLine';
 import {
   loadGridTypeaheadRoster,
   searchGridPlayers,
@@ -27,6 +29,7 @@ import type {
   FootballGridState,
   OpponentInfo,
   FootballGridCommandResultPayload,
+  FootballGridOption,
   FootballGridSeriesInfo,
 } from '@/lib/realtime/socket.types';
 import type { FootballGridLastGameResult } from '@/stores/footballGrid.store';
@@ -149,6 +152,18 @@ export const FOOTBALL_GRID_COPY = {
     goSignIn: 'Go to sign in',
     unavailable: 'Football Tic Tac Toe is temporarily unavailable',
     unavailableBody: 'We could not start matchmaking right now. Your account and progress are safe.',
+    pickOne: 'Pick the footballer who fits both',
+    typeInstead: 'I know one — type it instead',
+    showOptions: 'Show four options',
+    loadingOptions: 'Finding four footballers…',
+    rulesTitle: 'How answers count',
+    famClub: 'Club',
+    famCountry: 'Country',
+    famLeague: 'League',
+    famManager: 'Manager',
+    famTeammate: 'Teammate',
+    famTrophy: 'Trophy',
+    famWildcard: 'Special',
     retry: 'Try again',
   },
   ka: {
@@ -241,6 +256,18 @@ export const FOOTBALL_GRID_COPY = {
     goSignIn: 'შესვლა',
     unavailable: 'იქს ნული დროებით მიუწვდომელია',
     unavailableBody: 'მატჩის ძიება ახლა ვერ დავიწყეთ. შენი ანგარიში და პროგრესი უსაფრთხოდაა.',
+    pickOne: 'აირჩიე ფეხბურთელი, რომელიც ორივე პირობას აკმაყოფილებს',
+    typeInstead: 'ერთი ვიცი — თავად დავწერ',
+    showOptions: 'ოთხი ვარიანტის ჩვენება',
+    loadingOptions: 'ოთხ ფეხბურთელს ვარჩევთ…',
+    rulesTitle: 'როგორ ითვლება პასუხები',
+    famClub: 'კლუბი',
+    famCountry: 'ქვეყანა',
+    famLeague: 'ლიგა',
+    famManager: 'მწვრთნელი',
+    famTeammate: 'თანაგუნდელი',
+    famTrophy: 'ტიტული',
+    famWildcard: 'სპეციალური',
     retry: 'თავიდან ცდა',
   },
   es: {
@@ -293,6 +320,18 @@ export const FOOTBALL_GRID_COPY = {
     goSignIn: 'Ir a iniciar sesión',
     unavailable: 'Tic Tac Toe futbolero no está disponible temporalmente',
     unavailableBody: 'No hemos podido iniciar la búsqueda de oponentes. Tu cuenta y tu progreso están seguros.',
+    pickOne: 'Elige al futbolista que cumple las dos pistas',
+    typeInstead: 'Me sé uno: prefiero escribirlo',
+    showOptions: 'Ver cuatro opciones',
+    loadingOptions: 'Buscando cuatro futbolistas…',
+    rulesTitle: 'Cómo cuentan las respuestas',
+    famClub: 'Club',
+    famCountry: 'País',
+    famLeague: 'Liga',
+    famManager: 'Entrenador',
+    famTeammate: 'Compañero',
+    famTrophy: 'Título',
+    famWildcard: 'Especial',
     retry: 'Intentar de nuevo',
     noteOpponentLeft: 'El rival abandonó el partido',
     noteYouLeft: 'Abandonaste el partido',
@@ -425,6 +464,18 @@ export const FOOTBALL_GRID_COPY = {
     goSignIn: 'Girişe git',
     unavailable: 'Futbol XOX geçici olarak kullanılamıyor',
     unavailableBody: 'Şu anda eşleştirmeyi başlatamadık. Hesabın ve ilerlemen güvende.',
+    pickOne: 'İki ipucuna da uyan futbolcuyu seç',
+    typeInstead: 'Birini biliyorum, kendim yazacağım',
+    showOptions: 'Dört seçeneği göster',
+    loadingOptions: 'Dört futbolcu bulunuyor…',
+    rulesTitle: 'Cevaplar nasıl sayılır',
+    famClub: 'Kulüp',
+    famCountry: 'Ülke',
+    famLeague: 'Lig',
+    famManager: 'Teknik direktör',
+    famTeammate: 'Takım arkadaşı',
+    famTrophy: 'Kupa',
+    famWildcard: 'Özel',
     retry: 'Tekrar dene',
   },
 } as const;
@@ -467,7 +518,7 @@ export function GridHud({
   onOfferDraw: () => void;
 }) {
   const seconds = Math.max(0, Math.ceil(remaining / 1_000));
-  const fullTurnMs = Math.max(40_000, state.turnRemainingMs ?? 0);
+  const fullTurnMs = state.settings?.turnMs ?? Math.max(FOOTBALL_GRID_DEFAULT_TURN_MS, state.turnRemainingMs ?? 0);
   const ratio = state.phase === 'turn' ? Math.min(1, Math.max(0, remaining / fullTurnMs)) : 0;
   const myWins = selfUserId ? series?.wins[selfUserId] ?? 0 : 0;
   const theirWins = opponent ? series?.wins[opponent.id] ?? 0 : 0;
@@ -487,9 +538,9 @@ export function GridHud({
           <div className="flex h-9 min-w-[88px] items-center justify-center rounded-xl bg-brand-blue px-3 font-poppins text-xl font-black tabular-nums text-white">
             {myWins}<span className="mx-1.5 text-white/60">–</span>{theirWins}
           </div>
-          {series && series.format === 'bo3' && (
+          {series && series.format !== 'single' && (
             <span className="mt-0.5 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
-              {fill(copy.gameOf, { n: series.gameIndex, m: 3 })}
+              {fill(copy.gameOf, { n: series.gameIndex, m: footballGridSeriesGames(series.format) })}
             </span>
           )}
         </div>
@@ -602,7 +653,7 @@ export function SeriesSplash({
   const lead = myWins === theirWins ? copy.seriesLevel : myWins > theirWins ? copy.seriesLead : copy.seriesTrail;
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-center font-poppins text-white" style={GRID_BACKGROUND_STYLE}>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{fill(copy.gameOf, { n: series.gameIndex + 1, m: 3 })}</p>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{fill(copy.gameOf, { n: series.gameIndex + 1, m: footballGridSeriesGames(series.format) })}</p>
       <h1 className={cn('mt-2 text-[2.2rem] font-black uppercase leading-[1.2] sm:text-[2.8rem]', !result.winnerUserId ? 'text-brand-yellow' : result.winnerUserId === selfUserId ? 'text-brand-green' : 'text-brand-red')}>
         {gameTitle}
       </h1>
@@ -635,6 +686,14 @@ export function SeriesSplash({
       </div>
     </main>
   );
+}
+
+const FOOTBALL_GRID_DEFAULT_TURN_MS = 40_000;
+
+export function footballGridSeriesGames(format: FootballGridSeriesInfo['format']): number {
+  if (format === 'bo7') return 7;
+  if (format === 'bo5') return 5;
+  return format === 'bo3' ? 3 : 1;
 }
 
 function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): number {
@@ -757,9 +816,15 @@ export function MatchBoard({
   onSelect,
   selectableCells = null,
   highlightCells = null,
+  activeUserId,
+  takeableCells = null,
 }: {
   state: FootballGridState;
   selfUserId: string;
+  /** Same phone: whoever is to move picks cells, while colours stay with `selfUserId`. Defaults to `selfUserId`. */
+  activeUserId?: string;
+  /** Same phone with steals: claimed cells the player to move may still answer. */
+  takeableCells?: number[] | null;
   locale: Locale;
   selectedCell: number | null;
   onSelect: (cell: number) => void;
@@ -769,7 +834,7 @@ export function MatchBoard({
   highlightCells?: number[] | null;
 }) {
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
-  const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === selfUserId;
+  const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === (activeUserId ?? selfUserId);
   return (
     <motion.div
       variants={BOARD_BUILD_CONTAINER}
@@ -788,7 +853,8 @@ export function MatchBoard({
           const cellIndex = rowIndex * 3 + columnIndex;
           const claim = claims.get(cellIndex);
           const guided = selectableCells !== null && selectableCells.includes(cellIndex);
-          const selectable = isMyTurn && !claim && (selectableCells === null || guided);
+          const takeable = Boolean(claim) && Boolean(takeableCells?.includes(cellIndex));
+          const selectable = isMyTurn && (!claim || takeable) && (selectableCells === null || guided);
           return (
             <motion.button
               key={`${row.id}-${column.id}`}
@@ -806,7 +872,8 @@ export function MatchBoard({
                   ? 'border-brand-cyan bg-brand-cyan/20'
                   : 'border-brand-red-soft bg-brand-red-soft/15'),
                 !claim && 'border-white/10 bg-white/[0.03]',
-                selectable && 'cursor-pointer hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.06]',
+                selectable && !claim && 'cursor-pointer hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.06]',
+                selectable && takeable && 'cursor-pointer border-dashed',
                 selectedCell === cellIndex && 'border-brand-cyan bg-brand-cyan/15',
                 !selectable && !claim && 'opacity-60',
               )}
@@ -1018,6 +1085,51 @@ function ThinkingDots() {
 }
 
 /** Loads the release roster once per page and keeps it for every turn. */
+const OPTION_NAME_SIZES = [13, 12, 11, 10, 9];
+const OPTIONS_RETRY_MS = 3_500;
+const OPTIONS_REQUEST_TRIES = 4;
+
+// A long surname must not wrap in the middle: the text shrinks until every word fits on a line.
+function OptionName({ name }: { name: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    let fittedWidth = -1;
+    const fit = () => {
+      if (node.clientWidth === fittedWidth) return;
+      fittedWidth = node.clientWidth;
+      node.style.overflowWrap = 'normal';
+      for (const size of OPTION_NAME_SIZES) {
+        node.style.fontSize = `${size}px`;
+        if (node.scrollWidth <= node.clientWidth) return;
+      }
+      node.style.fontSize = '11px';
+      node.style.overflowWrap = 'anywhere';
+    };
+    fit();
+    let live = true;
+    void document.fonts?.ready.then(() => {
+      if (!live) return;
+      fittedWidth = -1;
+      fit();
+    });
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    observer?.observe(node);
+    return () => {
+      live = false;
+      observer?.disconnect();
+    };
+  }, [name]);
+
+  return (
+    <span ref={ref} className="min-w-0 flex-1 font-poppins text-[13px] font-bold leading-tight text-white">
+      {name}
+    </span>
+  );
+}
+
 function useGridTypeaheadRoster(enabled = true): GridTypeaheadPreparedPlayer[] {
   const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);
   useEffect(() => {
@@ -1058,6 +1170,10 @@ export function FootballGridTurnPanel({
   onReport,
   onCancel,
   roster: rosterOverride,
+  choice,
+  prefersTyping: givenPrefersTyping,
+  onPrefersTypingChange,
+  sheetNotice,
 }: {
   state: FootballGridState;
   locale: Locale;
@@ -1074,15 +1190,33 @@ export function FootballGridTurnPanel({
   onCancel?: () => void;
   /** Training: a fixed roster for the suggestions instead of the fetched one (guests have no session to fetch with). */
   roster?: GridTypeaheadPreparedPlayer[];
+  /**
+   * Pick-from-four: the footballers offered for the selected cell (undefined while they load, null when the cell
+   * has none to offer, which falls back to typing). Absent in a match that is typed only.
+   */
+  choice?: { options: FootballGridOption[] | null | undefined; onPick: (option: FootballGridOption) => void };
+  /** Same phone: the panel is rebuilt for each player, so the screen keeps each one's "type it instead". */
+  prefersTyping?: boolean;
+  onPrefersTypingChange?: (value: boolean) => void;
+  /** Said inside the open sheet, where the player is looking (a name that could be several footballers). */
+  sheetNotice?: string | null;
 }) {
   const copy = FOOTBALL_GRID_COPY[locale];
+  // The player may always type instead; the choice is remembered for the rest of the match.
+  const [ownPrefersTyping, setOwnPrefersTyping] = useState(false);
+  const prefersTyping = givenPrefersTyping ?? ownPrefersTyping;
+  const setPrefersTyping = (value: boolean) => {
+    setOwnPrefersTyping(value);
+    onPrefersTypingChange?.(value);
+  };
+  const picking = Boolean(choice) && !prefersTyping && choice?.options !== null;
   const fetchedRoster = useGridTypeaheadRoster(rosterOverride === undefined);
   const roster = rosterOverride ?? fetchedRoster;
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const suggestions = useMemo(() => (
-    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale, 6)
-  ), [roster, answer, locale, pending, suggestionsDismissed]);
+    pending || suggestionsDismissed || picking ? [] : searchGridPlayers(roster, answer, locale, 6)
+  ), [roster, answer, locale, pending, suggestionsDismissed, picking]);
 
   // Picking a suggestion FILLS the box; the player still presses submit. The
   // list spans the whole roster (it cannot be filtered to the cell's valid
@@ -1126,9 +1260,20 @@ export function FootballGridTurnPanel({
   const cellPicked = selectedCell !== null && Boolean(selectedRow) && Boolean(selectedColumn);
   // The form no longer remounts per cell, so refocus the box on every pick.
   const answerInputRef = useRef<HTMLInputElement | null>(null);
+  const optionsRef = useRef<HTMLDivElement | null>(null);
+  const optionsReady = Boolean(choice?.options);
+  // Keyboard focus follows the sheet: the box when typing, the options when picking.
   useEffect(() => {
-    if (isMyTurn && cellPicked) answerInputRef.current?.focus();
-  }, [cellPicked, isMyTurn, selectedCell]);
+    if (!isMyTurn || !cellPicked) return;
+    if (!picking) answerInputRef.current?.focus();
+    else optionsRef.current?.focus();
+  }, [cellPicked, isMyTurn, picking, selectedCell]);
+  // The four arriving moves focus onto the first of them, but only while the player is picking: someone who
+  // chose to type keeps their place.
+  useEffect(() => {
+    if (!isMyTurn || !cellPicked || !picking || !optionsReady) return;
+    optionsRef.current?.querySelector<HTMLButtonElement>('button:not([disabled])')?.focus();
+  }, [cellPicked, isMyTurn, optionsReady, picking, selectedCell]);
   // iOS lays fixed elements against the layout viewport, so the on-screen
   // keyboard would cover the sheet's buttons; track the visual viewport instead.
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -1241,10 +1386,57 @@ export function FootballGridTurnPanel({
                   </Fragment>
                 ))}
               </div>
+              {picking && (
+                <div ref={optionsRef} tabIndex={-1} className="mt-3 outline-none" data-grid-anchor="options">
+                  <p className="text-center font-poppins text-[11px] font-bold uppercase tracking-wide text-white/60">
+                    {choice?.options ? copy.pickOne : copy.loadingOptions}
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {(choice?.options ?? Array.from({ length: 4 }, () => null)).map((option, index) => (
+                      <button
+                        key={option?.playerId ?? `loading-${index}`}
+                        type="button"
+                        disabled={!option || pending}
+                        onClick={() => { if (option) choice?.onPick(option); }}
+                        className="flex min-h-[4.25rem] min-w-0 items-center gap-2 rounded-xl border-2 border-white/10 bg-white/[0.04] px-2 py-2 text-left transition-colors hover:border-brand-cyan/60 hover:bg-brand-cyan/[0.08] disabled:opacity-50"
+                      >
+                        {option ? (
+                          <>
+                            <FootballGridPortrait source={option.imageUrl} playerId={option.playerId} className="size-8 shrink-0 min-[360px]:size-9 min-[400px]:size-10" />
+                            <OptionName name={locale === 'ka' && option.nameKa ? option.nameKa : option.name} />
+                          </>
+                        ) : (
+                          <span className="mx-auto h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPrefersTyping(true)}
+                    className="mt-3 w-full text-center font-poppins text-xs font-bold text-white/60 underline decoration-white/25 underline-offset-4"
+                  >
+                    {copy.typeInstead}
+                  </button>
+                </div>
+              )}
+              {!picking && choice && choice.options !== null && (
+                <button
+                  type="button"
+                  onClick={() => setPrefersTyping(false)}
+                  className="mt-3 w-full text-center font-poppins text-xs font-bold text-white/60 underline decoration-white/25 underline-offset-4"
+                >
+                  {copy.showOptions}
+                </button>
+              )}
+              {sheetNotice && (
+                <p role="status" data-grid-anchor="sheet-notice" className="mt-3 text-center font-poppins text-xs font-bold text-brand-yellow">{sheetNotice}</p>
+              )}
               <input
                 ref={answerInputRef}
                 data-grid-anchor="answer-input"
-                autoFocus
+                autoFocus={!picking}
+                hidden={picking}
                 value={answer}
                 onChange={(event) => handleAnswerChange(event.target.value)}
                 onKeyDown={handleAnswerKeyDown}
@@ -1290,20 +1482,58 @@ export function FootballGridTurnPanel({
                 >
                   {copy.cancelPick}
                 </button>
-                <button
-                  type="submit"
-                  data-grid-anchor="submit"
-                  disabled={!answer.trim() || pending}
-                  className="h-12 flex-[1.4] rounded-xl bg-brand-green font-poppins text-xs font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
-                >
-                  {pending ? <LoaderCircle className="mx-auto size-5 animate-spin" /> : copy.submit}
-                </button>
+                {!picking && (
+                  <button
+                    type="submit"
+                    data-grid-anchor="submit"
+                    disabled={!answer.trim() || pending}
+                    className="h-12 flex-[1.4] rounded-xl bg-brand-green font-poppins text-xs font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
+                  >
+                    {pending ? <LoaderCircle className="mx-auto size-5 animate-spin" /> : copy.submit}
+                  </button>
+                )}
               </div>
             </motion.form>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+const RULE_FAMILY_COPY = {
+  club: 'famClub', country: 'famCountry', league: 'famLeague', manager: 'famManager',
+  teammate: 'famTeammate', trophy_award: 'famTrophy', wildcard: 'famWildcard',
+} as const satisfies Record<FootballGridCriterionView['family'], keyof FootballGridCopy>;
+
+/** The answer rules for the kinds of clue on this board, one line per kind, folded away until asked for. */
+export function GridRulesPanel({ board, locale }: { board: FootballGridState['board']; locale: Locale }) {
+  const copy = FOOTBALL_GRID_COPY[locale];
+  const rules = useMemo(() => {
+    const seen = new Set<string>();
+    return [...board.rows, ...board.columns].flatMap((criterion) => {
+      const text = criterionExplanation(criterion, locale);
+      if (!text || seen.has(text)) return [];
+      seen.add(text);
+      return [{ id: criterion.id, family: copy[RULE_FAMILY_COPY[criterion.family]], text }];
+    });
+  }, [board, copy, locale]);
+  if (rules.length === 0) return null;
+  return (
+    <details className="group mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left" data-grid-anchor="rules">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 font-poppins text-xs font-black uppercase tracking-wide text-white/70 [&::-webkit-details-marker]:hidden">
+        {copy.rulesTitle}
+        <span aria-hidden="true" className="text-base leading-none text-white/40 transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <ul className="mt-3 space-y-2.5" lang={locale}>
+        {rules.map((rule) => (
+          <li key={rule.id} className="border-l-2 border-white/15 pl-3 text-[13px] leading-relaxed text-white/75">
+            <span className="font-bold text-white">{rule.family}: </span>{rule.text}
+          </li>
+        ))}
+        <li className="border-l-2 border-white/15 pl-3 text-[13px] leading-relaxed text-white/60">{BOTH_CLUES_EXPLANATION[locale]}</li>
+      </ul>
+    </details>
   );
 }
 
@@ -1568,7 +1798,7 @@ export function completionTitle(
   selfUserId?: string | null,
 ) {
   if (reason === 'administrative_cancel') return copy.interrupted;
-  if (series?.finished && series.format === 'bo3') {
+  if (series?.finished && series.format !== 'single') {
     if (!series.winnerUserId) return copy.seriesDraw;
     return series.winnerUserId === selfUserId ? copy.seriesWin : copy.seriesLoss;
   }
@@ -1627,8 +1857,30 @@ export function FootballGridFlowScreen() {
   const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
     ? packParam!
     : 'european';
-  const boardPreload = useFootballGridBoardPreload(useFootballGridStore((current) => current.state));
+  const liveState = useFootballGridStore((current) => current.state);
+  const boardPreload = useFootballGridBoardPreload(liveState);
+  // A game won with a line: the board stays up for a moment with the line crossed out before the result takes
+  // over. Only for a game this screen saw being played; one that was already over when the page loaded goes
+  // straight to its result.
+  const [watchedMatchId, setWatchedMatchId] = useState<string | null>(null);
+  const [lineShownMatchId, setLineShownMatchId] = useState<string | null>(null);
+  const liveMatchId = liveState?.phase === 'turn' ? liveState.matchId : null;
+  if (liveMatchId && liveMatchId !== watchedMatchId) setWatchedMatchId(liveMatchId);
+  const winLine = useMemo(() => (
+    liveState?.phase === 'terminal'
+      ? gridWinLine(liveState.claims.map((claim) => ({ cellIndex: claim.cellIndex, owner: claim.claimantUserId })), liveState.winnerUserId)
+      : null
+  ), [liveState]);
+  const finishedMatchId = liveState?.phase === 'terminal' ? liveState.matchId : null;
+  const showingWinLine = winLine !== null && finishedMatchId !== null && finishedMatchId === watchedMatchId && finishedMatchId !== lineShownMatchId;
+  useEffect(() => {
+    if (!showingWinLine || !finishedMatchId) return;
+    const timer = window.setTimeout(() => setLineShownMatchId(finishedMatchId), GRID_WIN_LINE_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [finishedMatchId, showingWinLine]);
+
   const grid = useRealtimeFootballGrid({
+    holdCompletionAck: showingWinLine,
     enabled: principal.kind !== 'none',
     selfUserId,
     locale,
@@ -1770,6 +2022,28 @@ export function FootballGridFlowScreen() {
     handledTurnResolutionsRef.current.add(resolutionKey);
     statsRef.current.timeouts += 1;
   }, [grid.turnResolved]);
+
+  // Pick-from-four: ask for the open cell's options whenever they are missing for this turn. A cell left selected
+  // from an earlier turn reopens its sheet on the next one, and that turn has its own four.
+  const optionsTurn = grid.state?.settings?.answerMode === 'choice' && isMyTurn ? grid.state.turnNumber : null;
+  const optionsKnown = Boolean(
+    grid.options && grid.state && selectedCell !== null
+    && grid.options.matchId === grid.state.matchId && grid.options.turnNumber === grid.state.turnNumber
+    && selectedCell in grid.options.byCell,
+  );
+  const requestOptions = grid.actions.requestOptions;
+  useEffect(() => {
+    if (optionsTurn === null || selectedCell === null || optionsKnown) return;
+    requestOptions(selectedCell);
+    // A reply lost to a dropped connection would leave the sheet loading: ask again a few times.
+    let asked = 1;
+    const again = window.setInterval(() => {
+      if (asked >= OPTIONS_REQUEST_TRIES) { window.clearInterval(again); return; }
+      asked += 1;
+      requestOptions(selectedCell);
+    }, OPTIONS_RETRY_MS);
+    return () => window.clearInterval(again);
+  }, [optionsKnown, optionsTurn, requestOptions, selectedCell]);
 
   const handleCancel = () => {
     grid.actions.cancelSearch();
@@ -1919,7 +2193,7 @@ export function FootballGridFlowScreen() {
     );
   }
 
-  if (grid.completed && grid.state?.phase === 'terminal' && grid.lastGameResult && grid.lastGameResult.matchId === grid.completed.matchId) {
+  if (!showingWinLine && grid.completed && grid.state?.phase === 'terminal' && grid.lastGameResult && grid.lastGameResult.matchId === grid.completed.matchId) {
     return (
       <SeriesSplash
         result={grid.lastGameResult}
@@ -1933,10 +2207,10 @@ export function FootballGridFlowScreen() {
     );
   }
 
-  if (grid.completed && grid.state?.phase === 'terminal') {
+  if (!showingWinLine && grid.completed && grid.state?.phase === 'terminal') {
     const won = grid.state.winnerUserId === selfUserId;
     const draw = !grid.state.winnerUserId;
-    const seriesDone = grid.completed.series?.finished && grid.completed.series.format === 'bo3' ? grid.completed.series : null;
+    const seriesDone = grid.completed.series?.finished && grid.completed.series.format !== 'single' ? grid.completed.series : null;
     const myClaims = seriesDone
       ? (selfUserId ? seriesDone.wins[selfUserId] ?? 0 : 0)
       : grid.state.claims.filter((claim) => claim.claimantUserId === selfUserId).length;
@@ -2009,6 +2283,10 @@ export function FootballGridFlowScreen() {
   const reportableAttempt = grid.commandResult?.attemptId ?? null;
   const alreadyReported = Boolean(reportableAttempt && grid.reportedAttemptIds.includes(reportableAttempt));
   const selectedCellIsClaimed = selectedCell !== null && state.claims.some((claim) => claim.cellIndex === selectedCell);
+  // Options belong to one turn: an answer for an earlier turn of this match is never shown.
+  const cellOptions = grid.options && grid.options.matchId === state.matchId && grid.options.turnNumber === state.turnNumber
+    ? grid.options
+    : null;
   return (
     <>
       <MiniGameShell
@@ -2044,8 +2322,11 @@ export function FootballGridFlowScreen() {
           )}
         </AnimatePresence>
         <div className="mt-3" />
-        <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
-          <FootballGridTurnPanel
+        <div className="relative">
+          <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
+          {showingWinLine && winLine && <GridWinLine cells={winLine} tone={state.winnerUserId === selfUserId ? 'self' : 'rival'} />}
+        </div>
+          {state.phase !== 'terminal' && <FootballGridTurnPanel
             state={state}
             locale={locale}
             isMyTurn={isMyTurn}
@@ -2059,7 +2340,14 @@ export function FootballGridFlowScreen() {
             reportableAttempt={reportableAttempt}
             alreadyReported={alreadyReported}
             onReport={grid.actions.reportMissingAnswer}
-          />
+            choice={state.settings?.answerMode === 'choice' ? {
+              options: selectedCell !== null ? cellOptions?.byCell[selectedCell] : undefined,
+              onPick: (option) => {
+                if (selectedCell !== null && grid.actions.submitAnswer(selectedCell, option.name, option.playerId)) statsRef.current.answers += 1;
+              },
+            } : undefined}
+          />}
+          <GridRulesPanel board={state.board} locale={locale} />
         {grid.error && <div className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-center text-xs font-bold text-red-200">{grid.error.message}</div>}
           {/* Non-blocking transport warning during live play (auction parity):
               the paused overlay only appears once the SERVER pauses the match,

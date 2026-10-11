@@ -4,6 +4,8 @@ import type {
   FootballGridCommandResultPayload,
   FootballGridCompletedPayload,
   FootballGridMatchFoundPayload,
+  FootballGridOption,
+  FootballGridOptionsPayload,
   FootballGridRematchStatePayload,
   FootballGridSearchStatePayload,
   FootballGridSeriesInfo,
@@ -34,6 +36,8 @@ interface FootballGridStoreState {
   rematch: FootballGridRematchStatePayload | null;
   lastCommandResult: FootballGridCommandResultPayload | null;
   lastTurnResolved: FootballGridTurnResolvedPayload | null;
+  /** The four footballers offered this turn, by cell (null = the cell has none to offer); stale once the turn moves on. */
+  options: { matchId: string; turnNumber: number; byCell: Record<number, FootballGridOption[] | null> } | null;
   pendingCommandId: string | null;
   reportedAttemptIds: string[];
   searchCancellationPending: boolean;
@@ -46,6 +50,7 @@ interface FootballGridStoreState {
   setRematch: (payload: FootballGridRematchStatePayload) => void;
   setCommandResult: (payload: FootballGridCommandResultPayload) => void;
   setTurnResolved: (payload: FootballGridTurnResolvedPayload) => void;
+  setOptions: (payload: FootballGridOptionsPayload) => void;
   markCommandPending: (commandId: string | null) => void;
   clearCommandFeedback: () => void;
   markAttemptReported: (attemptId: string) => void;
@@ -76,6 +81,7 @@ function resetGridState() {
     rematch: null,
     lastCommandResult: null,
     lastTurnResolved: null,
+    options: null,
     pendingCommandId: null,
     reportedAttemptIds: [],
     searchCancellationPending: false,
@@ -137,6 +143,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   rematch: null,
   lastCommandResult: null,
   lastTurnResolved: null,
+  options: null,
   pendingCommandId: null,
   reportedAttemptIds: [],
   searchCancellationPending: false,
@@ -203,6 +210,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
       rematch: null,
       lastCommandResult: null,
       lastTurnResolved: null,
+      options: null,
       pendingCommandId: null,
       reportedAttemptIds: [],
       searchCancellationPending: false,
@@ -295,6 +303,18 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     pendingCommandId: commandId,
     lastCommandResult: null,
     error: null,
+  }),
+  setOptions: (payload) => set((current) => {
+    if (current.state?.matchId !== payload.matchId || current.state.turnNumber !== payload.turnNumber) return {};
+    // Answers for several cells of one turn can arrive in any order: each keeps its own slot.
+    const sameTurn = current.options?.matchId === payload.matchId && current.options.turnNumber === payload.turnNumber;
+    return {
+      options: {
+        matchId: payload.matchId,
+        turnNumber: payload.turnNumber,
+        byCell: { ...(sameTurn ? current.options!.byCell : {}), [payload.cellIndex]: payload.options },
+      },
+    };
   }),
   clearCommandFeedback: () => set({ lastCommandResult: null }),
   markAttemptReported: (attemptId) => set((current) => ({

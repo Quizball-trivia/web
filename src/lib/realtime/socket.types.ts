@@ -92,6 +92,8 @@ export interface LobbySettings {
   roomGame?: RoomGameId | null;
   /** The host's choices for the room game (as the server validated them); absent or null = the game's defaults. */
   roomOptions?: Record<string, unknown> | null;
+  /** This backend lets a Tic Tac Toe room set its own rules; absent on an older backend. */
+  gridRules?: boolean;
   friendlyRandom: boolean;
   friendlyCategoryAId: string | null;
   friendlyCategoryBId: string | null;
@@ -1029,7 +1031,7 @@ export interface FootballGridDrawOffer {
 /** Best-of-N progress, attached to state and completion payloads. */
 export interface FootballGridSeriesInfo {
   seriesId: string;
-  format: 'single' | 'bo3';
+  format: 'single' | 'bo3' | 'bo5' | 'bo7';
   gameIndex: number;
   targetWins: number;
   wins: Record<string, number>;
@@ -1068,6 +1070,31 @@ export interface FootballGridState {
   reconnectDeadlineAt: string | null;
   completionReason: FootballGridCompletionReason | null;
   drawOffer?: FootballGridDrawOffer | null;
+  /** The rules this series plays by; absent on an older backend, which plays the standard game. */
+  settings?: FootballGridSettings;
+}
+
+export interface FootballGridSettings {
+  turnMs: number;
+  /** 'choice': the player to move may ask for four footballers to pick from. */
+  answerMode: 'type' | 'choice';
+  boardDifficulty: FootballGridDifficulty | null;
+}
+
+export interface FootballGridOption {
+  playerId: string;
+  name: string;
+  nameKa: string | null;
+  imageUrl: string | null;
+}
+
+/** Four footballers to pick from for one cell this turn; null when the cell cannot offer four. */
+export interface FootballGridOptionsPayload {
+  matchId: string;
+  cellIndex: number;
+  turnNumber: number;
+  stateVersion: number;
+  options: FootballGridOption[] | null;
 }
 
 export interface FootballGridSearchStartPayload {
@@ -1086,6 +1113,8 @@ export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCo
   cellIndex: number;
   text: string;
   locale: 'en' | 'ka' | 'es' | 'tr';
+  /** Pick-from-four: the footballer picked. */
+  optionPlayerId?: string;
 }
 
 export interface FootballGridSearchStatePayload {
@@ -1820,6 +1849,7 @@ export interface ClientToServerEvents {
   'grid:resync': (data: { matchId: string }) => void;
   'grid:completed_ack': (data: { matchId: string; terminalStateVersion: number; ackToken: string }) => void;
   'grid:forfeit': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:options_request': (data: { matchId: string; cellIndex: number }) => void;
   'grid:report_missing_answer': (data: { attemptId: string }) => void;
   'grid:rematch_accept': (data: { matchId: string; commandId: string; expectedSeriesVersion: number }) => void;
   'grid:rematch_decline': (data: { matchId: string; expectedSeriesVersion: number }) => void;
@@ -2136,6 +2166,7 @@ export interface ServerToClientEvents {
   'grid:resumed': (data: FootballGridStatePayload) => void;
   'grid:completed': (data: FootballGridCompletedPayload) => void;
   'grid:report_received': (data: { reportId: string; attemptId: string }) => void;
+  'grid:options': (data: FootballGridOptionsPayload) => void;
   'grid:rematch_state': (data: FootballGridRematchStatePayload) => void;
   'warmup:state': (data: WarmupStatePayload) => void;
   'warmup:tapped': (data: WarmupTappedPayload) => void;
