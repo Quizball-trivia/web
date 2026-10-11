@@ -68,6 +68,7 @@ export function useRealtimeFootballGrid({
   const rematch = useFootballGridStore((current) => current.rematch);
   const commandResult = useFootballGridStore((current) => current.lastCommandResult);
   const turnResolved = useFootballGridStore((current) => current.lastTurnResolved);
+  const options = useFootballGridStore((current) => current.options);
   const pendingCommandId = useFootballGridStore((current) => current.pendingCommandId);
   const reportedAttemptIds = useFootballGridStore((current) => current.reportedAttemptIds);
   const error = useFootballGridStore((current) => current.error);
@@ -226,7 +227,7 @@ export function useRealtimeFootballGrid({
     if (current.search.searchId) socket.emit('grid:search_cancel', { searchId: current.search.searchId });
   }, [socket]);
 
-  const submitAnswer = useCallback((cellIndex: number, text: string) => {
+  const submitAnswer = useCallback((cellIndex: number, text: string, optionPlayerId?: string) => {
     const current = useFootballGridStore.getState();
     const snapshot = current.state;
     if (
@@ -245,9 +246,25 @@ export function useRealtimeFootballGrid({
       cellIndex,
       text: text.trim(),
       locale,
+      ...(optionPlayerId && { optionPlayerId }),
     });
     return true;
   }, [locale, selfUserId, socket]);
+
+  /** Asks for the four footballers to pick from for a cell; the answer arrives in `options`. */
+  const requestOptions = useCallback((cellIndex: number) => {
+    const snapshot = useFootballGridStore.getState().state;
+    if (
+      !snapshot ||
+      !selfUserId ||
+      snapshot.settings?.answerMode !== 'choice' ||
+      snapshot.phase !== 'turn' ||
+      snapshot.currentPlayerUserId !== selfUserId ||
+      snapshot.claims.some((claim) => claim.cellIndex === cellIndex)
+    ) return false;
+    socket.emit('grid:options_request', { matchId: snapshot.matchId, cellIndex });
+    return true;
+  }, [selfUserId, socket]);
 
   const pass = useCallback(() => {
     const current = useFootballGridStore.getState();
@@ -351,6 +368,7 @@ export function useRealtimeFootballGrid({
     rematch,
     commandResult,
     turnResolved,
+    options,
     pendingCommandId,
     reportedAttemptIds,
     error,
@@ -359,6 +377,7 @@ export function useRealtimeFootballGrid({
       startSearch,
       cancelSearch,
       submitAnswer,
+      requestOptions,
       pass,
       forfeit,
       offerDraw,
