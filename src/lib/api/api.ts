@@ -187,7 +187,7 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
       const codeFromBody = data && typeof data === 'object' && 'code' in data && typeof (data as { code: unknown }).code === 'string'
         ? (data as { code: string }).code
         : undefined;
-      trackApiError(String(path), response.status, codeFromBody);
+      trackApiError(String(path), response.status, codeFromBody, method);
     } catch {
       /* analytics best-effort */
     }
