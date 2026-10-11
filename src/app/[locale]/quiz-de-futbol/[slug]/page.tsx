@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { CAMPAIGN_QUIZ_SLUGS } from '@/features/campaign-quiz/campaignQuiz.content';

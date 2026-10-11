@@ -1,4 +1,5 @@
 "use client";
+import "@/styles/application-utilities.css";
 
 import { sharedPlayerDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 import { useEffect, useState } from "react";

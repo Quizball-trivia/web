@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { FriendInviteEntry } from '@/features/friend/components/FriendInviteEntry';

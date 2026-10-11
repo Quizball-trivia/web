@@ -1,5 +1,6 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from "next";
-import { PublicGamePage, publicGameMetadata, publicGameStaticParams } from "@/features/marketing/publicGamePage";
+import { PublicGamePage, publicGameMetadata, publicGameDynamicParams } from "@/features/marketing/publicGamePage";
 
 type Params = Promise<{ locale: string; slug: string }>;
 const FOLDER = "futbol-oyunlari";
@@ -11,7 +12,7 @@ const FOLDER = "futbol-oyunlari";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return publicGameStaticParams(FOLDER);
+  return publicGameDynamicParams(FOLDER);
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {

@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from "next";
 import { DailyCollectionPage, dailyCollectionMetadata, dailyCollectionStaticParams } from "@/features/marketing/publicGamePage";
 
