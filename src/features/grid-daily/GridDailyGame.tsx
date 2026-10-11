@@ -19,7 +19,7 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { cn } from "@/lib/utils";
 import { gridDailyApi, type GridDailyBoard, type GridDailyRun } from "./gridDaily.api";
 import { fillDaily, GRID_DAILY_COPY } from "./gridDaily.copy";
-import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
+import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
 
 const SELF = "daily-me";
 /** A run past the hour has no exact time on the board. */
@@ -85,7 +85,10 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const [feedback, setFeedback] = useState<Feedback>(undefined);
   const [pending, setPending] = useState(false);
   const [confirmFinish, setConfirmFinish] = useState(false);
-  const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard } | null>(null);
+  /** data: null = the rankings could not be fetched (the player can ask again). */
+  const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard | null } | null>(null);
+  const [boardAttempt, setBoardAttempt] = useState(0);
+  const finishButton = useRef<HTMLButtonElement | null>(null);
   const [copied, setCopied] = useState(false);
   // The server stamps the first guess with its own clock; the timer follows that clock, not this device's.
   const clockOffset = useRef(0);
@@ -136,12 +139,22 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   useEffect(() => {
     if (!day || !done) return;
     let cancelled = false;
-    gridDailyApi.leaderboard(day, locale).then((data) => { if (!cancelled) setBoard({ day, data }); }, () => { if (!cancelled) setBoard(null); });
+    gridDailyApi.leaderboard(day, locale).then((data) => { if (!cancelled) setBoard({ day, data }); }, () => { if (!cancelled) setBoard({ day, data: null }); });
     return () => { cancelled = true; };
-  }, [day, done, locale, myId]);
+  }, [boardAttempt, day, done, locale, myId]);
+
+  // A finished grid left open overnight: when the player comes back to the tab on a new day, that day's grid loads.
+  useEffect(() => {
+    if (!day || !done || !member || initialDay) return;
+    const onVisible = () => { if (document.visibilityState === "visible" && releaseDay() > day) void open(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [day, done, initialDay, member, open]);
 
   // Rankings fetched for another day are never shown under this one.
-  const board = loadedBoard && loadedBoard.day === day ? loadedBoard.data : null;
+  const boardEntry = loadedBoard && loadedBoard.day === day ? loadedBoard : null;
+  const board = boardEntry?.data ?? null;
+  const boardFailed = boardEntry !== null && boardEntry.data === null;
   const elapsed = useElapsed(run?.state.startedAt ?? null, run?.state.finishedAt ?? null, clockOffset.current);
   const state = useMemo(() => (run ? boardState(run, locale) : null), [locale, run]);
 
@@ -308,17 +321,19 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
               onSubmit={(event) => { void submit(event); }}
               onCancel={() => { setSelectedCell(null); setAnswer(""); }}
               pending={pending}
+              sheetNotice={feedback === "ambiguous" ? copy.ambiguous : null}
             />
             {confirmFinish ? (
-              <div role="dialog" className="mt-3 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center">
+              <div role="dialog" aria-label={fillDaily(copy.finishConfirm, { n: run.state.guessesLeft })} className="mt-3 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center">
                 <p className="text-sm font-black uppercase tracking-wide text-brand-orange">{fillDaily(copy.finishConfirm, { n: run.state.guessesLeft })}</p>
                 <div className="mt-2.5 flex gap-2">
                   <button type="button" data-daily-action="finish-yes" onClick={() => void finish()} className="h-10 flex-1 rounded-xl bg-brand-green text-xs font-black uppercase text-white">{copy.yes}</button>
-                  <button type="button" onClick={() => setConfirmFinish(false)} className="h-10 flex-1 rounded-xl border-2 border-white/15 text-xs font-black uppercase text-white/80">{copy.no}</button>
+                  <button type="button" autoFocus onClick={() => { setConfirmFinish(false); window.requestAnimationFrame(() => finishButton.current?.focus()); }}
+                    className="h-10 flex-1 rounded-xl border-2 border-white/15 text-xs font-black uppercase text-white/80">{copy.no}</button>
                 </div>
               </div>
             ) : (
-              <button type="button" disabled={pending} onClick={() => setConfirmFinish(true)} data-daily-action="finish"
+              <button ref={finishButton} type="button" disabled={pending} onClick={() => setConfirmFinish(true)} data-daily-action="finish"
                 className="mt-3 h-10 w-full rounded-xl border-2 border-white/15 text-xs font-black uppercase tracking-wide text-white/70 transition-colors hover:bg-white/5 disabled:opacity-40">
                 {copy.finish}
               </button>
@@ -332,7 +347,13 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
               <h2 className="text-lg font-black uppercase">{copy.leaderboard}</h2>
               {board && board.players > 0 && <span className="text-xs text-white/60">{fillDaily(copy.players, { n: board.players })}</span>}
             </div>
-            {!board ? (
+            {boardFailed ? (
+              <div className="flex flex-col items-center gap-3 rounded-2xl bg-white/5 px-4 py-6 text-center">
+                <p className="text-sm text-white/75">{copy.leaderboardFailed}</p>
+                <button type="button" onClick={() => { setBoard(null); setBoardAttempt((current) => current + 1); }} data-daily-action="leaderboard-retry"
+                  className="h-10 rounded-xl border-2 border-white/15 px-5 text-xs font-black uppercase tracking-wide text-white/80">{copy.retry}</button>
+              </div>
+            ) : !board ? (
               <div className="h-40 animate-pulse rounded-2xl bg-white/5" />
             ) : board.top.length === 0 ? (
               <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-white/75">{copy.empty}</p>

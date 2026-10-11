@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { AuctionLeaveControl } from '@/features/auction/components/shared/AuctionLeaveControl';
 import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
-import { gridSoloApi, type GridSoloBoard } from '@/lib/football-grid/soloApi';
+import { gridSoloApi, GridSoloError, type GridSoloBoard } from '@/lib/football-grid/soloApi';
 import { loadGridTypeaheadRoster, searchGridPlayers, type GridTypeaheadPreparedPlayer } from '@/lib/football-grid/typeahead';
 import type { Locale } from '@/lib/i18n/messages';
 import type { FootballGridCommandResultPayload, FootballGridOption, FootballGridState } from '@/lib/realtime/socket.types';
@@ -21,6 +21,8 @@ import {
   GridRulesPanel,
   MatchBoard,
 } from '../FootballGridFlowScreen';
+import { GridWinLine } from '../components/GridWinLine';
+import { GRID_WIN_LINE_HOLD_MS } from '../winLine';
 import { fillLocal, GRID_LOCAL_COPY, type GridLocalCopy } from './localCopy';
 import {
   agreeLocalDraw,
@@ -34,6 +36,7 @@ import {
   LOCAL_SUSPENSIONS,
   LOCAL_TURN_SECONDS,
   localMaxGames,
+  localWinningLine,
   missLocalTurn,
   newLocalGame,
   newLocalSeries,
@@ -54,8 +57,40 @@ const SEAT_AVATARS: Record<LocalSeat, AvatarCustomization> = {
   2: { skin: 'skin_male_dark', hair: 'hair_buzz', jersey: 'jersey_milan' },
 };
 
+const SESSION_KEY = 'qb-grid-local-session-v1';
 type Stage = 'setup' | 'suspend' | 'handoff' | 'loading' | 'failed' | 'play' | 'between' | 'done';
 type Feedback = FootballGridCommandResultPayload['outcome'] | undefined;
+
+/** The series on screen, kept for this tab so a reload (or a pull to refresh) does not throw the game away. */
+interface LocalSnapshot {
+  v: 1;
+  stage: 'play' | 'between' | 'done';
+  settings: LocalSettings;
+  names: Record<LocalSeat, string>;
+  deal: GridSoloBoard;
+  game: LocalGame;
+  series: LocalSeries;
+  opener: LocalSeat;
+  blocked: Record<LocalSeat, FootballGridOption[]>;
+  typing: Record<LocalSeat, boolean>;
+  played: string[];
+}
+
+function readSnapshot(): LocalSnapshot | null {
+  try {
+    const saved = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? 'null') as LocalSnapshot | null;
+    if (!saved || saved.v !== 1 || !saved.deal?.ticket || !saved.game || !saved.series || !saved.settings) return null;
+    // A ticket begins with the moment the server stops accepting it; a board that is about to lapse is not resumed.
+    if (!(Number(saved.deal.ticket.split('.')[0]) > Date.now() + 60_000)) return null;
+    return saved;
+  } catch {
+    return null;
+  }
+}
+
+function forgetSnapshot(): void {
+  try { window.sessionStorage.removeItem(SESSION_KEY); } catch { /* storage blocked: nothing was kept */ }
+}
 
 function readStoredSettings(): LocalSettings {
   try {
@@ -191,6 +226,8 @@ export function GridLocalScreen() {
   const [options, setOptions] = useState<{ key: string; items: FootballGridOption[] | null } | null>(null);
   const [deadline, setDeadline] = useState<number | null>(null);
   const [confirmDraw, setConfirmDraw] = useState(false);
+  /** typing[seat]: that player chose "type it instead" in a pick-from-four series. */
+  const [typing, setTyping] = useState<Record<LocalSeat, boolean>>({ 1: false, 2: false });
   const playedBoardIds = useRef<string[]>([]);
   const pendingRef = useRef(false);
   /** Changes whenever the game on screen is replaced or left: an answer still on its way to an older game is dropped. */
@@ -198,7 +235,29 @@ export function GridLocalScreen() {
   /** The options request the sheet is waiting for; an older one arriving late is ignored. */
   const optionsWanted = useRef<string | null>(null);
 
-  useEffect(() => { setSettings(readStoredSettings()); }, []);
+  useEffect(() => {
+    setSettings(readStoredSettings());
+    const saved = readSnapshot();
+    if (!saved) return;
+    playedBoardIds.current = saved.played;
+    setSettings(saved.settings);
+    setNames(saved.names);
+    setDeal(saved.deal);
+    setGame(saved.game);
+    setSeries(saved.series);
+    setOpener(saved.opener);
+    setBlocked(saved.blocked);
+    setTyping(saved.typing);
+    setStage(saved.stage);
+  }, []);
+  useEffect(() => {
+    if ((stage !== 'play' && stage !== 'between' && stage !== 'done') || !deal || !game) return;
+    // A game that has ended but is not yet folded into the series (its winning line is on screen) is not a state
+    // to come back to; the snapshot before the last move stays.
+    if (stage === 'play' && game.endReason) return;
+    const snapshot: LocalSnapshot = { v: 1, stage, settings, names, deal, game, series, opener, blocked, typing, played: playedBoardIds.current };
+    try { window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(snapshot)); } catch { /* storage blocked: a reload starts over */ }
+  }, [blocked, deal, game, names, opener, series, settings, stage, typing]);
   const updateSettings = (change: Partial<LocalSettings>) => {
     setSettings((current) => {
       const next = { ...current, ...change };
@@ -235,6 +294,7 @@ export function GridLocalScreen() {
   const backToSetup = () => {
     gameToken.current += 1;
     optionsWanted.current = null;
+    forgetSnapshot();
     setStage('setup');
   };
 
@@ -243,6 +303,8 @@ export function GridLocalScreen() {
     setOpener(first);
     setSeries(newLocalSeries());
     setBlocked({ 1: [], 2: [] });
+    setTyping({ 1: false, 2: false });
+    forgetSnapshot();
     if (settings.suspensions) {
       setSuspendSeat(1);
       setStage('suspend');
@@ -266,7 +328,14 @@ export function GridLocalScreen() {
     setAnswer('');
     setOptions(null);
     setConfirmDraw(false);
-    if (next.endReason) finishGame(next);
+    if (next.endReason !== 'line') {
+      if (next.endReason) finishGame(next);
+      return;
+    }
+    // Three in a line: the board stays up with the line crossed out, then the result.
+    const token = gameToken.current;
+    setDeadline(null);
+    window.setTimeout(() => { if (token === gameToken.current) finishGame(next); }, GRID_WIN_LINE_HOLD_MS);
   }, [finishGame]);
 
   // A fresh clock for every turn of a timed game.
@@ -311,6 +380,8 @@ export function GridLocalScreen() {
 
   const submit = async (text: string, picked: FootballGridOption | null) => {
     if (!game || !deal || selectedCell === null || pendingRef.current || !text.trim()) return;
+    // The clock's own tick can be late (a tab in the background): an answer sent after time is up is not an answer.
+    if (deadline !== null && Date.now() >= deadline) { expireTurn(game); return; }
     const cell = selectedCell;
     const mover = game.current;
     const token = gameToken.current;
@@ -345,9 +416,13 @@ export function GridLocalScreen() {
         setFeedback(verdict.outcome);
         applyGame(missLocalTurn(game));
       }
-    } catch {
+    } catch (error) {
       if (token !== gameToken.current) return;
-      if (outOfTime()) expireTurn(game);
+      if (error instanceof GridSoloError && error.status === 403) {
+        // The board's ticket lapsed (the game sat for hours): no retry can succeed, so this game starts again on a
+        // new board with the same player to move, and the series score stands.
+        void dealBoard(mover).then(() => { if (gameToken.current === token + 1) setNotice(copy.boardExpired); });
+      } else if (outOfTime()) expireTurn(game);
       else setNotice(copy.boardFailed);
     } finally {
       pendingRef.current = false;
@@ -355,7 +430,7 @@ export function GridLocalScreen() {
     }
   };
 
-  const leave = () => router.push('/play');
+  const leave = () => { forgetSnapshot(); router.push('/play'); };
 
   if (stage === 'setup') {
     return (
@@ -536,6 +611,7 @@ export function GridLocalScreen() {
     ? game.claims.filter((claim) => claim.seat !== mover).map((claim) => claim.cellIndex)
     : null;
   const cellOptions = selectedCell !== null && options?.key === optionsKey(deal, series.gameIndex, game.turnNumber, selectedCell) ? options.items : undefined;
+  const wonLine = game.endReason === 'line' ? localWinningLine(game.claims) : null;
   return (
     <>
       <MiniGameShell title={gridCopy.title} accent="#1CB0F6" hideHeader disclaimer={false} backgroundImageUrl={GRID_BACKGROUND} wide scrollable>
@@ -573,12 +649,12 @@ export function GridLocalScreen() {
               )}
             </div>
             <div className="mt-2.5 flex gap-2">
-              <button type="button" disabled={pending} data-local-action="skip"
+              <button type="button" disabled={pending || Boolean(game.endReason)} data-local-action="skip"
                 onClick={() => { setFeedback(undefined); setNotice(null); applyGame(missLocalTurn(game)); }}
                 className="h-10 flex-1 rounded-xl border-2 border-brand-red-soft/60 text-xs font-black uppercase tracking-wide text-brand-red-soft transition-colors hover:bg-brand-red-soft/10 disabled:opacity-35">
                 {copy.skip}
               </button>
-              <button type="button" disabled={pending} data-local-action="draw" onClick={() => setConfirmDraw(true)}
+              <button type="button" disabled={pending || Boolean(game.endReason)} data-local-action="draw" onClick={() => setConfirmDraw(true)}
                 className="h-10 flex-1 rounded-xl border-2 border-brand-orange/70 text-xs font-black uppercase tracking-wide text-brand-orange transition-colors hover:bg-brand-orange/10 disabled:opacity-35">
                 {copy.endDraw}
               </button>
@@ -591,7 +667,7 @@ export function GridLocalScreen() {
             )}
           </div>
           {confirmDraw && (
-            <div role="dialog" className="mt-1 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center font-poppins">
+            <div role="dialog" aria-label={copy.drawConfirm} className="mt-1 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center font-poppins">
               <p className="text-sm font-black uppercase tracking-wide text-brand-orange">{copy.drawConfirm}</p>
               <div className="mt-2.5 flex gap-2">
                 <button type="button" data-local-action="draw-yes" disabled={pending} onClick={() => applyGame(agreeLocalDraw(game))} className="h-10 flex-1 rounded-xl bg-brand-green text-xs font-black uppercase text-white disabled:opacity-40">{copy.yes}</button>
@@ -600,17 +676,20 @@ export function GridLocalScreen() {
             </div>
           )}
           <div className="mt-3" />
-          <MatchBoard
-            state={state}
-            selfUserId={SEAT_ID[1]}
-            activeUserId={SEAT_ID[mover]}
-            takeableCells={takeableCells}
-            locale={locale}
-            selectedCell={selectedCell}
-            onSelect={selectCell}
-          />
+          <div className="relative">
+            <MatchBoard
+              state={state}
+              selfUserId={SEAT_ID[1]}
+              activeUserId={SEAT_ID[mover]}
+              takeableCells={takeableCells}
+              locale={locale}
+              selectedCell={selectedCell}
+              onSelect={selectCell}
+            />
+            {wonLine && <GridWinLine cells={wonLine.cells} tone={wonLine.seat === 1 ? 'self' : 'rival'} />}
+          </div>
           {notice && <p role="status" data-local-notice className="mt-3 text-center font-poppins text-xs font-bold text-brand-yellow">{notice}</p>}
-          <FootballGridTurnPanel
+          {!game.endReason && <FootballGridTurnPanel
             // One panel per player: "type it instead" is that player's choice, not the next one's.
             key={mover}
             state={state}
@@ -624,7 +703,10 @@ export function GridLocalScreen() {
             pending={pending}
             feedback={feedback}
             choice={settings.answers === 'choice' ? { options: cellOptions, onPick: (option) => { void submit(option.name, option); } } : undefined}
-          />
+            prefersTyping={typing[mover]}
+            onPrefersTypingChange={(value) => setTyping((current) => ({ ...current, [mover]: value }))}
+            sheetNotice={feedback === 'ambiguous' ? gridCopy.ambiguous : null}
+          />}
           <GridRulesPanel board={deal.board} locale={locale} />
         </div>
       </MiniGameShell>

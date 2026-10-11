@@ -12,6 +12,8 @@ import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { FootballGridPortrait } from './components/FootballGridPortrait';
+import { GridWinLine } from './components/GridWinLine';
+import { GRID_WIN_LINE_HOLD_MS, gridWinLine } from './winLine';
 import {
   loadGridTypeaheadRoster,
   searchGridPlayers,
@@ -1084,6 +1086,8 @@ function ThinkingDots() {
 
 /** Loads the release roster once per page and keeps it for every turn. */
 const OPTION_NAME_SIZES = [13, 12, 11, 10, 9];
+const OPTIONS_RETRY_MS = 3_500;
+const OPTIONS_REQUEST_TRIES = 4;
 
 // A long surname must not wrap in the middle: the text shrinks until every word fits on a line.
 function OptionName({ name }: { name: string }) {
@@ -1167,6 +1171,9 @@ export function FootballGridTurnPanel({
   onCancel,
   roster: rosterOverride,
   choice,
+  prefersTyping: givenPrefersTyping,
+  onPrefersTypingChange,
+  sheetNotice,
 }: {
   state: FootballGridState;
   locale: Locale;
@@ -1188,10 +1195,20 @@ export function FootballGridTurnPanel({
    * has none to offer, which falls back to typing). Absent in a match that is typed only.
    */
   choice?: { options: FootballGridOption[] | null | undefined; onPick: (option: FootballGridOption) => void };
+  /** Same phone: the panel is rebuilt for each player, so the screen keeps each one's "type it instead". */
+  prefersTyping?: boolean;
+  onPrefersTypingChange?: (value: boolean) => void;
+  /** Said inside the open sheet, where the player is looking (a name that could be several footballers). */
+  sheetNotice?: string | null;
 }) {
   const copy = FOOTBALL_GRID_COPY[locale];
   // The player may always type instead; the choice is remembered for the rest of the match.
-  const [prefersTyping, setPrefersTyping] = useState(false);
+  const [ownPrefersTyping, setOwnPrefersTyping] = useState(false);
+  const prefersTyping = givenPrefersTyping ?? ownPrefersTyping;
+  const setPrefersTyping = (value: boolean) => {
+    setOwnPrefersTyping(value);
+    onPrefersTypingChange?.(value);
+  };
   const picking = Boolean(choice) && !prefersTyping && choice?.options !== null;
   const fetchedRoster = useGridTypeaheadRoster(rosterOverride === undefined);
   const roster = rosterOverride ?? fetchedRoster;
@@ -1411,6 +1428,9 @@ export function FootballGridTurnPanel({
                 >
                   {copy.showOptions}
                 </button>
+              )}
+              {sheetNotice && (
+                <p role="status" data-grid-anchor="sheet-notice" className="mt-3 text-center font-poppins text-xs font-bold text-brand-yellow">{sheetNotice}</p>
               )}
               <input
                 ref={answerInputRef}
@@ -1981,6 +2001,26 @@ export function FootballGridFlowScreen() {
     statsRef.current.timeouts += 1;
   }, [grid.turnResolved]);
 
+  // A game won with a line: the board stays up for a moment with the line crossed out before the result takes
+  // over. Only for a game this screen saw being played; one that was already over when the page loaded goes
+  // straight to its result.
+  const [watchedMatchId, setWatchedMatchId] = useState<string | null>(null);
+  const [lineShownMatchId, setLineShownMatchId] = useState<string | null>(null);
+  const liveMatchId = grid.state?.phase === 'turn' ? grid.state.matchId : null;
+  if (liveMatchId && liveMatchId !== watchedMatchId) setWatchedMatchId(liveMatchId);
+  const winLine = useMemo(() => (
+    grid.state?.phase === 'terminal'
+      ? gridWinLine(grid.state.claims.map((claim) => ({ cellIndex: claim.cellIndex, owner: claim.claimantUserId })), grid.state.winnerUserId)
+      : null
+  ), [grid.state]);
+  const finishedMatchId = grid.state?.phase === 'terminal' ? grid.state.matchId : null;
+  const showingWinLine = winLine !== null && finishedMatchId !== null && finishedMatchId === watchedMatchId && finishedMatchId !== lineShownMatchId;
+  useEffect(() => {
+    if (!showingWinLine || !finishedMatchId) return;
+    const timer = window.setTimeout(() => setLineShownMatchId(finishedMatchId), GRID_WIN_LINE_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [finishedMatchId, showingWinLine]);
+
   // Pick-from-four: ask for the open cell's options whenever they are missing for this turn. A cell left selected
   // from an earlier turn reopens its sheet on the next one, and that turn has its own four.
   const optionsTurn = grid.state?.settings?.answerMode === 'choice' && isMyTurn ? grid.state.turnNumber : null;
@@ -1993,6 +2033,14 @@ export function FootballGridFlowScreen() {
   useEffect(() => {
     if (optionsTurn === null || selectedCell === null || optionsKnown) return;
     requestOptions(selectedCell);
+    // A reply lost to a dropped connection would leave the sheet loading: ask again a few times.
+    let asked = 1;
+    const again = window.setInterval(() => {
+      if (asked >= OPTIONS_REQUEST_TRIES) { window.clearInterval(again); return; }
+      asked += 1;
+      requestOptions(selectedCell);
+    }, OPTIONS_RETRY_MS);
+    return () => window.clearInterval(again);
   }, [optionsKnown, optionsTurn, requestOptions, selectedCell]);
 
   const handleCancel = () => {
@@ -2143,7 +2191,7 @@ export function FootballGridFlowScreen() {
     );
   }
 
-  if (grid.completed && grid.state?.phase === 'terminal' && grid.lastGameResult && grid.lastGameResult.matchId === grid.completed.matchId) {
+  if (!showingWinLine && grid.completed && grid.state?.phase === 'terminal' && grid.lastGameResult && grid.lastGameResult.matchId === grid.completed.matchId) {
     return (
       <SeriesSplash
         result={grid.lastGameResult}
@@ -2157,7 +2205,7 @@ export function FootballGridFlowScreen() {
     );
   }
 
-  if (grid.completed && grid.state?.phase === 'terminal') {
+  if (!showingWinLine && grid.completed && grid.state?.phase === 'terminal') {
     const won = grid.state.winnerUserId === selfUserId;
     const draw = !grid.state.winnerUserId;
     const seriesDone = grid.completed.series?.finished && grid.completed.series.format !== 'single' ? grid.completed.series : null;
@@ -2272,8 +2320,11 @@ export function FootballGridFlowScreen() {
           )}
         </AnimatePresence>
         <div className="mt-3" />
-        <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
-          <FootballGridTurnPanel
+        <div className="relative">
+          <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
+          {showingWinLine && winLine && <GridWinLine cells={winLine} tone={state.winnerUserId === selfUserId ? 'self' : 'rival'} />}
+        </div>
+          {state.phase !== 'terminal' && <FootballGridTurnPanel
             state={state}
             locale={locale}
             isMyTurn={isMyTurn}
@@ -2293,7 +2344,7 @@ export function FootballGridFlowScreen() {
                 if (selectedCell !== null && grid.actions.submitAnswer(selectedCell, option.name, option.playerId)) statsRef.current.answers += 1;
               },
             } : undefined}
-          />
+          />}
           <GridRulesPanel board={state.board} locale={locale} />
         {grid.error && <div className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-center text-xs font-bold text-red-200">{grid.error.message}</div>}
           {/* Non-blocking transport warning during live play (auction parity):
