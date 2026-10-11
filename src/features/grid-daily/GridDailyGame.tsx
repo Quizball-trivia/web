@@ -60,7 +60,7 @@ function boardState(run: GridDailyRun, locale: Locale): FootballGridState | null
   };
 }
 
-/** Time since the first guess; frozen at the finish. Zero until the first guess. */
+/** Time since the kick-off; frozen at the finish. Zero until the kick-off. */
 function useElapsed(startedAt: number | null, finishedAt: number | null, clockOffsetMs: number): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -198,6 +198,21 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     }
   };
 
+  const kickOff = async () => {
+    if (!run || pendingRef.current) return;
+    const mine = generation.current;
+    pendingRef.current = true;
+    setPending(true);
+    try {
+      apply(await gridDailyApi.kickOff({ runId: run.run.id, version: run.run.version }, locale), mine);
+    } catch {
+      await resync(mine);
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
+  };
+
   const finish = async () => {
     if (!run || pendingRef.current) return;
     const mine = generation.current;
@@ -228,6 +243,38 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
       else { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 2_000); }
     } catch { /* the share sheet was dismissed */ }
   };
+
+  // Before the kick-off the squares are not on this device at all: the first look and the clock start together.
+  if (load.kind === "ready" && run && day && !run.state.done && run.state.startedAt === null) {
+    return (
+      <main className="min-h-dvh bg-surface-page-alt bg-cover bg-center bg-no-repeat px-4 pb-16 pt-6 text-white" style={GRID_BACKGROUND_STYLE} data-daily-grid="intro">
+        <div className="mx-auto flex w-full max-w-[26rem] flex-col font-poppins sm:max-w-[28rem]">
+          <header className="text-center">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{gridCopy.title}</p>
+            <h1 className="mt-1 text-3xl font-black uppercase leading-tight">{copy.title} <span className="text-white/45">#{puzzleNumber(day)}</span></h1>
+            <p className="mx-auto mt-1.5 max-w-xs text-sm text-white/60">{copy.subtitle}</p>
+          </header>
+          {!member && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-blue px-4 py-3">
+              <p className="min-w-0 flex-1 text-sm font-semibold text-white/90">{copy.guestNote}</p>
+              <button type="button" onClick={() => { rememberPostAuthRedirect("/daily-grid"); openAuthPrompt(); }} className="h-10 shrink-0 rounded-xl bg-brand-yellow px-4 text-xs font-black uppercase text-black">{copy.signIn}</button>
+            </div>
+          )}
+          <div aria-hidden="true" className="mx-auto mt-6 grid w-full max-w-[17rem] grid-cols-3 gap-2">
+            {Array.from({ length: TOTAL_CELLS }, (_, index) => (
+              <span key={index} className="grid aspect-square place-items-center rounded-[18px] border-2 border-white/10 bg-white/[0.03] text-2xl font-black text-white/20">?</span>
+            ))}
+          </div>
+          <p className="mx-auto mt-5 max-w-xs text-center text-sm font-semibold text-white/70">{copy.kickOffNote}</p>
+          <button type="button" disabled={pending} onClick={() => void kickOff()} data-daily-action="kickoff"
+            className="mt-4 h-14 w-full rounded-2xl bg-brand-green text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50">
+            {copy.kickOff}
+          </button>
+          <button type="button" onClick={onExit} className="mt-5 text-center text-sm font-bold text-white/55 underline underline-offset-4">{copy.back}</button>
+        </div>
+      </main>
+    );
+  }
 
   if (load.kind !== "ready" || !run || !state || !day) {
     return (

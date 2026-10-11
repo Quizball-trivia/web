@@ -1857,8 +1857,30 @@ export function FootballGridFlowScreen() {
   const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
     ? packParam!
     : 'european';
-  const boardPreload = useFootballGridBoardPreload(useFootballGridStore((current) => current.state));
+  const liveState = useFootballGridStore((current) => current.state);
+  const boardPreload = useFootballGridBoardPreload(liveState);
+  // A game won with a line: the board stays up for a moment with the line crossed out before the result takes
+  // over. Only for a game this screen saw being played; one that was already over when the page loaded goes
+  // straight to its result.
+  const [watchedMatchId, setWatchedMatchId] = useState<string | null>(null);
+  const [lineShownMatchId, setLineShownMatchId] = useState<string | null>(null);
+  const liveMatchId = liveState?.phase === 'turn' ? liveState.matchId : null;
+  if (liveMatchId && liveMatchId !== watchedMatchId) setWatchedMatchId(liveMatchId);
+  const winLine = useMemo(() => (
+    liveState?.phase === 'terminal'
+      ? gridWinLine(liveState.claims.map((claim) => ({ cellIndex: claim.cellIndex, owner: claim.claimantUserId })), liveState.winnerUserId)
+      : null
+  ), [liveState]);
+  const finishedMatchId = liveState?.phase === 'terminal' ? liveState.matchId : null;
+  const showingWinLine = winLine !== null && finishedMatchId !== null && finishedMatchId === watchedMatchId && finishedMatchId !== lineShownMatchId;
+  useEffect(() => {
+    if (!showingWinLine || !finishedMatchId) return;
+    const timer = window.setTimeout(() => setLineShownMatchId(finishedMatchId), GRID_WIN_LINE_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [finishedMatchId, showingWinLine]);
+
   const grid = useRealtimeFootballGrid({
+    holdCompletionAck: showingWinLine,
     enabled: principal.kind !== 'none',
     selfUserId,
     locale,
@@ -2000,26 +2022,6 @@ export function FootballGridFlowScreen() {
     handledTurnResolutionsRef.current.add(resolutionKey);
     statsRef.current.timeouts += 1;
   }, [grid.turnResolved]);
-
-  // A game won with a line: the board stays up for a moment with the line crossed out before the result takes
-  // over. Only for a game this screen saw being played; one that was already over when the page loaded goes
-  // straight to its result.
-  const [watchedMatchId, setWatchedMatchId] = useState<string | null>(null);
-  const [lineShownMatchId, setLineShownMatchId] = useState<string | null>(null);
-  const liveMatchId = grid.state?.phase === 'turn' ? grid.state.matchId : null;
-  if (liveMatchId && liveMatchId !== watchedMatchId) setWatchedMatchId(liveMatchId);
-  const winLine = useMemo(() => (
-    grid.state?.phase === 'terminal'
-      ? gridWinLine(grid.state.claims.map((claim) => ({ cellIndex: claim.cellIndex, owner: claim.claimantUserId })), grid.state.winnerUserId)
-      : null
-  ), [grid.state]);
-  const finishedMatchId = grid.state?.phase === 'terminal' ? grid.state.matchId : null;
-  const showingWinLine = winLine !== null && finishedMatchId !== null && finishedMatchId === watchedMatchId && finishedMatchId !== lineShownMatchId;
-  useEffect(() => {
-    if (!showingWinLine || !finishedMatchId) return;
-    const timer = window.setTimeout(() => setLineShownMatchId(finishedMatchId), GRID_WIN_LINE_HOLD_MS);
-    return () => window.clearTimeout(timer);
-  }, [finishedMatchId, showingWinLine]);
 
   // Pick-from-four: ask for the open cell's options whenever they are missing for this turn. A cell left selected
   // from an earlier turn reopens its sheet on the next one, and that turn has its own four.

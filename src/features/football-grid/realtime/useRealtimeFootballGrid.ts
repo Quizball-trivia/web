@@ -22,6 +22,8 @@ interface UseRealtimeFootballGridOptions {
   startMode?: 'queue' | 'practice_bot';
   /** Board artwork warmed — the client only reports ready once it can render the reveal. */
   assetsReady?: boolean;
+  /** The result is not on screen yet (the winning line is being shown): its delivery is not confirmed until it is. */
+  holdCompletionAck?: boolean;
 }
 
 const PENDING_COMMAND_TIMEOUT_MS = 5_000;
@@ -44,6 +46,7 @@ export function useRealtimeFootballGrid({
   autoStart = true,
   startMode = 'queue',
   assetsReady = true,
+  holdCompletionAck = false,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   // A start whose server reply has not arrived yet: a disconnect in that window
@@ -207,7 +210,7 @@ export function useRealtimeFootballGrid({
   // full results payload. A reload before this effect simply causes the server
   // to redeliver it with a fresh token, so results are never lost in transit.
   useEffect(() => {
-    if (!completed || acknowledgedCompletionTokenRef.current === completed.ackToken) return;
+    if (!completed || holdCompletionAck || acknowledgedCompletionTokenRef.current === completed.ackToken) return;
     const frameId = window.requestAnimationFrame(() => {
       acknowledgedCompletionTokenRef.current = completed.ackToken;
       socket.emit('grid:completed_ack', {
@@ -217,7 +220,7 @@ export function useRealtimeFootballGrid({
       });
     });
     return () => window.cancelAnimationFrame(frameId);
-  }, [completed, socket]);
+  }, [completed, holdCompletionAck, socket]);
 
   const cancelSearch = useCallback(() => {
     searchSuppressedRef.current = true;

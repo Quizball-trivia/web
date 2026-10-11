@@ -24,6 +24,7 @@ import {
 import { GridWinLine } from '../components/GridWinLine';
 import { GRID_WIN_LINE_HOLD_MS } from '../winLine';
 import { fillLocal, GRID_LOCAL_COPY, type GridLocalCopy } from './localCopy';
+import { LOCAL_SESSION_KEY, localSnapshotOf, parseLocalSnapshot, type LocalSnapshot } from './localSession';
 import {
   agreeLocalDraw,
   canPickLocalCell,
@@ -57,35 +58,12 @@ const SEAT_AVATARS: Record<LocalSeat, AvatarCustomization> = {
   2: { skin: 'skin_male_dark', hair: 'hair_buzz', jersey: 'jersey_milan' },
 };
 
-const SESSION_KEY = 'qb-grid-local-session-v1';
+const SESSION_KEY = LOCAL_SESSION_KEY;
 type Stage = 'setup' | 'suspend' | 'handoff' | 'loading' | 'failed' | 'play' | 'between' | 'done';
 type Feedback = FootballGridCommandResultPayload['outcome'] | undefined;
 
-/** The series on screen, kept for this tab so a reload (or a pull to refresh) does not throw the game away. */
-interface LocalSnapshot {
-  v: 1;
-  stage: 'play' | 'between' | 'done';
-  settings: LocalSettings;
-  names: Record<LocalSeat, string>;
-  deal: GridSoloBoard;
-  game: LocalGame;
-  series: LocalSeries;
-  opener: LocalSeat;
-  blocked: Record<LocalSeat, FootballGridOption[]>;
-  typing: Record<LocalSeat, boolean>;
-  played: string[];
-}
-
 function readSnapshot(): LocalSnapshot | null {
-  try {
-    const saved = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? 'null') as LocalSnapshot | null;
-    if (!saved || saved.v !== 1 || !saved.deal?.ticket || !saved.game || !saved.series || !saved.settings) return null;
-    // A ticket begins with the moment the server stops accepting it; a board that is about to lapse is not resumed.
-    if (!(Number(saved.deal.ticket.split('.')[0]) > Date.now() + 60_000)) return null;
-    return saved;
-  } catch {
-    return null;
-  }
+  try { return parseLocalSnapshot(window.sessionStorage.getItem(SESSION_KEY), Date.now()); } catch { return null; }
 }
 
 function forgetSnapshot(): void {
@@ -229,6 +207,11 @@ export function GridLocalScreen() {
   /** typing[seat]: that player chose "type it instead" in a pick-from-four series. */
   const [typing, setTyping] = useState<Record<LocalSeat, boolean>>({ 1: false, 2: false });
   const playedBoardIds = useRef<string[]>([]);
+  /** Who moves first on the board being dealt: a retry after a failed deal asks for the same game. */
+  const dealMover = useRef<LocalSeat>(1);
+  /** The turn the clock on screen belongs to, and a clock carried over a reload for its own turn only. */
+  const deadlineTurn = useRef<string | null>(null);
+  const restoredDeadline = useRef<LocalSnapshot['deadline']>(null);
   const pendingRef = useRef(false);
   /** Changes whenever the game on screen is replaced or left: an answer still on its way to an older game is dropped. */
   const gameToken = useRef(0);
@@ -240,6 +223,7 @@ export function GridLocalScreen() {
     const saved = readSnapshot();
     if (!saved) return;
     playedBoardIds.current = saved.played;
+    restoredDeadline.current = saved.deadline;
     setSettings(saved.settings);
     setNames(saved.names);
     setDeal(saved.deal);
@@ -250,14 +234,6 @@ export function GridLocalScreen() {
     setTyping(saved.typing);
     setStage(saved.stage);
   }, []);
-  useEffect(() => {
-    if ((stage !== 'play' && stage !== 'between' && stage !== 'done') || !deal || !game) return;
-    // A game that has ended but is not yet folded into the series (its winning line is on screen) is not a state
-    // to come back to; the snapshot before the last move stays.
-    if (stage === 'play' && game.endReason) return;
-    const snapshot: LocalSnapshot = { v: 1, stage, settings, names, deal, game, series, opener, blocked, typing, played: playedBoardIds.current };
-    try { window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(snapshot)); } catch { /* storage blocked: a reload starts over */ }
-  }, [blocked, deal, game, names, opener, series, settings, stage, typing]);
   const updateSettings = (change: Partial<LocalSettings>) => {
     setSettings((current) => {
       const next = { ...current, ...change };
@@ -270,6 +246,7 @@ export function GridLocalScreen() {
 
   const dealBoard = useCallback(async (firstMover: LocalSeat) => {
     const token = ++gameToken.current;
+    dealMover.current = firstMover;
     optionsWanted.current = null;
     setStage('loading');
     setSelectedCell(null);
@@ -294,6 +271,7 @@ export function GridLocalScreen() {
   const backToSetup = () => {
     gameToken.current += 1;
     optionsWanted.current = null;
+    restoredDeadline.current = null;
     forgetSnapshot();
     setStage('setup');
   };
@@ -304,6 +282,7 @@ export function GridLocalScreen() {
     setSeries(newLocalSeries());
     setBlocked({ 1: [], 2: [] });
     setTyping({ 1: false, 2: false });
+    restoredDeadline.current = null;
     forgetSnapshot();
     if (settings.suspensions) {
       setSuspendSeat(1);
@@ -341,8 +320,22 @@ export function GridLocalScreen() {
   // A fresh clock for every turn of a timed game.
   const turnKey = stage === 'play' && game && !game.endReason ? `${series.gameIndex}:${game.turnNumber}` : null;
   useEffect(() => {
-    setDeadline(turnKey && settings.turnSeconds > 0 ? Date.now() + settings.turnSeconds * 1_000 : null);
+    const carried = restoredDeadline.current;
+    // A clock carried over a reload serves the turn it was running for and no other.
+    if (turnKey && carried && carried.turn !== turnKey) restoredDeadline.current = null;
+    deadlineTurn.current = turnKey;
+    if (turnKey && carried?.turn === turnKey) setDeadline(carried.at);
+    else setDeadline(turnKey && settings.turnSeconds > 0 ? Date.now() + settings.turnSeconds * 1_000 : null);
   }, [settings.turnSeconds, turnKey]);
+  useEffect(() => {
+    const snapshot = localSnapshotOf({
+      stage, settings, names, deal, game, series, opener, blocked, typing,
+      played: playedBoardIds.current,
+      deadline: turnKey && deadline !== null && deadlineTurn.current === turnKey ? { turn: turnKey, at: deadline } : null,
+    });
+    if (!snapshot) return;
+    try { window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(snapshot)); } catch { /* storage blocked: a reload starts over */ }
+  }, [blocked, deadline, deal, game, names, opener, series, settings, stage, turnKey, typing]);
 
   const expireTurn = useCallback((current: LocalGame) => {
     setFeedback(undefined);
@@ -531,7 +524,7 @@ export function GridLocalScreen() {
         {stage === 'failed' ? (
           <>
             <p className="max-w-xs text-sm font-semibold text-white/75">{copy.boardFailed}</p>
-            <button type="button" onClick={() => void dealBoard(opener)} className="h-12 rounded-2xl bg-brand-green px-8 text-sm font-black uppercase text-white">{copy.retry}</button>
+            <button type="button" onClick={() => void dealBoard(dealMover.current)} className="h-12 rounded-2xl bg-brand-green px-8 text-sm font-black uppercase text-white">{copy.retry}</button>
             <button type="button" onClick={backToSetup} className="text-sm font-bold text-white/60 underline underline-offset-4">{copy.changeSettings}</button>
           </>
         ) : (

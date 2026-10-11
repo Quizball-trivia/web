@@ -219,6 +219,24 @@ describe('Grid ready and handoff retry recovery', () => {
     expect(socket.emit).not.toHaveBeenCalled();
   });
 
+  it('confirms a result only once the screen is ready to show it', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'setTimeout', 'clearTimeout'] });
+    const finished = state({ status: 'completed', phase: 'terminal', winnerUserId: 'self' });
+    useFootballGridStore.getState().setState({ matchId: finished.matchId, state: finished } as never);
+    useFootballGridStore.getState().setCompleted({ matchId: finished.matchId, terminalStateVersion: 1, ackToken: 'token-1', state: finished } as never);
+    const acks = () => socket.emit.mock.calls.filter(([name]) => name === 'grid:completed_ack');
+    const hook = renderHook(
+      ({ hold }: { hold: boolean }) => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false, holdCompletionAck: hold }),
+      { initialProps: { hold: true } },
+    );
+    act(() => { vi.advanceTimersByTime(2_000); });
+    expect(acks()).toHaveLength(0);
+    hook.rerender({ hold: false });
+    act(() => { vi.advanceTimersByTime(50); });
+    expect(acks()).toEqual([['grid:completed_ack', { matchId: finished.matchId, terminalStateVersion: 1, ackToken: 'token-1' }]]);
+    hook.unmount();
+  });
+
   it('stops retrying once readiness is acknowledged', () => {
     const snapshot = waiting('loading');
     useFootballGridStore.getState().setState(snapshot);
