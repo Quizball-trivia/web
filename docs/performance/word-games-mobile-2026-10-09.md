@@ -451,3 +451,101 @@ Responsive heroes now additionally offer **672×378** and **720×405** AVIF/WebP
 The final local default Lighthouse 13.5.0 diagnostic confirms the real **412px / DPR 1.75** browser transfers exactly one word hero, the new 672px Shared Player AVIF, with no redundant 750px hero request. Its single score was **81**, LCP 5.05 seconds, so this is **not a mobile-score pass**. Raw report: `/tmp/quizball-word-local-closure-assets-20261011-tr-shared-1.json`. Local CUA viewport overrides did not change this particular background tab's 390px dimensions; desktop/fractional-DPR native-CUA selection and an actual AVIF-unsupported browser remain unverified. Native srcset selection at the actual Lighthouse mobile dimensions is verified, while fallback markup/formats/dimensions are unit-tested.
 
 All eight local mobile URLs were revisited with preserved H1/navigation, two initial CSS files and no horizontal overflow. Turkish expanded login/signup and the language menu remain styled; switching to English stays on the equivalent Shared Player page. No credentials were submitted, account created or member settings changed. Hosted member/gameplay checks and repeated all-language scores remain pending. Production is not authorized for promotion.
+
+### Pushed candidate and staging handoff blocker
+
+The reviewed candidate is committed and remotely verified as `6ec4f699e54fb0b6ee47dbdedf20060fb8f08187` on `codex/word-css-closure-20261011`. Its automatic **preview**, not the official staging alias, is READY: deployment `dpl_FxohetK2W2wfSCrhpZquDtxR85LJ`, [preview](https://quizball-2bnhxwh0u-quizball.vercel.app). All eight preview documents return HTTP 200, one H1, five hreflang alternates, two JSON-LD blocks, intentional noindex and staging API/Supabase CSP targets. Their canonicals correctly remain the official staging URLs. Staging API and database health return HTTP 200/ok. This is HTTP/source verification, not fresh hosted visual/gameplay or Lighthouse certification.
+
+PR search found no existing PR for this branch. Creating the staging-targeted PR through the connected GitHub integration returned **403: Resource not accessible by integration**. The normal signed-in native browser fallback is unavailable because the Mac is locked. No permissions, credentials or security controls were changed; no PR was created and no merge attempted. The user must unlock the Mac for the existing browser workflow to continue. Official `staging.quizball.io` was freshly verified READY on PR 682's `4e25d3c0c088e14ebde77133be7f265167ec69c2`, not this candidate. Current navigation is retained; the all-language 90+ gate remains unmet. No production promotion was performed.
+
+### Unlocked browser — PR 683 opened against staging
+
+After the user unlocked the Mac, the existing signed-in browser created [PR 683](https://github.com/Quizball-trivia/web/pull/683) from `6ec4f699` against **staging**, not main. The PR was attached to this chat. Hosted CI run `38158497465` has passed lint and type-check; tests and the production-mode build are pending at this checkpoint. CodeRabbit's GitHub review skips this base branch, and Greptile has exhausted trial credits; neither is a completed automated review. The earlier clean CLI and independent diff reviews are the actual review evidence. No review/security settings were changed.
+
+Fresh preview mobile QA used a verified 412px viewport with no horizontal overflow. The original five-item bottom navigation and original artwork remain. Turkish sign-in, expanded email controls and the sign-up tab render correctly; no credentials were submitted or account created. The CUA browser selected the 1080px AVIF at its native DPR, while the default Lighthouse DPR 1.75 selection was separately verified above. The candidate is not yet merged to the official staging alias and does not yet pass the repeated all-language 90+ gate. Production promotion remains prohibited.
+
+### PR 683 staging merge and independent preview measurement
+
+Hosted CI run `38158497465` completed successfully: lint, type-check, the full test suite and production-mode build all passed on `6ec4f699`. The normal signed-in browser then merged PR 683 **only to staging**, as `4d932e6d3ddb9b9ccfe8c315c3eee5a8bfe62278`, at approximately 21:19 Tbilisi. The new staging deployment `dpl_3CBGVc5BLLLXRej3Z1NjvLPrXHnX` is queued at this checkpoint. No production promotion was attempted. Merge screenshot: `/tmp/quizball-pr683-staging-merged-20261011.png`.
+
+Google's independent preview mobile audit at 21:16 Tbilisi returned **87**, FCP 1.2 s, LCP 3.9 s, TBT 90 ms, CLS 0 and speed index 2.9 s, with accessibility/best practices 100. [Exact preview report](https://pagespeed.web.dev/analysis/https-quizball-2bnhxwh0u-quizball-vercel-app-tr-futbol-oyunlari-ortak-futbolcu-oyunu/5rhaic9nkf?form_factor=mobile). It used Lighthouse 13.5.0 / HeadlessChromium 153 / Slow 4G. This is not a comparable official-staging before/after pair or an all-language pass. SEO 66 reflects intentional noindex; there is no field data. The illustration is the LCP element; its unthrottled breakdown is 250 ms TTFB, 890 ms resource delay, 320 ms download and 220 ms render delay. Two blocking stylesheets transfer 19.9 KiB with estimated 590 ms savings. No navigation, API, auth, security or analytics behavior was altered to achieve this score.
+
+### PR 683 official staging verification
+
+Deployment `dpl_3CBGVc5BLLLXRej3Z1NjvLPrXHnX` is now READY and aliased to `staging.quizball.io`; its staging branch, project and `4d932e6d` SHA were verified before testing. All eight documents again return 200, one H1, self-staging canonicals, five language alternates, two structured-data blocks and intentional noindex. Staging API and database health return 200/ok.
+
+A normal guest browser's archived Spanish Shared Player answer **Figo** for Barcelona/Real Madrid was accepted as Luís Figo, increasing the score from 0 to 1. In archived English Name Chain, an **Eto'o** answer for E was accepted as David Eto'o, increasing the cumulative score from 1 to 2 and changing the required letter to O. Earlier ten-second windows expired during tool round-trips and showed normal timeout settlement; no timer or rule was changed. Both engines remain correctly styled with their full stylesheet dependency. Proofs: `/tmp/quizball-staging-pr683-guest-answer-20261011.png` and `/tmp/quizball-staging-pr683-namechain-answer-20261011.png`.
+
+An existing signed-in staging session restores the original sidebar, profile/avatar/currency controls and notification indicator. Profile → Settings loads the full styled application; browser Back restores the word landing. No credentials, account, member game, settings or signout mutation was performed. This does not re-certify all authentication, ranked daily or multiplayer flows.
+
+The next plan's independent review permits **only a local measured font-priority prototype** after this hosted baseline, not a staging release. Retain every font/weight/subset and the responsive hero preload, verify emitted hints plus actual request priorities/timing, alternate cold baseline/candidate screening runs and reject a score-only improvement without earlier hero/LCP or with later font/CLS regressions. Review record: `/tmp/quizball-word-font-priority-plan-20261011.txt`. The font-contention hypothesis remains unproven. The existing navigation stays unchanged; production promotion remains prohibited.
+
+### PR 683 complete default mobile matrix
+
+All 24 valid Lighthouse 13.5.0 default simulated mobile results completed, including both Georgian pages. Browser QA, local builds, tests and independent review processes did not run during collection. This shared machine still has unrelated work running; none was interrupted. Every valid low is retained. Raw artifacts: `/tmp/quizball-word-hosted-after-683-lh135-20261011-<name>-<run>.json`.
+
+| Page | Scores in run order | Median |
+| --- | --- | --- |
+| Turkish Played for Both | 82 / 98 / 87 | 87 |
+| English Name Chain | 87 / 93 / 79 | 87 |
+| Turkish Name Chain | 98 / 86 / 81 | 86 |
+| English Played for Both | 97 / 98 / 99 | 98 |
+| Spanish Played for Both | 97 / 93 / 94 | 94 |
+| Spanish Name Chain | 79 / 89 / 85 | 85 |
+| Georgian Played for Both | 72 / 73 / 85 | 73 |
+| Georgian Name Chain | 99 / 94 / 87 | 94 |
+
+Accessibility/best practices are 100 and console-audit errors zero in all 24. Layout shifts are below 0.002. Georgian Shared Player's 73 run has 641.5 ms TBT; its 72 run instead has 6.23 s LCP with only 37 ms TBT. These are distinct bottlenecks, not grounds to discard either result. **Only three of eight medians pass 90; the all-language target is not achieved.** Continue with the reviewed local-only priority experiment; do not promote production.
+
+### Rejected local font-priority prototype
+
+The one-option prototype retained every original font URL, weight and subset, cross-origin mode, CSS and responsive hero preload. All eight built response pairs have identical font URLs and the candidate emits `fetchpriority=low`; each still contains one identical hero preload. Eight focused tests and changed-file lint pass; the 279-page production-mode build/type-check passes. At 412px, every locale retains one localized H1, five navigation links, declared Poppins/900 styling and no overflow after `document.fonts.ready`.
+
+Two equivalent production-mode builds ran on isolated localhost ports. The old generated build was snapshotted before rebuilding the one-setting candidate. Twelve default Lighthouse 13.5.0 cold runs alternated baseline/candidate for each page, retaining all valid lows; no build, test, foreground browser QA or reviewer process overlapped collection. Raw reports and saved trace/network logs: `/tmp/quizball-word-font-priority-ab-20261011-<baseline|low>-<name>-<run>.json` and adjacent `-0.devtoolslog.json`/`-0.trace.json`.
+
+| Page | Baseline scores / median | Low-priority scores / median | Median LCP baseline → candidate |
+| --- | --- | --- | --- |
+| Turkish Played for Both | 98 / 87 / 80; **87** | 99 / 86 / 83; **86** | 4.05 → 4.19 s |
+| English Name Chain | 97 / 95 / 88; **95** | 88 / 85 / 88; **88** | 2.68 → 3.90 s |
+
+All twelve have zero CLS and no console-audit errors. **Rejected:** no repeatable LCP/score improvement, with worse English median loading. The original preload option and tests were restored; nothing from this experiment was committed, pushed or deployed. This is a local diagnostic, not the official eight-page gate or proof of a sole network cause. The staging alias remains the reviewed PR 683 release; production remains untouched by this workflow.
+
+Saved TR run-one network logs confirm all eight baseline fonts actually started at High priority, versus Low for all eight candidate fonts, with no later priority changes. The single responsive hero started High in both. The hint worked, but the measured outcome did not improve; it was not deployed.
+
+### Rejected deferred-panel CSS plan and next measured build comparison
+
+Read-only recompilation excluding six already-lazy panel subtrees reduced the generated utility closure from 252 to 191 modules, **13,829 → 11,901 gzip bytes** (1,928 fewer). These are standalone compiler output sizes, not deployed request sizes; the 18,457-byte deployed base/word pair above includes Next's built processing and font/global CSS. The proposed full application stylesheet would cost about 45 KB on opening the panels. Independent plan review returned **DO NOT SHIP**, citing poor network trade, shared-CSS promotion risk, fail-closed nested-boundary requirements and CSS failure effects on restored-member UI. No application CSS imports, resolver or component changes were made. Review: `/tmp/quizball-word-deferred-css-plan-20261011.txt`.
+
+The working branch was fast-forwarded to current staging **36a214e9**, which adds only the separately released API-error reporting changes to PR 683; this workflow did not perform that production release. Current branch is `codex/word-loading-20261011`, with only this report modified. The next proposal is a **local-only supported Webpack/Turbopack production-build comparison**, without package upgrades, application changes, analytics removal, CSS declaration changes or a different navigation. Require a fresh same-commit baseline, actual cold asset bytes/chunks, unchanged deferred engine/CSS behavior, browser checks and interleaved default Lighthouse measurements before considering any staging PR. Independent review subsequently approved local measurement only, not a build-script change or release. Review: `/tmp/quizball-word-webpack-plan-20261011.txt`.
+
+### Same-commit build experiment — verification blocked by machine load
+
+A fresh default Turbopack production-mode build at **36a214e9e8f61b3a32191d66d455bfe657f701ff**, Node **22.22.2** (CI's major version), passed compilation, type-check and generation of all 279 pages. Its complete generated artifact is preserved at `/tmp/quizball-word-node22-turbo.esOga6/.next`; the earlier Node 25 diagnostic is separate and is not the comparison baseline. Both build commands use the same staging-only API, site URL, public anonymous-auth configuration and lockfile. No credentials were printed or persisted in experiment notes.
+
+The equivalent `next build --webpack` experiment emitted a compile result with warnings after 6.6 minutes, including a named JSON `version` export in `src/lib/auth/supabase-client-options.ts`. It had not completed all build phases when verification was stopped. This is **not a successful build**, measured performance improvement or approved candidate. No package script or application source was changed. Dynamic CSS behavior, actual cold browser bytes, unchanged authentication and all-language scores for Webpack remain **unverified**. The prepared interleaved 18-run Lighthouse comparison was not started. The incomplete artifact is recoverably preserved at `/tmp/quizball-word-webpack-incomplete.zPDT5a/.next`; the successful Node 22 Turbopack artifact was copied back to the worktree's `.next`.
+
+At approximately 22:11–22:18 Tbilisi the Mac's one-minute load average was **705–852**, with 11 logical CPUs and severe memory compression. A local CUA attempt timed out and reset its session; a recovered tab's navigation then timed out after about 55 seconds. These are verification failures, not application regression findings. Other apps/builds were not interrupted. The user was asked to pause unneeded heavy work; only this workflow's comparison build/server were stopped, and their exact process IDs plus both localhost ports were checked inactive. The interrupted agent-created test tab was closed and the temporary mobile viewport reset; the user's navigation mock tab was untouched. The independent public PageSpeed API fallback returned **HTTP 429**; no remote score was obtained. Do not retry invalid tests to discard low results or certify 90+ using these conditions.
+
+The latest official staging alias was freshly verified **READY**, deployment **dpl_6VUGxhVnbkXwWiJ94xTzaYN9RVe7**, at `quizball-nphstbe9q-quizball.vercel.app`, staging SHA **36a214e9**. This includes PR 683 and the separate API reporting sync; it does not include Webpack or the rejected font/deferred-panel experiments. The latest complete valid eight-page matrix remains the PR 683 table above: **three of eight medians ≥90**, all valid low results retained. Navigation is unchanged; **no production promotion by this workflow**. Resume the same-commit experiment only when normal browser verification and measurements can run reliably.
+
+## 12 October — resumed same-commit bundler measurements
+
+The Mac became responsive again: one-minute load was approximately 16–23 during initial collection, rather than the preceding 705–852. Browser navigation returned in under two seconds. Other processes remain uncontrolled and were not stopped. Fresh Git inspection found `origin/staging` and this checkout still at **36a214e9**; the official alias remains the deployment above. No production promotion or navigation replacement was performed.
+
+A new **complete** Node 22.22.2 Webpack production-mode build compiled, type-checked, generated all **279** pages and completed build traces. The default build is independently preserved at `/tmp/quizball-word-node22-turbo.esOga6/.next`. Identical source, lockfile and staging-only public configuration were used. Webpack emitted the existing named-JSON-export warning for `@supabase/auth-js/package.json`; its compatibility needs review before a candidate change. Log: `/tmp/quizball-word-node22-webpack-build-20261012.log`.
+
+Both builds passed all eight HTML/status/canonical/H1/hreflang/JSON-LD/noindex/CSP checks; the staging API's ordinary `/health` and `/health/db` checks returned 200. At 412px both TR shared-player landings retained Poppins typography, the same navigation and no horizontal overflow. The original sign-in panel expanded its email controls normally. Before Play, neither Webpack playable engine nor the full-game CSS was requested; after Play the stylesheet was present. Gameplay itself failed locally on **both** builds: `api-staging.quizball.io` explicitly returns **403, CORS origin not allowed** for the localhost origin. This is not evidence of a bundler regression or successful game QA. No CORS, authentication or browser protection was relaxed. Hosted staging gameplay is still a release gate.
+
+Eighteen valid Lighthouse **13.5.0** default simulated-mobile cold loads ran as paired comparisons, reversing pair order on the middle repeat. All valid lows remain. No own build, test, reviewer or foreground browser QA overlapped collection. Raw reports: `/tmp/quizball-word-bundler-ab-20261012-<turbopack|webpack>-<name>-<1..3>.json`, with saved trace/network logs. These are local diagnostics, **not** the hosted eight-page gate or field Core Web Vitals.
+
+| Page | Turbopack scores / median | Webpack scores / median | Median LCP | Median TBT |
+| --- | --- | --- | --- | --- |
+| Turkish Played for Both | 83 / 85 / 89; **85** | 92 / 83 / 91; **91** | 4.32 → 3.44 s | 39 → 49.5 ms |
+| Georgian Played for Both | 87 / 83 / 81; **83** | 83 / 85 / 88; **85** | 4.63 → 4.33 s | 41 → 64.5 ms |
+| English Name Chain | 88 / 99 / 80; **88** | 91 / 91 / 89; **91** | 3.92 → 3.44 s | 91.5 → 43 ms |
+
+Every paired run transferred **480,135 → 458,464** initial JavaScript bytes: **21,671 fewer (4.5%)**, but **32 → 39** script requests. CSS was essentially unchanged at 19,990 → 19,993 transferred bytes. No initial source-map requests, console-audit errors or CLS were found. All three median LCPs improved, while Turkish/Georgian median TBT rose; those costs must not be hidden behind the score gain. Georgian remains below 90.
+
+Independent result review approved **SHIP STAGING CANDIDATE**, not production or full functional certification: `/tmp/quizball-webpack-result-review-20261012.txt`. Hosted gameplay, deferred CSS timing, exact candidate SHA/bundler, the complete eight-page matrix and route-specific blocking/request regressions remain mandatory gates. The warning affects only the installed-version diagnostic header today; no auth import or behavior change is included. The candidate changes only `package.json`'s build command to `next build --webpack`, plus this evidence report; the lockfile, dependencies, application source, CSS, navigation, auth and analytics remain unchanged.
+
+The resulting diff independently received **SHIP STAGING CANDIDATE, no P1/P2** (`/tmp/quizball-webpack-diff-review-20261012.txt`). CodeRabbit CLI reviewed both changed files and returned **no findings**. Type-check passed; full-repository lint passed with zero errors and 63 existing warnings. The Node 22 two-worker full-suite run is still pending at PR preparation. The complete Webpack build above passed. No hosted candidate has yet been released or certified. Verify the eventual **new candidate or staging merge SHA**, not the experiment's parent SHA `36a214e9`.
