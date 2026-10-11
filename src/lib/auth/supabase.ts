@@ -1,6 +1,8 @@
-import { createClient, type Provider, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import { AuthClient, type Provider, type Session } from '@supabase/auth-js';
+import { browserAuthClientOptions } from './supabase-client-options';
 
-let supabaseClient: SupabaseClient | null = null;
+type BrowserSupabaseClient = { auth: InstanceType<typeof AuthClient> };
+let supabaseClient: BrowserSupabaseClient | null = null;
 
 // Next.js/Turbopack only inlines STATICALLY-referenced `process.env.NEXT_PUBLIC_*`
 // vars into the browser bundle. Dynamic `process.env[name]` lookups are NOT
@@ -9,7 +11,7 @@ let supabaseClient: SupabaseClient | null = null;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-export function getSupabaseClient(): SupabaseClient {
+export function getSupabaseClient(): BrowserSupabaseClient {
   if (supabaseClient) return supabaseClient;
 
   if (!SUPABASE_URL) {
@@ -19,14 +21,9 @@ export function getSupabaseClient(): SupabaseClient {
     throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required');
   }
 
-  supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
-  });
+  // All browser callers use only .auth. Keep that same SDK engine and API,
+  // without constructing unused PostgREST, Storage and Realtime clients.
+  supabaseClient = { auth: new AuthClient(browserAuthClientOptions(SUPABASE_URL, SUPABASE_ANON_KEY)) };
 
   return supabaseClient;
 }

@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import type { AuthChangeEvent } from '@supabase/auth-js';
 import { getSupabaseClient } from '@/lib/auth/supabase';
 import { nudgeSocketReconnectAfterTokenRefresh } from '@/lib/realtime/socket-client';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function AuthSessionBridge() {
   useEffect(() => {
-    const { data } = getSupabaseClient().auth.onAuthStateChange((event) => {
+    const { data } = getSupabaseClient().auth.onAuthStateChange((event: AuthChangeEvent) => {
       // "banned" is terminal. setBanned() signs the user out, which fires
       // SIGNED_OUT (and the post-OAuth session churn fires SIGNED_IN /
       // TOKEN_REFRESHED). If we let those flip the status to anonymous or
