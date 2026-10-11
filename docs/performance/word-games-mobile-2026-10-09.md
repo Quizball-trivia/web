@@ -408,3 +408,46 @@ The one-setting inline-CSS local prototype built/type-checked all 279 pages and 
 - Independent read-only Codex diff review returned **SHIP, no P1/P2**, with future dynamic-CSS closure/error-route coverage noted as non-blocking maintenance risks. The reviewer did not independently reproduce supplied build/browser measurements.
 - Complete local suite: **2,384 tests passed / eight skipped**, 338 files passed / one skipped, 305 seconds sequential. CodeRabbit reviewed all 49 changed/new text files with **zero findings**. No settings, security controls, analytics, database, game rules or production branch changed.
 - Pending: normal hosted guest/member gameplay and hosted mobile measurements. Not deployed at this checkpoint. No production promotion.
+
+### PR 682 — staging CSS release and hosted verification
+
+[PR 682](https://github.com/Quizball-trivia/web/pull/682) passed hosted lint, type-check, the complete test suite and production-mode build, then merged **only to staging** as `4e25d3c0c088e14ebde77133be7f265167ec69c2`. Deployment `dpl_BmAzYRsGGfVN8AcELm3GiccPBmM2` is READY at `quizball-n96gw5z5a-quizball.vercel.app`, aliased to `staging.quizball.io`; its branch and SHA were verified before measurement. GitHub CodeRabbit skipped the staging-base review and Greptile lacked trial credits; neither was described as a completed review, and no review/access settings were changed. The clean CLI and independent diff reviews above are the review evidence.
+
+All eight official staging URLs retain HTTP 200, one H1, a self-staging canonical, five hreflang alternates, two structured-data blocks, intentional noindex and the existing staging API/Supabase CSP targets. Staging API and database health both return 200/ok. Cold guest Spanish sign-in and signup tabs render correctly; no credentials were submitted or account created. The existing member session restores after reload, the unchanged profile menu opens, settings navigation loads the full application stylesheet, and Back restores the word landing. No member settings were changed or signout performed.
+
+On the actual new deployment, a guest **Robert Pirès** answer for Arsenal/Villarreal was accepted in archived Spanish Played for Both, increasing its score from 2 to 3. An **Özil** answer after Robinho in archived English Name Chain was accepted, increasing its score from 0 to 1 and moving the required letter to L. Both screenshots show correctly styled engines after the full stylesheet loads. A ten-second Name Chain window expired during earlier tool round-trips; normal timeout settlement appeared, not an application failure. This is guest practice verification, not certification of every auth flow, member-ranked daily or multiplayer mode. Proofs: `/tmp/quizball-staging-css-guest-20261011.png` and `/tmp/quizball-staging-css-namechain-20261011.png`.
+
+Google's independent hosted mobile retest at **17:41 Tbilisi** returned **88** for Turkish Played for Both: accessibility/best practices 100, FCP 1.4 s, LCP 3.9 s, TBT 10 ms, CLS 0 and speed index 2.2 s. [Exact report](https://pagespeed.web.dev/analysis/https-staging-quizball-io-tr-futbol-oyunlari-ortak-futbolcu-oyunu/cv66sww8h9?form_factor=mobile). This improves on the prior independent 84, but is still below 90. There is no staging field data. The new full 24-run default Lighthouse 13.5.0 matrix is collecting; every valid run will be retained. No foreground browser QA, local builds or test suites run during that collection. Production remains untouched by this workflow.
+
+### PR 682 measurement checkpoint and next local prototype
+
+Twenty valid default mobile reports completed on deployment `dpl_BmAzYRsGGfVN8AcELm3GiccPBmM2`; each artifact's resource deployment ID agrees and the staging alias still points to the same SHA. Two bounded batch attempts timed out repeatedly on Georgian Played for Both's third run, before Georgian Name Chain started. Those four missing results are **unavailable, not passes**. Every valid low score is retained.
+
+| Page | Valid scores in order | Median (only complete triplets) |
+| --- | --- | --- |
+| Turkish Played for Both | 87 / 87 / 99 | 87 |
+| English Name Chain | 84 / 90 / 89 | 89 |
+| Turkish Name Chain | 96 / 92 / 67 | 92 |
+| English Played for Both | 99 / 96 / 88 | 96 |
+| Spanish Played for Both | 84 / 86 / 97 | 86 |
+| Spanish Name Chain | 85 / 98 / 93 | 93 |
+| Georgian Played for Both | 82 / 50 / unavailable | unavailable |
+| Georgian Name Chain | unavailable | unavailable |
+
+The Georgian 50 included 3,007.5 ms TBT versus 44 ms on its other valid run. The machine remains shared with independently running development/browser processes; this is an uncontrolled limitation, not proof of the sole cause, and those processes were not interrupted. No further build/browser work overlapped the collection. Raw artifacts retain the `hosted-after-682-lh135-20261011` prefix.
+
+The next local-only prototype resolves critical stylesheet sources from the physical route/layout roots, follows runtime imports/re-exports and explicitly classifies all 33 reachable local dynamic boundaries. It includes all pre-Play member/auth/locale/board UI, including dormant loading/logo/FIFA-art styling; playable engines and destination-route providers retain their existing full stylesheet boundaries. CI verifies the generated manifest against a fresh source walk and independently compares complete ordered CSS rules, ignoring only formatting/comments. Six resolver fixture tests plus five route tests pass. The stylesheet guard covers 248 modules, all 109 page entries and all 6,601 original contextual declarations, with zero missing declarations.
+
+Built initial CSS is **4,425 + 14,032 = 18,457 gzip bytes**, versus 24,824 on PR 682: **6,367 bytes less** at this checkpoint. This is a measured built-asset saving, not a Lighthouse-score improvement. The current navigation, styles, provider/auth behavior and game rules are unchanged. Local mobile Turkish appearance remains unchanged, with no horizontal overflow. Remaining verification and hosted measurements are still pending; nothing from this prototype has reached staging or production yet.
+
+### Reviewed closure and responsive-assets candidate
+
+Independent diff review caught a P2 in the prototype's classification: word hub pages mount **FullProviders before Play**, not SeoProviders. The `./providers` boundary is now pre-Play, its complete static subtree is included, and a regression test asserts the provider, authentication bridge, CSP context and toast wrapper are present. All eight routes also assert they are not lightweight SEO routes. The fresh manifest now covers **252 modules / 33 dynamic boundaries**. All original 6,601 contextual declarations and the complete ordered critical CSS comparison still pass; the built stylesheet size remains unchanged. Follow-up independent review returned **SHIP, no remaining P1/P2**. No application provider behavior was changed.
+
+The full local suite before this classification-only correction passed **2,392 tests / eight skipped**, 339 files passed / one skipped, 306 seconds. After the correction all **18 focused tests** pass, including actual provider inclusion, manifest/rule parity, route ownership and asset integrity. The final 279-page production-mode build passes. Full lint has zero errors and 63 pre-existing warnings. The final CodeRabbit CLI review covered all 12 changed/new text files and returned zero findings. Final hosted CI remains required; no deployment yet.
+
+Responsive heroes now additionally offer **672×378** and **720×405** AVIF/WebP at the exact existing encoder quality and original artwork geometry. Golden hashes preserve all 24 existing variants; no fonts, background or original asset bytes changed. At 672px the Shared Player AVIF is **26,004 bytes** versus 29,622 at 750px (3,618 less); Name Chain is **28,635** versus 32,656 (4,021 less). These file-byte savings are separate from the 6,367-byte CSS saving.
+
+The final local default Lighthouse 13.5.0 diagnostic confirms the real **412px / DPR 1.75** browser transfers exactly one word hero, the new 672px Shared Player AVIF, with no redundant 750px hero request. Its single score was **81**, LCP 5.05 seconds, so this is **not a mobile-score pass**. Raw report: `/tmp/quizball-word-local-closure-assets-20261011-tr-shared-1.json`. Local CUA viewport overrides did not change this particular background tab's 390px dimensions; desktop/fractional-DPR native-CUA selection and an actual AVIF-unsupported browser remain unverified. Native srcset selection at the actual Lighthouse mobile dimensions is verified, while fallback markup/formats/dimensions are unit-tested.
+
+All eight local mobile URLs were revisited with preserved H1/navigation, two initial CSS files and no horizontal overflow. Turkish expanded login/signup and the language menu remain styled; switching to English stays on the equivalent Shared Player page. No credentials were submitted, account created or member settings changed. Hosted member/gameplay checks and repeated all-language scores remain pending. Production is not authorized for promotion.
