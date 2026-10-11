@@ -30,6 +30,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
     "@/components/shared/EventAwardCeremony", "@/features/weekend-league/rewards/WlRewardCeremonyHost",
   ].map((specifier) => boundary("src/components/layout/AppShell.tsx", specifier, "pre-play", "Member UI can render immediately on session restoration.")),
   boundary("src/features/fifa-universe/FifaModeArtLazy.tsx", "./FifaModeArt", "pre-play", "Keep all related-card artwork variants covered."),
+  boundary("src/features/marketing/public/DeferredCardArt.tsx", "@/features/demos/DemoModeArt", "pre-play", "Scrolling can show related artwork without Play; retain its complete styles."),
   boundary("src/features/marketing/public/PracticeLayer.tsx", "@/features/demos/DemoModeView", "play-only", "The practice portal is mounted only while playing."),
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
