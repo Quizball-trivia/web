@@ -370,6 +370,8 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
               {run.state.score === TOTAL_CELLS ? copy.resultPerfect : fillDaily(copy.resultTitle, { score: run.state.score })}
             </h2>
             <p className="mt-1 text-sm font-semibold text-white/65">{fillDaily(copy.resultTime, { time: formatClock(elapsed) })}</p>
+            {/* The other tab finished the run while this one was sending a guess: the result alone would not say where it went. */}
+            {movedElsewhere && <p role="status" data-daily-feedback="moved" className="mt-2 text-xs font-bold text-brand-yellow">{copy.movedElsewhereDone}</p>}
             <p className="mt-2 text-xs font-bold text-white/55">
               {run.state.ranked && run.state.rank ? fillDaily(copy.rank, { rank: run.state.rank }) : run.state.ranked ? "" : copy.practice}
             </p>
