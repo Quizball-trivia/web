@@ -204,7 +204,6 @@ export function GridLocalScreen() {
   const [options, setOptions] = useState<{ key: string; items: FootballGridOption[] | null } | null>(null);
   /** The running turn's clock, kept with the turn it belongs to so the two can never be read apart. */
   const [clock, setClock] = useState<LocalSnapshot['deadline']>(null);
-  const deadline = clock?.at ?? null;
   const [confirmDraw, setConfirmDraw] = useState(false);
   /** typing[seat]: that player chose "type it instead" in a pick-from-four series. */
   const [typing, setTyping] = useState<Record<LocalSeat, boolean>>({ 1: false, 2: false });
@@ -320,6 +319,9 @@ export function GridLocalScreen() {
 
   // A fresh clock for every turn of a timed game.
   const turnKey = stage === 'play' && game && !game.endReason ? `${series.gameIndex}:${game.turnNumber}` : null;
+  // Only the clock set for the turn on screen counts: for the instant after a turn ends the one on hand is the
+  // last turn's, and it must neither show nor run out for the new turn.
+  const deadline = clock && clock.turn === turnKey ? clock.at : null;
   useEffect(() => {
     const carried = restoredDeadline.current;
     // A clock carried over a reload serves the turn it was running for and no other.
@@ -346,8 +348,9 @@ export function GridLocalScreen() {
   const handleExpire = useCallback(() => {
     // A verdict already on its way decides the turn; if it decides nothing, submit() ends the turn when it lands.
     if (pendingRef.current || !game || game.endReason || stage !== 'play') return;
+    if (deadline === null || Date.now() < deadline) return;
     expireTurn(game);
-  }, [expireTurn, game, stage]);
+  }, [deadline, expireTurn, game, stage]);
   const remainingMs = useTurnRemaining(stage === 'play' ? deadline : null, handleExpire);
 
   const usedForOptions = useMemo(

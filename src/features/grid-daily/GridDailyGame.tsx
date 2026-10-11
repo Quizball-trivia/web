@@ -100,6 +100,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const open = useCallback(async () => {
     const mine = ++generation.current;
     setLoad({ kind: "loading" });
+    setKickOffFailed(false);
     setSelectedCell(null);
     setAnswer("");
     setFeedback(undefined);
@@ -152,6 +153,19 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [day, done, initialDay, member, open]);
 
+  // The Kick off button is gone once the run has started, however that came about (the press, a lost answer
+  // recovered, another tab): keyboard focus moves to the board that replaced it.
+  const onIntro = load.kind === "ready" && run !== null && !done && run.state.startedAt === null;
+  const leftIntro = useRef(false);
+  useEffect(() => {
+    if (onIntro) { leftIntro.current = true; return; }
+    if (!leftIntro.current) return;
+    leftIntro.current = false;
+    if (load.kind !== "ready") return;
+    const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-grid-anchor^="cell-"]:not([disabled])')?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [load.kind, onIntro]);
+
   // Rankings fetched for another day are never shown under this one.
   const boardEntry = loadedBoard && loadedBoard.day === day ? loadedBoard : null;
   const board = boardEntry?.data ?? null;
@@ -171,12 +185,18 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
    * The server's copy of the run wins: after a refused move, or one whose answer never arrived, the screen shows
    * what the server holds and the sheet closes (the cell may have been filled from another tab).
    */
-  const resync = async (mine: number) => {
-    if (load.kind !== "ready" || mine !== generation.current) return;
+  const resync = async (mine: number): Promise<GridDailyRun | null> => {
+    if (load.kind !== "ready" || mine !== generation.current) return null;
     setSelectedCell(null);
     setAnswer("");
     setFeedback(undefined);
-    try { apply(await gridDailyApi.start(load.day, locale), mine); } catch { if (mine === generation.current) setLoad({ kind: "unavailable" }); }
+    try {
+      const fresh = await gridDailyApi.start(load.day, locale);
+      return apply(fresh, mine) ? fresh : null;
+    } catch {
+      if (mine === generation.current) setLoad({ kind: "unavailable" });
+      return null;
+    }
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -206,14 +226,12 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     setPending(true);
     setKickOffFailed(false);
     try {
-      if (apply(await gridDailyApi.kickOff({ runId: run.run.id, version: run.run.version }, locale), mine)) {
-        // The button the player pressed is gone: keyboard focus moves to the board that replaced it.
-        window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-grid-anchor^="cell-"]:not([disabled])')?.focus());
-      }
+      apply(await gridDailyApi.kickOff({ runId: run.run.id, version: run.run.version }, locale), mine);
     } catch {
-      // If the kick-off did land (or another tab made it), the resync shows the board and this line is never seen.
-      setKickOffFailed(true);
-      await resync(mine);
+      // The kick-off may have landed all the same (a lost answer, or another tab made it): only a run the server
+      // still holds as not started is a failure to tell the player about.
+      const fresh = await resync(mine);
+      if (fresh && fresh.state.startedAt === null && !fresh.state.done) setKickOffFailed(true);
     } finally {
       pendingRef.current = false;
       setPending(false);
