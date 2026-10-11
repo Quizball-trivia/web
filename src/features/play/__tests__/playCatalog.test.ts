@@ -49,8 +49,10 @@ describe("parsePlayPopularity", () => {
       .toEqual({ generated_at: "x", games: { a: { players_7d: 3, players_3d: 1 } } });
   });
 
-  it("treats a body without a games object as no numbers", () => {
-    for (const body of [null, "text", {}, { games: null }, { games: [] }]) expect(parsePlayPopularity(body)).toBeNull();
+  it("treats a body without usable counts as no numbers", () => {
+    for (const body of [null, "text", {}, { games: null }, { games: [] }, { games: {} }, { games: { a: { players_7d: "900", players_3d: 4 } } }]) {
+      expect(parsePlayPopularity(body)).toBeNull();
+    }
   });
 });
 
@@ -63,7 +65,8 @@ describe("createPlayOrderLoader", () => {
     const read = vi.fn()
       .mockResolvedValueOnce(numbers(900))
       .mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
-    const load = createPlayOrderLoader(read, () => now);
+    const keepAlive = vi.fn();
+    const load = createPlayOrderLoader(read, { clock: () => now, keepAlive });
     expect((await load()).daily?.[0]).toBe("daily-statSniper");
     now += 5 * 60_000;
     await load();
@@ -72,6 +75,8 @@ describe("createPlayOrderLoader", () => {
     // The refresh has not answered: the page is not kept waiting.
     expect((await load()).daily?.[0]).toBe("daily-statSniper");
     expect(read).toHaveBeenCalledTimes(2);
+    // The host is told about the work that outlives this page, once per page that started or joined it.
+    expect(keepAlive).toHaveBeenCalledTimes(2);
     finish(numbers(0));
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect((await load()).daily?.[0]).not.toBe("daily-statSniper");
@@ -80,7 +85,7 @@ describe("createPlayOrderLoader", () => {
   it("keeps the hand-made order when the endpoint fails, and leaves it alone for two minutes", async () => {
     let now = Date.parse("2026-10-11T12:00:00Z");
     const read = vi.fn().mockRejectedValue(new Error("404"));
-    const load = createPlayOrderLoader(read, () => now);
+    const load = createPlayOrderLoader(read, { clock: () => now });
     expect(await load()).toMatchObject({ daily: null, coins: null });
     now += 60_000;
     await load();
@@ -93,11 +98,34 @@ describe("createPlayOrderLoader", () => {
   it("keeps the last good numbers when a later read fails", async () => {
     let now = Date.parse("2026-10-11T12:00:00Z");
     const read = vi.fn().mockResolvedValueOnce(numbers(900)).mockResolvedValue(null);
-    const load = createPlayOrderLoader(read, () => now);
+    const load = createPlayOrderLoader(read, { clock: () => now });
     await load();
     now += 11 * 60_000;
     await load();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect((await load()).daily?.[0]).toBe("daily-statSniper");
+  });
+
+  it("does not hold the first page up for a slow first read", async () => {
+    let finish: (value: ReturnType<typeof numbers>) => void = () => undefined;
+    const read = vi.fn().mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const load = createPlayOrderLoader(read, { firstWaitMs: 5 });
+    expect(await load()).toMatchObject({ daily: null, coins: null });
+    // Pages arriving while it is still running join the same read.
+    expect(await load()).toMatchObject({ daily: null });
+    expect(read).toHaveBeenCalledTimes(1);
+    finish(numbers(900));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect((await load()).daily?.[0]).toBe("daily-statSniper");
+  });
+
+  it("asks again when the clock has gone backwards", async () => {
+    let now = Date.parse("2026-10-11T12:00:00Z");
+    const read = vi.fn().mockResolvedValue(numbers(900));
+    const load = createPlayOrderLoader(read, { clock: () => now });
+    await load();
+    now -= 60 * 60_000;
+    await load();
+    expect(read).toHaveBeenCalledTimes(2);
   });
 });
