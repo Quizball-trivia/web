@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DemoModeArt } from "@/features/demos/DemoModeArt";
+import dynamic from "next/dynamic";
+
+const EmptyCardArt = () => null;
+const DemoModeArt = dynamic(() => import("@/features/demos/DemoModeArt")
+  .then((module) => module.DemoModeArt)
+  .catch((error: unknown) => {
+    // Artwork is decorative. A failed code chunk must not break the card's
+    // server-rendered label/link, or the rest of the game page.
+    console.warn("Related-game artwork could not load.", error);
+    return EmptyCardArt;
+  }), { ssr: false });
 
 /** Keep decorative, below-the-fold related artwork off the critical network path. */
 export function DeferredCardArt({ slug, sizes, className }: { slug: string; sizes: string; className?: string }) {
