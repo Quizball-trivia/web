@@ -926,8 +926,15 @@ export function trackSocketReconnected(downtimeSec: number) {
   trackEvent('socket_reconnected', { downtime_sec: downtimeSec });
 }
 
-export function trackApiError(endpoint: string, status: number, code?: string) {
-  trackEvent('api_error', { endpoint, status, code });
+export function trackApiError(
+  endpoint: string,
+  status: number,
+  code?: string,
+  method?: 'get' | 'post' | 'put' | 'patch' | 'delete',
+) {
+  // A profile read and profile edit can share a route/status. Record the known
+  // operation, but do not invent one for existing callers or include payloads.
+  trackEvent('api_error', { endpoint, status, code, ...(method ? { method: method.toUpperCase() } : {}) });
 }
 
 export function trackMatchLoadError(matchId: string | undefined, errorCode: string) {
