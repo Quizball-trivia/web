@@ -1,5 +1,7 @@
 'use client';
 
+import backgroundAssets from '@/lib/app-background-assets.json';
+
 /**
  * Fixed background layers that sit behind every AppShell layout.
  * Stadium pattern + a subtle radial-gradient overlay.
@@ -11,6 +13,7 @@ export function AppShellPageChrome() {
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `image-set(url('${backgroundAssets.patternAvif}') type('image/avif'), url('/assets/bg-pattern.webp') type('image/webp'))` }}
       />
       <div
         aria-hidden="true"
