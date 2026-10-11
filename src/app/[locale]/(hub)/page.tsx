@@ -9,6 +9,8 @@ import { JsonLd } from "@/features/marketing/publicGamePage";
 import { HubBody, HubIntro } from "@/features/marketing/HubSeo";
 import { HubMemberRedirect } from "@/features/marketing/HubMemberRedirect";
 import { PlayHome } from "@/features/play/PlayHome";
+import { PlayOrderProvider } from "@/features/play/PlayOrderProvider";
+import { loadPlayOrder } from "@/features/play/playOrder.server";
 
 type Params = Promise<{ locale: string }>;
 
@@ -32,6 +34,7 @@ export default async function Page({ params }: { params: Params }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const copy = HOME_COPY[locale];
+  const playOrder = await loadPlayOrder();
   const structuredData = buildGamesHomeStructuredData({
     locale,
     title: copy.metaTitle,
@@ -44,7 +47,9 @@ export default async function Page({ params }: { params: Params }) {
       <JsonLd data={buildFaqStructuredData(copy.faq)} />
       <HubMemberRedirect />
       <HubIntro locale={locale} />
-      <PlayHome beforeFooter={<HubBody locale={locale} />} />
+      <PlayOrderProvider value={playOrder}>
+        <PlayHome beforeFooter={<HubBody locale={locale} />} />
+      </PlayOrderProvider>
     </>
   );
 }
