@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import PublicOnlyGate from "@/components/auth/PublicOnlyGate";
 
 export default function AuthLayout({

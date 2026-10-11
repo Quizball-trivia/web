@@ -9,6 +9,7 @@ import { PUBLISHED_PUBLIC_GAMES, findPublishedGame, homepageCards, publishedLoca
 import { buildGamesHomeStructuredData, buildPublicGameStructuredData, serializeJsonLd } from "@/lib/seo/structured-data";
 import { PublicGameScreen } from "./PublicGameScreen";
 import { DailyCollectionScreen } from "./DailyCollectionScreen";
+import { isWordGameLandingPath } from "@/lib/word-game-critical-assets";
 
 type Params = Promise<{ locale: string; slug: string }>;
 
@@ -27,6 +28,13 @@ export const dailyCollectionStaticParams = (folder: string) => localesForFolder(
 export function publicGameStaticParams(folder: string) {
   return localesForFolder(folder).flatMap((locale) =>
     PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale as (typeof SEO_PAGE_LOCALES)[number])).map((game) => ({ locale, slug: gamePagePath(game, locale).split("/")[3] })),
+  );
+}
+
+/** Fixed word landing siblings own these URLs and their smaller stylesheet. */
+export function publicGameDynamicParams(folder: string) {
+  return publicGameStaticParams(folder).filter(({ locale, slug }) =>
+    !isWordGameLandingPath(`/${locale}/${folder}/${slug}`),
   );
 }
 

@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { CampaignQuizHub } from '@/features/campaign-quiz/CampaignQuizHub';

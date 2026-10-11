@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';

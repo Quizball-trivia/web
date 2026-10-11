@@ -12,8 +12,12 @@ const WORD_GAME_PATHS = new Set([
   "/tr/futbol-oyunlari/ortak-futbolcu-oyunu",
 ]);
 
+export function isWordGameLandingPath(pathname: string): boolean {
+  return WORD_GAME_PATHS.has(pathname.replace(/\/$/, ""));
+}
+
 export function wordGameFontPreloads(pathname: string): string[] {
-  if (!WORD_GAME_PATHS.has(pathname.replace(/\/$/, ""))) return [];
+  if (!isWordGameLandingPath(pathname)) return [];
   // These four weights were requested above the fold in the mobile traces.
   const subsets = pathname.startsWith("/tr/") ? ["latin", "latin-ext"] : ["latin"];
   return subsets.flatMap((subset) => [400, 600, 700, 900].map((weight) =>

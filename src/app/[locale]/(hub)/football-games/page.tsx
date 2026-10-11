@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { notFound, permanentRedirect } from "next/navigation";
 import { isLocale } from "@/lib/i18n/locale";
 

@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { APP_ROUTE_METADATA } from "@/lib/seo/app-routes";

@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "./theme-tokens.css";
 @import "tw-animate-css";
 
 :root {
@@ -109,107 +112,7 @@
   --chart-2: 145 60% 55%;
 }
 
-@theme inline {
-  /* FIFA card artwork palette, shared by cards, clues and squad pitches. */
-  --color-fut-badge: #3a2c08;
-  --color-fut-gold-light: #f4e3a2;
-  --color-fut-ink: #33270a;
-  --color-fut-ink-deep: #241b05;
-  --color-fut-border: #7c5e1e;
-  --color-fut-pitch: #1f4a1f;
-  --color-fut-menu: #0f1a2e;
 
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-overlay-bg: var(--overlay-bg);
-  --color-overlay-accent: hsl(var(--overlay-accent));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-
-  /* Brand palette — exposed as bg-brand-blue, text-brand-yellow, border-brand-cyan/20 etc. */
-  --color-brand-blue: hsl(var(--brand-blue));
-  --color-brand-yellow: hsl(var(--brand-yellow));
-  --color-brand-green: hsl(var(--brand-green));
-  --color-brand-green-light: hsl(var(--brand-green-light));
-  --color-brand-green-bright: hsl(var(--brand-green-bright));
-  --color-brand-red: hsl(var(--brand-red));
-  --color-brand-red-soft: hsl(var(--brand-red-soft));
-  --color-brand-cyan: hsl(var(--brand-cyan));
-  --color-brand-orange: hsl(var(--brand-orange));
-  --color-brand-purple: hsl(var(--brand-purple));
-  --color-brand-gold: hsl(var(--brand-gold));
-  --color-brand-silver: hsl(var(--brand-silver));
-  --color-brand-bronze: hsl(var(--brand-bronze));
-  --color-brand-slate: hsl(var(--brand-slate));
-
-  /* Surface palette */
-  --color-store-card: hsl(var(--store-card));
-  --color-store-accent: hsl(var(--store-accent));
-  --color-surface-page: hsl(var(--surface-page));
-  --color-surface-page-alt: hsl(var(--surface-page-alt));
-  --color-surface-page-deep: hsl(var(--surface-page-deep));
-  --color-surface-card-deep: hsl(var(--surface-card-deep));
-  --color-surface-card-deeper: hsl(var(--surface-card-deeper));
-  --color-surface-card: hsl(var(--surface-card));
-  --color-surface-card-tint: hsl(var(--surface-card-tint));
-  --color-surface-card-light: hsl(var(--surface-card-light));
-  --color-surface-deep: hsl(var(--surface-deep));
-  --color-surface-darkest: hsl(var(--surface-darkest));
-  --color-surface-input: hsl(var(--surface-input));
-  --color-surface-row-deep: hsl(var(--surface-row-deep));
-  --color-surface-map-panel: hsl(var(--surface-map-panel));
-  --color-surface-map-panel-deep: hsl(var(--surface-map-panel-deep));
-  --color-surface-mode-card: hsl(var(--surface-mode-card));
-  --color-surface-mode-card-hover: hsl(var(--surface-mode-card-hover));
-  --color-surface-mode-trough: hsl(var(--surface-mode-trough));
-  --color-surface-mode-trough-deep: hsl(var(--surface-mode-trough-deep));
-  --color-surface-tournament-trough: hsl(var(--surface-tournament-trough));
-  --color-surface-tournament-panel-from: hsl(var(--surface-tournament-panel-from));
-  --color-surface-tournament-panel-via: hsl(var(--surface-tournament-panel-via));
-  --color-surface-auth-input: hsl(var(--surface-auth-input));
-
-  /* Brand variants */
-  --color-brand-green-deep: hsl(var(--brand-green-deep));
-  --color-brand-green-darkest: hsl(var(--brand-green-darkest));
-  --color-brand-yellow-deep: hsl(var(--brand-yellow-deep));
-  --color-brand-yellow-soft: hsl(var(--brand-yellow-soft));
-  --color-brand-red-light: hsl(var(--brand-red-light));
-  --color-brand-red-deep: hsl(var(--brand-red-deep));
-  --color-brand-cyan-deep: hsl(var(--brand-cyan-deep));
-
-  /* Brand accent variants */
-  --color-brand-orange-light: hsl(var(--brand-orange-light));
-  --color-brand-orange-deep: hsl(var(--brand-orange-deep));
-  --color-brand-gold-deep: hsl(var(--brand-gold-deep));
-  --color-brand-gold-press: hsl(var(--brand-gold-press));
-  --color-brand-gold-ink: hsl(var(--brand-gold-ink));
-  --color-brand-gold-fill-deep: hsl(var(--brand-gold-fill-deep));
-  --color-brand-red-rust: hsl(var(--brand-red-rust));
-  --color-brand-red-rust-deep: hsl(var(--brand-red-rust-deep));
-  --color-brand-red-soft-deep: hsl(var(--brand-red-soft-deep));
-  --color-brand-slate-deep: hsl(var(--brand-slate-deep));
-  --color-brand-slate-light: hsl(var(--brand-slate-light));
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
 
 @layer base {
   * {
@@ -424,21 +327,3 @@
 }
 
 /* Artwork palette for the released mini games; keeps their existing colours while sharing named tokens. */
-@theme {
-  --color-game-wheel-hub: #171310;
-  --color-game-art-night: #07111f;
-  --color-game-wheel-rim: #2b2417;
-  --color-game-pitch-loading: #061712;
-  --color-game-stadium-night: #0a1730;
-  --color-game-ink: #07111d;
-  --color-game-stadium-frame: #29385f;
-  --color-game-stadium-tunnel: #050b19;
-  --color-game-stadium-overlay: #071d5b;
-  --color-game-stadium-panel: #06142e;
-  --color-game-pitch-edge: #040b09;
-  --color-game-pitch-sky: #081724;
-  --color-game-pitch-shade: #020805;
-  --color-game-collection-green: #0e2f14;
-  --color-game-collection-purple: #2a1240;
-  --color-game-collection-shadow: #12081f;
-}

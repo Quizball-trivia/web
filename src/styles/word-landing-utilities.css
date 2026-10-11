@@ -1,0 +1,27 @@
+/* Same navigation, auth and public content; omit unrelated app/game utilities. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "./theme-tokens.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@source "../components";
+@source "../features/marketing";
+@source "../features/auth";
+@source "../features/welcome";
+@source "../contexts";
+@source "../lib";
+@source "../utils";
+@source "../hooks";
+@source "../app/layout.tsx";
+@source "../app/providers.tsx";
+@source "../app/seo-providers.tsx";
+@source "../features/weekend-league/rewards";
+@source "../features/store/components/CoinIcon.tsx";
+@source "../features/aproximado/PlayRoomWithFriendsButton.tsx";
+@source "../features/duel/ActiveDuelBanner.tsx";
+@source "../features/demos/DemoModeArt.tsx";
+@source "../features/demos/DemoModeIcon.tsx";
+@source "../features/demos/WordGameHeroImage.tsx";
+@source "../features/fifa-universe/FifaModeArtLazy.tsx";
+@source "../features/wordgames";
+@source "../features/leaderboard/components";
