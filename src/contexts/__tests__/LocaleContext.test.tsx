@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LocaleProvider, useLocale } from '../LocaleContext';
+import { SeoProviders } from '@/app/seo-providers';
 import { messages } from '@/lib/i18n/messages';
 import { loadLocaleMessages } from '@/lib/i18n/client-messages';
 
@@ -26,6 +27,8 @@ vi.mock('@/stores/auth.store', () => ({
     return selector ? selector(state) : state;
   },
 }));
+
+vi.mock('@/components/PostHogProvider', () => ({ PostHogPageView: () => null }));
 
 vi.mock('@/lib/i18n/infer-locale', () => ({
   inferLocaleFromBrowser: () => mocks.inferredLocale,
@@ -59,6 +62,35 @@ describe('LocaleProvider', () => {
     await act(async () => { await loadLocaleMessages('es'); });
     await waitFor(() => expect(screen.getByTestId('translation')).toHaveTextContent(messages.es.welcome.signInTab));
     expect(screen.getByTestId('locale')).toHaveTextContent('es');
+  });
+
+  it('declares the page language of an unprefixed address from the saved choice, and of a prefixed one from the address', async () => {
+    localStorage.setItem('quizball_locale', JSON.stringify('ka'));
+    mocks.preferredLanguage = undefined;
+    document.documentElement.lang = 'en';
+    const view = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('ka'));
+    mocks.pathname = '/es/about';
+    view.rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('es'));
+    mocks.pathname = '/play';
+    view.rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('ka'));
+  });
+
+  it('keeps the page language right when navigation swaps the app providers for the lightweight ones and back', async () => {
+    localStorage.setItem('quizball_locale', JSON.stringify('ka'));
+    mocks.preferredLanguage = undefined;
+    const app = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('ka'));
+    app.unmount();
+    mocks.pathname = '/en/football-quiz';
+    const seo = render(<SeoProviders><p>quiz</p></SeoProviders>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('en'));
+    seo.unmount();
+    mocks.pathname = '/play';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(document.documentElement.lang).toBe('ka'));
   });
 
   it('restores the saved user locale after a transient localized public route', async () => {

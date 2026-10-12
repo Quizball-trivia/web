@@ -7,6 +7,7 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { type Locale, isSupportedLocale, normalizeLocale } from '@/lib/i18n/locale-config';
 import { cachedLocaleMessages, loadLocaleMessages, primeLocaleMessages, translate, translateDictionary, type MessageDictionary } from '@/lib/i18n/client-messages';
 import { inferLocaleFromBrowser } from '@/lib/i18n/infer-locale';
+import { useDocumentLanguage } from '@/lib/i18n/useDocumentLanguage';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 interface LocaleContextType {
@@ -138,6 +139,9 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
     if (localeSourceRef.current === 'path') return;
     storage.set(STORAGE_KEYS.LOCALE, locale);
   }, [locale, pathLocale]);
+
+  // The address still wins where it names a language.
+  useDocumentLanguage(pathLocale ?? locale);
 
   useEffect(() => {
     if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;

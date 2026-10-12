@@ -187,6 +187,7 @@
 @source "../lib/i18n/metadata.ts";
 @source "../lib/i18n/runtime-messages.ts";
 @source "../lib/i18n/useChangeLanguage.ts";
+@source "../lib/i18n/useDocumentLanguage.ts";
 @source "../lib/match/rankedGeoHint.ts";
 @source "../lib/posthog.ts";
 @source "../lib/preferences/userPreferences.ts";
