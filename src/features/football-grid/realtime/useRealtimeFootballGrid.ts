@@ -22,6 +22,8 @@ interface UseRealtimeFootballGridOptions {
   startMode?: 'queue' | 'practice_bot';
   /** Board artwork warmed — the client only reports ready once it can render the reveal. */
   assetsReady?: boolean;
+  /** The result is not on screen yet (the winning line is being shown): its delivery is not confirmed until it is. */
+  holdCompletionAck?: boolean;
 }
 
 const PENDING_COMMAND_TIMEOUT_MS = 5_000;
@@ -44,6 +46,7 @@ export function useRealtimeFootballGrid({
   autoStart = true,
   startMode = 'queue',
   assetsReady = true,
+  holdCompletionAck = false,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   // A start whose server reply has not arrived yet: a disconnect in that window
@@ -68,6 +71,7 @@ export function useRealtimeFootballGrid({
   const rematch = useFootballGridStore((current) => current.rematch);
   const commandResult = useFootballGridStore((current) => current.lastCommandResult);
   const turnResolved = useFootballGridStore((current) => current.lastTurnResolved);
+  const options = useFootballGridStore((current) => current.options);
   const pendingCommandId = useFootballGridStore((current) => current.pendingCommandId);
   const reportedAttemptIds = useFootballGridStore((current) => current.reportedAttemptIds);
   const error = useFootballGridStore((current) => current.error);
@@ -206,7 +210,7 @@ export function useRealtimeFootballGrid({
   // full results payload. A reload before this effect simply causes the server
   // to redeliver it with a fresh token, so results are never lost in transit.
   useEffect(() => {
-    if (!completed || acknowledgedCompletionTokenRef.current === completed.ackToken) return;
+    if (!completed || holdCompletionAck || acknowledgedCompletionTokenRef.current === completed.ackToken) return;
     const frameId = window.requestAnimationFrame(() => {
       acknowledgedCompletionTokenRef.current = completed.ackToken;
       socket.emit('grid:completed_ack', {
@@ -216,7 +220,7 @@ export function useRealtimeFootballGrid({
       });
     });
     return () => window.cancelAnimationFrame(frameId);
-  }, [completed, socket]);
+  }, [completed, holdCompletionAck, socket]);
 
   const cancelSearch = useCallback(() => {
     searchSuppressedRef.current = true;
@@ -226,7 +230,7 @@ export function useRealtimeFootballGrid({
     if (current.search.searchId) socket.emit('grid:search_cancel', { searchId: current.search.searchId });
   }, [socket]);
 
-  const submitAnswer = useCallback((cellIndex: number, text: string) => {
+  const submitAnswer = useCallback((cellIndex: number, text: string, optionPlayerId?: string) => {
     const current = useFootballGridStore.getState();
     const snapshot = current.state;
     if (
@@ -245,9 +249,25 @@ export function useRealtimeFootballGrid({
       cellIndex,
       text: text.trim(),
       locale,
+      ...(optionPlayerId && { optionPlayerId }),
     });
     return true;
   }, [locale, selfUserId, socket]);
+
+  /** Asks for the four footballers to pick from for a cell; the answer arrives in `options`. */
+  const requestOptions = useCallback((cellIndex: number) => {
+    const snapshot = useFootballGridStore.getState().state;
+    if (
+      !snapshot ||
+      !selfUserId ||
+      snapshot.settings?.answerMode !== 'choice' ||
+      snapshot.phase !== 'turn' ||
+      snapshot.currentPlayerUserId !== selfUserId ||
+      snapshot.claims.some((claim) => claim.cellIndex === cellIndex)
+    ) return false;
+    socket.emit('grid:options_request', { matchId: snapshot.matchId, cellIndex });
+    return true;
+  }, [selfUserId, socket]);
 
   const pass = useCallback(() => {
     const current = useFootballGridStore.getState();
@@ -351,6 +371,7 @@ export function useRealtimeFootballGrid({
     rematch,
     commandResult,
     turnResolved,
+    options,
     pendingCommandId,
     reportedAttemptIds,
     error,
@@ -359,6 +380,7 @@ export function useRealtimeFootballGrid({
       startSearch,
       cancelSearch,
       submitAnswer,
+      requestOptions,
       pass,
       forfeit,
       offerDraw,

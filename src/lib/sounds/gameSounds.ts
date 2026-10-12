@@ -1,6 +1,7 @@
 "use client";
 
 import { Howl, Howler } from "howler";
+import { registerBgmStop } from "./audioControl";
 
 // ─── Sound file paths (place MP3s in /public/sounds/) ────────────
 export const SOUND_FILES = {
@@ -373,3 +374,5 @@ export function setBgmVolume(vol: number) {
   if (!activeBgm) return;
   bgmInstances[activeBgm]?.volume(Math.max(0, Math.min(1, vol)));
 }
+
+registerBgmStop(stopBgm);

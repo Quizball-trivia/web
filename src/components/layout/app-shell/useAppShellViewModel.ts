@@ -27,7 +27,6 @@ import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
 import { useUnreadNotificationCount } from '@/lib/queries/notifications.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
-import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { logger } from '@/utils/logger';
 import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
@@ -84,10 +83,6 @@ export function useAppShellViewModel() {
   const lobbyCommands = useLobbyCommandMachine();
   // One connection owner for members AND resolved guests (friend rooms).
   const principal = useRealtimePrincipal();
-  useRealtimeConnection({
-    enabled: principal.kind !== 'none',
-    selfUserId: principal.userId,
-  });
 
   const isAuthenticated = authStatus === 'authenticated';
   useEffect(() => {

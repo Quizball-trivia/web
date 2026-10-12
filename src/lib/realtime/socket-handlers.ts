@@ -12,7 +12,8 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
-import { translate, normalizeLocale } from '@/lib/i18n/messages';
+import { normalizeLocale } from '@/lib/i18n/locale-config';
+import { translateRuntimeCopy as translate } from '@/lib/i18n/runtime-messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
@@ -1005,6 +1006,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       acceptedPlayers: data.acceptedUserIds.length,
     });
     useFootballGridStore.getState().setRematch(data);
+  });
+  socket.on('grid:options', (data) => {
+    useFootballGridStore.getState().setOptions(data);
   });
   socket.on('grid:report_received', ({ attemptId }) => {
     logger.info('Socket event grid:report_received', { attemptId });

@@ -1,0 +1,7 @@
+/* Destination routes and lazy engines load their utilities before rendering. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "./theme-tokens.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@source "../../";

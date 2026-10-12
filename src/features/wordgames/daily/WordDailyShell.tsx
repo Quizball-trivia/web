@@ -1,36 +1,22 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Users } from "lucide-react";
-import { LeaderboardTable } from "@/features/leaderboard/components/LeaderboardTable";
-import { SignInLink } from "@/features/marketing/public/PublicLinks";
 import { GUEST_LOBBIES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
-import type { RoomGameId } from "@/lib/realtime/socket.types";
 import { cn } from "@/lib/utils";
 import { STORAGE_KEYS, storage } from "@/utils/storage";
 import { useAuthStore } from "@/stores/auth.store";
 import { wordDailyCopy } from "../copy";
 import { Brand, Frame, GreenButton, poppins } from "../ui";
-import type { WordBoard, WordBoardRow } from "./wordDaily.api";
-import { latestDay, puzzleNumber, releaseDay, type WordDailyCalendar } from "./wordDaily.logic";
+import { puzzleNumber } from "./wordDaily.logic";
+import { DailySignIn, YELLOW_PILL } from "./WordDailySignIn";
+import type { WordDailyGame } from "./wordDaily.games";
+export { DailySignIn } from "./WordDailySignIn";
+export { WordDailyLeaderboard } from "./WordDailyLeaderboard";
+export type { WordDailyGame } from "./wordDaily.games";
 import type { WordDailyNotice } from "./useWordDaily";
-
-/** What the shared daily screens need to know about one game. */
-export interface WordDailyGame {
-  /** Analytics / sign-in id and the app route the game lives on. */
-  modeId: string;
-  route: string;
-  roomGame: RoomGameId;
-  brand: readonly [string, string];
-  hero: string;
-  calendar: WordDailyCalendar;
-  tag: string;
-  /** The rules shown on the intro; a function when they depend on the day (its number). */
-  lines: readonly string[] | ((dayNumber: number) => readonly string[]);
-}
 
 export function Centered({ children }: { children: ReactNode }) {
   return <div className="flex flex-1 flex-col items-center justify-center">{children}</div>;
@@ -38,12 +24,6 @@ export function Centered({ children }: { children: ReactNode }) {
 
 export function ExitLink({ label, onExit }: { label: string; onExit: () => void }) {
   return <button type="button" onClick={onExit} className="mt-4 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{label}</button>;
-}
-
-const YELLOW_PILL = "inline-flex h-10 items-center rounded-full bg-brand-yellow px-5 text-xs font-black uppercase text-black hover:bg-brand-yellow-deep";
-
-export function DailySignIn({ game, placement, className = YELLOW_PILL, children }: { game: WordDailyGame; placement: string; className?: string; children: ReactNode }) {
-  return <SignInLink placement={`${game.modeId}_${placement}`} modeId={game.modeId} returnTo={game.route} className={className}>{children}</SignInLink>;
 }
 
 /**
@@ -118,64 +98,6 @@ export function DailyArchive({ game, locale, days, today, current, onBack, onOpe
         ))}
       </ul>
     </div>
-  );
-}
-
-const toEntry = (row: WordBoardRow, myId: string | undefined): LeaderboardEntry => ({
-  id: row.userId, rank: row.rank, username: row.username, avatar: row.avatarUrl || row.userId, avatarCustomization: row.avatarCustomization,
-  country: row.country, tier: row.tier ?? "", rankPoints: row.score, isCurrentUser: row.userId === myId, trend: "same", trendValue: 0,
-});
-
-/** The day's top scores in the shared leaderboard rows. `refreshKey` refetches after the viewer finishes a ranked run. */
-export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, limit = 10, placement = "page", className }: {
-  game: WordDailyGame; locale: string; load: (day: string, locale: string) => Promise<WordBoard>; day?: string; refreshKey?: number; limit?: number; placement?: "page" | "end"; className?: string;
-}) {
-  const c = wordDailyCopy(locale).board;
-  // Follows the Argentine day while the page stays open, unless a specific day is asked for.
-  const [today, setToday] = useState(() => releaseDay());
-  useEffect(() => {
-    if (day) return;
-    const check = () => setToday(releaseDay());
-    const timer = window.setInterval(check, 60_000);
-    window.addEventListener("focus", check);
-    return () => { window.clearInterval(timer); window.removeEventListener("focus", check); };
-  }, [day]);
-  const boardDay = day ?? latestDay(game.calendar, today);
-  const [loaded, setLoaded] = useState<{ day: string; board: WordBoard | null } | null>(null);
-  const authStatus = useAuthStore((s) => s.status);
-  const myId = useAuthStore((s) => s.user?.id);
-  useEffect(() => {
-    if (authStatus === "loading" || !boardDay) return;
-    let cancelled = false;
-    load(boardDay, locale).then((data) => { if (!cancelled) setLoaded({ day: boardDay, board: data }); }).catch(() => { if (!cancelled) setLoaded({ day: boardDay, board: null }); });
-    return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, myId, locale, load]);
-
-  // Rows fetched for another day are never shown under this day's heading.
-  const board = loaded && loaded.day === boardDay ? loaded.board : undefined;
-  if (board === null || !boardDay) return null;
-  const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];
-  const meOutside = board?.me && !entries.some((entry) => entry.isCurrentUser) ? toEntry(board.me, myId) : null;
-  return (
-    <section aria-label={c.title} className={className}>
-      <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(game.calendar, boardDay)}</span></h2>
-        {board && board.players > 0 && <span className="text-xs text-white/60">{c.players(board.players)}</span>}
-      </div>
-      {board === undefined ? (
-        <div className="h-64 animate-pulse rounded-2xl bg-white/5" />
-      ) : entries.length === 0 ? (
-        <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-white/75">{c.empty}</p>
-      ) : (
-        <LeaderboardTable entries={meOutside ? [...entries, meOutside] : entries} currentUserId={myId} pointsLabel={wordDailyCopy(locale).points} compact />
-      )}
-      {authStatus !== "authenticated" && authStatus !== "loading" && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-blue px-4 py-3">
-          <p className="text-sm font-semibold text-white/90">{c.join}</p>
-          <DailySignIn game={game} placement={`leaderboard_${placement}`}>{c.joinButton}</DailySignIn>
-        </div>
-      )}
-    </section>
   );
 }
 

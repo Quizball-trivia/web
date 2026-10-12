@@ -14,6 +14,7 @@ import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySe
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
 import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, ROOM_GAME_LABEL_KEYS, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { RoomGameOptions } from "./RoomGameOptions";
+import { GridRoomOptions } from './GridRoomOptions';
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -996,6 +997,10 @@ export function LobbySettings({
             >
               {t("friend.footballGridDescriptionLong")}
             </p>
+            {/* Shown once the server holds this mode, so the options edited are the room's own. */}
+            {serverMode === 'football_grid' && settings?.gridRules === true && (
+              <GridRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
           </div>
         )}
 

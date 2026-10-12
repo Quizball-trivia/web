@@ -1,0 +1,7 @@
+/* Same navigation, auth and public content; omit unrelated app/game utilities. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "./theme-tokens.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@import "./word-landing-sources.css";

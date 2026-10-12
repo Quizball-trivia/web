@@ -941,7 +941,8 @@ export function useFriendLobbyLogic({
   };
 
   const handleRoomOptions = useCallback((options: Record<string, unknown> | null) => {
-    if (!activeLobby || activeLobby.settings.gameMode !== "room_game") return;
+    const gameMode = activeLobby?.settings.gameMode;
+    if (!activeLobby || (gameMode !== "room_game" && gameMode !== "football_grid")) return;
     getSocket().emit("lobby:room_options", { lobbyId: activeLobby.lobbyId, options });
     logger.info("Socket emit lobby:room_options", { lobbyId: activeLobby.lobbyId });
   }, [activeLobby]);

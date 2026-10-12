@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import AppAuthGate from "@/components/auth/AppAuthGate";
 import { AppShell } from "@/components/layout/AppShell";
 import { APP_ROUTE_METADATA } from "@/lib/seo/app-routes";

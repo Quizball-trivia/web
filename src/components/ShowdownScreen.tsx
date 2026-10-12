@@ -452,7 +452,7 @@ export function ShowdownScreen({
               className="mt-1.5 text-[13px] uppercase text-white"
               style={poppins}
             >
-              {isRanked ? 'Ranked' : 'Friendly'}{' '}
+              {isRanked ? t('showdown.ranked') : t('showdown.friendly')}{' '}
               <span style={{ color: accentMatch }}>1v1</span>
             </motion.div>
             <motion.div
@@ -462,7 +462,7 @@ export function ShowdownScreen({
               className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/55"
               style={poppins}
             >
-              Get ready for kickoff
+              {t('showdown.getReadyForKickoff')}
             </motion.div>
           </motion.div>
 
@@ -511,7 +511,7 @@ export function ShowdownScreen({
             className="mt-2 text-[10px] uppercase text-white sm:mt-5 sm:text-xl md:text-2xl"
             style={poppins}
           >
-            {isRanked ? 'Ranked' : 'Friendly'}{' '}
+            {isRanked ? t('showdown.ranked') : t('showdown.friendly')}{' '}
             <span style={{ color: accentMatch }}>1v1</span>
           </motion.div>
           <motion.div
@@ -521,8 +521,8 @@ export function ShowdownScreen({
             className="mt-1 text-[9px] uppercase tracking-[0.12em] text-white/55 sm:mt-2 sm:text-xs sm:tracking-[0.16em]"
             style={poppins}
           >
-            <span className="sm:hidden">Kickoff</span>
-            <span className="hidden sm:inline">Get ready for kickoff</span>
+            <span className="sm:hidden">{t('showdown.kickoff')}</span>
+            <span className="hidden sm:inline">{t('showdown.getReadyForKickoff')}</span>
           </motion.div>
         </motion.div>
 

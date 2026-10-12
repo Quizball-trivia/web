@@ -7,7 +7,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import dynamic from 'next/dynamic';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -19,6 +19,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, User } from 'lucide-react';
 import type { PlayerStats } from '@/types/game';
+
+// Signed-out headers never render this menu, so they do not need the avatar
+// catalogue. Preserve the existing 44 x round(44 * 1.4) frame while it loads.
+const TierFrameAvatar = dynamic(
+  () => import('@/components/TierFrameAvatar').then((module) => module.TierFrameAvatar),
+  { ssr: false, loading: () => <div aria-hidden="true" className="shrink-0" style={{ width: 44, height: 62 }} /> },
+);
 
 interface AppShellProfileMenuProps {
   variant: 'desktop' | 'mobile';

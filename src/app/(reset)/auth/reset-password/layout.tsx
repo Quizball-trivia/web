@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { APP_ROUTE_METADATA } from "@/lib/seo/app-routes";
 
 // Deliberately NOT wrapped in PublicOnlyGate: the recovery link establishes a

@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LegalScreen } from "@/features/marketing/LegalScreen";

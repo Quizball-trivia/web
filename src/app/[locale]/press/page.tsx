@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { seoTitle } from "@/lib/seo/title";
 import type { Metadata } from "next";
 import { headers } from "next/headers";

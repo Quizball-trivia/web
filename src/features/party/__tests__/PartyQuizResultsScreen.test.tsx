@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FixedLocaleProvider } from '@/contexts/LocaleContext';
+import { loadLocaleMessages } from '@/lib/i18n/client-messages';
 
 import type { MatchFinalResultsPayload, MatchParticipant } from '@/lib/realtime/socket.types';
 
@@ -82,7 +83,9 @@ describe('PartyQuizResultsScreen', () => {
   it.each([
     ['en', 'Saving your rewards'], ['es', 'Guardando tus recompensas'],
     ['ka', 'ჯილდოები ინახება'], ['tr', 'Ödüllerin kaydediliyor'],
-  ] as const)('translates the delayed status in %s', (locale, message) => {
+  ] as const)('translates the delayed status in %s', async (locale, message) => {
+    // Match the app's already-loaded locale before exercising reward timers.
+    await loadLocaleMessages(locale);
     vi.useFakeTimers();
     render(<FixedLocaleProvider locale={locale}><PartyQuizResultsScreen finalResults={makeFinalResults()} participants={participants}
       selfUserId="high-score" onPlayAgain={vi.fn()} onMainMenu={vi.fn()}

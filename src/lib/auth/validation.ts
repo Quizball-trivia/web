@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { MessageKey } from '@/lib/i18n/messages';
 
+export { normalizeEmail } from './normalizeEmail';
+
 /**
  * Shared auth field validation for login / signup / reset / change-password.
  * Single source of truth so the same rules apply everywhere and the backend's
@@ -15,11 +17,6 @@ export const PASSWORD_MAX = 128;
 
 const EMAIL_SCHEMA = z.string().trim().min(1).email().max(254);
 const GEORGIAN_MOBILE_RE = /^\+9955\d{8}$/;
-
-/** Normalize an email for submission: trimmed + lowercased. */
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
 
 export function validateEmail(email: string): MessageKey | null {
   const value = email.trim();

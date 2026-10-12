@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { decodeShare, SHARE_COPY } from "@/features/buscaminas/buscaminas.share";

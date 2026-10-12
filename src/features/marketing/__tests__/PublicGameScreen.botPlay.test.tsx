@@ -10,8 +10,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/stores/auth.store", () => ({ useAuthStore: (selector: (s: { status: string }) => unknown) => selector({ status: "anonymous" }) }));
 vi.mock("@/lib/posthog", () => ({ trackEvent: vi.fn() }));
 vi.mock("@/lib/realtime/realtime-principal", () => ({ ensureGuestPrincipal: vi.fn(async () => null) }));
-vi.mock("@/features/demos/DemoModeArt", () => ({ DemoModeArt: () => <div data-testid="art" /> }));
+vi.mock("@/features/demos/DemoModeArt", () => ({ DemoModeArt: ({ priority, sizes }: { priority?: boolean; sizes?: string }) => <div data-testid="art" data-priority={String(Boolean(priority))} data-sizes={sizes} /> }));
+vi.mock("../public/DeferredWordDailyBoard", () => ({ DeferredWordDailyBoard: ({ modeId, locale }: { modeId: string; locale: string }) => <div data-testid="word-board">{modeId}:{locale}</div> }));
 vi.mock("../public/PublicTopTen", () => ({ PublicTopTen: ({ board }: { board: string }) => <div data-testid="top-ten">{board}</div> }));
+vi.mock("../public/PublicPageBoard", () => ({ PublicPageBoard: ({ modeId }: { modeId: string }) => <div data-testid="top-ten">{modeId}</div> }));
 vi.mock("../public/PublicGameEmbed", () => ({
   PublicGameEmbed: ({ copy, variant }: { copy: { start: string }; variant?: string }) => <button type="button" data-variant={variant ?? "card"}>{copy.start}</button>,
 }));
@@ -44,5 +46,20 @@ describe("PublicGameScreen — Tic Tac Toe / Auction bot-play layout", () => {
     expect(screen.queryByRole("link", { name: "Play ranked" })).toBeNull();
     expect(screen.getByRole("button", { name: "Play training" }).getAttribute("data-variant")).toBe("card");
     expect(screen.getByRole("heading", { name: "Play online" })).toBeInTheDocument();
+  });
+});
+
+describe("PublicGameScreen — word-game loading contract", () => {
+  it.each(["en", "es", "ka", "tr"] as const)("prioritises one hero and defers both word-game boards in %s", (locale) => {
+    for (const modeId of ["sharedPlayer", "nameChain"]) {
+      const game = findPublicGameByModeId(modeId)!;
+      const view = render(<PublicGameScreen game={game} locale={locale} />);
+      const heroes = screen.getAllByTestId("art").filter((art) => art.dataset.priority === "true");
+      expect(heroes).toHaveLength(1);
+      expect(heroes[0]).toHaveAttribute("data-sizes", expect.stringContaining("436px"));
+      expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+      expect(screen.getByTestId("word-board")).toHaveTextContent(`${modeId}:${locale}`);
+      view.unmount();
+    }
   });
 });

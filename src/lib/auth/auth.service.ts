@@ -1,7 +1,7 @@
 import type { Provider } from "@supabase/supabase-js";
 import { clearTokens } from "@/lib/auth/tokenStorage";
 import { api, ApiError } from "@/lib/api/api";
-import { normalizeEmail } from "@/lib/auth/validation";
+import { normalizeEmail } from "@/lib/auth/normalizeEmail";
 import { logger } from "@/utils/logger";
 import type { components, paths } from "@/types/api.generated";
 import {

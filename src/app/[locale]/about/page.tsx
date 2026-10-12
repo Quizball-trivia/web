@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";

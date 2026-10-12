@@ -37,7 +37,8 @@ import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
-import { LOCALES, type MessageKey } from '@/lib/i18n/messages';
+import { LOCALES } from '@/lib/i18n/locale-config';
+import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { getTierVisual } from '@/utils/tierVisuals';

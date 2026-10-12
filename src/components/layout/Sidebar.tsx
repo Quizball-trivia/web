@@ -28,6 +28,8 @@ interface SidebarProps {
   currentPath: string;
   /** Logo + Play destination: the member Play or the guest's locale hub. */
   homeHref?: string;
+  /** Guests should not download account-only routes behind the sign-in guard. */
+  prefetchRoutes?: boolean;
   socialBadgeCount?: number;
   className?: string;
 }
@@ -47,7 +49,7 @@ function isPathActive(currentPath: string, path: string, exact?: boolean) {
   return !hasMoreSpecificMatch;
 }
 
-export function Sidebar({ currentPath, homeHref = "/play", socialBadgeCount = 0, className }: SidebarProps) {
+export function Sidebar({ currentPath, homeHref = "/play", prefetchRoutes = true, socialBadgeCount = 0, className }: SidebarProps) {
   const { t } = useLocale();
 
   return (
@@ -57,7 +59,7 @@ export function Sidebar({ currentPath, homeHref = "/play", socialBadgeCount = 0,
     >
       <div className="flex items-center justify-center px-6 pt-8 pb-6">
         <div className="flex w-full items-center justify-center overflow-hidden">
-          <Link href={homeHref} className="transition-opacity hover:opacity-80">
+          <Link href={homeHref} prefetch={prefetchRoutes ? undefined : false} className="transition-opacity hover:opacity-80">
             <AppLogo size="xl" />
           </Link>
         </div>
@@ -73,6 +75,7 @@ export function Sidebar({ currentPath, homeHref = "/play", socialBadgeCount = 0,
               <Link
                 key={item.path}
                 href={item.path === "/play" ? homeHref : item.path}
+                prefetch={prefetchRoutes ? undefined : false}
                 className={cn(
                   "relative inline-flex items-center justify-center py-2.5 px-4 text-sm uppercase tracking-wide transition-all",
                   isActive

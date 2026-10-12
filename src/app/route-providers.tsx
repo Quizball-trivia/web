@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n/messages";
+import type { MessageDictionary } from "@/lib/i18n/client-messages";
 import type { PartnerSlug } from "@/features/partner/partnerHosts";
 import { SeoProviders } from "./seo-providers";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
@@ -21,6 +22,7 @@ type RouteProvidersProps = {
   partner?: PartnerSlug | null;
   isSeoRoute: boolean;
   initialLocale?: Locale;
+  initialMessages?: MessageDictionary;
   geoCountry?: string | null;
   cspNonce?: string;
 };
@@ -30,6 +32,7 @@ export function RouteProviders({
   partner,
   isSeoRoute,
   initialLocale,
+  initialMessages,
   geoCountry,
   cspNonce,
 }: RouteProvidersProps) {
@@ -58,6 +61,7 @@ export function RouteProviders({
   return (
     <FullProviders
       initialLocale={initialLocale}
+      initialMessages={initialMessages}
       geoCountry={geoCountry}
       cspNonce={cspNonce}
     >

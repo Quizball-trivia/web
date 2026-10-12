@@ -99,6 +99,16 @@ describe('gameSounds', () => {
     expect(HowlMock).not.toHaveBeenCalled();
   });
 
+  it('registers navigation cleanup without loading sounds, then stops active music synchronously', async () => {
+    const { playBgm } = await import('../gameSounds');
+    const { stopLoadedBgm } = await import('../audioControl');
+    stopLoadedBgm();
+    expect(HowlMock).not.toHaveBeenCalled();
+    playBgm('search');
+    stopLoadedBgm();
+    expect(howlInstances[0]?.stop).toHaveBeenCalledTimes(1);
+  });
+
   it('only loads the latest deferred track when unmuted', async () => {
     window.localStorage.setItem('quizball_audio_muted', 'true');
     const { playBgm, setMuted } = await import('../gameSounds');

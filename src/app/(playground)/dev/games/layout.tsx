@@ -1,3 +1,4 @@
+import "@/styles/application-utilities.css";
 import { notFound } from "next/navigation";
 
 /** Local development only: the games playground never renders in a deployed build. */
