@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { partnerHostPattern } from "./src/features/partner/partnerHosts";
+import { limitClientInitialRequests, startupRequestLimitEnabled } from "./scripts/lib/initial-request-limit";
 
 // Only the canonical production deployment should be indexable. Vercel
 // sets VERCEL_ENV at build time — "production" on quizball.io, "preview"
@@ -51,6 +52,11 @@ const PARTNER_HOST_RULE = {
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
+  // Staging-preview-only, explicit build-time opt-in. Roll back by unsetting the flag
+  // and rebuilding staging, or by reverting this isolated change. Main is inert.
+  ...(startupRequestLimitEnabled(process.env) ? {
+    webpack: (config, options) => limitClientInitialRequests(config, options),
+  } : {}),
   images: {
     // Local CMS previews read artwork from the local Supabase Storage service.
     // Keep private-IP image fetching disabled everywhere except development.

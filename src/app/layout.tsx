@@ -23,6 +23,7 @@ import { PARTNER_LAUNCH_CAPTURE_SCRIPT } from "@/features/partner/partnerLaunchT
 import "../styles/globals.css";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 import { WordGameFontPreloads } from "./word-game-font-preloads";
+import { startupLocaleAssetSeedEnabled } from "../../scripts/lib/initial-request-limit";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -130,6 +131,7 @@ export default async function RootLayout({
   // Host decides the provider tree: a partner host never changes during client navigation (another origin).
   const partner = partnerFromHost(headerList.get("host"));
   const isSeoRoute = isLightweightSeoRoute(pathname);
+  const localeAssetSeed = startupLocaleAssetSeedEnabled(process.env);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -162,7 +164,8 @@ export default async function RootLayout({
           partner={partner}
           isSeoRoute={isSeoRoute}
           initialLocale={explicitLocale}
-          initialMessages={!partner && !isSeoRoute && explicitLocale && explicitLocale !== "en" ? messages[explicitLocale] : undefined}
+          initialMessages={!localeAssetSeed && !partner && !isSeoRoute && explicitLocale && explicitLocale !== "en" ? messages[explicitLocale] : undefined}
+          localeAssetSeed={localeAssetSeed}
           geoCountry={geoCountry}
           cspNonce={cspNonce}
         >

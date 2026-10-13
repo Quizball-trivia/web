@@ -1,0 +1,43 @@
+name: Word mobile benchmark (staging investigation)
+
+on:
+  pull_request:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: word-mobile-investigation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    # Investigation only: no deploy commands, secrets, or production traffic.
+    if: github.head_ref == 'codex/word-mobile-next-20261012' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install the pinned audit tool separately from app dependencies
+        run: npm install --prefix "$RUNNER_TEMP/word-mobile-lighthouse" --no-audit --no-fund lighthouse@13.5.0
+      - name: Compare matching baseline and candidate builds
+        run: node scripts/word-mobile-benchmark.mjs "${{ github.event.pull_request.base.sha }}"
+        env:
+          QB_BENCHMARK_OUTPUT: ${{ runner.temp }}/word-mobile-results
+          QB_LIGHTHOUSE_CLI: ${{ runner.temp }}/word-mobile-lighthouse/node_modules/lighthouse/cli/index.js
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: word-mobile-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/word-mobile-results/safe
+          retention-days: 14
