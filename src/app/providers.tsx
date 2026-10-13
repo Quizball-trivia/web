@@ -13,7 +13,7 @@ import { AuthSessionBridge } from "@/components/auth/AuthSessionBridge";
 import type { Locale } from "@/lib/i18n/messages";
 import type { MessageDictionary } from "@/lib/i18n/client-messages";
 
-type ProvidersProps = {
+export type ProvidersProps = {
   children: React.ReactNode;
   initialLocale?: Locale;
   initialMessages?: MessageDictionary;

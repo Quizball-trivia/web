@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,14 +9,21 @@ vi.mock('next/navigation', () => ({
   usePathname: () => navigation.pathname,
 }));
 
-const dynamicImports = vi.hoisted(() => ({ count: 0 }));
+const dynamicImports = vi.hoisted(() => ({ mounts: {} as Record<string, number>, unmounts: {} as Record<string, number> }));
 
 vi.mock('next/dynamic', () => ({
-  // route-providers declares FullProviders first, then PartnerProviders.
-  default: () => {
-    const name = ++dynamicImports.count === 1 ? 'full-providers' : 'partner-providers';
+  default: (loader: () => unknown) => {
+    const source = loader.toString();
+    const name = source.includes('locale-asset-providers.es') ? 'locale-es'
+      : source.includes('locale-asset-providers.tr') ? 'locale-tr'
+        : source.includes('locale-asset-providers.ka') ? 'locale-ka'
+          : source.includes('PartnerProviders') ? 'partner-providers' : 'full-providers';
     const queryClient = new QueryClient();
     return function MockDynamicProviders({ children }: { children: ReactNode }) {
+      useEffect(() => {
+        dynamicImports.mounts[name] = (dynamicImports.mounts[name] ?? 0) + 1;
+        return () => { dynamicImports.unmounts[name] = (dynamicImports.unmounts[name] ?? 0) + 1; };
+      }, []);
       return (
         <div data-testid={name}>
           <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -42,6 +49,8 @@ function QueryClientProbe() {
 describe('RouteProviders', () => {
   beforeEach(() => {
     navigation.pathname = '/en/football-quiz';
+    dynamicImports.mounts = {};
+    dynamicImports.unmounts = {};
   });
 
   it('keeps the lightweight provider tree on public football quiz routes', () => {
@@ -97,5 +106,41 @@ describe('RouteProviders', () => {
     view.rerender(<RouteProviders isSeoRoute><QueryClientProbe /></RouteProviders>);
     expect(screen.getByText('signup ready')).toBeInTheDocument();
     expect(screen.queryByTestId('seo-providers')).not.toBeInTheDocument();
+  });
+
+  it.each(['en', 'es', 'ka', 'tr'] as const)('keeps the original tree unless explicitly opted in for %s', locale => {
+    navigation.pathname = `/${locale}`;
+    render(<RouteProviders isSeoRoute={false} initialLocale={locale}><QueryClientProbe /></RouteProviders>);
+    expect(screen.getByTestId('full-providers')).toBeInTheDocument();
+  });
+
+  it.each(['es', 'tr', 'ka'] as const)('seeds %s without remounting full providers across locale, Settings and Back', locale => {
+    navigation.pathname = `/${locale}`;
+    const view = render(<RouteProviders isSeoRoute={false} initialLocale={locale} localeAssetSeed><QueryClientProbe /></RouteProviders>);
+    for (const pathname of ['/en/football-games/football-name-chain', '/settings', `/${locale}`]) {
+      navigation.pathname = pathname;
+      view.rerender(<RouteProviders isSeoRoute={false} initialLocale={locale} localeAssetSeed><QueryClientProbe /></RouteProviders>);
+      expect(screen.getByTestId(`locale-${locale}`)).toBeInTheDocument();
+      expect(screen.getByText('signup ready')).toBeInTheDocument();
+    }
+    expect(dynamicImports.mounts[`locale-${locale}`]).toBe(1);
+    expect(dynamicImports.unmounts[`locale-${locale}`] ?? 0).toBe(0);
+  });
+
+  it('uses the original English entry even with opt-in', () => {
+    navigation.pathname = '/en';
+    render(<RouteProviders isSeoRoute={false} initialLocale="en" localeAssetSeed><QueryClientProbe /></RouteProviders>);
+    expect(screen.getByTestId('full-providers')).toBeInTheDocument();
+  });
+
+  it('does not render a seeded entry on lightweight/partner paths, then restores queries after SEO', () => {
+    const view = render(<RouteProviders isSeoRoute initialLocale="es" localeAssetSeed><p>quiz</p></RouteProviders>);
+    expect(screen.queryByTestId('locale-es')).not.toBeInTheDocument();
+    navigation.pathname = '/es';
+    view.rerender(<RouteProviders isSeoRoute initialLocale="es" localeAssetSeed><QueryClientProbe /></RouteProviders>);
+    expect(screen.getByTestId('locale-es')).toBeInTheDocument();
+    view.rerender(<RouteProviders partner="freecroco" isSeoRoute={false} initialLocale="es" localeAssetSeed><p>partner</p></RouteProviders>);
+    expect(screen.getByTestId('partner-providers')).toBeInTheDocument();
+    expect(screen.queryByTestId('locale-es')).not.toBeInTheDocument();
   });
 });

@@ -26,6 +26,7 @@ describe("word stylesheet dependency resolver", () => {
     expect(actual.files).toEqual(expect.arrayContaining([
       "src/app/providers.tsx", "src/components/auth/AuthSessionBridge.tsx",
       "src/contexts/CspNonceContext.tsx", "src/components/ui/sonner.tsx",
+      "src/app/locale-asset-providers.es.tsx", "src/app/locale-asset-providers.tr.tsx", "src/app/locale-asset-providers.ka.tsx",
     ]));
   });
   it("resolves alias imports, re-exports, directory indexes, JS and cycles deterministically", () => {
