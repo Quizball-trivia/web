@@ -5,3 +5,4 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "tw-animate-css";
 @import "./word-landing-sources.css";
+@import "./word-mobile-background.css";

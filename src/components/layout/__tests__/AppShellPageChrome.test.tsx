@@ -9,6 +9,16 @@ import backgroundAssets from '@/lib/app-background-assets.json';
 import { AppShellPageChrome } from '../app-shell/AppShellPageChrome';
 
 describe('unchanged stadium background with an AVIF alternative', () => {
+  it('keeps the original image-set as fallback for a scoped word landing', () => {
+    const html = renderToStaticMarkup(<AppShellPageChrome wordLanding />);
+    expect(html).toContain('qb-word-mobile-background');
+    expect(html).toContain('var(--qb-word-background, image-set(');
+    expect(html).toContain(backgroundAssets.patternAvif);
+    expect(html).toContain('/assets/bg-pattern.webp');
+    const original = renderToStaticMarkup(<AppShellPageChrome />);
+    expect(original).not.toContain('qb-word-mobile-background');
+    expect(original).not.toContain('var(--qb-word-background');
+  });
   it('keeps the original WebP fallback, cover geometry and decorative semantics', () => {
     const { container } = render(<AppShellPageChrome />);
     const layers = container.querySelectorAll('[aria-hidden="true"]');

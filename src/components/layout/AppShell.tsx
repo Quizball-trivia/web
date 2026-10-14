@@ -22,6 +22,7 @@ import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/public
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useLocale } from "@/contexts/LocaleContext";
 import { DeferredShellRealtime } from "./app-shell/DeferredShellRealtime";
+import { isWordGameLandingPath } from "@/lib/word-game-critical-assets";
 
 // Member notifications, invitations and rewards do not exist for guests. Load
 // their animated UI after authentication; their stores and delivery stay intact.
@@ -95,7 +96,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="relative min-h-screen text-foreground" data-shell="app">
       <DeferredShellRealtime />
       {!isGuest && <ChallengeInvitePrompt />}
-      <AppShellPageChrome />
+      <AppShellPageChrome wordLanding={isWordGameLandingPath(vm.currentPath)} />
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}

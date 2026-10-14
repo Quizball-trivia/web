@@ -304,6 +304,26 @@ function renderShell(children: React.ReactNode = <div data-testid="page-children
 // ---------------------------------------------------------------------------
 
 describe('AppShell — children + chrome', () => {
+  it('removes the candidate background class when leaving words without remounting children', () => {
+    pathnameMock.mockReturnValue('/settings');
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const frame = () => <QueryClientProvider client={client}><AppShell><p data-testid="stable-page">Page</p></AppShell></QueryClientProvider>;
+    const view = rtlRender(frame());
+    const child = screen.getByTestId('stable-page');
+    expect(view.container.querySelector('.qb-word-mobile-background')).toBeNull();
+    pathnameMock.mockReturnValue('/en/football-games/football-name-chain');
+    view.rerender(frame());
+    expect(view.container.querySelector('.qb-word-mobile-background')).not.toBeNull();
+    expect(screen.getByTestId('stable-page')).toBe(child);
+    pathnameMock.mockReturnValue('/settings');
+    view.rerender(frame());
+    expect(view.container.querySelector('.qb-word-mobile-background')).toBeNull();
+    expect(screen.getByTestId('stable-page')).toBe(child);
+    pathnameMock.mockReturnValue('/es/juegos-de-futbol/jugador-en-comun');
+    view.rerender(frame());
+    expect(view.container.querySelector('.qb-word-mobile-background')).not.toBeNull();
+    expect(screen.getByTestId('stable-page')).toBe(child);
+  });
   it.each(['loading', 'anonymous', 'authenticated'] as const)('preloads navigation only for authenticated members, not %s guests', (status) => {
     seedAuth({ status, user: status === 'authenticated' ? defaultAuth.user : null });
     renderShell();

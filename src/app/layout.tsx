@@ -24,6 +24,7 @@ import "../styles/globals.css";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 import { WordGameFontPreloads } from "./word-game-font-preloads";
 import { startupLocaleAssetSeedEnabled } from "../../scripts/lib/initial-request-limit";
+import { wordMobileBackgroundEnabled } from "../../scripts/lib/word-mobile-background";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -136,6 +137,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <body
+        data-qb-word-background={wordMobileBackgroundEnabled(process.env, partner) ? "1" : undefined}
         className="antialiased"
         style={{ fontFamily: "'Poppins', sans-serif" }}
         suppressHydrationWarning

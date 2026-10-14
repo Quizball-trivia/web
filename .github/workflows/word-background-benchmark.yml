@@ -1,0 +1,41 @@
+name: Word background isolated diagnostic
+
+on:
+  pull_request:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: word-background-diagnostic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  diagnostic:
+    if: github.head_ref == 'codex/word-background-benchmark-20261015' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm install --prefix "$RUNNER_TEMP/word-background-lighthouse" --no-audit --no-fund lighthouse@13.5.0
+      - name: Same-CWD builds and browser-cold paired diagnostics with zero external egress
+        run: node scripts/word-background-benchmark.mjs "${{ github.event.pull_request.base.sha }}"
+        env:
+          QB_BENCHMARK_OUTPUT: ${{ runner.temp }}/word-background-results
+          QB_LIGHTHOUSE_CLI: ${{ runner.temp }}/word-background-lighthouse/node_modules/lighthouse/cli/index.js
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: word-background-safe-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/word-background-results/safe
+          retention-days: 7
