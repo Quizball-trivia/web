@@ -54,6 +54,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),
+  boundary("src/features/wordgames/daily/WordDailyLeaderboardRows.tsx", "./WordDailyLeaderboardTable", "pre-play", "A nonempty visible ranking loads its original table before Play; retain every row and failure-state style."),
   ...[
     "./PublicTopTen", "@/features/buscaminas/BuscaminasLeaderboard", "@/features/pistas/PistasLeaderboard",
     "@/features/ultimo/UltimoLeaderboard", "@/features/minuto/MinutoLeaderboard", "./StatSniperPageBoard",

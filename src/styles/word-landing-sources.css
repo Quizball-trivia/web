@@ -144,6 +144,8 @@
 @source "../features/welcome/welcome.helpers.ts";
 @source "../features/wordgames/copy.ts";
 @source "../features/wordgames/daily/WordDailyLeaderboard.tsx";
+@source "../features/wordgames/daily/WordDailyLeaderboardRows.tsx";
+@source "../features/wordgames/daily/WordDailyLeaderboardTable.tsx";
 @source "../features/wordgames/daily/WordDailyPageBoards.tsx";
 @source "../features/wordgames/daily/WordDailySignIn.tsx";
 @source "../features/wordgames/daily/wordDaily.api.ts";

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { LeaderboardTable } from "@/features/leaderboard/components/LeaderboardTable";
+import { WordDailyLeaderboardRows } from "./WordDailyLeaderboardRows";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { useAuthStore } from "@/stores/auth.store";
 import { wordDailyCopy } from "../copy";
@@ -55,7 +55,7 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
       ) : entries.length === 0 ? (
         <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-white/75">{c.empty}</p>
       ) : (
-        <LeaderboardTable entries={meOutside ? [...entries, meOutside] : entries} currentUserId={myId} pointsLabel={wordDailyCopy(locale).points} compact />
+        <WordDailyLeaderboardRows entries={meOutside ? [...entries, meOutside] : entries} currentUserId={myId} pointsLabel={wordDailyCopy(locale).points} compact />
       )}
       {authStatus !== "authenticated" && authStatus !== "loading" && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-blue px-4 py-3">
