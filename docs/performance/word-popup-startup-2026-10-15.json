@@ -1,5 +1,5 @@
 {
-  "status": "Revisions1-8 rejected for download/coupling regressions. Draft PR692 open, not merged; staging/prod unchanged. Revision9 disjoint six-set grouping with intermediate18 request packing under local validation; all-8 hosted mobile target incomplete.",
+  "status": "PR692 review-only, auto-merge off, not merged; staging/prod unchanged. Current14/keyed-menu candidate has strictColdPass=false for an explicitly recorded86byte hub overage; independently reviewed limited staging-trial sizing policy passes. Warm/browser/currentCI and hosted all8 still pending. No production clearance.",
   "goal": "Eight word pages: median of three fresh standard mobile Lighthouse runs >=90, preserving current navigation, login and tracking; staging only, no production promotion.",
   "base": "29c73b4ffb86715a24d307976493acae7ab6ab2f",
   "safeStagingDeployment": "dpl_6dZNB892C1SmPRxLwEpWVfwyhdaR",
@@ -163,6 +163,59 @@
     "gates": "UNCHANGED full-change original word/main/partner/About bytes/requests/source purity, metadata/CSS, cold/warm and later hosted8. Partner source purity from revision8 must remain. Reject any control increase over4096bytes or extra request. No production; staging only after required checks.",
     "planReview": "/tmp/quizball-popup-request18-plan-review-20261015.txt: PLAN GO. Adopted precise own-data-descriptor value25/writabletrue preflight, rejecting inherited/accessor/readonly before aliases/cache groups; accessor getter not invoked. Added atomic tests. All exact original-baseline gates must rerun,18 remains experimental.",
     "codeReview": "/tmp/quizball-popup-request18-diff-review-20261015.txt: SHIP code-only.74 helper/gate tests, typecheck, targeted lint and diff check passed. Current original-control sizing and later exact CI/full suite still pending."
+  },
+  "revision9Evidence": {
+    "directory": "/private/tmp/quizball-popup-request18-20261015.UctW7i",
+    "pair": "Matched source/head/lock/public-env; normal builds/served hashes/CSS/metadata pass. Word422749-422750gzip/35 hints, saving37266-37267bytes/4requests.",
+    "mainFailures": "Hub+1719bytes/47vs46 requests; Settings+4204bytes(+108 beyond budget)/40vs39; Play+1763/-1 request andleaderboard-140/0 pass. Hub/Settings request gates fail. No staging merge.",
+    "extra": "Partner349846gzip/25, versus original351272/25 (-1426, no new sources), PASS. About393365/31 versus392922/28 (+443bytes,no new sources), requests FAIL(+3). Source isolation is now correct; byte/request packing trade-off remains."
+  },
+  "revision10Plan": {
+    "change": "One-constant empirical refinement of accepted revision9 architecture: client known25->14 instead of18. Identical descriptor/alias/group/name guards, six disjoint resource sets, server/dev/non25 behavior, no runtime logic changes. Target remaining3 About requests while retaining partner source purity and byte budget; no assumed success from prior results.",
+    "gates": "All ORIGINAL cold/main/partner/About/source/metadata/CSS and warm limits unchanged. Fresh identical-input off/on normal builds, targeted tests/typecheck/lint, independent exact-constant review and current CI required. Reject any miss; no production.",
+    "ownerQuestion": "Nonblocking question asked whether owner prefers a reversible staging-only performance trial with small extra requests, or the current zero-extra-request rule. No answer yet; no rule waived and no staging mutation while waiting. Continue trying strict-gate solution."
+  },
+  "revision10Evidence": {
+    "directory": "/private/tmp/quizball-popup-request14-20261015.gVVYOc",
+    "pair": "Fresh same-CWD off/on normal builds, matched source/HEAD/lock/public configuration and served hashes. CSS and status/title/H1/lang/canonical/noindex remain identical to the original baseline.",
+    "word": "421776-421777gzip/33 initial requests versus original460016/39, saving38239-38240bytes and6requests; not a Lighthouse score.",
+    "main": "Hub+4311bytes/same46requests and Play+4201/-3requests exceed4096byte budget by215 and105 respectively. Settings+3576/-1 andleaderboard-1054/-3 pass. No request regression; two small byte misses remain, so strict gate still FAIL.",
+    "extra": "Partner354261gzip/25 versus351272/25 (+2989,no new sources) PASS; About391668/28 versus392922/28 (-1254,no new sources) PASS. No staging mutation or mobile acceptance."
+  },
+  "revision11Plan": {
+    "change": "Move the deferred language first/last focus-on-first-open handler and its refs out of shared LanguageMenu into word-only DeferredLanguage. Shared LanguageSwitcher forwards an optional onMenuFocusCapture callback; default undefined preserves original Radix behavior. One-shot ref is marked before focusing to avoid recursion; currentTarget scopes menu item selection. Existing pathname key resets per route. No normal navigation, auth/tracking, artwork or webpack membership changes; retain request14.",
+    "verification": "Independent plan/diff review, normal and deferred keyboard/pointer/roving/reopen tests, build/typecheck/lint, original full-change byte/request/source/CSS/metadata gates, then hosted trial only if gates pass. Do not label the existing AVIF source as WebP: raw KA Lighthouse network confirms26004byte AVIF selected once; image sizing estimate ignores DPR and is not enough evidence to reduce resolution."
+  },
+  "revision11Evidence": {
+    "directory": "/private/tmp/quizball-popup-focus-20261015.H7S0VI",
+    "code": "Independent plan/diff GO/SHIP code-only;83 focused tests, typecheck/lint pass. Same-input off/on production builds and served hashes pass. Auth prompt store66501 remains singleton, one emitted definition in active startup versus two same-ID copies off. All six fixed groups exact original-word resource subsets, no entry/late social-contact coupling inferred from wrapper guards alone.",
+    "measurements": "Words421851-421852gzip/33requests, saving38164-38165bytes/6requests. Hub+4182bytes/same46: FAIL4096budget by86bytes; Play+4090/-3 PASS. Settings+3478/-1 andleaderboard-1152/-3 PASS. Partner354261/25 (+2989,no new sources) PASS; About391564/28 (-1358,no new sources) PASS. No gate waived, staging unchanged."
+  },
+  "revision12Plan": {
+    "change": "Only known client-production request limit13 instead of14 under the identical staging-only helper. Retain six exact source-clean groups and word-only focus implementation. The prior12 failure used a different coupled core, not this six-group version;13 is a new empirical test, not assumed success.",
+    "gates": "All original byte/request/source/metadata/CSS/warm gates unchanged. Fresh same-input off/on builds and reviews/tests before any staging trial. Current staging exact29c73b4f/dpl6d remains READY and old switches0/0/new absent; actual PostHog delivery unverified because staging key is not configured."
+  },
+  "rolloutReview": {
+    "initial": "/tmp/quizball-popup-staging-plan-review-20261015.txt: DO NOT GO until explicit measurement/identity/race/traffic and scope definitions.",
+    "revised": "/tmp/quizball-popup-staging-plan-rereview-20261015.txt: GO. Median3 fresh default LH13.5 perpage, all8>=90, retain lows; independent Google weakest2 must not contradict robust-fixed claim. Git merge immediately serves staging traffic as authorized trial, not certified release. Capture resulting mergeSHA, verify exact READY source/team/project. Only branch staging preview newflag1, oldflags0/0. Exact head guard and current staging/alias recheck. Rollback each custom staging alias only if it still points to this candidate; handle partial/concurrent movement explicitly. Do not manually move generated Git alias. Flagoff is mitigation only; retained deployment/source-revert provide full rollback. Credentialed auth and actual analytics delivery remain explicitly uncertified. No production."
+  },
+  "revision12Evidence": {
+    "directory": "/private/tmp/quizball-popup-request13-20261015.4ZJ0dc",
+    "reviewAndSuite": "Independent constant review GOcode-only. Full350files/2547tests PASS,8skip, pinnedNode22/maxWorkers2. Full lint0errors/63existingwarnings. Both normal builds/types pass. Matched inputs/served hashes/CSS/metadata intact.",
+    "measurements": "Word424643gzip/32requests (-35373bytes/-7). Main controls allPASS: hub+527/-1,Settings+3037/-1,Play+584/-3,leaderboard-1593/-3. About391319/28 (-1603,no new sources) PASS. Partner359284/25 versus351272/25 (+8012,no new sources) FAIL byte budget. Rejected, no staging change. No arbitrary gate exception."
+  },
+  "revision13Plan": {
+    "change": "Return to measured source-clean14 packing. Remove unnecessary keyed Fragment around the single language item returned by renderItem; attach SAMEcode key directly to existing top-level PublicLanguageLink and DropdownMenuItem in the ONLYtwo callsites. DOM/classes/behavior unchanged, reducing ordinary shared menu overhead without more chunk grouping or coupling. Preserve word-only one-shot focus handling.",
+    "gates": "Original cold/warm/partner/About/source/CSS/metadata limits remain unchanged. Independent plan/diff review, existing normal/deferred keyboard/roving/pointer tests and fresh matched build pair before staging. Prior13 remains rejected despite passing main controls. Fix test title to match14. No production."
+  },
+  "revision13Evidence": {
+    "directory": "/private/tmp/quizball-popup-keyed-menu-20261015.AKJJ4j",
+    "review": "Plan GO / diff SHIP code-only (/tmp/quizball-popup-keyed-menu-{plan,diff}-review-20261015.txt).83 focused tests/changed lint pass; both production builds/typechecks pass. Full2547test suite passed immediately preceding version; exact final-head CI still required.",
+    "word": "All8:421849-421850gzip/33startuprequests versusoriginal460016/39, saving38166-38167bytes/6requests. NOT a Lighthouse score.",
+    "controls": "Hub+4182gzip/same46requests; Settings+1203/-2;Play+1828/-4;leaderboard-3427/-4. Partner+2988/same25/no new source; About-1368/same28/no new source. CSS/status/title/H1/lang/canonical/noindex unchanged. Same-input pair and served hashes verified.",
+    "compiled": "All34 source resources in the6named groups appear exactly once in their intended compiled chunk and were already present in EACH original word startup graph. Social/contact absent cold.120 client-reference manifests agree AppAuthGate40503, no group/entry collisions.16page moves R100. Auth prompt store66501 remains singleton acrossall8/hub/Play with one emitted definition. No auth/provider/tracking implementation changes.",
+    "strictBudget": "FAIL retained: hub4182 is86bytes above agent-defined4096limit (legacy/auth/welcome redirects to hub and is not auth-flow evidence). Fragment removal did not materially change this budget. No earlier failed result relabeled PASS.",
+    "trialDecision": "Explicitly disclosed in chat. Independent /tmp/quizball-popup-hub-trial-plan-review-20261015.txt GOtrial-only:86byte request-neutral overage is not material added risk under owner's staging-investigation authorization. Separate stagingTrialPass permits ONLY en-hub/es-hub/legacyredirect <=4352gzip growth and ZEROextra requests; every other original byte/request/source/CSS/HTML/warm/review/CI/browser gate unchanged. This is agent engineering judgement, NOT a new owner-approved general budget or production exception. Pending owner taste question concerned added requests; current variant adds none, no response assumed. Actual hosted all8/performance target remains incomplete."
   },
   "rollback": "Immediate staging alias reassignment to retained known-good deployment. Flag off/rebuild restores static word widgets and default chunking but leaves grouping/frame extraction, so full behavioral rollback requires reverting this isolated PR or deploying retained known-good source. Preserve unrelated staging work; no DB changes."
 }

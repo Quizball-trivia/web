@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import { Fragment, useRef } from "react";
 
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -37,7 +36,7 @@ interface LanguageSwitcherProps {
   onSelect?: (locale: Locale) => void;
   /** Internal deferred-shell intent; defaults preserve the original widget. */
   initialOpen?: boolean;
-  initialFocus?: "first" | "last";
+  onMenuFocusCapture?: React.FocusEventHandler<HTMLDivElement>;
   publicLink?: React.ComponentType<React.ComponentProps<typeof PublicLanguageLink>>;
 }
 
@@ -65,16 +64,14 @@ function ItemBody({ option, active }: { option: (typeof LOCALE_OPTIONS)[number];
 }
 
 /** The dropdown chrome shared by both switchers; `renderItem` supplies the link or button per locale. */
-function LanguageMenu({ activeLocale, locales, className, renderItem, initialOpen, initialFocus }: {
+function LanguageMenu({ activeLocale, locales, className, renderItem, initialOpen, onMenuFocusCapture }: {
   activeLocale: Locale;
   locales: readonly Locale[];
   className?: string;
   renderItem: (code: Locale, option: (typeof LOCALE_OPTIONS)[number], active: boolean) => React.ReactNode;
   initialOpen?: boolean;
-  initialFocus?: "first" | "last";
+  onMenuFocusCapture?: React.FocusEventHandler<HTMLDivElement>;
 }) {
-  const content = useRef<HTMLDivElement>(null);
-  const firstFocus = useRef(initialFocus);
   const activeOption = OPTIONS_BY_CODE[activeLocale];
   const { t } = useLocale();
   // Accessible name in the active locale, naming the language the way its speakers do.
@@ -97,32 +94,20 @@ function LanguageMenu({ activeLocale, locales, className, renderItem, initialOpe
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        ref={content}
-        onFocusCapture={() => {
-          const focus = firstFocus.current;
-          firstFocus.current = undefined;
-          if (!focus) return;
-          const items = content.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([data-disabled])');
-          const item = focus === "last" ? items?.[items.length - 1] : items?.[0];
-          if (item) item.focus();
-        }}
+        onFocusCapture={onMenuFocusCapture}
         align="end"
         sideOffset={8}
         className="w-56 rounded-[18px] border-0 bg-black/70 p-2 font-poppins text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
       >
         <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{t("languageSwitcher.title")}</DropdownMenuLabel>
-        {locales.map((code) => (
-          <Fragment key={code}>
-            {renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale)}
-          </Fragment>
-        ))}
+        {locales.map((code) => renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 /** Public pages: each language is a link to the localized URL. Reads the URL, so mount it under Suspense. */
-export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect, initialOpen, initialFocus, publicLink }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect, initialOpen, onMenuFocusCapture, publicLink }: LanguageSwitcherProps) {
   const LanguageLink = publicLink ?? PublicLanguageLink;
   const pathname = usePathname() ?? `/${locale}`;
   const searchParams = useSearchParams();
@@ -136,10 +121,11 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
       locales={locales}
       className={className}
       initialOpen={initialOpen}
-      initialFocus={initialFocus}
+      onMenuFocusCapture={onMenuFocusCapture}
       renderItem={(code, option, active) => {
         return (
           <LanguageLink
+            key={code}
             pathname={pathname}
             queryString={queryString}
             code={code}
@@ -171,7 +157,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
       locales={locales}
       className={className}
       renderItem={(code, option, active) => (
-        <DropdownMenuItem asChild className="p-0 focus:bg-transparent"><button
+        <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent"><button
           type="button"
           lang={code}
           onClick={() => onSelect(code)}

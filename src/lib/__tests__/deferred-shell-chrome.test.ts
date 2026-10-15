@@ -4,13 +4,13 @@ import { applyWordShellAlias, deferredShellChromeEnabled, optimizeWordShellStart
 
 const on = { QB_EXPERIMENTAL_DEFER_SHELL_CHROME: "1", VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "staging", QB_EXPERIMENTAL_STARTUP_REQUEST_LIMIT: "0", QB_EXPERIMENTAL_LOCALE_ASSET_SEED: "0" };
 describe("deferred shell staging kill switch", () => {
-  it("composes disjoint groups and only changes the known client request limit to eighteen", () => {
+  it("composes disjoint groups and only changes the known client request limit to fourteen", () => {
     const config = { resolve: { alias: { "react$": "/framework/react" } as Record<string, unknown> }, optimization: { splitChunks: { maxInitialRequests: 25, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } } } };
     const options = { dev: false, isServer: false };
     expect(optimizeWordShellStartup(config, options, "/workspace")).toBe(config);
     expect(config.resolve.alias["react$"]).toBe("/framework/react");
     expect(config.resolve.alias["@/components/layout/WordAppShellEntry$"]).toBe("/workspace/src/components/layout/WordAppShell.tsx");
-    expect(config.optimization.splitChunks).toMatchObject({ maxInitialRequests: 18, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } });
+    expect(config.optimization.splitChunks).toMatchObject({ maxInitialRequests: 14, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } });
     expect(Object.keys(config.optimization.splitChunks.cacheGroups)).toEqual(["existing", "qbShellCore", "qbShellSocial", "qbShellContact", "qbShellNeutral", "qbShellPrimitives", "qbShellRanked"]);
     expect(options).toEqual({ dev: false, isServer: false });
   });

@@ -47,12 +47,20 @@ function DeferredLanguage(props: LanguageProps) {
   const option = LOCALES.find(item => item.code === locale)!;
   const { t } = useLocale();
   const intent = useShellPopupIntent(languageChrome);
+  const focusConsumed = useRef(false);
   const keyboard = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
     intent.activate(event.currentTarget, event.key === "ArrowUp" ? "last" : "first");
   };
-  if (intent.ready) return <intent.ready.module.LanguageSwitcher {...props} initialOpen initialFocus={intent.ready.focus === "pointer" ? undefined : intent.ready.focus} publicLink={intent.ready.module.PublicLanguageLink} />;
+  const ready = intent.ready;
+  if (ready) return <ready.module.LanguageSwitcher {...props} initialOpen onMenuFocusCapture={event => {
+    if (focusConsumed.current) return;
+    focusConsumed.current = true;
+    if (ready.focus === "pointer") return;
+    const items = event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not([data-disabled])');
+    (ready.focus === "last" ? items[items.length - 1] : items[0])?.focus();
+  }} publicLink={ready.module.PublicLanguageLink} />;
   return <>
     <button type="button" aria-label={t("languageSwitcher.chooseLanguage", { language: option.nativeName })} title={option.nativeName}
       aria-haspopup="menu" aria-expanded={false} aria-busy={intent.pending || undefined}

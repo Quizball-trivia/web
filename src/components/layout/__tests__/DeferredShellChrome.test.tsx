@@ -55,6 +55,32 @@ describe("deferred shell, same existing widgets", () => {
     expect(await screen.findByRole("menuitem", { name: /türkçe/i })).toHaveAttribute("href", "/tr/futbol-oyunlari/son-harfle-futbolcu?preview=public-test&ref=campaign");
   });
 
+  it("does not repeat startup focus during roving or after reopening the same menu", async () => {
+    const user = userEvent.setup(); render(<LanguageSwitcher locale="en" />);
+    screen.getByRole("button", { name: /current language/i }).focus();
+    await user.keyboard("{ArrowUp}");
+    const turkish = await screen.findByRole("menuitem", { name: /türkçe/i });
+    await waitFor(() => expect(turkish).toHaveFocus());
+    await user.keyboard("{ArrowUp}");
+    expect(screen.getByRole("menuitem", { name: /español/i })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.getByRole("button", { name: /current language/i })).toHaveFocus());
+    await user.keyboard("{ArrowDown}");
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: /english/i })).toHaveFocus());
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: /ქართული/i })).toHaveFocus();
+  });
+
+  it("leaves pointer-open menu focus and later keyboard navigation to Radix", async () => {
+    const user = userEvent.setup(); render(<LanguageSwitcher locale="en" />);
+    await user.click(screen.getByRole("button", { name: /current language/i }));
+    await screen.findByRole("menu");
+    await user.keyboard("{End}");
+    expect(screen.getByRole("menuitem", { name: /türkçe/i })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("menuitem", { name: /english/i })).toHaveFocus();
+  });
+
   it("does not let a late language import open after navigating away and back", async () => {
     const later = pending<typeof language>(); mocks.language.load.mockReturnValue(later.promise);
     const view = render(<LanguageSwitcher locale="en" />); const trigger = screen.getByRole("button"); trigger.focus(); fireEvent.click(trigger);

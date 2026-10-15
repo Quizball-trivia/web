@@ -120,7 +120,7 @@ export function optimizeWordShellStartup<T extends WordStartupConfig>(config: T,
   applyWordShellAlias(config, root);
   if (eligible) {
     // Intermediate staging packing, measured against every original route control.
-    split.maxInitialRequests = 18;
+    split.maxInitialRequests = 14;
     Object.assign(split.cacheGroups as Record<string, unknown>, sharedShellGroups(root));
   }
   return config;
