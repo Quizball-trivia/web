@@ -1,6 +1,10 @@
 "use client";
 
+import { createContext } from "react";
 import { cn } from "@/lib/utils";
+
+/** True inside a stage: the header then spans the stage column instead of its own centred cap. */
+export const DailyGameStageContext = createContext(false);
 
 /**
  * The shared desktop stage for daily challenges.
@@ -26,6 +30,7 @@ export function DailyGameStage({
   contentClassName?: string;
 }) {
   return (
+    <DailyGameStageContext.Provider value>
     <div
       className={cn(
         "flex flex-1 justify-center overflow-y-auto px-4 py-4",
@@ -44,5 +49,6 @@ export function DailyGameStage({
         {children}
       </div>
     </div>
+    </DailyGameStageContext.Provider>
   );
 }
