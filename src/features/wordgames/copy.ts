@@ -3,7 +3,7 @@ export type WordLocale = "tr" | "en" | "es" | "ka" | "ru";
 export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" ? locale : "en");
 
 /** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
-const russianPlural = (n: number, one: string, few: string, many: string) =>
+export const russianPlural = (n: number, one: string, few: string, many: string) =>
   n % 100 >= 11 && n % 100 <= 14 ? many : n % 10 === 1 ? one : n % 10 >= 2 && n % 10 <= 4 ? few : many;
 const ordinalEn = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 

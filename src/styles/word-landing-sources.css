@@ -126,6 +126,8 @@
 @source "../features/pistas/pistas.logic.ts";
 @source "../features/social/hooks/useFriendRequestMutations.ts";
 @source "../features/store/components/CoinIcon.tsx";
+@source "../features/tenable/tenable.copy.ts";
+@source "../features/tenable/tenable.game.ts";
 @source "../features/weekend-league/rewards/WlFrame.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremony.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremonyHost.tsx";
@@ -216,6 +218,7 @@
 @source "../lib/queries/social.queries.ts";
 @source "../lib/queries/store.queries.ts";
 @source "../lib/queries/wlRewards.queries.ts";
+@source "../lib/realtime/clientGames.ts";
 @source "../lib/realtime/command-id.ts";
 @source "../lib/realtime/connection-health.ts";
 @source "../lib/realtime/realtime-principal.ts";

@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
 import { GAME_PAGE_DETAILS } from "./game-page-details";
+import { TENABLE_ENABLED } from "@/lib/config";
 export { engineEmitsEvents, FULL_GAME_DEMO_SLUGS, isFullGameDemo, SIGN_IN_PATH } from "./public-game-runtime";
 
 /**
@@ -63,6 +64,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "ultimo", slug: "last-answer-standing", group: "daily", guest: "demo", demoSlug: "ultimo", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "buscaminas", "grid"], order: -0.25 },
   // The two word games (2026-10): the page plays the real daily; "play with friends" opens a 2–6 room of the same game.
   { modeId: "sharedPlayer", slug: "played-for-both-clubs", group: "daily", guest: "demo", demoSlug: "shared-player", page: true, card: true, destination: { kind: "page" }, related: ["nameChain", "grid", "pistas"], order: -0.9 },
+  { modeId: "tenable", slug: "football-tenable", group: "daily", guest: "demo", demoSlug: "tenable", page: TENABLE_ENABLED, card: TENABLE_ENABLED, destination: { kind: "page" }, related: ["ultimo", "nameChain", "pistas"], order: -0.95 },
   { modeId: "nameChain", slug: "football-name-chain", group: "daily", guest: "demo", demoSlug: "name-chain", page: true, card: true, destination: { kind: "page" }, related: ["sharedPlayer", "ultimo", "pistas"], order: -0.85 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
   { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
@@ -77,7 +79,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: true, card: true, destination: { kind: "page" }, related: ["highLow", "moneyDrop", "trueFalse"], order: 11 },
   { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
   // The practice prototype (tactical-board animation, multiple choice) is not the real clip game: no page until it is; card opens the app.
-  { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "app", page: false, card: true, destination: { kind: "app", path: "/guess-the-goal" }, related: [], order: 0 },
+  { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "demo", demoSlug: "guess-the-goal", page: true, card: true, destination: { kind: "page" }, related: ["minuto", "pistas", "cardDetective"], order: 0 },
   { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["grid", "moneyDrop", "cardDetective"], order: 0 },
   { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: true, card: true, destination: { kind: "page" }, related: ["roadToGoal", "triviaMines", "squadSpin"], order: 1 },
   { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: true, card: true, destination: { kind: "page" }, related: ["freeKicks", "triviaMines", "squadSpin"], order: 2 },

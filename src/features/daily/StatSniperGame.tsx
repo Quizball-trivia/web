@@ -128,21 +128,20 @@ export function StatSniperGame({
 
   return (
     <>
-      <DailyGameStage
-        header={
-          <DailyChallengeHeader
-            onQuit={() => (confirmQuit ? setShowQuit(true) : onBack())}
-            currentIndex={index}
-            total={questions.length}
-            timeLeft={Math.max(0, timeLeft)}
-            centerLabel={t("statSniper.target", { current: String(index + 1), total: String(questions.length) })}
-            className="px-0 pt-0"
-          />
-        }
-        contentClassName="lg:max-w-[1080px]"
-      >
+      <DailyGameStage contentClassName="lg:max-w-[1080px]">
+        {/* The header heads the game column (not the game + board pair), so it lines up with the question. */}
         <div className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start lg:gap-6">
           <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
+            <div className="mb-[clamp(14px,2.4vh,28px)]">
+              <DailyChallengeHeader
+                onQuit={() => (confirmQuit ? setShowQuit(true) : onBack())}
+                currentIndex={index}
+                total={questions.length}
+                timeLeft={Math.max(0, timeLeft)}
+                centerLabel={t("statSniper.target", { current: String(index + 1), total: String(questions.length) })}
+                className="px-0 pt-0"
+              />
+            </div>
             <div className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-4 text-center text-white backdrop-blur-sm" style={{ ...poppins, fontWeight: 700, fontSize: "clamp(15px, 1.9vw, 22px)" }}>
               <p className="leading-snug">{q.prompt}</p>
             </div>

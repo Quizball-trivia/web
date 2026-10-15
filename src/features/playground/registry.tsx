@@ -17,12 +17,22 @@ import { AproximadoBoard, AproximadoFrame, AproximadoIntro, AproximadoNotice, Ap
 import { AproximadoPartyResults } from "@/features/aproximado/AproximadoParty";
 import type { AproximadoRoomView } from "@/features/aproximado/aproximado.views";
 import { StatSniperGame } from "@/features/daily/StatSniperGame";
+import { PlayerProvider } from "@/contexts/PlayerContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FixedLocaleProvider } from "@/contexts/LocaleContext";
 import { buildDemoDailySession } from "@/features/demos/data/demoDailySessions";
-import type { StatSniperSession } from "@/lib/domain/dailyChallenge";
+import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperSession } from "@/lib/domain/dailyChallenge";
 import { AproximadoSim, type SimConfig } from "./AproximadoSim";
 import { roomView } from "./fixtures/aproximado";
 import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
+import { TenableBoard, TenableResults, type TenableRoomLink } from "@/features/tenable/TenableRoom";
+import { TenableEndView, TenablePlayView, tenableDailyGame } from "@/features/tenable/TenableSolo";
+import type { TenableSoloState, TenableView } from "@/features/tenable/tenable.view";
+import { DailyIntro } from "@/features/wordgames/daily/WordDailyShell";
+import { Frame } from "@/features/wordgames/ui";
+import { Users } from "lucide-react";
+import { TenableRoomSim, TenableSoloSim, type TenableRoomConfig } from "./TenableSim";
+import { roomSnapshot, roomView as tenableRoomView, slotsWith, soloState } from "./fixtures/tenable";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
 interface DuelData { snapshot: DuelStatePayload; secondsLeft: number | null; connected: boolean; busy: boolean; error: string | null; confirmLeave: boolean }
@@ -229,9 +239,147 @@ const APROXIMADO_SOLO: Scenario<never>[] = [
       </FixedLocaleProvider>
     ),
   }),
+  scenario<null>({
+    id: "daily-board", name: "Today's daily + leaderboard (desktop layout)", note: "What a signed-in player sees: the board beside the game",
+    data: null,
+    render: (_d, ctx) => (
+      <FixedLocaleProvider locale={ctx.locale}>
+        {/* The board highlights the signed-in player's row, so it reads the player context (which queries). */}
+        <QueryClientProvider client={playgroundQueryClient}>
+          <PlayerProvider>
+            <StatSniperGame key={ctx.locale} session={soloSession(ctx.locale)} practice leaderboardFetcher={fixtureStatSniperBoard} onBack={() => ctx.log("onBack")} onComplete={(score) => ctx.log("onComplete", score)} />
+          </PlayerProvider>
+        </QueryClientProvider>
+      </FixedLocaleProvider>
+    ),
+  }),
 ];
 
+const playgroundQueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const BOARD_NAMES = ["OSP07", "14WLIS YEAH", "POTASIO", "JMC1988", "ALASTOR_GOL", "NICOLINHO", "JEROGAL", "TOTTI10"];
+const BOARD_COUNTRIES = ["CO", "GE", "CL", "UY", "CA", "CL", "AR", "IT"];
+async function fixtureStatSniperBoard(): Promise<StatSniperLeaderboardData> {
+  return {
+    challengeDay: "2026-10-15",
+    entries: BOARD_NAMES.map((username, i) => ({ userId: `00000000-0000-4000-8000-00000000000${i}`, rank: i + 1, username, country: BOARD_COUNTRIES[i], score: 94 - i * 4 })),
+    me: null,
+  };
+}
+
+// ── Football Tenable ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** Stand-in for the friend-room button (the real one links to /friend/room/new?room=tenable once rooms exist). */
+const tenableFriends = (ctx: ScenarioContext) => (
+  <button type="button" onClick={() => ctx.log("openFriendRoom", "tenable")} style={{ fontFamily: "'Poppins', sans-serif" }}
+    className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black uppercase tracking-wide text-white hover:bg-brand-blue/90">
+    <Users className="size-4" aria-hidden />{({ en: "Play with friends (2–6)", es: "Jugar con amigos (2–6)", tr: "Arkadaşlarınla oyna (2–6)", ka: "ითამაშე მეგობრებთან (2–6)", ru: "Играть с друзьями (2–6)" } as Record<string, string>)[ctx.locale] ?? "Play with friends (2–6)"}
+  </button>
+);
+const tenableBoardStandIn = <div className="mt-6 rounded-2xl border border-dashed border-white/25 px-4 py-6 text-center text-xs text-white/60">Daily leaderboard: live data only (WordDailyLeaderboard)</div>;
+
+interface TenableSoloData { screen: "intro" | "play" | "end"; state: TenableSoloState; pending: boolean; notice: string | null; guestOnPastBoard: boolean; guestLockedOut: boolean }
+const tSolo = (id: string, name: string, screen: TenableSoloData["screen"], state: TenableSoloState, extra: Partial<Omit<TenableSoloData, "screen" | "state">> = {}) =>
+  scenario<TenableSoloData>({
+    id, name, data: { screen, state, pending: false, notice: null, guestOnPastBoard: false, guestLockedOut: false, ...extra },
+    render: (d, ctx) => (
+      <Frame lang={ctx.locale}>
+        {d.screen === "intro" ? (
+          <DailyIntro game={tenableDailyGame(ctx.locale)} locale={ctx.locale} number={3} status={d.state.status === "done" ? "done" : d.state.misses.length || d.state.slots.some((x) => x.name) ? "started" : "new"}
+            busy={d.pending} notice={null} guestOnPastBoard={d.guestOnPastBoard} guestLockedOut={d.guestLockedOut} friends={tenableFriends(ctx)}
+            onStart={() => ctx.log("onStart")} onArchive={() => ctx.log("onArchive")} onExit={() => ctx.log("onExit")} />
+        ) : d.screen === "play" ? (
+          <TenablePlayView locale={ctx.locale} number={3} state={d.state} pending={d.pending} notice={d.notice} onSay={(t) => ctx.log("onSay", t)}
+            onGiveUp={() => ctx.log("onGiveUp")} onResult={() => ctx.log("onResult")} onExit={() => ctx.log("onExit")} />
+        ) : (
+          <TenableEndView locale={ctx.locale} number={3} state={d.state} guestOnPastBoard={d.guestOnPastBoard} leaderboard={tenableBoardStandIn} friends={tenableFriends(ctx)}
+            onArchive={() => ctx.log("onArchive")} onExit={() => ctx.log("onExit")} />
+        )}
+      </Frame>
+    ),
+  });
+
+const ok = (rank: number, id = 4) => ({ id, kind: "right" as const, text: "", rank });
+const TENABLE_SOLO: Scenario<never>[] = [
+  scenario<{ list: number }>({ id: "live-1", name: "▶ Play a list (Champions League scorers)", note: "Live: real rules on this device, Game Mode Lab lists. Type names; 3 wrong = out", data: { list: 0 },
+    render: (d, ctx) => <TenableSoloSim key={`${d.list}-${ctx.locale}`} locale={ctx.locale} list={d.list} log={ctx.log} friends={tenableFriends(ctx)} /> }),
+  scenario<{ list: number }>({ id: "live-2", name: "▶ Play a list (Premier League scorers)", data: { list: 1 },
+    render: (d, ctx) => <TenableSoloSim key={`${d.list}-${ctx.locale}`} locale={ctx.locale} list={d.list} log={ctx.log} friends={tenableFriends(ctx)} /> }),
+  tSolo("intro-new", "Intro · first visit", "intro", soloState()),
+  tSolo("intro-guest", "Intro · guest, today locked", "intro", soloState(), { guestOnPastBoard: true, guestLockedOut: true }),
+  tSolo("play-fresh", "Play · empty tower", "play", soloState()),
+  tSolo("play-hit", "Play · right answer climbs to #6", "play", soloState({ found: [1, 3, 6], last: ok(6) })),
+  tSolo("play-wrong", "Play · wrong answer (life lost)", "play", soloState({ found: [1, 3, 6], lives: 2, misses: ["Nadie Inventado"], last: { id: 5, kind: "wrong", text: "Nadie Inventado", rank: null } })),
+  tSolo("play-repeat", "Play · already on the tower (free)", "play", soloState({ found: [1, 3, 6], lives: 2, misses: ["Nadie Inventado"], last: { id: 6, kind: "repeat", text: "Tomás Varelo", rank: 1 } })),
+  tSolo("play-ambiguous", "Play · ambiguous surname (free)", "play", soloState({ found: [1, 3], last: { id: 7, kind: "ambiguous", text: "Varelo", rank: null } })),
+  tSolo("play-last-life", "Play · 7 found, last life", "play", soloState({ found: [1, 2, 3, 5, 6, 8, 9], lives: 1, misses: ["Nadie Inventado", "Otro Falso"], last: ok(9) })),
+  tSolo("play-busy", "Play · answer in flight", "play", soloState({ found: [2] }), { pending: true }),
+  tSolo("sheet-complete", "End sheet · all ten (Tenable!)", "play", soloState({ found: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], status: "done", endReason: "complete", last: ok(10) })),
+  tSolo("sheet-lives", "End sheet · out of lives, list revealed", "play", { ...soloState({ lives: 0, misses: ["Nadie Inventado", "Otro Falso", "Tercero Mal"], status: "done", endReason: "lives" }), slots: slotsWith({ 1: 0, 2: 0, 4: 0, 6: 0, 9: 0 }, true) }),
+  tSolo("end-ranked", "Result · 6/10, ranked #12", "end", { ...soloState({ status: "done", endReason: "lives", lives: 0, rank: 12 }), slots: slotsWith({ 1: 0, 2: 0, 3: 0, 5: 0, 6: 0, 9: 0 }, true) }),
+  tSolo("end-perfect", "Result · 10/10", "end", soloState({ found: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], status: "done", endReason: "complete", rank: 1 })),
+  tSolo("end-guest", "Result · guest on a past day", "end", { ...soloState({ status: "done", endReason: "gaveUp", ranked: false }), slots: slotsWith({ 1: 0, 3: 0 }, true) }, { guestOnPastBoard: true }),
+];
+
+interface TenableRoomData { n: number; view: TenableView; secondsLeft: number; busy: boolean; connected: boolean; statuses: Record<number, "away" | "withdrawn"> }
+const tRoom = (id: string, name: string, n: number, view: Partial<TenableView>, extra: Partial<Omit<TenableRoomData, "n" | "view">> = {}) =>
+  scenario<TenableRoomData>({
+    id, name, data: { n, view: tenableRoomView(n, view), secondsLeft: 12, busy: false, connected: true, statuses: {}, ...extra },
+    render: (d, ctx) => {
+      const snapshot = roomSnapshot(d.n, d.view, d.statuses);
+      if (d.view.phase === "over") return <TenableResults view={d.view} snapshot={snapshot} locale={ctx.locale} onRoom={() => ctx.log("onRoom")} onExit={() => ctx.log("onExit")} />;
+      const frozen = d.view.deadline ? Date.parse(d.view.deadline) - d.secondsLeft * 1000 : Date.now();
+      const room: TenableRoomLink = {
+        send: (c) => { ctx.log("send", c); return true; }, nowMs: () => frozen, inFlight: d.busy ? 1 : 0, retained: null, connected: d.connected,
+        resendRetained: () => undefined, leave: () => ctx.log("leave"), report: (round, text) => { ctx.log("report", { round, text }); return true; },
+      };
+      return <Frame lang={ctx.locale} wide={d.view.format === "party"}><TenableBoard view={d.view} snapshot={snapshot} room={room} locale={ctx.locale} error={null} /></Frame>;
+    },
+  });
+const liveRoom = (id: string, name: string, config: TenableRoomConfig, note: string) =>
+  scenario<TenableRoomConfig>({ id, name, note, data: config, render: (d, ctx) => <TenableRoomSim key={`${JSON.stringify(d)}-${ctx.locale}`} config={d} locale={ctx.locale} log={ctx.log} /> });
+
+const lastBy = (seat: number, kind: "right" | "wrong" | "time" | "repeat", rank: number | null, text = "") => ({ epoch: 8, attempt: 0, seat, kind, text, name: kind === "wrong" ? text : null, rank });
+const standings = (scores: number[]) => scores.map((points, seat) => ({ seat, points, roundWins: 3, place: 1 + scores.filter((x) => x > points).length }));
+function tenableRoomScreens(n: number): Scenario<never>[] {
+  const lives = (map: Record<number, number>) => tenableRoomView(n).seats.map((s) => ({ ...s, lives: map[s.seat] ?? s.lives }));
+  const listPoints = n === 2 ? [8, 4] : [8, 2, 4, 7, 0, 0].slice(0, n);
+  return [
+    tRoom("intro", "Intro countdown", n, { phase: "intro", list: 0 }, { secondsLeft: 2 }),
+    tRoom("my-turn", "Your turn", n, { last: lastBy(1, "right", 4) }),
+    tRoom("their-turn", "Someone else's turn", n, { turn: 1, last: lastBy(0, "right", 7) }),
+    tRoom("my-wrong", "You lost a life (wrong), next seat on", n, { turn: 1, seats: lives({ 0: 1 }), last: lastBy(0, "wrong", null, "Nadie Inventado") }),
+    tRoom("their-time", "A rival ran out of time", n, { turn: 0, seats: lives({ 1: 1 }), last: lastBy(1, "time", null) }),
+    tRoom("my-repeat", "You typed one already on the tower (free retry)", n, { attempt: 1, last: { ...lastBy(0, "repeat", 1, "Tomás Varelo") } }),
+    tRoom("urgent", "Your turn · 4 s left, last life", n, { seats: lives({ 0: 1 }) }, { secondsLeft: 4 }),
+    tRoom("i-am-out", "You are out of lives on this list", n, { turn: 1, seats: lives({ 0: 0 }) }),
+    tRoom("busy", "Answer sent, waiting for the server", n, {}, { busy: true }),
+    tRoom("list-end", "List end · points per seat, list revealed", n, { phase: "listEnd", turn: null, listEnd: { reason: "out" }, listPoints, slots: slotsWith(n === 2 ? { 1: 0, 4: 1, 7: 0 } : { 1: 0, 2: 1, 4: 2, 7: 3 }, true) }, { secondsLeft: 4 }),
+    tRoom("list-complete", "List end · all ten found", n, { phase: "listEnd", turn: null, listEnd: { reason: "complete" }, listPoints, slots: slotsWith(Object.fromEntries(Array.from({ length: 10 }, (_, i) => [i + 1, i % n]))) }),
+    tRoom("result-win", "Result · you won", n, { phase: "over", standings: standings(tenableRoomView(n).seats.map((s) => s.score)) }),
+    tRoom("result-lose", "Result · you lost", n, { phase: "over", seats: tenableRoomView(n).seats.map((s) => ({ ...s, score: s.seat === 1 ? 30 : s.score })), standings: standings(tenableRoomView(n).seats.map((s) => (s.seat === 1 ? 30 : s.score))) }),
+    tRoom("result-draw", "Result · tie for first", n, { phase: "over", seats: tenableRoomView(n).seats.map((s) => ({ ...s, score: s.seat === 1 ? 17 : s.score })), standings: standings(tenableRoomView(n).seats.map((s) => (s.seat === 1 ? 17 : s.score))) }),
+    tRoom("rival-away", "A rival disconnected", n, { turn: 1 }, { statuses: { 1: "away" } }),
+  ];
+}
+
 export const GAMES: GameEntry[] = [
+  {
+    id: "tenable",
+    name: "Football Tenable",
+    scenarios: {
+      solo: TENABLE_SOLO,
+      duel: [
+        liveRoom("live-1v1", "▶ Play a 1v1 vs a bot", { seats: 2, botSkill: 1, speed: 1 }, "Live: 3 Game Mode Lab lists, 20 s turns, 2 lives per list. botSkill 0.5–2"),
+        ...tenableRoomScreens(2),
+      ],
+      room: [
+        liveRoom("live-4", "▶ Play with 3 bots", { seats: 4, botSkill: 1, speed: 1 }, "Live: 4 players on one tower"),
+        liveRoom("live-6", "▶ Play with 5 bots (one leaves on list 2)", { seats: 6, botSkill: 1, speed: 1, leaveAtList: { seat: 5, list: 1 } }, "Live: 6 players; seat 5 leaves when list 2 starts"),
+        ...tenableRoomScreens(4).map((sc) => ({ ...sc, id: `4-${sc.id}`, name: `4p · ${sc.name}` })),
+        ...tenableRoomScreens(6).filter((sc) => ["my-turn", "their-turn", "list-end", "result-win"].includes(sc.id)).map((sc) => ({ ...sc, id: `6-${sc.id}`, name: `6p · ${sc.name}` })),
+      ],
+    },
+  },
   {
     id: "aproximado",
     name: "Closest Wins · Aproximado",

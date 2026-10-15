@@ -80,7 +80,23 @@ const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ru: { ...ULTIMO_PAGE.ru, label: "3 новые цепочки каждый день · аккаунт не нужен", note: "3 цепочки, по 10 секунд на имя. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние цепочки и рейтинг." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
+const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
+  ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
+  es: { label: "5 goles al día · sin cuenta", start: "Jugar ahora", note: "El juego real: cinco goles al día. Sin cuenta juegas por puntos; inicia sesión para ganar monedas y XP.", account: "Gana monedas con cada gol", accountText: "Inicia sesión para ganar monedas y XP la primera vez que aciertas cada gol, y jugar Tic Tac Toe, Subasta y partidas clasificatorias contra rivales reales." },
+  tr: { label: "Günde 5 gol · hesap gerekmez", start: "Oyna", note: "Gerçek oyun: günde beş gol. Misafir olarak puan için oynarsın; coin ve XP kazanmak için giriş yap.", account: "Her golden coin kazan", accountText: "Her golü ilk kez bildiğinde coin ve XP kazanmak, ayrıca gerçek rakiplere karşı XOX, Açık Artırma ve dereceli maç oynamak için giriş yap." },
+  ru: { label: "5 голов в день · аккаунт не нужен", start: "Играть сейчас", note: "Настоящая игра: пять голов в день. Гость играет на очки, а чтобы получать монеты и XP, войди в аккаунт.", account: "Монеты за каждый гол", accountText: "Войди, чтобы получать монеты и XP, когда впервые угадываешь гол, и играть в крестики-нолики, аукцион и рейтинговые матчи с реальными соперниками." },
+};
+
+const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...ULTIMO_PAGE.en, label: "A new top 10 every day · past days free, no account", note: "One hidden list, 3 lives. As a guest you play past days; with an account, today's list and the leaderboard." },
+  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე ახალი ტოპ 10 · წინა დღეები უფასოდ, ანგარიშის გარეშე", note: "ერთი დამალული სია, 3 სიცოცხლე. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...ULTIMO_PAGE.es, label: "Un top 10 nuevo cada día · días anteriores gratis, sin cuenta", note: "Una lista oculta, 3 vidas. Sin cuenta jugás los días anteriores; con cuenta, la lista de hoy y el ranking." },
+  tr: { ...ULTIMO_PAGE.tr, label: "Her gün yeni bir Top 10 · önceki günler ücretsiz, hesapsız", note: "Tek gizli liste, 3 can. Misafir olarak önceki günleri oynarsın; hesapla bugünün listesini ve sıralamayı." },
+  ru: { ...ULTIMO_PAGE.ru, label: "Новый топ-10 каждый день · прошлые дни бесплатно, без аккаунта", note: "Один скрытый список, 3 жизни. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшний список и рейтинг." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -151,7 +167,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

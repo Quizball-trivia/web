@@ -1,6 +1,8 @@
 "use client";
 
+import { useContext } from "react";
 import { ArrowLeft } from "lucide-react";
+import { DailyGameStageContext } from "@/features/daily/components/DailyGameStage";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 
@@ -35,6 +37,8 @@ export function DailyChallengeHeader({
   className,
 }: DailyChallengeHeaderProps) {
   const { t } = useLocale();
+  // In a stage the header lines up with the game column below it; elsewhere it keeps its own centred width.
+  const inStage = useContext(DailyGameStageContext);
   const showTimer = !hideTimer && typeof timeLeft === "number";
   const displayTimer = showTimer
     ? (timeLeft! >= 10 ? `${timeLeft}` : `0${timeLeft}`)
@@ -46,7 +50,7 @@ export function DailyChallengeHeader({
 
   return (
     <div className={cn("px-4 pt-4", className)}>
-      <div className="mx-auto max-w-3xl flex items-stretch gap-2.5">
+      <div className={cn("flex items-stretch gap-2.5", !inStage && "mx-auto max-w-3xl")}>
         <button
           type="button"
           onClick={onQuit}

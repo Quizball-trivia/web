@@ -126,12 +126,18 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   };
 
   // What the server holds for this board and player drives the intro (continue, finished); a guest without a session has none.
+  // Read again once the board's day closes: a finished run may show more then (Tenable reveals the rest of its list).
+  const dayClosed = !!day && today > day;
+  /** That read failed (offline at midnight): it is asked again on the next return or reconnect. */
+  const closeReadPendingRef = useRef(false);
+  const [closeReadAttempt, setCloseReadAttempt] = useState(0);
   useEffect(() => {
     if (!authReady || !day || contentVersion === undefined) return;
     if (owner === "guest" && !peekGuestToken()) return;
     let cancelled = false;
     api.current(day, locale)
       .then((data) => {
+        if (!cancelled) closeReadPendingRef.current = false;
         if (cancelled || !("state" in data) || !accept(data)) return;
         setEntry({ owner, day, run: data });
         if (data.state.done) {
@@ -144,11 +150,11 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
           if (!startedRef.current) { startedRef.current = true; handlers.current.onEvent?.("start"); }
         }
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled && dayClosed) closeReadPendingRef.current = true; });
     return () => { cancelled = true; };
     // accept only reads and writes refs (and the clock state): it must not re-run this read.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, authReady, contentVersion, day, locale, owner]);
+  }, [api, authReady, closeReadAttempt, contentVersion, day, dayClosed, locale, owner]);
 
   const newestOpenable = openableDays[0] ?? null;
   useEffect(() => { if (day) handlers.current.onDay?.(day, day === newestOpenable); }, [day, newestOpenable]);
@@ -232,12 +238,33 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     if (stillCurrent(o, d)) { needsRecoveryRef.current = true; setNotice("connection"); }
   };
 
+  const retryCloseRead = () => {
+    if (!closeReadPendingRef.current || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+    closeReadPendingRef.current = false;
+    setCloseReadAttempt((n) => n + 1);
+  };
   const recover = () => {
+    retryCloseRead();
     if (!needsRecoveryRef.current || inFlightRef.current) return;
     const { owner: o, day: d } = currentRef.current;
     if (d) void exclusive("sync", () => resync(o, d));
   };
   useEffect(() => { recoverRef.current = recover; });
+  /** A tab coming back into view catches up first: another tab may have moved the run on (its next answer would be stale). */
+  const catchUp = () => {
+    if (document.visibilityState === "visible") retryCloseRead();
+    if (document.visibilityState !== "visible" || inFlightRef.current || !runRef.current || runRef.current.state.done) return;
+    const { owner: o, day: d } = currentRef.current;
+    if (d) void exclusive("sync", () => resync(o, d));
+  };
+  const catchUpRef = useRef(catchUp);
+  useEffect(() => { catchUpRef.current = catchUp; });
+  useEffect(() => {
+    const onReturn = () => catchUpRef.current();
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("focus", onReturn);
+    return () => { document.removeEventListener("visibilitychange", onReturn); window.removeEventListener("focus", onReturn); };
+  }, []);
   useEffect(() => {
     const onBack = () => recoverRef.current();
     window.addEventListener("online", onBack);
@@ -321,7 +348,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     run, state, view, setView, pending, notice, clock, boardRefresh,
     play, openDay,
     next: () => act("next", (r) => api.next(r, locale)),
-    answer: (text: string) => act("answer", (r) => api.answer(r, text, locale), text),
+    answer: (text: string, extra?: Record<string, unknown>) => act("answer", (r) => api.answer(r, text, locale, extra), text),
     pass: () => act("pass", (r) => api.pass(r, locale)),
     reload: () => { setVersions(undefined); setBoardsAttempt((n) => n + 1); },
   };

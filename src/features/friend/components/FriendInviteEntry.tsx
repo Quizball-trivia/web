@@ -37,7 +37,9 @@ export function FriendInviteEntry() {
   if (!code) return <main className="min-h-dvh grid place-items-center p-6"><p role="alert">{t('inviteCode.invalid')}</p></main>;
   // Someone coming back to their own room (after a duel, a rematch) already chose the browser: no chooser again.
   const returning = ['rematch', 'current_lobby', 'create'].includes(search.get('source') ?? '');
-  if (isHost || playOnWeb || returning || status === 'authenticated' || status === 'banned') {
+  // ...nor someone reloading an open room page (?web=1: an older page told to reload).
+  const reloadedOnWeb = search.get('web') === '1';
+  if (isHost || playOnWeb || returning || reloadedOnWeb || status === 'authenticated' || status === 'banned') {
     return <AppAuthGate><AppShell><FriendLobbyScreen key={code} roomCode={code} isHost={isHost}
       inviteSource={parseFriendLobbyInviteSource(search.get('source'))} newRoomDuelGame={newRoomDuelGame} newRoomRoomGame={newRoomRoomGame} newRoomGameMode={newRoomGameMode} /></AppShell></AppAuthGate>;
   }

@@ -35,8 +35,10 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
   // Crawlable links only where a page exists: published game pages and the quiz
   // pages that own Career Path / Who Am I. Account-only modes have no public page.
   const linkable = PUBLIC_GAMES.filter((game) => game.page || game.destination.kind === 'quiz');
-  const games = linkable.filter((page) => page.section === 'games');
-  const dailies = linkable.filter((page) => page.section === 'daily');
+  // Columns follow the game's group, not its URL section: the newer dailies
+  // (Buscaminas, Pistas, Minuto…) live under the games folder for SEO reasons.
+  const games = linkable.filter((page) => page.group !== 'daily');
+  const dailies = linkable.filter((page) => page.group === 'daily');
   const linkClass = 'block text-[13px] font-medium text-white/50 transition-colors hover:text-brand-cyan';
 
   const groups: Array<{ title: string; items: Array<{ href: string; label: string }> }> = [

@@ -30,8 +30,9 @@ export function createWordDailyApi<State extends WordRunStateBase, Result extend
     start: (day: string, contentVersion: number | undefined, locale: string, timeoutMs?: number) =>
       call<WordRun<State>>("/start", "POST", { day, locale, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
     next: (run: WordRun<State>, locale: string) => call<WordRun<State>>("/next", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
-    answer: (run: WordRun<State>, answer: string, locale: string) =>
-      call<WordRun<State> & { result: Result }>("/answer", "POST", { ...move(run), answer }, locale, "player", MOVE_TIMEOUT_MS),
+    /** `extra`: a game's own answer fields (Tenable: the id of a picked suggestion). */
+    answer: (run: WordRun<State>, answer: string, locale: string, extra?: Record<string, unknown>) =>
+      call<WordRun<State> & { result: Result }>("/answer", "POST", { ...move(run), answer, ...extra }, locale, "player", MOVE_TIMEOUT_MS),
     pass: (run: WordRun<State>, locale: string) => call<WordRun<State>>("/pass", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
     /** "That was right": a refused answer of the player's own run (and of which pair, where the day has pairs). True when the server took it. */
     report: (day: string, text: string, locale: string, pair?: number) =>

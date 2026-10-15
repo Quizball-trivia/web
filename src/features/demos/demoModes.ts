@@ -16,6 +16,19 @@ export interface DemoModeCard {
 // continued as a separate feature. The /demos/match route (DemoTraining)
 // stays wired so it can still be reached directly.
 const HIDDEN_DEMO_MODES: DemoModeCard[] = [
+  // The live Guess the Goal runs on its own public page (guest session) and /guess-the-goal, not through the demo hub.
+  {
+    slug: "guess-the-goal",
+    title: { en: "Guess the Goal", ka: "გამოიცანი გოლი", es: "Adivina el gol", tr: "Golü Tahmin Et", ru: "Угадай гол" },
+    description: {
+      en: "A legendary goal replays on the tactics board. Name it, then watch the clip.",
+      ka: "ლეგენდარული გოლი ტაქტიკურ დაფაზე მეორდება. გამოიცანი და ნახე ვიდეო.",
+      es: "Un gol legendario se repite en la pizarra táctica. Adivínalo y mira el clip.",
+      tr: "Efsane bir gol taktik tahtasında yeniden oynanıyor. Bil, sonra klibi izle.",
+      ru: "Легендарный гол повторяется на тактической доске. Угадай его, а потом посмотри видео.",
+    },
+    group: "daily",
+  },
   // Buscaminas futbolero runs on its own public page and /buscaminas, not through the demo hub.
   {
     slug: "buscaminas",
@@ -62,6 +75,18 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
       es: "Dos clubes, 20 segundos: nombrá un futbolista que jugó en los dos. 10 pares por día.",
       tr: "İki kulüp, 20 saniye: ikisinde de oynamış bir futbolcu yaz. Günde 10 eşleşme.",
       ru: "Два клуба, 20 секунд: назови футболиста, который играл за оба. Каждый день — 10 пар.",
+    },
+    group: "daily",
+  },
+  {
+    slug: "tenable",
+    title: { en: "Football Tenable", ka: "ფეხბურთის ტოპ 10", es: "Adivina el Top 10", tr: "Futbol Top 10", ru: "Угадай топ-10" },
+    description: {
+      en: "One hidden top 10 a day. Name who is on it before the tower beats you.",
+      ka: "ყოველდღე ერთი დამალული ტოპ 10. დაასახელე, ვინ არის მასში.",
+      es: "Un top 10 oculto por día. Nombrá a los que están antes de que gane la torre.",
+      tr: "Her gün gizli bir Top 10. Kule kazanmadan listedekileri bul.",
+      ru: "Каждый день — скрытый топ-10. Назови тех, кто в нём, пока башня не победила.",
     },
     group: "daily",
   },
