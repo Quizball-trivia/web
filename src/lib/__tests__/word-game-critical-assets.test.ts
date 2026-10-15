@@ -3,18 +3,23 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import fontAssets from "../word-game-font-assets.json";
-import { wordGameFontPreloads } from "../word-game-critical-assets";
+import { isWordGameLandingPath, wordGameFontPreloads } from "../word-game-critical-assets";
 
 describe("word-game font discovery", () => {
   it.each([
     "/en/football-games/football-name-chain", "/en/football-games/played-for-both-clubs",
     "/es/juegos-de-futbol/cadena-de-futbolistas", "/es/juegos-de-futbol/jugador-en-comun",
-    "/ka/football-games/football-name-chain", "/ka/football-games/played-for-both-clubs",
+    "/ka/football-games/football-name-chain",
   ])("preloads only the four Latin weights used above the fold on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(4);
     expect(new Set(urls).size).toBe(4);
     expect(urls.every((value) => value.includes("poppins-latin-"))).toBe(true);
+  });
+
+  it.each(["/ka/football-games/played-for-both-clubs", "/ka/football-games/played-for-both-clubs/"])("keeps %s in the word shell while letting CSS discover required fonts", (url) => {
+    expect(isWordGameLandingPath(url)).toBe(true);
+    expect(wordGameFontPreloads(url)).toEqual([]);
   });
 
   it.each(["/tr/futbol-oyunlari/son-harfle-futbolcu", "/tr/futbol-oyunlari/ortak-futbolcu-oyunu/"])("also discovers Turkish glyphs early on %s", (url) => {
