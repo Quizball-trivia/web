@@ -2,6 +2,9 @@
 export type WordLocale = "tr" | "en" | "es" | "ka" | "ru";
 export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" ? locale : "en");
 
+/** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
+const russianPlural = (n: number, one: string, few: string, many: string) =>
+  n % 100 >= 11 && n % 100 <= 14 ? many : n % 10 === 1 ? one : n % 10 >= 2 && n % 10 <= 4 ? few : many;
 const ordinalEn = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 
 const shared = {
@@ -13,7 +16,7 @@ const shared = {
   },
   ru: {
     exit: "Выйти", you: "Ты", rival: "Соперник", placeholder: "Введи имя футболиста", say: "Отправить", won: "Ты выиграл матч!", lost: "Ты проиграл матч", draw: "Ничья",
-    youWon: "Ты победил!", tieFirst: "Разделили первое место!", youPlace: (n: number) => `Ты занял ${ordinalEn(n)}-е место`, left: "Вышел", away: "Нет связи", backToRoom: "Вернуться в комнату",
+    youWon: "Ты победил!", tieFirst: "Разделили первое место!", youPlace: (n: number) => `Ты занял ${n}-е место`, left: "Вышел", away: "Нет связи", backToRoom: "Вернуться в комнату",
     rivalLeft: "Соперник вышел.", offline: "Нет связи: переподключаемся…", leave: "Покинуть матч", leaveConfirm: "Покинуть матч? Вернуться уже не получится.", leaveYes: "Выйти", leaveNo: "Продолжить игру",
     iWasRight: "Я написал правильно", reported: "Спасибо, мы проверим.", startsIn: "Начинаем",
   },
@@ -170,7 +173,7 @@ const daily = {
     playToday: "Зарегистрируйся, чтобы сыграть сегодня", practice: "Этот день не учитывается в рейтинге (тренировка).", rank: (n: number) => `Сегодня ты на ${n}-м месте`,
     notices: { dayOver: "День закончился. Уже открыт новый.", guestToday: "Чтобы сыграть сегодня, нужен аккаунт.", maintenance: "Короткое техобслуживание. Попробуй ещё раз через минуту.", restarted: "Содержание этого дня обновилось — начинай заново.", sessionChanged: "Твоя сессия изменилась. Начни заново.", actionError: "Что-то пошло не так. Попробуй ещё раз.", connection: "Нет соединения: переподключаемся…" },
     share: "Поделиться", copy: "Скопировать", copied: "Скопировано", friends: "Играть с друзьями (2–6)", friendsSignIn: "Войди, чтобы играть с друзьями", points: "очк.",
-    board: { title: "Рейтинг за сегодня", players: (n: number) => `${n} ${n === 1 ? "игрок" : n >= 2 && n <= 4 ? "игрока" : "игроков"}`, empty: "Сегодня ещё никто не закончил. Стань первым.", join: "Зарегистрируйся, чтобы попасть в рейтинг.", joinButton: "Зарегистрироваться" },
+    board: { title: "Рейтинг за сегодня", players: (n: number) => `${n} ${russianPlural(n, "игрок", "игрока", "игроков")}`, empty: "Сегодня ещё никто не закончил. Стань первым.", join: "Зарегистрируйся, чтобы попасть в рейтинг.", joinButton: "Зарегистрироваться" },
   },
   en: {
     loading: "Loading…", loadError: "The game could not be loaded.", retry: "Try again", exit: "Exit", soon: "The first day opens soon.", back: "Back",

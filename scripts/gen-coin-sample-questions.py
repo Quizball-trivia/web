@@ -15,7 +15,9 @@ for difficulty, n in PER_DIFFICULTY.items():
     rows = q(f"""select json_build_object('id', q.id, 'difficulty', q.difficulty, 'category', c.name, 'prompt', q.prompt, 'options', p.payload->'options')::text
         from questions q join question_payloads p on p.question_id=q.id left join categories c on c.id=q.category_id
         where q.type='mcq_single' and q.status='published' and q.difficulty='{difficulty}'
-          and q.prompt ? 'en' and q.prompt ? 'ka' and q.prompt ? 'es' and q.prompt ? 'tr' and q.prompt ? 'ru' and (p.payload->>'image_url') is null
+          and (p.payload->>'image_url') is null
+          and not exists (select 1 from unnest(array['en','ka','es','tr','ru']) l where coalesce(q.prompt->>l, '') = '')
+          and not exists (select 1 from jsonb_array_elements(p.payload->'options') o, unnest(array['en','ka','es','tr','ru']) l where coalesce(o->'text'->>l, '') = '')
           and jsonb_array_length(p.payload->'options') = 4
         order by md5(q.id::text || 'coin-sample-v1') limit {n}""")
     for r in rows:

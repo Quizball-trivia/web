@@ -271,7 +271,7 @@ const ru: LocalCopy = {
   hard: 'Сложная',
   rounds: 'Раунды',
   single: 'Одна игра',
-  bestOf: 'Серия до {n} побед',
+  bestOf: 'Серия из {n} игр',
   turnTime: 'Время на ход',
   seconds: '{n} с',
   noClock: 'Без таймера',

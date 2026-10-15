@@ -61,7 +61,7 @@ const STAT_SNIPER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ka: { ...MINUTO_PAGE.ka, label: "ყოველდღე ფეხბურთის 10 ახალი რიცხვი · ანგარიშის გარეშე", note: "ფეხბურთის 10 ნამდვილი რიცხვი. სტუმრად დღევანდელს თამაშობ; ანგარიშით შენი ქულა რეიტინგში ხვდება." },
   es: { ...MINUTO_PAGE.es, label: "10 cifras nuevas del fútbol cada día · sin cuenta", note: "10 cifras reales del fútbol. Sin cuenta jugás las de hoy; con cuenta, tu puntaje entra al ranking." },
   tr: { ...MINUTO_PAGE.tr, label: "Her gün 10 yeni futbol sayısı · hesap gerekmez", note: "10 gerçek futbol sayısı. Misafir olarak bugününkünü oynarsın; hesapla puanın sıralamaya girer." },
-  ru: { ...MINUTO_PAGE.en, label: "10 новых футбольных чисел каждый день · аккаунт не нужен", note: "10 настоящих футбольных чисел. Гость играет в сегодняшний выпуск, а с аккаунтом результат попадёт в рейтинг." },
+  ru: { ...MINUTO_PAGE.ru, label: "10 новых футбольных чисел каждый день · аккаунт не нужен", note: "10 настоящих футбольных чисел. Гость играет в сегодняшний выпуск, а с аккаунтом результат попадёт в рейтинг." },
 };
 
 const SHARED_PLAYER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
@@ -69,7 +69,7 @@ const SHARED_PLAYER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 10 ახალი წყვილი · ანგარიშის გარეშე", note: "10 წყვილი, თითოზე 20 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
   es: { ...ULTIMO_PAGE.es, label: "10 pares de clubes nuevos cada día · sin cuenta", note: "10 pares, 20 segundos cada uno. Sin cuenta jugás los días anteriores; con cuenta, los pares de hoy y el ranking." },
   tr: { ...ULTIMO_PAGE.tr, label: "Her gün 10 yeni eşleşme · hesap gerekmez", note: "10 eşleşme, her biri 20 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün eşleşmelerini ve sıralamayı." },
-  ru: { ...ULTIMO_PAGE.en, label: "10 новых пар клубов каждый день · аккаунт не нужен", note: "10 пар, по 20 секунд на каждую. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние пары и рейтинг." },
+  ru: { ...ULTIMO_PAGE.ru, label: "10 новых пар клубов каждый день · аккаунт не нужен", note: "10 пар, по 20 секунд на каждую. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние пары и рейтинг." },
 };
 
 const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
@@ -77,7 +77,7 @@ const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე 3 ახალი ჯაჭვი · ანგარიშის გარეშე", note: "3 ჯაჭვი, თითო სახელზე 10 წამი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
   es: { ...ULTIMO_PAGE.es, label: "3 cadenas nuevas cada día · sin cuenta", note: "3 cadenas, 10 segundos por nombre. Sin cuenta jugás los días anteriores; con cuenta, las cadenas de hoy y el ranking." },
   tr: { ...ULTIMO_PAGE.tr, label: "Her gün 3 yeni zincir · hesap gerekmez", note: "3 zincir, her isim için 10 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün zincirlerini ve sıralamayı." },
-  ru: { ...ULTIMO_PAGE.en, label: "3 новые цепочки каждый день · аккаунт не нужен", note: "3 цепочки, по 10 секунд на имя. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние цепочки и рейтинг." },
+  ru: { ...ULTIMO_PAGE.ru, label: "3 новые цепочки каждый день · аккаунт не нужен", note: "3 цепочки, по 10 секунд на имя. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние цепочки и рейтинг." },
 };
 
 const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
