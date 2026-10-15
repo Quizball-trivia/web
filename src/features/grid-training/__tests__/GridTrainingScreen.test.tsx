@@ -9,7 +9,7 @@ const trackEvent = vi.fn();
 const fetchSpy = vi.fn();
 vi.mock('@/lib/posthog', () => ({
   registerAccessType: vi.fn(), trackEvent: (...args: unknown[]) => trackEvent(...args) }));
-vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: 'en', t: (key: string) => key }) }));
+vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: 'en', siteLocale: 'en', t: (key: string) => key }) }));
 vi.mock('@/contexts/PlayerContext', () => ({ usePlayer: () => ({ player: { username: 'Taz', avatar: 'avatar-1', level: 3 } }) }));
 vi.mock('@/lib/football-grid/typeahead', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/football-grid/typeahead')>();

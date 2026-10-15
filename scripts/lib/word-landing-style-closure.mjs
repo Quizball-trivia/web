@@ -33,7 +33,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   boundary("src/app/route-providers.tsx", "./providers", "pre-play", "Hub word routes render FullProviders immediately, including toast UI."),
   ...["es", "tr", "ka"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
   boundary("src/app/route-providers.tsx", "@/features/partner/PartnerProviders", "other-host", "Partner hosts never render these Quizball word routes."),
-  ...["es", "ka", "tr"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
+  ...["es", "ka", "tr", "ru"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
   boundary("src/components/auth/AppAuthGate.tsx", "@/features/auth/GuestAuthDialog", "pre-play", "Guest authentication can open before Play."),
   boundary("src/components/auth/AppAuthGate.tsx", "@/components/shared/LoadingScreen", "pre-play", "Retain all authentication loading states."),
   boundary("src/components/AppLogo.tsx", "./AnimatedAppLogo", "pre-play", "Preserve animated-logo styling even when currently dormant."),

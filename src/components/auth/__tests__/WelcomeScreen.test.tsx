@@ -67,6 +67,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
     t: (key: string, params?: Record<string, string | number>) =>
       params ? `${key}|${JSON.stringify(params)}` : key,
     locale: 'en',
+    siteLocale: 'en',
   }),
 }));
 

@@ -18,6 +18,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/contexts/LocaleContext', () => ({
   useLocale: () => ({
     locale: 'en',
+    siteLocale: 'en',
     t: (key: string, params?: Record<string, unknown>) => {
       if (key === 'auctionGame.startAuction') return 'Start Auction';
       if (key === 'auctionGame.findingPlayers') return 'Finding players';
