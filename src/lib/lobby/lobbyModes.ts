@@ -40,7 +40,8 @@ export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey
 };
 
 /** Labels of a room game, or null for one this build does not know (a lobby set up by a newer client). */
-export const roomGameLabels = (game: string | null | undefined) => (game ? (ROOM_GAME_LABEL_KEYS as Record<string, (typeof ROOM_GAME_LABEL_KEYS)[RoomGameId] | undefined>)[game] ?? null : null);
+export const roomGameLabels = (game: string | null | undefined) =>
+  game && Object.hasOwn(ROOM_GAME_LABEL_KEYS, game) ? ROOM_GAME_LABEL_KEYS[game as RoomGameId] : null;
 
 export function isRoomGameEnabled(value: unknown, enabled: readonly RoomGameId[] = ROOM_GAMES_ENABLED): value is RoomGameId {
   return ROOM_GAMES.includes(value as RoomGameId) && enabled.includes(value as RoomGameId);

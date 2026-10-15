@@ -86,6 +86,8 @@ export function SuggestBox({ kind, release, placeholder, say, disabled, note, cl
         onChange={(e) => { setDraft(e.target.value.slice(0, ANSWER_MAX_LENGTH)); setActive(-1); setOpen(true); }}
         onBlur={() => setOpen(false)} onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
+          // Enter that confirms an input-method composition is not a send.
+          if (e.key === "Enter" && (e.nativeEvent.isComposing || e.keyCode === 229)) { e.preventDefault(); return; }
           if (e.key === "ArrowDown" && shown.length) { e.preventDefault(); setActive((a) => (a + 1) % shown.length); }
           else if (e.key === "ArrowUp" && shown.length) { e.preventDefault(); setActive((a) => (a <= 0 ? shown.length - 1 : a - 1)); }
           else if (e.key === "Escape" && shown.length) {

@@ -52,6 +52,15 @@ describe("SuggestBox", () => {
     expect(onSubmit).toHaveBeenCalledWith("Milo", null);
   });
 
+  it("Enter that confirms an input-method composition sends nothing", async () => {
+    const { input, onSubmit } = box();
+    await type(input, "Milo");
+    // The browser's own Enter (implicit form submission) is cancelled; a normal Enter is not.
+    expect(fireEvent.keyDown(input, { key: "Enter", keyCode: 229 })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: "Enter" })).toBe(true);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("Escape closes the suggestions without reaching the game's own Escape", async () => {
     const outer = vi.fn();
     document.addEventListener("keydown", outer);
