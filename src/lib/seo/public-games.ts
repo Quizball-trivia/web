@@ -149,8 +149,8 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 }
 
 /** Where a card links: its page, the established quiz page, or the app. */
-/** Campaign quiz pages exist in en/es only. */
-export const campaignLocaleOf = (locale: Locale): "en" | "es" => (locale === "es" ? "es" : "en");
+/** Campaign quiz pages have English, Spanish and Russian editions; the Georgian edition is per page, so ka links to English. */
+export const campaignLocaleOf = (locale: Locale): "en" | "es" | "ru" => (locale === "es" || locale === "ru" ? locale : "en");
 
 /** Locales in which this game's public page exists (page flag + a written body). */
 export function publishedLocalesOf(game: PublicGame): SeoPageLocale[] {

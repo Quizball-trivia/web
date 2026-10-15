@@ -107,5 +107,8 @@ describe("public games manifest", () => {
       if (game.destination.kind === "quiz") expect(href.startsWith("/en/football-quiz/")).toBe(true);
     }
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "es")).toBe("/es/quiz-de-futbol/trayectoria-del-jugador");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "ru")).toBe("/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "ru")).toBe("/ru/futbolnaya-viktorina/ugaday-futbolista");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "tr")).toBe("/en/football-quiz/career-path");
   });
 });

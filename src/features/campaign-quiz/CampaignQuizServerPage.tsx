@@ -12,6 +12,21 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   en: 'en-GB',
   ka: 'ka-GE',
   es: 'es-ES',
+  ru: 'ru-RU',
+};
+
+const OG_LOCALE: Record<CampaignQuizLocale, string> = {
+  en: 'en_GB',
+  ka: 'ka_GE',
+  es: 'es_ES',
+  ru: 'ru_RU',
+};
+
+const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
+  en: { home: 'Home', hub: 'Football Quiz' },
+  ka: { home: 'მთავარი', hub: 'ფეხბურთის ქვიზი' },
+  es: { home: 'Inicio', hub: 'Quiz de Fútbol' },
+  ru: { home: 'Главная', hub: 'Футбольная викторина' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
@@ -33,11 +48,11 @@ export async function buildCampaignQuizMetadata(
 
     const pageUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, locale)}`;
     const englishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'en')}`;
-    const spanishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`;
     const languages = {
       en: englishUrl,
       ...(content.localeMode === 'en_ka' ? { ka: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ka')}` } : {}),
-      es: spanishUrl,
+      es: `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`,
+      ru: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ru')}`,
       'x-default': englishUrl,
     };
     const image = content.ogImage ?? content.heroImage;
@@ -54,10 +69,10 @@ export async function buildCampaignQuizMetadata(
         title: content.metadataTitle,
         description: content.description,
         url: pageUrl,
-        locale: locale === 'es' ? 'es_ES' : locale === 'ka' ? 'ka_GE' : 'en_GB',
-        alternateLocale: Object.keys(languages)
-          .filter((language) => language !== locale && language !== 'x-default')
-          .map((language) => language === 'es' ? 'es_ES' : language === 'ka' ? 'ka_GE' : 'en_GB'),
+        locale: OG_LOCALE[locale],
+        alternateLocale: (Object.keys(languages) as Array<keyof typeof languages>)
+          .filter((language): language is CampaignQuizLocale => language !== locale && language !== 'x-default')
+          .map((language) => OG_LOCALE[language]),
         images: [{ url: absoluteImage(image), alt: imageAlt }],
       },
       twitter: {
@@ -96,8 +111,8 @@ export async function renderCampaignQuizPage(
       {
         '@type': 'BreadcrumbList', '@id': `${pageUrl}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: locale === 'es' ? 'Inicio' : locale === 'ka' ? 'მთავარი' : 'Home', item: `${SITE_URL}/${locale}` },
-          { '@type': 'ListItem', position: 2, name: locale === 'es' ? 'Quiz de Fútbol' : locale === 'ka' ? 'ფეხბურთის ქვიზი' : 'Football Quiz', item: `${SITE_URL}${campaignHubPath(locale)}` },
+          { '@type': 'ListItem', position: 1, name: BREADCRUMB[locale].home, item: `${SITE_URL}/${locale}` },
+          { '@type': 'ListItem', position: 2, name: BREADCRUMB[locale].hub, item: `${SITE_URL}${campaignHubPath(locale)}` },
           { '@type': 'ListItem', position: 3, name: content.breadcrumbLabel, item: pageUrl },
         ],
       },

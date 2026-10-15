@@ -98,6 +98,8 @@ describe('official Android download page', () => {
     }
     expect(isLightweightSeoRoute('/en/football-quiz/career-path')).toBe(true);
     expect(isLightweightSeoRoute('/es/quiz-de-futbol')).toBe(true);
+    expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina')).toBe(true);
+    expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina/viktorina-arsenal')).toBe(true);
     for (const path of ['/en', '/play', '/auth/welcome', '/xx/download', '/en/download/other', '/download']) {
       expect(isLightweightSeoRoute(path)).toBe(false);
     }

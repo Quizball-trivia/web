@@ -8,6 +8,7 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
 
 import { generateMetadata } from '@/app/[locale]/football-quiz/page';
 import { generateMetadata as generateSpanishMetadata } from '@/app/[locale]/quiz-de-futbol/page';
+import { generateMetadata as generateRussianMetadata } from '@/app/[locale]/futbolnaya-viktorina/page';
 
 describe('football quiz hub metadata', () => {
   it('advertises Spanish while withholding Georgian until localized pages exist', async () => {
@@ -25,6 +26,7 @@ describe('football quiz hub metadata', () => {
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/football-quiz',
       es: 'https://quizball.io/es/quiz-de-futbol',
+      ru: 'https://quizball.io/ru/futbolnaya-viktorina',
       'x-default': 'https://quizball.io/en/football-quiz',
     });
   });
@@ -35,6 +37,7 @@ describe('football quiz hub metadata', () => {
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/football-quiz',
       es: 'https://quizball.io/es/quiz-de-futbol',
+      ru: 'https://quizball.io/ru/futbolnaya-viktorina',
       'x-default': 'https://quizball.io/en/football-quiz',
     });
   });
@@ -48,5 +51,28 @@ describe('Spanish football quiz hub metadata', () => {
       expect.objectContaining({ width: 1200, height: 630 }),
     ]);
     expect(metadata.twitter).toMatchObject({ card: 'summary_large_image' });
+  });
+});
+
+describe('Russian football quiz hub metadata', () => {
+  it('leads with the searched Russian phrase and links every edition', async () => {
+    const metadata = await generateRussianMetadata({ params: Promise.resolve({ locale: 'ru' }) });
+
+    expect(metadata.title).toEqual({ absolute: expect.stringMatching(/^Футбольная викторина онлайн/) });
+    expect(String((metadata.title as { absolute: string }).absolute)).toContain('футбольный квиз');
+    expect(metadata.alternates).toEqual({
+      canonical: 'https://quizball.io/ru/futbolnaya-viktorina',
+      languages: {
+        en: 'https://quizball.io/en/football-quiz',
+        es: 'https://quizball.io/es/quiz-de-futbol',
+        ru: 'https://quizball.io/ru/futbolnaya-viktorina',
+        'x-default': 'https://quizball.io/en/football-quiz',
+      },
+    });
+    expect(metadata.openGraph).toMatchObject({ locale: 'ru_RU' });
+  });
+
+  it('has no metadata outside the Russian locale', async () => {
+    await expect(generateRussianMetadata({ params: Promise.resolve({ locale: 'en' }) })).resolves.toEqual({});
   });
 });

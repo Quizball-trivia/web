@@ -61,6 +61,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
     const localizedLanguages = {
       ...languages,
       es: `${SITE_URL}${campaignQuizPath(content.slug, 'es')}`,
+      ru: `${SITE_URL}${campaignQuizPath(content.slug, 'ru')}`,
       'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
     };
 
@@ -99,6 +100,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/football-quiz/${slugCheck.slug}`, preview));
   if (locale === 'es') permanentRedirect(withPreview(campaignQuizPath(slug, 'es'), preview));
+  if (locale === 'ru') permanentRedirect(withPreview(campaignQuizPath(slug, 'ru'), preview));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;
