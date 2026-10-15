@@ -13,7 +13,7 @@ import { GuessTheGoalScreen, type GgtScreenDeps } from './GuessTheGoalLive';
 export function GuessTheGoalGuest({ locale, onExit, onEvent, onMember }: {
   locale: string;
   onExit: () => void;
-  onEvent?: (event: 'start' | 'complete') => void;
+  onEvent?: (event: 'start' | 'complete' | 'replay') => void;
   /** A signed-in visitor (known now or once auth resolves) plays in the app, where a solve pays coins and XP. */
   onMember: () => void;
 }) {

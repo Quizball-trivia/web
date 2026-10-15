@@ -113,7 +113,7 @@ export interface GgtPartnerMode {
 export interface GgtGuestMode {
   onExit(): void;
   /** Engine lifecycle for the public page's analytics: a goal started, a goal finished. */
-  onEvent?(event: 'start' | 'complete'): void;
+  onEvent?(event: 'start' | 'complete' | 'replay'): void;
   signInHref: string;
 }
 
@@ -445,6 +445,14 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
   const t = useMiniT();
   const locale = useMiniLocale();
   const { api, partner, guest } = deps;
+  /** Each goal is one public-page session: a goal after the first opens a new one ('replay'), a resumed goal too. */
+  const guestGoalsRef = useRef(0);
+  const emitGuestStart = useCallback(() => {
+    if (!guest?.onEvent) return;
+    if (guestGoalsRef.current > 0) guest.onEvent('replay');
+    guest.onEvent('start');
+    guestGoalsRef.current += 1;
+  }, [guest]);
   const trackEvent = deps.track ?? noTrack;
 
   const [phase, setPhase] = useState<Phase>('loading');
@@ -709,6 +717,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
       const resume = resumableRef.current;
       resumableRef.current = null;
       adoptSession(resume, true, resumableOffsetRef.current);
+      emitGuestStart();
       return;
     }
     setBusy(true);
@@ -724,7 +733,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
       nonceRef.current = null;
       if (gen !== genRef.current) return;
       adoptSession(next);
-      guest?.onEvent?.('start');
+      emitGuestStart();
     } catch (err) {
       if (gen !== genRef.current) return;
       const failure = apiError(err);
@@ -769,7 +778,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
     } finally {
       setBusy(false);
     }
-  }, [api, partner, guest, trackEvent, busy, adoptSession, t, gallery?.daily_goal_limit]);
+  }, [api, partner, trackEvent, busy, adoptSession, emitGuestStart, t, gallery?.daily_goal_limit]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {
@@ -955,6 +964,15 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
     setShowVideo(true);
   }, [phase, hasVideo, session]);
 
+  const guestSignIn = guest ? (
+    <Link
+      href={guest.signInHref}
+      data-testid="ggt-guest-sign-in"
+      className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-yellow underline-offset-4 hover:underline"
+    >
+      <CoinIcon className="size-4" /> {t('Sign in to earn coins and XP for every goal you solve')}
+    </Link>
+  ) : null;
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
 
   // Freecroco bonus deadline: a tick drives the countdown; at 0 the server settles the play as timed out. The main
@@ -1483,15 +1501,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
                           {t('Already solved before — no repeat rewards')}
                         </p>
                       )}
-                      {guest && (
-                        <Link
-                          href={guest.signInHref}
-                          data-testid="ggt-guest-sign-in"
-                          className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-yellow underline-offset-4 hover:underline"
-                        >
-                          <CoinIcon className="size-4" /> {t('Sign in to earn coins and XP for every goal you solve')}
-                        </Link>
-                      )}
+                      {guestSignIn}
                       {error && (
                         <p className="px-1 text-xs font-semibold text-brand-red">{error}</p>
                       )}
@@ -1575,6 +1585,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
                           {pick(outcome.fun_fact)}
                         </p>
                       )}
+                      {guestSignIn}
                       {bonusOutcome && (bonusOutcome.awards.coins > 0 || bonusOutcome.awards.xp > 0) && (
                         <p className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
                           <CoinIcon className="size-4" /> +{bonusOutcome.awards.coins} · +{bonusOutcome.awards.xp} XP

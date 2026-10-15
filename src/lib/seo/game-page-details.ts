@@ -212,22 +212,22 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
   "guess-the-goal": {
     en: [
       "Guess the Goal replays a famous goal on a coaching board. Red rings are the attacking team, navy the defenders; you see every pass, run and dribble in order, but no names. Somewhere between the first touch and the finish, the move gives itself away.",
-      "Pick the goal from four options: scorer, match and year. A correct answer then shows the real clip, and a bonus question asks about a detail of the move, such as who made the assist.",
+      "Pick the goal from four options: scorer, match and year. After you answer you see the real clip, and a correct answer brings a bonus question about a detail of the move, such as who made the assist.",
       "You get five goals a day. Without an account you play free and keep your collection on this device; signed-in players earn coins and XP the first time they name each goal.",
     ],
     ka: [
       "„გამოიცანი გოლი“ ცნობილ გოლს სამწვრთნელო დაფაზე იმეორებს. წითელი რგოლები შემტევი გუნდია, მუქი ლურჯი — მცველები; ხედავ ყველა პასს, გარღვევას და დრიბლინგს თანმიმდევრობით, მაგრამ სახელების გარეშე. სადღაც პირველ შეხებასა და დარტყმას შორის შეტევა თავად გასცემს თავს.",
-      "აირჩიე გოლი ოთხი ვარიანტიდან: ავტორი, მატჩი და წელი. სწორი პასუხის შემდეგ ნამდვილ ვიდეოს ნახავ, ბონუს კითხვა კი შეტევის დეტალს ეხება, მაგალითად, ვინ გაუკეთა საგოლე პასი.",
+      "აირჩიე გოლი ოთხი ვარიანტიდან: ავტორი, მატჩი და წელი. პასუხის შემდეგ ნამდვილ ვიდეოს ნახავ, სწორ პასუხს კი ბონუს კითხვა მოჰყვება შეტევის დეტალზე, მაგალითად, ვინ გაუკეთა საგოლე პასი.",
       "დღეში ხუთი გოლია. ანგარიშის გარეშე უფასოდ თამაშობ და კოლექცია ამ მოწყობილობაზე გრჩება; ანგარიშით ყოველ პირველად გამოცნობილ გოლზე ქოინებს და XP-ს იღებ.",
     ],
     es: [
       "Adivina el gol repite un gol famoso en una pizarra táctica. Los aros rojos son el equipo que ataca y los azul marino, los defensores; ves cada pase, desmarque y regate en orden, pero sin nombres. En algún momento entre el primer toque y el remate, la jugada se delata sola.",
-      "Elige el gol entre cuatro opciones: goleador, partido y año. Si aciertas, ves el clip real, y una pregunta extra te pregunta por un detalle de la jugada, como quién dio la asistencia.",
+      "Elige el gol entre cuatro opciones: goleador, partido y año. Después de responder ves el clip real, y si aciertas, una pregunta extra te pregunta por un detalle de la jugada, como quién dio la asistencia.",
       "Tienes cinco goles al día. Sin cuenta juegas gratis y tu colección queda en este dispositivo; con tu cuenta ganas monedas y XP la primera vez que aciertas cada gol.",
     ],
     tr: [
       "Golü Tahmin Et, ünlü bir golü taktik tahtasında yeniden oynatır. Kırmızı halkalar hücum eden takım, lacivertler savunmacılardır; her pası, koşuyu ve çalımı sırayla görürsün ama isimler gizlidir. İlk dokunuşla bitiriş arasında bir yerde atak kendini ele verir.",
-      "Golü dört seçenek arasından seç: golcü, maç ve yıl. Doğru cevaptan sonra gerçek klibi izlersin; bonus soru ise atağın bir ayrıntısını sorar, örneğin asisti kimin yaptığını.",
+      "Golü dört seçenek arasından seç: golcü, maç ve yıl. Cevapladıktan sonra gerçek klibi izlersin; doğru cevap ise atağın bir ayrıntısını soran bonus bir soru getirir, örneğin asisti kimin yaptığını.",
       "Günde beş gol var. Hesapsız ücretsiz oynarsın ve koleksiyonun bu cihazda kalır; giriş yapan oyuncular her golü ilk kez bildiklerinde coin ve XP kazanır.",
     ],
   },
