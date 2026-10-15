@@ -10,13 +10,14 @@ describe("playPopularityKey", () => {
     expect(playPopularityKey("lab-missing-xi")).toBe("daily:missingXi");
     expect(playPopularityKey("mini-final-third")).toBe("free-kicks");
     expect(playPopularityKey("minuto")).toBe("minuto");
+    expect(playPopularityKey("buscaminas")).toBe("buscaminas");
   });
 });
 
 describe("playOrderFrom", () => {
   it("keeps the hand-made order when there are no numbers, and still marks new games", () => {
     for (const empty of [null, { generated_at: null, games: {} }]) {
-      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, coins: null, newSlugs: ["minuto", "shared-player", "name-chain"] });
+      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, coins: null, newSlugs: ["minuto", "shared-player", "name-chain", "buscaminas", "pistas", "ultimo"] });
     }
   });
 
@@ -35,6 +36,12 @@ describe("playOrderFrom", () => {
     expect([...(order.daily ?? [])].sort()).toEqual([...DAILY_CHALLENGE_SLUGS].sort());
     expect(order.coins?.[0]).toBe("mini-squad-spin");
     expect([...(order.coins ?? [])].sort()).toEqual([...PLAY_WITH_COINS_SLUGS].sort());
+  });
+
+  it("keeps the hand-made order of a row that has no counts of its own", () => {
+    const order = playOrderFrom({ generated_at: null, games: { "squad-spin": { players_7d: 9, players_3d: 3 } } }, NOW);
+    expect(order.daily).toBeNull();
+    expect(order.coins?.[0]).toBe("mini-squad-spin");
   });
 
   it("stops marking a game as new three weeks after its release", () => {

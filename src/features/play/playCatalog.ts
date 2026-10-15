@@ -78,7 +78,7 @@ export function parsePlayPopularity(body: unknown): PlayPopularity | null {
 
 /** What the Play page is drawn from: each row's order, and the games to mark as new. */
 export interface PlayOrder {
-  /** Null when there were no numbers: the page keeps its hand-made order. */
+  /** Null when there were no numbers for that row: it keeps its hand-made order. */
   daily: string[] | null;
   coins: string[] | null;
   newSlugs: string[];
@@ -87,13 +87,14 @@ export interface PlayOrder {
 export function playOrderFrom(popularity: PlayPopularity | null, now: Date): PlayOrder {
   const everySlug = [...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS];
   const newSlugs = everySlug.filter((slug) => isNewPlayGame(PLAY_RELEASED_ON[slug], now));
-  const counted = popularity ? Object.keys(popularity.games).length : 0;
-  if (!popularity || counted === 0) return { daily: null, coins: null, newSlugs };
+  if (!popularity) return { daily: null, coins: null, newSlugs };
   const stats: Record<string, PlayGameStats> = {};
   for (const slug of everySlug) {
     const row = popularity.games[playPopularityKey(slug)];
     if (row) stats[slug] = { players7d: row.players_7d, players3d: row.players_3d };
   }
-  const ranked = (slugs: string[]) => rankPlayGames(slugs, stats, PLAY_RELEASED_ON, now).map((row) => row.slug);
+  // A row with no counts of its own is not reordered by release dates alone.
+  const ranked = (slugs: string[]) =>
+    slugs.some((slug) => stats[slug]) ? rankPlayGames(slugs, stats, PLAY_RELEASED_ON, now).map((row) => row.slug) : null;
   return { daily: ranked(DAILY_CHALLENGE_SLUGS), coins: ranked(PLAY_WITH_COINS_SLUGS), newSlugs };
 }
