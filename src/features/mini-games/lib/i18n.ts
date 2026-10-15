@@ -27,6 +27,9 @@ const KA: Record<string, string> = {
   "A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.":
     "ლეგენდარული გოლი ტაქტიკურ დაფაზე თამაშდება. რაც უფრო ადრე ამოიცნობ, მეტს გამოიმუშავებ — ყოველი გოლის პირველი ამოცნობა ქოინებსა და XP-ს გაძლევს.",
   "(daily cap)": "(დღიური ლიმიტი)",
+  "Name the legendary goal from the coaching board": "გამოიცანი ლეგენდარული გოლი სამწვრთნელო დაფიდან",
+  "A legendary goal replays on the coaching board. Watch the moves and name the goal. Sign in to earn coins and XP.": "ლეგენდარული გოლი სამწვრთნელო დაფაზე მეორდება. უყურე სვლებს და გამოიცანი გოლი. შედი ანგარიშზე, რომ ქოინები და XP დააგროვო.",
+  "Sign in to earn coins and XP for every goal you solve": "შედი ანგარიშზე და ყოველ გამოცნობილ გოლზე ქოინები და XP მიიღე",
   "Already solved before — no repeat rewards": "უკვე ამოცნობილი გაქვს — განმეორებაზე ჯილდო აღარ გეძლევა",
   "Something went wrong — try again": "რაღაც შეცდომაა — სცადე თავიდან",
   "Watch the real goal": "ნახე ნამდვილი გოლი",

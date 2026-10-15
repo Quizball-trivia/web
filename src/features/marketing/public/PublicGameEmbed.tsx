@@ -16,6 +16,7 @@ import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFri
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
+const GuessTheGoalGuest = dynamic(() => import("@/features/mini-games/components/GuessTheGoalGuest").then((m) => m.GuessTheGoalGuest), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGame").then((m) => m.BuscaminasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const PistasGame = dynamic(() => import("@/features/pistas/PistasGame").then((m) => m.PistasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const MinutoGame = dynamic(() => import("@/features/minuto/MinutoGame").then((m) => m.MinutoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -91,7 +92,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     router.push(playPath);
   };
   const start = () => {
-    if (dailyType === "statSniper" && authStatus === "authenticated") { playInApp(); return; }
+    // Members play these in the app, where a solve pays coins and XP.
+    if ((dailyType === "statSniper" || demoSlug === "guess-the-goal") && authStatus === "authenticated") { playInApp(); return; }
     sessionRef.current = newSessionId();
     startedAtRef.current = Date.now();
     completedRef.current = false;
@@ -152,6 +154,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
         <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitButton={!OWN_EXIT_ENGINES.has(demoSlug)}>
           {demoSlug === "buscaminas" ? (
             <BuscaminasGame locale={locale as Locale} onExit={exit} onEvent={onEngineEvent} />
+          ) : demoSlug === "guess-the-goal" ? (
+            <GuessTheGoalGuest locale={locale} onExit={exit} onEvent={onEngineEvent} onMember={() => { recordExit(); playInApp(); }} />
           ) : demoSlug === "pistas" ? (
             <PistasGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "minuto" ? (

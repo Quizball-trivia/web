@@ -109,6 +109,14 @@ export interface GgtPartnerMode {
   };
 }
 
+/** A signed-out visitor on a public game page: the guest session plays, earns nothing, and is invited to sign in. */
+export interface GgtGuestMode {
+  onExit(): void;
+  /** Engine lifecycle for the public page's analytics: a goal started, a goal finished. */
+  onEvent?(event: 'start' | 'complete'): void;
+  signInHref: string;
+}
+
 export interface GgtScreenDeps {
   api: GgtScreenApi;
   /** Coins / XP the server granted (quizball.io only). */
@@ -116,6 +124,7 @@ export interface GgtScreenDeps {
   track?: (event: string, properties?: Record<string, unknown>) => void;
   isAdmin?: boolean;
   partner?: GgtPartnerMode;
+  guest?: GgtGuestMode;
 }
 
 const noTrack = () => {};
@@ -211,8 +220,11 @@ function GgtGalleryPanel({
   t,
   pick,
   onClose,
+  earnings = true,
 }: {
   gallery: GgtGallery;
+  /** Guests earn nothing, so their collection shows no coin/XP totals. */
+  earnings?: boolean;
   locale: MiniLocale;
   t: (key: string, vars?: Record<string, string | number>) => string;
   pick: (text: GgtI18nText | null | undefined) => string;
@@ -269,14 +281,16 @@ function GgtGalleryPanel({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="flex items-center gap-4 px-1">
-        <span className="flex items-center gap-1.5 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
-          <CoinIcon className="size-4" /> {gallery.coins_earned}
-        </span>
-        <span className="font-poppins text-[12px] font-black uppercase text-white/70">
-          {gallery.xp_earned} XP
-        </span>
-      </div>
+      {earnings && (
+        <div className="flex items-center gap-4 px-1">
+          <span className="flex items-center gap-1.5 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
+            <CoinIcon className="size-4" /> {gallery.coins_earned}
+          </span>
+          <span className="font-poppins text-[12px] font-black uppercase text-white/70">
+            {gallery.xp_earned} XP
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
         {ordered.map((entry, i) =>
           entry.kind === 'solved' ? (
@@ -430,7 +444,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps: GgtScreenDeps }) {
   const t = useMiniT();
   const locale = useMiniLocale();
-  const { api, partner } = deps;
+  const { api, partner, guest } = deps;
   const trackEvent = deps.track ?? noTrack;
 
   const [phase, setPhase] = useState<Phase>('loading');
@@ -710,6 +724,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
       nonceRef.current = null;
       if (gen !== genRef.current) return;
       adoptSession(next);
+      guest?.onEvent?.('start');
     } catch (err) {
       if (gen !== genRef.current) return;
       const failure = apiError(err);
@@ -754,7 +769,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
     } finally {
       setBusy(false);
     }
-  }, [api, partner, trackEvent, busy, adoptSession, t, gallery?.daily_goal_limit]);
+  }, [api, partner, guest, trackEvent, busy, adoptSession, t, gallery?.daily_goal_limit]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {
@@ -773,6 +788,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
         setOutcome(result);
         setPhase('reveal');
         deps.onRewards?.(result.awards);
+        if (result.session_state === 'complete') guest?.onEvent?.('complete');
         trackEvent('ggt_guess_submitted', {
           correct: result.correct,
           points: result.points,
@@ -806,7 +822,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
         setBusy(false);
       }
     },
-    [api, deps, trackEvent, session, busy, phase, t, serverElapsed, loadCurrent, reconcilePartner]
+    [api, deps, guest, trackEvent, session, busy, phase, t, serverElapsed, loadCurrent, reconcilePartner]
   );
 
   const submitBonus = useCallback(
@@ -823,6 +839,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
         setOutcome((current) => withFootage(current, result));
         setPhase('bonus_done');
         deps.onRewards?.(result.awards);
+        guest?.onEvent?.('complete');
         trackEvent('ggt_bonus_answered', {
           correct: result.correct,
           bonus_points: result.bonus_points,
@@ -846,7 +863,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
         setBusy(false);
       }
     },
-    [api, deps, trackEvent, session, busy, t, loadCurrent, reconcilePartner]
+    [api, deps, guest, trackEvent, session, busy, t, loadCurrent, reconcilePartner]
   );
 
   const mainMoves = session?.goal.main_moves ?? 1;
@@ -1150,11 +1167,11 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[430px] flex-col px-4 py-6 md:px-8 md:py-8 lg:max-w-6xl">
         <div className="mb-4 md:mb-6">
           <div className="flex items-center gap-3 md:gap-4">
-            {partner && (phase === 'idle' || phase === 'disabled' || phase === 'load_error') ? (
+            {(partner || guest) && (phase === 'idle' || phase === 'disabled' || phase === 'load_error') ? (
               <button
                 type="button"
                 aria-label={t('Back')}
-                onClick={partner.onExit}
+                onClick={partner ? partner.onExit : guest!.onExit}
                 className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
               >
                 <ArrowLeft className="size-5 md:size-6" />
@@ -1211,7 +1228,11 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
             </h1>
           </div>
           <p className="mt-1.5 pl-12 text-[11px] font-black uppercase tracking-[0.04em] text-white/55 md:pl-[60px] md:text-sm md:tracking-[0.08em]">
-            {partner ? partner.copy.subtitle : t('Name the iconic goal — real rewards, server-scored')}
+            {partner
+              ? partner.copy.subtitle
+              : guest
+                ? t('Name the legendary goal from the coaching board')
+                : t('Name the iconic goal — real rewards, server-scored')}
           </p>
         </div>
       {phase === 'loading' && (
@@ -1266,6 +1287,8 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
             <p className="max-w-xs text-sm font-semibold leading-relaxed text-black/80">
               {partner
                 ? partner.copy.intro
+                : guest
+                ? t('A legendary goal replays on the coaching board. Watch the moves and name the goal. Sign in to earn coins and XP.')
                 : poolExhausted
                 ? t(
                     'You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.'
@@ -1341,7 +1364,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
               transition={{ delay: 0.1 }}
               className="w-full max-w-3xl"
             >
-              <GgtGalleryPanel gallery={gallery} locale={locale} t={t} pick={pick} />
+              <GgtGalleryPanel gallery={gallery} locale={locale} t={t} pick={pick} earnings={!guest} />
             </motion.div>
           )}
         </div>
@@ -1455,10 +1478,19 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
                           )}
                         </p>
                       )}
-                      {!partner && outcome.correct && !outcome.awards.first_solve && (
+                      {!partner && !guest && outcome.correct && !outcome.awards.first_solve && (
                         <p className="px-1 font-poppins text-[11px] font-bold uppercase text-white/40">
                           {t('Already solved before — no repeat rewards')}
                         </p>
+                      )}
+                      {guest && (
+                        <Link
+                          href={guest.signInHref}
+                          data-testid="ggt-guest-sign-in"
+                          className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-yellow underline-offset-4 hover:underline"
+                        >
+                          <CoinIcon className="size-4" /> {t('Sign in to earn coins and XP for every goal you solve')}
+                        </Link>
                       )}
                       {error && (
                         <p className="px-1 text-xs font-semibold text-brand-red">{error}</p>
@@ -1608,6 +1640,7 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
                     t={t}
                     pick={pick}
                     onClose={() => setShowGallery(false)}
+                    earnings={!guest}
                   />
                 </div>
               </motion.div>

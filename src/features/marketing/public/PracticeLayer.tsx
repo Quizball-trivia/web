@@ -19,9 +19,16 @@ export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "áƒ
  * container) with their own exit control; focus moves in and back out.
  */
 /** The coin sneak peeks leave through their own header back control; the layer keeps Escape but draws no exit pill. */
-export const OWN_EXIT_ENGINES = new Set(["buscaminas", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
+export const OWN_EXIT_ENGINES = new Set(["buscaminas", "guess-the-goal", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
+/** The modal that owns the keyboard: a dialog a game opened on top of the layer (portaled elsewhere), else the layer. */
+function topModal(layer: HTMLElement | null): HTMLElement | null {
+  if (!layer) return null;
+  const nested = Array.from(document.querySelectorAll<HTMLElement>('[aria-modal="true"]')).filter((el) => el !== layer && !layer.contains(el));
+  return nested.at(-1) ?? layer;
+}
+
 export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, exitButton = true, children }: { title: string; exitLabel: string; onExit: () => void; exitControl?: boolean; /** false = Escape still exits but the engine draws its own exit control. */ exitButton?: boolean; children: ReactNode }) {
   const exitRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -39,14 +46,15 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ex
   // Self-exiting engines bind Escape to their own skip (it records completion + analytics).
   useEffect(() => {
     if (!exitControl) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onExit(); };
+    // A game's own dialog on top (a collection, a result sheet) closes on Escape itself; the layer stays open.
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape" && topModal(dialogRef.current) === dialogRef.current) onExit(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [exitControl, onExit]);
   // aria-modal only describes the dialog; keep Tab/Shift+Tab inside it so the page behind stays unreachable.
   useEffect(() => {
     const onTab = (event: KeyboardEvent) => {
-      const dialog = dialogRef.current;
+      const dialog = topModal(dialogRef.current);
       if (event.key !== "Tab" || !dialog) return;
       const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
         .filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);

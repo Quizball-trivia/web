@@ -211,24 +211,24 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
   },
   "guess-the-goal": {
     en: [
-      "Guess the Goal plays a real goal clip with the scorer hidden. Watch the build-up, the strike and the celebration, then name the player who scored. Clips cover famous finals, derbies and cult goals from the last thirty years.",
-      "Fewer hints mean more points: name the scorer from the clip alone for the maximum, or reveal the season, the competition or the club for a smaller reward. Five goals make a round.",
-      "The practice round uses a fixed set of clips. In the app, five new goals arrive every day, correct names earn coins and results count towards your streak.",
+      "Guess the Goal replays a famous goal on a coaching board. Red rings are the attacking team, navy the defenders; you see every pass, run and dribble in order, but no names. Somewhere between the first touch and the finish, the move gives itself away.",
+      "Pick the goal from four options: scorer, match and year. A correct answer then shows the real clip, and a bonus question asks about a detail of the move, such as who made the assist.",
+      "You get five goals a day. Without an account you play free and keep your collection on this device; signed-in players earn coins and XP the first time they name each goal.",
     ],
     ka: [
-      "„გამოიცანი გოლი“ ნამდვილი გოლის ვიდეოს უშვებს დამალული ავტორით. უყურე შეტევას, დარტყმას და ზეიმს, შემდეგ დაასახელე გოლის ავტორი. ვიდეოები ცნობილ ფინალებს, დერბიებსა და საკულტო გოლებს მოიცავს ბოლო ოცდაათი წლიდან.",
-      "ნაკლები მინიშნება — მეტი ქულა: დაასახელე ავტორი მხოლოდ ვიდეოთი მაქსიმალური ქულისთვის, ან გახსენი სეზონი, ტურნირი ან კლუბი მცირე ჯილდოსთვის. ხუთი გოლი რაუნდს ქმნის.",
-      "სავარჯიშო რაუნდი ფიქსირებულ ვიდეოებს იყენებს. აპლიკაციაში ყოველდღე ხუთი ახალი გოლი მოდის, სწორი პასუხები ქოინებს იძლევა და შედეგები სერიაში ითვლება.",
+      "„გამოიცანი გოლი“ ცნობილ გოლს სამწვრთნელო დაფაზე იმეორებს. წითელი რგოლები შემტევი გუნდია, მუქი ლურჯი — მცველები; ხედავ ყველა პასს, გარღვევას და დრიბლინგს თანმიმდევრობით, მაგრამ სახელების გარეშე. სადღაც პირველ შეხებასა და დარტყმას შორის შეტევა თავად გასცემს თავს.",
+      "აირჩიე გოლი ოთხი ვარიანტიდან: ავტორი, მატჩი და წელი. სწორი პასუხის შემდეგ ნამდვილ ვიდეოს ნახავ, ბონუს კითხვა კი შეტევის დეტალს ეხება, მაგალითად, ვინ გაუკეთა საგოლე პასი.",
+      "დღეში ხუთი გოლია. ანგარიშის გარეშე უფასოდ თამაშობ და კოლექცია ამ მოწყობილობაზე გრჩება; ანგარიშით ყოველ პირველად გამოცნობილ გოლზე ქოინებს და XP-ს იღებ.",
     ],
     es: [
-      "Adivina el gol reproduce un clip de un gol real con el goleador oculto. Mira la jugada, el remate y la celebración, y nombra al jugador que marcó. Los clips cubren finales famosas, derbis y goles de culto de los últimos treinta años.",
-      "Menos pistas, más puntos: nombra al goleador solo con el clip para el máximo, o revela la temporada, la competición o el club por una recompensa menor. Cinco goles forman una ronda.",
-      "La ronda de práctica usa un set fijo de clips. En la app llegan cinco goles nuevos cada día, los nombres correctos dan monedas y los resultados cuentan para tu racha.",
+      "Adivina el gol repite un gol famoso en una pizarra táctica. Los aros rojos son el equipo que ataca y los azul marino, los defensores; ves cada pase, desmarque y regate en orden, pero sin nombres. En algún momento entre el primer toque y el remate, la jugada se delata sola.",
+      "Elige el gol entre cuatro opciones: goleador, partido y año. Si aciertas, ves el clip real, y una pregunta extra te pregunta por un detalle de la jugada, como quién dio la asistencia.",
+      "Tienes cinco goles al día. Sin cuenta juegas gratis y tu colección queda en este dispositivo; con tu cuenta ganas monedas y XP la primera vez que aciertas cada gol.",
     ],
     tr: [
-      "Golü Tahmin Et, golü atan gizlenmiş gerçek bir gol klibi oynatır. Hücumu, vuruşu ve sevinci izle, sonra golü atan oyuncunun adını söyle. Klipler son otuz yılın ünlü finallerini, derbilerini ve efsanevi gollerini kapsar.",
-      "Daha az ipucu daha çok puan demektir: en yüksek puan için golcüyü yalnızca klipten bil ya da daha küçük bir ödül için sezonu, turnuvayı veya kulübü aç. Bir tur beş golden oluşur.",
-      "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
+      "Golü Tahmin Et, ünlü bir golü taktik tahtasında yeniden oynatır. Kırmızı halkalar hücum eden takım, lacivertler savunmacılardır; her pası, koşuyu ve çalımı sırayla görürsün ama isimler gizlidir. İlk dokunuşla bitiriş arasında bir yerde atak kendini ele verir.",
+      "Golü dört seçenek arasından seç: golcü, maç ve yıl. Doğru cevaptan sonra gerçek klibi izlersin; bonus soru ise atağın bir ayrıntısını sorar, örneğin asisti kimin yaptığını.",
+      "Günde beş gol var. Hesapsız ücretsiz oynarsın ve koleksiyonun bu cihazda kalır; giriş yapan oyuncular her golü ilk kez bildiklerinde coin ve XP kazanır.",
     ],
   },
   "football-clues": {

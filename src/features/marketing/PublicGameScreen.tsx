@@ -72,7 +72,14 @@ const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   tr: { ...ULTIMO_PAGE.tr, label: "Her gün 3 yeni zincir · hesap gerekmez", note: "3 zincir, her isim için 10 saniye. Misafir olarak önceki günleri oynarsın; hesapla bugünün zincirlerini ve sıralamayı." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
+const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
+  ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
+  es: { label: "5 goles al día · sin cuenta", start: "Jugar ahora", note: "El juego real: cinco goles al día. Sin cuenta juegas por puntos; inicia sesión para ganar monedas y XP.", account: "Gana monedas con cada gol", accountText: "Inicia sesión para ganar monedas y XP la primera vez que aciertas cada gol, y jugar Tic Tac Toe, Subasta y partidas clasificatorias contra rivales reales." },
+  tr: { label: "Günde 5 gol · hesap gerekmez", start: "Oyna", note: "Gerçek oyun: günde beş gol. Misafir olarak puan için oynarsın; coin ve XP kazanmak için giriş yap.", account: "Her golden coin kazan", accountText: "Her golü ilk kez bildiğinde coin ve XP kazanmak, ayrıca gerçek rakiplere karşı XOX, Açık Artırma ve dereceli maç oynamak için giriş yap." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
