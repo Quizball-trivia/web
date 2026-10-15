@@ -211,24 +211,24 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
   },
   "guess-the-goal": {
     en: [
-      "Guess the Goal plays a real goal clip with the scorer hidden. Watch the build-up, the strike and the celebration, then name the player who scored. Clips cover famous finals, derbies and cult goals from the last thirty years.",
-      "Fewer hints mean more points: name the scorer from the clip alone for the maximum, or reveal the season, the competition or the club for a smaller reward. Five goals make a round.",
-      "The practice round uses a fixed set of clips. In the app, five new goals arrive every day, correct names earn coins and results count towards your streak.",
+      "Guess the Goal replays a famous goal on a coaching board. Red rings are the attacking team, navy the defenders; you see every pass, run and dribble in order, but no names. Somewhere between the first touch and the finish, the move gives itself away.",
+      "Pick the goal from four options: scorer, match and year. After you answer you see the real clip, and a correct answer brings a bonus question about a detail of the move, such as who made the assist.",
+      "You get five goals a day. Without an account you play free and keep your collection on this device; signed-in players earn coins and XP the first time they name each goal.",
     ],
     ka: [
-      "„გამოიცანი გოლი“ ნამდვილი გოლის ვიდეოს უშვებს დამალული ავტორით. უყურე შეტევას, დარტყმას და ზეიმს, შემდეგ დაასახელე გოლის ავტორი. ვიდეოები ცნობილ ფინალებს, დერბიებსა და საკულტო გოლებს მოიცავს ბოლო ოცდაათი წლიდან.",
-      "ნაკლები მინიშნება — მეტი ქულა: დაასახელე ავტორი მხოლოდ ვიდეოთი მაქსიმალური ქულისთვის, ან გახსენი სეზონი, ტურნირი ან კლუბი მცირე ჯილდოსთვის. ხუთი გოლი რაუნდს ქმნის.",
-      "სავარჯიშო რაუნდი ფიქსირებულ ვიდეოებს იყენებს. აპლიკაციაში ყოველდღე ხუთი ახალი გოლი მოდის, სწორი პასუხები ქოინებს იძლევა და შედეგები სერიაში ითვლება.",
+      "„გამოიცანი გოლი“ ცნობილ გოლს სამწვრთნელო დაფაზე იმეორებს. წითელი რგოლები შემტევი გუნდია, მუქი ლურჯი — მცველები; ხედავ ყველა პასს, გარღვევას და დრიბლინგს თანმიმდევრობით, მაგრამ სახელების გარეშე. სადღაც პირველ შეხებასა და დარტყმას შორის შეტევა თავად გასცემს თავს.",
+      "აირჩიე გოლი ოთხი ვარიანტიდან: ავტორი, მატჩი და წელი. პასუხის შემდეგ ნამდვილ ვიდეოს ნახავ, სწორ პასუხს კი ბონუს კითხვა მოჰყვება შეტევის დეტალზე, მაგალითად, ვინ გაუკეთა საგოლე პასი.",
+      "დღეში ხუთი გოლია. ანგარიშის გარეშე უფასოდ თამაშობ და კოლექცია ამ მოწყობილობაზე გრჩება; ანგარიშით ყოველ პირველად გამოცნობილ გოლზე ქოინებს და XP-ს იღებ.",
     ],
     es: [
-      "Adivina el gol reproduce un clip de un gol real con el goleador oculto. Mira la jugada, el remate y la celebración, y nombra al jugador que marcó. Los clips cubren finales famosas, derbis y goles de culto de los últimos treinta años.",
-      "Menos pistas, más puntos: nombra al goleador solo con el clip para el máximo, o revela la temporada, la competición o el club por una recompensa menor. Cinco goles forman una ronda.",
-      "La ronda de práctica usa un set fijo de clips. En la app llegan cinco goles nuevos cada día, los nombres correctos dan monedas y los resultados cuentan para tu racha.",
+      "Adivina el gol repite un gol famoso en una pizarra táctica. Los aros rojos son el equipo que ataca y los azul marino, los defensores; ves cada pase, desmarque y regate en orden, pero sin nombres. En algún momento entre el primer toque y el remate, la jugada se delata sola.",
+      "Elige el gol entre cuatro opciones: goleador, partido y año. Después de responder ves el clip real, y si aciertas, una pregunta extra te pregunta por un detalle de la jugada, como quién dio la asistencia.",
+      "Tienes cinco goles al día. Sin cuenta juegas gratis y tu colección queda en este dispositivo; con tu cuenta ganas monedas y XP la primera vez que aciertas cada gol.",
     ],
     tr: [
-      "Golü Tahmin Et, golü atan gizlenmiş gerçek bir gol klibi oynatır. Hücumu, vuruşu ve sevinci izle, sonra golü atan oyuncunun adını söyle. Klipler son otuz yılın ünlü finallerini, derbilerini ve efsanevi gollerini kapsar.",
-      "Daha az ipucu daha çok puan demektir: en yüksek puan için golcüyü yalnızca klipten bil ya da daha küçük bir ödül için sezonu, turnuvayı veya kulübü aç. Bir tur beş golden oluşur.",
-      "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
+      "Golü Tahmin Et, ünlü bir golü taktik tahtasında yeniden oynatır. Kırmızı halkalar hücum eden takım, lacivertler savunmacılardır; her pası, koşuyu ve çalımı sırayla görürsün ama isimler gizlidir. İlk dokunuşla bitiriş arasında bir yerde atak kendini ele verir.",
+      "Golü dört seçenek arasından seç: golcü, maç ve yıl. Cevapladıktan sonra gerçek klibi izlersin; doğru cevap ise atağın bir ayrıntısını soran bonus bir soru getirir, örneğin asisti kimin yaptığını.",
+      "Günde beş gol var. Hesapsız ücretsiz oynarsın ve koleksiyonun bu cihazda kalır; giriş yapan oyuncular her golü ilk kez bildiklerinde coin ve XP kazanır.",
     ],
   },
   "football-clues": {
@@ -307,6 +307,32 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her eşleşme için 20 saniyen var ve tek bir futbolcu yeterli. Soyadını, tam adını ya da bilinen adını yaz; Türkçe karakterler ve aksanlar fark etmez, küçük yazım hataları kabul edilir. Yanlış cevap kutuyu bir saniye kilitler. Kiralık dönemler de sayılır.",
       "Yeni eşleşmeler her gün Arjantin saatiyle gece yarısı gelir. Hesapsız önceki günleri oynar ve her eşleşmenin örnek cevaplarını görürsün; hesapla bugünün on eşleşmesini oynar ve günün sıralamasına girersin. Puanlar eşitse hızlı olan üstte yer alır. Bugünün cevapları gün bitene kadar gösterilmez.",
       "Arkadaşlarla daha da keyifli. Bir oda aç, linki paylaş; altı kişiye kadar aynı eşleşmelerde yarışın: 1'e 1'de ilk doğru cevap puanı alır, üç ya da daha fazla kişide ilk bilen 3, ikinci 2, bulan diğer herkes 1 puan alır. Ligi oda sahibi seçer: Süper Lig, Premier Lig, La Liga, Serie A, Bundesliga, Ligue 1 ya da büyük kulüpler karışık.",
+    ],
+  },
+  "football-tenable": {
+    en: [
+      "Football Tenable is the top 10 game: one hidden list a day, and your job is to name who is on it. The lists are football's own records: all-time Champions League scorers, Premier League appearances, the biggest transfer fees, World Cup top scorers, managers with the most trophies, the clubs and countries that won the most.",
+      "Every right answer climbs into its ranked slot with its figure, so you learn the order as you play. A real footballer who is not on the list costs one of your three lives; a name already on the tower, a name that fits several people or a name we do not know costs nothing. Suggestions appear as you type, from every footballer we know, so they never give the list away.",
+      "A new list arrives every day at midnight Argentina time. Without an account you can play the previous days; signed-in players get today's list and the daily leaderboard, ranked by how many of the ten they found and then by lives left. Today's missing answers stay hidden until the day is over.",
+      "With friends it becomes a race for the slots. Open a room for 2 to 6 players and take turns on one shared tower: each slot is worth its number, so the tenth is worth ten points; a wrong answer or running out of time costs one of your two lives per list. Three lists, and the highest total wins.",
+    ],
+    ka: [
+      "ფეხბურთის ტოპ 10 ერთი დამალული სიის თამაშია: ყოველდღე ახალი სია და შენი ამოცანაა დაასახელო, ვინ არის მასში. სიები ფეხბურთის რეკორდებია: ჩემპიონთა ლიგის ბომბარდირები, პრემიერ ლიგაში ყველაზე მეტი მატჩი, ყველაზე ძვირი ტრანსფერები, მსოფლიო ჩემპიონატის ბომბარდირები, ყველაზე ტიტულოვანი მწვრთნელები, კლუბები და ქვეყნები.",
+      "ყოველი სწორი პასუხი თავის ადგილას ადის თავისი მაჩვენებლით, ასე რომ თამაშისას რიგსაც სწავლობ. ნამდვილი ფეხბურთელი, რომელიც სიაში არ არის, სამიდან ერთ სიცოცხლეს გაკარგვინებს; უკვე გახსნილი, რამდენიმე ადამიანზე მორგებული ან უცნობი სახელი არაფერი ჯდება. მინიშნებები ყველა ცნობილი ფეხბურთელიდან ჩნდება, ასე რომ სიას არ ამხელს.",
+      "ახალი სია ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით — დღევანდელ სიას და დღის რეიტინგს, სადაც ჯერ ნაპოვნი ადგილები ითვლება, მერე დარჩენილი სიცოცხლეები. დღევანდელი ვერ ნაპოვნი პასუხები დღის დასრულებამდე დამალულია.",
+      "მეგობრებთან ეს ადგილებისთვის შეჯიბრია. გახსენი ოთახი 2-დან 6 მოთამაშემდე და რიგრიგობით ითამაშეთ ერთ კოშკზე: ყოველი ადგილი იმდენი ქულა ღირს, რა ნომერიც აქვს; შეცდომა ან დროის ამოწურვა სიაზე ორიდან ერთ სიცოცხლეს გაკარგვინებს. სამი სია და იგებს ყველაზე მეტი ქულის მქონე.",
+    ],
+    es: [
+      "Adivina el Top 10 de fútbol es el juego de la lista oculta: una por día, y tenés que nombrar a los que están. Las listas son los récords del fútbol: goleadores históricos de la Champions, más partidos en la Liga, los fichajes más caros, goleadores de los Mundiales, los técnicos con más títulos, los clubes y las selecciones más ganadoras.",
+      "Cada acierto sube a su puesto con su número, así que aprendés el orden mientras jugás. Un futbolista real que no está en la lista te cuesta una de tus tres vidas; un nombre que ya está en la torre, uno que sirve para varias personas o uno que no conocemos no cuesta nada. Las sugerencias salen de todos los futbolistas que conocemos, así que nunca delatan la lista.",
+      "Cada día llega una lista nueva a la medianoche de Argentina. Sin cuenta jugás los días anteriores; con tu cuenta, la lista de hoy y el ranking del día, ordenado por cuántos de los diez encontraste y después por las vidas que te quedaron. Las respuestas que faltan de hoy se muestran cuando termina el día.",
+      "Con amigos es una carrera por los puestos. Abrí una sala de 2 a 6 jugadores y jueguen por turnos sobre una misma torre: cada puesto vale su número, así que el décimo vale diez puntos; un error o quedarse sin tiempo cuesta una de tus dos vidas por lista. Tres listas y gana el que más suma.",
+    ],
+    tr: [
+      "Futbol Top 10, gizli liste oyunudur: her gün bir liste ve görevin listede kim olduğunu bulmak. Listeler futbolun rekorlarıdır: Şampiyonlar Ligi'nin tüm zamanların golcüleri, Süper Lig'de en çok maça çıkanlar, en pahalı transferler, Dünya Kupası golcüleri, en çok kupa kazanan teknik direktörler, en başarılı kulüpler ve milli takımlar.",
+      "Her doğru cevap rakamıyla birlikte kendi sırasına çıkar; oynarken sıralamayı da öğrenirsin. Listede olmayan gerçek bir futbolcu üç canından birine mal olur; zaten kulede olan, birden fazla kişiye uyan ya da tanımadığımız bir isim hiçbir şey götürmez. Öneriler tanıdığımız tüm futbolculardan gelir, yani listeyi asla ele vermez.",
+      "Her gün Arjantin saatiyle gece yarısı yeni bir liste gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün listesini ve günün sıralamasını, önce bulduğun isim sayısına sonra kalan canlarına göre. Bugünün bulunamayan cevapları gün bitince gösterilir.",
+      "Arkadaşlarla sıralar için bir yarışa dönüşür. 2-6 kişilik bir oda aç ve tek bir kulede sırayla oynayın: her sıra kendi numarası kadar puan, yani onuncu sıra on puan; yanlış cevap ya da süre bitmesi liste başına iki canından birini götürür. Üç liste ve en çok puanı toplayan kazanır.",
     ],
   },
   "football-name-chain": {

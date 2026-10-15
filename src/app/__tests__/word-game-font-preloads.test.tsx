@@ -30,4 +30,29 @@ describe("route-aware font hints", () => {
     render(<WordGameFontPreloads initialPathname="/tr/futbol-oyunlari/son-harfle-futbolcu" />);
     expect(state.preload).not.toHaveBeenCalled();
   });
+
+  it("keeps normal hints when leaving the Georgian Shared Player page and never downgrades them on return", () => {
+    const target = "/ka/football-games/played-for-both-clubs";
+    state.pathname = target;
+    const view = render(<WordGameFontPreloads initialPathname={target} />);
+    expect(state.preload).not.toHaveBeenCalled();
+    for (const [pathname, count] of [
+      ["/en/football-games/played-for-both-clubs", 4],
+      ["/es/juegos-de-futbol/jugador-en-comun", 4],
+      ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", 8],
+      ["/ka/football-games/football-name-chain", 4],
+    ] as const) {
+      state.preload.mockClear();
+      state.pathname = pathname;
+      view.rerender(<WordGameFontPreloads initialPathname={target} />);
+      expect(state.preload).toHaveBeenCalledTimes(count);
+      for (const [, options] of state.preload.mock.calls) {
+        expect(options).toEqual({ as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+      }
+      state.preload.mockClear();
+      state.pathname = target;
+      view.rerender(<WordGameFontPreloads initialPathname={target} />);
+      expect(state.preload).not.toHaveBeenCalled();
+    }
+  });
 });

@@ -32,6 +32,15 @@ export function PreviewHost() {
       else if (message.type === "render") setFrame(message);
     };
     window.addEventListener("message", onMessage);
+    // Opened on its own (screenshot scripts): ?game=&mode=&scenario=&locale= renders that screen with its fixture state.
+    const query = new URLSearchParams(window.location.search);
+    const direct = query.get("game") && query.get("scenario")
+      ? GAMES.find((g) => g.id === query.get("game"))?.scenarios[query.get("mode") as ToPreview["mode"]]?.find((s) => s.id === query.get("scenario"))
+      : undefined;
+    if (direct) {
+      window.setTimeout(() => setFrame({ source: PLAYGROUND, type: "render", game: query.get("game") as ToPreview["game"], mode: query.get("mode") as ToPreview["mode"], scenario: direct.id,
+        data: direct.data, locale: (query.get("locale") ?? "en") as ToPreview["locale"], key: "direct", applied: 0 }), 0);
+    }
     // Said on mount and again whenever the parent asks: either side may load first.
     post({ type: "ready" });
     return () => window.removeEventListener("message", onMessage);

@@ -7,9 +7,12 @@
  * membership are owner-defined (see the slug arrays below); any mode not listed
  * is intentionally off the Play screen for now.
  *
- * A completed daily challenge shows a done state + an "unlocks in Hh Mm" timer
- * and sinks to the end of the row. Auction and Tic-Tac-Toe keep their own
- * bespoke cards above these sections.
+ * Each row is ordered by the server (how many people play a game, how new it is, whether it is rising; see
+ * playRanking.ts) and falls back to the hand-made order in playCatalog.ts. A game released in the last three
+ * weeks wears a NEW ribbon and is listed under the New filter.
+ *
+ * A completed daily challenge shows a done state + an "unlocks in Hh Mm" timer and keeps its place. Auction and
+ * Tic-Tac-Toe keep their own bespoke cards above these sections.
  */
 
 import Image from "next/image";
@@ -42,12 +45,18 @@ import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { CoinIcon } from "@/features/store/components/CoinIcon";
 import type { Locale } from "@/lib/i18n/messages";
 import { isMiniGamesEnabled } from "@/lib/features/playModes";
+import { DAILY_CHALLENGE_SLUGS, PLAY_WITH_COINS_SLUGS } from "@/features/play/playCatalog";
+import { usePlayOrder } from "@/features/play/PlayOrderProvider";
 
 /** Real in-app destinations for the modes that have shipped a page. */
 const REAL_ROUTES: Record<string, string> = {
   minuto: "/minuto",
   "shared-player": "/ortak-futbolcu",
   "name-chain": "/son-harfle",
+  buscaminas: "/buscaminas",
+  pistas: "/pistas",
+  ultimo: "/ultimo",
+  tenable: "/football-tenable",
   "mini-final-third": "/free-kicks",
   "mini-road-to-goal": "/road-to-goal",
   "mini-guess-the-goal": "/guess-the-goal",
@@ -92,7 +101,7 @@ function formatOf(slug: string): PlayFormat {
 
 /** Games playable with other people (live or party-style); everything else is solo. */
 /** Second format a mode also ships in (Missing XI: solo now, multiplayer coming). */
-const EXTRA_FORMATS: Record<string, PlayFormat[]> = { "lab-missing-xi": ["multiplayer"] };
+const EXTRA_FORMATS: Record<string, PlayFormat[]> = { "lab-missing-xi": ["multiplayer"], tenable: ["multiplayer"] };
 
 const ONLINE_SLUGS = new Set([
   "lab-own-goal",
@@ -109,33 +118,6 @@ const ONLINE_SLUGS = new Set([
   "mini-football-grid",
 ]);
 
-// Owner-curated order. Every slug resolves against ALL_DEMO_MODES; unknown
-// slugs are simply skipped, so a rename can't crash the Play screen.
-const DAILY_CHALLENGE_SLUGS = [
-  "minuto",
-  "shared-player",
-  "name-chain",
-  "daily-moneyDrop",
-  "daily-countdown",
-  "daily-trueFalse",
-  "daily-clues",
-  "daily-imposter",
-  "daily-careerPath",
-  "daily-highLow",
-  "daily-footballLogic",
-  "daily-cardDetective",
-  "lab-missing-xi",
-  "daily-passChain",
-  "mini-guess-the-goal",
-  "daily-statSniper",
-];
-const PLAY_WITH_COINS_SLUGS = [
-  "mini-trivia-mines",
-  "mini-final-third",
-  "mini-road-to-goal",
-  "mini-squad-spin",
-];
-
 const MODE_BY_SLUG = new Map(ALL_DEMO_MODES.map((mode) => [mode.slug, mode]));
 const resolveModes = (slugs: string[]): DemoModeCard[] =>
   slugs
@@ -146,6 +128,13 @@ const resolveModes = (slugs: string[]): DemoModeCard[] =>
 // into real games — and open their /demos preview until their route lands.
 const DAILY_CHALLENGE_MODES = resolveModes(DAILY_CHALLENGE_SLUGS);
 const PLAY_WITH_COINS_MODES = isMiniGamesEnabled ? resolveModes(PLAY_WITH_COINS_SLUGS) : [];
+
+/** The row in the server's order; a game the server did not list keeps its hand-made place at the end. */
+function inOrder(modes: DemoModeCard[], order: string[] | null): DemoModeCard[] {
+  if (!order) return modes;
+  const place = new Map(order.map((slug, index) => [slug, index]));
+  return [...modes].sort((a, b) => (place.get(a.slug) ?? order.length) - (place.get(b.slug) ?? order.length));
+}
 
 const STAT_SNIPER_ROOMS = ROOM_GAMES_ENABLED.includes("aproximado");
 const MODAL_SLUGS = new Set(["lab-missing-xi", ...(STAT_SNIPER_ROOMS ? ["daily-statSniper"] : [])]);
@@ -240,6 +229,20 @@ function DailyDevResetButton({ challengeType, title }: { challengeType: DailyCha
   );
 }
 
+/** The diagonal NEW band across a card's picture. A coin game's COINS pill has the right corner, so its band crosses the left one, below the format pill. */
+function NewRibbon({ label, beside }: { label: string; beside: "left" | "right" }) {
+  return (
+    <span
+      data-play-new
+      className={`pointer-events-none absolute z-[6] w-32 bg-brand-green py-1 text-center font-poppins text-[9px] font-black uppercase tracking-[0.2em] text-white shadow-md shadow-black/40 md:text-[11px] ${
+        beside === "left" ? "-left-10 top-12 -rotate-45 md:-left-9 md:top-14" : "-right-10 top-3 rotate-45 md:-right-9 md:top-4"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
 function GameCard({
   mode,
   index,
@@ -247,9 +250,12 @@ function GameCard({
   unlockLabel = "",
   showDevReset = false,
   onOpenMode,
+  isNew = false,
 }: {
   mode: DemoModeCard;
   index: number;
+  /** Released in the last three weeks: the card wears the NEW ribbon. */
+  isNew?: boolean;
   completed?: boolean;
   unlockLabel?: string;
   showDevReset?: boolean;
@@ -279,6 +285,7 @@ function GameCard({
         {devReset}
         <div className="relative aspect-video w-full overflow-hidden">
           <DemoModeArt slug={mode.slug} className="size-full opacity-25" />
+          {isNew && <NewRibbon label={t("play.newBadge")} beside="right" />}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/45 text-center">
             <CheckCircle2 className="size-6 text-brand-green-light md:size-7" />
             <span className="font-poppins text-[9px] font-bold uppercase tracking-wide text-white md:text-[11px]">
@@ -311,7 +318,7 @@ function GameCard({
     <Link
       href={guestHref ?? hrefFor(mode)}
       onClick={(event) => {
-        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : mode.slug.startsWith("daily-") || mode.slug.startsWith("lab-") ? "daily" : "other";
+        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : DAILY_CHALLENGE_SLUGS.includes(mode.slug) ? "daily" : "other";
         if (isGuest) {
           // Public page when the mode has one; otherwise the sign-in dialog
           // (never a /demos preview, which production does not serve).
@@ -335,7 +342,7 @@ function GameCard({
         }
         trackPlayCardClicked({ slug: mode.slug, group, destination: hasRealRoute(mode) ? "route" : "demo" });
       }}
-      className={`group flex w-full animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-xl bg-brand-blue duration-300 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60`}
+      className={`group relative flex w-full animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-xl bg-brand-blue duration-300 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60`}
       style={{ animationDelay: `${Math.min(index * 30, 420)}ms`, animationFillMode: "backwards" }}
     >
       <div className="relative aspect-video w-full overflow-hidden">
@@ -367,6 +374,8 @@ function GameCard({
             </span>
           ))}
         </span>
+
+        {isNew && <NewRibbon label={t("play.newBadge")} beside={PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "left" : "right"} />}
 
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
@@ -401,7 +410,9 @@ function GameSection({
   unlockLabel = "",
   showDevReset = false,
   onOpenMode,
+  isNew,
 }: {
+  isNew?: (mode: DemoModeCard) => boolean;
   title: string;
   /** Muted coin-flavoured hint next to the title ("Earn coins", …). */
   hint?: string;
@@ -444,6 +455,7 @@ function GameSection({
             mode={mode}
             index={index}
             completed={isCompleted?.(mode) ?? false}
+            isNew={isNew?.(mode) ?? false}
             unlockLabel={unlockLabel}
             showDevReset={showDevReset}
             onOpenMode={MODAL_SLUGS.has(mode.slug) ? onOpenMode : undefined}
@@ -456,15 +468,17 @@ function GameSection({
 
 
 // The finder lists the daily and coin games only, so a solo/multiplayer/online split would carry no information here.
-type FinderFilter = "all" | "daily" | "coins";
+type FinderFilter = "all" | "new" | "daily" | "coins";
 const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
   { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü", ru: "Все" },
+  { id: "new", en: "New", ka: "ახალი", es: "Nuevos", tr: "Yeni", ru: "Новые" },
   { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük", ru: "Ежедневно" },
   { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton", ru: "Монеты" },
 ];
 
-function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: FinderFilter): boolean {
+function matchesFilter(section: "daily" | "coins", filter: FinderFilter, isNew: boolean): boolean {
   if (filter === "all") return true;
+  if (filter === "new") return isNew;
   return section === filter;
 }
 
@@ -487,12 +501,15 @@ function GamesFinder({
   filter,
   onFilter,
   counts,
+  hasNewGames,
 }: {
   query: string;
   onQuery: (value: string) => void;
   filter: FinderFilter;
   onFilter: (value: FinderFilter) => void;
   counts: Record<FinderFilter, number>;
+  /** Whether any game is new at all: the New pill does not come and go with what is typed in the search. */
+  hasNewGames: boolean;
 }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
@@ -549,12 +566,14 @@ function GamesFinder({
           )}
         </AnimatePresence>
       </div>
-      {FINDER_FILTERS.map((entry) => (
+      {/* The New pill is there only while a game is new (or while it is the chosen filter). */}
+      {FINDER_FILTERS.filter((entry) => entry.id !== "new" || hasNewGames || filter === "new").map((entry) => (
         <button
           key={entry.id}
           type="button"
           onClick={() => onFilter(entry.id)}
           aria-pressed={filter === entry.id}
+          data-play-filter={entry.id}
           className={`font-poppins inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors md:text-xs ${
             filter === entry.id ? "bg-brand-yellow text-black" : "bg-white/[0.07] text-white/60 hover:bg-white/[0.12]"
           }`}
@@ -586,8 +605,10 @@ export function AllGamesGrid() {
 
   // Completion is over the cards actually shown in this row, not the backend's
   // active-challenge count (which is smaller — e.g. inactive/hidden types).
+  // Only cards with a daily type report completion (Minuto, Buscaminas… don't),
+  // so the rest stay out of the total or it could never be reached.
   // Completed cards keep their curated position (owner call — no re-sort).
-  const dailyTotal = DAILY_CHALLENGE_MODES.length;
+  const dailyTotal = DAILY_CHALLENGE_MODES.filter((mode) => mode.dailyType).length;
   const dailyDone = DAILY_CHALLENGE_MODES.filter(isDailyCompleted).length;
 
   const [query, setQuery] = useState("");
@@ -599,25 +620,31 @@ export function AllGamesGrid() {
     if (slug === "lab-missing-xi") setMissingXiOpen(true);
     if (slug === "daily-statSniper") setStatSniperOpen(true);
   }, []);
+  // Decided on the server (see playOrder.server.ts): the rows arrive already in order and nothing moves afterwards.
+  const playOrder = usePlayOrder();
+  const isNew = useCallback((mode: DemoModeCard) => playOrder.newSlugs.includes(mode.slug), [playOrder.newSlugs]);
+  const dailyModes = useMemo(() => inOrder(DAILY_CHALLENGE_MODES, playOrder.daily), [playOrder.daily]);
+  const coinModes = useMemo(() => inOrder(PLAY_WITH_COINS_MODES, playOrder.coins), [playOrder.coins]);
   const visibleDaily = useMemo(
-    () => DAILY_CHALLENGE_MODES.filter((mode) => matchesFilter(mode, "daily", filter) && matchesQuery(mode, query)),
-    [filter, query],
+    () => dailyModes.filter((mode) => matchesFilter("daily", filter, isNew(mode)) && matchesQuery(mode, query)),
+    [dailyModes, filter, isNew, query],
   );
   const visibleCoins = useMemo(
-    () => PLAY_WITH_COINS_MODES.filter((mode) => matchesFilter(mode, "coins", filter) && matchesQuery(mode, query)),
-    [filter, query],
+    () => coinModes.filter((mode) => matchesFilter("coins", filter, isNew(mode)) && matchesQuery(mode, query)),
+    [coinModes, filter, isNew, query],
   );
   const counts = useMemo(() => {
     const all = [...DAILY_CHALLENGE_MODES.map((mode) => ({ mode, section: "daily" as const })), ...PLAY_WITH_COINS_MODES.map((mode) => ({ mode, section: "coins" as const }))]
       .filter(({ mode }) => matchesQuery(mode, query));
-    const count = (id: FinderFilter) => all.filter(({ mode, section }) => matchesFilter(mode, section, id)).length;
-    return { all: all.length, daily: count("daily"), coins: count("coins") };
-  }, [query]);
+    const count = (id: FinderFilter) => all.filter(({ mode, section }) => matchesFilter(section, id, isNew(mode))).length;
+    return { all: all.length, new: count("new"), daily: count("daily"), coins: count("coins") };
+  }, [isNew, query]);
   const nothing = visibleDaily.length === 0 && visibleCoins.length === 0;
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <GamesFinder query={query} onQuery={setQuery} filter={filter} onFilter={setFilter} counts={counts} />
+      <GamesFinder query={query} onQuery={setQuery} filter={filter} onFilter={setFilter} counts={counts}
+        hasNewGames={DAILY_CHALLENGE_MODES.some(isNew) || PLAY_WITH_COINS_MODES.some(isNew)} />
       <MissingXiModeModal
         isOpen={missingXiOpen}
         onOpenChange={setMissingXiOpen}
@@ -651,6 +678,7 @@ export function AllGamesGrid() {
         hint={t("play.sectionDailyChallengesHint")}
         modes={visibleDaily}
         onOpenMode={openMode}
+        isNew={isNew}
         isCompleted={isDailyCompleted}
         unlockLabel={unlockLabel}
         showDevReset={canUseDevReset}
@@ -674,6 +702,7 @@ export function AllGamesGrid() {
         hint={t("play.sectionPlayCoinsHint")}
         modes={visibleCoins}
         onOpenMode={openMode}
+        isNew={isNew}
       />
       )}
     </div>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
 import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySettingsState, LobbyState, RoomGameId } from "@/lib/realtime/socket.types";
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, ROOM_GAME_LABEL_KEYS, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, roomGameLabels, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { RoomGameOptions } from "./RoomGameOptions";
 import { GridRoomOptions } from './GridRoomOptions';
 import { logger } from "@/utils/logger";
@@ -69,7 +69,8 @@ function modeTabs(currentDuelGame: DuelGameId | null, currentRoomGame: RoomGameI
   return [
     ...BASE_MODE_TABS,
     ...duelGames.map((duelGame): ModeTab => ({ choice: { gameMode: 'duel', duelGame }, labelKey: DUEL_TAB_LABEL_KEYS[duelGame] })),
-    ...roomGames.map((roomGame): ModeTab => ({ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: ROOM_GAME_LABEL_KEYS[roomGame].tab })),
+    // A game this build does not know (the room was set up from a newer page) gets no tab rather than a crash.
+    ...roomGames.flatMap((roomGame): ModeTab[] => { const labels = roomGameLabels(roomGame); return labels ? [{ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: labels.tab }] : []; }),
   ];
 }
 
@@ -752,7 +753,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && ROOM_GAME_LABEL_KEYS[roomGame].description) || MODE_DESCRIPTION_KEYS[mode])}
+              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && (roomGameLabels(roomGame)?.description ?? 'friend.roomGameUnknown')) || MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -1027,7 +1028,7 @@ export function LobbySettings({
               className="uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
             >
-              {t(ROOM_GAME_LABEL_KEYS[roomGame ?? ROOM_GAMES[0]].title)}
+              {t(roomGameLabels(roomGame ?? ROOM_GAMES[0])?.title ?? 'friend.roomGameUnknown')}
             </h4>
             {roomGame === 'shared_player' && roomGame === serverRoomGame && (
               <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

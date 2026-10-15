@@ -84,6 +84,7 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
   RATE_LIMITED: "friend.errorRateLimited",
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
+  GAME_NEEDS_RELOAD: "friend.errorNeedsReload",
   DUEL_UNAVAILABLE: "friend.errorDuelUnavailable",
   ROOM_GAME_UNAVAILABLE: "friend.errorRoomGameUnavailable",
   LOBBY_READY_LOCKED: "friend.errorReadyLocked",
@@ -870,6 +871,7 @@ export function useFriendLobbyLogic({
       error.code === "LOBBY_MODE_REQUIRES_ACCOUNT" ||
       error.code === "LOBBY_GUEST_LIMIT" ||
       error.code === "CAPABILITY_REQUIRED" ||
+      error.code === "GAME_NEEDS_RELOAD" ||
       // A Ready or Start pressed on a game the room had already left: the screen takes the server's settings.
       error.code === "LOBBY_SETTINGS_CHANGED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
