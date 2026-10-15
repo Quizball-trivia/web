@@ -48,6 +48,9 @@ const REAL_ROUTES: Record<string, string> = {
   minuto: "/minuto",
   "shared-player": "/ortak-futbolcu",
   "name-chain": "/son-harfle",
+  buscaminas: "/buscaminas",
+  pistas: "/pistas",
+  ultimo: "/ultimo",
   "mini-final-third": "/free-kicks",
   "mini-road-to-goal": "/road-to-goal",
   "mini-guess-the-goal": "/guess-the-goal",
@@ -115,6 +118,9 @@ const DAILY_CHALLENGE_SLUGS = [
   "minuto",
   "shared-player",
   "name-chain",
+  "buscaminas",
+  "pistas",
+  "ultimo",
   "daily-moneyDrop",
   "daily-countdown",
   "daily-trueFalse",
@@ -311,7 +317,7 @@ function GameCard({
     <Link
       href={guestHref ?? hrefFor(mode)}
       onClick={(event) => {
-        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : mode.slug.startsWith("daily-") || mode.slug.startsWith("lab-") ? "daily" : "other";
+        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : DAILY_CHALLENGE_SLUGS.includes(mode.slug) ? "daily" : "other";
         if (isGuest) {
           // Public page when the mode has one; otherwise the sign-in dialog
           // (never a /demos preview, which production does not serve).
@@ -586,8 +592,10 @@ export function AllGamesGrid() {
 
   // Completion is over the cards actually shown in this row, not the backend's
   // active-challenge count (which is smaller — e.g. inactive/hidden types).
+  // Only cards with a daily type report completion (Minuto, Buscaminas… don't),
+  // so the rest stay out of the total or it could never be reached.
   // Completed cards keep their curated position (owner call — no re-sort).
-  const dailyTotal = DAILY_CHALLENGE_MODES.length;
+  const dailyTotal = DAILY_CHALLENGE_MODES.filter((mode) => mode.dailyType).length;
   const dailyDone = DAILY_CHALLENGE_MODES.filter(isDailyCompleted).length;
 
   const [query, setQuery] = useState("");
