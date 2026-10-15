@@ -5,17 +5,31 @@ import ts from "typescript";
 export const WORD_LANDING_ROOTS = [
   "src/app/layout.tsx",
   "src/app/[locale]/(hub)/layout.tsx",
+  "src/app/[locale]/(hub)/(default-shell)/layout.tsx",
+  "src/app/[locale]/(hub)/(word-shell)/layout.tsx",
+  "src/components/layout/WordAppShell.tsx",
+  // The staging webpack substitution is deliberately absent from normal
+  // imports. Include its thin triggers and every interaction/error state.
+  "src/components/layout/app-shell/DeferredShellChrome.tsx",
   ...[
     "football-games/football-name-chain", "football-games/played-for-both-clubs",
     "juegos-de-futbol/cadena-de-futbolistas", "juegos-de-futbol/jugador-en-comun",
     "futbol-oyunlari/son-harfle-futbolcu", "futbol-oyunlari/ortak-futbolcu-oyunu",
-  ].map((route) => `src/app/[locale]/(hub)/${route}/page.tsx`),
+  ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
 // Each reachable local import() must be reviewed. Pre-Play includes member,
 // auth, locale-menu and scroll-triggered UI, not just the first guest viewport.
 const boundary = (from, specifier, phase, reason) => [`${from} -> ${specifier}`, { phase, reason }];
 export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
+  ...[
+    "../../i18n/LanguageSwitcher", "../../shared/SocialLinks", "../../shared/ContactModal",
+    "./AppShellProfileMenu", "./AppShellLogoutDialog",
+  ].map((specifier) => boundary("src/components/layout/app-shell/DeferredShellChrome.tsx", specifier, "pre-play", "Flag-on non-word fallbacks and restored members use the unchanged originals before Play.")),
+  ...[
+    "../../i18n/LanguageSwitcher", "../../i18n/PublicLanguageLink", "../../shared/SocialLinks",
+    "../../shared/ContactModal", "./AppShellProfileMenu", "./AppShellLogoutDialog",
+  ].map((specifier) => boundary("src/components/layout/app-shell/shellChromeLoader.ts", specifier, "pre-play", "Explicit intent loads an original popup; include its complete styles, not just the first viewport.")),
   boundary("src/app/route-providers.tsx", "./providers", "pre-play", "Hub word routes render FullProviders immediately, including toast UI."),
   ...["es", "tr", "ka"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
   boundary("src/app/route-providers.tsx", "@/features/partner/PartnerProviders", "other-host", "Partner hosts never render these Quizball word routes."),
@@ -29,7 +43,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "@/components/layout/ChallengeInvitePrompt", "@/components/layout/NotificationsDropdown",
     "@/components/shared/EventAwardCeremony", "@/features/weekend-league/rewards/WlRewardCeremonyHost",
-  ].map((specifier) => boundary("src/components/layout/AppShell.tsx", specifier, "pre-play", "Member UI can render immediately on session restoration.")),
+  ].map((specifier) => boundary("src/components/layout/AppShellFrame.tsx", specifier, "pre-play", "Member UI can render immediately on session restoration.")),
   boundary("src/features/fifa-universe/FifaModeArtLazy.tsx", "./FifaModeArt", "pre-play", "Keep all related-card artwork variants covered."),
   boundary("src/features/marketing/public/DeferredCardArt.tsx", "@/features/demos/DemoModeArt", "pre-play", "Scrolling can show related artwork without Play; retain its complete styles."),
   boundary("src/features/marketing/public/PracticeLayer.tsx", "@/features/demos/DemoModeView", "play-only", "The practice portal is mounted only while playing."),

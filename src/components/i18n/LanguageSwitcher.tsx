@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -35,6 +35,10 @@ interface LanguageSwitcherProps {
   locales?: readonly Locale[];
   /** Also called with the chosen locale (signed-in users persist it on the profile). */
   onSelect?: (locale: Locale) => void;
+  /** Internal deferred-shell intent; defaults preserve the original widget. */
+  initialOpen?: boolean;
+  initialFocus?: "first" | "last";
+  publicLink?: React.ComponentType<React.ComponentProps<typeof PublicLanguageLink>>;
 }
 
 const OPTIONS_BY_CODE = Object.fromEntries(
@@ -61,18 +65,22 @@ function ItemBody({ option, active }: { option: (typeof LOCALE_OPTIONS)[number];
 }
 
 /** The dropdown chrome shared by both switchers; `renderItem` supplies the link or button per locale. */
-function LanguageMenu({ activeLocale, locales, className, renderItem }: {
+function LanguageMenu({ activeLocale, locales, className, renderItem, initialOpen, initialFocus }: {
   activeLocale: Locale;
   locales: readonly Locale[];
   className?: string;
   renderItem: (code: Locale, option: (typeof LOCALE_OPTIONS)[number], active: boolean) => React.ReactNode;
+  initialOpen?: boolean;
+  initialFocus?: "first" | "last";
 }) {
+  const content = useRef<HTMLDivElement>(null);
+  const firstFocus = useRef(initialFocus);
   const activeOption = OPTIONS_BY_CODE[activeLocale];
   const { t } = useLocale();
   // Accessible name in the active locale, naming the language the way its speakers do.
   const label = t("languageSwitcher.chooseLanguage", { language: activeOption.nativeName });
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={initialOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -89,6 +97,15 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
+        ref={content}
+        onFocusCapture={() => {
+          const focus = firstFocus.current;
+          firstFocus.current = undefined;
+          if (!focus) return;
+          const items = content.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([data-disabled])');
+          const item = focus === "last" ? items?.[items.length - 1] : items?.[0];
+          if (item) item.focus();
+        }}
         align="end"
         sideOffset={8}
         className="w-56 rounded-[18px] border-0 bg-black/70 p-2 font-poppins text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
@@ -105,7 +122,8 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
 }
 
 /** Public pages: each language is a link to the localized URL. Reads the URL, so mount it under Suspense. */
-export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect, initialOpen, initialFocus, publicLink }: LanguageSwitcherProps) {
+  const LanguageLink = publicLink ?? PublicLanguageLink;
   const pathname = usePathname() ?? `/${locale}`;
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
@@ -117,9 +135,11 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
       activeLocale={activeLocale}
       locales={locales}
       className={className}
+      initialOpen={initialOpen}
+      initialFocus={initialFocus}
       renderItem={(code, option, active) => {
         return (
-          <PublicLanguageLink
+          <LanguageLink
             pathname={pathname}
             queryString={queryString}
             code={code}
@@ -131,7 +151,7 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
             className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
           >
             <ItemBody option={option} active={active} />
-          </PublicLanguageLink>
+          </LanguageLink>
         );
       }}
     />

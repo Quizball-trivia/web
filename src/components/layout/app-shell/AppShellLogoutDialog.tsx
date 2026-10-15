@@ -22,13 +22,15 @@ interface AppShellLogoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void | Promise<void>;
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
-export function AppShellLogoutDialog({ open, onOpenChange, onConfirm }: AppShellLogoutDialogProps) {
+export function AppShellLogoutDialog({ open, onOpenChange, onConfirm, onCloseAutoFocus }: AppShellLogoutDialogProps) {
   const { t } = useLocale();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
+        onCloseAutoFocus={onCloseAutoFocus}
         className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 font-poppins shadow-none sm:p-10"
         style={{ backgroundColor: '#1645FF' }}
       >

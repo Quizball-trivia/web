@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 import { publicGameDynamicParams, publicGameMetadata, publicGameStaticParams } from "../publicGamePage";
-import * as enChain from "@/app/[locale]/(hub)/football-games/football-name-chain/page";
-import * as enShared from "@/app/[locale]/(hub)/football-games/played-for-both-clubs/page";
-import * as esChain from "@/app/[locale]/(hub)/juegos-de-futbol/cadena-de-futbolistas/page";
-import * as esShared from "@/app/[locale]/(hub)/juegos-de-futbol/jugador-en-comun/page";
-import * as trChain from "@/app/[locale]/(hub)/futbol-oyunlari/son-harfle-futbolcu/page";
-import * as trShared from "@/app/[locale]/(hub)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
+import * as enChain from "@/app/[locale]/(hub)/(word-shell)/football-games/football-name-chain/page";
+import * as enShared from "@/app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page";
+import * as esChain from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page";
+import * as esShared from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page";
+import * as trChain from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page";
+import * as trShared from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
 import { findPublishedGame } from "@/lib/seo/public-games";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
