@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
-import { getCampaignQuiz } from './campaignQuiz.api';
+import { getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
 import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
@@ -32,6 +32,15 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
   getCampaignQuiz(slug, preview, locale));
 
+/** The quiz endpoint answers a missing Russian edition in English; the Russian catalog lists only real ones. A failed catalog read keeps the page. */
+const hasRussianEdition = cache(async (slug: string) => {
+  try {
+    return (await listCampaignQuizPages('ru')).some((page) => page.slug === slug);
+  } catch {
+    return true;
+  }
+});
+
 function absoluteImage(url: string): string {
   return url.startsWith('http') ? url : `${SITE_URL}${url}`;
 }
@@ -42,6 +51,7 @@ export async function buildCampaignQuizMetadata(
   preview?: string,
 ): Promise<Metadata> {
   try {
+    if (locale === 'ru' && !preview && !(await hasRussianEdition(sourceSlug))) return {};
     const quiz = await loadQuiz(sourceSlug, preview, locale);
     const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
     if (!content) return {};
@@ -52,7 +62,7 @@ export async function buildCampaignQuizMetadata(
       en: englishUrl,
       ...(content.localeMode === 'en_ka' ? { ka: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ka')}` } : {}),
       es: `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`,
-      ru: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ru')}`,
+      ...(await hasRussianEdition(sourceSlug) ? { ru: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ru')}` } : {}),
       'x-default': englishUrl,
     };
     const image = content.ogImage ?? content.heroImage;
@@ -92,6 +102,7 @@ export async function renderCampaignQuizPage(
   locale: CampaignQuizLocale,
   preview?: string,
 ) {
+  if (locale === 'ru' && !preview && !(await hasRussianEdition(sourceSlug))) notFound();
   const quiz = await loadQuiz(sourceSlug, preview, locale);
   const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
   if (!content) notFound();

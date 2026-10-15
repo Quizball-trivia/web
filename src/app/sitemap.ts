@@ -73,6 +73,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fail on an unavailable catalog instead of returning a successful, incomplete sitemap.
   const campaignPages = await listCampaignQuizPages('en');
+  // Only quizzes with a Russian edition: the quiz endpoint would answer the rest in English under a Russian URL.
+  const russianSlugs = new Set((await listCampaignQuizPages('ru')).map((page) => page.slug));
 
   const campaignEntries: MetadataRoute.Sitemap = [
     entry(
@@ -131,9 +133,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...english,
         url: `${SITE_URL}${campaignQuizPath(page.slug, 'ru')}`,
       };
+      const editions = russianSlugs.has(page.slug) ? [spanish, russian] : [spanish];
       return page.locale_mode === 'en_ka'
-        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, spanish, russian]
-        : [english, spanish, russian];
+        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, ...editions]
+        : [english, ...editions];
     }),
   ];
 

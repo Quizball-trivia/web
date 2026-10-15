@@ -62,4 +62,18 @@ describe('sitemap lastModified signals', () => {
     expect(entries.some((entry) => entry.url.endsWith('/ka/football-quiz'))).toBe(true);
     expect(entries.some((entry) => entry.url.endsWith('/ka/football-quiz/club-badges'))).toBe(true);
   });
+
+  it('lists a Russian quiz page only when the Russian catalog has its edition', async () => {
+    const pages = [
+      { slug: 'club-badges', locale_mode: 'en_only', updated_at: '2026-08-12T10:00:00.000Z' },
+      { slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' },
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === 'ru' ? pages.slice(0, 1) : pages));
+
+    const entries = await sitemap();
+
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/ugaday-klub-po-embleme')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/viktorina-liverpul')).toBe(false);
+    expect(entries.some((entry) => entry.url.endsWith('/en/football-quiz/liverpool'))).toBe(true);
+  });
 });
