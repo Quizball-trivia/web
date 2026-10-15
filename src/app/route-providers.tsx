@@ -51,7 +51,7 @@ export function RouteProviders({
   const pathname = usePathname();
   // Unconditional hook, including partner/SEO branches. A URL language change
   // must not change the component type and reset queries, sessions or tracking.
-  const [entryLocale] = useState(() => localeAssetSeed && initialLocale && initialLocale !== "en" ? initialLocale : null);
+  const [entryLocale] = useState(() => localeAssetSeed && initialLocale && initialLocale !== "en" && initialLocale !== "ru" ? initialLocale : null);
 
   if (partner) {
     return <PartnerProviders cspNonce={cspNonce}>{children}</PartnerProviders>;

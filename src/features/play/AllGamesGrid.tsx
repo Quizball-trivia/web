@@ -75,9 +75,9 @@ const LIVE_ONLINE_SLUGS = new Set(["match", "auction", "mini-football-grid", "we
 /** Format badge: solo (yellow) / multiplayer with friends (green) / online (orange). */
 type PlayFormat = "solo" | "multiplayer" | "online";
 const FORMAT_LABEL: Record<PlayFormat, Record<string, string>> = {
-  solo: { en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik" },
-  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador", tr: "Çok oyunculu" },
-  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1", tr: "Online 1v1" },
+  solo: { en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik", ru: "Одиночная" },
+  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador", tr: "Çok oyunculu", ru: "Мультиплеер" },
+  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1", tr: "Online 1v1", ru: "Онлайн 1 на 1" },
 };
 const FORMAT_STYLE: Record<PlayFormat, string> = {
   solo: "bg-brand-yellow text-black",
@@ -256,7 +256,7 @@ function GameCard({
   /** Modes with their own entry dialog (Missing XI) open it instead of navigating. */
   onOpenMode?: (slug: string) => void;
 }) {
-  const { t, locale } = useLocale();
+  const { t, locale, siteLocale } = useLocale();
   const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const devReset = showDevReset && mode.dailyType
@@ -264,7 +264,7 @@ function GameCard({
     : null;
   // Signed-out visitors go to the public page (or owning quiz) for the mode.
   const publicGame = findPublicGameForCard(mode);
-  const guestHref = isGuest ? guestCardHref(mode, locale) : null;
+  const guestHref = isGuest ? guestCardHref(mode, siteLocale) : null;
   const title = demoText(mode.title, locale);
   const description = demoText(mode.description, locale);
   const format = formatOf(mode.slug);
@@ -458,9 +458,9 @@ function GameSection({
 // The finder lists the daily and coin games only, so a solo/multiplayer/online split would carry no information here.
 type FinderFilter = "all" | "daily" | "coins";
 const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
-  { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü" },
-  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük" },
-  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton" },
+  { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü", ru: "Все" },
+  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük", ru: "Ежедневно" },
+  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton", ru: "Монеты" },
 ];
 
 function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: FinderFilter): boolean {

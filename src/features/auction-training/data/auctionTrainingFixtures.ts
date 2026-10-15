@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type { Footballer, Formation, PositionGroup, SeasonSnapshot } from '@/features/auction/types';
 import { FOOTBALLERS, SNAPSHOT_STAT_STEPS, getFootballerPlaceholderImage } from '@/features/auction/data';
 import { footballGridStorageImageUrl } from '@/lib/football-grid/assets';

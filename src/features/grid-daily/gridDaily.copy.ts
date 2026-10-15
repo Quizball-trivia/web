@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/messages";
+import type { Locale } from "@/lib/i18n/locale";
 
 const en = {
   title: "Daily grid",

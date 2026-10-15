@@ -13,7 +13,7 @@ import {
   trackCampaignSignupClick,
 } from './campaignQuiz.analytics';
 import type { CampaignQuizQuestion } from './campaignQuiz.types';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 
 type AnswerResult = {
   selectedOptionId: string;

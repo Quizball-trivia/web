@@ -9,7 +9,7 @@ import type {
   FootballLogicSession,
   MoneyDropSession,
 } from "@/lib/domain/dailyChallenge";
-import type { Locale } from "@/lib/i18n/messages";
+import type { Locale } from "@/lib/i18n/locale";
 import { getI18nText } from "@/lib/utils/i18n";
 import { getPoolSessions } from "./demoPoolSessions";
 import type { FifaCardsSession } from "@/lib/domain/dailyChallenge";

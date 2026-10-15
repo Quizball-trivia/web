@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import { getI18nText } from '@/lib/utils/i18n';
 import { useActiveAnnouncements, type AnnouncementItem } from '@/lib/queries/announcements.queries';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 
 type AnnouncementType = AnnouncementItem['type'];
 
@@ -37,7 +37,7 @@ function formatAnnouncementDate(iso: string, locale: Locale): string {
 }
 
 export function PlayAnnouncements() {
-  const { t, locale } = useLocale();
+  const { t, siteLocale: locale } = useLocale();
   const dateLocale: Locale = locale;
   const { data } = useActiveAnnouncements();
   const announcements = data?.items ?? [];

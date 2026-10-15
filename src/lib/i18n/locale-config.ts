@@ -1,4 +1,5 @@
-export type Locale = "en" | "ka" | "es" | "tr";
+// "ru" renders only inside partner views (Freecroco); LOCALES below is the public picker list.
+export type Locale = "en" | "ka" | "es" | "tr" | "ru";
 
 // Routing and language menus need this small list, not every translated string.
 export const LOCALES = [
@@ -9,7 +10,7 @@ export const LOCALES = [
 ] as const;
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {
-  return value === "en" || value === "ka" || value === "es" || value === "tr";
+  return value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru";
 }
 
 export function normalizeLocale(value: string | null | undefined): Locale {

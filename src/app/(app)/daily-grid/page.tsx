@@ -8,7 +8,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 function GridDailyRoute() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { locale } = useLocale();
+  const { siteLocale: locale } = useLocale();
   // Read once: a reload reopens the same day.
   const [day] = useState(() => searchParams.get("dia"));
   return <GridDailyGame locale={locale} initialDay={day} onExit={() => router.push("/play")} />;

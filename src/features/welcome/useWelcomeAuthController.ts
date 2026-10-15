@@ -60,7 +60,7 @@ type PendingRestoreAction =
   | { kind: 'social-token'; provider: 'google'; idToken: string; nonce?: string };
 
 export function useWelcomeAuthController() {
-  const { t, locale } = useLocale();
+  const { t, siteLocale: locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const setBanned = useAuthStore((state) => state.setBanned);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';

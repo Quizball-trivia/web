@@ -46,10 +46,10 @@ export const GGT_ACTION_META: Record<
   TacticsStepKind,
   { label: Record<MiniLocale, string>; color: string }
 > = {
-  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი', es: 'Regate', tr: 'Dribling' }, color: '#1c2b21' },
-  run: { label: { en: 'Run', ka: 'შერბენა', es: 'Carrera', tr: 'Koşu' }, color: '#1c2b21' },
-  pass: { label: { en: 'Pass', ka: 'პასი', es: 'Pase', tr: 'Pas' }, color: '#ffffff' },
-  shot: { label: { en: 'Shot!', ka: 'დარტყმა!', es: '¡Tiro!', tr: 'Şut!' }, color: '#FFE500' },
+  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი', es: 'Regate', tr: 'Dribling', ru: 'Дриблинг' }, color: '#1c2b21' },
+  run: { label: { en: 'Run', ka: 'შერბენა', es: 'Carrera', tr: 'Koşu', ru: 'Рывок' }, color: '#1c2b21' },
+  pass: { label: { en: 'Pass', ka: 'პასი', es: 'Pase', tr: 'Pas', ru: 'Пас' }, color: '#ffffff' },
+  shot: { label: { en: 'Shot!', ka: 'დარტყმა!', es: '¡Tiro!', tr: 'Şut!', ru: 'Удар!' }, color: '#FFE500' },
 };
 
 export function GgtActionGlyph({ kind, color }: { kind: TacticsStepKind; color: string }) {

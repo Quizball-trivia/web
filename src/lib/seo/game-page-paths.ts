@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale-config";
+import type { Locale } from "@/lib/i18n/locale";
 
 /** Routing-only constants: safe for client chrome without downloading the SEO copy catalog. */
 export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = {

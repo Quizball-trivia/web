@@ -57,7 +57,7 @@ import { CriterionAsset } from './components/CriterionAsset';
 import { criterionPresentation } from './criterionPresentation';
 import { BOTH_CLUES_EXPLANATION, criterionExplanation } from './criterionExplanation';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
@@ -1839,7 +1839,7 @@ export function completionNote(reason: FootballGridCompletionReason | null, won:
 export function FootballGridFlowScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { locale } = useLocale();
+  const { siteLocale: locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const { player } = usePlayer();
   const authStatus = useAuthStore((current) => current.status);

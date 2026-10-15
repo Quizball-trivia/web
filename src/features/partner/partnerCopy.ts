@@ -2,13 +2,13 @@ import type { Locale } from "@/lib/i18n/messages";
 import type { PartnerGameId } from "./api/partnerApi.types";
 
 /**
- * Languages the partner view offers. Adding Russian = add "ru" here (once the app Locale has it) and a `ru`
- * block to PARTNER_COPY below; the switcher, the redeem language mapping and the copy lookup all follow.
+ * Languages the partner view offers. Adding a language = add it here and a block to PARTNER_COPY below; the switcher, the redeem language mapping
+ * and the copy lookup all follow.
  */
-export const PARTNER_LOCALES = ["ka", "en"] as const satisfies readonly Locale[];
+export const PARTNER_LOCALES = ["ka", "en", "ru"] as const satisfies readonly Locale[];
 export type PartnerLocale = (typeof PARTNER_LOCALES)[number];
 
-export const PARTNER_LOCALE_LABELS: Record<PartnerLocale, string> = { ka: "ქარ", en: "ENG" };
+export const PARTNER_LOCALE_LABELS: Record<PartnerLocale, string> = { ka: "ქარ", en: "ENG", ru: "РУС" };
 
 export function toPartnerLocale(value: string | null | undefined): PartnerLocale {
   return (PARTNER_LOCALES as readonly string[]).includes(value ?? "") ? (value as PartnerLocale) : "en";
@@ -134,7 +134,59 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
       "quiz-board": "ქვიზის დაფა",
     },
   },
+  ru: {
+    backToFreecroco: "Назад во Freecroco",
+    pointsLabel: "Набрано очков",
+    language: "Язык",
+    rankedTitle: "Рейтинговый матч",
+    rankedSubtitle: "Футбольный квиз 1 на 1 в реальном времени",
+    playsLeftToday: "Осталось игр на сегодня",
+    resetsIn: (time) => `Обновится через ${time}`,
+    play: "Играть",
+    playsLeft: (count) => `${russianPlural(count, "Осталась", "Осталось", "Осталось")} ${count} ${russianPlural(count, "игра", "игры", "игр")}`,
+    upToPoints: (points) => `До ${points} очков`,
+    doneForToday: "На сегодня всё",
+    continuePlay: "Продолжить",
+    comeBackTomorrow: "Возвращайся завтра",
+    comingSoon: "Скоро",
+    moreGames: "Другие игры",
+    signingIn: "Входим…",
+    relaunchTitle: "Открой заново во Freecroco",
+    relaunchBody: "Сессия завершилась. Вернись во Freecroco и снова открой Quizball.",
+    replacedBody: "Quizball открыт в другой вкладке или на другом устройстве. Чтобы играть здесь, открой его заново во Freecroco.",
+    linkUsedBody: "Вернись во Freecroco и снова открой Quizball, чтобы получить новую ссылку.",
+    launchErrorBody: "Не удалось выполнить вход. Вернись во Freecroco и снова открой Quizball.",
+    blockedTitle: "Аккаунт недоступен",
+    blockedBody: "С этим аккаунтом сейчас нельзя играть. Обратись в поддержку Freecroco.",
+    errorTitle: "Что-то пошло не так",
+    errorBody: "Не удалось загрузить игры. Проверь подключение и попробуй ещё раз.",
+    tryAgain: "Попробовать ещё раз",
+    backToGames: "Назад к играм",
+    gameSoonBody: "Эта игра скоро появится здесь.",
+    gameTitles: {
+      ranked: "Рейтинговый матч",
+      countdown: "Обратный отсчёт",
+      "true-false": "Правда или ложь",
+      "pick-em": "Pick Em",
+      "career-path": "Карьерный путь",
+      "higher-lower": "Больше или меньше",
+      "card-detective": "Детектив карточек FIFA",
+      "guess-the-goal": "Угадай гол",
+      "road-to-goal": "Путь к воротам",
+      "trivia-mines": "Trivia Mines",
+      "quiz-board": "Квиз-доска",
+    },
+  },
 };
+
+function russianPlural(count: number, one: string, few: string, many: string): string {
+  const tens = count % 100;
+  const ones = count % 10;
+  if (tens >= 11 && tens <= 14) return many;
+  if (ones === 1) return one;
+  if (ones >= 2 && ones <= 4) return few;
+  return many;
+}
 
 export function partnerCopy(locale: string | null | undefined): PartnerCopy {
   return PARTNER_COPY[toPartnerLocale(locale)];

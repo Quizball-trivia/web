@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { wildcardKey } from './criterionPresentation';
 

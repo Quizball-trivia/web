@@ -25,7 +25,7 @@ const OVERVIEW = FAMILIES.flatMap(([family]) => {
 const PAGE_SIZE = 24;
 
 export function CriterionGallery() {
-  const { locale, setLocale } = useLocale();
+  const { siteLocale: locale, setLocale } = useLocale();
   const [mode, setMode] = useState<'overview' | 'all'>('overview');
   const [family, setFamily] = useState('all');
   const [search, setSearch] = useState('');

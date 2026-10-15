@@ -9,7 +9,7 @@ import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { gridSoloApi, GridSoloError, type GridSoloBoard } from '@/lib/football-grid/soloApi';
 import { loadGridTypeaheadRoster, searchGridPlayers, type GridTypeaheadPreparedPlayer } from '@/lib/football-grid/typeahead';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type { FootballGridCommandResultPayload, FootballGridOption, FootballGridState } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -183,7 +183,7 @@ function useTurnRemaining(deadline: number | null, onExpire: () => void): number
 
 export function GridLocalScreen() {
   const router = useRouter();
-  const { locale } = useLocale();
+  const { siteLocale: locale } = useLocale();
   const copy = GRID_LOCAL_COPY[locale];
   const gridCopy = FOOTBALL_GRID_COPY[locale];
   const [stage, setStage] = useState<Stage>('setup');

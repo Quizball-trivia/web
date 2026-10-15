@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.seed.json';
 import { criterionLabel } from './criterionLabel';

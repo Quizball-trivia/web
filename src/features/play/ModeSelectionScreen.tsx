@@ -262,7 +262,7 @@ export function ModeSelectionScreen({
   rankedProfileLoading = false,
   beforeFooter,
 }: ModeSelectionScreenProps) {
-  const { t, locale } = useLocale();
+  const { t, locale, siteLocale } = useLocale();
   const tierLabelOf = useTierLabel();
 
   // Funnel top: the WL rail is above the fold on every /play visit, so a
@@ -334,7 +334,7 @@ export function ModeSelectionScreen({
   const [rankedDemoOpen, setRankedDemoOpen] = useState(false);
   const publicPageFor = (modeId: string) => {
     const game = findPublicGameByModeId(modeId);
-    return game?.page ? gamePagePath(game, locale) : undefined;
+    return game?.page ? gamePagePath(game, siteLocale) : undefined;
   };
   // Signed-out visitors go straight to the public Auction / Tic Tac Toe page
   // (owner, 2026-09-16); the mode modal is for members. Ranked is untouched.

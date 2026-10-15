@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type { AvatarCustomization } from '@/types/game';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type {
   AuctionBiddingStartedPayload,
   AuctionBidAcceptedPayload,

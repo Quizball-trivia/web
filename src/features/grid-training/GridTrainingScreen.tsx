@@ -40,7 +40,7 @@ const GRID_BACKGROUND = footballGridAssetUrl('/assets/bg-pattern.webp')!;
  * it from the Tic Tac Toe dialog, guests as the public page's practice round.
  */
 export function GridTrainingScreen({ onComplete, variant = 'member' }: { onComplete: () => void; variant?: 'member' | 'guest' }) {
-  const { t, locale } = useLocale();
+  const { t, siteLocale: locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const tooltips = useGridTrainingTooltips();
   const completion = useTrainingCompletion('grid');

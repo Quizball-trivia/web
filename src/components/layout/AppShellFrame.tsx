@@ -32,7 +32,7 @@ const WlRewardCeremonyHost = dynamic(() => import("@/features/weekend-league/rew
 export function AppShellFrame({ children, chrome }: AppShellProps & { chrome: ShellChromeComponents }) {
   const { LanguageSwitcher, InPlaceLanguageSwitcher, AppShellProfileMenu, AppShellLogoutDialog } = chrome;
   const vm = useAppShellViewModel();
-  const { t, locale } = useLocale();
+  const { t, siteLocale } = useLocale();
   const { changeLanguage, savePreference } = useChangeLanguage();
   // Guest mode: signed-out visitors browsing the hub get a Sign-in button
   // instead of the profile/coins cluster, and any nav tap that isn't a public
@@ -42,7 +42,7 @@ export function AppShellFrame({ children, chrome }: AppShellProps & { chrome: Sh
   // Signed-out visitors stay on their locale hub; the geo redirect on "/" is
   // never the logo target, and members go to their Play.
   const publicLocale = publicLocaleOf(vm.currentPath);
-  const homeHref = isGuest ? hubPath(publicLocale ?? locale) : "/play";
+  const homeHref = isGuest ? hubPath(publicLocale ?? siteLocale) : "/play";
   const guestNavGuard = (event: React.MouseEvent) => {
     if (!isGuest) return;
     const href = (event.target as HTMLElement).closest("a")?.getAttribute("href");
@@ -110,7 +110,7 @@ export function AppShellFrame({ children, chrome }: AppShellProps & { chrome: Sh
             <div className="flex items-center">
               {!isGuest && (publicLocale
                 ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} /></Suspense>
-                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} />)}
+                : <InPlaceLanguageSwitcher locale={siteLocale} onSelect={changeLanguage} />)}
             </div>
 
             <div className="flex items-center gap-4">

@@ -6,7 +6,7 @@
 
 import type { MiniLocale } from '../lib/i18n';
 
-type BilingualText = Record<MiniLocale, string>;
+type BilingualText = Record<Exclude<MiniLocale, 'ru'>, string>;
 
 export interface SniperRound {
   id: string;
@@ -87,7 +87,8 @@ const BANK: BilingualRound[] = [
 ];
 
 export function getSniperRounds(locale: MiniLocale): SniperRound[] {
-  return BANK.map((r) => ({ ...r, prompt: r.prompt[locale], unit: r.unit[locale] }));
+  const key = locale === 'ru' ? 'en' : locale;
+  return BANK.map((r) => ({ ...r, prompt: r.prompt[key], unit: r.unit[key] }));
 }
 
 /** Proximity score: 100 at spot-on, fading to 0 at a quarter of the span away.

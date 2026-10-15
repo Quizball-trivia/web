@@ -40,7 +40,7 @@ export function PartnerPointsCount({
       animate={landed && score > 0 && !reduced ? { scale: [1, 1.15, 1] } : undefined}
       transition={{ duration: 0.45, ease: "easeOut" }}
     >
-      +{value.toLocaleString(locale === "ka" ? "ka-GE" : "en-US")}
+      +{value.toLocaleString(locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-US")}
     </motion.p>
   );
 }

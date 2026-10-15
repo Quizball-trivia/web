@@ -32,7 +32,7 @@ export function PartnerProviders({ children, cspNonce }: { children: React.React
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} nonce={cspNonce}>
-        <LocaleProvider>
+        <LocaleProvider allowPartnerLocales>
           <CspNonceProvider nonce={cspNonce}>
             <PartnerSessionProvider>
               {children}

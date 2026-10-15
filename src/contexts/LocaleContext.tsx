@@ -7,11 +7,14 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { type Locale, isSupportedLocale, normalizeLocale } from '@/lib/i18n/locale-config';
 import { cachedLocaleMessages, loadLocaleMessages, primeLocaleMessages, translate, translateDictionary, type MessageDictionary } from '@/lib/i18n/client-messages';
 import { inferLocaleFromBrowser } from '@/lib/i18n/infer-locale';
+import { isLocale as isSiteLocale, toSiteLocale, type Locale as SiteLocale } from '@/lib/i18n/locale';
 import { useDocumentLanguage } from '@/lib/i18n/useDocumentLanguage';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 interface LocaleContextType {
   locale: Locale;
+  /** `locale` for features that exist only in site languages (Russian → English). */
+  siteLocale: SiteLocale;
   setLocale: (locale: Locale) => void;
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
 }
@@ -24,6 +27,7 @@ interface LocaleContextType {
  */
 const DEFAULT_LOCALE_CONTEXT: LocaleContextType = {
   locale: 'en',
+  siteLocale: 'en',
   setLocale: () => {},
   t: (key, params) => translate('en', key, params),
 };
@@ -41,6 +45,9 @@ interface LocaleProviderProps {
   // the browser-inference fallback — it never overrides a saved choice, account
   // preference, or an explicit URL locale.
   geoCountry?: string | null;
+  // Partner views (Freecroco) may render partner-only languages such as Russian.
+  // Everywhere else a stray stored/preferred "ru" renders as English.
+  allowPartnerLocales?: boolean;
 }
 
 // Extract the locale prefix from a URL path. Returns null when the path has
@@ -48,7 +55,7 @@ interface LocaleProviderProps {
 function localeFromPath(pathname: string | null): Locale | null {
   if (!pathname) return null;
   const first = pathname.replace(/^\/+/, '').split('/')[0];
-  return isSupportedLocale(first) ? first : null;
+  return isSiteLocale(first) ? first : null;
 }
 
 function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
@@ -89,7 +96,7 @@ function useMessages(locale: Locale, initialLocale?: Locale, initialMessages?: M
   return seed ?? (loaded.locale === locale ? loaded.dictionary : cachedLocaleMessages(locale));
 }
 
-export function LocaleProvider({ children, initialLocale, initialMessages, geoCountry }: LocaleProviderProps) {
+export function LocaleProvider({ children, initialLocale, initialMessages, geoCountry, allowPartnerLocales = false }: LocaleProviderProps) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
   // usePathname updates on every client-side navigation, so we can derive the
@@ -133,15 +140,22 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
     }
   }, [initialLocale, pathLocale, preferredLanguage, geoCountry]);
 
+  const effectiveLocale: Locale = allowPartnerLocales ? locale : toSiteLocale(locale);
+
+  // Socket toasts and daily labels read the saved key directly; the site must never keep a partner-only language.
+  useEffect(() => {
+    if (!allowPartnerLocales && storage.get<string | null>(STORAGE_KEYS.LOCALE, null) === 'ru') storage.set(STORAGE_KEYS.LOCALE, 'en');
+  }, [allowPartnerLocales]);
+
   useEffect(() => {
     if (!hasHydratedRef.current) return;
     if (pathLocale) return;
     if (localeSourceRef.current === 'path') return;
-    storage.set(STORAGE_KEYS.LOCALE, locale);
-  }, [locale, pathLocale]);
+    storage.set(STORAGE_KEYS.LOCALE, effectiveLocale);
+  }, [effectiveLocale, pathLocale]);
 
   // The address still wins where it names a language.
-  useDocumentLanguage(pathLocale ?? locale);
+  useDocumentLanguage(pathLocale ?? effectiveLocale);
 
   useEffect(() => {
     if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;
@@ -189,15 +203,16 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
     setLocaleState(newLocale);
   }, []);
 
-  const dictionary = useMessages(locale, initialLocale, initialMessages);
+  const dictionary = useMessages(effectiveLocale, initialLocale, initialMessages);
   const t = useCallback((key: MessageKey, params?: Record<string, string | number>) => translateDictionary(dictionary, key, params), [dictionary]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<LocaleContextType>(() => ({
-    locale,
+    locale: effectiveLocale,
+    siteLocale: toSiteLocale(effectiveLocale),
     setLocale,
     t,
-  }), [locale, setLocale, t]);
+  }), [effectiveLocale, setLocale, t]);
 
   return (
     <LocaleContext.Provider value={contextValue}>
@@ -209,7 +224,7 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
 /** A locale fixed by the caller (dev previews, tests): no storage, account or URL sync, follows `locale` as it changes. */
 export function FixedLocaleProvider({ locale, children }: { locale: Locale; children: React.ReactNode }) {
   const dictionary = useMessages(locale);
-  const value = useMemo<LocaleContextType>(() => ({ locale, setLocale: () => {}, t: (key, params) => translateDictionary(dictionary, key, params) }), [locale, dictionary]);
+  const value = useMemo<LocaleContextType>(() => ({ locale, siteLocale: toSiteLocale(locale), setLocale: () => {}, t: (key, params) => translateDictionary(dictionary, key, params) }), [locale, dictionary]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 

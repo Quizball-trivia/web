@@ -12,7 +12,7 @@ import {
 } from "@/features/football-grid/FootballGridFlowScreen";
 import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { DailyGameApiError } from "@/lib/repositories/dailyGameApi";
-import type { Locale } from "@/lib/i18n/messages";
+import type { Locale } from "@/lib/i18n/locale";
 import type { FootballGridCommandResultPayload, FootballGridState } from "@/lib/realtime/socket.types";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
