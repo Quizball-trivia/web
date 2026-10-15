@@ -1,14 +1,14 @@
 {
   "name-chain": {
     "avif": {
-      "384": "/assets/demos/word-heroes/son-harfle-384.9339e142254b.avif",
-      "640": "/assets/demos/word-heroes/son-harfle-640.7110d7a1a033.avif",
-      "672": "/assets/demos/word-heroes/son-harfle-672.1d488403e617.avif",
-      "720": "/assets/demos/word-heroes/son-harfle-720.18b316c04885.avif",
-      "750": "/assets/demos/word-heroes/son-harfle-750.ea05d04742c1.avif",
-      "1080": "/assets/demos/word-heroes/son-harfle-1080.06deb4a0637c.avif",
-      "1200": "/assets/demos/word-heroes/son-harfle-1200.dbff2ef13526.avif",
-      "1600": "/assets/demos/word-heroes/son-harfle-1600.23636a6b2117.avif"
+      "384": "/assets/demos/word-heroes/son-harfle-384.021c8198bf1b.avif",
+      "640": "/assets/demos/word-heroes/son-harfle-640.31affa3c09f1.avif",
+      "672": "/assets/demos/word-heroes/son-harfle-672.8990d2165f35.avif",
+      "720": "/assets/demos/word-heroes/son-harfle-720.7c43d9140d1b.avif",
+      "750": "/assets/demos/word-heroes/son-harfle-750.3b16e17fb2da.avif",
+      "1080": "/assets/demos/word-heroes/son-harfle-1080.a20cbe4b3191.avif",
+      "1200": "/assets/demos/word-heroes/son-harfle-1200.29347c27e649.avif",
+      "1600": "/assets/demos/word-heroes/son-harfle-1600.4ac9126ffa2d.avif"
     },
     "webp": {
       "384": "/assets/demos/word-heroes/son-harfle-384.bc3dde1cc729.webp",
@@ -23,14 +23,14 @@
   },
   "shared-player": {
     "avif": {
-      "384": "/assets/demos/word-heroes/ortak-futbolcu-384.120244a57476.avif",
-      "640": "/assets/demos/word-heroes/ortak-futbolcu-640.304aaea0a20c.avif",
-      "672": "/assets/demos/word-heroes/ortak-futbolcu-672.1174677f2bbe.avif",
-      "720": "/assets/demos/word-heroes/ortak-futbolcu-720.11a4dbc3a160.avif",
-      "750": "/assets/demos/word-heroes/ortak-futbolcu-750.78e01c0c444a.avif",
-      "1080": "/assets/demos/word-heroes/ortak-futbolcu-1080.ff9673ca0c86.avif",
-      "1200": "/assets/demos/word-heroes/ortak-futbolcu-1200.efef84404afb.avif",
-      "1600": "/assets/demos/word-heroes/ortak-futbolcu-1600.123e1d8587f1.avif"
+      "384": "/assets/demos/word-heroes/ortak-futbolcu-384.f9871919685e.avif",
+      "640": "/assets/demos/word-heroes/ortak-futbolcu-640.70ebd059e491.avif",
+      "672": "/assets/demos/word-heroes/ortak-futbolcu-672.1d79db5db442.avif",
+      "720": "/assets/demos/word-heroes/ortak-futbolcu-720.15dcbb5dcccb.avif",
+      "750": "/assets/demos/word-heroes/ortak-futbolcu-750.74f6523454cb.avif",
+      "1080": "/assets/demos/word-heroes/ortak-futbolcu-1080.c3c982dddd0a.avif",
+      "1200": "/assets/demos/word-heroes/ortak-futbolcu-1200.1b65c02e9792.avif",
+      "1600": "/assets/demos/word-heroes/ortak-futbolcu-1600.431da09a624b.avif"
     },
     "webp": {
       "384": "/assets/demos/word-heroes/ortak-futbolcu-384.040120326c6b.webp",

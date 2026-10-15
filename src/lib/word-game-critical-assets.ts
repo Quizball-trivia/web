@@ -18,6 +18,10 @@ export function isWordGameLandingPath(pathname: string): boolean {
 
 export function wordGameFontPreloads(pathname: string): string[] {
   if (!isWordGameLandingPath(pathname)) return [];
+  // This page's Georgian copy uses the existing system glyph fallback. Let
+  // CSS discover any Latin fragments/digits it actually renders, rather than
+  // speculating on all four Latin weights. Keep its word-shell classification.
+  if (pathname.replace(/\/$/, "") === "/ka/football-games/played-for-both-clubs") return [];
   // These four weights were requested above the fold in the mobile traces.
   const subsets = pathname.startsWith("/tr/") ? ["latin", "latin-ext"] : ["latin"];
   return subsets.flatMap((subset) => [400, 600, 700, 900].map((weight) =>

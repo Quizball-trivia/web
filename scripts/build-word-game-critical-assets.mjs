@@ -43,14 +43,16 @@ const heroes = {};
 // Keep the original aspect ratio; no enlarged source or artwork redesign.
 for (const [slug, sourceName] of [["name-chain", "son-harfle"], ["shared-player", "ortak-futbolcu"]]) {
   const source = path.join(root, `public/assets/demos/game-modes/${sourceName}.webp`);
+  const avifQuality = 35;
   const variants = {};
   for (const format of ["avif", "webp"]) {
     variants[format] = {};
     for (const width of [384, 640, 672, 720, 750, 1080, 1200, 1600]) {
       const image = sharp(source).resize({ width });
-      // Retain the quality setting and source geometry. Higher encoder effort
-      // and 4:2:0 chroma reduce decorative art transfers; WebP remains the fallback.
-      const bytes = await (format === "avif" ? image.avif({ quality: 40, effort: 9, chromaSubsampling: "4:2:0" }) : image.webp({ quality: 60 })).toBuffer();
+      // Same source artwork and geometry. Both q35 variants passed the recorded
+      // phone/desktop visual and byte prototypes; every WebP stays q60.
+      // Keep previous immutable outputs so reverting the manifest is sufficient.
+      const bytes = await (format === "avif" ? image.avif({ quality: avifQuality, effort: 9, chromaSubsampling: "4:2:0" }) : image.webp({ quality: 60 })).toBuffer();
       const filename = `${sourceName}-${width}.${digest(bytes)}.${format}`;
       await writeFile(path.join(artDir, filename), bytes);
       variants[format][width] = `/assets/demos/word-heroes/${filename}`;

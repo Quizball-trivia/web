@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import type { Locale } from "@/lib/i18n/messages";
 import type { MessageDictionary } from "@/lib/i18n/client-messages";
 import type { PartnerSlug } from "@/features/partner/partnerHosts";
@@ -16,6 +17,14 @@ const PartnerProviders = dynamic(() =>
   import("@/features/partner/PartnerProviders").then((module) => module.PartnerProviders),
 );
 
+// Direct imports in each entry keep unrelated locale assets out of startup.
+// All entries use the same Providers/contexts, never a separate auth tree.
+const LocaleAssetProviders = {
+  es: dynamic(() => import("./locale-asset-providers.es").then((module) => module.LocaleAssetProviders)),
+  tr: dynamic(() => import("./locale-asset-providers.tr").then((module) => module.LocaleAssetProviders)),
+  ka: dynamic(() => import("./locale-asset-providers.ka").then((module) => module.LocaleAssetProviders)),
+};
+
 type RouteProvidersProps = {
   children: React.ReactNode;
   /** Set from the request host; partner hosts get their own tree with no Quizball auth, player or analytics. */
@@ -23,6 +32,8 @@ type RouteProvidersProps = {
   isSeoRoute: boolean;
   initialLocale?: Locale;
   initialMessages?: MessageDictionary;
+  /** Server-controlled, staging-only experiment; defaults to the original delivery. */
+  localeAssetSeed?: boolean;
   geoCountry?: string | null;
   cspNonce?: string;
 };
@@ -33,10 +44,14 @@ export function RouteProviders({
   isSeoRoute,
   initialLocale,
   initialMessages,
+  localeAssetSeed = false,
   geoCountry,
   cspNonce,
 }: RouteProvidersProps) {
   const pathname = usePathname();
+  // Unconditional hook, including partner/SEO branches. A URL language change
+  // must not change the component type and reset queries, sessions or tracking.
+  const [entryLocale] = useState(() => localeAssetSeed && initialLocale && initialLocale !== "en" ? initialLocale : null);
 
   if (partner) {
     return <PartnerProviders cspNonce={cspNonce}>{children}</PartnerProviders>;
@@ -58,14 +73,15 @@ export function RouteProviders({
     return <>{children}</>;
   }
 
+  const SelectedProviders = entryLocale ? LocaleAssetProviders[entryLocale] : FullProviders;
   return (
-    <FullProviders
+    <SelectedProviders
       initialLocale={initialLocale}
       initialMessages={initialMessages}
       geoCountry={geoCountry}
       cspNonce={cspNonce}
     >
       {children}
-    </FullProviders>
+    </SelectedProviders>
   );
 }

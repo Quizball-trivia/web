@@ -10,6 +10,8 @@ interface SocialLinksProps {
   className?: string;
   /** Icon button size. Defaults to medium. */
   size?: 'xs' | 'sm' | 'md';
+  /** A consumed first-click intent from the staging shell. */
+  initialFacebookOpen?: boolean;
 }
 
 const SIZE = {
@@ -34,7 +36,7 @@ const tileClass = (box: string) =>
 
 /** Reusable row of social profile icon-links. Instagram links straight out;
  *  Facebook opens a small picker (page vs community group). */
-export function SocialLinks({ className, size = 'md' }: SocialLinksProps) {
+export function SocialLinks({ className, size = 'md', initialFacebookOpen }: SocialLinksProps) {
   const s = SIZE[size];
   return (
     <div className={cn('flex items-center justify-center gap-2.5', className)}>
@@ -50,7 +52,7 @@ export function SocialLinks({ className, size = 'md' }: SocialLinksProps) {
         <FaInstagram className={s.icon} />
       </a>
 
-      <Popover>
+      <Popover defaultOpen={initialFacebookOpen}>
         <PopoverTrigger
           aria-label="Facebook"
           title="Facebook"
