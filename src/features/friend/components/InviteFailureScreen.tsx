@@ -15,10 +15,12 @@ export interface InviteFailureView {
   room: LobbyJoinRoomInfo | null;
 }
 
-type Kind = "account" | "full" | "ended" | "in_progress" | "expired" | "failed";
+type Kind = "account" | "reload" | "full" | "ended" | "in_progress" | "expired" | "failed";
 
 export function inviteFailureKind(failure: Pick<InviteFailureView, "reasonCode" | "room">): Kind {
   if (failure.reasonCode === "LOBBY_MODE_REQUIRES_ACCOUNT") return "account";
+  // The invite is fine: this page is older than the room's game.
+  if (failure.reasonCode === "GAME_NEEDS_RELOAD") return "reload";
   if (failure.reasonCode === "LOBBY_FULL") return "full";
   if (failure.reasonCode === "LOBBY_NOT_FOUND") {
     if (failure.room?.roomState === "ended") return "ended";
@@ -29,6 +31,13 @@ export function inviteFailureKind(failure: Pick<InviteFailureView, "reasonCode" 
 }
 
 const poppins = "'Poppins', sans-serif";
+
+/** The same room page, newer: the visitor already chose to play in the browser, so the invite chooser is skipped. */
+function reloadOnWeb(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set("web", "1");
+  window.location.replace(url.toString());
+}
 
 function ActionButton({ onClick, icon, children, primary = false }: { onClick: () => void; icon: ReactNode; children: ReactNode; primary?: boolean }) {
   return (
@@ -44,9 +53,9 @@ function ActionButton({ onClick, icon, children, primary = false }: { onClick: (
 
 /**
  * A friend-room invite that could not be joined, with a way forward for each reason: a guest refused by an
- * account-only mode signs up and comes back; an ended, full or mid-game room offers a new room (or trying again).
+ * account-only mode signs up and comes back; a page older than the room's game reloads; an ended, full or mid-game room offers a new room (or trying again).
  */
-export function InviteFailureScreen({ failure, code, onRetry, onBack, onSignUp, onNewRoom, onTryAgain }: {
+export function InviteFailureScreen({ failure, code, onRetry, onBack, onSignUp, onNewRoom, onTryAgain, onReload = reloadOnWeb }: {
   failure: InviteFailureView;
   code: string;
   onRetry: () => void;
@@ -54,15 +63,17 @@ export function InviteFailureScreen({ failure, code, onRetry, onBack, onSignUp, 
   onSignUp: () => void;
   onNewRoom: () => void;
   onTryAgain: () => void;
+  onReload?: () => void;
 }) {
   const { t } = useLocale();
   const kind = inviteFailureKind(failure);
   const host = failure.room?.hostNickname?.trim() || t("friend.inviteHostFallback");
   const isError = kind === "failed" || kind === "expired";
-  const Icon = kind === "account" ? UserPlus : kind === "ended" ? Flag : kind === "in_progress" ? Hourglass : kind === "full" ? Users : AlertCircle;
+  const Icon = kind === "account" ? UserPlus : kind === "reload" ? RotateCcw : kind === "ended" ? Flag : kind === "in_progress" ? Hourglass : kind === "full" ? Users : AlertCircle;
 
   const title =
     kind === "account" ? t("friend.inviteAccountTitle", { host })
+      : kind === "reload" ? t("friend.inviteReloadTitle")
       : kind === "full" ? t("friend.inviteFullTitle")
         : kind === "ended" ? t("friend.inviteEndedTitle")
           : kind === "in_progress" ? t("friend.inviteInProgressTitle", { host })
@@ -70,6 +81,7 @@ export function InviteFailureScreen({ failure, code, onRetry, onBack, onSignUp, 
               : t("friend.inviteJoinFailedTitle");
   const description =
     kind === "account" ? t("friend.inviteAccountDescription")
+      : kind === "reload" ? t("friend.errorNeedsReload")
       : kind === "full" ? t("friend.inviteFullDescription", { code })
         : kind === "ended" ? t("friend.inviteEndedDescription", { host })
           : kind === "in_progress" ? t("friend.inviteInProgressDescription")
@@ -93,6 +105,7 @@ export function InviteFailureScreen({ failure, code, onRetry, onBack, onSignUp, 
           )}
         </div>
         <div className="flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row">
+          {kind === "reload" && <ActionButton primary onClick={onReload} icon={<RotateCcw className="size-4" />}>{t("friend.inviteReload")}</ActionButton>}
           {kind === "account" && <ActionButton primary onClick={onSignUp} icon={<UserPlus className="size-4" />}>{t("friend.inviteCreateAccount")}</ActionButton>}
           {kind === "in_progress" && <ActionButton primary onClick={onTryAgain} icon={<RotateCcw className="size-4" />}>{t("friend.inviteTryAgain")}</ActionButton>}
           {(kind === "ended" || kind === "expired") && <ActionButton primary onClick={onNewRoom} icon={<Plus className="size-4" />}>{t("friend.inviteNewRoom")}</ActionButton>}

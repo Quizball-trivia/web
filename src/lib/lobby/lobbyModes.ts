@@ -29,14 +29,19 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   room_game: { capacity: 6, playable: 6, guestAllowed: true, hostStart: { min: 2, max: 6 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable"];
 
 /** Tab label, panel title and description of each room game. */
 export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey; title: MessageKey; description: MessageKey }>> = {
   aproximado: { tab: "friend.roomTabAproximado", title: "friend.roomAproximado", description: "friend.roomGameDescription" },
   shared_player: { tab: "friend.roomTabSharedPlayer", title: "friend.roomSharedPlayer", description: "friend.roomSharedPlayerDescription" },
   name_chain: { tab: "friend.roomTabNameChain", title: "friend.roomNameChain", description: "friend.roomNameChainDescription" },
+  tenable: { tab: "friend.roomTabTenable", title: "friend.roomTenable", description: "friend.roomTenableDescription" },
 };
+
+/** Labels of a room game, or null for one this build does not know (a lobby set up by a newer client). */
+export const roomGameLabels = (game: string | null | undefined) =>
+  game && Object.hasOwn(ROOM_GAME_LABEL_KEYS, game) ? ROOM_GAME_LABEL_KEYS[game as RoomGameId] : null;
 
 export function isRoomGameEnabled(value: unknown, enabled: readonly RoomGameId[] = ROOM_GAMES_ENABLED): value is RoomGameId {
   return ROOM_GAMES.includes(value as RoomGameId) && enabled.includes(value as RoomGameId);
