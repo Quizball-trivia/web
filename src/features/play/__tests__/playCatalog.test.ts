@@ -126,6 +126,19 @@ describe("createPlayOrderLoader", () => {
     expect((await load()).daily?.[0]).toBe("daily-statSniper");
   });
 
+  it("drops counts that could not be refreshed for a day", async () => {
+    let now = Date.parse("2026-10-11T12:00:00Z");
+    const read = vi.fn().mockResolvedValueOnce(numbers(900)).mockResolvedValue(null);
+    const load = createPlayOrderLoader(read, { clock: () => now });
+    expect((await load()).daily?.[0]).toBe("daily-statSniper");
+    now += 23 * 60 * 60_000;
+    await load();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect((await load()).daily?.[0]).toBe("daily-statSniper");
+    now += 2 * 60 * 60_000;
+    expect((await load()).daily).toBeNull();
+  });
+
   it("asks again when the clock has gone backwards", async () => {
     let now = Date.parse("2026-10-11T12:00:00Z");
     const read = vi.fn().mockResolvedValue(numbers(900));

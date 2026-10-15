@@ -5,7 +5,9 @@ const FRESH_MS = 10 * 60_000;
 /** After a failed read (the endpoint missing, down or slow) it is left alone this long. */
 const RETRY_MS = 2 * 60_000;
 /** A process with nothing yet gives its first read this long before drawing the page with the hand-made order. */
-const FIRST_WAIT_MS = 800;
+const FIRST_WAIT_MS = 300;
+/** Counts not refreshed for this long (the endpoint gone or failing) are dropped for the hand-made order. */
+const MAX_STALE_MS = 24 * 60 * 60_000;
 
 export interface PlayOrderLoaderOptions {
   clock?: () => number;
@@ -21,16 +23,17 @@ export interface PlayOrderLoaderOptions {
  */
 export function createPlayOrderLoader(read: () => Promise<PlayPopularity | null>, options: PlayOrderLoaderOptions = {}) {
   const { clock = Date.now, keepAlive = () => undefined, firstWaitMs = FIRST_WAIT_MS } = options;
-  let kept: { popularity: PlayPopularity | null; at: number; ok: boolean } | null = null;
+  let kept: { popularity: PlayPopularity | null; at: number; ok: boolean; readAt: number } | null = null;
   let loading: Promise<void> | null = null;
 
   const refresh = (): Promise<void> => {
     loading ??= read()
       .catch(() => null)
       .then((popularity) => {
+        const at = clock();
         kept = popularity
-          ? { popularity, at: clock(), ok: true }
-          : { popularity: kept?.popularity ?? null, at: clock(), ok: false };
+          ? { popularity, at, ok: true, readAt: at }
+          : { popularity: kept?.popularity ?? null, at, ok: false, readAt: kept?.readAt ?? at };
       })
       .finally(() => { loading = null; });
     return loading;
@@ -46,6 +49,7 @@ export function createPlayOrderLoader(read: () => Promise<PlayPopularity | null>
       keepAlive(work);
       if (!kept) await Promise.race([work, new Promise<void>((resolve) => setTimeout(resolve, firstWaitMs))]);
     }
-    return playOrderFrom(kept?.popularity ?? null, new Date(now));
+    const stale = !kept || now - kept.readAt > MAX_STALE_MS || now < kept.readAt;
+    return playOrderFrom(stale ? null : kept?.popularity ?? null, new Date(now));
   };
 }
