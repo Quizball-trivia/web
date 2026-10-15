@@ -1,0 +1,38 @@
+import { createWordDailyApi, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
+import { API_BASE_URL } from "@/lib/config";
+import { timeoutSignal } from "@/lib/timeoutSignal";
+import type { FigureUnit } from "./tenable.figures";
+
+type Localized = { es: string; en: string; ka: string; tr: string };
+export type EntityKind = "player" | "manager" | "club" | "nation";
+
+/** Server-held run state (backend tenable-daily.rules PublicRunState). */
+export interface TenableServerRun extends WordRunStateBase {
+  list: { title: Localized; note: Localized | null; asOf: string | null; kind: EntityKind; release: string };
+  /** Names and figures only of slots this run found, or of every slot once the day is over. */
+  slots: Array<{ rank: number; name: string | null; figure: { value: number; unit: FigureUnit } | null; found: boolean }>;
+  lives: number;
+  maxLives: number;
+  misses: string[];
+  last: { kind: "right" | "wrong" | "repeat" | "repeatWrong" | "ambiguous" | "unknown"; text: string; name: string | null; rank: number | null; n: number } | null;
+  end: "complete" | "lives" | "gaveUp" | null;
+  disclosed: boolean;
+}
+export interface TenableReview { day: string; list: Localized; slots: Array<{ rank: number; name: string; figure: { value: number; unit: FigureUnit } }> }
+
+export const tenableDailyApi = createWordDailyApi<TenableServerRun, never, TenableReview>("/api/v1/tenable");
+
+export interface Suggestion { eid: string; label: string; qualifier: string | null }
+
+/** Names starting with the text, from the whole release of the list's kind (never from the list). */
+/** The server's cap on an answer's text (the transport refuses longer ones). */
+export const ANSWER_MAX_LENGTH = 60;
+
+/** Throws when the lookup failed (rate limit, outage): a failure must not be kept as "no names". */
+export async function fetchSuggestions(kind: EntityKind, release: string, q: string): Promise<Suggestion[]> {
+  const params = new URLSearchParams({ kind, release, q });
+  const response = await fetch(`${API_BASE_URL}/api/v1/tenable/suggest?${params}`, { signal: timeoutSignal(4_000) });
+  if (!response.ok) throw new Error(`suggest ${response.status}`);
+  const body = (await response.json()) as { items?: Suggestion[] };
+  return body.items ?? [];
+}

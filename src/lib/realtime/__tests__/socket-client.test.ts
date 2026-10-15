@@ -7,6 +7,7 @@
  * storms) and the auth-recovery path permanently replaced the dynamic auth
  * callback with a frozen static token. These tests pin the fixed behavior.
  */
+import { CLIENT_ROOM_GAMES } from '../clientGames';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ioMock = vi.fn();
@@ -105,7 +106,7 @@ describe('socket-client auth/reconnect reliability', () => {
 
     // The stale-but-expiring token must NOT be replayed; the refreshed one is sent.
     expect(refreshSessionMock).toHaveBeenCalled();
-    expect(cb).toHaveBeenCalledWith({ token: 'fresh-token' });
+    expect(cb).toHaveBeenCalledWith({ token: 'fresh-token', games: CLIENT_ROOM_GAMES });
   });
 
   it('auth callback passes a healthy token through without refreshing', async () => {
@@ -118,7 +119,7 @@ describe('socket-client auth/reconnect reliability', () => {
     await vi.runAllTimersAsync();
 
     expect(refreshSessionMock).not.toHaveBeenCalled();
-    expect(cb).toHaveBeenCalledWith({ token: healthy });
+    expect(cb).toHaveBeenCalledWith({ token: healthy, games: CLIENT_ROOM_GAMES });
   });
 
   it('auth recovery after connect_error never replaces the dynamic auth callback with a static token', async () => {
@@ -324,7 +325,7 @@ describe('socket-client token source (partner view)', () => {
     const options = ioMock.mock.calls[0]?.[1] as { withCredentials: boolean; auth: (cb: (data: unknown) => void) => void };
     expect(options.withCredentials).toBe(false);
     const auth = await new Promise((resolve) => options.auth(resolve));
-    expect(auth).toEqual({ token: 'partner-token' });
+    expect(auth).toEqual({ token: 'partner-token', games: CLIENT_ROOM_GAMES });
     expect(getSupabaseAccessTokenMock).not.toHaveBeenCalled();
 
     handlers.get('connect_error')?.(new Error('Authentication required'));
