@@ -1,16 +1,11 @@
-"use client";
+import { PlayOrderProvider } from "@/features/play/PlayOrderProvider";
+import { loadPlayOrder } from "@/features/play/playOrder.server";
+import { PlayPageBody } from "./PlayPageBody";
 
-import { Season3Survey } from "@/features/season3/Season3Survey";
-import { Suspense } from "react";
-import { PlayHome } from "@/features/play/PlayHome";
-import { GuestHubRedirect } from "@/features/play/GuestHubRedirect";
-
-export default function PlayPage() {
+export default async function PlayPage() {
   return (
-    <Suspense fallback={null}>
-      <GuestHubRedirect />
-      <PlayHome />
-      <Season3Survey />
-    </Suspense>
+    <PlayOrderProvider value={await loadPlayOrder()}>
+      <PlayPageBody />
+    </PlayOrderProvider>
   );
 }
