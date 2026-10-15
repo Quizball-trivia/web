@@ -6,7 +6,7 @@ const FRESH_MS = 10 * 60_000;
 const RETRY_MS = 2 * 60_000;
 /** A process with nothing yet gives its first read this long before drawing the page with the hand-made order. */
 const FIRST_WAIT_MS = 300;
-/** Counts not refreshed for this long (the endpoint gone or failing) are dropped for the hand-made order. */
+/** Counts older than this (the endpoint gone, failing or serving an old copy) are dropped for the hand-made order. */
 const MAX_STALE_MS = 24 * 60 * 60_000;
 
 export interface PlayOrderLoaderOptions {
@@ -23,7 +23,7 @@ export interface PlayOrderLoaderOptions {
  */
 export function createPlayOrderLoader(read: () => Promise<PlayPopularity | null>, options: PlayOrderLoaderOptions = {}) {
   const { clock = Date.now, keepAlive = () => undefined, firstWaitMs = FIRST_WAIT_MS } = options;
-  let kept: { popularity: PlayPopularity | null; at: number; ok: boolean; readAt: number } | null = null;
+  let kept: { popularity: PlayPopularity | null; at: number; ok: boolean; countedAt: number } | null = null;
   let loading: Promise<void> | null = null;
 
   const refresh = (): Promise<void> => {
@@ -31,9 +31,12 @@ export function createPlayOrderLoader(read: () => Promise<PlayPopularity | null>
       .catch(() => null)
       .then((popularity) => {
         const at = clock();
+        // The backend may hand out a copy it counted a while ago: its age runs from then, never from the future.
+        const generated = Date.parse(popularity?.generated_at ?? "");
+        const countedAt = Number.isFinite(generated) ? Math.min(generated, at) : at;
         kept = popularity
-          ? { popularity, at, ok: true, readAt: at }
-          : { popularity: kept?.popularity ?? null, at, ok: false, readAt: kept?.readAt ?? at };
+          ? { popularity, at, ok: true, countedAt }
+          : { popularity: kept?.popularity ?? null, at, ok: false, countedAt: kept?.countedAt ?? at };
       })
       .finally(() => { loading = null; });
     return loading;
@@ -49,7 +52,9 @@ export function createPlayOrderLoader(read: () => Promise<PlayPopularity | null>
       keepAlive(work);
       if (!kept) await Promise.race([work, new Promise<void>((resolve) => setTimeout(resolve, firstWaitMs))]);
     }
-    const stale = !kept || now - kept.readAt > MAX_STALE_MS || now < kept.readAt;
-    return playOrderFrom(stale ? null : kept?.popularity ?? null, new Date(now));
+    // Read again: a first read that answered while this page waited is newer than `now`.
+    const drawnAt = clock();
+    const stale = !kept || drawnAt - kept.countedAt > MAX_STALE_MS;
+    return playOrderFrom(stale ? null : kept?.popularity ?? null, new Date(drawnAt));
   };
 }

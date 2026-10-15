@@ -139,6 +139,19 @@ describe("createPlayOrderLoader", () => {
     expect((await load()).daily).toBeNull();
   });
 
+  it("uses a first read that answers while the page waits, on a moving clock", async () => {
+    const read = vi.fn().mockImplementation(async () => numbers(900));
+    const load = createPlayOrderLoader(read);
+    expect((await load()).daily?.[0]).toBe("daily-statSniper");
+  });
+
+  it("drops a copy the backend counted more than a day ago", async () => {
+    const now = Date.parse("2026-10-11T12:00:00Z");
+    const old = { ...numbers(900), generated_at: "2026-10-10T11:00:00Z" };
+    const load = createPlayOrderLoader(vi.fn().mockResolvedValue(old), { clock: () => now });
+    expect((await load()).daily).toBeNull();
+  });
+
   it("asks again when the clock has gone backwards", async () => {
     let now = Date.parse("2026-10-11T12:00:00Z");
     const read = vi.fn().mockResolvedValue(numbers(900));
