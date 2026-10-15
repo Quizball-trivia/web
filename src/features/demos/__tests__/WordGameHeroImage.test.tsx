@@ -14,6 +14,7 @@ import previous from "./fixtures/word-hero-assets-q40.json";
 const widths = [384, 640, 672, 720, 750, 1080, 1200, 1600] as const;
 // Explicit active q35 snapshot, independent of the runtime manifest.
 const nameChainAvifHashes = ["021c8198bf1b", "31affa3c09f1", "8990d2165f35", "7c43d9140d1b", "3b16e17fb2da", "a20cbe4b3191", "29347c27e649", "4ac9126ffa2d"];
+const sharedPlayerAvifHashes = ["f9871919685e", "70ebd059e491", "1d79db5db442", "15dcbb5dcccb", "74f6523454cb", "c3c982dddd0a", "1b65c02e9792", "431da09a624b"];
 const bytesAt = (url: string) => readFileSync(path.join(process.cwd(), "public", url));
 
 describe("pre-encoded word-game heroes", () => {
@@ -48,7 +49,7 @@ describe("pre-encoded word-game heroes", () => {
     }
   });
 
-  it("retains every previous immutable asset, unchanged WebP/shared-player URLs and original source art", () => {
+  it("retains every previous immutable asset, unchanged WebP URLs and original source art", () => {
     for (const variants of Object.values(previous)) {
       for (const format of ["avif", "webp"] as const) {
         for (const url of Object.values(variants[format])) {
@@ -58,7 +59,7 @@ describe("pre-encoded word-game heroes", () => {
       }
     }
     expect(heroes["name-chain"].webp).toEqual(previous["name-chain"].webp);
-    expect(heroes["shared-player"]).toEqual(previous["shared-player"]);
+    expect(heroes["shared-player"].webp).toEqual(previous["shared-player"].webp);
     expect(createHash("sha256").update(bytesAt("/assets/demos/game-modes/son-harfle.webp")).digest("hex")).toBe("e0ffed700d3ea40f49f8bc11d0c28202d84feaf07934739d54994af666f3067f");
     expect(createHash("sha256").update(bytesAt("/assets/demos/game-modes/ortak-futbolcu.webp")).digest("hex")).toBe("39363f0b5195f2ca008d32d5e314e0a9362af3d66933b6e6443607873947f963");
   });
@@ -77,6 +78,18 @@ describe("pre-encoded word-game heroes", () => {
     expect(newTotal).toBeLessThanOrEqual(oldTotal * 0.9);
   });
 
+  it("pins all active Played for Both AVIFs and saves at least ten percent without growing any width", () => {
+    let before = 0, after = 0;
+    for (const [index, width] of widths.entries()) {
+      const url = heroes["shared-player"].avif[width];
+      expect(url).toBe(`/assets/demos/word-heroes/ortak-futbolcu-${width}.${sharedPlayerAvifHashes[index]}.avif`);
+      const a = bytesAt(previous["shared-player"].avif[width]).length, b = bytesAt(url).length;
+      expect(b).toBeLessThan(a);
+      before += a; after += b;
+    }
+    expect(after).toBeLessThanOrEqual(before * 0.9);
+  });
+
   it.each(["name-chain", "shared-player"] as const)("preserves %s's format and 16:9 geometry at every active width", async (slug) => {
     for (const format of ["avif", "webp"] as const) {
       for (const width of widths) {
@@ -84,6 +97,10 @@ describe("pre-encoded word-game heroes", () => {
         const metadata = await sharp(bytes).metadata();
         expect(metadata.width).toBe(width);
         expect(metadata.height).toBe(Math.round(width * 9 / 16));
+        const before = await sharp(bytesAt(previous[slug][format][width])).metadata();
+        for (const field of ["orientation", "space", "channels", "hasAlpha", "isProgressive"] as const) {
+          expect(metadata[field]).toEqual(before[field]);
+        }
         expect(metadata.format).toBe(format === "avif" ? "heif" : "webp");
       }
     }
