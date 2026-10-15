@@ -17,9 +17,11 @@ import { AproximadoBoard, AproximadoFrame, AproximadoIntro, AproximadoNotice, Ap
 import { AproximadoPartyResults } from "@/features/aproximado/AproximadoParty";
 import type { AproximadoRoomView } from "@/features/aproximado/aproximado.views";
 import { StatSniperGame } from "@/features/daily/StatSniperGame";
+import { PlayerProvider } from "@/contexts/PlayerContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FixedLocaleProvider } from "@/contexts/LocaleContext";
 import { buildDemoDailySession } from "@/features/demos/data/demoDailySessions";
-import type { StatSniperSession } from "@/lib/domain/dailyChallenge";
+import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperSession } from "@/lib/domain/dailyChallenge";
 import { AproximadoSim, type SimConfig } from "./AproximadoSim";
 import { roomView } from "./fixtures/aproximado";
 import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
@@ -229,7 +231,32 @@ const APROXIMADO_SOLO: Scenario<never>[] = [
       </FixedLocaleProvider>
     ),
   }),
+  scenario<null>({
+    id: "daily-board", name: "Today's daily + leaderboard (desktop layout)", note: "What a signed-in player sees: the board beside the game",
+    data: null,
+    render: (_d, ctx) => (
+      <FixedLocaleProvider locale={ctx.locale}>
+        {/* The board highlights the signed-in player's row, so it reads the player context (which queries). */}
+        <QueryClientProvider client={playgroundQueryClient}>
+          <PlayerProvider>
+            <StatSniperGame key={ctx.locale} session={soloSession(ctx.locale)} practice leaderboardFetcher={fixtureStatSniperBoard} onBack={() => ctx.log("onBack")} onComplete={(score) => ctx.log("onComplete", score)} />
+          </PlayerProvider>
+        </QueryClientProvider>
+      </FixedLocaleProvider>
+    ),
+  }),
 ];
+
+const playgroundQueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const BOARD_NAMES = ["OSP07", "14WLIS YEAH", "POTASIO", "JMC1988", "ALASTOR_GOL", "NICOLINHO", "JEROGAL", "TOTTI10"];
+const BOARD_COUNTRIES = ["CO", "GE", "CL", "UY", "CA", "CL", "AR", "IT"];
+async function fixtureStatSniperBoard(): Promise<StatSniperLeaderboardData> {
+  return {
+    challengeDay: "2026-10-15",
+    entries: BOARD_NAMES.map((username, i) => ({ userId: `00000000-0000-4000-8000-00000000000${i}`, rank: i + 1, username, country: BOARD_COUNTRIES[i], score: 94 - i * 4 })),
+    me: null,
+  };
+}
 
 export const GAMES: GameEntry[] = [
   {
