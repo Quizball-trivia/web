@@ -178,13 +178,11 @@ export function useRealtimeAuctionMatch({
   matchmakingMode = 'ai',
   attachMatchId = null,
   selfUserId,
-  locale: uiLocale,
+  locale,
   formation,
   humanAvatarSeed,
   humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
-  // Auction clue cards and queues exist in en/ka/es/tr only: Russian players are dealt and matched in English.
-  const locale = uiLocale === 'ru' ? 'en' : uiLocale;
   const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
@@ -798,7 +796,7 @@ export function useRealtimeAuctionMatch({
       }
       clearPendingForMatch(null);
       soloPickSentRef.current = null;
-      setError(friendlyAuctionError(payload, uiLocale));
+      setError(friendlyAuctionError(payload, locale));
     };
     const rememberMatchId = (matchId: string | undefined | null) => {
       if (!matchId) return;
@@ -1132,7 +1130,7 @@ export function useRealtimeAuctionMatch({
         matchFoundRejoinTimerRef.current = null;
       }
     };
-  }, [humanAvatarSeed, locale, selfUserId, setPendingTurnActionValue, setSearchValue, socket, uiLocale, updateServerTimeOffset]);
+  }, [humanAvatarSeed, locale, selfUserId, setPendingTurnActionValue, setSearchValue, socket, updateServerTimeOffset]);
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {

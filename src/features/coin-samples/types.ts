@@ -17,6 +17,7 @@ export interface SampleSquadSpinReel {
   key: string;
   label_en: string;
   label_ka: string;
+  label_ru?: string | null;
   asset_key: string | null;
 }
 
@@ -25,6 +26,6 @@ export interface SampleSquadSpinCombo {
   id: string;
   tier: "t3e" | "t3m" | "t4" | "t5";
   reels: SampleSquadSpinReel[];
-  answers: Array<{ id: string; name_en: string; name_ka: string | null; image_url: string | null }>;
+  answers: Array<{ id: string; name_en: string; name_ka: string | null; name_ru?: string | null; image_url: string | null }>;
   aliases: Array<{ player_id: string; alias: string; locale: string; policy: string }>;
 }
