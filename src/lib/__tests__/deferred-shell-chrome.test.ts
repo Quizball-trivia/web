@@ -1,16 +1,16 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { applyWordShellAlias, deferredShellChromeEnabled, optimizeWordShellStartup } from "../../../scripts/lib/deferred-shell-chrome";
 
 const on = { QB_EXPERIMENTAL_DEFER_SHELL_CHROME: "1", VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "staging", QB_EXPERIMENTAL_STARTUP_REQUEST_LIMIT: "0", QB_EXPERIMENTAL_LOCALE_ASSET_SEED: "0" };
 describe("deferred shell staging kill switch", () => {
-  it("composes disjoint groups without changing the installed request limits", () => {
+  it("composes disjoint groups and only changes the known client request limit to eighteen", () => {
     const config = { resolve: { alias: { "react$": "/framework/react" } as Record<string, unknown> }, optimization: { splitChunks: { maxInitialRequests: 25, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } } } };
     const options = { dev: false, isServer: false };
     expect(optimizeWordShellStartup(config, options, "/workspace")).toBe(config);
     expect(config.resolve.alias["react$"]).toBe("/framework/react");
     expect(config.resolve.alias["@/components/layout/WordAppShellEntry$"]).toBe("/workspace/src/components/layout/WordAppShell.tsx");
-    expect(config.optimization.splitChunks).toMatchObject({ maxInitialRequests: 25, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } });
+    expect(config.optimization.splitChunks).toMatchObject({ maxInitialRequests: 18, maxAsyncRequests: 30, cacheGroups: { existing: { priority: 42 } } });
     expect(Object.keys(config.optimization.splitChunks.cacheGroups)).toEqual(["existing", "qbShellCore", "qbShellSocial", "qbShellContact", "qbShellNeutral", "qbShellPrimitives", "qbShellRanked"]);
     expect(options).toEqual({ dev: false, isServer: false });
   });
@@ -34,11 +34,28 @@ describe("deferred shell staging kill switch", () => {
     expect(aliases).toEqual({ "react$": "/framework/react" });
     expect(splitChunks.maxInitialRequests).toBe(25);
   });
-  it("accepts readonly installed limits while adding only to a mutable cache-group record", () => {
+  it("rejects readonly installed limits before any alias or group mutation", () => {
     const config = { resolve: { alias: {} }, optimization: { splitChunks: Object.freeze({ maxInitialRequests: 25, cacheGroups: {} }) } };
-    expect(optimizeWordShellStartup(config, { dev: false, isServer: false }, "/workspace")).toBe(config);
+    expect(() => optimizeWordShellStartup(config, { dev: false, isServer: false }, "/workspace")).toThrow("Unexpected webpack request limit");
     expect(config.optimization.splitChunks.maxInitialRequests).toBe(25);
-    expect(Object.keys(config.optimization.splitChunks.cacheGroups)).toHaveLength(6);
+    expect(config.resolve.alias).toEqual({});
+    expect(config.optimization.splitChunks.cacheGroups).toEqual({});
+  });
+  it("rejects inherited limits without modifying their value or any mutation target", () => {
+    const splitChunks = Object.assign(Object.create({ maxInitialRequests: 25 }), { cacheGroups: {} });
+    const aliases = {};
+    expect(() => optimizeWordShellStartup({ resolve: { alias: aliases }, optimization: { splitChunks } }, { dev: false, isServer: false }, "/workspace")).toThrow("Unexpected webpack request limit");
+    expect(Object.hasOwn(splitChunks, "maxInitialRequests")).toBe(false);
+    expect(splitChunks.maxInitialRequests).toBe(25);
+    expect(aliases).toEqual({}); expect(splitChunks.cacheGroups).toEqual({});
+  });
+  it("rejects accessor limits without even invoking the getter", () => {
+    const get = vi.fn(() => 25);
+    const splitChunks = Object.defineProperty({ cacheGroups: {} }, "maxInitialRequests", { get });
+    const aliases = {};
+    expect(() => optimizeWordShellStartup({ resolve: { alias: aliases }, optimization: { splitChunks } }, { dev: false, isServer: false }, "/workspace")).toThrow("Unexpected webpack request limit");
+    expect(get).not.toHaveBeenCalled();
+    expect(aliases).toEqual({}); expect(splitChunks.cacheGroups).toEqual({});
   });
   it.each([
     { "@/components/layout/WordAppShellEntry$": "/other" },

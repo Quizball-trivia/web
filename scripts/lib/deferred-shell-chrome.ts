@@ -104,7 +104,12 @@ function sharedShellGroups(root: string) {
 /** One opt-in hook, preserving framework settings and the original options. */
 export function optimizeWordShellStartup<T extends WordStartupConfig>(config: T, options: { dev: boolean; isServer: boolean }, root: string): T {
   const split = config.optimization?.splitChunks;
-  const eligible = !options.dev && !options.isServer && split && split.maxInitialRequests === 25;
+  const active = !options.dev && !options.isServer;
+  const limit = split ? Object.getOwnPropertyDescriptor(split, "maxInitialRequests") : undefined;
+  if (active && split && (limit ? !("value" in limit) || limit.value === 25 && limit.writable !== true : "maxInitialRequests" in split)) {
+    throw new Error("Unexpected webpack request limit; refuse word-shell experiment");
+  }
+  const eligible = active && split && limit?.value === 25;
   // Validate before mutating any settings. Framework upgrades must not silently opt in.
   if (eligible && (!plainRecord(split.cacheGroups) || !Object.isExtensible(split.cacheGroups)
     || groupKeys.some(key => Object.hasOwn(split.cacheGroups as object, key))
@@ -113,7 +118,10 @@ export function optimizeWordShellStartup<T extends WordStartupConfig>(config: T,
     throw new Error("Unexpected webpack cache groups; refuse word-shell experiment");
   }
   applyWordShellAlias(config, root);
-  // Preserve installed request packing: other hosts and thin routes share this build.
-  if (eligible) Object.assign(split.cacheGroups as Record<string, unknown>, sharedShellGroups(root));
+  if (eligible) {
+    // Intermediate staging packing, measured against every original route control.
+    split.maxInitialRequests = 18;
+    Object.assign(split.cacheGroups as Record<string, unknown>, sharedShellGroups(root));
+  }
   return config;
 }

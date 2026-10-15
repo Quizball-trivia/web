@@ -1,5 +1,5 @@
 {
-  "status": "Revisions1-7 rejected for download/coupling regressions. No PR/deployment. Revision8 disjoint six-set grouping with installed default request packing under local validation; all-8 hosted mobile target incomplete.",
+  "status": "Revisions1-8 rejected for download/coupling regressions. Draft PR692 open, not merged; staging/prod unchanged. Revision9 disjoint six-set grouping with intermediate18 request packing under local validation; all-8 hosted mobile target incomplete.",
   "goal": "Eight word pages: median of three fresh standard mobile Lighthouse runs >=90, preserving current navigation, login and tracking; staging only, no production promotion.",
   "base": "29c73b4ffb86715a24d307976493acae7ab6ab2f",
   "safeStagingDeployment": "dpl_6dZNB892C1SmPRxLwEpWVfwyhdaR",
@@ -147,6 +147,22 @@
     "eligibility": "New primitives6/ranked3 were already present in EVERY baseline word and original About graph, and absent from original partner graph; exact per-resource graph proof before acceptance. Group labels are packaging, not security. No grouping of primitives with ranked functions.",
     "gates": "UNCHANGED original full-change word/main-control/cold/warm budgets; partner ORIGINAL pre-extraction graph <=4096growth/no added initial request/no new source; About ORIGINAL <=4096/no added request/no new auth/game/analytics sources. Unknown coupling rejects before staging. Code reviews/tests/build/browser/hosted8 still required. No production.",
     "planReview": "/tmp/quizball-popup-defaultpacking-plan-review-20261015.txt: PLAN GO. Adopted removal of helper runtime/type coupling and obsolete writable-limit guard. Preserve installed25 even when readonly; fixed-group savings remain a hypothesis, use full original byte/request/source gates, not merely no-new-module checks. Six collision keys/names and normalized disjointness covered."
+  },
+  "draftPR": { "url": "https://github.com/Quizball-trivia/web/pull/692", "headAtCreation": "002adfc2f954699a950b14086d6e7363b63fdeee", "base": "staging", "isDraft": true, "merged": false, "purpose": "Preserve reviewed work and run exact-source CI; blocked from staging merge/production while remaining gates open. Preview switch off. No staging environment mutation.", "revision8CI": "GitHub run38663606808 success for002adfc2, Vercel preview success. Not current18-packing acceptance or staging/mobile verification." },
+  "revision8Evidence": {
+    "directory": "/private/tmp/quizball-popup-defaultpacking-20261015.CQZXxI",
+    "pair": "Exact same-CWD source/head/lock/public-env off/on, served hashes verified; CSS and HTTP/title/H1/lang/canonical/noindex unchanged. Normal production builds pass.",
+    "word": "422507gzip/35hints versus460016/39 original:37509bytes saved,4 fewer requests, PASS",
+    "mainControls": "Bytes pass (hub+2741,Settings+3601,Play+2846,leaderboard-112), but requests FAIL: hub51vs46; Settings44vs39; Play51vs47; leaderboard47vs42. Do not ship.",
+    "extraControls": "Node22 original-baseline comparison: partner349939gzip/25 versus351272/25 (-1333bytes, no new sources), PASS. About393489/32 versus392922/28 (+567bytes/no new sources): source and byte gates PASS, requests FAIL(+4). Global/app coupling corrected, but too many chunks remain.",
+    "reviewRisk": "/tmp/quizball-popup-defaultpacking-diff-review-20261015.txt raised dynamic cache-name preflight P2. Independent reassessment /tmp/quizball-popup-dynamic-risk-review-20261015.txt classifies it as static-preflight limitation, not present runtime/deployment blocker: pinned Next dynamic callbacks cannot be evaluated safely early; mandatory successful compile + exact compiled source ownership + all120 entry-manifest collision checks close the risk before deployment. No callback is invoked prematurely or gate weakened."
+  },
+  "revision9Plan": {
+    "hypothesis": "Keep revision8 source-clean six-group partition; use intermediate installed-default25->18 packing rather than default25 (too many main/About requests) or prior12 (partner byte duplication). This is a new measured experiment, not permission to relabel failed results.",
+    "implementation": "Same sole staging opt-in. Only known client-production split.maxInitialRequests===25 changes to18 after every existing alias/cache-group/name/entry preflight; require writable own maxInitialRequests descriptor before any writes. Preserve all other settings, old standalone12 helper untouched/off; server/dev/non25 unchanged. Add exact18, original-options and frozen-limit atomic guard tests. No runtime/host/auth/tracking/gameplay changes.",
+    "gates": "UNCHANGED full-change original word/main/partner/About bytes/requests/source purity, metadata/CSS, cold/warm and later hosted8. Partner source purity from revision8 must remain. Reject any control increase over4096bytes or extra request. No production; staging only after required checks.",
+    "planReview": "/tmp/quizball-popup-request18-plan-review-20261015.txt: PLAN GO. Adopted precise own-data-descriptor value25/writabletrue preflight, rejecting inherited/accessor/readonly before aliases/cache groups; accessor getter not invoked. Added atomic tests. All exact original-baseline gates must rerun,18 remains experimental.",
+    "codeReview": "/tmp/quizball-popup-request18-diff-review-20261015.txt: SHIP code-only.74 helper/gate tests, typecheck, targeted lint and diff check passed. Current original-control sizing and later exact CI/full suite still pending."
   },
   "rollback": "Immediate staging alias reassignment to retained known-good deployment. Flag off/rebuild restores static word widgets and default chunking but leaves grouping/frame extraction, so full behavioral rollback requires reverting this isolated PR or deploying retained known-good source. Preserve unrelated staging work; no DB changes."
 }
