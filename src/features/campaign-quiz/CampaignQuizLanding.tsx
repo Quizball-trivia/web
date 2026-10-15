@@ -31,6 +31,7 @@ import {
 import { getCampaignQuizGuide } from './campaignQuiz.guides';
 import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
 import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { russianPlural } from './campaignQuiz.plural';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 interface CampaignQuizLandingProps {
@@ -136,7 +137,46 @@ const COPY = {
     playQuiz: 'Jugar',
     footer: '© 2026 QuizBall. Trivia de fútbol creada para competir de verdad.',
   },
+  ru: {
+    rankedTrivia: 'Рейтинговая футбольная викторина',
+    playRanked: 'Рейтинговый матч',
+    home: 'Главная',
+    footballQuiz: 'Футбольная викторина',
+    verifiedQuestions: 'проверенных вопросов',
+    startQuiz: 'Начать викторину',
+    noLogin: 'Без регистрации',
+    easy: 'лёгких',
+    medium: 'средних',
+    hard: 'сложных',
+    soloWarmup: 'Одиночная разминка',
+    answerPrompt: 'Выбери один ответ на каждый вопрос. Результат появится сразу.',
+    factChecked: 'Вопросы с проверенными фактами',
+    fiveMinutes: 'Около 5 минут',
+    instantScore: 'Результат сразу',
+    readyRanked: 'Готов к рейтинговым матчам?',
+    fairPlay: 'Только честная игра',
+    publicOnly: 'Эти открытые вопросы для разминки не входят в базу вопросов рейтинговых матчей.',
+    keepPlaying: 'Продолжай играть',
+    relatedQuizzes: 'Похожие футбольные викторины',
+    allQuizzes: 'Все футбольные викторины',
+    playQuiz: 'Играть',
+    footer: '© 2026 QuizBall. Футбольная викторина для настоящего соперничества.',
+  },
+} as const satisfies Record<CampaignQuizLocale, Record<string, string>>;
+
+/** Russian words after a count change form (1 лёгкий, 3 лёгких); the other editions use the COPY string as is. */
+const RUSSIAN_COUNT_FORMS = {
+  verifiedQuestions: ['проверенный вопрос', 'проверенных вопроса', 'проверенных вопросов'],
+  easy: ['лёгкий', 'лёгких', 'лёгких'],
+  medium: ['средний', 'средних', 'средних'],
+  hard: ['сложный', 'сложных', 'сложных'],
 } as const;
+
+function countLabel(locale: CampaignQuizLocale, count: number, key: keyof typeof RUSSIAN_COUNT_FORMS): string {
+  if (locale !== 'ru') return COPY[locale][key];
+  const [one, few, many] = RUSSIAN_COUNT_FORMS[key];
+  return russianPlural(count, one, few, many);
+}
 
 type AboutSection =
   | { id: string; type: 'paragraph'; text: string }
@@ -206,7 +246,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </span>
             <LanguageSwitcher
               locale={locale}
-              locales={content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] : ['en', 'es']}
+              locales={content.localeMode === 'en_ka' ? ['en', 'ka', 'es', 'ru'] : ['en', 'es', 'ru']}
               className="hidden sm:inline-flex"
             />
             <CampaignSignupLink
@@ -255,7 +295,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-yellow">
                 <BadgeCheck className="size-4" aria-hidden />
-                {quiz.total_questions} {copy.verifiedQuestions}
+                {quiz.total_questions} {countLabel(locale, quiz.total_questions, 'verifiedQuestions')}
               </div>
               <h1 className="mt-5 text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
                 {localizedHeading.heroLead}{' '}
@@ -281,9 +321,9 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
 
               {hasDifficultyMix ? (
                 <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/55">
-                  <span><strong className="font-semibold text-white">{difficultyCounts.easy}</strong> {copy.easy}</span>
-                  <span><strong className="font-semibold text-white">{difficultyCounts.medium}</strong> {copy.medium}</span>
-                  <span><strong className="font-semibold text-white">{difficultyCounts.hard}</strong> {copy.hard}</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.easy}</strong> {countLabel(locale, difficultyCounts.easy, 'easy')}</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.medium}</strong> {countLabel(locale, difficultyCounts.medium, 'medium')}</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.hard}</strong> {countLabel(locale, difficultyCounts.hard, 'hard')}</span>
                 </div>
               ) : null}
             </div>

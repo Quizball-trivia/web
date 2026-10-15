@@ -93,6 +93,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0],
     ),
+    entry(
+      '/ru/futbolnaya-viktorina',
+      'weekly',
+      0.9,
+      campaignPages
+        .map((page) => validLastModified(page.updated_at))
+        .filter((date): date is Date => Boolean(date))
+        .sort((a, b) => b.getTime() - a.getTime())[0],
+    ),
     ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
       ? [entry(
           '/ka/football-quiz',
@@ -118,9 +127,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...english,
         url: `${SITE_URL}${campaignQuizPath(page.slug, 'es')}`,
       };
+      const russian = {
+        ...english,
+        url: `${SITE_URL}${campaignQuizPath(page.slug, 'ru')}`,
+      };
       return page.locale_mode === 'en_ka'
-        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, spanish]
-        : [english, spanish];
+        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, spanish, russian]
+        : [english, spanish, russian];
     }),
   ];
 

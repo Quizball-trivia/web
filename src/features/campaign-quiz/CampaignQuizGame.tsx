@@ -124,15 +124,18 @@ const UI_COPY = {
  * the question, so the heading is kept for screen readers only in that case.
  * Prompts that carry real extra wording are always shown.
  */
+const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста'];
+
 function isRedundantCareerPrompt(question: CampaignQuizQuestion): boolean {
   if (question.type !== 'career_path' || question.details.length === 0) return false;
 
-  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Letters of any script, so Russian («Арсенал» ➔ «Ювентус») and Georgian prompts compare too.
+  const normalize = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
   const prompt = normalize(question.prompt);
   if (!prompt) return false;
 
   // A bare "Guess the player" carries no information once chips are shown.
-  if (prompt === normalize('Guess the player')) return true;
+  if (BARE_CAREER_PROMPTS.some((bare) => prompt === normalize(bare))) return true;
 
   return prompt === normalize(question.details.join(''));
 }

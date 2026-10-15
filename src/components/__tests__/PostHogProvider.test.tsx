@@ -74,7 +74,7 @@ describe('PostHogPageView', () => {
     });
   });
 
-  it.each(['/en/football-quiz/liverpool', '/es/quiz-de-futbol', '/es/quiz-de-futbol/adivina-el-jugador'])('starts delayed recording on %s', async (path) => {
+  it.each(['/en/football-quiz/liverpool', '/es/quiz-de-futbol', '/es/quiz-de-futbol/adivina-el-jugador', '/ru/futbolnaya-viktorina/ugaday-futbolista'])('starts delayed recording on %s', async (path) => {
     vi.useFakeTimers();
     navigationMocks.pathname = path;
 

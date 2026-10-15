@@ -4,6 +4,7 @@ import {
   rememberCampaignAttribution,
   type CampaignCtaPlacement,
 } from './campaignAttribution';
+import type { CampaignQuizLocale } from './campaignQuiz.routes';
 
 /**
  * Funnel for the public SEO quiz pages:
@@ -21,7 +22,7 @@ function journeyProperties(slug: string, reset = false) {
     : {};
 }
 
-export function trackCampaignQuizHubView(locale: 'en' | 'ka' | 'es'): void {
+export function trackCampaignQuizHubView(locale: CampaignQuizLocale): void {
   trackEvent('campaign_quiz_hub_view', {
     ...CAMPAIGN_PROPS,
     locale,

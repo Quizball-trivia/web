@@ -43,6 +43,11 @@ describe('sitemap lastModified signals', () => {
     expect(entries.some((entry) => entry.url.endsWith('/es/press'))).toBe(true);
     expect(entries.some((entry) => entry.url.endsWith('/ka/press'))).toBe(false);
     expect(hub?.lastModified).toEqual(new Date('2026-08-20T12:30:00.000Z'));
+    expect(entries.find((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina')?.lastModified)
+      .toEqual(new Date('2026-08-20T12:30:00.000Z'));
+    expect(entries.find((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/ugaday-klub-po-embleme')?.lastModified)
+      .toEqual(new Date('2026-08-12T10:00:00.000Z'));
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/viktorina-liverpul')).toBe(true);
     expect(liverpool?.lastModified).toEqual(new Date('2026-08-20T12:30:00.000Z'));
     expect(entries.some((entry) => entry.url.endsWith('/ka/football-quiz'))).toBe(false);
   });
