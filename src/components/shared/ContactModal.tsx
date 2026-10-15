@@ -21,6 +21,8 @@ import { submitFeedback, type FeedbackCategory } from '@/lib/repositories/feedba
 interface ContactModalProps {
   /** Element that opens the modal (rendered inside DialogTrigger). */
   trigger: ReactNode;
+  /** A consumed first-click intent from the staging shell. */
+  initialOpen?: boolean;
 }
 
 const CATEGORIES: FeedbackCategory[] = ['bug', 'feedback', 'other'];
@@ -44,11 +46,11 @@ const FIELD =
 
 const LABEL = 'text-xs font-bold uppercase tracking-wide text-white/90';
 
-export function ContactModal({ trigger }: ContactModalProps) {
+export function ContactModal({ trigger, initialOpen = false }: ContactModalProps) {
   const { t } = useLocale();
   const user = useAuthStore((s) => s.user);
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [category, setCategory] = useState<FeedbackCategory>('bug');
   const [message, setMessage] = useState('');
   // Email + nickname are always shown and required so we can trace reports;

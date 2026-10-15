@@ -20,7 +20,7 @@ const wordSlugs = new Map([
   ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun"]],
   ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu"]],
 ]);
-const fixedEntries = new Set([...wordSlugs].flatMap(([folder, slugs]) => slugs.map((slug) => `src/app/[locale]/(hub)/${folder}/${slug}/page.tsx`)));
+const fixedEntries = new Set([...wordSlugs].flatMap(([folder, slugs]) => slugs.map((slug) => `src/app/[locale]/(hub)/(word-shell)/${folder}/${slug}/page.tsx`)));
 const appDirectory = path.join(root, "src/app");
 let checkedPages = 0;
 function visitRoutes(directory) {

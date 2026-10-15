@@ -5,8 +5,7 @@ import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppLogo } from "@/components/AppLogo";
-import { SocialLinks } from "@/components/shared/SocialLinks";
-import { ContactModal } from "@/components/shared/ContactModal";
+import type { ShellChromeComponents } from "./app-shell/shellChrome.types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -25,6 +24,7 @@ const NAV_ITEMS = [
 ] as const;
 
 interface SidebarProps {
+  footerChrome: Pick<ShellChromeComponents, "SocialLinks" | "ContactModal">;
   currentPath: string;
   /** Logo + Play destination: the member Play or the guest's locale hub. */
   homeHref?: string;
@@ -49,7 +49,8 @@ function isPathActive(currentPath: string, path: string, exact?: boolean) {
   return !hasMoreSpecificMatch;
 }
 
-export function Sidebar({ currentPath, homeHref = "/play", prefetchRoutes = true, socialBadgeCount = 0, className }: SidebarProps) {
+export function Sidebar({ currentPath, homeHref = "/play", prefetchRoutes = true, socialBadgeCount = 0, className, footerChrome }: SidebarProps) {
+  const { SocialLinks, ContactModal } = footerChrome;
   const { t } = useLocale();
 
   return (

@@ -48,7 +48,7 @@ export function AppShellProfileMenu({
   const tier = rankedProfile?.tier ?? 'Academy';
 
   const trigger = isDesktop ? (
-    <button className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
+    <button data-qb-profile-trigger="desktop" className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
       <TierFrameAvatar
         tier={tier}
         avatarCustomization={playerStats.avatarCustomization || { base: playerStats.avatar }}
@@ -66,7 +66,7 @@ export function AppShellProfileMenu({
       </div>
     </button>
   ) : (
-    <button className="flex min-w-0 items-center gap-2 rounded-full focus:outline-none">
+    <button data-qb-profile-trigger="mobile" className="flex min-w-0 items-center gap-2 rounded-full focus:outline-none">
       <TierFrameAvatar
         tier={tier}
         avatarCustomization={playerStats.avatarCustomization || { base: playerStats.avatar }}

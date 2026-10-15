@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { partnerHostPattern } from "./src/features/partner/partnerHosts";
 import { limitClientInitialRequests, startupRequestLimitEnabled } from "./scripts/lib/initial-request-limit";
+import { deferredShellChromeEnabled, optimizeWordShellStartup } from "./scripts/lib/deferred-shell-chrome";
 
 // Only the canonical production deployment should be indexable. Vercel
 // sets VERCEL_ENV at build time — "production" on quizball.io, "preview"
@@ -56,6 +57,11 @@ const nextConfig: NextConfig = {
   // and rebuilding staging, or by reverting this isolated change. Main is inert.
   ...(startupRequestLimitEnabled(process.env) ? {
     webpack: (config, options) => limitClientInitialRequests(config, options),
+  } : {}),
+  // Select only the word route's isolated client entry. Default hub/app bundles
+  // keep the original static widgets; flag-off selects that same original entry.
+  ...(deferredShellChromeEnabled(process.env) ? {
+    webpack: (config, options) => optimizeWordShellStartup(config, options, process.cwd()),
   } : {}),
   images: {
     // Local CMS previews read artwork from the local Supabase Storage service.
