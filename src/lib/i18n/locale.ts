@@ -1,23 +1,11 @@
 // Locale codes used by URL routing and SEO. messages.ts has a richer LOCALES
 // array (with flag/nativeName) for UI rendering — we deliberately keep this
 // list as plain strings so callers can iterate them as URL segments.
-import { isSupportedLocale, type Locale as AppLocale } from "./locale-config";
+import { isSupportedLocale, type Locale } from "./locale-config";
 
-export type { AppLocale };
+export { isSupportedLocale as isLocale, type Locale } from "./locale-config";
 
-// Site locales: URL segments, SEO pages and the public language picker. Russian
-// renders only inside partner views (Freecroco), so it is never a site locale.
-export type Locale = Exclude<AppLocale, "ru">;
-
-export function isLocale(value: string | null | undefined): value is Locale {
-  return isSupportedLocale(value) && value !== "ru";
-}
-
-export function toSiteLocale(locale: AppLocale): Locale {
-  return locale === "ru" ? "en" : locale;
-}
-
-export const LOCALES = ["en", "ka", "es", "tr"] as const satisfies readonly Locale[];
+export const LOCALES = ["en", "ka", "es", "tr", "ru"] as const satisfies readonly Locale[];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -26,12 +14,12 @@ export const DEFAULT_LOCALE: Locale = "en";
 // non-localized routes (which fall back to DEFAULT_LOCALE).
 export function localeFromPathname(pathname: string): Locale {
   const first = pathname.replace(/^\/+/, "").split("/")[0];
-  return isLocale(first) ? first : DEFAULT_LOCALE;
+  return isSupportedLocale(first) ? first : DEFAULT_LOCALE;
 }
 
 export function explicitLocaleFromPathname(pathname: string): Locale | undefined {
   const first = pathname.replace(/^\/+/, "").split("/")[0];
-  return isLocale(first) ? first : undefined;
+  return isSupportedLocale(first) ? first : undefined;
 }
 
 export const OG_LOCALE: Record<Locale, string> = {
@@ -39,6 +27,7 @@ export const OG_LOCALE: Record<Locale, string> = {
   ka: "ka_GE",
   es: "es_ES",
   tr: "tr_TR",
+  ru: "ru_RU",
 };
 
 export const HTML_LANG: Record<Locale, string> = {
@@ -46,4 +35,5 @@ export const HTML_LANG: Record<Locale, string> = {
   ka: "ka",
   es: "es",
   tr: "tr",
+  ru: "ru",
 };

@@ -171,7 +171,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
   const searchParams = useSearchParams();
   // Guest "Play now" from the public Auction page: an anonymous bot table.
   const practiceBotSource = searchParams.get('source') === 'practice_bot';
-  const { siteLocale: locale, t } = useLocale();
+  const { locale, t } = useLocale();
   // A match already exists when we arrive from a friend lobby or the app-shell
   // "still in an auction" banner. Captured once on mount: the store is cleared
   // as the match settles, and we must not flip to search mode mid-match.

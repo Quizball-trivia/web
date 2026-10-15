@@ -99,6 +99,23 @@ const UI_COPY = {
     score: 'Skorumu gör',
     next: 'Sonraki soru',
   },
+  ru: {
+    answerError: 'Не удалось проверить ответ. Попробуй ещё раз.',
+    fullTime: 'Матч окончен',
+    youScored: 'Ты набрал',
+    playRanked: 'Играть в рейтинговом режиме',
+    playAgain: 'Пройти викторину ещё раз',
+    question: 'Вопрос',
+    of: 'из',
+    correctCount: 'правильных ответов',
+    correctAnswer: 'Правильный ответ',
+    incorrectAnswer: 'Ты ответил неправильно',
+    checking: 'Проверяем твой ответ…',
+    correctFeedback: 'Верно — отлично сыграно!',
+    incorrectFeedback: 'Не совсем — правильный ответ подсвечен.',
+    score: 'Посмотреть мой результат',
+    next: 'Следующий вопрос',
+  },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**

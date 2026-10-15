@@ -31,7 +31,6 @@ import {
   type AuctionTrainingBeat,
   type AuctionTrainingEvent,
 } from '../data/auctionTrainingScript';
-import { toSiteLocale } from '@/lib/i18n/locale';
 
 export interface AuctionTrainingHumanSeat {
   username: string;
@@ -359,7 +358,7 @@ export function useAuctionTrainingMatch({
   const startLot = useCallback((lotIndex: number) => {
     cursorRef.current = { lot: lotIndex, event: 0 };
     const s = stateRef.current;
-    const footballer = trainingLotFootballer(lotIndex, toSiteLocale(localeRef.current));
+    const footballer = trainingLotFootballer(lotIndex, localeRef.current);
     commit({ ...s, phase: 'clue-reveal', roundIndex: lotIndex + 1, currentRound: makeRound(footballer, lotIndex), soloPick: null });
     // Same cadence as the live game: the round intro plays, then pairs of clues.
     schedule(ROUND_INTRO_MS + 400, revealNextPair);

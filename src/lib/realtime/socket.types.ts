@@ -998,6 +998,7 @@ export interface FootballGridCriterionView {
   labelKa: string;
   labelEs?: string | null;
   labelTr?: string | null;
+  labelRu?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }
@@ -1085,6 +1086,7 @@ export interface FootballGridOption {
   playerId: string;
   name: string;
   nameKa: string | null;
+  nameRu?: string | null;
   imageUrl: string | null;
 }
 
@@ -1098,7 +1100,7 @@ export interface FootballGridOptionsPayload {
 }
 
 export interface FootballGridSearchStartPayload {
-  locale?: 'en' | 'ka' | 'es' | 'tr';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru';
   /** League pack to queue for; server defaults to 'european'. */
   theme?: string;
 }
@@ -1112,7 +1114,7 @@ export interface FootballGridVersionedCommandPayload {
 export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
   cellIndex: number;
   text: string;
-  locale: 'en' | 'ka' | 'es' | 'tr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru';
   /** Pick-from-four: the footballer picked. */
   optionPlayerId?: string;
 }

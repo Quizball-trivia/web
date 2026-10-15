@@ -322,7 +322,87 @@ const tr: Copy = {
   },
 };
 
-export const buscaminasCopy = (locale: string): Copy => (locale === "es" ? es : locale === "ka" ? ka : locale === "tr" ? tr : en);
-/** Prompts ship in es/en and, from content v2, ka/tr; a missing locale falls back to English. */
-export const promptFor = (prompt: { es: string; en: string; ka?: string; tr?: string }, locale: string) =>
-  (locale === "es" ? prompt.es : locale === "ka" ? prompt.ka : locale === "tr" ? prompt.tr : undefined) ?? prompt.en;
+const ru: Copy = {
+  brandA: "Футбольный",
+  brandB: "сапёр",
+  round: (n, total) => `Раунд ${n} / ${total}`,
+  difficulty: { easy: "Лёгкий", medium: "Средний", hard: "Сложный" },
+  found: "Найдено",
+  pot: "Банк",
+  points: "очк.",
+  bank: (n) => `Забрать · +${n}`,
+  bankHint: "Найди хотя бы одного, чтобы забрать очки",
+  next: "Следующий раунд",
+  finish: "Посмотреть результат",
+  perfect: (n) => `Идеальный раунд! +${n}`,
+  banked: (n) => `Забрано: +${n}`,
+  mine: (lost) => (lost > 1 ? `Мина! Минус ${lost} очк. за этот раунд` : lost === 1 ? "Мина! Минус очко за этот раунд" : "Мина!"),
+  mineCard: "Мина",
+  fitCard: "Подходил под подсказку",
+  revealLater: "Ответы на сегодня появятся завтра в разделе «Предыдущие дни».",
+  tooManyRuns: "Ты достиг дневного лимита для гостей. Создай аккаунт, чтобы продолжить играть и попасть в рейтинг.",
+  intro: {
+    title: (n) => `Футбольный сапёр #${n}`,
+    lines: [
+      "20 раундов, и каждый сложнее предыдущего.",
+      "В каждом раунде 16 игроков: 12 подходят под подсказку, а 4 — мины.",
+      "Нажимай на тех, кто подходит. Попадёшь на мину — потеряешь очки за раунд.",
+      "Забирай очки в любой момент. Найдёшь всех 12 — получишь бонус +3.",
+    ],
+    start: "Играть",
+    resume: (n) => `Продолжить · раунд ${n}`,
+    past: "Предыдущие дни",
+    newBoard: "Каждый день в полночь по времени Аргентины появляется новая доска.",
+  },
+  end: {
+    title: (n) => `Футбольный сапёр #${n}`,
+    score: "Очки",
+    of: (max) => `из ${max}`,
+    perfects: "Идеальные раунды",
+    mines: "Мины, на которые ты попал",
+    streak: "Серия",
+    days: (n) => (n === 1 ? "1 день" : `${n} дня`),
+    comeBack: "Завтра будет новая доска.",
+    share: "Поделиться результатом",
+    whatsapp: "WhatsApp",
+    copy: "Скопировать",
+    copied: "Скопировано!",
+    past: "Играть за предыдущие дни",
+    signup: "Создай аккаунт и играй во все игры QuizBall",
+    signupButton: "Создать аккаунт",
+    more: "Другие игры",
+    trivia: "Сапёр-викторина",
+    grid: "Футбольные крестики-нолики",
+  },
+  archive: { title: "Предыдущие дни", played: (s) => `${s} очк.`, inProgress: "В процессе", notPlayed: "Не сыграно", today: "Сегодня", back: "Назад" },
+  shareText: (n, score, grid, url) => `Футбольный сапёр #${n} — ${score} очк.\n${grid}\nСможешь побить мой результат? ${url}`,
+  report: "Сообщить об ошибке",
+  reported: "Спасибо! Мы проверим.",
+  exit: "Выйти",
+  loading: "Загружаем доску…",
+  loadError: "Не удалось загрузить доску. Попробуй ещё раз чуть позже.",
+  retry: "Повторить",
+  actionError: "Нет соединения. Попробуй ещё раз.",
+  restarted: "Твоя игра изменилась (на другом устройстве или после исправления). Мы обновили её.",
+  dayOver: "В Аргентине наступил новый день: новая доска уже готова.",
+  guestYesterday: "Ты играешь на вчерашней доске. Создай аккаунт, чтобы сыграть на сегодняшней и попасть в рейтинг.",
+  playToday: "Играть на сегодняшней доске",
+  maintenance: "Игра на обслуживании. Загляни чуть позже.",
+  sessionChanged: "Твоя сессия изменилась. Начни игру заново.",
+  board: {
+    title: "Рейтинг за сегодня",
+    players: (n) => (n === 1 ? "Завершил 1 игрок" : `Завершили ${n} игроков`),
+    empty: "Пока никто не завершил сегодняшнюю игру. Будь первым!",
+    you: "Ты",
+    rank: (r) => `Место №${r}`,
+    join: "Создай аккаунт, чтобы попасть в сегодняшний рейтинг",
+    joinButton: "Попасть в рейтинг",
+    unranked: "Предыдущие дни не учитываются в рейтинге.",
+    guestPlay: "Ты играешь как гость: твой результат не попадёт в рейтинг.",
+  },
+};
+
+export const buscaminasCopy = (locale: string): Copy => (locale === "es" ? es : locale === "ka" ? ka : locale === "tr" ? tr : locale === "ru" ? ru : en);
+/** Prompts ship in es/en and, from content v2, ka/tr/ru; a missing locale falls back to English. */
+export const promptFor = (prompt: { es: string; en: string; ka?: string; tr?: string; ru?: string }, locale: string) =>
+  (locale === "es" ? prompt.es : locale === "ka" ? prompt.ka : locale === "tr" ? prompt.tr : locale === "ru" ? prompt.ru : undefined) ?? prompt.en;

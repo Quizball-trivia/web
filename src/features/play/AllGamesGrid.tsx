@@ -256,7 +256,7 @@ function GameCard({
   /** Modes with their own entry dialog (Missing XI) open it instead of navigating. */
   onOpenMode?: (slug: string) => void;
 }) {
-  const { t, locale, siteLocale } = useLocale();
+  const { t, locale } = useLocale();
   const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const devReset = showDevReset && mode.dailyType
@@ -264,7 +264,7 @@ function GameCard({
     : null;
   // Signed-out visitors go to the public page (or owning quiz) for the mode.
   const publicGame = findPublicGameForCard(mode);
-  const guestHref = isGuest ? guestCardHref(mode, siteLocale) : null;
+  const guestHref = isGuest ? guestCardHref(mode, locale) : null;
   const title = demoText(mode.title, locale);
   const description = demoText(mode.description, locale);
   const format = formatOf(mode.slug);
@@ -476,7 +476,7 @@ function searchKey(value: string): string {
 function matchesQuery(mode: DemoModeCard, query: string): boolean {
   const q = searchKey(query);
   if (!q) return true;
-  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? ""]).concat(mode.slug)
+  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? "", text.ru ?? ""]).concat(mode.slug)
     .some((text) => searchKey(text).includes(q));
 }
 

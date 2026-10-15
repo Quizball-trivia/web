@@ -52,7 +52,7 @@ type ResolveLink = NonNullable<Parameters<typeof PassChainGame>[0]["resolveLink"
 
 export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher, boardSlot, confirmQuit, peek = false, resultCta, resultExtra }: DemoDailyChallengeProps) {
   const router = useRouter();
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const [attempt, setAttempt] = useState(0);
   const [introDone, setIntroDone] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);

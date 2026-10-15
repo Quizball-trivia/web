@@ -9,7 +9,7 @@ export function sampleTriviaQuestions(locale: MiniLocale): TriviaQuestion[] {
 }
 
 export function toTriviaQuestion(q: SampleQuestion, locale: MiniLocale): TriviaQuestion {
-  const pick = (t: SampleQuestion["prompt"]) => (locale === "ru" ? t.en : t[locale]) || t.en;
+  const pick = (t: SampleQuestion["prompt"]) => t[locale] || t.en;
   return {
     id: q.id,
     q: pick(q.prompt),

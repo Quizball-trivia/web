@@ -5,6 +5,8 @@
 @source "../app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/futbolisty-na-poslednyuyu-bukvu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/igravshie-za-oba-kluba/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/layout.tsx";
@@ -12,6 +14,7 @@
 @source "../app/layout.tsx";
 @source "../app/locale-asset-providers.es.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
+@source "../app/locale-asset-providers.ru.tsx";
 @source "../app/locale-asset-providers.tr.tsx";
 @source "../app/providers.tsx";
 @source "../app/route-providers.tsx";

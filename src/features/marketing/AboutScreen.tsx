@@ -19,6 +19,7 @@ const BACK_LABEL: Record<Locale, string> = {
   ka: "უკან",
   es: "Volver",
   tr: "Geri",
+  ru: "Назад",
 };
 
 const HOME_LABEL: Record<Locale, string> = {
@@ -26,6 +27,7 @@ const HOME_LABEL: Record<Locale, string> = {
   ka: "QuizBall-ის მთავარი გვერდი",
   es: "Inicio de QuizBall",
   tr: "QuizBall ana sayfası",
+  ru: "Главная QuizBall",
 };
 
 const MODE_COLORS = [

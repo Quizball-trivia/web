@@ -11,7 +11,7 @@ import { createRealtimeCommandId } from "@/lib/realtime/command-id";
 function MinutoRoute() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   // Read once: the board the player then picks goes into the URL (a reload reopens it) without remounting the game.
   const [day] = useState(() => searchParams.get("dia"));
   const access = useAuthStore((s) => (s.status === "authenticated" ? "member" : "guest"));

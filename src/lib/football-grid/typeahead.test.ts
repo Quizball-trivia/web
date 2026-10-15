@@ -12,6 +12,7 @@ const players = [
 const roster: GridTypeaheadPreparedPlayer[] = players.map((player) => ({ ...player,
   wordsEn: normalizeGridAnswerText(player.nameEn).split(' '),
   wordsKa: normalizeGridAnswerText(player.nameKa).split(' '),
+  wordsRu: [],
 }));
 
 describe('Grid name suggestions across interface languages', () => {
@@ -32,5 +33,15 @@ describe('Grid name suggestions across interface languages', () => {
     expect(normalizeGridAnswerText("N'Golo Kanté")).toBe('ngolo kante');
     expect(normalizeGridAnswerText('NʻGolo Kanté')).toBe('ngolo kante');
     expect(normalizeGridAnswerText('IŞIK')).toBe('isik');
+  });
+
+  it('finds a player by the Russian name and keeps it on the suggestion', () => {
+    const ru: GridTypeaheadPreparedPlayer[] = [{
+      id: 'haaland', nameEn: 'Erling Haaland', nameKa: null, nameRu: 'Эрлинг Холанд',
+      wordsEn: ['erling', 'haaland'], wordsKa: [], wordsRu: normalizeGridAnswerText('Эрлинг Холанд').split(' '),
+    }];
+    expect(searchGridPlayers(ru, 'ХОЛ', 'ru')).toEqual([{ id: 'haaland', nameEn: 'Erling Haaland', nameKa: null, nameRu: 'Эрлинг Холанд' }]);
+    expect(searchGridPlayers(ru, 'эрлинг хол', 'ru').map((player) => player.id)).toEqual(['haaland']);
+    expect(searchGridPlayers(ru, 'холанн', 'ru')).toEqual([]);
   });
 });

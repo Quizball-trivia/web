@@ -1,6 +1,6 @@
 import { CLUES_PER_ROUND, ROUNDS_PER_DAY, latestDay, pointsFor, puzzleNumber, releaseDay, type RoundResult } from "./pistas.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru";
 /** g/y/o: solved with ≤3 / ≤6 / more clues, r: missed — the same buckets as the emoji grid. */
 const letterOf = (r: RoundResult) => (r.outcome === "missed" ? "r" : r.clues <= 3 ? "g" : r.clues <= 6 ? "y" : "o");
 /** The points a colour can stand for: solved with clues 1–3 / 4–6 / 7–10 pays 10–8 / 7–5 / 4–1, a miss pays 0. */
@@ -11,7 +11,7 @@ const POINTS_OF: Record<string, readonly [min: number, max: number]> = {
   r: [0, 0],
 };
 /** `pf-` keeps these apart from Buscaminas codes on the shared /r/ route. */
-const CODE = /^pf-(\d{1,3})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr)$/;
+const CODE = /^pf-(\d{1,3})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr|ru)$/;
 
 export interface PistasShareResult {
   number: number;
@@ -22,7 +22,7 @@ export interface PistasShareResult {
 
 export function encodePistasShare(number: number, results: readonly RoundResult[], locale: string): string {
   const score = results.reduce((sum, r) => sum + r.points, 0);
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" ? locale : "en";
   return `pf-${number}-${score}-${results.map(letterOf).join("")}-${shareLocale}`;
 }
 
@@ -51,4 +51,5 @@ export const PISTAS_SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: st
   en: { brandA: "Football", brandB: "Clues", points: "/100", challenge: "Can you beat me?", title: (n, s) => `Football Clues #${n}: ${s}/100`, description: "10 hidden players, 10 clues each. Guess with fewer clues to score more.", open: "Play Football Clues" },
   ka: { brandA: "საფეხბურთო", brandB: "მინიშნებები", points: "/100", challenge: "მაჯობებ?", title: (n, s) => `საფეხბურთო მინიშნებები #${n}: ${s}/100`, description: "10 დამალული მოთამაშე, თითოეულს 10 მინიშნება.", open: "ითამაშე" },
   tr: { brandA: "Futbolcu", brandB: "Tahmini", points: "/100", challenge: "Beni geçebilir misin?", title: (n, s) => `Futbolcu Tahmin Etme Oyunu #${n}: ${s}/100`, description: "10 gizli oyuncu, her birine 10 ipucu. Daha az ipucuyla bil, daha çok puan al.", open: "Oyna" },
+  ru: { brandA: "Футбольные", brandB: "подсказки", points: "/100", challenge: "Сможешь меня обыграть?", title: (n, s) => `Футбольные подсказки #${n}: ${s}/100`, description: "10 загаданных игроков, по 10 подсказок на каждого. Угадывай с меньшим числом подсказок и набирай больше очков.", open: "Играть в «Футбольные подсказки»" },
 };

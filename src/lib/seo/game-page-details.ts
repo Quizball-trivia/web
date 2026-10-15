@@ -32,6 +32,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Kazanmak RP kazandırır ve seni Akademi'den üst liglere doğru yükseltir; kaybetmek RP götürür. Yeni hesaplar bir kademe almadan önce üç yerleştirme maçı oynar. Maçların, kazanma oranın ve sıran liderlik tablosunda görünür; hafta sonu yarışması da katılım puanlarını dereceli maçlardan alır.",
       "Bu sayfadaki antrenman maçı tam olarak bu akışın yönlendirmeli sürümüdür: aynı yasak aşaması, aynı top hakimiyeti turları ve CoachBot'a karşı bir penaltı serisi, her adımda ipuçlarıyla. Hiçbir şey kazandırmaz ve kaydedilmez. Dereceli modun kendisi hesap gerektirir.",
     ],
+    ru: [
+      "Рейтинговый режим — соревновательный режим Quizball: живой футбольный квиз 1 на 1 с реальным соперником, где на кону рейтинговые очки (RP). Из общего списка случайно выбираются три категории; каждый игрок запрещает одну, а матч проходит в оставшейся. Двенадцать вопросов в двух таймах, а в перерыве категории выбираются заново.",
+      "Каждый вопрос — борьба за владение мячом. Оба игрока отвечают на один и тот же вопрос; тот, кто быстрее ответит правильно, продвигается по полю. Доведи мяч до линии ворот соперника, чтобы пробить по воротам. Если мяч пройдёт мимо вратаря, это гол. При ничьей в основное время матч переходит в серию пенальти: каждый удар решает один вопрос.",
+      "За победу ты получаешь RP и поднимаешься по дивизионам — от Академии до высших лиг; за поражение теряешь RP. Новые игроки проходят три отборочных матча, прежде чем получить дивизион. Твои матчи, процент побед и место видны в рейтинге, а очки для участия в соревновании выходного дня начисляются за рейтинговые матчи.",
+      "Тренировочный матч на этой странице — пошаговая версия того же режима: та же фаза запрета категорий, те же раунды борьбы за владение и серия пенальти против CoachBot, с подсказками на каждом шаге. Наград за него нет, результат не сохраняется. Для рейтингового режима нужен аккаунт.",
+    ],
   },
   "football-tic-tac-toe": {
     en: [
@@ -53,6 +59,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Futbol XOX (Tic Tac Toe) üçe üç bir ızgarada oynanır. Her satır ve her sütun bir kategori taşır: bir kulüp, bir ülke, bir lig, bir kupa ya da bir teknik direktör. Böylece her kare aynı anda iki kategoriyi temsil eder; kareyi, ikisine de uyan bir futbolcunun adını yazarak alırsın, örneğin Chelsea'de oynamış bir Brezilyalı.",
       "Turlar süreye bağlıdır. Bir isim yaz; oyun soyadları, tam adları, yaygın lakapları ve küçük yazım hatalarını kabul eder. Kareyi kimse dolduramazsa pas geçebilirsin; kazanan bir çizgi kalmayan tahta beraberliktir. Yakın maçlar, şanslı bir tahta günü belirlemesin diye üç maçlık seri olarak oynanır.",
       "Bu sayfadaki alıştırma turu aynı kurallarla bir bota karşı oynanır. Giriş yapmış oyuncular uygulamada gerçek rakiplerle karşılaşır, sicilini korur ve dereceli puan kazanır; misafir alıştırması hiçbir şey kazandırmaz ve kaydedilmez.",
+    ],
+    ru: [
+      "Футбольные крестики-нолики играют на поле три на три. Каждой строке и каждому столбцу соответствует категория: клуб, сборная, лига, трофей или тренер. Значит, каждая клетка сочетает сразу две категории. Чтобы занять её, назови футболиста, который подходит под обе, например бразильца, игравшего за «Челси».",
+      "На каждый ход даётся ограниченное время. Введи имя: игра принимает фамилии, полные имена, распространённые прозвища и небольшие опечатки. Если никто не может заполнить клетку, можно пропустить ход. Если на поле больше нельзя собрать выигрышную линию, это ничья. Равные матчи играют до двух побед, чтобы исход не зависел от удачной раскладки.",
+      "В тренировочном раунде на этой странице ты играешь против бота по тем же правилам. Игроки, выполнившие вход, встречаются в приложении с реальными соперниками, сохраняют статистику и зарабатывают рейтинговые очки; тренировка в режиме гостя не даёт наград и не сохраняется.",
     ],
   },
   auction: {
@@ -76,6 +87,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Amaç, seçilen dizilişte eksiksiz bir kadro kurmaktır. Erken aşamada fazla öde, sonra ihtiyacın olan oyuncularda geride kalırsın; çok bekle, iyiler gider. Her kadro dolduğunda takımlar puanlanır ve en iyi eksiksiz takım turu kazanır.",
       "Bu sayfadaki alıştırma müzayedesi sanal bütçeyle botlara karşı oynanır ve sonuç kaydedilmez. Uygulamada giriş yapmış oyuncular gerçek menajerlere karşı teklif verir, jeton kazanır ve müzayede sıralamasında yükselir.",
     ],
+    ru: [
+      "Футбольный аукцион — игра для четырёх менеджеров. Футболисты появляются по одному, скрытые за подсказками об их карьере, позиции и стоимости. Менеджеры делают предложения из общего стартового бюджета. Когда молоток опускается, игрок достаётся тому, кто предложил больше всех, а подсказки раскрывают, кого ты приобрёл.",
+      "Цель — собрать полный состав под выбранную схему. Переплатишь в начале — позже соперники перебьют твои предложения за нужных игроков; будешь ждать слишком долго — лучших разберут. Когда все составы собраны, команды получают оценки, и раунд выигрывает лучший полный состав.",
+      "В тренировочном аукционе на этой странице ты играешь против ботов с виртуальным бюджетом, результат не сохраняется. В приложении игроки, выполнившие вход, соревнуются за футболистов с реальными менеджерами, зарабатывают монеты и поднимаются в рейтинге аукциона.",
+    ],
   },
   "money-drop": {
     en: [
@@ -97,6 +113,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Money Drop sana sanal bir kasa ve beş futbol sorusu verir. Her sorunun dört olası cevabı vardır ve paranı güvendiğin cevaplara dağıtırsın. Yanlış cevaplara konan para kapaklardan aşağı düşer; doğru cevaptaki para sende kalır.",
       "Güven kazandırır: her şeyi tek bir cevaba koymak, haklıysan tüm yığını korur, yanılıyorsan hepsini kaybettirir. Bölmek seni korur ama elinde kalanı küçültür. Can simitleri birer kez iki yanlış cevabı eleyebilir, bir ipucu gösterebilir ya da bir soruyu atlayabilir.",
       "Puanın, beşinci düşüşten sonra elinde kalandır. Alıştırma turu örnek bir soru seti kullanır; uygulamadaki günlük oyunun her gün yeni bir seti vardır, elinde kalan için jeton verir ve serine sayılır.",
+    ],
+    ru: [
+      "В начале Money Drop тебе дают виртуальный запас монет и пять футбольных вопросов. У каждого вопроса четыре варианта ответа, и ты распределяешь монеты между теми, которые считаешь верными. Монеты на неверных ответах проваливаются через люки, а монеты на правильном остаются у тебя.",
+      "Уверенность вознаграждается: если поставить весь запас на один ответ, при верном ответе ты сохраняешь всё, а при ошибке теряешь всё. Распределение монет снижает риск, но и оставляет тебе меньше. Каждый спасательный круг можно использовать один раз: убрать два неверных ответа, открыть подсказку или пропустить вопрос.",
+      "Твой результат — это то, что осталось после пятого раунда. В тренировке используется примерный набор вопросов; в ежедневной игре приложения каждый день появляется новый набор, за оставшиеся монеты дают награду, а результат учитывается в серии ежедневных игр.",
     ],
   },
   "true-or-false-football": {
@@ -120,6 +141,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "İfadeler her iki yönde de inandırıcı görünecek şekilde yazılır, bu yüzden oyun tahmini değil gerçek bilgiyi ödüllendirir. Her doğru karar bir puan getirir ve serini sürdürür; günlük set, başta gösterilen tur kurallarına göre son ifadeden ya da ilk yanlış cevabından sonra biter.",
       "Buradaki alıştırma turu sabit bir örnek kullanır. Uygulamada her gün yeni bir ifade seti gelir, doğru kararlar jeton kazandırır ve sonuçların günlük serine işlenir.",
     ],
+    ru: [
+      "«Верно или неверно» — самая быстрая ежедневная игра в Quizball. Появляется утверждение о футболе — от трансферов до рекордов бомбардиров, — и у тебя есть несколько секунд, чтобы решить, верное оно или нет. Ответь до конца отсчёта: опоздание засчитывается как ошибка.",
+      "Утверждения составлены так, чтобы в обоих случаях звучать правдоподобно, поэтому игра проверяет знания, а не удачу. Каждый правильный ответ приносит очко и продлевает серию; ежедневный набор заканчивается после последнего утверждения или первой ошибки — это зависит от правил раунда, показанных в начале.",
+      "В тренировке здесь используется фиксированный набор примеров. В приложении каждый день появляются новые утверждения, за правильные ответы дают монеты, а результат идёт в зачёт ежедневной серии.",
+    ],
   },
   countdown: {
     en: [
@@ -141,6 +167,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Geri Sayım sana bir futbol listesi ve işleyen bir saat verir. Liste, Zlatan Ibrahimović'in oynadığı tüm kulüpler ya da son on Ballon d'Or kazananı olabilir. Süre bitmeden olabildiğince çok geçerli girdi yaz; kabul edilen her cevap bir puandır.",
       "İsimler esnek eşleştirilir: soyadları, yaygın kısaltmalar ve küçük yazım hataları kabul edilir; daha önce verdiğin bir girdi yalnızca yok sayılır. Tur, saat sıfıra ulaştığında ya da liste tamamlandığında biter.",
       "Alıştırma turu örnek listeler kullanır. Uygulamadaki günlük sürüm listeleri her gün değiştirir, bulunan cevap başına jeton öder ve serine ekler.",
+    ],
+    ru: [
+      "«Обратный отсчёт» даёт тебе футбольный список и тикающие часы. В списке могут быть все клубы, за которые играл Златан Ибрагимович, или последние десять обладателей «Золотого мяча». Введи как можно больше правильных ответов, пока не вышло время: каждый засчитанный ответ приносит очко.",
+      "Ответы засчитываются с небольшими послаблениями: подойдут фамилии, распространённые сокращения и небольшие ошибки в написании, а повторный ответ просто не учитывается. Раунд закончится, когда время выйдет или список будет заполнен.",
+      "В тренировочном раунде используются примеры списков. В ежедневной версии игры списки меняются каждый день, за каждый найденный ответ дают монеты, а результаты идут в серию.",
     ],
   },
   "higher-or-lower": {
@@ -164,6 +195,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Doğru bir karar seriyi sürdürür ve sonraki ikiliyi getirir; ilk yanlış karar turu bitirir. Turlar kısadır ve sayılar doğrulanmış kayıtlardan gelir, bu yüzden oyun şansla değil sporu bilmekle ilgilidir.",
       "Alıştırma turu örnek ikililer kullanır. Uygulamada günlük set her gün değişir, geçilen turlar jeton kazandırır ve sonuçlar serine sayılır.",
     ],
+    ru: [
+      "В игре «Выше или ниже» рядом появляются два футболиста и одно скрытое число: голы за сезон, сумма трансфера, матчи за сборную, возраст или рыночная стоимость. Ты видишь показатель первого игрока и решаешь, выше или ниже он у второго.",
+      "Правильный ответ продолжает серию и открывает следующую пару; первая ошибка завершает раунд. Раунды короткие, а числа взяты из проверенных источников, так что здесь важны знания футбола, а не удача.",
+      "В тренировочном раунде используются примеры пар. В приложении ежедневный набор меняется каждый день, за пройденные раунды дают монеты, а результаты идут в серию.",
+    ],
   },
   imposter: {
     en: [
@@ -185,6 +221,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Sahtekâr sana ortak bir şeyi paylaşan bir futbolcu grubu gösterir, örneğin oynadıkları bir kulüp ya da kazandıkları bir kupa; ancak biri ya da ikisi gruba ait değildir. Görevin, süre bitmeden sahtekârları bulup seçmektir.",
       "Her turun belirtilen bir teması ve belirtilen sayıda sahtekârı vardır. Tam olarak o oyuncuları seç: her doğru seçim sayılır, her yanlış seçim puan kaybettirir. Tur, onayladığında ya da süre bittiğinde puanlanır.",
       "Alıştırma turu örnek gruplar kullanır. Uygulamada gruplar her gün değişir, doğru turlar jeton kazandırır ve sonuçların günlük serini oluşturur.",
+    ],
+    ru: [
+      "«Самозванец» показывает группу футболистов, которых объединяет что-то общее — например, клуб, за который они играли, или выигранный трофей. Но один или два игрока не подходят. Найди их и выбери до конца отсчёта.",
+      "В каждом раунде указаны тема и количество самозванцев. Выбери именно этих игроков: правильный выбор засчитывается, за ошибку теряешь очки. Результат раунда подводится после подтверждения или когда выйдет время.",
+      "В тренировочном раунде используются примеры групп. В приложении группы меняются каждый день, за правильно пройденные раунды дают монеты, а результаты пополняют ежедневную серию.",
     ],
   },
   "card-detective": {
@@ -208,6 +249,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her karta bir bütçeyle başlarsın. Ucuz ipuçları az şey söyler, pahalı ipuçları neredeyse cevabı verir; beceri, hangi tek açığın tahmin etmeni sağlayacağını bilmektir. Oyuncuyu doğru bilirsen harcamadığını korursun; bütçen biterse kart kaybedilir.",
       "Bir gün on karttan oluşur. Bu sayfadaki alıştırma turu örnek bir kart seti kullanır; uygulamadaki günlük oyun kartları her gün değiştirir, koruduğun için jeton öder ve serine sayılır.",
     ],
+    ru: [
+      "«Карточный детектив» показывает карточку футболиста, в которой закрыты все данные: общий рейтинг, позиция, клуб, страна, лига и версия карточки. Каждая подсказка стоит определённое количество монет. Открой нужные подсказки и назови игрока.",
+      "На каждую карточку тебе дают бюджет. Дешёвые подсказки мало что раскрывают, а дорогие почти выдают ответ. Главное — понять, какую одну подсказку открыть, чтобы угадать. Назовёшь игрока правильно — сохранишь неизрасходованные монеты; бюджет закончится — карточка пропадёт.",
+      "Каждый день состоит из десяти карточек. В тренировочном раунде на этой странице используется пример набора карточек; в ежедневной игре приложения карточки меняются каждый день, за сохранённые монеты дают награду, а результаты идут в серию.",
+    ],
   },
   "guess-the-goal": {
     en: [
@@ -229,6 +275,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Golü Tahmin Et, golü atan gizlenmiş gerçek bir gol klibi oynatır. Hücumu, vuruşu ve sevinci izle, sonra golü atan oyuncunun adını söyle. Klipler son otuz yılın ünlü finallerini, derbilerini ve efsanevi gollerini kapsar.",
       "Daha az ipucu daha çok puan demektir: en yüksek puan için golcüyü yalnızca klipten bil ya da daha küçük bir ödül için sezonu, turnuvayı veya kulübü aç. Bir tur beş golden oluşur.",
       "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
+    ],
+    ru: [
+      "«Угадай гол» показывает настоящий голевой момент, но имя автора скрыто. Смотри на развитие атаки, удар и празднование, а затем назови забившего игрока. В подборке — знаменитые финалы, дерби и культовые голы за последние тридцать лет.",
+      "Меньше подсказок — больше очков: назови автора гола только по видео, чтобы получить максимум, или открой сезон, турнир либо клуб за меньшую награду. В каждом раунде пять голов.",
+      "В тренировочном раунде используется фиксированный набор видео. В приложении каждый день появляются пять новых голов, за правильные ответы дают монеты, а результаты идут в серию.",
     ],
   },
   "football-clues": {
@@ -256,6 +307,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her gün gece yarısı (Arjantin saati) on yeni oyuncu gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün ipuçlarını, günün sıralamasını ve serini.",
       "Futbolcu Tahmin Etme Oyunu'nu bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
     ],
+    ru: [
+      "«Футбольные подсказки» — игра, где нужно угадать футболиста по цепочке подсказок. Каждый день спрятаны десять футболистов, и у каждого есть десять подсказок: сначала расплывчатые — за какой континент он выступает, на какой позиции играет, какая у него сильная нога, — а затем всё более конкретные: знаменитый финал, трансфер, рекорд.",
+      "Решай сам, сколько подсказок тебе нужно. Правильная фамилия после первой подсказки приносит десять очков, а каждая открытая подсказка уменьшает возможный результат на одно очко — до одного очка за десятую. Ошибка — ещё не конец: у тебя будет ещё одна попытка и не больше трёх дополнительных подсказок.",
+      "Каждый день в полночь по аргентинскому времени появляются десять новых игроков. Без аккаунта можно сыграть в задания прошлых дней и посмотреть все ответы; после входа тебе доступны сегодняшние подсказки, одна рейтинговая попытка в ежедневном рейтинге и серия. В конце получишь десять цветных квадратиков, которыми можно поделиться.",
+      "Ещё можно сыграть в «Футбольные подсказки» 1 на 1 с другом онлайн: отправь ему ссылку на комнату, и вы одновременно увидите одни и те же подсказки. Очки получает тот, кто первым введёт правильную фамилию. Если ошибёшься, у соперника будет не больше трёх дополнительных подсказок, чтобы угадать.",
+    ],
   },
   "guess-the-goal-minute": {
     en: [
@@ -281,6 +338,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Tam dakika 3 puan eder. En fazla iki dakika farkla 2, en fazla beş dakika farkla 1 puan alırsın, daha uzağı puan getirmez; yani mükemmel bir gün 30 puandır. Uzatma dakikaya eklenir: 90+3'te atılan gol 93. dakikadır.",
       "Her dakika, gol kullanılmadan önce iki bağımsız maç kaydıyla kontrol edilir. Her gün gece yarısı (Arjantin saati) on yeni gol gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün gollerini, günün sıralamasını ve serini.",
       "Bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı golü aynı anda görürsünüz. Herkes diğerininkini görmeden dakikasını yazar, sonra ikisi birden açılır: tam dakika 3 puan, değilse en yakın tahmin 1 puan alır.",
+    ],
+    ru: [
+      "Угадай минуту гола — игра со стримов: на экране появляется знаменитый гол, а вместе с ним — матч, итоговый счёт, стадия турнира и автор гола. Тебе нужно назвать минуту, на которой забили. Каждый день — десять голов из финалов и матчей на вылет чемпионата мира, Лиги чемпионов, чемпионата Европы и Кубка Америки.",
+      "Точная минута приносит 3 очка. Если ошибёшься не больше чем на две минуты — получишь 2 очка, не больше чем на пять — 1, а за больший промах очков не будет. Идеальный день — это 30 очков. Добавленное время считается дальше: гол на 90+3 — это 93-я минута, а на 45+2 — 47-я.",
+      "Перед тем как добавить гол в игру, его минуту проверяют по двум независимым протоколам матча. Каждый день в полночь по аргентинскому времени появляются десять новых голов. Без аккаунта можно играть за прошлые дни; после входа доступны сегодняшние голы, одна рейтинговая попытка в ежедневном рейтинге и серия побед. В конце ты получишь десять цветных квадратиков, которыми можно поделиться.",
+      "Ещё можно сыграть онлайн 1 на 1 с другом, как на стримах: отправь ему ссылку на комнату, и вы одновременно увидите один и тот же гол. Каждый вводит минуту, не видя ответа другого, а потом ответы открываются: точный ответ приносит 3 очка, а если никто не угадал — 1 очко получает тот, чей ответ ближе.",
     ],
   },
   "played-for-both-clubs": {
@@ -308,6 +371,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Yeni eşleşmeler her gün Arjantin saatiyle gece yarısı gelir. Hesapsız önceki günleri oynar ve her eşleşmenin örnek cevaplarını görürsün; hesapla bugünün on eşleşmesini oynar ve günün sıralamasına girersin. Puanlar eşitse hızlı olan üstte yer alır. Bugünün cevapları gün bitene kadar gösterilmez.",
       "Arkadaşlarla daha da keyifli. Bir oda aç, linki paylaş; altı kişiye kadar aynı eşleşmelerde yarışın: 1'e 1'de ilk doğru cevap puanı alır, üç ya da daha fazla kişide ilk bilen 3, ikinci 2, bulan diğer herkes 1 puan alır. Ligi oda sahibi seçer: Süper Lig, Premier Lig, La Liga, Serie A, Bundesliga, Ligue 1 ya da büyük kulüpler karışık.",
     ],
+    ru: [
+      "Кто играл за оба клуба — футбольная игра из видео: два клуба, один вопрос. Кто выступал за обе команды? Каждый день — десять пар: от принципиальных соперников, у которых редко бывают общие игроки, до клубов с десятками общих футболистов.",
+      "На каждую пару у тебя 20 секунд, и достаточно назвать одного футболиста. Введи фамилию, полное имя или прозвище; акценты не важны, небольшие опечатки прощаются. Неверный ответ блокирует поле на секунду. Аренды тоже считаются: если футболист играл за основную команду, ответ засчитывается.",
+      "Новые пары появляются каждый день в полночь по аргентинскому времени. Без аккаунта можно играть за прошлые дни и посмотреть примеры ответов для каждой пары; после входа доступны сегодняшние десять пар и одна рейтинговая попытка в ежедневном рейтинге, где при равном счёте выше тот, кто ответил быстрее. Ответы за сегодня откроются только после окончания дня.",
+      "С друзьями ещё интереснее. Создай комнату, поделись ссылкой — и до шести игроков смогут соревноваться на одних и тех же парах. В игре 1 на 1 очко получает тот, кто первым даст правильный ответ. Если игроков трое или больше, первый получает 3 очка, второй — 2, а каждый следующий, кто найдёт ответ, — 1. Хозяин комнаты выбирает лигу: Премьер-лига, Ла Лига, Серия А, Бундеслига, Лига 1, Суперлига или подборка крупнейших клубов.",
+    ],
   },
   "football-name-chain": {
     en: [
@@ -333,6 +402,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "İsim de soyisim de sayılır: Anthony Martial hem A hem M için geçerlidir; sıradaki harf ise futbolcunun bilinen adının son harfidir. Harfler aksansız sayılır: Özil O ile başlar. Her isim için 10 saniyen var, yanlış cevap sadece zaman kaybettirir ve aynı futbolcu bir günde iki kez söylenemez.",
       "Her gün üç zincir var; her biri farklı, tanınmış bir futbolcuyla başlar. Puanın üç zincirdeki bütün isimlerin toplamıdır ve süre her beş isimde bir saniye kısalır, altı saniyeye kadar. Yeni zincirler Arjantin saatiyle gece yarısı gelir; hesapsız önceki günleri oynarsın, hesapla bugünün zincirlerini ve günün sıralamasını.",
       "Arkadaşlarla eleme oyununa dönüşür. 2-6 kişilik bir oda aç ve tek bir zincirde sırayla oynayın: süresi biten o turdan elenir, ayakta kalan son oyuncu puanı alır ve 3 puana ilk ulaşan kazanır.",
+    ],
+    ru: [
+      "Футбольная цепочка имён — словесная игра в цепочку с футболистами. Каждое имя должно начинаться на последнюю букву предыдущего, так что каждый ответ задаёт начало следующего. Закончить цепочку на сложную букву — ловушка, которую ты устроил себе сам.",
+      "Подойдут и имя, и фамилия: например, Энтони Марсьяль подходит на «Э» и «М», а следующая буква — последняя буква имени, под которым его знают. Акценты не учитываются: Озил начинается на «О». На каждое имя даётся 10 секунд, неверный ответ отнимает только потраченное время, а одного футболиста нельзя назвать дважды за день.",
+      "Каждый день доступны три цепочки, каждая начинается с другого известного футболиста. Твой счёт — общее число названных футболистов во всех трёх цепочках. Каждые пять ответов таймер сокращается на секунду, до шести секунд. Новые цепочки появляются в полночь по аргентинскому времени; без аккаунта можно играть за прошлые дни, а после входа доступны сегодняшние цепочки и ежедневный рейтинг.",
+      "С друзьями игра превращается в выбывание. Создай комнату на 2–6 игроков и ходите по очереди, продолжая одну общую цепочку: не успел ответить — выбыл из раунда, последний оставшийся получает очко, а победит тот, кто первым наберёт 3 очка.",
     ],
   },
   "last-answer-standing": {
@@ -360,6 +435,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her gün gece yarısı (Arjantin saati) yeni kategoriler gelir. Hesapsız önceki günleri oynar ve tüm cevapları görürsün; hesabınla bugünün kategorilerini oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda paylaşmak için beş renkli kare alırsın: sarı tam liste, yeşil yarısı ya da fazlası, mavi birkaçı, siyah hiçbiri.",
       "Futbolcu Sayma Oyunu bir arkadaşla çevrimiçi 1'e 1 de oynanır, tıpkı yayınlardaki gibi: oda linkini gönder ve aynı listeden sırayla cevap sayın. Ayakta kalan kategoriyi kazanır, 3 kategoriyi ilk kazanan düelloyu alır.",
     ],
+    ru: [
+      "«Последний ответ» — игра на перечисление. Каждый день тебя ждут пять футбольных категорий, и в каждой — закрытый список: состав сборной на чемпионате мира, все победители Кубка Либертадорес или лучшие бомбардиры клуба. Называй ответы по очереди — за каждый правильный получишь очко.",
+      "Всё решают секунды. На первый ответ даётся 20 секунд, а с каждым ответом времени на следующий становится меньше — вплоть до 6 секунд. Три ошибки подряд или истёкшее время завершают категорию. Назовёшь весь список — получишь ещё 5 очков.",
+      "Новые категории появляются каждый день в полночь по времени Аргентины. Без аккаунта можно сыграть в категории прошлых дней и посмотреть все ответы. После входа доступны категории на сегодня, одна рейтинговая попытка в дневном рейтинге и серия. В конце ты получишь пять цветных квадратиков для публикации: жёлтый за полный список, зелёный — за половину или больше, синий — за несколько ответов, чёрный — если не назвал ни одного.",
+      "Ещё можно сыграть в «Последний ответ» 1 на 1 с другом онлайн, как на стримах: отправь ему ссылку на комнату и называйте ответы из одного списка по очереди. Кто продержится дольше, выиграет категорию, а первый, кто выиграет 3 категории, победит в дуэли.",
+    ],
   },
   "football-minesweeper": {
     en: [
@@ -386,6 +467,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her gün Arjantin saatiyle gece yarısı yeni bir tahta gelir. Hesapsız bir önceki günün tahtasını oynar, her turdan sonra tüm cevapları görürsün; hesabınla bugünün tahtasını oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda arkadaşlarınla paylaşmak için yirmi renkli kareden oluşan bir tablo alırsın.",
       "Futbol Mayın Tarlası bir arkadaşla çevrimiçi 1'e 1 de oynanır: sırayla oyuncu seçersiniz ve sahtekâra basan, turun puanlarını rakibine verir. 12'sini de bulursanız ikiniz de puan alırsınız.",
     ],
+    ru: [
+      "Футбольный сапёр превращает футбольную викторину в поле с игроками вместо мин. В каждом раунде есть подсказка и шестнадцать карточек с портретами. Подсказке соответствуют двенадцать игроков, а четыре карточки — мины. Подсказки бывают о сезоне клуба, составе на знаменитый финал, месте рождения игрока или чемпионате мира, где он забил гол.",
+      "Каждый правильный выбор добавляет очко в копилку раунда. Наступишь на мину — раунд закончится, а очки в копилке сгорят. Поэтому главное — решить, когда забрать их. Найдёшь всех двенадцать — получишь 15 очков за идеальный раунд. За день можно сыграть двадцать раундов: сложность растёт, а максимум — 300 очков.",
+      "Каждый день в полночь по времени Аргентины появляется новое поле. Без аккаунта можно сыграть на поле за прошлый день и посмотреть все ответы после каждого раунда. После входа доступны сегодняшнее поле, одна рейтинговая попытка в дневном рейтинге и серия. В конце ты получишь сетку из двадцати цветных квадратиков, которой можно поделиться с друзьями.",
+      "В футбольного сапёра можно сыграть и 1 на 1 с другом онлайн, как на стримах: вы по очереди выбираете игроков, а если кто-то попадётся на самозванца, очки за раунд достанутся сопернику. Найдёте всех 12 — очки получат оба.",
+    ],
   },
   "trivia-mines": {
     en: [
@@ -407,6 +494,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Trivia Mines bir futbol mayın tarlasıdır. Yirmi beş karo dört defans oyuncusunu gizler. Bir bahis seçersin, karoları teker teker açarsın ve her güvenli karo potu o seçimin adil oranıyla çarpar. Bir defans oyuncusuna denk gelirsen bahis gider; ondan önce parayı çekersen pot senindir.",
       "Her turda üç kez keşif yapabilirsin: bir futbol sorusunu doğru cevapla, gizli bir defans oyuncusu işaretlenir. Keşif sonraki seçimlerin riskini düşürür ve çarpanlar da onunla küçülür, böylece nasıl oynarsan oyna beklenen getiri aynı kalır. Para çekişte kasa yüzde üç alır.",
       "Bu sayfada çekilemeyen ve dönüştürülemeyen alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular cüzdanlarından gerçek jeton yatırır; bahisler beş ile beş yüz arasındadır ve potun üst sınırı vardır.",
+    ],
+    ru: [
+      "«Мины-викторина» — футбольный сапёр. Под двадцатью пятью плитками спрятаны четыре защитника. Выбери количество очков, открывай плитки по одной: каждая безопасная плитка умножает общий счёт по честному коэффициенту для этого выбора. Попадёшь на защитника — очки пропадут; успеешь забрать их раньше — они твои.",
+      "За раунд можно до трёх раз провести разведку: правильно ответь на футбольный вопрос, и один скрытый защитник будет отмечен. Разведка снижает риск следующих выборов, а коэффициенты уменьшаются вместе с ним, так что ожидаемый результат не зависит от того, как ты играешь. При получении очков игра удерживает три процента.",
+      "На этой странице ты играешь тренировочными очками, которые нельзя вывести или обменять. В приложении игроки после входа используют реальные монеты из кошелька. Количество монет — от пяти до пятисот, а у общего счёта есть верхний предел.",
     ],
   },
   "football-logic": {
@@ -430,6 +522,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Bilmeceler üç çeşittir: iki armayla anlatılan bir transfer, yalnızca tek bir oyuncuya uyan bir kariyer ve resimlerin bir ismi seslendirdiği saf kelime oyunu. Soyadları ve küçük yazım hataları kabul edilir; yanlış bir tahmin cevabı gösterir, böylece sonrakinden önce hileyi öğrenirsin.",
       "Alıştırma turu sabit bir bilmece seti kullanır. Uygulamada her gün beş yeni bilmece gelir, her doğru cevap jeton kazandırır ve gün serine sayılır.",
     ],
+    ru: [
+      "«Футбольная логика» — это загадки по картинкам. Рядом появляются два изображения: эмблема клуба и достопримечательность, флаг и предмет или пара эмодзи. Вместе они намекают на футболиста, трансфер или знаменитый момент. Разгадай пару, введи ответ — и появится следующая загадка.",
+      "Загадки бывают трёх видов: трансфер, зашифрованный двумя эмблемами; карьера, которая подходит только одному игроку; и игра слов, в которой картинки подсказывают звучание имени. Подойдут фамилии и небольшие опечатки. Если ошибёшься, увидишь ответ и разберёшься в загадке перед следующей.",
+      "В тренировке используется постоянный набор загадок. В приложении каждый день появляются пять новых: за каждый правильный ответ начисляются монеты, а день засчитывается в серию.",
+    ],
   },
   "missing-xi": {
     en: [
@@ -451,6 +548,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "İlk 11 Tahmin Etme ünlü bir ilk on biri sahada on bir forma olarak, gerçek dizilişte ve her isim gizli şekilde gösterir. Maç adlandırılmıştır, örneğin bir Şampiyonlar Ligi finali; görevin her mevkide maça başlayan oyuncunun adını söylemektir. Bir formaya dokun, ismi yaz, devam et.",
       "Her ilk on bir resmî maç kaydına göre doğrulanır, bu yüzden diziliş ve on bir oyuncu tam olarak doğrudur. İsimler İngilizce ve Gürcüce yazımlarıyla esnek eşleştirilir. Hatırlayamadığın bir formayı atlayabilirsin; atlamak yüzü ve ismi açar, böylece kadro sonunda yine eksiksiz görünür.",
       "Bir gün üç ilk on birden oluşur. Alıştırma turu örnek kadrolar kullanır; uygulamadaki günlük oyun kadroları her gün değiştirir, bilinen forma başına jeton öder ve serine sayılır.",
+    ],
+    ru: [
+      "«Угадай стартовый состав» показывает знаменитую основу из одиннадцати футболок на поле в настоящей расстановке — имена игроков скрыты. Матч известен заранее, например финал Лиги чемпионов. Тебе нужно назвать игрока на каждой позиции. Нажми на футболку, введи имя и переходи дальше.",
+      "Каждый состав сверяется с официальным протоколом матча, поэтому расстановка и все одиннадцать игроков точны. Принимаются разные варианты написания имён латиницей и по-грузински. Не помнишь, кто играл в этой футболке? Пропусти её — откроются лицо и имя, и к концу перед тобой будет полный состав.",
+      "За день нужно угадать три состава. В тренировочном раунде — примеры составов, а составы в ежедневной игре в приложении меняются каждый день. За каждого угаданного игрока дают монеты, а игра учитывается в твоей серии.",
     ],
   },
   "pass-chain": {
@@ -474,6 +576,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her halka doğrulanmış bir kariyer grafiğine göre kontrol edilir, bu yüzden bir tahmin yalnızca iki oyuncu gerçekten aynı dönemde bulunmuşsa sayılır. Daha az halka daha çok puan getirir: her bulmacanın bilinen bir en kısa yolu vardır ve onu yakalamak ya da geçmek hedeftir. Takılırsan en kısa zinciri açıp devam et.",
       "Bir gün iki bulmacadan oluşur: bir ısınma ve daha az belirgin bir köprü gerektiren bir tane. Alıştırma turu örnek bulmacalar kullanır; uygulamadaki günlük oyun bulmacaları her gün değiştirir, çözüm başına jeton öder ve serine sayılır.",
     ],
+    ru: [
+      "«Цепочка игроков» предлагает двух футболистов, которые никогда не играли вместе, и просит связать их. Назови игрока, который пересекался с последним звеном цепочки в одном клубе, работал с тем же тренером или делил с ним раздевалку. Если связь подтверждается, цепочка вырастет на одно звено, а новый игрок станет её концом. Дойди до цели — и головоломка решена.",
+      "Каждое звено сверяется с проверенной базой футбольных карьер: ответ засчитывается, только если игроки действительно пересекались. Чем короче цепочка, тем выше счёт: для каждой головоломки известен самый короткий путь, и твоя цель — найти его или сделать ещё короче. Застрял? Открой кратчайшую цепочку и двигайся дальше.",
+      "За день — две головоломки: разминочная и та, где придётся найти менее очевидную связь. В тренировочном раунде — примеры головоломок, а в ежедневной игре в приложении они меняются каждый день. За каждое решение дают монеты, а игра учитывается в твоей серии.",
+    ],
   },
   "stat-sniper": {
     en: [
@@ -495,6 +602,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "En Yakın Tahmin, bir futbol sayıları oyunudur. Her soru gerçek bir sayıyı sorar: bir bonservis bedeli, bir oyuncunun en yüksek piyasa değeri, bir sezondaki lig golleri, bir kulüpteki maç sayısı, boyu ya da büyük bir Avrupa gecesindeki seyirci sayısı. Bir sayı söylersin; gerçeğe ne kadar yakınsa o kadar iyi.",
       "Tek başına bir günlük oyundur: on soru, makul bir aralıkta bir kaydırıcı ve yakınlığa göre puan (tam değer 100 puan, aralığın dörtte biri kadar uzak tahmin sıfır) ve günün isabet liderlik tablosu. Arkadaşlarla 2–6 oyuncu tahminini aynı anda yazar ve turu en yakın tahmin eden kazanır: 1v1'de en yakın olan puan alır, üç ve daha fazla oyuncuda kürsü vardır, tam isabet bonus kazandırır.",
       "Her sayı izlenebilir bir veri setinden gelir ve arkadaş odaları kendi soru havuzunu kullanır; böylece kimse cevapları günlük oyundan ezberleyemez.",
+    ],
+    ru: [
+      "«Кто ближе?» — футбольная игра на знание цифр. В каждом вопросе нужно назвать реальное число: стоимость трансфера, пиковую рыночную стоимость футболиста, его голы в лиге за сезон, матчи за клуб, рост или число зрителей на большом европейском матче. Назови число — чем ближе к правильному ответу, тем лучше.",
+      "В одиночной игре — ежедневное испытание из десяти вопросов: для каждого есть шкала с правдоподобным диапазоном, а очки начисляются за точность (точный ответ даёт 100 очков, промах на четверть диапазона — ноль). В конце дня покажут рейтинг точности. В игре с друзьями от 2 до 6 игроков одновременно вводят свои ответы, и раунд выигрывает тот, кто оказался ближе всех: в игре 1 на 1 очки получает тот, кто ближе, а при трёх и более игроках есть пьедестал. За точный ответ — бонус.",
+      "Это футбольная версия викторинного раунда «кто ближе — тот и выиграл»: угадывай стоимость трансфера, рыночную стоимость или число зрителей на матче. Каждое число взято из проверяемого набора данных, а в комнатах с друзьями используется свой пул вопросов, так что ответы из ежедневного испытания не помогут.",
     ],
   },
   "free-kicks": {
@@ -518,6 +630,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Şut çektiğinde bir bölge seçersin; kaleci açık bölgelerden birine uzanır ve pot kaç bölgenin açık olduğuna göre öder; yani daha çok doğru cevap daha güvenli bir şut ve daha büyük bir çarpan demektir. Kaçırırsan bahis gider; gol atarsan parayı çekebilir ya da potu ortaya koyarak yeni bir hücum yapabilirsin.",
       "Bu sayfada çekilemeyen alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular cüzdanlarından gerçek jeton yatırır; aynı adil oranlar ve her durumda gösterilen kasa payı geçerlidir.",
     ],
+    ru: [
+      "«Штрафные» — игра на монеты с воротами, разделёнными на зоны. Ты выбираешь, сколько монет потратить на атаку, а каждый удар начинается с футбольного вопроса. Правильный ответ открывает ещё одну зону ворот и задаёт следующий вопрос. После неправильного ответа или окончания времени отвечать больше нельзя, и бить придётся по тем зонам, которые успели открыться.",
+      "Перед ударом выбери зону. Вратарь прыгает в одну из открытых зон, а награда зависит от того, сколько зон было открыто: чем больше правильных ответов, тем безопаснее удар и выше множитель. Промах — монеты за атаку пропадают. Забьёшь — можешь забрать выигрыш или пойти в новую атаку и поставить его под угрозу.",
+      "На этой странице ты играешь только на тренировочные очки, которые нельзя вывести. В приложении игроки после входа используют монеты из своего кошелька; шансы остаются такими же прозрачными, а доля игры показана на каждом этапе.",
+    ],
   },
   "road-to-goal": {
     en: [
@@ -540,6 +657,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Her bölgeden sonra karar verirsin: merdivenin o ana kadarki değerini çek ya da tüm potu riske atarak sonraki soruya devam et. Bir yanlış cevap ya da süre aşımı koşuyu bitirir ve bahis kaybedilir. On bir bölgenin tamamını geçmek merdivenin tepesini öder.",
       "Bu sayfada yalnızca alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular sabit tutarlarda gerçek jeton yatırır, soru sırası koşu başlamadan önce sabitlenir ve tur kanıtı sonradan doğrulanabilir.",
     ],
+    ru: [
+      "«Путь к голу» — это лестница из одиннадцати зон от своей штрафной до ворот соперника. Выбери фиксированное количество монет для игры, а затем отвечай на футбольный вопрос в каждой зоне за пятнадцать секунд. Каждый правильный ответ поднимает тебя на зону выше и увеличивает множитель. Чем ближе к воротам, тем сложнее вопросы.",
+      "После каждой зоны решай, что делать дальше: забрать текущую награду или перейти к следующему вопросу, рискуя всеми накопленными монетами. Ошибка или окончание времени завершает игру, и монеты за вход пропадают. Пройди все одиннадцать зон — получишь максимальную награду.",
+      "На этой странице ты играешь только на тренировочные очки. В приложении игроки после входа играют на фиксированное количество монет; порядок вопросов зафиксирован до начала игры, а подтверждение раунда можно проверить после неё.",
+    ],
   },
   "squad-spin": {
     en: [
@@ -561,6 +683,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Futbol Çarkı bir dizi çevirmedir. Her çevirme üç makarayı bir kulüp, bir mevki ve bir ülkeye oturtur ve üçüne de uyan bir futbolcunun adını söylemek için on beş saniyen vardır, örneğin Chelsea'de oynamış Brezilyalı bir forvet. Dört ve beş makaralı koşular bir lig, bir teknik direktör ya da bir kupa ekler ve çevirme başına daha çok öder.",
       "Doğru cevap potu çarpar; sonra, sonraki makaralar gösterilmeden önce parayı çekmeyi ya da yeniden çevirmeyi seçersin, yani asla önceden bakamazsın. Yanlış cevap ya da süre aşımı koşuyu bitirir ve bahis kaybedilir. Her kombinasyonun en az bir doğrulanmış cevabı vardır; isimler yazım hatası toleransıyla İngilizce ve Gürcüce yazımlarıyla kabul edilir.",
       "Bu sayfada yalnızca alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular gerçek jeton yatırır, çarpanlar zorluk seviyesi başına ölçülen isabetten gelir ve koşular on çevirme ve bahsin kırk katıyla sınırlıdır.",
+    ],
+    ru: [
+      "Футбольный спин — это серия вращений. Каждый раз три барабана показывают клуб, позицию и страну, а у тебя есть пятнадцать секунд, чтобы назвать футболиста, которому подходят все три условия. Например, бразильского нападающего, который играл за «Челси». В сериях с четырьмя и пятью барабанами добавляется лига, тренер или трофей, а за каждый спин начисляется больше.",
+      "Правильный ответ увеличивает сумму, а затем ты выбираешь: забрать её или крутить снова, пока не показаны следующие барабаны. Подсмотреть заранее не получится. Ошибка или истечение времени завершают серию, а монеты сгорают. Для каждой комбинации есть как минимум один проверенный ответ; имена принимаются в английском и грузинском написании, ошибки в написании тоже допустимы.",
+      "На этой странице ты играешь только на тренировочные очки. В приложении игроки, выполнившие вход, используют настоящие монеты, множители рассчитываются по измеренной точности для каждого уровня сложности, а серия ограничена десятью вращениями и суммой, не превышающей монеты за участие более чем в сорок раз.",
     ],
   },
 };

@@ -12,7 +12,7 @@ import {
 } from "@/features/football-grid/FootballGridFlowScreen";
 import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { DailyGameApiError } from "@/lib/repositories/dailyGameApi";
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/messages";
 import type { FootballGridCommandResultPayload, FootballGridState } from "@/lib/realtime/socket.types";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { gridDailyApi, type GridDailyBoard, type GridDailyRun } from "./gridDaily.api";
 import { fillDaily, GRID_DAILY_COPY } from "./gridDaily.copy";
 import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
+import { localizedPlayerName } from "@/lib/football-grid/playerName";
 
 const SELF = "daily-me";
 /** A run past the hour has no exact time on the board. */
@@ -46,7 +47,7 @@ function boardState(run: GridDailyRun, locale: Locale): FootballGridState | null
     claims: run.state.cells.flatMap((cell, cellIndex) => (cell ? [{
       cellIndex,
       footballPlayerId: cell.playerId,
-      displayName: locale === "ka" && cell.nameKa ? cell.nameKa : cell.name,
+      displayName: localizedPlayerName(locale, cell.name, cell),
       imageUrl: cell.imageUrl,
       claimantUserId: SELF,
       turnNumber: 0,

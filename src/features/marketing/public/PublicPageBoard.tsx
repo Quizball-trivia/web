@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/locale-config";
 
 function Placeholder() {
   return <div className="h-64 animate-pulse rounded-2xl bg-white/5" aria-hidden />;

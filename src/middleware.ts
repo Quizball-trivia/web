@@ -252,7 +252,7 @@ export async function middleware(req: NextRequest) {
   // A games folder belongs to its own locales (/en|ka/football-games,
   // /es/juegos-de-futbol, /tr/futbol-oyunlari). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/([a-z-]+)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru)\/([a-z-]+)(?:\/|$)/);
   if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }

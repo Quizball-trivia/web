@@ -65,6 +65,7 @@ describe('official Android download page', () => {
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/download', ka: 'https://quizball.io/ka/download',
       es: 'https://quizball.io/es/download', tr: 'https://quizball.io/tr/download',
+      ru: 'https://quizball.io/ru/download',
       'x-default': 'https://quizball.io/en/download',
     });
     // Inherit production/preview robots from the root; do not accidentally index previews.

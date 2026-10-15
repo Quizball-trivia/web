@@ -7,7 +7,6 @@ import { UltimoGame } from "@/features/ultimo/UltimoGame";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
-import { toSiteLocale } from "@/lib/i18n/locale";
 
 function UltimoRoute() {
   const router = useRouter();
@@ -22,7 +21,7 @@ function UltimoRoute() {
     if (event === "complete") trackGameComplete({ modeId: "ultimo", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
     if (event === "replay") { trackGameReplay({ modeId: "ultimo", previousSessionId: s.id }); session.current = { id: createRealtimeCommandId(), startedAt: Date.now() }; }
   }, [access]);
-  return <UltimoGame key={day ?? "today"} locale={toSiteLocale(locale)} initialDay={day} onEvent={onEvent} onExit={() => router.push("/play")} />;
+  return <UltimoGame key={day ?? "today"} locale={locale} initialDay={day} onEvent={onEvent} onExit={() => router.push("/play")} />;
 }
 
 /** Último en pie futbolero in the app shell; the same daily board as the public page. */
