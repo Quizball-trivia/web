@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { timeoutSignal } from "@/lib/timeoutSignal";
+import { GUEST_TOKEN_HEADER, forgetGuestToken, getGuestToken } from "@/lib/guest/guestSession";
+import { useAuthStore } from "@/stores/auth.store";
 
 /**
  * Guess the Goal (server-authoritative mini-game) API client.
@@ -161,10 +163,18 @@ export class GuessTheGoalApiError extends Error {
   }
 }
 
-async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: unknown): Promise<T> {
+/** `guestLocale`: a signed-out visitor plays as the site-wide guest session (minted on first play). */
+async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: unknown, guestLocale?: string, retried = false): Promise<T> {
   const headers = new Headers({ "Content-Type": "application/json" });
   const token = await getSupabaseAccessToken();
+  let guestToken: string | null = null;
   if (token) headers.set("Authorization", `Bearer ${token}`);
+  else if (guestLocale !== undefined) {
+    // A signed-in player whose session can't be read right now must not quietly become a guest.
+    if (useAuthStore.getState().status === "authenticated") throw new GuessTheGoalApiError("session_unavailable", 0);
+    guestToken = await getGuestToken(guestLocale);
+    headers.set(GUEST_TOKEN_HEADER, guestToken);
+  }
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
@@ -175,6 +185,11 @@ async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: u
     // retry (mutations replay their stored result server-side).
     signal: timeoutSignal(15_000),
   });
+  if (response.status === 401 && guestToken) {
+    // An expired guest session: drop it and try once with a fresh one.
+    forgetGuestToken(guestToken);
+    if (!retried) return call<T>(path, method, body, guestLocale, true);
+  }
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
@@ -243,3 +258,29 @@ export const guessTheGoalApi = {
     return call("/api/v1/guess-the-goal/gallery", "GET");
   },
 };
+
+/** The same game for a signed-out visitor: played as the guest session, no rewards, no dev levers. */
+export function guessTheGoalGuestApi(locale: string) {
+  return {
+    start(clientNonce: string): Promise<GgtSession> {
+      return call("/api/v1/guess-the-goal/sessions", "POST", { client_nonce: clientNonce }, locale);
+    },
+    async current(): Promise<GgtSession | null> {
+      try {
+        return await call<GgtSession>("/api/v1/guess-the-goal/sessions/current", "GET", undefined, locale);
+      } catch (error) {
+        if (error instanceof GuessTheGoalApiError && error.status === 404) return null;
+        throw error;
+      }
+    },
+    guess(sessionId: string, optionId: string): Promise<GgtGuessOutcome> {
+      return call(`/api/v1/guess-the-goal/sessions/${sessionId}/guess`, "POST", { option_id: optionId }, locale);
+    },
+    bonus(sessionId: string, optionId: string): Promise<GgtBonusOutcome> {
+      return call(`/api/v1/guess-the-goal/sessions/${sessionId}/bonus`, "POST", { option_id: optionId }, locale);
+    },
+    gallery(): Promise<GgtGallery> {
+      return call("/api/v1/guess-the-goal/gallery", "GET", undefined, locale);
+    },
+  };
+}

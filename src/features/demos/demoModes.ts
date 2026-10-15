@@ -16,6 +16,18 @@ export interface DemoModeCard {
 // continued as a separate feature. The /demos/match route (DemoTraining)
 // stays wired so it can still be reached directly.
 const HIDDEN_DEMO_MODES: DemoModeCard[] = [
+  // The live Guess the Goal runs on its own public page (guest session) and /guess-the-goal, not through the demo hub.
+  {
+    slug: "guess-the-goal",
+    title: { en: "Guess the Goal", ka: "გამოიცანი გოლი", es: "Adivina el gol", tr: "Golü Tahmin Et", },
+    description: {
+      en: "A legendary goal replays on the tactics board. Name it, then watch the clip.",
+      ka: "ლეგენდარული გოლი ტაქტიკურ დაფაზე მეორდება. გამოიცანი და ნახე ვიდეო.",
+      es: "Un gol legendario se repite en la pizarra táctica. Adivínalo y mira el clip.",
+      tr: "Efsane bir gol taktik tahtasında yeniden oynanıyor. Bil, sonra klibi izle.",
+    },
+    group: "daily",
+  },
   // Buscaminas futbolero runs on its own public page and /buscaminas, not through the demo hub.
   {
     slug: "buscaminas",
