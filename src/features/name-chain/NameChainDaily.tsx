@@ -13,6 +13,7 @@ import { DailyEnd, WordDailyLeaderboard, WordDailyScreen } from "@/features/word
 import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins, useRefused } from "@/features/wordgames/ui";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
+import { chainLetterIndex } from "./chainLetter";
 
 type Verdict = "ok" | "unknown" | "letter" | "repeat";
 /** Server-held run state (backend name-chain-daily.rules PublicRunState). */
@@ -32,7 +33,7 @@ export { nameChainDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 /** A name with the letter the chain hangs on picked out. */
 function Lettered({ name, className }: { name: string; className?: string }) {
   const letters = [...name];
-  const at = letters.length - 1 - [...letters].reverse().findIndex((ch) => /\p{L}/u.test(ch));
+  const at = chainLetterIndex(name);
   return <span className={className} style={poppins}>{letters.map((ch, i) => <span key={i} className={i === at ? "text-brand-yellow" : undefined}>{ch}</span>)}</span>;
 }
 

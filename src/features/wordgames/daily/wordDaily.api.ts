@@ -28,7 +28,7 @@ export function createWordDailyApi<State extends WordRunStateBase, Result extend
     current: (day: string, locale: string) => call<WordRun<State> | { run: null }>(`/current?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
     /** `timeoutMs`: a re-sync in the middle of a turn must answer within it. */
     start: (day: string, contentVersion: number | undefined, locale: string, timeoutMs?: number) =>
-      call<WordRun<State>>("/start", "POST", { day, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
+      call<WordRun<State>>("/start", "POST", { day, locale, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
     next: (run: WordRun<State>, locale: string) => call<WordRun<State>>("/next", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
     answer: (run: WordRun<State>, answer: string, locale: string) =>
       call<WordRun<State> & { result: Result }>("/answer", "POST", { ...move(run), answer }, locale, "player", MOVE_TIMEOUT_MS),
