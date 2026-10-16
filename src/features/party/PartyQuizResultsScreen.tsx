@@ -31,6 +31,7 @@ interface PartyQuizResultsScreenProps {
   headline?: string;
   hideXp?: boolean;
   correctLabel?: string;
+  pointsLabel?: string;
   /** Keep the ranks and order in `finalResults.standings` (shared places) instead of re-ranking by points. */
   useGivenRanks?: boolean;
   /** 'medals': gold / silver / bronze podium and rows (the leaderboard's colours). */
@@ -325,6 +326,7 @@ export function PartyQuizResultsScreen({
   headline,
   hideXp = false,
   correctLabel,
+  pointsLabel,
   useGivenRanks = false,
   palette = 'medals',
   notOnPodium = [],
@@ -492,7 +494,7 @@ export function PartyQuizResultsScreen({
                   value={String(selfStanding.correctAnswers ?? 0)}
                 />
                 <PartyStatCell
-                  label={t('partyResults.statPoints')}
+                  label={pointsLabel ?? t('partyResults.statPoints')}
                   value={String(selfStanding.totalPoints ?? 0)}
                 />
               </div>

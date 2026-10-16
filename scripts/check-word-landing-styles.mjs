@@ -16,9 +16,9 @@ const freshManifest = renderWordStyleSources(closure.files);
 if (read("src/styles/word-landing-sources.css") !== freshManifest) throw new Error("Stale word style manifest; regenerate with scripts/generate-word-landing-sources.mjs --write.");
 
 const wordSlugs = new Map([
-  ["football-games", ["football-name-chain", "played-for-both-clubs"]],
-  ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun"]],
-  ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu"]],
+  ["football-games", ["football-name-chain", "played-for-both-clubs", "football-horserace"]],
+  ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun", "carrera-de-caballos-futbolera"]],
+  ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu", "futbol-at-yarisi"]],
 ]);
 const fixedEntries = new Set([...wordSlugs].flatMap(([folder, slugs]) => slugs.map((slug) => `src/app/[locale]/(hub)/(word-shell)/${folder}/${slug}/page.tsx`)));
 const appDirectory = path.join(root, "src/app");

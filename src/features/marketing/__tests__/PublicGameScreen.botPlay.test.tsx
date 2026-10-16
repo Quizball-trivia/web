@@ -50,8 +50,8 @@ describe("PublicGameScreen — Tic Tac Toe / Auction bot-play layout", () => {
 });
 
 describe("PublicGameScreen — word-game loading contract", () => {
-  it.each(["en", "es", "ka", "tr"] as const)("prioritises one hero and defers both word-game boards in %s", (locale) => {
-    for (const modeId of ["sharedPlayer", "nameChain"]) {
+  it.each(["en", "es", "ka", "tr"] as const)("prioritises one hero and defers every word-game board in %s", (locale) => {
+    for (const modeId of ["sharedPlayer", "nameChain", "footballRace"]) {
       const game = findPublicGameByModeId(modeId)!;
       const view = render(<PublicGameScreen game={game} locale={locale} />);
       const heroes = screen.getAllByTestId("art").filter((art) => art.dataset.priority === "true");

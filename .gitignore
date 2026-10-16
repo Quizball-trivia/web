@@ -46,6 +46,8 @@ yarn-error.log*
 next-env.d.ts
 
 # secrets / local data
+# Local-only game data packs with real answers (dev playground): never committed.
+/public/dev-data/
 *.key
 *.crt
 *.cer
