@@ -19,7 +19,6 @@ const wordSlugs = new Map([
   ["football-games", ["football-name-chain", "played-for-both-clubs", "football-horserace"]],
   ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun", "carrera-de-caballos-futbolera"]],
   ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu", "futbol-at-yarisi"]],
-  ["futbolnye-igry", ["futbolisty-na-poslednyuyu-bukvu", "igravshie-za-oba-kluba", "futbolnye-skachki"]],
 ]);
 const fixedEntries = new Set([...wordSlugs].flatMap(([folder, slugs]) => slugs.map((slug) => `src/app/[locale]/(hub)/(word-shell)/${folder}/${slug}/page.tsx`)));
 const appDirectory = path.join(root, "src/app");
