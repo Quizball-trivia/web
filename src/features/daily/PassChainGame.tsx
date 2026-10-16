@@ -177,6 +177,7 @@ export function PassChainGame({
             className="px-0 pt-0"
           />
         }
+        contentClassName="max-w-md"
       >
         <div className="mx-auto w-full max-w-md">
           {/* The rule, spelled out with tonight's names: what "link" means is not obvious. */}

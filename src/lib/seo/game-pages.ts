@@ -74,6 +74,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   // "football name chain", "son harfle futbolcu". KA follows EN.
   "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu" },
   "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu" },
+  // Google Suggest 2026-10-15: "adivina el top 10 de fútbol" (ar/es/mx), "futbol top 10" (tr); en/ka "football tenable".
+  "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10" },
   "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi" },
 };
 
@@ -1053,6 +1055,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Sana bir milli takım ve bir turnuva düşer: Avrupa Şampiyonası'nda Türkiye, Dünya Kupası'nda Fas. Üç rakip milli takım seninle yarışır. Takımının önde olduğunu düşündüğün bir istatistik seç, örneğin tek maçta en çok gol ya da en az yenilen gol; haklıysan bayrağın bir kare ilerler. Yanılırsan o istatistikte gerçekten önde olan takım ilerler.",
       howToPlay: ["Günün yarışında milli takımın tek bir turnuvada üç rakiple karşılaşır. Rakipler iki kare önde başlar.", "Listeden bir istatistik seç ya da yaz: galibiyetler, penaltılar, gol yemeden biten maçlar, kırmızı kartlar, geri dönüşler ve daha fazlası. Her istatistik o turnuvanın gerçek bir verisidir.", "İstatistikte önde olan takım, kim seçmiş olursa olsun bir kare ilerler. Eşitlikte önde olan bütün takımlar ilerler.", "Rakiplerden önce, olabildiğince az seçimle kaleye ulaş. 5'te 5 kusursuz bir yarıştır."],
       reward: "Önceki günleri hesapsız oyna; bugünün yarışı ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("football-tenable", "/football-tenable", "tenable", {
+    en: {
+      metaTitle: "Football Tenable — Guess the Top 10 Daily Football Quiz | QuizBall",
+      metaDescription: "Football Tenable: one hidden top 10 a day. Name the players, managers, clubs or countries on the list before the tower beats you. 3 lives, a daily leaderboard, or play friends in rooms of 2 to 6.",
+      title: "Football Tenable",
+      intro: "One hidden top 10 list every day: the Champions League's top scorers, the most expensive transfers, the managers with the most titles. Name who is on it. Every right answer climbs into its place on the tower; three wrong answers and the tower wins. Can you get all ten?",
+      howToPlay: ["Read today's list title: it tells you exactly what the ten have in common.", "Type a name, or pick it from the suggestions. A right answer appears in its ranked slot with its figure.", "A real player who is not on the list costs a life. Something already on the tower, or a name we do not know, costs nothing. You have 3 lives.", "Your score is how many of the ten you found. Share your tower, or play the same game with friends: take turns on one tower, and each slot is worth its number."],
+      reward: "Play past days without an account; sign in for today's list and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ფეხბურთის ტოპ 10 — გამოიცანი დამალული სია | QuizBall",
+      metaDescription: "ფეხბურთის ტოპ 10: ყოველდღე ერთი დამალული სია. დაასახელე ფეხბურთელები, მწვრთნელები, კლუბები ან ქვეყნები, სანამ კოშკი გაიმარჯვებს. 3 სიცოცხლე, დღის რეიტინგი ან თამაში მეგობრებთან.",
+      title: "ფეხბურთის ტოპ 10",
+      intro: "ყოველდღე ერთი დამალული ტოპ 10 სია: ჩემპიონთა ლიგის საუკეთესო ბომბარდირები, ყველაზე ძვირადღირებული ტრანსფერები, ყველაზე ტიტულოვანი მწვრთნელები. დაასახელე, ვინ არის მასში. ყოველი სწორი პასუხი კოშკზე თავის ადგილას ადის; სამი შეცდომა და კოშკი იგებს. ათივეს გამოიცნობ?",
+      howToPlay: ["წაიკითხე დღის სიის სათაური: ის ზუსტად გეუბნება, რა აერთიანებს ათეულს.", "დაწერე სახელი ან აირჩიე მინიშნებიდან. სწორი პასუხი თავის ადგილას ჩნდება თავისი მაჩვენებლით.", "ნამდვილი ფეხბურთელი, რომელიც სიაში არ არის, ერთ სიცოცხლეს გაკარგვინებს. უკვე გახსნილი ან უცნობი სახელი არაფერი ჯდება. 3 სიცოცხლე გაქვს.", "შენი ქულა ნაპოვნი ადგილების რაოდენობაა. გააზიარე შენი კოშკი ან ითამაშე მეგობრებთან: რიგრიგობით ერთ კოშკზე, ყოველი ადგილი იმდენი ქულა ღირს, რა ნომერიც აქვს."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი სიისთვის და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Adivina el Top 10 de fútbol — Un top 10 oculto por día | QuizBall",
+      metaDescription: "Adivina el Top 10 de fútbol: una lista oculta por día. Nombrá a los jugadores, técnicos, clubes o selecciones que están en ella antes de que te gane la torre. 3 vidas, ranking diario o salas con amigos.",
+      title: "Adivina el Top 10 de fútbol",
+      intro: "Una lista top 10 oculta cada día: los goleadores de la Champions, los fichajes más caros, los técnicos con más títulos. Nombrá a los que están. Cada acierto sube a su puesto en la torre; con tres errores gana la torre. ¿Llegás a los diez?",
+      howToPlay: ["Leé el título de la lista de hoy: dice exactamente qué tienen en común los diez.", "Escribí un nombre o elegilo de las sugerencias. Un acierto aparece en su puesto con su número.", "Un futbolista real que no está en la lista te cuesta una vida. Repetir uno que ya está, o un nombre que no conocemos, no cuesta nada. Tenés 3 vidas.", "Tu puntaje es cuántos de los diez encontraste. Compartí tu torre o jugá lo mismo con amigos: por turnos sobre una misma torre, cada puesto vale su número."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, la lista de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol Top 10 — Gizli İlk 10 Listesini Tahmin Et | QuizBall",
+      metaDescription: "Futbol Top 10: her gün gizli bir İlk 10 listesi. Kule seni yenmeden listedeki futbolcuları, teknik direktörleri, kulüpleri ya da milli takımları bul. 3 can, günlük sıralama ya da arkadaşlarınla odada oyna.",
+      title: "Futbol Top 10",
+      intro: "Her gün gizli bir İlk 10 listesi: Şampiyonlar Ligi'nin en golcüleri, en pahalı transferler, en çok kupa kazanan teknik direktörler. Listede kim var, bul. Her doğru cevap kuledeki sırasına çıkar; üç yanlışta kule kazanır. Onunu da bulabilir misin?",
+      howToPlay: ["Günün liste başlığını oku: ondaki on ismin ortak noktasını tam olarak söyler.", "Bir isim yaz ya da önerilerden seç. Doğru cevap, rakamıyla birlikte kendi sırasında görünür.", "Listede olmayan gerçek bir futbolcu bir cana mal olur. Zaten kulede olan ya da tanımadığımız bir isim hiçbir şey götürmez. 3 canın var.", "Puanın, ondan kaçını bulduğundur. Kuleni paylaş ya da aynı oyunu arkadaşlarınla oyna: sırayla tek bir kulede, her sıra kendi numarası kadar puan."],
+      reward: "Önceki günleri hesapsız oyna; bugünün listesi ve günün sıralaması için giriş yap.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {

@@ -84,6 +84,7 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
   RATE_LIMITED: "friend.errorRateLimited",
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
+  GAME_NEEDS_RELOAD: "friend.errorNeedsReload",
   DUEL_UNAVAILABLE: "friend.errorDuelUnavailable",
   ROOM_GAME_UNAVAILABLE: "friend.errorRoomGameUnavailable",
   LOBBY_READY_LOCKED: "friend.errorReadyLocked",
@@ -265,6 +266,8 @@ export function useFriendLobbyLogic({
   // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
   const analyticsTrackedRef = useRef(false);
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
+  /** Bumped by a refusal of a settings change itself (not of a Ready or Start pressed on another game). */
+  const [settingsRefusedVersion, setSettingsRefusedVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
   // Bridges the lobby:ready round trip only; tagged with the room so it never
@@ -879,6 +882,7 @@ export function useFriendLobbyLogic({
       error.code === "LOBBY_MODE_REQUIRES_ACCOUNT" ||
       error.code === "LOBBY_GUEST_LIMIT" ||
       error.code === "CAPABILITY_REQUIRED" ||
+      error.code === "GAME_NEEDS_RELOAD" ||
       // A Ready or Start pressed on a game the room had already left: the screen takes the server's settings.
       error.code === "LOBBY_SETTINGS_CHANGED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
@@ -898,7 +902,10 @@ export function useFriendLobbyLogic({
     if (isLobbySettingsError && !isInviteTransitionBusy && !isInviteNotFound) {
       // Out of the cleanup path (clearError() below re-runs this effect at once), so the rollback always lands.
       queueMicrotask(() => setSettingsErrorVersion((current) => current + 1));
+      if (error.code !== "LOBBY_SETTINGS_CHANGED") queueMicrotask(() => setSettingsRefusedVersion((current) => current + 1));
     }
+    // The server failed the change before writing it (no rollback: the screen keeps the choice until it times out).
+    if (error.code === "LOBBY_SETTINGS_ERROR") queueMicrotask(() => setSettingsRefusedVersion((current) => current + 1));
     if (error.code === "LOBBY_SETTINGS_CHANGED") {
       // The refused Ready never happened: without this the button would keep showing it.
       queueMicrotask(() => setOptimisticReadyState(null));
@@ -1132,6 +1139,7 @@ export function useFriendLobbyLogic({
     h2hSummary: opponent ? h2hSummary ?? null : null,
     allCategories,
     settingsErrorVersion,
+    settingsRefusedVersion,
     isStartingMatch,
     isLeaving: lobbyCommands.isLeaving,
     optimisticReady: derivedOptimisticReady,

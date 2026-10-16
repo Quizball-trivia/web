@@ -35,7 +35,7 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
   const authStatus = useAuthStore((state) => state.status);
   const c = wordDailyCopy(locale);
   // Without guest rooms a signed-out player would only be bounced off the room page.
-  if (!ROOM_GAMES_ENABLED.includes(game.roomGame) || (!GUEST_LOBBIES_ENABLED && authStatus !== "authenticated")) return null;
+  if (!game.roomGame || !ROOM_GAMES_ENABLED.includes(game.roomGame) || (!GUEST_LOBBIES_ENABLED && authStatus !== "authenticated")) return null;
   return (
     // App routes read the stored language, not the SEO page's URL: keep the room in the language the player is reading.
     <Link href={`/friend/room/new?room=${game.roomGame}`} prefetch={false} onClick={() => storage.set(STORAGE_KEYS.LOCALE, locale)} data-word-friends={game.roomGame}
@@ -45,9 +45,11 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
   );
 }
 
-export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit }: {
+export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends }: {
   game: WordDailyGame; locale: string; number: number; status: "new" | "started" | "done"; busy: boolean; notice: WordDailyNotice | null;
   guestOnPastBoard: boolean; guestLockedOut: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void;
+  /** Replaces the friend-room link (the playground draws a stand-in). */
+  friends?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   return (
@@ -74,7 +76,7 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
       {notice && <p role="alert" className="mt-4 rounded-2xl bg-brand-red-soft/15 px-4 py-3 text-sm font-semibold text-brand-red-light">{c.notices[notice]}</p>}
       <div className="flex-1" />
       <GreenButton className="mt-6" disabled={busy} onClick={onStart}>{status === "done" ? c.seeResult : status === "started" ? c.resume : c.play}</GreenButton>
-      <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />
+      {friends ?? <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />}
       <button type="button" onClick={onArchive} className="mx-auto mt-3 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{c.archive}</button>
     </div>
   );
@@ -103,9 +105,9 @@ export function DailyArchive({ game, locale, days, today, current, onBack, onOpe
 }
 
 /** The end of a run: the game's own result card, then share, friends, archive and the day's ranking. */
-export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranked, rank, children, leaderboard, onArchive, onExit }: {
+export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranked, rank, children, leaderboard, onArchive, onExit, friends }: {
   game: WordDailyGame; locale: string; day: string; shareText: string; guestOnPastBoard: boolean; ranked: boolean; rank?: number;
-  children: ReactNode; leaderboard: ReactNode; onArchive: () => void; onExit?: () => void;
+  children: ReactNode; leaderboard: ReactNode; onArchive: () => void; onExit?: () => void; friends?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   const [copied, setCopied] = useState(false);
@@ -136,7 +138,7 @@ export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranke
         <button type="button" onClick={() => void share()} className="h-12 rounded-full bg-brand-green text-sm font-black uppercase tracking-wide text-white hover:bg-brand-green-deep" style={poppins}>{c.share}</button>
         <button type="button" onClick={() => void copy()} className="h-12 rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15" style={poppins} aria-live="polite">{copied ? c.copied : c.copy}</button>
       </div>
-      <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />
+      {friends ?? <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />}
       <button type="button" onClick={onArchive} className="mx-auto mt-3 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{c.archive}</button>
       {leaderboard}
     </div>

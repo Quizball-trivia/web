@@ -3,6 +3,7 @@ import { FOOTBALL_RACE_ENABLED } from "@/lib/config";
 import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
 import { GAME_PAGE_DETAILS } from "./game-page-details";
+import { TENABLE_ENABLED } from "@/lib/config";
 export { engineEmitsEvents, FULL_GAME_DEMO_SLUGS, isFullGameDemo, SIGN_IN_PATH } from "./public-game-runtime";
 
 /**
@@ -64,6 +65,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "ultimo", slug: "last-answer-standing", group: "daily", guest: "demo", demoSlug: "ultimo", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "buscaminas", "grid"], order: -0.25 },
   // The two word games (2026-10): the page plays the real daily; "play with friends" opens a 2–6 room of the same game.
   { modeId: "sharedPlayer", slug: "played-for-both-clubs", group: "daily", guest: "demo", demoSlug: "shared-player", page: true, card: true, destination: { kind: "page" }, related: ["nameChain", "grid", "pistas"], order: -0.9 },
+  { modeId: "tenable", slug: "football-tenable", group: "daily", guest: "demo", demoSlug: "tenable", page: TENABLE_ENABLED, card: TENABLE_ENABLED, destination: { kind: "page" }, related: ["ultimo", "nameChain", "pistas"], order: -0.95 },
   { modeId: "nameChain", slug: "football-name-chain", group: "daily", guest: "demo", demoSlug: "name-chain", page: true, card: true, destination: { kind: "page" }, related: ["sharedPlayer", "ultimo", "pistas"], order: -0.85 },
   { modeId: "footballRace", slug: "football-horserace", group: "daily", guest: "demo", demoSlug: "football-horserace", page: FOOTBALL_RACE_ENABLED, card: FOOTBALL_RACE_ENABLED, destination: { kind: "page" }, related: ["nameChain", "sharedPlayer", "minuto"], order: -0.8 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },

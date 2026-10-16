@@ -74,6 +74,17 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "tenable",
+    title: { en: "Football Tenable", ka: "ფეხბურთის ტოპ 10", es: "Adivina el Top 10", tr: "Futbol Top 10", },
+    description: {
+      en: "One hidden top 10 a day. Name who is on it before the tower beats you.",
+      ka: "ყოველდღე ერთი დამალული ტოპ 10. დაასახელე, ვინ არის მასში.",
+      es: "Un top 10 oculto por día. Nombrá a los que están antes de que gane la torre.",
+      tr: "Her gün gizli bir Top 10. Kule kazanmadan listedekileri bul.",
+    },
+    group: "daily",
+  },
+  {
     slug: "name-chain",
     title: { en: "Football Name Chain", ka: "ფეხბურთელობანა", es: "Cadena de futbolistas", tr: "Son Harfle Futbolcu", },
     description: {

@@ -57,6 +57,7 @@ const REAL_ROUTES: Record<string, string> = {
   buscaminas: "/buscaminas",
   pistas: "/pistas",
   ultimo: "/ultimo",
+  tenable: "/football-tenable",
   "mini-final-third": "/free-kicks",
   "mini-road-to-goal": "/road-to-goal",
   "mini-guess-the-goal": "/guess-the-goal",
@@ -101,7 +102,7 @@ function formatOf(slug: string): PlayFormat {
 
 /** Games playable with other people (live or party-style); everything else is solo. */
 /** Second format a mode also ships in (Missing XI: solo now, multiplayer coming). */
-const EXTRA_FORMATS: Record<string, PlayFormat[]> = { "lab-missing-xi": ["multiplayer"] };
+const EXTRA_FORMATS: Record<string, PlayFormat[]> = { "lab-missing-xi": ["multiplayer"], tenable: ["multiplayer"] };
 
 const ONLINE_SLUGS = new Set([
   "lab-own-goal",

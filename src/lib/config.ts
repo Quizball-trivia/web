@@ -25,12 +25,14 @@ export const FOOTBALL_RACE_ENABLED = process.env.NEXT_PUBLIC_FOOTBALL_RACE === "
 
 /** Guest friend lobbies (play Tic Tac Toe / Auction / Ranked sim with a friend without an account). Off = no route or socket change for guests. */
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
+/** Football Tenable's solo daily, Play card and public pages; off until its content is seeded (rooms follow NEXT_PUBLIC_ROOM_GAMES). */
+export const TENABLE_ENABLED = process.env.NEXT_PUBLIC_TENABLE === "true";
 
 /**
  * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas,ultimo".
  * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
  */
-const isRoomGameId = (game: string): game is RoomGameId => game === "aproximado" || game === "shared_player" || game === "name_chain" || game === "football_race";
+const isRoomGameId = (game: string): game is RoomGameId => game === "aproximado" || game === "shared_player" || game === "name_chain" || game === "tenable" || game === "football_race";
 const roomGameList = (raw: string | undefined): RoomGameId[] => (raw ?? "").split(",").map((game) => game.trim()).filter(isRoomGameId);
 /** On without any configuration (as on the backend); NEXT_PUBLIC_ROOM_GAMES_DISABLED still switches one off. */
 const ROOM_GAMES_ON_BY_DEFAULT: readonly RoomGameId[] = ["shared_player", "name_chain"];

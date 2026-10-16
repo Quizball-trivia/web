@@ -156,6 +156,8 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete, practice =
             <span className={coins <= 20 ? "text-brand-red" : "text-brand-yellow"}>{coins}</span>
           </>
         }
+        // Same width as the card column below (max-w-md with px-4 on both).
+        className="mx-auto w-full max-w-md"
       />
 
       <div className="flex-1 overflow-y-auto">

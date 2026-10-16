@@ -46,4 +46,9 @@ export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>
     ],
     duel: [{ moment: "Any duel moment", sound: null, where: "duels play no sounds yet" }],
   },
+  tenable: {
+    solo: [{ moment: "Any solo moment", sound: null, where: "prototype: sounds to pick (Último's map is the candidate)" }],
+    duel: [{ moment: "Any 1v1 moment", sound: null, where: "prototype: no sounds yet" }],
+    room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
+  },
 };

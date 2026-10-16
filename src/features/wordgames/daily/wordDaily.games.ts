@@ -7,7 +7,8 @@ export interface WordDailyGame {
   /** Analytics / sign-in id and the app route the game lives on. */
   modeId: string;
   route: string;
-  roomGame: RoomGameId;
+  /** Null while the game has no friend rooms yet. */
+  roomGame: RoomGameId | null;
   brand: readonly [string, string];
   hero: string;
   calendar: WordDailyCalendar;

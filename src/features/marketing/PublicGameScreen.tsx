@@ -86,7 +86,14 @@ const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   tr: { label: "Günde 5 gol · hesap gerekmez", start: "Oyna", note: "Gerçek oyun: günde beş gol. Misafir olarak puan için oynarsın; coin ve XP kazanmak için giriş yap.", account: "Her golden coin kazan", accountText: "Her golü ilk kez bildiğinde coin ve XP kazanmak, ayrıca gerçek rakiplere karşı XOX, Açık Artırma ve dereceli maç oynamak için giriş yap." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
+const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...ULTIMO_PAGE.en, label: "A new top 10 every day · past days free, no account", note: "One hidden list, 3 lives. As a guest you play past days; with an account, today's list and the leaderboard." },
+  ka: { ...ULTIMO_PAGE.ka, label: "ყოველდღე ახალი ტოპ 10 · წინა დღეები უფასოდ, ანგარიშის გარეშე", note: "ერთი დამალული სია, 3 სიცოცხლე. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...ULTIMO_PAGE.es, label: "Un top 10 nuevo cada día · días anteriores gratis, sin cuenta", note: "Una lista oculta, 3 vidas. Sin cuenta jugás los días anteriores; con cuenta, la lista de hoy y el ranking." },
+  tr: { ...ULTIMO_PAGE.tr, label: "Her gün yeni bir Top 10 · önceki günler ücretsiz, hesapsız", note: "Tek gizli liste, 3 can. Misafir olarak önceki günleri oynarsın; hesapla bugünün listesini ve sıralamayı." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -157,7 +164,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "footballRace"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

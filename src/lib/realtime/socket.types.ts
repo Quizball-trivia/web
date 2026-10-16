@@ -17,7 +17,7 @@ export interface LobbySeenGame {
 
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
-export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'football_race';
+export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
 export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**
@@ -1522,7 +1522,7 @@ export type LobbyCreateResult =
     }
   | {
       ok: false;
-      code: "CAPABILITY_REQUIRED" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR" | "DUEL_UNAVAILABLE";
+      code: "CAPABILITY_REQUIRED" | "GAME_NEEDS_RELOAD" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR" | "DUEL_UNAVAILABLE";
       message: string;
       retryable: boolean;
       correlationId: string;
@@ -1541,6 +1541,7 @@ export type LobbyJoinByCodeResult =
       ok: false;
       code:
         | "CAPABILITY_REQUIRED"
+        | "GAME_NEEDS_RELOAD"
         | "LOBBY_GUEST_LIMIT"
         | "LOBBY_MODE_REQUIRES_ACCOUNT"
         | "RATE_LIMITED"
