@@ -35,7 +35,7 @@ export const PLAY_WITH_COINS_SLUGS = [
 /** The day each game reached production. A game with no date is never marked new. Add a line with every release. */
 export const PLAY_RELEASED_ON: Record<string, string> = {
   tenable: "2026-10-16",
-  "football-horserace": "2026-10-16",
+  "football-horserace": "2026-10-17",
   "shared-player": "2026-10-09",
   "name-chain": "2026-10-09",
   minuto: "2026-10-04",
