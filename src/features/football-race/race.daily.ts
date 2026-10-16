@@ -8,8 +8,8 @@ import type { PickResult } from "./race.engine";
 import type { L10n, RaceNation } from "./race.rules";
 import type { RaceView, RaceWording } from "./race.views";
 
-/** Same calendar as the backend (football-race.days.ts). */
-export const FOOTBALL_RACE_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-13", rankedStart: "2026-10-15", publishedDays: 80 };
+/** Same calendar as the backend (football-race.days.ts): race #1 is the launch day. */
+export const FOOTBALL_RACE_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-16", rankedStart: "2026-10-16", publishedDays: 77 };
 
 export const footballRaceDailyGame = (locale: string): WordDailyGame => {
   const copy = raceCopy(locale);
