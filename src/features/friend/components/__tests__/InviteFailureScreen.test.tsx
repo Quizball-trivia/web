@@ -39,6 +39,17 @@ describe("refused invite: a way forward for each reason", () => {
     expect(a.onSignUp).toHaveBeenCalledOnce();
   });
 
+  it("a page older than the room's game: reload, never 'invite no longer available'", () => {
+    const onReload = vi.fn();
+    render(<InviteFailureScreen failure={failure("GAME_NEEDS_RELOAD")} code="ABC123" onRetry={vi.fn()} onBack={vi.fn()} onSignUp={vi.fn()} onNewRoom={vi.fn()} onTryAgain={vi.fn()} onReload={onReload} />);
+    expect(inviteFailureKind(failure("GAME_NEEDS_RELOAD"))).toBe("reload");
+    expect(screen.getByRole("heading").textContent).toBe("friend.inviteReloadTitle");
+    expect(screen.getByText("friend.errorNeedsReload")).toBeTruthy();
+    expect(screen.queryByText(/inviteJoinFailedDescription|inviteExpired/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /inviteReload/ }));
+    expect(onReload).toHaveBeenCalledOnce();
+  });
+
   it("ended room: start a new room; mid-game room: try again or open your own", () => {
     const a = renderScreen(failure("LOBBY_NOT_FOUND", room("ended")));
     expect(screen.getByRole("heading").textContent).toBe("friend.inviteEndedTitle");

@@ -50,6 +50,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     h2hSummary,
     allCategories,
     settingsErrorVersion,
+    settingsRefusedVersion,
     isStartingMatch,
     isLeaving,
     optimisticReady,
@@ -327,6 +328,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
             onUpdateSettings={actions.handleUpdateSettings}
             onRoomOptions={actions.handleRoomOptions}
             settingsErrorVersion={rollbackVersion}
+            settingsRefusedVersion={settingsRefusedVersion}
             onSavingChange={handleSettingsBusy}
             onGameShown={handleGameShown}
           />
