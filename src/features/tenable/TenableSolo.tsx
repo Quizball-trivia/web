@@ -43,7 +43,7 @@ function Feedback({ state, locale }: { state: TenableSoloState; locale: string }
 
 export function TenablePlayView({ locale, number, state, pending, notice, lookup, onSay, onGiveUp, onResult, onExit }: {
   locale: string; number: number; state: TenableSoloState; pending: boolean; notice: string | null; lookup?: SuggestLookup;
-  onSay: (text: string, pick: string | null) => void; onGiveUp: () => void; onResult: () => void; onExit: () => void;
+  onSay: (text: string, pick: string | null) => void | Promise<boolean>; onGiveUp: () => void; onResult: () => void; onExit: () => void;
 }) {
   const c = tenableCopy(locale);
   const d = wordDailyCopy(locale);
