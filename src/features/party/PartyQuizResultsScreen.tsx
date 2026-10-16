@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -148,44 +148,51 @@ function getRankClasses(rank: number, palette: RankPalette = 'medals'): { border
 
 // ─── Podium block (top 3) ──────────────────────────────────────────────────
 
-const PODIUM_HEIGHT_CLASS: Record<1 | 2 | 3, string> = {
-  1: 'min-h-44 sm:min-h-52',
-  2: 'min-h-36 sm:min-h-44',
-  3: 'min-h-32 sm:min-h-40',
+// The cards share one grid row, so they all get the tallest card's content height; each rank then rises above that row
+// by a fixed lift. Gold stays tallest whatever the names, translated details or the "You" badge make one card need.
+const PODIUM_LIFT: Record<1 | 2 | 3, { card: string; avatar: string }> = {
+  1: { card: '-mt-12', avatar: 'mb-[3.25rem] sm:mb-14' },
+  2: { card: '-mt-4', avatar: 'mb-5 sm:mb-6' },
+  3: { card: '', avatar: 'mb-1 sm:mb-2' },
 };
 
-// Visual column order on the podium: 2nd on left, 1st in middle, 3rd on right.
-// Using CSS `order` keeps 1st centered even when the array is iterated in rank
-// order — important so the grid columns stay rank-correct on every breakpoint.
-const PODIUM_COLUMN_ORDER: Record<1 | 2 | 3, string> = {
-  1: 'order-2',
-  2: 'order-1',
-  3: 'order-3',
+// Visual column on the podium: 2nd on the left, 1st in the middle, 3rd on the right (by display position, so tied
+// places still get columns of their own).
+const PODIUM_COLUMN: Record<number, Record<number, string>> = {
+  1: { 0: 'col-start-1' },
+  2: { 0: 'col-start-2', 1: 'col-start-1' },
+  3: { 0: 'col-start-2', 1: 'col-start-1', 2: 'col-start-3' },
 };
 
-function PodiumBlock({ standing, displayIndex, palette = 'medals', detail }: { standing: StandingRow; displayIndex: number; palette?: RankPalette; detail?: string }) {
+/** Wraps only between the parts of a "Nation · 1 good · 0 backfired" line, never inside a word that fits. */
+function DetailLine({ text }: { text: string }) {
+  const parts = text.split(' · ');
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && ' '}
+      <span className="inline-block max-w-full">{i < parts.length - 1 ? `${part}\u00a0·` : part}</span>
+    </Fragment>
+  ));
+}
+
+function PodiumBlock({ standing, displayIndex, count, palette = 'medals', detail }: { standing: StandingRow; displayIndex: number; count: number; palette?: RankPalette; detail?: string }) {
   const { t } = useLocale();
   const rank = standing.rank as 1 | 2 | 3;
   const colorHex = getRankHex(rank, palette);
-  const heightClass = PODIUM_HEIGHT_CLASS[rank] ?? PODIUM_HEIGHT_CLASS[3];
-  const orderClass = PODIUM_COLUMN_ORDER[rank] ?? PODIUM_COLUMN_ORDER[3];
+  const lift = PODIUM_LIFT[rank] ?? PODIUM_LIFT[3];
+  const column = PODIUM_COLUMN[count]?.[displayIndex] ?? 'col-start-1';
   // Medal blocks (gold, silver, bronze) carry dark text like the leaderboard podium.
   const nameTextOnBlock = palette === 'medals' || rank === 2 ? 'text-black' : 'text-white';
   const scoreTextOnBlock = palette === 'medals' || rank === 2 ? 'text-black' : 'text-brand-yellow';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.15 + displayIndex * 0.12, type: 'spring', stiffness: 300, damping: 24 }}
-      className={cn('flex min-w-0 flex-col items-center justify-end', orderClass)}
-    >
+    <>
       {/* Real responsive avatar size, not transform scale, so mobile columns keep honest dimensions. */}
       <motion.div
         initial={{ scale: 0.7, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ delay: 0.3 + displayIndex * 0.12, type: 'spring', stiffness: 260, damping: 18 }}
-        className="relative z-10 mb-1 flex h-16 items-end justify-center sm:mb-2 sm:h-24"
+        className={cn('relative z-10 row-start-1 flex h-16 items-end justify-center self-end sm:h-24', column, lift.avatar)}
       >
         <AvatarDisplay
           customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
@@ -194,12 +201,16 @@ function PodiumBlock({ standing, displayIndex, palette = 'medals', detail }: { s
         />
       </motion.div>
 
-      <div
+      <motion.div
         data-testid={`party-podium-block-${rank}`}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 + displayIndex * 0.12, type: 'spring', stiffness: 300, damping: 24 }}
         className={cn(
-          'relative flex w-full min-w-0 flex-col items-center justify-end rounded-2xl',
-          'gap-1 px-2 py-3 sm:gap-1.5 sm:px-3 sm:py-4',
-          heightClass,
+          'relative row-start-2 flex w-full min-w-0 flex-col items-center justify-start self-stretch rounded-2xl',
+          'gap-1 px-1 py-3 sm:gap-1.5 sm:px-3 sm:py-4',
+          column,
+          lift.card,
         )}
         style={{
           backgroundColor: colorHex,
@@ -229,8 +240,8 @@ function PodiumBlock({ standing, displayIndex, palette = 'medals', detail }: { s
           {standing.totalPoints}
         </div>
         {detail && (
-          <div className={cn('w-full break-words px-1 text-center font-poppins text-[10px] font-semibold leading-tight opacity-75 [overflow-wrap:anywhere] sm:text-xs', scoreTextOnBlock)}>
-            {detail}
+          <div className={cn('w-full text-center font-poppins text-[10px] font-semibold leading-tight opacity-75 [overflow-wrap:anywhere] sm:px-1 sm:text-xs', scoreTextOnBlock)}>
+            <DetailLine text={detail} />
           </div>
         )}
         {standing.isSelf && (
@@ -238,8 +249,8 @@ function PodiumBlock({ standing, displayIndex, palette = 'medals', detail }: { s
             {t('common.you')}
           </span>
         )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }
 
@@ -452,14 +463,14 @@ export function PartyQuizResultsScreen({
         {podium.length > 0 && (
           <div
             className={cn(
-              'mt-10 grid items-end gap-2 sm:mt-12 sm:gap-3',
-              podium.length === 1 ? 'grid-cols-1 place-items-center max-w-xs mx-auto' : '',
+              'mt-10 grid grid-rows-[auto_minmax(8rem,auto)] gap-x-2 gap-y-0 sm:mt-12 sm:grid-rows-[auto_minmax(10rem,auto)] sm:gap-x-3',
+              podium.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : '',
               podium.length === 2 ? 'grid-cols-2' : '',
               podium.length === 3 ? 'grid-cols-3' : '',
             )}
           >
             {podium.map((standing, index) => (
-              <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} palette={palette} detail={rowDetail?.[standing.userId]} />
+              <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} count={podium.length} palette={palette} detail={rowDetail?.[standing.userId]} />
             ))}
           </div>
         )}

@@ -99,7 +99,7 @@ export function FootballRaceDaily({ locale, onExit, onEvent, initialDay, onDay }
   const game = footballRaceDailyGame(locale);
   const copy = raceCopy(locale);
   const d = wordDailyCopy(locale);
-  const daily = useWordDaily<RaceDailyState, "pick">({ api: footballRaceDailyApi, calendar: FOOTBALL_RACE_CALENDAR, locale, initialDay, onDay, onEvent });
+  const daily = useWordDaily<RaceDailyState, "pick">({ api: footballRaceDailyApi, calendar: FOOTBALL_RACE_CALENDAR, locale, initialDay, onDay, onEvent, resendLostAnswers: true });
   const { state, day, run } = daily;
   const avatar = usePlayerAvatar();
   // Picks already seen on this run; the one after them is on its reveal card until "Next". A run opened (or
