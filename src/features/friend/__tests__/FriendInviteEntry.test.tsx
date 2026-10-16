@@ -51,6 +51,12 @@ describe('public invite handoff', () => {
     render(<FriendInviteEntry />);
     expect(screen.getByTestId('lobby')).toHaveTextContent(/^AB1234:false$/);
   });
+  it('an anonymous visitor reloading an open room page (?web=1) goes straight to the room, not the chooser', () => {
+    state.search = 'web=1';
+    render(<FriendInviteEntry />);
+    expect(screen.getByTestId('lobby').textContent).toBe('AB1234:false');
+  });
+
   it('does not turn new-room creation into a join invitation', () => {
     state.code = 'new'; render(<FriendInviteEntry />);
     expect(screen.getByTestId('lobby')).toHaveTextContent('new:true');

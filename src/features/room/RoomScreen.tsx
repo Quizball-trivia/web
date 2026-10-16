@@ -9,6 +9,8 @@ import { AproximadoRoomMatch } from "@/features/aproximado/RoomMatchScreen";
 import { useAproximadoRoom, type RoomCommand } from "@/features/aproximado/useRoom";
 import { nameChainScreens } from "@/features/name-chain/NameChainRoom";
 import type { NameChainCommand } from "@/features/name-chain/nameChain.view";
+import { tenableScreens } from "@/features/tenable/TenableRoom";
+import type { TenableCommand } from "@/features/tenable/tenable.view";
 import { sharedPlayerScreens } from "@/features/shared-player/SharedPlayerRoom";
 import type { SharedPlayerCommand } from "@/features/shared-player/sharedPlayer.view";
 import { RoomGameShell } from "@/features/wordgames/RoomGameShell";
@@ -32,6 +34,7 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "aproximado") return <Aproximado room={room as Connection<RoomCommand>} />;
   if (game === "shared_player") return <RoomGameShell room={room as Connection<SharedPlayerCommand>} screens={sharedPlayerScreens} />;
   if (game === "name_chain") return <RoomGameShell room={room as Connection<NameChainCommand>} screens={nameChainScreens} />;
+  if (game === "tenable") return <RoomGameShell room={room as Connection<TenableCommand>} screens={tenableScreens} />;
   return <Outdated />;
 }
 

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
 import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySettingsState, LobbyState, RoomGameId } from "@/lib/realtime/socket.types";
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, ROOM_GAME_LABEL_KEYS, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, roomGameLabels, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { RoomGameOptions } from "./RoomGameOptions";
 import { GridRoomOptions } from './GridRoomOptions';
 import { logger } from "@/utils/logger";
@@ -29,6 +29,8 @@ interface LobbySettingsProps {
   /** The host's choices for the room game (which clubs, how hard); null = the game's defaults. */
   onRoomOptions?: (options: Record<string, unknown> | null) => void;
   settingsErrorVersion?: number;
+  /** Bumped when the server refused a settings change (which one it does not say). */
+  settingsRefusedVersion?: number;
   /** True while a change of this screen is queued or sent and not echoed by the server yet. */
   onSavingChange?: (saving: boolean) => void;
   /**
@@ -69,7 +71,8 @@ function modeTabs(currentDuelGame: DuelGameId | null, currentRoomGame: RoomGameI
   return [
     ...BASE_MODE_TABS,
     ...duelGames.map((duelGame): ModeTab => ({ choice: { gameMode: 'duel', duelGame }, labelKey: DUEL_TAB_LABEL_KEYS[duelGame] })),
-    ...roomGames.map((roomGame): ModeTab => ({ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: ROOM_GAME_LABEL_KEYS[roomGame].tab })),
+    // A game this build does not know (the room was set up from a newer page) gets no tab rather than a crash.
+    ...roomGames.flatMap((roomGame): ModeTab[] => { const labels = roomGameLabels(roomGame); return labels ? [{ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: labels.tab }] : []; }),
   ];
 }
 
@@ -128,6 +131,7 @@ export function LobbySettings({
   onUpdateSettings,
   onRoomOptions,
   settingsErrorVersion = 0,
+  settingsRefusedVersion = 0,
   onSavingChange,
   onGameShown,
 }: LobbySettingsProps) {
@@ -209,6 +213,11 @@ export function LobbySettings({
   const lastSentCategoryIdRef = useRef<string | null>(null);
   const handledErrorVersionRef = useRef(0);
   const resentChoiceRef = useRef<LobbyModeChoice | null>(null);
+  /**
+   * Games this screen sent and stopped waiting for, one entry per request (every key it can land as): only one of these
+   * landing late is this screen's own (older) choice.
+   */
+  const givenUpChoicesRef = useRef<string[][]>([]);
   const [displayedLobbyId, setDisplayedLobbyId] = useState(lobbyId);
   if (lobbyId !== displayedLobbyId) {
     // Another room: nothing chosen in the previous one is shown for it.
@@ -318,6 +327,12 @@ export function LobbySettings({
         lobbyId: lobby?.lobbyId ?? null,
         changes: inFlightChangesRef.current,
       });
+      const given = inFlightChangesRef.current;
+      if (given.gameMode !== undefined) {
+        const sentKey = modeChoiceKey({ gameMode: given.gameMode, duelGame: given.duelGame ?? null, roomGame: given.roomGame ?? null });
+        // With a third player in the room it lands as Party Quiz.
+        givenUpChoicesRef.current.push(LOBBY_MODES[given.gameMode].promotesToPartyQuiz ? [sentKey, modeChoiceKey({ gameMode: 'friendly_party_quiz', duelGame: null, roomGame: null })] : [sentKey]);
+      }
       inFlightChangesRef.current = null;
       if (Object.keys(pendingChangesRef.current).length > 0) {
         flushPendingChangesRef.current();
@@ -362,8 +377,15 @@ export function LobbySettings({
     pendingChangesRef.current = {};
     inFlightChangesRef.current = null;
     lastSentCategoryIdRef.current = null;
+    givenUpChoicesRef.current = [];
     syncSaving();
   }, [clearFlushTimer, clearInFlightTimeout, lobbyId, syncSaving]);
+
+  // A refusal may be the answer to a request this screen had given up on: that one will never land. Which one it was is
+  // not said, so none of them is taken for this screen's own any more (a late landing then just shows the server's game).
+  useEffect(() => {
+    if (settingsRefusedVersion) givenUpChoicesRef.current = [];
+  }, [settingsRefusedVersion]);
 
   // The queue's half of a rollback (the display's half is done while rendering, above).
   useEffect(() => {
@@ -408,6 +430,10 @@ export function LobbySettings({
 
   // --- Sync optimistic state when server confirms (after the acknowledgement above, which clears what these read) ---
   useEffect(() => {
+    // A given-up request that has landed is retired whatever the screen shows now: it cannot land a second time.
+    const landed = givenUpChoicesRef.current.findIndex((keys) => keys.includes(serverChoiceKey));
+    const landedLate = landed >= 0;
+    if (landedLate) givenUpChoicesRef.current.splice(landed, 1);
     if (optimisticMode === null) return;
     const hasPendingMode =
       pendingChangesRef.current.gameMode !== undefined ||
@@ -416,12 +442,13 @@ export function LobbySettings({
       return;
     }
 
-    // Nothing is on its way and the server holds another game: an earlier request landed late, after the queue had
-    // given up on it. The choice still on screen is the latest one, so it is sent once more (once: a choice the
-    // server keeps turning into something else is dropped, and the screen shows what the server holds).
+    // Nothing is on its way and the server holds another game. If it is one this screen sent and stopped waiting for,
+    // that earlier request landed late: the choice still on screen is the latest one, so it is sent once more (once: a
+    // choice the server keeps turning into something else is dropped, and the screen shows what the server holds).
+    // Any other game was chosen elsewhere (another tab of the host) after this one: that choice stands.
     const optimisticKey = modeChoiceKey(optimisticMode);
     const turnedIntoParty = serverMode === 'friendly_party_quiz' && memberCount > 2 && LOBBY_MODES[optimisticMode.gameMode].promotesToPartyQuiz;
-    if (optimisticKey !== serverChoiceKey && !turnedIntoParty && canEdit && resentChoiceRef.current !== optimisticMode) {
+    if (optimisticKey !== serverChoiceKey && landedLate && !turnedIntoParty && canEdit && resentChoiceRef.current !== optimisticMode) {
       resentChoiceRef.current = optimisticMode;
       queueChange({
         gameMode: optimisticMode.gameMode, duelGame: optimisticMode.duelGame,
@@ -752,7 +779,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && ROOM_GAME_LABEL_KEYS[roomGame].description) || MODE_DESCRIPTION_KEYS[mode])}
+              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || (mode === 'room_game' && roomGame && (roomGameLabels(roomGame)?.description ?? 'friend.roomGameUnknown')) || MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -1027,7 +1054,7 @@ export function LobbySettings({
               className="uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
             >
-              {t(ROOM_GAME_LABEL_KEYS[roomGame ?? ROOM_GAMES[0]].title)}
+              {t(roomGameLabels(roomGame ?? ROOM_GAMES[0])?.title ?? 'friend.roomGameUnknown')}
             </h4>
             {roomGame === 'shared_player' && roomGame === serverRoomGame && (
               <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

@@ -84,7 +84,7 @@ export function TimeBar({ share, urgent, className }: { share: number; urgent: b
 }
 
 /** The app's typed-answer look: blue pill input, green pill button, stacked. */
-export function AnswerBox({ placeholder, say, disabled, note, onSubmit }: { placeholder: string; say: string; disabled?: boolean; note?: string | null; onSubmit: (text: string) => void }) {
+export function AnswerBox({ placeholder, say, disabled, note, onSubmit, className }: { placeholder: string; say: string; disabled?: boolean; note?: string | null; onSubmit: (text: string) => void; className?: string }) {
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
   // Not while a question sheet (leave?) is open over the game: the focus belongs to the sheet.
@@ -96,7 +96,7 @@ export function AnswerBox({ placeholder, say, disabled, note, onSubmit }: { plac
     input.current?.focus({ preventScroll: true });
   };
   return (
-    <form className="sticky bottom-0 mt-3 space-y-2 bg-surface-page-alt/95 pb-1 pt-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+    <form className={cn("sticky bottom-0 mt-3 space-y-2 bg-surface-page-alt/95 pb-1 pt-2", className)} onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <input ref={input} value={draft} disabled={disabled} onChange={(e) => setDraft(e.target.value.slice(0, 60))} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="send"
         placeholder={disabled && note ? note : placeholder} aria-label={placeholder}
         className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
