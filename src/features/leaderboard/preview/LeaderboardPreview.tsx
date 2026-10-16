@@ -33,7 +33,6 @@ const SCENARIOS: Record<string, { label: string; scope: BoardScope; view?: Board
 
 /** Fixture-driven copy of the leaderboard so every state can be reviewed without a backend. */
 export function LeaderboardPreview({ scenario, member }: { scenario: string; member: boolean }) {
-  if (scenario === "trophies") return <TrophiesPreview />;
   const start = SCENARIOS[scenario] ?? SCENARIOS.global;
   const guest = !member;
   const [mode, setMode] = useState<LeaderboardMode>("ranked");
@@ -126,7 +125,7 @@ export function LeaderboardPreview({ scenario, member }: { scenario: string; mem
 }
 
 /** Profile achievement rows and the one-time unlock, as players see them after a season ends. */
-function TrophiesPreview() {
+export function TrophiesPreview() {
   const [open, setOpen] = useState(true);
   return (
     <div className="mx-auto max-w-3xl space-y-3 px-4 py-6 font-fun">
