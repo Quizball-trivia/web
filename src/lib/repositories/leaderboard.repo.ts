@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { ApiError } from "@/lib/api/api";
-import type { LeaderboardType } from "@/lib/domain/leaderboard";
+import type { BoardScope, LeaderboardType } from "@/lib/domain/leaderboard";
 import type { AvatarCustomization } from "@/types/game";
 
 // Ranked sends RP, Auction sends AP, and Football Tic Tac Toe sends TP. One
@@ -146,4 +146,56 @@ export async function getLeaderboardSeasons() {
     "/api/v1/ranked/leaderboard/seasons"
   );
   return { data, error: null };
+}
+
+export type BoardMode = "ranked" | "auction" | "ticTacToe";
+
+const BOARD_PATHS: Record<BoardMode, string> = {
+  ranked: "/api/v1/ranked/leaderboard",
+  auction: "/api/v1/auction/leaderboard",
+  ticTacToe: "/api/v1/football-grid/leaderboard",
+};
+
+function boardParams(scope: BoardScope): URLSearchParams {
+  const params = new URLSearchParams({ scope: scope.kind });
+  if (scope.kind === "country") params.set("country", scope.country);
+  if (scope.kind === "club") params.set("club", scope.club);
+  return params;
+}
+
+/** Any board of any mode: the world, a country, or one club's fans. */
+export async function getBoard(mode: BoardMode, scope: BoardScope, limit = 50, offset = 0, season?: string) {
+  const params = boardParams(scope);
+  params.set("limit", String(limit));
+  params.set("offset", String(offset));
+  if (season && mode === "ranked") params.set("season", season);
+  const data = await requestJson<LeaderboardApiResponse>(`${BOARD_PATHS[mode]}?${params}`);
+  return data.entries;
+}
+
+export interface BoardRankResponse extends UserRankResponse {
+  nextTarget?: { username: string; rank: number; gap: number } | null;
+}
+
+/** The viewer's place on a board; null when they are not on it. */
+export async function getBoardRank(mode: BoardMode, scope: BoardScope, season?: string) {
+  const params = boardParams(scope);
+  if (season && mode === "ranked") params.set("season", season);
+  return requestJson<BoardRankResponse | null>(`${BOARD_PATHS[mode]}/me?${params}`);
+}
+
+export interface StandingsApiResponse {
+  standings: Array<{
+    key: string;
+    rank: number;
+    players: number;
+    score: number;
+    topPlayer: { username: string; points: number } | null;
+  }>;
+  viewer: { mine: string; slot: number | null; gap: number | null; points: number | null } | null;
+}
+
+/** Nations or clubs ranked by their top 10 players. */
+export async function getStandings(mode: BoardMode, kind: "country" | "club") {
+  return requestJson<StandingsApiResponse>(`/api/v1/leaderboards/standings?mode=${mode}&kind=${kind}`);
 }

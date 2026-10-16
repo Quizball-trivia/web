@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import * as leaderboardRepo from '@/lib/repositories/leaderboard.repo';
-import type { LeaderboardType } from '@/lib/domain/leaderboard';
+import type { BoardScope, LeaderboardType } from '@/lib/domain/leaderboard';
 import { toLeaderboardEntry, toUserRank } from '@/lib/mappers/leaderboard.mapper';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
@@ -127,5 +127,62 @@ export function useLeaderboardSeasons() {
     },
     enabled: sessionKnown,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+function boardKey(scope: BoardScope): string {
+  return scope.kind === 'global' ? 'global' : scope.kind === 'country' ? `country:${scope.country}` : `club:${scope.club}`;
+}
+
+/** Players on any board (world, a country, a club) for one mode. */
+export function useBoard(
+  mode: leaderboardRepo.BoardMode,
+  scope: BoardScope,
+  currentUserId?: string,
+  season?: string,
+  enabled = true,
+) {
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
+  return useQuery({
+    // Rows carry isCurrentUser, so the cache is scoped to the viewer as well as the board.
+    queryKey: queryKeys.leaderboard.board(mode, boardKey(scope), season, currentUserId),
+    queryFn: async () => {
+      const entries = await leaderboardRepo.getBoard(mode, scope, 50, 0, season);
+      return entries.map((entry) => toLeaderboardEntry(entry, currentUserId));
+    },
+    enabled: sessionKnown && enabled,
+  });
+}
+
+export function useBoardRank(
+  mode: leaderboardRepo.BoardMode,
+  scope: BoardScope,
+  userId: string | undefined,
+  season?: string,
+  enabled = true,
+) {
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  return useQuery({
+    queryKey: queryKeys.leaderboard.boardRank(mode, boardKey(scope), userId ?? '', season),
+    queryFn: async () => {
+      const data = await leaderboardRepo.getBoardRank(mode, scope, season);
+      return data ? { entry: toUserRank(data), nextTarget: data.nextTarget ?? null } : null;
+    },
+    enabled: isAuthenticated && !!userId && enabled,
+  });
+}
+
+export function useStandings(
+  mode: leaderboardRepo.BoardMode,
+  kind: 'country' | 'club',
+  viewerId?: string,
+  enabled = true,
+) {
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
+  return useQuery({
+    queryKey: queryKeys.leaderboard.standings(mode, kind, viewerId),
+    queryFn: () => leaderboardRepo.getStandings(mode, kind),
+    enabled: sessionKnown && enabled,
+    staleTime: 60 * 1000,
   });
 }

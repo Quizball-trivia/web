@@ -53,6 +53,7 @@
 @source "../components/layout/app-shell/shellChromeLoader.ts";
 @source "../components/layout/app-shell/useAppShellViewModel.ts";
 @source "../components/layout/app-shell/useShellPopupIntent.ts";
+@source "../components/shared/BoardTrophy.tsx";
 @source "../components/shared/ConnectionQualitySignal.tsx";
 @source "../components/shared/ContactModal.tsx";
 @source "../components/shared/EventAwardCeremony.tsx";
@@ -101,6 +102,8 @@
 @source "../features/football-race/race.copy.ts";
 @source "../features/football-race/race.daily.ts";
 @source "../features/friend/hooks/useLobbyCommandMachine.ts";
+@source "../features/leaderboard/boards.ts";
+@source "../features/leaderboard/components/BoardBadge.tsx";
 @source "../features/leaderboard/components/LeaderboardTable.tsx";
 @source "../features/marketing/DailyCollectionScreen.tsx";
 @source "../features/marketing/PublicGameScreen.tsx";
