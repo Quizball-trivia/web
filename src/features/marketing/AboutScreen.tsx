@@ -40,7 +40,7 @@ const MODE_COLORS = [
 export function AboutScreen({ copy, locale }: AboutScreenProps) {
   const credibility = ABOUT_CREDIBILITY_COPY[locale];
   const gameModes = ABOUT_GAME_MODES_COPY[locale];
-  const quizLocale = locale === "es" ? "es" : "en";
+  const quizLocale = locale === "es" || locale === "ru" ? locale : "en";
   const reportLocale = locale === "es" ? "es" : "en";
 
   return (

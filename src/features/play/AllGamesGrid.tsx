@@ -380,7 +380,7 @@ function GameCard({
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
             <Play className="size-3 fill-current" />
-            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : "Play"}
+            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : locale === "tr" ? "Oyna" : locale === "ru" ? "Играть" : "Play"}
           </span>
         </div>
       </div>
@@ -514,7 +514,7 @@ function GamesFinder({
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : "Search games";
+  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : locale === "tr" ? "Oyun ara" : locale === "ru" ? "Поиск игр" : "Search games";
   const close = () => {
     onQuery("");
     setOpen(false);

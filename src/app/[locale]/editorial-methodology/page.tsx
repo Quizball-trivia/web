@@ -41,7 +41,7 @@ export default async function EditorialMethodologyPage({
   if (!isLocale(locale)) notFound();
 
   const copy = getEditorialMethodologyCopy(locale);
-  const quizLocale = locale === "es" ? "es" : "en";
+  const quizLocale = locale === "es" || locale === "ru" ? locale : "en";
   const headerList = await headers();
   const nonce = headerList.get("x-nonce") ?? undefined;
   const structuredData = buildEditorialPageStructuredData({
