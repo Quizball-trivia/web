@@ -86,5 +86,6 @@ export const ultimoApi = {
     call<UltimoRun & { result: UltimoAnswerResult }>("/answer", "POST", { ...move(run), answer }, locale, "player", MOVE_TIMEOUT_MS),
   next: (run: UltimoRun, locale: string) => call<UltimoRun>("/next", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
   review: (day: string, locale: string) => call<UltimoReview>(`/review?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "none"),
-  leaderboard: (day: string, locale: string) => call<UltimoLeaderboard>(`/leaderboard?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
+  /** Without a day the server answers with its default board: today's while it is ranked, else the last released day's. */
+  leaderboard: (day: string | undefined, locale: string) => call<UltimoLeaderboard>(day ? `/leaderboard?day=${encodeURIComponent(day)}` : "/leaderboard", "GET", undefined, locale, "optional"),
 };

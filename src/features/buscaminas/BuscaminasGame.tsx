@@ -14,7 +14,7 @@ import { findPublicGameByModeId, relatedPublishedGames } from "@/lib/seo/public-
 import { PublicCardGrid } from "@/features/marketing/public/PublicCards";
 import type { Locale } from "@/lib/i18n/locale";
 import {
-  MAX_SCORE, TARGETS_PER_ROUND, addDays, defaultDayFor, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
+  MAX_SCORE, TARGETS_PER_ROUND, addDays, defaultDayFor, isLiveDay, lastReleasedDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
   type BuscaminasCard, type BuscaminasDay, type BuscaminasRound, type RoundResult,
 } from "./buscaminas.logic";
 import { clearRun, finishedScores, inProgressDays, loadRun, saveRun, streakFrom } from "./buscaminas.storage";
@@ -34,6 +34,8 @@ type View = "intro" | "play" | "end" | "archive";
 /** A dropped connection usually comes back within a second or two: wait before re-syncing or resending. */
 const RECOVERY_DELAY_MS = 800;
 const LOAD_RETRY_DELAY_MS = 1500;
+/** Quiet re-reads of the board index after a failed one, each a little later than the last. */
+const INDEX_RETRIES = 4;
 
 /** Whether a re-synced run is exactly this move applied, and not progress made elsewhere (another tab). */
 function moveLanded(key: string, before: BuscaminasRun, after: BuscaminasRun): boolean {
@@ -54,10 +56,21 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
 }) {
   const c = buscaminasCopy(locale);
   const [today, setToday] = useState(() => releaseDay());
-  const days = useMemo(() => playableDays(today), [today]);
+  const firstTodayRef = useRef(today);
+  const [versions, setVersions] = useState<Record<string, number> | undefined>(undefined);
+  const [indexAttempt, setIndexAttempt] = useState(0);
+  // The server's board index is the calendar: its last released day ends it. Until it loads, today counts as released.
+  const lastDay = useMemo(() => (versions ? lastReleasedDay(Object.keys(versions)) : undefined), [versions]);
+  const days = useMemo(() => playableDays(today, lastDay), [today, lastDay]);
   // An archive pick or a started board stays put; otherwise the screen follows today's puzzle across midnight.
-  const [chosenDay, setChosenDay] = useState<string | null>(() => (initialDay && playableDays(releaseDay()).includes(initialDay) ? initialDay : null));
-  const [lockedDay, setLockedDay] = useState<string | null>(null);
+  const [pickedDay, setChosenDay] = useState<string | null>(() => (initialDay && playableDays(releaseDay()).includes(initialDay) ? initialDay : null));
+  const [startedDay, setLockedDay] = useState<string | null>(null);
+  // A day the index turned out not to list (not released) is never opened, and is forgotten for good when the index
+  // arrives, so it cannot come back and take over the board being played once it is released.
+  const chosenDay = pickedDay && days.includes(pickedDay) ? pickedDay : null;
+  const lockedDay = startedDay && days.includes(startedDay) ? startedDay : null;
+  // The index lists no board at all: there is nothing to load (the error screen's Retry re-reads the index).
+  const noCalendar = lastDay === null;
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
   const replayPendingRef = useRef(false);
@@ -68,20 +81,19 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const authStatus = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.user?.id);
   const owner = authStatus === "authenticated" && userId ? userId : "guest";
-  const liveDay = puzzleDayFor(today);
-  const day = chosenDay ?? lockedDay ?? defaultDayFor(today, owner !== "guest");
-  const guestOnPastBoard = owner === "guest" && !isLiveDay(day, today) && isLiveDay(liveDay, today);
+  const liveDay = puzzleDayFor(today, lastDay);
+  const day = chosenDay ?? lockedDay ?? defaultDayFor(today, owner !== "guest", lastDay);
+  const guestOnPastBoard = owner === "guest" && !isLiveDay(day, today, lastDay) && isLiveDay(liveDay, today, lastDay);
   const guestOnYesterday = guestOnPastBoard && day === addDays(liveDay, -1);
   // Guests can't open today's live board; they see it listed as needing an account instead.
-  const openableDays = useMemo(() => (owner === "guest" && isLiveDay(liveDay, today) ? days.filter((d) => d !== liveDay) : days), [days, liveDay, owner, today]);
-  const [versions, setVersions] = useState<Record<string, number> | undefined>(undefined);
+  const openableDays = useMemo(() => (owner === "guest" && isLiveDay(liveDay, today, lastDay) ? days.filter((d) => d !== liveDay) : days), [days, lastDay, liveDay, owner, today]);
   const authReady = authStatus !== "loading";
   const [attempt, setAttempt] = useState(0);
   const loadKey = `${day}#${attempt}#${owner}`;
   const [loaded, setLoaded] = useState<{ key: string; data: BuscaminasDay } | null>(null);
   const [failedKey, setFailedKey] = useState<string | null>(null);
   const content = loaded?.key === loadKey ? loaded.data : null;
-  const loadFailed = failedKey === loadKey;
+  const loadFailed = noCalendar || failedKey === loadKey;
   const [run, setRun] = useState<BuscaminasRun | null>(null);
   const [view, setView] = useState<View>("intro");
   const [pending, setPending] = useState<string | null>(null);
@@ -111,17 +123,31 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(boardsUrl, { signal: controller.signal })
+    let retryTimer: number | undefined;
+    // The index is the calendar, so a failed read is tried again (a few times, then on the next day change or Retry).
+    const retry = () => { if (indexAttempt < INDEX_RETRIES) retryTimer = window.setTimeout(() => setIndexAttempt((n) => n + 1), LOAD_RETRY_DELAY_MS * (indexAttempt + 1)); };
+    // A new Argentine day while the page is open, or a retry: the cached index is stale, so read a fresh one.
+    const fresh = today !== firstTodayRef.current || indexAttempt > 0 || attempt > 0;
+    fetch(fresh ? `${boardsUrl}?r=${Date.now()}` : boardsUrl, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { days?: Record<string, number> } | null) => { if (data?.days) setVersions(data.days); })
-      .catch(() => {});
-    return () => controller.abort();
-  }, []);
+      .then((data: { days?: Record<string, number> } | null) => {
+        if (!data?.days) { retry(); return; }
+        const released = playableDays(today, lastReleasedDay(Object.keys(data.days)));
+        setChosenDay((d) => (d && released.includes(d) ? d : null));
+        setLockedDay((d) => (d && released.includes(d) ? d : null));
+        setVersions(data.days);
+      })
+      .catch((error: { name?: string }) => { if (error?.name !== "AbortError") retry(); });
+    return () => { controller.abort(); window.clearTimeout(retryTimer); };
+    // `attempt` is the board's Retry: it re-reads the calendar too.
+  }, [today, indexAttempt, attempt]);
 
   const loadRetriedRef = useRef(new Set<string>());
+  // Only "no board at all" matters to the board load: the calendar arriving must not re-fetch (and reset) a loaded board.
   useEffect(() => {
     // The saved run belongs to a guest or an account; wait until we know which.
     if (!authReady) return;
+    if (noCalendar) return;
     const controller = new AbortController();
     let retryTimer: number | undefined;
     // A retry after a content correction must not get the old board back from the HTTP cache.
@@ -148,7 +174,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         setFailedKey(loadKey);
       });
     return () => { controller.abort(); window.clearTimeout(retryTimer); };
-  }, [attempt, authReady, day, loadKey, owner]);
+  }, [attempt, authReady, day, loadKey, noCalendar, owner]);
 
   useEffect(() => {
     if (content && run) saveRun(day, contentVersion, run, owner);
@@ -366,7 +392,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : view === "archive" ? (
           <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state?.done ? "end" : "intro")} onOpen={openDay} />
         ) : view === "end" && state ? (
-          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
+          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today, lastDay) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
           <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
@@ -698,7 +724,6 @@ function Archive({ locale, days, lockedLiveDay, versions, today, current, curren
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
   const scores = useMemo(() => finishedScores(days, owner, versions), [days, owner, versions]);
   const unfinished = useMemo(() => inProgressDays(days, owner, versions), [days, owner, versions]);
-  const todayPuzzle = puzzleDayFor(today);
   return (
     <div className="flex flex-1 flex-col">
       <button type="button" onClick={onBack} aria-label={c.archive.back} className="flex size-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"><ArrowLeft className="size-5" /></button>
@@ -716,7 +741,7 @@ function Archive({ locale, days, lockedLiveDay, versions, today, current, curren
           return (
             <li key={d}>
               <button type="button" onClick={() => onOpen(d)} className={cn("flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left hover:bg-white/10", d === current ? "border-brand-yellow bg-white/[0.08]" : "border-white/10 bg-white/[0.05]")}>
-                <span className="font-black" style={poppins}>#{puzzleNumber(d)} <span className="ml-2 text-xs font-bold text-white/55">{d === todayPuzzle ? c.archive.today : d}</span></span>
+                <span className="font-black" style={poppins}>#{puzzleNumber(d)} <span className="ml-2 text-xs font-bold text-white/55">{d === today ? c.archive.today : d}</span></span>
                 <span className={cn("text-sm font-bold", score !== undefined ? "text-brand-green-light" : "text-white/45")}>{score !== undefined ? c.archive.played(score) : started ? c.archive.inProgress : c.archive.notPlayed}</span>
               </button>
             </li>

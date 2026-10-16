@@ -83,5 +83,6 @@ export const pistasApi = {
   giveUp: (run: PistasRun, locale: string) => call<PistasRun>("/giveup", "POST", move(run), locale),
   next: (run: PistasRun, locale: string) => call<PistasRun>("/next", "POST", move(run), locale),
   review: (day: string, locale: string) => call<PistasReview>(`/review?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "none"),
-  leaderboard: (day: string, locale: string) => call<PistasLeaderboard>(`/leaderboard?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
+  /** Without a day the server answers with its default board: today's while it is ranked, else the last released day's. */
+  leaderboard: (day: string | undefined, locale: string) => call<PistasLeaderboard>(day ? `/leaderboard?day=${encodeURIComponent(day)}` : "/leaderboard", "GET", undefined, locale, "optional"),
 };

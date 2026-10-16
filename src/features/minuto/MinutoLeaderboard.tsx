@@ -37,26 +37,28 @@ export function MinutoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
     window.addEventListener("focus", check);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", check); };
   }, [day]);
-  const boardDay = day ?? latestDay(today);
   const authStatus = useAuthStore((s) => s.status);
   const myId = useAuthStore((s) => s.user?.id);
   // A board fetched for another day, account or language is never shown (the `me` row is personal).
-  const key = `${boardDay}|${myId ?? ""}|${locale}`;
+  const key = `${day ?? `default:${today}`}|${myId ?? ""}|${locale}`;
   const [fetched, setFetched] = useState<{ key: string; board: Board | null } | null>(null);
   const board: Board | null | undefined = fetched?.key === key ? fetched.board : undefined;
+  // With no day asked for, the server picks the board (today's while it is ranked, else the last released day's)
+  // and says which; until it answers, today's number stands in.
+  const boardDay = day ?? board?.day ?? latestDay(today);
 
   useEffect(() => {
-    if (authStatus === "loading" || !boardDay) return;
+    if (authStatus === "loading") return;
     let cancelled = false;
-    minutoApi.leaderboard(boardDay, locale)
+    minutoApi.leaderboard(day, locale)
       .then((data) => {
         if (cancelled) return;
         setFetched({ key, board: data });
-        if (refreshKey === 0) trackLeaderboardView({ puzzleId: boardDay, placement, players: data.players, hasMe: Boolean(data.me) });
+        if (refreshKey === 0) trackLeaderboardView({ puzzleId: data.day, placement, players: data.players, hasMe: Boolean(data.me) });
       })
       .catch(() => { if (!cancelled) setFetched({ key, board: null }); });
     return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, placement, locale, key]);
+  }, [day, refreshKey, authStatus, placement, locale, key]);
 
   if (board === null || !boardDay) return null;
   const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];

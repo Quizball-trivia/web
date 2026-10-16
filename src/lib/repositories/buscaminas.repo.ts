@@ -128,5 +128,6 @@ export const buscaminasApi = {
   tap: (run: BuscaminasRun, cardId: string, locale: string) => call<BuscaminasRun & { ok: boolean }>("/tap", "POST", { ...move(run), cardId }, locale),
   bank: (run: BuscaminasRun, locale: string) => call<BuscaminasRun>("/bank", "POST", move(run), locale),
   next: (run: BuscaminasRun, locale: string) => call<BuscaminasRun>("/next", "POST", move(run), locale),
-  leaderboard: (day: string, locale: string) => call<BuscaminasLeaderboard>(`/leaderboard?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
+  /** Without a day the server answers with its default board: today's while it is ranked, else the last released day's. */
+  leaderboard: (day: string | undefined, locale: string) => call<BuscaminasLeaderboard>(day ? `/leaderboard?day=${encodeURIComponent(day)}` : "/leaderboard", "GET", undefined, locale, "optional"),
 };

@@ -28,23 +28,34 @@ const toEntry = (row: BuscaminasLeaderboardRow, myId: string | undefined): Leade
 /** Today's top scores in the shared leaderboard rows. `refreshKey` refetches after the viewer finishes a ranked run. */
 export function BuscaminasLeaderboard({ locale, day, refreshKey = 0, limit = 10, placement = "page", className }: { locale: string; day?: string; refreshKey?: number; limit?: number; placement?: "page" | "end"; className?: string }) {
   const c = buscaminasCopy(locale).board;
-  const [boardDay] = useState(() => day ?? puzzleDayFor(releaseDay()));
+  // Follows the Argentine day while the page stays open, unless a specific day is asked for.
+  const [today, setToday] = useState(() => releaseDay());
+  useEffect(() => {
+    if (day) return;
+    const check = () => setToday(releaseDay());
+    const timer = window.setInterval(check, 60_000);
+    window.addEventListener("focus", check);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", check); };
+  }, [day]);
   const [board, setBoard] = useState<Board | null | undefined>(undefined);
+  // With no day asked for, the server picks the board (today's while it is ranked, else the last released day's)
+  // and says which; until it answers, today's number stands in.
+  const boardDay = day ?? board?.day ?? puzzleDayFor(today);
   const authStatus = useAuthStore((s) => s.status);
   const myId = useAuthStore((s) => s.user?.id);
 
   useEffect(() => {
     if (authStatus === "loading") return;
     let cancelled = false;
-    buscaminasApi.leaderboard(boardDay, locale)
+    buscaminasApi.leaderboard(day, locale)
       .then((data) => {
         if (cancelled) return;
         setBoard(data);
-        if (refreshKey === 0) trackLeaderboardView({ puzzleId: boardDay, placement, players: data.players, hasMe: Boolean(data.me) });
+        if (refreshKey === 0) trackLeaderboardView({ puzzleId: data.day, placement, players: data.players, hasMe: Boolean(data.me) });
       })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, placement, locale]);
+  }, [day, today, refreshKey, authStatus, placement, locale]);
 
   if (board === null) return null;
   const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];

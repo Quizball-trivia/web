@@ -3,7 +3,7 @@ import { ROUNDS_PER_DAY, MAX_SCORE, type RoundOutcome, type RoundResult } from "
 export type ShareLocale = "es" | "en" | "ka" | "tr";
 const LETTER: Record<RoundOutcome, string> = { perfect: "p", banked: "b", mine: "m" };
 const OUTCOME: Record<string, RoundOutcome> = { p: "perfect", b: "banked", m: "mine" };
-const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{20})-(es|en|ka|tr)$/;
+const CODE = /^(\d{1,5})-(\d{1,3})-([pbm]{20})-(es|en|ka|tr)$/;
 
 export interface ShareResult {
   number: number;
