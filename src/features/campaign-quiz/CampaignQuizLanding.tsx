@@ -39,6 +39,8 @@ interface CampaignQuizLandingProps {
   quiz: CampaignQuiz;
   locale?: CampaignQuizLocale;
   previewToken?: string;
+  /** Offered in the language switcher only when the quiz has a Russian edition. */
+  russianEdition?: boolean;
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
@@ -199,7 +201,7 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
   }, []);
 }
 
-export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken }: CampaignQuizLandingProps) {
+export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, russianEdition }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
   const hubPath = campaignHubPath(locale);
@@ -246,7 +248,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </span>
             <LanguageSwitcher
               locale={locale}
-              locales={content.localeMode === 'en_ka' ? ['en', 'ka', 'es', 'ru'] : ['en', 'es', 'ru']}
+              locales={[...(content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] as const : ['en', 'es'] as const), ...(russianEdition ? ['ru'] as const : [])]}
               className="hidden sm:inline-flex"
             />
             <CampaignSignupLink

@@ -86,6 +86,8 @@ export interface CampaignQuiz {
   questions: CampaignQuizQuestion[];
   rating: CampaignQuizRating;
   page: CampaignQuizPage | null;
+  /** Which language editions exist (a missing one is served in English). Absent from older backends. */
+  editions?: { ka: boolean; es: boolean; ru: boolean };
 }
 
 export interface CampaignQuizAnswer {

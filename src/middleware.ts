@@ -50,6 +50,13 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
 
+/** The 410 page of a retired quiz, in the language of the address it was asked for. */
+const QUIZ_GONE: Record<'en' | 'ka' | 'ru', { title: string; message: string }> = {
+  en: { title: 'Quiz no longer available', message: 'This quiz is no longer available.' },
+  ka: { title: 'ქვიზი აღარ არის ხელმისაწვდომი', message: 'ეს ქვიზი აღარ არის ხელმისაწვდომი.' },
+  ru: { title: 'Викторина больше недоступна', message: 'Эта викторина больше недоступна.' },
+};
+
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
 function decodedPath(pathname: string): string {
   try {
@@ -289,8 +296,9 @@ export async function middleware(req: NextRequest) {
           return redirectResponse;
         }
         if (route.kind === 'gone') {
+          const gone = QUIZ_GONE[quizLocale!];
           return new NextResponse(
-            '<!doctype html><html lang="en"><head><title>Quiz no longer available</title></head><body><main><h1>This quiz is no longer available.</h1></main></body></html>',
+            `<!doctype html><html lang="${quizLocale}"><head><title>${gone.title}</title></head><body><main><h1>${gone.message}</h1></main></body></html>`,
             {
             status: 410,
             headers: {

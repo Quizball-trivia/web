@@ -16,6 +16,9 @@ describe("retired and renamed quiz pages", () => {
     const response = await middleware(new NextRequest("https://quizball.io/ru/futbolnaya-viktorina/ugaday-klub-po-embleme"));
     expect(response.status).toBe(410);
     expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toMatch(/\/campaign-quizzes\/routes\/club-badges$/);
+    const body = await response.text();
+    expect(body).toContain('lang="ru"');
+    expect(body).toContain("Эта викторина больше недоступна.");
   });
 
   it("moves a renamed Russian quiz to the Russian page of its new slug", async () => {
