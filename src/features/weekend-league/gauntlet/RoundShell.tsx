@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useLocale } from '@/contexts/LocaleContext';
 import { poppins } from '../constants';
 import { ROUND_LABEL_KEYS, ROUNDS } from './gauntlet.data';
@@ -81,7 +82,7 @@ export function RoundHeader({
   /** Hide the personal score/rank — spectators have neither. */
   spectator?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const urgent = secondsLeft <= 4;
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pt-16">
@@ -105,7 +106,7 @@ export function RoundHeader({
       </div>
       <div className="mt-1 flex items-center justify-between font-poppins text-[10px] font-bold uppercase tracking-wide text-white/40">
         <span>{t('weekendLeague.gPlayersAdvance', { players: game.players, advance: game.advance })}</span>
-        <span className={`tabular-nums ${urgent ? 'text-brand-red-soft' : ''}`}>{secondsLeft}s</span>
+        <span className={`tabular-nums ${urgent ? 'text-brand-red-soft' : ''}`}>{secondsShort(secondsLeft, locale)}</span>
       </div>
 
       {/* Timer bar */}

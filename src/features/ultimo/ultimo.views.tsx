@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Check, Copy, Crown, Flag, Share2, Timer, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/locale";
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import type { AvatarCustomization } from "@/types/game";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
 import type { UltimoAnswerResult, UltimoRunState } from "@/lib/repositories/ultimo.repo";
@@ -124,7 +125,7 @@ export function UltimoPlayView({ locale, state, now, avatar, pending, notice, fe
       <header className="flex items-center gap-3">
         {onExit && <button type="button" onClick={onExit} aria-label={c.exit} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"><X className="size-4" /></button>}
         <Brand locale={locale} className="min-w-0 flex-1 truncate text-[13px]" />
-        {playing && <Clock seconds={secs} />}
+        {playing && <Clock seconds={secs} locale={locale} />}
       </header>
 
       <div className={cn("mt-3 flex items-center gap-3 rounded-2xl px-3 py-2 transition-colors", playing ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-white/[0.05]")}>
@@ -203,12 +204,12 @@ export function UltimoPlayView({ locale, state, now, avatar, pending, notice, fe
 }
 
 /** The header clock, as in every duel; urgent in the last seconds (turns here are short). */
-function Clock({ seconds }: { seconds: number }) {
+function Clock({ seconds, locale }: { seconds: number; locale: Locale }) {
   const urgent = seconds <= 5;
   return (
     <motion.span key={urgent ? seconds : "calm"} initial={urgent ? { scale: 1.2 } : false} animate={{ scale: 1 }}
       className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-black tabular-nums transition-colors", urgent ? "bg-brand-red-soft/20 text-brand-red-light" : "bg-white/[0.06] text-white/50")} style={poppins}>
-      {seconds} s
+      {secondsShort(seconds, locale)}
     </motion.span>
   );
 }

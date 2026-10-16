@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { motion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/contexts/LocaleContext";
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
 import type { AvatarCustomization } from "@/types/game";
 
@@ -39,11 +41,12 @@ export function TopBar({ brand, seconds, exitLabel, onExit, right }: { brand: re
 }
 
 export function ClockPill({ seconds }: { seconds: number }) {
+  const { locale } = useLocale();
   const urgent = seconds <= 5;
   return (
     <motion.span key={urgent ? seconds : "calm"} initial={urgent ? { scale: 1.2 } : false} animate={{ scale: 1 }}
       className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-black tabular-nums transition-colors", urgent ? "bg-brand-red-soft/20 text-brand-red-light" : "bg-white/[0.06] text-white/60")} style={poppins}>
-      {seconds} s
+      {secondsShort(seconds, locale)}
     </motion.span>
   );
 }
