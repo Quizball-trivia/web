@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/lib/config';
+import { API_BASE_URL, CLIENT_PLATFORM } from '@/lib/config';
 import { getGuestToken, peekGuestToken, retireGuestToken } from './guestSession';
 import { getSupabaseAccessToken } from '@/lib/auth/supabase';
 import { timeoutSignal } from '@/lib/timeoutSignal';
@@ -27,7 +27,7 @@ async function send(path: string, body: unknown, token?: string, member = false,
   const auth = member ? await getSupabaseAccessToken() : null;
   if (member && !auth) throw new Error('No member session');
   return fetch(`${API_BASE_URL}/api/v1/guest/journey/${path}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'x-guest-token': token } : {}), ...(auth ? { Authorization: `Bearer ${auth}`, 'x-journey-member-id': expectedMember ?? '' } : {}) },
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-quizball-platform': CLIENT_PLATFORM, ...(token ? { 'x-guest-token': token } : {}), ...(auth ? { Authorization: `Bearer ${auth}`, 'x-journey-member-id': expectedMember ?? '' } : {}) },
     body: JSON.stringify(body), signal: timeoutSignal(5000),
   });
 }

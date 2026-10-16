@@ -54,18 +54,25 @@ export function identifyUser(
 
 // Reset user when they log out
 export function resetUser(): void {
+  const wasMember = accessType === 'member' || lastIdentifySignature !== null;
   accessType = 'guest';
+  lastIdentifySignature = null;
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;
   }
 
   try {
-    lastIdentifySignature = null;
-    // Guest bootstrap must not rotate the anonymous $session_id.
-    if (!posthog._isIdentified()) {
-      return;
+    // Use the SDK's public persisted-user getter, not _isIdentified(). Next's
+    // instrumentation initializes PostHog before the auth bootstrap runs.
+    // An anonymous reload must retain its ID, but a member whose auth session
+    // expired must still be detached even in a fresh JS runtime.
+    let mustReset = wasMember;
+    try {
+      mustReset ||= Boolean(posthog.get_property('$user_id'));
+    } catch {
+      mustReset = true; // Unreadable identity: prefer privacy over continuity.
     }
-    posthog.reset();
+    if (mustReset) posthog.reset();
   } catch (error) {
     console.error('PostHog resetUser error:', error);
   }

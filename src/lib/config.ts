@@ -1,4 +1,6 @@
 import type { DuelGameId, RoomGameId } from "@/lib/realtime/socket.types";
+/** Analytics only. Native replaces this module with its runtime platform. */
+export const CLIENT_PLATFORM = 'web' as const;
 
 function nonBlank(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
