@@ -13,6 +13,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:bayer-04-leverkusen",
         "label_en": "Bayer 04 Leverkusen",
         "label_ka": "Bayer 04 Leverkusen",
+        "label_ru": "Байер Леверкузен",
         "asset_key": "bayer-04-leverkusen"
       },
       {
@@ -21,6 +22,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "DEF",
         "label_en": "Defender",
         "label_ka": "მცველი",
+        "label_ru": "Защитник",
         "asset_key": null
       },
       {
@@ -29,6 +31,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:es",
         "label_en": "Spain",
         "label_ka": "ესპანეთი",
+        "label_ru": "Испания",
         "asset_key": "es"
       }
     ],
@@ -37,24 +40,28 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "7a947640-80de-4f6a-bb57-e7752909b74a",
         "name_en": "Mario Hermoso",
         "name_ka": "მარიო ერმოსო",
+        "name_ru": "Марио Эрмосо",
         "image_url": null
       },
       {
         "id": "a9a05114-da56-4d9f-adcc-d653b8582142",
         "name_en": "Alejandro Grimaldo",
         "name_ka": "ალეხანდრო გრიმალდო",
+        "name_ru": "Алехандро Гримальдо",
         "image_url": null
       },
       {
         "id": "b0cb2d4c-8a7b-4f49-955a-b5f904bf9685",
         "name_en": "Lucas Vázquez",
         "name_ka": "ლუკას ვასკესი",
+        "name_ru": "Лукас Васкес",
         "image_url": null
       },
       {
         "id": "de28216d-257f-48ea-8292-46303b11e00d",
         "name_en": "Daniel Carvajal",
         "name_ka": "დანიელ კარვახალი",
+        "name_ru": "Даниэль Карвахаль",
         "image_url": null
       }
     ],
@@ -161,6 +168,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-malaga",
         "label_en": "Málaga",
         "label_ka": "Málaga",
+        "label_ru": "Малага",
         "asset_key": "wl-malaga"
       },
       {
@@ -169,6 +177,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "MID",
         "label_en": "Midfielder",
         "label_ka": "ნახევარმცველი",
+        "label_ru": "Полузащитник",
         "asset_key": null
       },
       {
@@ -177,6 +186,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:es",
         "label_en": "Spain",
         "label_ka": "ესპანეთი",
+        "label_ru": "Испания",
         "asset_key": "es"
       }
     ],
@@ -185,30 +195,35 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "5c38d987-e66c-4c70-ad79-5b1169591b0e",
         "name_en": "Pablo Fornals",
         "name_ka": "პაბლო ფორნალსი",
+        "name_ru": "Пабло Форнальс",
         "image_url": null
       },
       {
         "id": "9b56d51b-1b88-4add-9c5f-1a077606d5cc",
         "name_en": "Isco",
         "name_ka": "ისკო",
+        "name_ru": "Иско",
         "image_url": null
       },
       {
         "id": "a75e82c1-0f44-4c9a-8b62-d8315cfb84f2",
         "name_en": "Sergi Darder",
         "name_ka": "სერჟი დარდერი",
+        "name_ru": "Серхи Дардер",
         "image_url": null
       },
       {
         "id": "d82f5b75-0360-4717-8439-1d3ff13d57da",
         "name_en": "Luis Alberto",
         "name_ka": "ლუის ალბერტო",
+        "name_ru": "Луис Альберто",
         "image_url": null
       },
       {
         "id": "ee5d3945-8c4b-4c8d-8001-bf0105c6eb65",
         "name_en": "Ignacio Camacho",
         "name_ka": "იგნასიო კამაჩო",
+        "name_ru": "Игнасио Камачо",
         "image_url": null
       }
     ],
@@ -339,6 +354,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:valencia-cf",
         "label_en": "Valencia CF",
         "label_ka": "Valencia CF",
+        "label_ru": "Валенсия",
         "asset_key": "valencia-cf"
       },
       {
@@ -347,6 +363,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "DEF",
         "label_en": "Defender",
         "label_ka": "მცველი",
+        "label_ru": "Защитник",
         "asset_key": null
       },
       {
@@ -355,6 +372,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:pt",
         "label_en": "Portugal",
         "label_ka": "პორტუგალია",
+        "label_ru": "Португалия",
         "asset_key": "pt"
       }
     ],
@@ -363,30 +381,35 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "5471a5f5-a0b5-485d-9ed7-f349e80d2164",
         "name_en": "João Pereira",
         "name_ka": "ჟოაო პერეირა",
+        "name_ru": "Жуан Перейра",
         "image_url": null
       },
       {
         "id": "73302f11-81c2-4e28-a4fe-57a2bfef3c14",
         "name_en": "Ferro",
         "name_ka": "ფერო",
+        "name_ru": "Ферро",
         "image_url": null
       },
       {
         "id": "97e2b56a-99c2-4e19-9aad-5012106166a9",
         "name_en": "Thierry Correia",
         "name_ka": "ტიერი კორეია",
+        "name_ru": "Тьерри Коррейя",
         "image_url": null
       },
       {
         "id": "d70a6fdb-c889-4f4b-98cd-13ce639e326f",
         "name_en": "João Cancelo",
         "name_ka": "ჟოაუ კანსელუ",
+        "name_ru": "Жоау Канселу",
         "image_url": null
       },
       {
         "id": "e5eb6f47-e6b8-4ce8-b8e9-03b79ab6b00f",
         "name_en": "Rúben Vezo",
         "name_ka": "რუბენ ვეზუ",
+        "name_ru": "Рубен Везу",
         "image_url": null
       }
     ],
@@ -499,6 +522,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-monza",
         "label_en": "Monza",
         "label_ka": "Monza",
+        "label_ru": "Монца",
         "asset_key": "wl-monza"
       },
       {
@@ -507,6 +531,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "GK",
         "label_en": "Goalkeeper",
         "label_ka": "მეკარე",
+        "label_ru": "Вратарь",
         "asset_key": null
       },
       {
@@ -515,6 +540,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:it",
         "label_en": "Italy",
         "label_ka": "იტალია",
+        "label_ru": "Италия",
         "asset_key": "it"
       }
     ],
@@ -523,18 +549,21 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "6bd228d8-aa19-4553-b9dd-ddd8ee57103a",
         "name_en": "Stefano Turati",
         "name_ka": "სტეფანო ტურატი",
+        "name_ru": "Стефано Турати",
         "image_url": null
       },
       {
         "id": "99e8ea92-26b3-40a0-a80d-65b62564d8a7",
         "name_en": "Michele Di Gregorio",
         "name_ka": "მიკელე დი გრეგორიო",
+        "name_ru": "Микеле Ди Грегорио",
         "image_url": null
       },
       {
         "id": "f7269e71-0834-414b-8a72-1b2bd4c28e6d",
         "name_en": "Alessio Cragno",
         "name_ka": "ალესიო კრანიო",
+        "name_ru": "Алессио Краньо",
         "image_url": null
       }
     ],
@@ -623,6 +652,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-rayo-vallecano",
         "label_en": "Rayo Vallecano",
         "label_ka": "Rayo Vallecano",
+        "label_ru": "Райо Вальекано",
         "asset_key": "wl-rayo-vallecano"
       },
       {
@@ -631,6 +661,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "MID",
         "label_en": "Midfielder",
         "label_ka": "ნახევარმცველი",
+        "label_ru": "Полузащитник",
         "asset_key": null
       },
       {
@@ -639,6 +670,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:es",
         "label_en": "Spain",
         "label_ka": "ესპანეთი",
+        "label_ru": "Испания",
         "asset_key": "es"
       }
     ],
@@ -647,42 +679,49 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "1382a9a6-be30-4983-90f3-95c142367efd",
         "name_en": "Unai López",
         "name_ka": "უნაი ლოპესი",
+        "name_ru": "Унай Лопес",
         "image_url": null
       },
       {
         "id": "5610d0a7-4522-4cc3-ae6e-4c4aad8b9c7c",
         "name_en": "Santi Comesaña",
         "name_ka": "სანტი კომესანია",
+        "name_ru": "Санти Комесанья",
         "image_url": null
       },
       {
         "id": "bed4eba7-db84-4357-9329-bea33c669e82",
         "name_en": "Javi Fuego",
         "name_ka": "ხავი ფუეგო",
+        "name_ru": "Хави Фуэго",
         "image_url": null
       },
       {
         "id": "ca49c152-b02b-435f-b5df-454fac02347a",
         "name_en": "Saúl Ñíguez",
         "name_ka": "საულ ნიგესი",
+        "name_ru": "Сауль Ньигес",
         "image_url": null
       },
       {
         "id": "d26018c9-3501-459a-8fcc-2f728a4b7ffd",
         "name_en": "Pablo Hernández",
         "name_ka": "პაბლო ერნანდესი",
+        "name_ru": "Пабло Эрнандес",
         "image_url": null
       },
       {
         "id": "e6862dbf-22a0-40cf-994d-0b6e3a638be5",
         "name_en": "Alejandro Pozuelo",
         "name_ka": "ალეხანდრო პოსუელო",
+        "name_ru": "Алехандро Посуэло",
         "image_url": null
       },
       {
         "id": "f986b890-9121-4569-9a73-d9dd13f54dd8",
         "name_en": "Jonathan Viera",
         "name_ka": "ჯონათან ვიერა",
+        "name_ru": "Хонатан Виера",
         "image_url": null
       }
     ],
@@ -849,6 +888,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:chelsea",
         "label_en": "Chelsea",
         "label_ka": "Chelsea",
+        "label_ru": "Челси",
         "asset_key": "chelsea"
       },
       {
@@ -857,6 +897,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -865,6 +906,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:gb-eng",
         "label_en": "England",
         "label_ka": "ინგლისი",
+        "label_ru": "Англия",
         "asset_key": "gb-eng"
       }
     ],
@@ -873,60 +915,70 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "01312c6d-a794-42a4-836a-88f97563fd71",
         "name_en": "Tyrique George",
         "name_ka": "ტაირიკ ჯორჯი",
+        "name_ru": "Тайрик Джордж",
         "image_url": null
       },
       {
         "id": "105c2d1a-69a2-47f1-982c-03131859288e",
         "name_en": "Noni Madueke",
         "name_ka": "ნონი მადუეკე",
+        "name_ru": "Нони Мадуэке",
         "image_url": null
       },
       {
         "id": "1950a150-8ce6-4b0d-aa91-92161bef4766",
         "name_en": "Dominic Solanke",
         "name_ka": "დომინიკ სოლანკე",
+        "name_ru": "Доминик Соланке",
         "image_url": null
       },
       {
         "id": "5092c161-0d14-43e0-9ad9-08043b6ddf41",
         "name_en": "Callum Hudson-Odoi",
         "name_ka": "კალუმ ჰადსონ-ოდოი",
+        "name_ru": "Каллум Хадсон-Одои",
         "image_url": null
       },
       {
         "id": "51e1ae96-5a05-4387-acd7-eeafc62786e2",
         "name_en": "Tammy Abraham",
         "name_ka": "ტემი აბრაჰამი",
+        "name_ru": "Тэмми Абрахам",
         "image_url": null
       },
       {
         "id": "56b38697-46e0-457c-bbbb-72604fb5dba3",
         "name_en": "Daniel Sturridge",
         "name_ka": "დანიელ სტარიჯი",
+        "name_ru": "Дэниел Старридж",
         "image_url": null
       },
       {
         "id": "76d92011-8582-40a6-9655-d69e41b50705",
         "name_en": "Jamie Gittens",
         "name_ka": "ჯეიმი გიტენსი",
+        "name_ru": "Джейми Гиттенс",
         "image_url": null
       },
       {
         "id": "792f1313-70e6-45a4-9079-71321a16848d",
         "name_en": "Jadon Sancho",
         "name_ka": "ჯეიდონ სანჩო",
+        "name_ru": "Джейдон Санчо",
         "image_url": null
       },
       {
         "id": "bec36cad-dbad-4f54-ac17-8749362ae474",
         "name_en": "Raheem Sterling",
         "name_ka": "რაჰიმ სტერლინგი",
+        "name_ru": "Рахим Стерлинг",
         "image_url": null
       },
       {
         "id": "e68b2cf8-d41f-40b5-a550-0b892f66b1e7",
         "name_en": "Liam Delap",
         "name_ka": "ლიამ დელაპი",
+        "name_ru": "Лиам Делап",
         "image_url": null
       }
     ],
@@ -1243,6 +1295,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:chelsea",
         "label_en": "Chelsea",
         "label_ka": "Chelsea",
+        "label_ru": "Челси",
         "asset_key": "chelsea"
       },
       {
@@ -1251,6 +1304,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "MID",
         "label_en": "Midfielder",
         "label_ka": "ნახევარმცველი",
+        "label_ru": "Полузащитник",
         "asset_key": null
       },
       {
@@ -1259,6 +1313,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:ar",
         "label_en": "Argentina",
         "label_ka": "არგენტინა",
+        "label_ru": "Аргентина",
         "asset_key": "ar"
       }
     ],
@@ -1267,18 +1322,21 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "2ee2187f-a8e4-4f73-b670-11586e0b5661",
         "name_en": "Facundo Buonanotte",
         "name_ka": "ფაკუნდო ბუონანოტე",
+        "name_ru": "Факундо Буонанотте",
         "image_url": null
       },
       {
         "id": "b0550e07-c6a5-4bbb-a095-d336f0d3c0f0",
         "name_en": "Enzo Fernández",
         "name_ka": "ენცო ფერნანდესი",
+        "name_ru": "Энцо Фернандес",
         "image_url": null
       },
       {
         "id": "d0a233f5-36ae-4187-ba49-73fe1da1e23e",
         "name_en": "Juan Sebastián Verón",
         "name_ka": "ხუან სებასტიან ვერონი",
+        "name_ru": "Хуан Себастьян Верон",
         "image_url": null
       }
     ],
@@ -1367,6 +1425,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:sevilla-fc",
         "label_en": "Sevilla FC",
         "label_ka": "Sevilla FC",
+        "label_ru": "Севилья",
         "asset_key": "sevilla-fc"
       },
       {
@@ -1375,6 +1434,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -1383,6 +1443,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:ar",
         "label_en": "Argentina",
         "label_ka": "არგენტინა",
+        "label_ru": "Аргентина",
         "asset_key": "ar"
       }
     ],
@@ -1391,42 +1452,49 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "145e057f-e280-48df-9b04-83cb5cd042ad",
         "name_en": "Diego Perotti",
         "name_ka": "დიეგო პეროტი",
+        "name_ru": "Диего Перотти",
         "image_url": null
       },
       {
         "id": "2143632c-db0c-435a-aabe-8de6f632a4ea",
         "name_en": "Luciano Vietto",
         "name_ka": "ლუჩიანო ვიეტო",
+        "name_ru": "Лучано Вьетто",
         "image_url": null
       },
       {
         "id": "450d1c73-244d-45e9-87b7-b34a19f701a3",
         "name_en": "Alejo Veliz",
         "name_ka": "ალეხო ველისი",
+        "name_ru": "Алехо Велис",
         "image_url": null
       },
       {
         "id": "65177212-1844-4330-aa90-d6c99340ede4",
         "name_en": "Lucas Ocampos",
         "name_ka": "ლუკას ოკამპოსი",
+        "name_ru": "Лукас Окампос",
         "image_url": null
       },
       {
         "id": "c3c8ff15-cad2-409e-816c-b95a72c0eb9c",
         "name_en": "Erik Lamela",
         "name_ka": "ერიკ ლამელა",
+        "name_ru": "Эрик Ламела",
         "image_url": null
       },
       {
         "id": "fc39f30b-a21f-469b-be69-7a7ebacc7c33",
         "name_en": "Joaquín Correa",
         "name_ka": "ხოაკინ კორეა",
+        "name_ru": "Хоакин Корреа",
         "image_url": null
       },
       {
         "id": "fc9f257b-0405-43fb-b97a-947e0522305b",
         "name_en": "Papu Gómez",
         "name_ka": "პაპუ გომესი",
+        "name_ru": "Папу Гомес",
         "image_url": null
       }
     ],
@@ -1611,6 +1679,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:ac-milan",
         "label_en": "AC Milan",
         "label_ka": "AC Milan",
+        "label_ru": "Милан",
         "asset_key": "ac-milan"
       },
       {
@@ -1619,6 +1688,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -1627,6 +1697,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:hr",
         "label_en": "Croatia",
         "label_ka": "ხორვატია",
+        "label_ru": "Хорватия",
         "asset_key": "hr"
       }
     ],
@@ -1635,18 +1706,21 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
         "name_en": "Nikola Kalinic",
         "name_ka": "ნიკოლა კალინიჩი",
+        "name_ru": "Никола Калинич",
         "image_url": null
       },
       {
         "id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
         "name_en": "Ante Rebić",
         "name_ka": "ანტე რებიჩი",
+        "name_ru": "Анте Ребич",
         "image_url": null
       },
       {
         "id": "afacf855-4426-4fca-b2fe-33afe829a562",
         "name_en": "Mario Mandzukic",
         "name_ka": "მარიო მანჯუკიჩი",
+        "name_ru": "Марио Манджукич",
         "image_url": null
       }
     ],
@@ -1765,6 +1839,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:liverpool",
         "label_en": "Liverpool",
         "label_ka": "Liverpool",
+        "label_ru": "Ливерпуль",
         "asset_key": "liverpool"
       },
       {
@@ -1773,6 +1848,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -1781,6 +1857,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:es",
         "label_en": "Spain",
         "label_ka": "ესპანეთი",
+        "label_ru": "Испания",
         "asset_key": "es"
       }
     ],
@@ -1789,24 +1866,28 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "544122df-f446-4316-b16f-cde987e7b4d3",
         "name_en": "Fernando Morientes",
         "name_ka": "ფერნანდო მორიენტესი",
+        "name_ru": "Фернандо Морьентес",
         "image_url": null
       },
       {
         "id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
         "name_en": "Sergi Canós",
         "name_ka": "სერჟი კანოსი",
+        "name_ru": "Сержи Канос",
         "image_url": null
       },
       {
         "id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
         "name_en": "Iago Aspas",
         "name_ka": "იაგო ასპასი",
+        "name_ru": "Яго Аспас",
         "image_url": null
       },
       {
         "id": "c9692588-f93b-4035-8737-8f625d1ec829",
         "name_en": "Fernando Torres",
         "name_ka": "ფერნანდო ტორესი",
+        "name_ru": "Фернандо Торрес",
         "image_url": null
       }
     ],
@@ -1949,6 +2030,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:villarreal-cf",
         "label_en": "Villarreal CF",
         "label_ka": "Villarreal CF",
+        "label_ru": "Вильярреал",
         "asset_key": "villarreal-cf"
       },
       {
@@ -1957,6 +2039,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -1965,6 +2048,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:cm",
         "label_en": "Cameroon",
         "label_ka": "კამერუნი",
+        "label_ru": "Камерун",
         "asset_key": "cm"
       }
     ],
@@ -1973,12 +2057,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "1189b30a-e803-4d4e-b9a6-501e370d2e17",
         "name_en": "Karl Etta Eyong",
         "name_ka": "კარლ ეტა ეიონგი",
+        "name_ru": "Карл Этта Эйонг",
         "image_url": null
       },
       {
         "id": "bd61f9d5-d750-451a-95e0-461d53d26bf4",
         "name_en": "Karl Toko Ekambi",
         "name_ka": "კარლ ტოკო ეკამბი",
+        "name_ru": "Карл Токо Экамби",
         "image_url": null
       }
     ],
@@ -2043,6 +2129,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:as-monaco",
         "label_en": "AS Monaco",
         "label_ka": "AS Monaco",
+        "label_ru": "Монако",
         "asset_key": "as-monaco"
       },
       {
@@ -2051,6 +2138,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "MID",
         "label_en": "Midfielder",
         "label_ka": "ნახევარმცველი",
+        "label_ru": "Полузащитник",
         "asset_key": null
       },
       {
@@ -2059,6 +2147,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:be",
         "label_en": "Belgium",
         "label_ka": "ბელგია",
+        "label_ru": "Бельгия",
         "asset_key": "be"
       }
     ],
@@ -2067,12 +2156,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "ad52c4f6-3b41-41c6-8c33-e8e28adfa6b7",
         "name_en": "Eliot Matazo",
         "name_ka": "ელიოტ მატაზო",
+        "name_ru": "Элиот Матазо",
         "image_url": null
       },
       {
         "id": "c56f9c35-9cef-4733-b80e-faad28b3c3b8",
         "name_en": "Youri Tielemans",
         "name_ka": "იური ტილემანსი",
+        "name_ru": "Юри Тилеманс",
         "image_url": null
       }
     ],
@@ -2173,6 +2264,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-olympiacos",
         "label_en": "Olympiacos",
         "label_ka": "Olympiacos",
+        "label_ru": "Олимпиакос",
         "asset_key": "wl-olympiacos"
       },
       {
@@ -2181,6 +2273,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "MID",
         "label_en": "Midfielder",
         "label_ka": "ნახევარმცველი",
+        "label_ru": "Полузащитник",
         "asset_key": null
       },
       {
@@ -2189,6 +2282,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:br",
         "label_en": "Brazil",
         "label_ka": "ბრაზილია",
+        "label_ru": "Бразилия",
         "asset_key": "br"
       }
     ],
@@ -2197,12 +2291,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "8eb86174-29f3-4034-99d5-7f9d39b5bdbb",
         "name_en": "Rivaldo",
         "name_ka": "რივალდო",
+        "name_ru": "Ривалдо",
         "image_url": null
       },
       {
         "id": "cfe2c7ef-0233-4968-8ef2-90a8f1863855",
         "name_en": "Gustavo Scarpa",
         "name_ka": "გუსტავო სკარპა",
+        "name_ru": "Густаво Скарпа",
         "image_url": null
       }
     ],
@@ -2255,6 +2351,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:afc-ajax",
         "label_en": "AFC Ajax",
         "label_ka": "AFC Ajax",
+        "label_ru": "Аякс",
         "asset_key": "afc-ajax"
       },
       {
@@ -2263,6 +2360,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -2271,6 +2369,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:ar",
         "label_en": "Argentina",
         "label_ka": "არგენტინა",
+        "label_ru": "Аргентина",
         "asset_key": "ar"
       }
     ],
@@ -2279,12 +2378,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "65177212-1844-4330-aa90-d6c99340ede4",
         "name_en": "Lucas Ocampos",
         "name_ka": "ლუკას ოკამპოსი",
+        "name_ru": "Лукас Окампос",
         "image_url": null
       },
       {
         "id": "7a6483ff-dc51-48d3-87a6-68bf6e297d30",
         "name_en": "Maher Carrizo",
         "name_ka": "მაჰერ კარისო",
+        "name_ru": "Махер Каррисо",
         "image_url": null
       }
     ],
@@ -2343,6 +2444,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-bournemouth",
         "label_en": "Bournemouth",
         "label_ka": "Bournemouth",
+        "label_ru": "Борнмут",
         "asset_key": "wl-bournemouth"
       },
       {
@@ -2351,6 +2453,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -2359,6 +2462,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:gb-wls",
         "label_en": "Wales",
         "label_ka": "უელსი",
+        "label_ru": "Уэльс",
         "asset_key": "gb-wls"
       }
     ],
@@ -2367,12 +2471,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "32ab5d21-8dc2-431f-a9b1-914dd6a62230",
         "name_en": "Harry Wilson",
         "name_ka": "ჰარი უილსონი",
+        "name_ru": "Гарри Уилсон",
         "image_url": null
       },
       {
         "id": "bb8d0877-7907-47b9-a26d-b01355015f7e",
         "name_en": "David Brooks",
         "name_ka": "დევიდ ბრუკსი",
+        "name_ru": "Дэвид Брукс",
         "image_url": null
       }
     ],
@@ -2425,6 +2531,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "club:wl-queens-park-rangers",
         "label_en": "Queens Park Rangers",
         "label_ka": "Queens Park Rangers",
+        "label_ru": "Куинз Парк Рейнджерс",
         "asset_key": "wl-queens-park-rangers"
       },
       {
@@ -2433,6 +2540,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "FWD",
         "label_en": "Forward",
         "label_ka": "თავდამსხმელი",
+        "label_ru": "Нападающий",
         "asset_key": null
       },
       {
@@ -2441,6 +2549,7 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "key": "country:fr",
         "label_en": "France",
         "label_ka": "საფრანგეთი",
+        "label_ru": "Франция",
         "asset_key": "fr"
       }
     ],
@@ -2449,12 +2558,14 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
         "id": "04d5b66c-4a82-4a47-94ba-25349adba7a9",
         "name_en": "Djibril Cissé",
         "name_ka": "ჯიბრილ სისე",
+        "name_ru": "Джибриль Сиссе",
         "image_url": null
       },
       {
         "id": "87898bb3-d021-47ee-b6a9-20e0dda5890b",
         "name_en": "Loïc Rémy",
         "name_ka": "ლოიკ რემი",
+        "name_ru": "Лоик Реми",
         "image_url": null
       }
     ],

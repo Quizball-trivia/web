@@ -15,7 +15,7 @@ import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
 
-type Localized = Record<"es" | "en" | "ka" | "tr", string>;
+type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string };
 interface ClubName { key: string; name: Localized; crest: string }
 interface PairResult { clubs: [ClubName, ClubName] | null; found: string | null; total: number | null; examples: string[] | null }
 /** Server-held run state (backend shared-player-daily.rules PublicRunState): never an accepted name of an open day. */
@@ -62,7 +62,7 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
     if (run && fresh(run.state)) await daily.next();
   };
   const status = state?.done ? "done" : state && (state.pair > 0 || state.open || state.settled) ? "started" : "new";
-  const club = (c2: ClubName) => ({ key: c2.key, name: c2.name[lang], crest: c2.crest });
+  const club = (c2: ClubName) => ({ key: c2.key, name: (c2.name[lang] ?? c2.name.en), crest: c2.crest });
 
   let play = null;
   // The run is finished by its last answer: that answer's own result stays on screen until the player moves on.
@@ -149,7 +149,7 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
           <li key={i} className="rounded-xl border border-white/10 px-3 py-2 text-sm">
             <div className="flex items-center gap-2">
               <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full", r.found ? "bg-brand-green" : "bg-white/15")}>{r.found ? <Check className="size-3.5" strokeWidth={3} /> : <X className="size-3 text-white/60" />}</span>
-              <span className="min-w-0 flex-1 truncate font-semibold">{r.clubs ? `${r.clubs[0].name[lang]} × ${r.clubs[1].name[lang]}` : `#${i + 1}`}</span>
+              <span className="min-w-0 flex-1 truncate font-semibold">{r.clubs ? `${(r.clubs[0].name[lang] ?? r.clubs[0].name.en)} × ${(r.clubs[1].name[lang] ?? r.clubs[1].name.en)}` : `#${i + 1}`}</span>
               <span className="shrink-0 truncate text-xs text-white/65">{r.found ?? gd.notFound}</span>
             </div>
             {r.examples && r.examples.length > 0 && <p className="mt-1 pl-7 text-xs text-white/55">{r.examples.join(" · ")}</p>}

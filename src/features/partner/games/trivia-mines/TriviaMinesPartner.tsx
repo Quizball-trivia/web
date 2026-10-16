@@ -31,6 +31,17 @@ const LABELS: Record<PartnerLocale, TriviaMinesPartnerMode["labels"]> = {
     playReturnedBody: "უჯრის გახსნამდე გახვედი, ამიტომ ეს თამაში არ დაგეხარჯა.",
     exit: "თამაშებზე დაბრუნება",
   },
+  ru: {
+    start: "Начать",
+    points: "Очки",
+    startPoints: "Старт: 100 очков",
+    play: "Играть",
+    cashOut: (points) => `Забрать очки: ${points}`,
+    finish: "Мои очки",
+    playReturned: "Игра возвращена",
+    playReturnedBody: "Ты вышел, не открыв ни одной клетки, поэтому игра не засчитана.",
+    exit: "Назад к играм",
+  },
 };
 
 /** Freecroco Trivia Mines: the site's live board on the partner endpoints, free and capped at 1,000 points. */

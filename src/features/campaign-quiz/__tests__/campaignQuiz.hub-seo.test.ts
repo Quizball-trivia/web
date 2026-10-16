@@ -37,4 +37,21 @@ describe('campaign quiz hub structured data', () => {
       })],
     });
   });
+
+  it('links the Russian hub to the transliterated quiz URLs', () => {
+    const result = buildCampaignQuizHubJsonLd({
+      locale: 'ru',
+      url: 'https://quizball.io/ru/futbolnaya-viktorina',
+      title: 'Футбольная викторина онлайн',
+      description: 'Бесплатные футбольные тесты.',
+      pages,
+    });
+
+    expect(result['@graph'][0]).toMatchObject({ inLanguage: 'ru-RU' });
+    expect(result['@graph'][1]).toMatchObject({
+      itemListElement: [expect.objectContaining({
+        url: 'https://quizball.io/ru/futbolnaya-viktorina/ugaday-futbolista',
+      })],
+    });
+  });
 });

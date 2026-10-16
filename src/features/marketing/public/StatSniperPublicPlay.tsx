@@ -15,6 +15,7 @@ const COPY: Record<Locale, { resultCta: string; loadError: string; retry: string
   es: { resultCta: "Creá tu cuenta y entrá al ranking", loadError: "No pudimos cargar el juego de hoy.", retry: "Reintentar" },
   ka: { resultCta: "შექმენი ანგარიში და მოხვდი რეიტინგში", loadError: "დღევანდელი თამაში ვერ ჩაიტვირთა.", retry: "თავიდან ცდა" },
   tr: { resultCta: "Hesap oluştur, sıralamaya gir", loadError: "Bugünün oyunu yüklenemedi.", retry: "Tekrar dene" },
+  ru: { resultCta: "Зарегистрируйся, чтобы попасть в рейтинг", loadError: "Сегодняшняя игра не загрузилась.", retry: "Попробуй ещё раз" },
 };
 
 /** One request per locale and load while it is in flight (a remount must not POST the rate-limited guest API twice). */

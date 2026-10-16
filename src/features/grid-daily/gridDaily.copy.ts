@@ -170,7 +170,49 @@ const tr: Copy = {
   signInToday: "Bugünün tablosunu oynamak için giriş yap. Eski tablolar gün bitince misafirlere açılır.",
 };
 
-export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr };
+const ru: Copy = {
+  title: "Ежедневная сетка",
+  subtitle: "Одна сетка в день. Девять попыток, чтобы заполнить девять клеток.",
+  guesses: "Попытки",
+  time: "Время",
+  filled: "Заполнено",
+  tapCell: "Нажми на клетку и назови футболиста, который подходит под обе подсказки.",
+  finish: "Закончить здесь",
+  kickOff: "Начать",
+  kickOffFailed: "Не удалось начать. Попробуй ещё раз.",
+  movedElsewhere: "Сетка изменилась в другой вкладке, поэтому эта попытка не засчитана. Попробуй ещё раз.",
+  movedElsewhereDone: "Сетку завершили в другой вкладке, поэтому эта попытка не засчитана.",
+  kickOffNote: "Клетки будут скрыты, пока ты не начнёшь. Таймер запустится в этот момент.",
+  finishConfirm: "Закончить, пока осталось {n} попыток?",
+  yes: "Да, закончить",
+  no: "Продолжить",
+  ambiguous: "Уточни: введи полное имя. Попытка не потрачена.",
+  wrong: "Не подходит. Одна попытка потрачена.",
+  alreadyUsed: "Ты уже использовал этого футболиста. Одна попытка потрачена.",
+  correct: "Клетка заполнена!",
+  resultTitle: "{score} из 9",
+  resultPerfect: "Идеальная сетка",
+  resultTime: "за {time}",
+  rank: "Твоё место сегодня: {rank}",
+  practice: "Тренировка: в рейтинг не попадёшь.",
+  share: "Поделиться",
+  copied: "Скопировано",
+  shareText: "Ежедневная сетка Quizball №{n}\n{score}/9 · {time}\n{grid}\n{url}",
+  leaderboard: "Лучшие за день",
+  players: "Игроков: {n}",
+  empty: "Пока никто не закончил. Будь первым.",
+  leaderboardFailed: "Не удалось загрузить рейтинг.",
+  guestNote: "Ты играешь во вчерашнюю сетку. Войди, чтобы сыграть в сегодняшнюю и попасть в рейтинг.",
+  signIn: "Войти",
+  loading: "Загружаем сетку…",
+  unavailable: "Ежедневная сетка сейчас недоступна.",
+  retry: "Попробовать ещё раз",
+  back: "Назад",
+  comeBack: "Каждый день появляется новая сетка.",
+  signInToday: "Войди, чтобы сыграть в сегодняшнюю сетку. Вчерашние сетки открываются для гостей после окончания дня.",
+};
+
+export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru };
 export type GridDailyCopy = Copy;
 
 export const fillDaily = (template: string, values: Record<string, string | number>): string =>

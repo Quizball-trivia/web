@@ -253,6 +253,7 @@ export const ES: Record<string, string> = {
   "Man City to win": "Gana el Man City",
   "Bayern to win": "Gana el Bayern",
   "Goalkeeper": "Portero",
+  "Zone": "Zona",
   "Defender": "Defensa",
   "Midfielder": "Centrocampista",
   "Forward": "Delantero",

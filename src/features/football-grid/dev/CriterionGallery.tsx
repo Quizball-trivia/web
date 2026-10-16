@@ -58,7 +58,7 @@ export function CriterionGallery() {
               {value === 'overview' ? 'Clue types' : `All ${CRITERIA.length} clues`}
             </button>)}
             <div className="flex gap-1 sm:ml-auto" aria-label="Review language">
-              {(['en', 'ka', 'es', 'tr'] as const).map((value) => <button key={value} type="button" aria-pressed={locale === value}
+              {(['en', 'ka', 'es', 'tr', 'ru'] as const).map((value) => <button key={value} type="button" aria-pressed={locale === value}
                 onClick={() => setLocale(value)} className={cn(control, 'uppercase', locale === value && 'border-brand-yellow text-brand-yellow')}>
                 {value}
               </button>)}

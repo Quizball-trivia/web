@@ -1,4 +1,4 @@
-import { asWordLocale } from "@/features/wordgames/copy";
+import { asWordLocale, russianPlural } from "@/features/wordgames/copy";
 
 const copy = {
   en: {
@@ -84,6 +84,27 @@ const copy = {
     yourTurn: "შენი სვლაა", seatTurn: (name: string) => `${name}-ის სვლა`, waiting: "დაელოდე შენს სვლას", sending: "მოწმდება…", youOut: "ამ სიაზე სიცოცხლე აღარ გაქვს",
     listOf: (n: number, of: number) => `სია ${n}/${of}`, listDone: "სია შევსებულია!", listOut: "ყველა გავარდა", nextList: "შემდეგი სია მოდის…",
     pointsStat: "ქულა", foundStat: "სწორი", slotsDetail: (n: number) => `${n} სწორი`, lifeLost: (name: string) => `${name}-მა სიცოცხლე დაკარგა`, outOfList: "გავარდა",
+  },
+  ru: {
+    brand: ["Угадай", "топ-10"] as const,
+    title: "Угадай футбольный топ-10", tag: "Один топ-10 в день",
+    lines: [
+      "Каждый день — один скрытый список топ-10. Назови тех, кто в нём.",
+      "Каждый верный ответ встаёт на своё место в башне. Повтор того, что уже открыто, ничего не стоит.",
+      "3 ошибки — и башня побеждает. Сможешь найти всех десятерых?",
+    ],
+    roomLines: ["По очереди называйте ответы из одного и того же скрытого списка.", "Место стоит столько очков, какой у него номер: #10 = 10 очков.", "Ошибка или время вышло = минус жизнь. 2 жизни на список, 3 списка."],
+    hidden: "Скрытый список", asOf: (d: string) => `На ${d}`, found: (n: number) => `${n}/10`,
+    placeholder: "Кто в списке?", say: "Отправить", giveUp: "Сдаться",
+    ok: (name: string, rank: number) => `#${rank} ${name}`, wrong: (t: string) => `${t} нет в списке`, repeat: (t: string) => `${t} уже в башне`,
+    unknown: (t: string) => `Не знаем «${t}»: проверь написание`, repeatWrong: (t: string) => `${t}: уже пробовал, жизнь не потеряна`, opensTomorrow: "Остальной список откроется завтра, когда закроется сегодняшний рейтинг.", corrected: "Этот список исправили после того, как ты его сыграл, поэтому ответы здесь не показаны.", ambiguous: (t: string) => `«${t}» подходит нескольким: напиши полное имя`, time: "Время вышло",
+    missesTitle: "Нет в списке", livesLeft: (n: number) => `${russianPlural(n, "Осталась", "Осталось", "Осталось")} ${n} ${russianPlural(n, "жизнь", "жизни", "жизней")}`,
+    endComplete: "Все десять!", endLives: "Башня победила", endGaveUp: "Ты сдался",
+    score: (n: number) => `${n}/10`, missedTitle: "Ты пропустил",
+    shareText: (n: number, found: number, tower: string) => `Угадай топ-10 #${n}: ${found}/10\n${tower}`,
+    yourTurn: "Твой ход", seatTurn: (name: string) => `Ход: ${name}`, waiting: "Жди своего хода", sending: "Проверяем…", youOut: "В этом списке жизней не осталось",
+    listOf: (n: number, of: number) => `Список ${n}/${of}`, listDone: "Список собран!", listOut: "Все выбыли", nextList: "Следующий список на подходе…",
+    pointsStat: "Очки", foundStat: "Угадано", slotsDetail: (n: number) => `угадано: ${n}`, lifeLost: (name: string) => `${name} теряет жизнь`, outOfList: "Выбыл",
   },
 } as const;
 

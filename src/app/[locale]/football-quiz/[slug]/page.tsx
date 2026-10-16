@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { CampaignQuizLanding } from '@/features/campaign-quiz/CampaignQuizLanding';
+import { hasRussianEdition } from '@/features/campaign-quiz/CampaignQuizServerPage';
 import {
   CAMPAIGN_QUIZ_SLUGS,
   getCampaignQuizContent,
@@ -61,6 +62,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
     const localizedLanguages = {
       ...languages,
       es: `${SITE_URL}${campaignQuizPath(content.slug, 'es')}`,
+      ...(await hasRussianEdition(slug, quiz) ? { ru: `${SITE_URL}${campaignQuizPath(content.slug, 'ru')}` } : {}),
       'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
     };
 
@@ -99,6 +101,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/football-quiz/${slugCheck.slug}`, preview));
   if (locale === 'es') permanentRedirect(withPreview(campaignQuizPath(slug, 'es'), preview));
+  if (locale === 'ru') permanentRedirect(withPreview(campaignQuizPath(slug, 'ru'), preview));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;
@@ -176,7 +179,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={await hasRussianEdition(slug, quiz)} />
     </>
   );
 }

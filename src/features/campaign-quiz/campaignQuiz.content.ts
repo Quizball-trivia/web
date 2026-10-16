@@ -1,5 +1,6 @@
 import manualClubQuizContent from './manualClubQuiz.content.json';
 import type { CampaignQuizAboutBlock, CampaignQuizPage, CampaignQuizRelatedPage } from './campaignQuiz.types';
+import type { CampaignQuizLocale } from './campaignQuiz.routes';
 
 export interface CampaignQuizPageContent {
   slug: string;
@@ -278,18 +279,19 @@ export function splitHeading(heading: string): { heroLead: string; heroHighlight
 
 export function campaignMetadataTitle(
   page: Pick<CampaignQuizPage, 'breadcrumb_label' | 'seo_title'>,
-  locale: 'en' | 'ka' | 'es',
+  locale: CampaignQuizLocale,
 ): string {
   if (locale === 'es') {
     return `${page.breadcrumb_label} — Juega gratis | QuizBall`;
   }
+  // The Russian SEO title is written for Russian search ("Викторина по «Арсеналу»: …"), so it is used as is.
   return page.seo_title;
 }
 
 export function getCampaignQuizContent(
   slug: string,
   page?: CampaignQuizPage | null,
-  locale: 'en' | 'ka' | 'es' = 'en',
+  locale: CampaignQuizLocale = 'en',
 ): CampaignQuizPageContent | undefined {
   if (!page) return CAMPAIGN_QUIZ_CONTENT[slug];
   const fallback = CAMPAIGN_QUIZ_CONTENT[slug];
@@ -312,12 +314,16 @@ export function getCampaignQuizContent(
       ? `დაიწყე ${page.breadcrumb_label}`
       : locale === 'es'
         ? `Empieza ${page.breadcrumb_label}`
-        : `Kick off the ${page.breadcrumb_label}`,
+        : locale === 'ru'
+          ? `${page.breadcrumb_label}: начинаем`
+          : `Kick off the ${page.breadcrumb_label}`,
     aboutEyebrow: locale === 'ka'
       ? 'ისტორია კითხვების მიღმა'
       : locale === 'es'
         ? 'La historia detrás de las preguntas'
-        : 'The story behind the questions',
+        : locale === 'ru'
+          ? 'История за вопросами'
+          : 'The story behind the questions',
     aboutHeading: page.about_heading,
     aboutParagraphs: paragraphs,
     aboutBlocks: page.about_blocks,

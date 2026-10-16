@@ -153,6 +153,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     en: `${SITE_URL}/en/football-quiz`,
     ...(hasGeorgianHub ? { ka: `${SITE_URL}/ka/football-quiz` } : {}),
     es: `${SITE_URL}/es/quiz-de-futbol`,
+    ru: `${SITE_URL}/ru/futbolnaya-viktorina`,
     'x-default': `${SITE_URL}/en/football-quiz`,
   };
   return {
@@ -184,6 +185,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function FootballQuizHubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params;
   if (rawLocale === 'es') permanentRedirect('/es/quiz-de-futbol');
+  if (rawLocale === 'ru') permanentRedirect('/ru/futbolnaya-viktorina');
   if (rawLocale !== 'en' && rawLocale !== 'ka') notFound();
   const locale = rawLocale as 'en' | 'ka';
   const copy = HUB_COPY[locale];
@@ -224,7 +226,7 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
           <div className="flex items-center gap-3">
             <LanguageSwitcher
               locale={locale}
-              locales={pages.some((page) => page.locale_mode === 'en_ka') ? ['en', 'ka', 'es'] : ['en', 'es']}
+              locales={pages.some((page) => page.locale_mode === 'en_ka') ? ['en', 'ka', 'es', 'ru'] : ['en', 'es', 'ru']}
               className="hidden sm:inline-flex"
             />
             <CampaignSignupLink

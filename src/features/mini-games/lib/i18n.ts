@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { ES } from "./i18n.es";
 import { TR } from "./i18n.tr";
+import { RU } from "./i18n.ru";
 
 /**
  * Lightweight EN→KA/ES/TR copy layer for the mini-game prototypes. Keys are the
@@ -11,7 +12,7 @@ import { TR } from "./i18n.tr";
  * from the dictionary falls back to the English key, so untranslated copy
  * renders unchanged rather than breaking.
  */
-export type MiniLocale = "en" | "ka" | "es" | "tr";
+export type MiniLocale = "en" | "ka" | "es" | "tr" | "ru";
 
 const KA: Record<string, string> = {
   // Guess the Goal (live)
@@ -304,6 +305,7 @@ const KA: Record<string, string> = {
   "Man City to win": "მან სიტის მოგება",
   "Bayern to win": "ბაიერნის მოგება",
   "Goalkeeper": "მეკარე",
+  "Zone": "ზონა",
   "Defender": "მცველი",
   "Midfielder": "ნახევარმცველი",
   "Forward": "თავდამსხმელი",
@@ -614,7 +616,7 @@ const KA: Record<string, string> = {
   "Rival": "მეტოქე",
 };
 
-const DICTS: Partial<Record<MiniLocale, Record<string, string>>> = { ka: KA, es: ES, tr: TR };
+const DICTS: Partial<Record<MiniLocale, Record<string, string>>> = { ka: KA, es: ES, tr: TR, ru: RU };
 
 export function useMiniLocale(): MiniLocale {
   const { locale } = useLocale();

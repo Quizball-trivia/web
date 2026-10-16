@@ -597,7 +597,7 @@ export function FootballGridDevPreview() {
           </div>
 
           <div className="mt-4 flex gap-2" aria-label="Preview language">
-            {(['en', 'ka', 'es', 'tr'] as const).map((language) => (
+            {(['en', 'ka', 'es', 'tr', 'ru'] as const).map((language) => (
               <button key={language} type="button" aria-pressed={locale === language} onClick={() => setLocale(language)}
                 className={cn('rounded-lg px-3 py-2 text-xs font-bold uppercase', locale === language ? 'bg-brand-yellow text-black' : 'bg-white/10 text-white')}>
                 {language}

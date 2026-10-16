@@ -6,6 +6,7 @@ import { rateCampaignQuiz } from './campaignQuiz.api';
 import { trackCampaignQuizRating } from './campaignQuiz.analytics';
 import type { CampaignQuizRating as Rating } from './campaignQuiz.types';
 import type { Locale } from '@/lib/i18n/messages';
+import { russianPlural } from './campaignQuiz.plural';
 
 interface CampaignQuizRatingProps {
   slug: string;
@@ -14,7 +15,18 @@ interface CampaignQuizRatingProps {
 }
 
 export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: CampaignQuizRatingProps) {
-  const copy = locale === 'es'
+  const copy = locale === 'ru'
+    ? {
+        saved: 'Спасибо — твоя оценка сохранена.',
+        failed: 'Не удалось сохранить оценку. Попробуй ещё раз.',
+        heading: 'Как ты оценишь эту викторину?',
+        first: 'Стань первым, кто её оценит.',
+        rate: 'Оценить',
+        outOf: 'из 5',
+        rating: 'оценка',
+        ratings: 'оценок',
+      }
+    : locale === 'es'
     ? {
         saved: 'Gracias, hemos guardado tu valoración.',
         failed: 'No pudimos guardar tu valoración. Inténtalo de nuevo.',
@@ -70,7 +82,11 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
       </h2>
       <p className="mt-1 text-sm font-semibold text-white/75">
         {aggregate.count > 0 && aggregate.average !== null
-          ? `${aggregate.average.toFixed(1)} ${copy.outOf} · ${aggregate.count.toLocaleString(locale === 'es' ? 'es-ES' : 'en-GB')} ${aggregate.count === 1 ? copy.rating : copy.ratings}`
+          ? `${aggregate.average.toFixed(1)} ${copy.outOf} · ${aggregate.count.toLocaleString(locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : 'en-GB')} ${
+              locale === 'ru'
+                ? russianPlural(aggregate.count, 'оценка', 'оценки', 'оценок')
+                : aggregate.count === 1 ? copy.rating : copy.ratings
+            }`
           : copy.first}
       </p>
 

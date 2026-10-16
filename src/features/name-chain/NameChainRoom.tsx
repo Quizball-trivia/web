@@ -12,6 +12,7 @@ import { AnswerBox, Chips, CountIn, Dots, Frame, GreenButton, QuietButton, Refus
 import type { RoomStatePayload } from "@/lib/realtime/socket.types";
 import { cn } from "@/lib/utils";
 import type { NameChainCommand, NameChainView } from "./nameChain.view";
+import { chainLetters } from "./chainLetter";
 
 /** Milliseconds until `deadlineIso` on the server's clock, refreshed often enough for a smooth bar. */
 function useMsLeft(deadlineIso: string | null, nowMs: () => number): number {
@@ -28,8 +29,7 @@ function useMsLeft(deadlineIso: string | null, nowMs: () => number): number {
 
 /** A name with the letter the chain hangs on picked out. */
 function Lettered({ name, className }: { name: string; className?: string }) {
-  const letters = [...name];
-  const at = letters.length - 1 - [...letters].reverse().findIndex((ch) => /\p{L}/u.test(ch));
+  const { letters, at } = chainLetters(name);
   return (
     <span className={className} style={poppins}>
       {letters.map((ch, i) => <span key={i} className={i === at ? "text-brand-yellow" : undefined}>{ch}</span>)}

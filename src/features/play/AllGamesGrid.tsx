@@ -85,9 +85,9 @@ const LIVE_ONLINE_SLUGS = new Set(["match", "auction", "mini-football-grid", "we
 /** Format badge: solo (yellow) / multiplayer with friends (green) / online (orange). */
 type PlayFormat = "solo" | "multiplayer" | "online";
 const FORMAT_LABEL: Record<PlayFormat, Record<string, string>> = {
-  solo: { en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik" },
-  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador", tr: "Çok oyunculu" },
-  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1", tr: "Online 1v1" },
+  solo: { en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik", ru: "Одиночная" },
+  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador", tr: "Çok oyunculu", ru: "Мультиплеер" },
+  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1", tr: "Online 1v1", ru: "Онлайн 1 на 1" },
 };
 const FORMAT_STYLE: Record<PlayFormat, string> = {
   solo: "bg-brand-yellow text-black",
@@ -381,7 +381,7 @@ function GameCard({
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
             <Play className="size-3 fill-current" />
-            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : "Play"}
+            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : locale === "tr" ? "Oyna" : locale === "ru" ? "Играть" : "Play"}
           </span>
         </div>
       </div>
@@ -471,10 +471,10 @@ function GameSection({
 // The finder lists the daily and coin games only, so a solo/multiplayer/online split would carry no information here.
 type FinderFilter = "all" | "new" | "daily" | "coins";
 const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
-  { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü" },
-  { id: "new", en: "New", ka: "ახალი", es: "Nuevos", tr: "Yeni" },
-  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük" },
-  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton" },
+  { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü", ru: "Все" },
+  { id: "new", en: "New", ka: "ახალი", es: "Nuevos", tr: "Yeni", ru: "Новые" },
+  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük", ru: "Ежедневно" },
+  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton", ru: "Монеты" },
 ];
 
 function matchesFilter(section: "daily" | "coins", filter: FinderFilter, isNew: boolean): boolean {
@@ -491,7 +491,7 @@ function searchKey(value: string): string {
 function matchesQuery(mode: DemoModeCard, query: string): boolean {
   const q = searchKey(query);
   if (!q) return true;
-  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? ""]).concat(mode.slug)
+  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? "", text.ru ?? ""]).concat(mode.slug)
     .some((text) => searchKey(text).includes(q));
 }
 
@@ -515,7 +515,7 @@ function GamesFinder({
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : "Search games";
+  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : locale === "tr" ? "Oyun ara" : locale === "ru" ? "Поиск игр" : "Search games";
   const close = () => {
     onQuery("");
     setOpen(false);

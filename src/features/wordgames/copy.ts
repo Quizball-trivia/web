@@ -1,7 +1,10 @@
 /** Copy of the word games' screens (played for both, name chain). The lobby and SEO pages keep their own strings. */
-export type WordLocale = "tr" | "en" | "es" | "ka";
-export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" ? locale : "en");
+export type WordLocale = "tr" | "en" | "es" | "ka" | "ru";
+export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" ? locale : "en");
 
+/** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
+export const russianPlural = (n: number, one: string, few: string, many: string) =>
+  n % 100 >= 11 && n % 100 <= 14 ? many : n % 10 === 1 ? one : n % 10 >= 2 && n % 10 <= 4 ? few : many;
 const ordinalEn = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 
 const shared = {
@@ -10,6 +13,12 @@ const shared = {
     youWon: "Kazandın!", tieFirst: "Birincilik paylaşıldı!", youPlace: (n: number) => `${n}. oldun`, left: "Ayrıldı", away: "Bağlantı yok", backToRoom: "Odaya dön",
     rivalLeft: "Rakip ayrıldı.", offline: "Bağlantı yok: yeniden bağlanılıyor…", leave: "Maçtan çık", leaveConfirm: "Maçtan çıkılsın mı? Geri dönemezsin.", leaveYes: "Çık", leaveNo: "Devam et",
     iWasRight: "Doğru yazdım", reported: "Teşekkürler, inceleyeceğiz.", startsIn: "Başlıyor",
+  },
+  ru: {
+    exit: "Выйти", you: "Ты", rival: "Соперник", placeholder: "Введи имя футболиста", say: "Отправить", won: "Ты выиграл матч!", lost: "Ты проиграл матч", draw: "Ничья",
+    youWon: "Ты победил!", tieFirst: "Разделили первое место!", youPlace: (n: number) => `Ты занял ${n}-е место`, left: "Вышел", away: "Нет связи", backToRoom: "Вернуться в комнату",
+    rivalLeft: "Соперник вышел.", offline: "Нет связи: переподключаемся…", leave: "Покинуть матч", leaveConfirm: "Покинуть матч? Вернуться уже не получится.", leaveYes: "Выйти", leaveNo: "Продолжить игру",
+    iWasRight: "Я написал правильно", reported: "Спасибо, мы проверим.", startsIn: "Начинаем",
   },
   en: {
     exit: "Exit", you: "You", rival: "Rival", placeholder: "Type a footballer", say: "Send", won: "You won the match!", lost: "You lost the match", draw: "Draw",
@@ -43,6 +52,18 @@ const sharedPlayer = {
     answers: (n: number) => `Doğru cevaplar (${n})`, more: (n: number) => `+${n} futbolcu daha`, next: "Sıradaki eşleşme geliyor…",
     answeredCount: (n: number, of: number) => `${n}/${of} oyuncu buldu`, firstWas: (name: string) => `İlk bilen: ${name}`, youFirst: "İlk sen bildin!", noAnswer: "bulamadı",
     foundStat: "Bulunan", foundDetail: (n: number, of: number) => `${of} eşleşmenin ${n} tanesi`, summary: "Eşleşmeler",
+  },
+  ru: {
+    brand: ["ИГРАЛ ЗА", "ОБА КЛУБА"] as const,
+    rules: ["Два клуба появляются одновременно.", "Назови футболиста, который играл за оба. Аренды тоже считаются.", "За неверный ответ ты не сможешь отвечать 1 секунду."],
+    duelRule: "Первый правильный ответ приносит очко. Побеждает тот, кто первым наберёт 3 очка.", partyRule: "8 раундов. Первый правильный ответ приносит 3 очка, второй — 2, любой другой правильный — 1.",
+    prompt: "Назови футболиста, который играл за оба клуба", round: (n: number, of: number) => `Раунд ${n} / ${of}`, roundOpen: (n: number) => `Раунд ${n}`,
+    wrong: (text: string) => `«${text}» не играл за оба клуба`, locked: (s: number) => `Неверно! Подожди ${s} с`, got: (name: string) => `Верно: ${name}!`,
+    waitRival: "Твой ответ принят…", lockedIn: "Твой ответ принят. Ждём остальных…", sending: "Отправляем…",
+    pointYou: "Очко твоё!", pointRival: "Очко сопернику", pointBoth: "Очко поделили", nobody: "Никто не нашёл ответ",
+    answers: (n: number) => `Правильные ответы (${n})`, more: (n: number) => `Ещё: ${n}`, next: "Следующая пара скоро…",
+    answeredCount: (n: number, of: number) => `${n}/${of} игроков нашли ответ`, firstWas: (name: string) => `Первым нашёл: ${name}`, youFirst: "Ты ответил первым!", noAnswer: "без ответа",
+    foundStat: "Найдено", foundDetail: (n: number, of: number) => `${n} из ${of} пар`, summary: "Пары",
   },
   en: {
     brand: ["PLAYED FOR", "BOTH"] as const,
@@ -93,6 +114,16 @@ const nameChain = {
     out: "Elendi", youOut: "Bu turda elendin. Sıradaki turu bekle.", knocked: (name: string) => `${name} elendi`, roundTo: (name: string) => `Turu ${name} aldı`, lastStanding: "Ayakta kalan son oyuncu",
     answersStat: "Cevap", answersDetail: (n: number) => `${n} doğru cevap`, chainTitle: "Zincir",
   },
+  ru: {
+    brand: ["ЦЕПОЧКА", "ИМЁН"] as const,
+    yourTurn: (letter: string) => `Твой ход: назови футболиста на букву ${letter}`, seatTurn: (name: string, letter: string) => `${name} пишет: буква ${letter}`,
+    nextLetter: "Следующая буква", round: (n: number) => `Раунд ${n}`, supplied: "Имя от игры", fresh: "На эту букву никого не осталось, поэтому игра предложила новое имя.",
+    unknown: (text: string) => `«${text}» нет в списке, попробуй ещё раз`, letter: (name: string, starts: string, need: string) => `Имя ${name} начинается на ${starts}, нужна буква ${need}`, repeat: (name: string) => `${name} уже называли`,
+    roundWon: "Раунд за тобой!", roundLost: "Ты проиграл раунд", time: "Время вышло", passed: "Сдался", leftTurn: "Покинул матч", giveUp: "Сдаться",
+    could: (letter: string) => `Имена на букву ${letter}`, nextRound: "Начинается следующий раунд…", waiting: "Соперник пишет…", sending: "Отправляем…",
+    out: "Выбыл", youOut: "Ты выбыл из этого раунда. Жди следующего.", knocked: (name: string) => `${name} выбыл`, roundTo: (name: string) => `Раунд забирает ${name}`, lastStanding: "Последний игрок в игре",
+    answersStat: "Ответы", answersDetail: (n: number) => `${n} правильных ответов`, chainTitle: "Цепочка",
+  },
   en: {
     brand: ["NAME", "CHAIN"] as const,
     yourTurn: (letter: string) => `Your turn: a footballer starting with ${letter}`, seatTurn: (name: string, letter: string) => `${name} is typing: letter ${letter}`,
@@ -135,6 +166,15 @@ const daily = {
     share: "Paylaş", copy: "Kopyala", copied: "Kopyalandı", friends: "Arkadaşlarınla oyna (2–6)", friendsSignIn: "Arkadaşlarınla oynamak için giriş yap", points: "puan",
     board: { title: "Günün sıralaması", players: (n: number) => `${n} oyuncu`, empty: "Bugün henüz kimse bitirmedi. İlk sen ol.", join: "Sıralamaya girmek için kaydol.", joinButton: "Kaydol" },
   },
+  ru: {
+    loading: "Загрузка…", loadError: "Не удалось загрузить игру.", retry: "Попробовать ещё раз", exit: "Выйти", soon: "Первый день скоро откроется.", back: "Назад",
+    play: "Играть", resume: "Продолжить", seeResult: "Посмотреть результат", archive: "Прошедшие дни", archiveTitle: "Прошедшие дни", today: "Сегодня", next: "Дальше",
+    guestPast: "Ты играешь за прошедший день как гость. Он не учитывается в рейтинге.", guestToday: "Чтобы сыграть сегодня, нужен аккаунт. Гостем можно играть за прошедшие дни.",
+    playToday: "Зарегистрируйся, чтобы сыграть сегодня", practice: "Этот день не учитывается в рейтинге (тренировка).", rank: (n: number) => `Сегодня ты на ${n}-м месте`,
+    notices: { dayOver: "День закончился. Уже открыт новый.", guestToday: "Чтобы сыграть сегодня, нужен аккаунт.", maintenance: "Короткое техобслуживание. Попробуй ещё раз через минуту.", restarted: "Содержание этого дня обновилось — начинай заново.", sessionChanged: "Твоя сессия изменилась. Начни заново.", actionError: "Что-то пошло не так. Попробуй ещё раз.", connection: "Нет соединения: переподключаемся…" },
+    share: "Поделиться", copy: "Скопировать", copied: "Скопировано", friends: "Играть с друзьями (2–6)", friendsSignIn: "Войди, чтобы играть с друзьями", points: "очк.",
+    board: { title: "Рейтинг за сегодня", players: (n: number) => `${n} ${russianPlural(n, "игрок", "игрока", "игроков")}`, empty: "Сегодня ещё никто не закончил. Стань первым.", join: "Зарегистрируйся, чтобы попасть в рейтинг.", joinButton: "Зарегистрироваться" },
+  },
   en: {
     loading: "Loading…", loadError: "The game could not be loaded.", retry: "Try again", exit: "Exit", soon: "The first day opens soon.", back: "Back",
     play: "Play", resume: "Continue", seeResult: "See the result", archive: "Past days", archiveTitle: "Past days", today: "Today", next: "Next",
@@ -173,6 +213,14 @@ const sharedPlayerDaily = {
     endTitle: "Bugünlük bitti", result: (n: number, of: number) => `${of} eşleşmenin ${n} tanesini buldun`, summary: "Eşleşmeler", notFound: "bulunamadı", late: "Süre dolmuştu, cevap sayılmadı.",
     shareText: (number: number, score: number, of: number) => `Ortak Futbolcu #${number}: ${score}/${of}`, speedLabel: "Hız",
   },
+  ru: {
+    title: "Играл за обе команды", tag: "Десять пар в день",
+    lines: (seconds: number) => ["Каждый день — десять пар клубов.", `Для каждой пары напиши имя футболиста, который играл за оба клуба. У тебя ${seconds} секунд.`, "За каждую найденную пару — 1 очко. Чем быстрее ответишь, тем выше будешь в рейтинге."],
+    pair: (n: number, of: number) => `Пара ${n}/${of}`, found: "Верно!", missed: "Время вышло", yourAnswer: (name: string) => `Твой ответ: ${name}`,
+    answersTomorrow: (n: number) => `Есть ${n} правильных ответов. Имена откроются, когда день закончится.`, nextPair: "Следующая пара", finish: "Посмотреть результат",
+    endTitle: "На сегодня всё", result: (n: number, of: number) => `Ты нашёл ${n} из ${of} пар`, summary: "Пары", notFound: "не найдено", late: "Время уже вышло, ответ не засчитан.",
+    shareText: (number: number, score: number, of: number) => `Играл за обе команды #${number}: ${score}/${of}`, speedLabel: "Скорость",
+  },
   en: {
     title: "Played for Both", tag: "Ten pairs a day",
     lines: (seconds: number) => ["Ten club pairs every day.", `For each pair, type a footballer who played for both: you have ${seconds} seconds.`, "Every pair you find is 1 point. Faster players rank higher."],
@@ -207,6 +255,14 @@ const nameChainDaily = {
     chainOver: "Zincir bitti", capped: "Zincir tamamlandı!", soFar: (n: number) => `Şu ana kadar ${n} futbolcu`, nextChain: "Sıradaki zincir", finish: "Sonucu gör",
     endTitle: "Bugünlük bitti", footballers: (n: number) => `${n} futbolcu`, longest: (n: number) => `En uzun zincir: ${n}`, chains: "Zincirler", longestLabel: "En uzun",
     shareText: (number: number, score: number, chains: string) => `Son Harfle Futbolcu #${number}: ${score} futbolcu (${chains})`,
+  },
+  ru: {
+    title: "Футбольная цепочка имён", tag: "Три цепочки в день",
+    lines: ["Мы называем футболиста. Напиши другого, чьё имя начинается на последнюю букву его имени.", "Подойдёт имя или фамилия: Энтони Марсьяль — и на Э, и на М. Как в игре в города, й, ь, ъ и ы в конце пропускаются: после «Белый» нужна буква Л.", "На каждый ответ даётся 10 секунд; чем длиннее цепочка, тем меньше времени. Три цепочки в день: сколько футболистов назовёшь всего?"],
+    chainOf: (n: number, of: number) => `Цепочка ${n}/${of}`, tooFast: "Слишком быстро! Подожди немного.", late: "Время уже вышло, ответ не засчитан.",
+    chainOver: "Цепочка закончилась", capped: "Цепочка завершена!", soFar: (n: number) => `Пока футболистов: ${n}`, nextChain: "Следующая цепочка", finish: "Посмотреть результат",
+    endTitle: "На сегодня всё", footballers: (n: number) => `${n} ${n === 1 ? "футболист" : n >= 2 && n <= 4 ? "футболиста" : "футболистов"}`, longest: (n: number) => `Самая длинная цепочка: ${n}`, chains: "Цепочки", longestLabel: "Самая длинная",
+    shareText: (number: number, score: number, chains: string) => `Футбольная цепочка имён #${number}: ${score} футболистов (${chains})`,
   },
   en: {
     title: "Football Name Chain", tag: "Three chains a day",

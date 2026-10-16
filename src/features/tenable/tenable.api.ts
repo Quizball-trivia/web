@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { timeoutSignal } from "@/lib/timeoutSignal";
 import type { FigureUnit } from "./tenable.figures";
 
-type Localized = { es: string; en: string; ka: string; tr: string };
+type Localized = { es: string; en: string; ka: string; tr: string; ru?: string };
 export type EntityKind = "player" | "manager" | "club" | "nation";
 
 /** Server-held run state (backend tenable-daily.rules PublicRunState). */

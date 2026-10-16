@@ -65,6 +65,27 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     retry: "თავიდან ცდა",
     back: "უკან",
   },
+  ru: {
+    subtitle: "Выбирай клетки и отвечай — за правильный ответ получишь очки клетки",
+    rules: "9 клеток · 20 секунд на вопрос · 100, 200 или 300 очков за правильный ответ",
+    start: "Начать",
+    starting: "Готовим доску…",
+    pointsLabel: "Очки",
+    pickTile: "Выбери клетку",
+    timeLeft: (s) => `${s} с`,
+    timesUp: "Время вышло",
+    completedTitle: "Доска пройдена",
+    endedTitle: "Игра окончена",
+    finalScore: (p) => `Ты набрал ${p} из 1 800 очков.`,
+    seePoints: "Мои очки",
+    cancelledTitle: "Эта игра отменена",
+    cancelledBody: "Очки за неё не начислены.",
+    noPlaysTitle: "На сегодня игры закончились",
+    noPlaysBody: "Возвращайся завтра за новой доской.",
+    error: "Что-то пошло не так — попробуй ещё раз",
+    retry: "Попробовать ещё раз",
+    back: "Назад",
+  },
 };
 
 export function quizBoardCopy(locale: PartnerLocale): QuizBoardCopy {

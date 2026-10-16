@@ -7,6 +7,9 @@
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/futbolisty-na-poslednyuyu-bukvu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/futbolnye-skachki/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/igravshie-za-oba-kluba/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/carrera-de-caballos-futbolera/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page.tsx";
@@ -15,6 +18,7 @@
 @source "../app/layout.tsx";
 @source "../app/locale-asset-providers.es.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
+@source "../app/locale-asset-providers.ru.tsx";
 @source "../app/locale-asset-providers.tr.tsx";
 @source "../app/providers.tsx";
 @source "../app/route-providers.tsx";
@@ -83,6 +87,7 @@
 @source "../features/auth/AccountBannedScreen.tsx";
 @source "../features/auth/GuestAuthDialog.tsx";
 @source "../features/campaign-quiz/campaignAttribution.ts";
+@source "../features/campaign-quiz/campaignQuiz.plural.ts";
 @source "../features/campaign-quiz/campaignQuiz.routes.ts";
 @source "../features/demos/DemoModeArt.tsx";
 @source "../features/demos/DemoModeIcon.tsx";
@@ -123,6 +128,7 @@
 @source "../features/mini-games/lib/guessCard.ts";
 @source "../features/mini-games/lib/guessCardConstants.ts";
 @source "../features/mini-games/lib/i18n.es.ts";
+@source "../features/mini-games/lib/i18n.ru.ts";
 @source "../features/mini-games/lib/i18n.tr.ts";
 @source "../features/mini-games/lib/i18n.ts";
 @source "../features/mini-games/lib/matching.ts";

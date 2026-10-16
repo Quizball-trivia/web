@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import en from "@/messages/en.json";
 import es from "@/messages/es.json";
 import ka from "@/messages/ka.json";
+import ru from "@/messages/ru.json";
 import tr from "@/messages/tr.json";
 
 function flatten(obj: unknown, prefix = ""): string[] {
@@ -41,6 +42,20 @@ describe("i18n message parity", () => {
     expect(trKeys).toEqual(enKeys);
   });
 
+  it("en.json and ru.json have identical key sets", () => {
+    expect(flatten(ru).sort()).toEqual(flatten(en).sort());
+  });
+
+  it("no ru.json value is empty", () => {
+    for (const key of flatten(ru)) {
+      const value = getByPath(ru, key);
+      expect(
+        typeof value === "string" && value.length > 0,
+        `ru.json missing or empty translation for ${key}`,
+      ).toBe(true);
+    }
+  });
+
   it("no tr.json value is empty", () => {
     for (const key of flatten(tr)) {
       const value = getByPath(tr, key);
@@ -55,6 +70,7 @@ describe("i18n message parity", () => {
     ["ka", ka],
     ["es", es],
     ["tr", tr],
+    ["ru", ru],
   ] as const)("%s.json keeps every {placeholder} of the English source", (_name, catalog) => {
     const placeholders = (value: unknown) =>
       (typeof value === "string" ? value.match(/\{\w+\}/g) ?? [] : []).slice().sort();
