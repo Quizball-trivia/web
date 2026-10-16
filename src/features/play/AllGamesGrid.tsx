@@ -394,7 +394,7 @@ function GameCard({
           {description}
         </p>
         <p className="mt-2 flex items-center gap-1 font-poppins text-[9px] text-white/55 md:text-[10px]">
-          <Clock3 className="size-2.5" /> 1–2 min
+          <Clock3 className="size-2.5" /> {locale === "ka" ? "1–2 წთ" : locale === "tr" ? "1–2 dk" : locale === "ru" ? "1–2 мин" : "1–2 min"}
         </p>
       </div>
     </Link>

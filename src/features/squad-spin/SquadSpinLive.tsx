@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- player faces come from the first-party grid CDN */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -334,7 +335,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/60" style={poppins}>
                     <span>{t("squadSpin.spinN", { n: String(state.spin.index) })} · ×{(state.spin.step_bp / 10000).toFixed(2)}</span>
-                    <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{Math.ceil(left)}s</span>
+                    <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{secondsShort(Math.ceil(left), locale)}</span>
                   </div>
                   <div className="relative mt-3">
                     <input

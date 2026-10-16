@@ -558,7 +558,7 @@ export const LAB_DEMO_MODES: DemoModeCard[] = [
 
 const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; description: DemoI18nText }> = {
   moneyDrop: {
-    title: { en: "Money Drop", ka: "ფულის ვარდნა", es: "Money Drop", tr: "Money Drop", ru: "Money Drop", },
+    title: { en: "Money Drop", ka: "ფულის ვარდნა", es: "Money Drop", tr: "Money Drop", ru: "Монеты на ответы" },
     description: {
       en: "Protect your prize money — every wrong answer costs you.",
       ka: "დაიცავი შენი საპრიზო თანხა — ყოველი შეცდომა ძვირად დაგიჯდება.",
