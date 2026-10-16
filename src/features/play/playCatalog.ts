@@ -1,14 +1,13 @@
-import { FOOTBALL_RACE_ENABLED, TENABLE_ENABLED } from "@/lib/config";
 import { rankPlayGames, isNewPlayGame, type PlayGameStats } from "./playRanking";
 
 // The hand-made order: what the Play page shows when there are no numbers to order by, and how ties fall.
 // Every slug resolves against ALL_DEMO_MODES; unknown slugs are simply skipped, so a rename can't crash the page.
 export const DAILY_CHALLENGE_SLUGS = [
-  ...(TENABLE_ENABLED ? ["tenable"] : []),
+  "tenable",
   "minuto",
   "shared-player",
   "name-chain",
-  ...(FOOTBALL_RACE_ENABLED ? ["football-horserace"] : []),
+  "football-horserace",
   "buscaminas",
   "pistas",
   "ultimo",
@@ -36,6 +35,7 @@ export const PLAY_WITH_COINS_SLUGS = [
 /** The day each game reached production. A game with no date is never marked new. Add a line with every release. */
 export const PLAY_RELEASED_ON: Record<string, string> = {
   tenable: "2026-10-16",
+  "football-horserace": "2026-10-16",
   "shared-player": "2026-10-09",
   "name-chain": "2026-10-09",
   minuto: "2026-10-04",
