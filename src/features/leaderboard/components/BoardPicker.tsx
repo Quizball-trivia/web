@@ -85,7 +85,7 @@ export function BoardPicker({ kind, standings, selected, mine, catalogue, points
     <Sheet open={kind !== null} onOpenChange={(open) => { if (!open) { setQuery(""); onClose(); } }}>
       <SheetContent
         side="bottom"
-        className="mx-auto max-h-[85vh] w-full max-w-lg gap-0 rounded-t-2xl border-white/10 bg-[#0d1220] font-fun text-white"
+        className="mx-auto max-h-[85vh] w-full max-w-lg gap-0 rounded-t-2xl border-white/10 bg-popover font-fun text-white"
       >
         <div className="px-4 pb-3 pt-3">
           <SheetTitle className="text-lg font-black uppercase tracking-wide text-white">

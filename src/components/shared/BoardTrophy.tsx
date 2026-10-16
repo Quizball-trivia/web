@@ -73,7 +73,7 @@ export function BoardTrophyUnlockOverlay({
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className={cn("w-full max-w-sm rounded-2xl border-2 bg-[#0d1220] p-6 text-center font-fun")}
+        className={cn("w-full max-w-sm rounded-2xl border-2 bg-popover p-6 text-center font-fun")}
         style={{ borderColor: MEDAL[place] }}
       >
         <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/60">{t("leaderboard.trophyUnlocked")}</p>
