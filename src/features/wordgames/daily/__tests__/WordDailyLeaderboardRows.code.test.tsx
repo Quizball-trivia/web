@@ -10,31 +10,25 @@ beforeEach(() => vi.resetModules());
 afterEach(() => { vi.doUnmock(target); vi.restoreAllMocks(); });
 
 describe("real word leaderboard code cache", () => {
-  it("shares an in-flight import and retains only the resolved component", async () => {
-    let finish!: () => void;
-    const gate = new Promise<void>(resolve => { finish = resolve; });
-    const factory = vi.fn(async () => { await gate; return { default: Table }; });
-    vi.doMock(target, factory);
-    const { wordLeaderboardTableCode: code } = await import("../WordDailyLeaderboardRows");
-    const first = code.load();
-    expect(code.load()).toBe(first);
-    finish();
-    expect(await first).toEqual({ default: Table });
-    expect(await code.load()).toEqual({ default: Table });
-    expect(factory).toHaveBeenCalledOnce();
-  });
-
-  it("clears a rejected in-flight promise so a subsequent import can retry", async () => {
+  // Exercise one real module lifecycle: failure must precede the permanent
+  // success cache. resetModules does not clear Vitest's separate mock cache.
+  it("shares in-flight imports, retries a rejected chunk and caches only resolved code", async () => {
     vi.doMock(target, () => { throw new Error("simulated module download failure"); });
     const { wordLeaderboardTableCode: code } = await import("../WordDailyLeaderboardRows");
     const failed = code.load();
     expect(code.load()).toBe(failed);
     await expect(failed).rejects.toThrow();
-    const retryFactory = vi.fn(() => ({ default: Table }));
+    let finish!: () => void;
+    const gate = new Promise<void>(resolve => { finish = resolve; });
+    const retryFactory = vi.fn(async () => { await gate; return { default: Table }; });
+    vi.doUnmock(target);
     vi.doMock(target, retryFactory);
     const retry = code.load();
     expect(retry).not.toBe(failed);
+    expect(code.load()).toBe(retry);
+    finish();
     expect(await retry).toEqual({ default: Table });
+    expect(await code.load()).toEqual({ default: Table });
     expect(retryFactory).toHaveBeenCalledOnce();
   });
 });
