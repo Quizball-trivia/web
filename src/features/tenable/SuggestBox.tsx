@@ -9,6 +9,8 @@ const MIN_QUERY = 2;
 /** Suggestions depend only on (kind, release, text): kept for the page's life, bounded; failures are never kept. */
 const cache = new Map<string, Suggestion[]>();
 const CACHE_MAX = 300;
+/** The server reads only an answer with a letter or a digit in it (symbols alone are refused, not judged). */
+const sendable = (text: string) => /[\p{L}\p{N}]/u.test(text.slice(0, ANSWER_MAX_LENGTH));
 
 export type SuggestLookup = (kind: EntityKind, release: string, q: string) => Promise<Suggestion[]>;
 
@@ -20,7 +22,9 @@ export type SuggestLookup = (kind: EntityKind, release: string, q: string) => Pr
  */
 export function SuggestBox({ kind, release, placeholder, say, disabled, note, className, lookup = fetchSuggestions, onSubmit }: {
   kind: EntityKind | undefined; release: string | undefined; placeholder: string; say: string; disabled?: boolean; note?: string | null; className?: string;
-  lookup?: SuggestLookup; onSubmit: (text: string, pick: string | null) => void;
+  lookup?: SuggestLookup;
+  /** Resolves to false when the answer was not applied: it is put back in the box unless something new was typed. */
+  onSubmit: (text: string, pick: string | null) => void | Promise<boolean>;
 }) {
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<{ key: string; items: Suggestion[] } | null>(null);
@@ -56,8 +60,9 @@ export function SuggestBox({ kind, release, placeholder, say, disabled, note, cl
   const [activeKey, setActiveKey] = useState(key);
   if (activeKey !== key) { setActiveKey(key); setActive(-1); }
   const send = (text: string, pick: string | null) => {
-    if (!text.trim() || disabled) return;
-    onSubmit(text.slice(0, ANSWER_MAX_LENGTH), pick);
+    if (!sendable(text) || disabled) return;
+    const sent = text.slice(0, ANSWER_MAX_LENGTH);
+    void Promise.resolve(onSubmit(sent, pick)).then((applied) => { if (applied === false) setDraft((now) => now || sent); });
     setDraft("");
     setResult(null);
     setActive(-1);
@@ -105,7 +110,7 @@ export function SuggestBox({ kind, release, placeholder, say, disabled, note, cl
         placeholder={disabled && note ? note : placeholder} aria-label={placeholder}
         className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
         style={{ fontWeight: 600, letterSpacing: "0.08em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }} />
-      <button type="submit" disabled={disabled || !draft.trim()}
+      <button type="submit" disabled={disabled || !sendable(draft)}
         className="font-poppins h-14 w-full rounded-[20px] bg-brand-green uppercase text-white outline-none transition-colors hover:bg-brand-green-deep focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)" }}>
         {say}

@@ -88,6 +88,29 @@ describe("SuggestBox", () => {
     expect(flaky.mock.calls.filter((c) => c[2] === "Mil").length).toBe(2);
   });
 
+  it("an answer that was not applied goes back in the box, unless something new was typed meanwhile", async () => {
+    let settle: (applied: boolean) => void = () => undefined;
+    const onSubmit = vi.fn(() => new Promise<boolean>((resolve) => { settle = resolve; }));
+    const { input } = box(undefined, onSubmit);
+    await type(input, "Dago Ravin");
+    fireEvent.submit(input.closest("form")!);
+    expect(input).toHaveValue("");
+    await act(async () => { settle(false); });
+    expect(input).toHaveValue("Dago Ravin");
+    fireEvent.submit(input.closest("form")!);
+    await type(input, "Milo");
+    await act(async () => { settle(false); });
+    expect(input).toHaveValue("Milo");
+  });
+
+  it("symbols alone are never sent (the server only reads a letter or a digit)", async () => {
+    const { input, onSubmit } = box();
+    await type(input, "⚽<>&\"'‮");
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("long labels are sent cut to the answer cap (the id decides)", async () => {
     const long = [{ eid: "p9", label: `Milo ${"x".repeat(80)}`, qualifier: null }];
     const { input, onSubmit } = box(vi.fn(async () => long));
