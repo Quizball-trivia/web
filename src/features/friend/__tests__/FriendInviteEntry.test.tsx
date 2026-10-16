@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 const state = vi.hoisted(() => ({ code: 'AB1234', status: 'anonymous', locale: 'en', search: 'source=share' }));
 vi.mock('next/navigation', () => ({ useParams: () => ({ code: state.code }), useSearchParams: () => new URLSearchParams(state.search) }));
-vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: state.locale, siteLocale: state.locale, t: (s: string) => s }) }));
+vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: state.locale, t: (s: string) => s }) }));
 vi.mock('@/stores/auth.store', () => ({ useAuthStore: (select: (s: unknown) => unknown) => select({ status: state.status }) }));
 vi.mock('@/components/auth/AppAuthGate', () => ({ default: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-gate">{children}</div> }));
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: React.ReactNode }) => <>{children}</> }));

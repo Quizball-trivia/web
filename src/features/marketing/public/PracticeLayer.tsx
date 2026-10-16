@@ -11,7 +11,7 @@ const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then(
 /** Engines that render their own way out ("Skip training"); the layer hides its exit control for them. */
 export const SELF_EXITING_ENGINES = new Set(["match", "auction", "mini-football-grid"]);
 
-export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık" };
+export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık", ru: "Выйти из тренировки" };
 
 /**
  * Full-viewport layer for a practice round. The engines are full-screen
@@ -19,7 +19,7 @@ export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "�
  * container) with their own exit control; focus moves in and back out.
  */
 /** The coin sneak peeks leave through their own header back control; the layer keeps Escape but draws no exit pill. */
-export const OWN_EXIT_ENGINES = new Set(["buscaminas", "guess-the-goal", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "tenable", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
+export const OWN_EXIT_ENGINES = new Set(["buscaminas", "guess-the-goal", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "tenable", "football-horserace", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
 /** The modal that owns the keyboard: a dialog a game opened on top of the layer (portaled elsewhere), else the layer. */

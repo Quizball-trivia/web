@@ -157,27 +157,6 @@ describe('LocaleProvider', () => {
     expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('ka'));
   });
 
-  it('shows and stores English on the public site when "ru" was saved, but keeps Russian in partner views', async () => {
-    mocks.preferredLanguage = null;
-    localStorage.setItem('quizball_locale', JSON.stringify('ru'));
-    const site = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
-    await waitFor(() => expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('en')));
-    expect(screen.getByTestId('locale')).toHaveTextContent('en');
-    site.unmount();
-
-    localStorage.setItem('quizball_locale', JSON.stringify('ru'));
-    render(<LocaleProvider allowPartnerLocales><LocaleProbe /></LocaleProvider>);
-    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('ru'));
-    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('ru'));
-  });
-
-  it('clears a saved "ru" on the public site even when the page names its language in the address', async () => {
-    mocks.pathname = '/en/about';
-    localStorage.setItem('quizball_locale', JSON.stringify('ru'));
-    render(<LocaleProvider initialLocale="en"><LocaleProbe /></LocaleProvider>);
-    await waitFor(() => expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('en')));
-  });
-
   it('uses the inferred browser locale on a first visit with no saved locale or profile preference', async () => {
     mocks.preferredLanguage = undefined;
     mocks.inferredLocale = 'ka';

@@ -24,6 +24,8 @@ import { buildDemoDailySession } from "@/features/demos/data/demoDailySessions";
 import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperSession } from "@/lib/domain/dailyChallenge";
 import { AproximadoSim, type SimConfig } from "./AproximadoSim";
 import { roomView } from "./fixtures/aproximado";
+import { FootballRaceSim, type RaceSimConfig } from "./FootballRaceSim";
+import { FootballRaceSoloSim, type RaceSoloConfig } from "./FootballRaceSoloSim";
 import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
 import { TenableBoard, TenableResults, type TenableRoomLink } from "@/features/tenable/TenableRoom";
 import { TenableEndView, TenablePlayView, tenableDailyGame } from "@/features/tenable/TenableSolo";
@@ -272,7 +274,7 @@ async function fixtureStatSniperBoard(): Promise<StatSniperLeaderboardData> {
 const tenableFriends = (ctx: ScenarioContext) => (
   <button type="button" onClick={() => ctx.log("openFriendRoom", "tenable")} style={{ fontFamily: "'Poppins', sans-serif" }}
     className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black uppercase tracking-wide text-white hover:bg-brand-blue/90">
-    <Users className="size-4" aria-hidden />{({ en: "Play with friends (2–6)", es: "Jugar con amigos (2–6)", tr: "Arkadaşlarınla oyna (2–6)", ka: "ითამაშე მეგობრებთან (2–6)" } as Record<string, string>)[ctx.locale] ?? "Play with friends (2–6)"}
+    <Users className="size-4" aria-hidden />{({ en: "Play with friends (2–6)", es: "Jugar con amigos (2–6)", tr: "Arkadaşlarınla oyna (2–6)", ka: "ითამაშე მეგობრებთან (2–6)", ru: "Играть с друзьями (2–6)" } as Record<string, string>)[ctx.locale] ?? "Play with friends (2–6)"}
   </button>
 );
 const tenableBoardStandIn = <div className="mt-6 rounded-2xl border border-dashed border-white/25 px-4 py-6 text-center text-xs text-white/60">Daily leaderboard: live data only (WordDailyLeaderboard)</div>;
@@ -362,7 +364,48 @@ function tenableRoomScreens(n: number): Scenario<never>[] {
   ];
 }
 
+
+const RACE: RaceSimConfig = { seats: 3, speed: 1, target: 0, botSkill: 0.6, pickSeconds: 30, data: "real", nations: [], scopes: [], tournament: "random", seed: 1, finish: "instant" };
+const race = (id: string, name: string, config: Partial<RaceSimConfig>, note: string) =>
+  scenario<RaceSimConfig>({
+    id, name, note, data: { ...RACE, ...config },
+    render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><FootballRaceSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider>,
+  });
+const raceSolo = (id: string, name: string, config: Partial<RaceSoloConfig>, note: string) =>
+  scenario<RaceSoloConfig>({
+    id, name, note, data: { data: "real", day: "today", script: "play", ...config },
+    render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><FootballRaceSoloSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider>,
+  });
+const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" to any date). Your nation vs three; rivals start 2 spaces ahead. Real stats from the local private pack.";
+const RACE_NOTE = "Playable: you are seat 0, bots take the rest. Real stats come from the local private pack (public/dev-data, never committed); without it the invented fixture plays. Edit seats, tournament (random, WC, EURO, COPA, AFCON, ASIA, GOLD, WCQ, EUROQ, NL, ALL), target (0 = by lobby size), finish, botSkill, nations (codes, yours first) or seed in the state.";
+
 export const GAMES: GameEntry[] = [
+  {
+    id: "carrera",
+    name: "Football Horserace (prototype)",
+    scenarios: {
+      solo: [
+        raceSolo("daily", "Daily race · today", {}, SOLO_NOTE),
+        raceSolo("daily-tomorrow", "Daily race · another day", { day: "2026-10-20" }, SOLO_NOTE),
+        raceSolo("won", "Result · won in 6", { script: "won" }, SOLO_NOTE),
+        raceSolo("perfect", "Result · perfect 5 of 5", { script: "perfect" }, SOLO_NOTE),
+        raceSolo("lost", "Result · a rival got there first", { script: "lost" }, SOLO_NOTE),
+        raceSolo("invented", "Daily race · invented data", { data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+      duel: [
+        race("live-2", "Live 1v1", { seats: 2 }, RACE_NOTE),
+        race("live-2-classic", "Live 1v1 · Germany v Mexico, World Cup", { seats: 2, nations: ["GER", "MEX"], tournament: "WC" }, RACE_NOTE),
+        race("live-2-copa", "Live 1v1 · Copa América", { seats: 2, tournament: "COPA" }, RACE_NOTE),
+        race("live-2-invented", "Live 1v1 · invented data", { seats: 2, data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+      room: [
+        race("live-3", "Live 3 players", { seats: 3 }, RACE_NOTE),
+        race("live-3-video", "Live 3 · the video's trio (Germany, Spain, Mexico), World Cup", { seats: 3, nations: ["GER", "ESP", "MEX"], tournament: "WC" }, RACE_NOTE),
+        race("live-4", "Live 4 players", { seats: 4 }, RACE_NOTE),
+        race("live-4-invented", "Live 4 · invented data", { seats: 4, data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+    },
+  },
   {
     id: "tenable",
     name: "Football Tenable",

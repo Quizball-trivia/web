@@ -23,6 +23,7 @@ const LocaleAssetProviders = {
   es: dynamic(() => import("./locale-asset-providers.es").then((module) => module.LocaleAssetProviders)),
   tr: dynamic(() => import("./locale-asset-providers.tr").then((module) => module.LocaleAssetProviders)),
   ka: dynamic(() => import("./locale-asset-providers.ka").then((module) => module.LocaleAssetProviders)),
+  ru: dynamic(() => import("./locale-asset-providers.ru").then((module) => module.LocaleAssetProviders)),
 };
 
 type RouteProvidersProps = {
@@ -51,7 +52,7 @@ export function RouteProviders({
   const pathname = usePathname();
   // Unconditional hook, including partner/SEO branches. A URL language change
   // must not change the component type and reset queries, sessions or tracking.
-  const [entryLocale] = useState(() => localeAssetSeed && initialLocale && initialLocale !== "en" && initialLocale !== "ru" ? initialLocale : null);
+  const [entryLocale] = useState(() => localeAssetSeed && initialLocale && initialLocale !== "en" ? initialLocale : null);
 
   if (partner) {
     return <PartnerProviders cspNonce={cspNonce}>{children}</PartnerProviders>;

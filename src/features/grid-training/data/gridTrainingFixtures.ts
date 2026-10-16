@@ -82,6 +82,7 @@ export const GRID_TRAINING_ROSTER: GridTypeaheadPreparedPlayer[] = (() => {
       nameKa,
       wordsEn: normalizeGridAnswerText(nameEn).split(' ').filter(Boolean),
       wordsKa: nameKa ? normalizeGridAnswerText(nameKa).split(' ').filter(Boolean) : [],
+      wordsRu: [],
     });
   };
   for (const row of GRID_TRAINING_CONFIG.cells) for (const cell of row) for (const answer of cell) add(answer.name, answer.accepted);

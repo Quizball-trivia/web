@@ -15,6 +15,9 @@ export const WORD_LANDING_ROOTS = [
     "football-games/football-name-chain", "football-games/played-for-both-clubs",
     "juegos-de-futbol/cadena-de-futbolistas", "juegos-de-futbol/jugador-en-comun",
     "futbol-oyunlari/son-harfle-futbolcu", "futbol-oyunlari/ortak-futbolcu-oyunu",
+    "futbolnye-igry/futbolisty-na-poslednyuyu-bukvu", "futbolnye-igry/igravshie-za-oba-kluba",
+    "football-games/football-horserace", "juegos-de-futbol/carrera-de-caballos-futbolera", "futbol-oyunlari/futbol-at-yarisi",
+    "futbolnye-igry/futbolnye-skachki",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -31,7 +34,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
     "../../shared/ContactModal", "./AppShellProfileMenu", "./AppShellLogoutDialog",
   ].map((specifier) => boundary("src/components/layout/app-shell/shellChromeLoader.ts", specifier, "pre-play", "Explicit intent loads an original popup; include its complete styles, not just the first viewport.")),
   boundary("src/app/route-providers.tsx", "./providers", "pre-play", "Hub word routes render FullProviders immediately, including toast UI."),
-  ...["es", "tr", "ka"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
+  ...["es", "tr", "ka", "ru"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
   boundary("src/app/route-providers.tsx", "@/features/partner/PartnerProviders", "other-host", "Partner hosts never render these Quizball word routes."),
   ...["es", "ka", "tr", "ru"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
   boundary("src/components/auth/AppAuthGate.tsx", "@/features/auth/GuestAuthDialog", "pre-play", "Guest authentication can open before Play."),
@@ -50,10 +53,11 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
     "@/features/minuto/MinutoGame", "@/features/ultimo/UltimoGame", "@/features/mini-games/components/GuessTheGoalGuest",
-    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily",
+    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily",
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),
+  boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/football-race/FootballRaceDailyBoard", "pre-play", "Scrolling can mount rankings without Play."),
   boundary("src/features/wordgames/daily/WordDailyLeaderboardRows.tsx", "./WordDailyLeaderboardTable", "pre-play", "A nonempty visible ranking loads its original table before Play; retain every row and failure-state style."),
   ...[
     "./PublicTopTen", "@/features/buscaminas/BuscaminasLeaderboard", "@/features/pistas/PistasLeaderboard",

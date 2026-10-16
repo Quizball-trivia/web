@@ -4,7 +4,8 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
-import { getCampaignQuiz } from './campaignQuiz.api';
+import { getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
+import type { CampaignQuiz } from './campaignQuiz.types';
 import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
@@ -12,10 +13,39 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   en: 'en-GB',
   ka: 'ka-GE',
   es: 'es-ES',
+  ru: 'ru-RU',
+};
+
+const OG_LOCALE: Record<CampaignQuizLocale, string> = {
+  en: 'en_GB',
+  ka: 'ka_GE',
+  es: 'es_ES',
+  ru: 'ru_RU',
+};
+
+const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
+  en: { home: 'Home', hub: 'Football Quiz' },
+  ka: { home: 'მთავარი', hub: 'ფეხბურთის ქვიზი' },
+  es: { home: 'Inicio', hub: 'Quiz de Fútbol' },
+  ru: { home: 'Главная', hub: 'Футбольная викторина' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
   getCampaignQuiz(slug, preview, locale));
+
+/**
+ * The quiz endpoint answers a missing Russian edition in English, so a Russian page exists only when the quiz says it
+ * has that edition. Older backends do not say: the Russian catalog decides, and a catalog that cannot be read means no
+ * edition (never an English page under a Russian address).
+ */
+export const hasRussianEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => {
+  if (quiz.editions) return quiz.editions.ru;
+  try {
+    return (await listCampaignQuizPages('ru')).some((page) => page.slug === slug);
+  } catch {
+    return false;
+  }
+});
 
 function absoluteImage(url: string): string {
   return url.startsWith('http') ? url : `${SITE_URL}${url}`;
@@ -28,16 +58,18 @@ export async function buildCampaignQuizMetadata(
 ): Promise<Metadata> {
   try {
     const quiz = await loadQuiz(sourceSlug, preview, locale);
+    const russian = await hasRussianEdition(sourceSlug, quiz);
+    if (locale === 'ru' && !preview && !russian) return {};
     const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
     if (!content) return {};
 
     const pageUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, locale)}`;
     const englishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'en')}`;
-    const spanishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`;
     const languages = {
       en: englishUrl,
       ...(content.localeMode === 'en_ka' ? { ka: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ka')}` } : {}),
-      es: spanishUrl,
+      es: `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`,
+      ...(russian ? { ru: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ru')}` } : {}),
       'x-default': englishUrl,
     };
     const image = content.ogImage ?? content.heroImage;
@@ -54,10 +86,10 @@ export async function buildCampaignQuizMetadata(
         title: content.metadataTitle,
         description: content.description,
         url: pageUrl,
-        locale: locale === 'es' ? 'es_ES' : locale === 'ka' ? 'ka_GE' : 'en_GB',
-        alternateLocale: Object.keys(languages)
-          .filter((language) => language !== locale && language !== 'x-default')
-          .map((language) => language === 'es' ? 'es_ES' : language === 'ka' ? 'ka_GE' : 'en_GB'),
+        locale: OG_LOCALE[locale],
+        alternateLocale: (Object.keys(languages) as Array<keyof typeof languages>)
+          .filter((language): language is CampaignQuizLocale => language !== locale && language !== 'x-default')
+          .map((language) => OG_LOCALE[language]),
         images: [{ url: absoluteImage(image), alt: imageAlt }],
       },
       twitter: {
@@ -77,7 +109,10 @@ export async function renderCampaignQuizPage(
   locale: CampaignQuizLocale,
   preview?: string,
 ) {
+  // Loaded first: a renamed quiz is a 404 here, which the route turns into its redirect.
   const quiz = await loadQuiz(sourceSlug, preview, locale);
+  const russian = await hasRussianEdition(sourceSlug, quiz);
+  if (locale === 'ru' && !preview && !russian) notFound();
   const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
   if (!content) notFound();
 
@@ -96,8 +131,8 @@ export async function renderCampaignQuizPage(
       {
         '@type': 'BreadcrumbList', '@id': `${pageUrl}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: locale === 'es' ? 'Inicio' : locale === 'ka' ? 'მთავარი' : 'Home', item: `${SITE_URL}/${locale}` },
-          { '@type': 'ListItem', position: 2, name: locale === 'es' ? 'Quiz de Fútbol' : locale === 'ka' ? 'ფეხბურთის ქვიზი' : 'Football Quiz', item: `${SITE_URL}${campaignHubPath(locale)}` },
+          { '@type': 'ListItem', position: 1, name: BREADCRUMB[locale].home, item: `${SITE_URL}/${locale}` },
+          { '@type': 'ListItem', position: 2, name: BREADCRUMB[locale].hub, item: `${SITE_URL}${campaignHubPath(locale)}` },
           { '@type': 'ListItem', position: 3, name: content.breadcrumbLabel, item: pageUrl },
         ],
       },
@@ -115,7 +150,7 @@ export async function renderCampaignQuizPage(
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} />
     </>
   );
 }

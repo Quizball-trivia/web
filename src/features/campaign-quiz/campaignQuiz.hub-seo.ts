@@ -6,6 +6,7 @@ const LANGUAGE: Record<CampaignQuizLocale, string> = {
   en: 'en-GB',
   ka: 'ka-GE',
   es: 'es-ES',
+  ru: 'ru-RU',
 };
 
 export function buildCampaignQuizHubJsonLd(input: {

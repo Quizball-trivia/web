@@ -28,7 +28,7 @@ export function createWordDailyApi<State extends WordRunStateBase, Result extend
     current: (day: string, locale: string) => call<WordRun<State> | { run: null }>(`/current?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
     /** `timeoutMs`: a re-sync in the middle of a turn must answer within it. */
     start: (day: string, contentVersion: number | undefined, locale: string, timeoutMs?: number) =>
-      call<WordRun<State>>("/start", "POST", { day, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
+      call<WordRun<State>>("/start", "POST", { day, locale, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
     next: (run: WordRun<State>, locale: string) => call<WordRun<State>>("/next", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
     /** `extra`: a game's own answer fields (Tenable: the id of a picked suggestion). */
     answer: (run: WordRun<State>, answer: string, locale: string, extra?: Record<string, unknown>) =>
@@ -37,8 +37,9 @@ export function createWordDailyApi<State extends WordRunStateBase, Result extend
     /** "That was right": a refused answer of the player's own run (and of which pair, where the day has pairs). True when the server took it. */
     report: (day: string, text: string, locale: string, pair?: number) =>
       call<null>("/report", "POST", { day, text: text.slice(0, 60), ...(pair === undefined ? {} : { pair }) }, locale, "player", MOVE_TIMEOUT_MS).then(() => true, () => false),
-    review: (day: string, locale: string) => call<Review>(`/review?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "none"),
-    leaderboard: (day: string, locale: string) => call<WordBoard>(`/leaderboard?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
+    // The interface language picks the Russian edition (Russian names; Name Chain's Russian-letter board).
+    review: (day: string, locale: string) => call<Review>(`/review?day=${encodeURIComponent(day)}&locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, "none"),
+    leaderboard: (day: string, locale: string) => call<WordBoard>(`/leaderboard?day=${encodeURIComponent(day)}&locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, "optional"),
   };
 }
 export type WordDailyApi<State extends WordRunStateBase, Result extends string, Review = unknown> = ReturnType<typeof createWordDailyApi<State, Result, Review>>;

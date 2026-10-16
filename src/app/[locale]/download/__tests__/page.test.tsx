@@ -65,6 +65,7 @@ describe('official Android download page', () => {
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/download', ka: 'https://quizball.io/ka/download',
       es: 'https://quizball.io/es/download', tr: 'https://quizball.io/tr/download',
+      ru: 'https://quizball.io/ru/download',
       'x-default': 'https://quizball.io/en/download',
     });
     // Inherit production/preview robots from the root; do not accidentally index previews.
@@ -97,6 +98,8 @@ describe('official Android download page', () => {
     }
     expect(isLightweightSeoRoute('/en/football-quiz/career-path')).toBe(true);
     expect(isLightweightSeoRoute('/es/quiz-de-futbol')).toBe(true);
+    expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina')).toBe(true);
+    expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina/viktorina-arsenal')).toBe(true);
     for (const path of ['/en', '/play', '/auth/welcome', '/xx/download', '/en/download/other', '/download']) {
       expect(isLightweightSeoRoute(path)).toBe(false);
     }

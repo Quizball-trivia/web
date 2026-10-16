@@ -20,6 +20,8 @@ describe('PostHog capture policy', () => {
     '/ka/football-quiz/club-badges',
     'https://quizball.io/es/quiz-de-futbol',
     '/es/quiz-de-futbol/trayectoria-del-jugador?utm_source=google',
+    'https://quizball.io/ru/futbolnaya-viktorina',
+    '/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere?utm_source=yandex',
   ])('keeps Web Vitals for public football quiz pages: %s', (url) => {
     expect(preparePostHogCapture(webVitals(url))?.event).toBe('$web_vitals');
   });

@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeNavbar() {
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const { eventEnabled } = useActiveEventMode();
   return (
     <header className="flex h-16 md:h-20 items-center justify-between gap-2 px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">

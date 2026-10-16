@@ -99,4 +99,32 @@ describe('CampaignQuizGame', () => {
     expect(answerCampaignQuizQuestion).toHaveBeenCalledWith(expect.objectContaining({ locale: 'es' }));
     expect(screen.getByRole('button', { name: /Ver mi puntuación/i })).toBeInTheDocument();
   });
+
+  it('uses Russian UI copy and requests Russian answer content', async () => {
+    render(<CampaignQuizGame slug="liverpool" questions={questions.slice(0, 1)} locale="ru" />);
+
+    expect(screen.getByText('Вопрос 1 из 1')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Jürgen Klopp' }));
+    await screen.findByText('Klopp led the title win.');
+
+    expect(answerCampaignQuizQuestion).toHaveBeenCalledWith(expect.objectContaining({ locale: 'ru' }));
+    expect(screen.getByRole('button', { name: /Посмотреть мой результат/i })).toBeInTheDocument();
+  });
+
+  it('hides a Russian career-path prompt that only repeats the club chips', () => {
+    const career: CampaignQuizQuestion = {
+      id: 'career-1',
+      position: 1,
+      difficulty: 'easy',
+      type: 'career_path',
+      prompt: '«Канн» ➔ «Арсенал»',
+      details: ['Канн', 'Арсенал'],
+      image_url: null,
+      options: [{ id: 'a', text: 'Патрик Виейра' }, { id: 'b', text: 'Тьерри Анри' }],
+    };
+    render(<CampaignQuizGame slug="career-path" questions={[career, { ...career, id: 'career-2', prompt: 'Угадай игрока' }]} locale="ru" />);
+
+    expect(screen.getByRole('heading', { name: '«Канн» ➔ «Арсенал»' })).toHaveClass('sr-only');
+    expect(screen.getByText('Угадай игрока')).toHaveClass('sr-only');
+  });
 });

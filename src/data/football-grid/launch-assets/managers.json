@@ -3,6 +3,7 @@
     "id": "pep-guardiola",
     "labelEn": "Pep Guardiola",
     "labelKa": "პეპ გვარდიოლა",
+    "labelRu": "Пеп Гвардиола",
     "wikipediaTitle": "Pep Guardiola",
     "primary": {
       "assetPath": "/assets/football-grid/managers/pep-guardiola.jpg",
@@ -34,6 +35,7 @@
     "id": "carlo-ancelotti",
     "labelEn": "Carlo Ancelotti",
     "labelKa": "კარლო ანჩელოტი",
+    "labelRu": "Карло Анчелотти",
     "wikipediaTitle": "Carlo Ancelotti",
     "primary": {
       "assetPath": "/assets/football-grid/managers/carlo-ancelotti.jpg",
@@ -65,6 +67,7 @@
     "id": "jose-mourinho",
     "labelEn": "José Mourinho",
     "labelKa": "ჟოზე მოურინიო",
+    "labelRu": "Жозе Моуринью",
     "wikipediaTitle": "José Mourinho",
     "primary": {
       "assetPath": "/assets/football-grid/managers/jose-mourinho.jpg",
@@ -96,6 +99,7 @@
     "id": "jurgen-klopp",
     "labelEn": "Jürgen Klopp",
     "labelKa": "იურგენ კლოპი",
+    "labelRu": "Юрген Клопп",
     "wikipediaTitle": "Jürgen Klopp",
     "primary": {
       "assetPath": "/assets/football-grid/managers/jurgen-klopp.jpg",
@@ -127,6 +131,7 @@
     "id": "arsene-wenger",
     "labelEn": "Arsène Wenger",
     "labelKa": "არსენ ვენგერი",
+    "labelRu": "Арсен Венгер",
     "wikipediaTitle": "Arsène Wenger",
     "primary": {
       "assetPath": "/assets/football-grid/managers/arsene-wenger.jpg",
@@ -158,6 +163,7 @@
     "id": "alex-ferguson",
     "labelEn": "Sir Alex Ferguson",
     "labelKa": "სერ ალექს ფერგიუსონი",
+    "labelRu": "Сэр Алекс Фергюсон",
     "wikipediaTitle": "Alex Ferguson",
     "primary": {
       "assetPath": "/assets/football-grid/managers/alex-ferguson.jpg",
@@ -189,6 +195,7 @@
     "id": "zinedine-zidane",
     "labelEn": "Zinedine Zidane",
     "labelKa": "ზინედინ ზიდანი",
+    "labelRu": "Зинедин Зидан",
     "wikipediaTitle": "Zinedine Zidane",
     "primary": {
       "assetPath": "/assets/football-grid/managers/zinedine-zidane.jpg",
@@ -220,6 +227,7 @@
     "id": "luis-enrique",
     "labelEn": "Luis Enrique",
     "labelKa": "ლუის ენრიკე",
+    "labelRu": "Луис Энрике",
     "wikipediaTitle": "Luis Enrique",
     "primary": {
       "assetPath": "/assets/football-grid/managers/luis-enrique.jpg",
@@ -251,6 +259,7 @@
     "id": "diego-simeone",
     "labelEn": "Diego Simeone",
     "labelKa": "დიეგო სიმეონე",
+    "labelRu": "Диего Симеоне",
     "wikipediaTitle": "Diego Simeone",
     "primary": {
       "assetPath": "/assets/football-grid/managers/diego-simeone.jpg",
@@ -282,6 +291,7 @@
     "id": "antonio-conte",
     "labelEn": "Antonio Conte",
     "labelKa": "ანტონიო კონტე",
+    "labelRu": "Антонио Конте",
     "wikipediaTitle": "Antonio Conte",
     "primary": {
       "assetPath": "/assets/football-grid/managers/antonio-conte.jpg",
@@ -313,6 +323,7 @@
     "id": "thomas-tuchel",
     "labelEn": "Thomas Tuchel",
     "labelKa": "თომას ტუხელი",
+    "labelRu": "Томас Тухель",
     "wikipediaTitle": "Thomas Tuchel",
     "primary": {
       "assetPath": "/assets/football-grid/managers/thomas-tuchel.jpg",
@@ -344,6 +355,7 @@
     "id": "hansi-flick",
     "labelEn": "Hansi Flick",
     "labelKa": "ჰანსი ფლიკი",
+    "labelRu": "Ханс-Дитер Флик",
     "wikipediaTitle": "Hansi Flick",
     "primary": {
       "assetPath": "/assets/football-grid/managers/hansi-flick.jpg",
@@ -375,6 +387,7 @@
     "id": "xabi-alonso",
     "labelEn": "Xabi Alonso",
     "labelKa": "ჩაბი ალონსო",
+    "labelRu": "Хаби Алонсо",
     "wikipediaTitle": "Xabi Alonso",
     "primary": {
       "assetPath": "/assets/football-grid/managers/xabi-alonso.jpg",
@@ -406,6 +419,7 @@
     "id": "mikel-arteta",
     "labelEn": "Mikel Arteta",
     "labelKa": "მიკელ არტეტა",
+    "labelRu": "Микель Артета",
     "wikipediaTitle": "Mikel Arteta",
     "primary": {
       "assetPath": "/assets/football-grid/managers/mikel-arteta.png",
@@ -437,6 +451,7 @@
     "id": "unai-emery",
     "labelEn": "Unai Emery",
     "labelKa": "უნაი ემერი",
+    "labelRu": "Унаи Эмери",
     "wikipediaTitle": "Unai Emery",
     "primary": {
       "assetPath": "/assets/football-grid/managers/unai-emery.jpg",
@@ -468,6 +483,7 @@
     "id": "roberto-mancini",
     "labelEn": "Roberto Mancini",
     "labelKa": "რობერტო მანჩინი",
+    "labelRu": "Роберто Манчини",
     "wikipediaTitle": "Roberto Mancini",
     "primary": {
       "assetPath": "/assets/football-grid/managers/roberto-mancini.jpg",
@@ -499,6 +515,7 @@
     "id": "massimiliano-allegri",
     "labelEn": "Massimiliano Allegri",
     "labelKa": "მასიმილიანო ალეგრი",
+    "labelRu": "Массимилиано Аллегри",
     "wikipediaTitle": "Massimiliano Allegri",
     "primary": {
       "type": "quizball-manager-badge",
@@ -538,6 +555,7 @@
     "id": "luciano-spalletti",
     "labelEn": "Luciano Spalletti",
     "labelKa": "ლუჩანო სპალეტი",
+    "labelRu": "Лучано Спаллетти",
     "wikipediaTitle": "Luciano Spalletti",
     "primary": {
       "assetPath": "/assets/football-grid/managers/luciano-spalletti.jpg",
@@ -569,6 +587,7 @@
     "id": "rafael-benitez",
     "labelEn": "Rafael Benítez",
     "labelKa": "რაფაელ ბენიტესი",
+    "labelRu": "Рафаэль Бенитес",
     "wikipediaTitle": "Rafael Benítez",
     "primary": {
       "assetPath": "/assets/football-grid/managers/rafael-benitez.jpg",
@@ -600,6 +619,7 @@
     "id": "didier-deschamps",
     "labelEn": "Didier Deschamps",
     "labelKa": "დიდიე დეშამი",
+    "labelRu": "Дидье Дешам",
     "wikipediaTitle": "Didier Deschamps",
     "primary": {
       "assetPath": "/assets/football-grid/managers/didier-deschamps.jpg",
@@ -631,6 +651,7 @@
     "id": "joachim-low",
     "labelEn": "Joachim Löw",
     "labelKa": "იოახიმ ლიოვი",
+    "labelRu": "Йоахим Лёв",
     "wikipediaTitle": "Joachim Löw",
     "primary": {
       "assetPath": "/assets/football-grid/managers/joachim-low.jpg",
@@ -662,6 +683,7 @@
     "id": "vicente-del-bosque",
     "labelEn": "Vicente del Bosque",
     "labelKa": "ვისენტე დელ ბოსკე",
+    "labelRu": "Висенте дель Боске",
     "wikipediaTitle": "Vicente del Bosque",
     "primary": {
       "assetPath": "/assets/football-grid/managers/vicente-del-bosque.jpg",
@@ -693,6 +715,7 @@
     "id": "fabio-capello",
     "labelEn": "Fabio Capello",
     "labelKa": "ფაბიო კაპელო",
+    "labelRu": "Фабио Капелло",
     "wikipediaTitle": "Fabio Capello",
     "primary": {
       "assetPath": "/assets/football-grid/managers/fabio-capello.jpg",
@@ -724,6 +747,7 @@
     "id": "marcello-lippi",
     "labelEn": "Marcello Lippi",
     "labelKa": "მარჩელო ლიპი",
+    "labelRu": "Марчелло Липпи",
     "wikipediaTitle": "Marcello Lippi",
     "primary": {
       "assetPath": "/assets/football-grid/managers/marcello-lippi.jpg",
@@ -755,6 +779,7 @@
     "id": "louis-van-gaal",
     "labelEn": "Louis van Gaal",
     "labelKa": "ლუი ვან გაალი",
+    "labelRu": "Луи ван Гал",
     "wikipediaTitle": "Louis van Gaal",
     "primary": {
       "assetPath": "/assets/football-grid/managers/louis-van-gaal.jpg",
@@ -786,6 +811,7 @@
     "id": "guus-hiddink",
     "labelEn": "Guus Hiddink",
     "labelKa": "გუს ჰიდინკი",
+    "labelRu": "Гус Хиддинк",
     "wikipediaTitle": "Guus Hiddink",
     "primary": {
       "assetPath": "/assets/football-grid/managers/guus-hiddink.jpg",
@@ -817,6 +843,7 @@
     "id": "ronald-koeman",
     "labelEn": "Ronald Koeman",
     "labelKa": "რონალდ კუმანი",
+    "labelRu": "Рональд Куман",
     "wikipediaTitle": "Ronald Koeman",
     "primary": {
       "assetPath": "/assets/football-grid/managers/ronald-koeman.jpg",
@@ -848,6 +875,7 @@
     "id": "frank-rijkaard",
     "labelEn": "Frank Rijkaard",
     "labelKa": "ფრანკ რაიკარდი",
+    "labelRu": "Франк Райкард",
     "wikipediaTitle": "Frank Rijkaard",
     "primary": {
       "type": "quizball-manager-badge",
@@ -887,6 +915,7 @@
     "id": "mauricio-pochettino",
     "labelEn": "Mauricio Pochettino",
     "labelKa": "მაურისიო პოჩეტინო",
+    "labelRu": "Маурисио Почеттино",
     "wikipediaTitle": "Mauricio Pochettino",
     "primary": {
       "assetPath": "/assets/football-grid/managers/mauricio-pochettino.jpg",
@@ -918,6 +947,7 @@
     "id": "erik-ten-hag",
     "labelEn": "Erik ten Hag",
     "labelKa": "ერიკ ტენ ჰაგი",
+    "labelRu": "Эрик тен Хаг",
     "wikipediaTitle": "Erik ten Hag",
     "primary": {
       "assetPath": "/assets/football-grid/managers/erik-ten-hag.jpg",
@@ -949,6 +979,7 @@
     "id": "ruben-amorim",
     "labelEn": "Rúben Amorim",
     "labelKa": "რუბენ ამორიმი",
+    "labelRu": "Рубен Аморим",
     "wikipediaTitle": "Rúben Amorim",
     "primary": {
       "assetPath": "/assets/football-grid/managers/ruben-amorim.png",
@@ -980,6 +1011,7 @@
     "id": "roberto-de-zerbi",
     "labelEn": "Roberto De Zerbi",
     "labelKa": "რობერტო დე ძერბი",
+    "labelRu": "Роберто Де Дзерби",
     "wikipediaTitle": "Roberto De Zerbi",
     "primary": {
       "assetPath": "/assets/football-grid/managers/roberto-de-zerbi.jpg",
@@ -1011,6 +1043,7 @@
     "id": "simone-inzaghi",
     "labelEn": "Simone Inzaghi",
     "labelKa": "სიმონე ინძაგი",
+    "labelRu": "Симоне Индзаги",
     "wikipediaTitle": "Simone Inzaghi",
     "primary": {
       "assetPath": "/assets/football-grid/managers/simone-inzaghi.jpg",
@@ -1042,6 +1075,7 @@
     "id": "gian-piero-gasperini",
     "labelEn": "Gian Piero Gasperini",
     "labelKa": "ჯან პიერო გასპერინი",
+    "labelRu": "Джан Пьеро Гасперини",
     "wikipediaTitle": "Gian Piero Gasperini",
     "primary": {
       "type": "quizball-manager-badge",
@@ -1081,6 +1115,7 @@
     "id": "claudio-ranieri",
     "labelEn": "Claudio Ranieri",
     "labelKa": "კლაუდიო რანიერი",
+    "labelRu": "Клаудио Раньери",
     "wikipediaTitle": "Claudio Ranieri",
     "primary": {
       "assetPath": "/assets/football-grid/managers/claudio-ranieri.png",
@@ -1112,6 +1147,7 @@
     "id": "maurizio-sarri",
     "labelEn": "Maurizio Sarri",
     "labelKa": "მაურიციო სარი",
+    "labelRu": "Маурицио Сарри",
     "wikipediaTitle": "Maurizio Sarri",
     "primary": {
       "assetPath": "/assets/football-grid/managers/maurizio-sarri.jpg",
@@ -1143,6 +1179,7 @@
     "id": "nuno-espirito-santo",
     "labelEn": "Nuno Espírito Santo",
     "labelKa": "ნუნუ ეშპირიტუ სანტუ",
+    "labelRu": "Нуну Эшпириту Санту",
     "wikipediaTitle": "Nuno Espírito Santo",
     "primary": {
       "assetPath": "/assets/football-grid/managers/nuno-espirito-santo.jpg",
@@ -1174,6 +1211,7 @@
     "id": "brendan-rodgers",
     "labelEn": "Brendan Rodgers",
     "labelKa": "ბრენდან როჯერსი",
+    "labelRu": "Брендан Роджерс",
     "wikipediaTitle": "Brendan Rodgers",
     "primary": {
       "assetPath": "/assets/football-grid/managers/brendan-rodgers.jpg",
@@ -1205,6 +1243,7 @@
     "id": "david-moyes",
     "labelEn": "David Moyes",
     "labelKa": "დევიდ მოიესი",
+    "labelRu": "Дэвид Мойес",
     "wikipediaTitle": "David Moyes",
     "primary": {
       "assetPath": "/assets/football-grid/managers/david-moyes.jpg",
@@ -1236,6 +1275,7 @@
     "id": "eddie-howe",
     "labelEn": "Eddie Howe",
     "labelKa": "ედი ჰაუ",
+    "labelRu": "Эдди Хау",
     "wikipediaTitle": "Eddie Howe",
     "primary": {
       "assetPath": "/assets/football-grid/managers/eddie-howe.jpg",
@@ -1267,6 +1307,7 @@
     "id": "gareth-southgate",
     "labelEn": "Gareth Southgate",
     "labelKa": "გარეთ საუთგეიტი",
+    "labelRu": "Гарет Саутгейт",
     "wikipediaTitle": "Gareth Southgate",
     "primary": {
       "assetPath": "/assets/football-grid/managers/gareth-southgate.jpg",
@@ -1298,6 +1339,7 @@
     "id": "sven-goran-eriksson",
     "labelEn": "Sven-Göran Eriksson",
     "labelKa": "სვენ-გორან ერიქსონი",
+    "labelRu": "Свен-Ёран Эрикссон",
     "wikipediaTitle": "Sven-Göran Eriksson",
     "primary": {
       "assetPath": "/assets/football-grid/managers/sven-goran-eriksson.jpg",
@@ -1329,6 +1371,7 @@
     "id": "ottmar-hitzfeld",
     "labelEn": "Ottmar Hitzfeld",
     "labelKa": "ოტმარ ჰიცფელდი",
+    "labelRu": "Оттмар Хитцфельд",
     "wikipediaTitle": "Ottmar Hitzfeld",
     "primary": {
       "assetPath": "/assets/football-grid/managers/ottmar-hitzfeld.jpg",
@@ -1360,6 +1403,7 @@
     "id": "jupp-heynckes",
     "labelEn": "Jupp Heynckes",
     "labelKa": "იუპ ჰაინკესი",
+    "labelRu": "Юпп Хайнкес",
     "wikipediaTitle": "Jupp Heynckes",
     "primary": {
       "assetPath": "/assets/football-grid/managers/jupp-heynckes.jpg",
@@ -1391,6 +1435,7 @@
     "id": "bobby-robson",
     "labelEn": "Bobby Robson",
     "labelKa": "ბობი რობსონი",
+    "labelRu": "Бобби Робсон",
     "wikipediaTitle": "Bobby Robson",
     "primary": {
       "assetPath": "/assets/football-grid/managers/bobby-robson.jpg",
@@ -1422,6 +1467,7 @@
     "id": "arrigo-sacchi",
     "labelEn": "Arrigo Sacchi",
     "labelKa": "არიგო საკი",
+    "labelRu": "Арриго Сакки",
     "wikipediaTitle": "Arrigo Sacchi",
     "primary": {
       "assetPath": "/assets/football-grid/managers/arrigo-sacchi.jpg",
@@ -1453,6 +1499,7 @@
     "id": "gerard-houllier",
     "labelEn": "Gérard Houllier",
     "labelKa": "ჟერარ ულიე",
+    "labelRu": "Жерар Улье",
     "wikipediaTitle": "Gérard Houllier",
     "primary": {
       "assetPath": "/assets/football-grid/managers/gerard-houllier.jpg",
@@ -1484,6 +1531,7 @@
     "id": "valeriy-lobanovskyi",
     "labelEn": "Valeriy Lobanovskyi",
     "labelKa": "ვალერი ლობანოვსკი",
+    "labelRu": "Валерий Лобановский",
     "wikipediaTitle": "Valeriy Lobanovskyi",
     "primary": {
       "assetPath": "/assets/football-grid/managers/valeriy-lobanovskyi.jpg",
@@ -1515,6 +1563,7 @@
     "id": "mircea-lucescu",
     "labelEn": "Mircea Lucescu",
     "labelKa": "მირჩა ლუჩესკუ",
+    "labelRu": "Мирча Луческу",
     "wikipediaTitle": "Mircea Lucescu",
     "primary": {
       "assetPath": "/assets/football-grid/managers/mircea-lucescu.jpg",
@@ -1546,6 +1595,7 @@
     "id": "fatih-terim",
     "labelEn": "Fatih Terim",
     "labelKa": "ფათიჰ თერიმი",
+    "labelRu": "Фатих Терим",
     "wikipediaTitle": "Fatih Terim",
     "primary": {
       "assetPath": "/assets/football-grid/managers/fatih-terim.jpg",
@@ -1577,6 +1627,7 @@
     "id": "fernando-santos",
     "labelEn": "Fernando Santos",
     "labelKa": "ფერნანდუ სანტუში",
+    "labelRu": "Фернанду Сантуш",
     "wikipediaTitle": "Fernando Santos (Portuguese football manager)",
     "wikimediaFile": "20150616 - Portugal - Italie - Genève - Fernando Santos.jpg",
     "primary": {
@@ -1609,6 +1660,7 @@
     "id": "luiz-felipe-scolari",
     "labelEn": "Luiz Felipe Scolari",
     "labelKa": "ლუის ფელიპე სკოლარი",
+    "labelRu": "Луис Фелипе Сколари",
     "wikipediaTitle": "Luiz Felipe Scolari",
     "primary": {
       "assetPath": "/assets/football-grid/managers/luiz-felipe-scolari.jpg",
@@ -1640,6 +1692,7 @@
     "id": "carlos-alberto-parreira",
     "labelEn": "Carlos Alberto Parreira",
     "labelKa": "კარლოს ალბერტო პარეირა",
+    "labelRu": "Карлос Алберто Паррейра",
     "wikipediaTitle": "Carlos Alberto Parreira",
     "primary": {
       "assetPath": "/assets/football-grid/managers/carlos-alberto-parreira.jpg",
@@ -1671,6 +1724,7 @@
     "id": "marcelo-bielsa",
     "labelEn": "Marcelo Bielsa",
     "labelKa": "მარსელო ბიელსა",
+    "labelRu": "Марсело Бьельса",
     "wikipediaTitle": "Marcelo Bielsa",
     "primary": {
       "assetPath": "/assets/football-grid/managers/marcelo-bielsa.jpg",
@@ -1702,6 +1756,7 @@
     "id": "jorge-sampaoli",
     "labelEn": "Jorge Sampaoli",
     "labelKa": "ხორხე სამპაოლი",
+    "labelRu": "Хорхе Сампаоли",
     "wikipediaTitle": "Jorge Sampaoli",
     "primary": {
       "assetPath": "/assets/football-grid/managers/jorge-sampaoli.jpg",
@@ -1733,6 +1788,7 @@
     "id": "lionel-scaloni",
     "labelEn": "Lionel Scaloni",
     "labelKa": "ლიონელ სკალონი",
+    "labelRu": "Лионель Скалони",
     "wikipediaTitle": "Lionel Scaloni",
     "primary": {
       "assetPath": "/assets/football-grid/managers/lionel-scaloni.jpg",
@@ -1764,6 +1820,7 @@
     "id": "tite",
     "labelEn": "Tite",
     "labelKa": "ტიტე",
+    "labelRu": "Тите",
     "wikipediaTitle": "Tite (football manager)",
     "primary": {
       "assetPath": "/assets/football-grid/managers/tite.jpg",
@@ -1795,6 +1852,7 @@
     "id": "andoni-iraola",
     "labelEn": "Andoni Iraola",
     "labelKa": "ანდონი ირაოლა",
+    "labelRu": "Андони Ираола",
     "wikipediaTitle": "Andoni Iraola",
     "primary": {
       "assetPath": "/assets/football-grid/managers/andoni-iraola.jpg",
@@ -1826,6 +1884,7 @@
     "id": "vincent-kompany",
     "labelEn": "Vincent Kompany",
     "labelKa": "ვენსან კომპანი",
+    "labelRu": "Венсан Компани",
     "wikipediaTitle": "Vincent Kompany",
     "primary": {
       "assetPath": "/assets/football-grid/managers/vincent-kompany.jpg",
@@ -1857,6 +1916,7 @@
     "id": "graham-potter",
     "labelEn": "Graham Potter",
     "labelKa": "გრემ პოტერი",
+    "labelRu": "Грэм Поттер",
     "wikipediaTitle": "Graham Potter",
     "primary": {
       "assetPath": "/assets/football-grid/managers/graham-potter.jpg",

@@ -53,6 +53,7 @@ const REAL_ROUTES: Record<string, string> = {
   minuto: "/minuto",
   "shared-player": "/ortak-futbolcu",
   "name-chain": "/son-harfle",
+  "football-horserace": "/horserace",
   buscaminas: "/buscaminas",
   pistas: "/pistas",
   ultimo: "/ultimo",
@@ -262,7 +263,7 @@ function GameCard({
   /** Modes with their own entry dialog (Missing XI) open it instead of navigating. */
   onOpenMode?: (slug: string) => void;
 }) {
-  const { t, locale, siteLocale } = useLocale();
+  const { t, locale } = useLocale();
   const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const devReset = showDevReset && mode.dailyType
@@ -270,7 +271,7 @@ function GameCard({
     : null;
   // Signed-out visitors go to the public page (or owning quiz) for the mode.
   const publicGame = findPublicGameForCard(mode);
-  const guestHref = isGuest ? guestCardHref(mode, siteLocale) : null;
+  const guestHref = isGuest ? guestCardHref(mode, locale) : null;
   const title = demoText(mode.title, locale);
   const description = demoText(mode.description, locale);
   const format = formatOf(mode.slug);
@@ -380,7 +381,7 @@ function GameCard({
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
             <Play className="size-3 fill-current" />
-            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : "Play"}
+            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : locale === "tr" ? "Oyna" : locale === "ru" ? "Играть" : "Play"}
           </span>
         </div>
       </div>
@@ -490,7 +491,7 @@ function searchKey(value: string): string {
 function matchesQuery(mode: DemoModeCard, query: string): boolean {
   const q = searchKey(query);
   if (!q) return true;
-  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? ""]).concat(mode.slug)
+  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? "", text.ru ?? ""]).concat(mode.slug)
     .some((text) => searchKey(text).includes(q));
 }
 
@@ -514,7 +515,7 @@ function GamesFinder({
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : "Search games";
+  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : locale === "tr" ? "Oyun ara" : locale === "ru" ? "Поиск игр" : "Search games";
   const close = () => {
     onQuery("");
     setOpen(false);

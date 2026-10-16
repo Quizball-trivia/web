@@ -3,7 +3,6 @@
 import { Component, useEffect, useState, type ReactNode } from "react";
 import { GAMES } from "./registry";
 import { isPlaygroundMessage, PLAYGROUND, type PreviewPayload, type ToPreview } from "./protocol";
-import { toSiteLocale } from "@/lib/i18n/locale";
 
 const post = (message: PreviewPayload) => window.parent?.postMessage({ source: PLAYGROUND, ...message }, window.location.origin);
 
@@ -59,6 +58,6 @@ export function PreviewHost() {
 function ScenarioView({ frame }: { frame: ToPreview }) {
   const scenario = GAMES.find((g) => g.id === frame.game)?.scenarios[frame.mode]?.find((s) => s.id === frame.scenario);
   if (!scenario) return <p className="p-4 text-sm text-white">Unknown scenario</p>;
-  const content = scenario.render(frame.data as never, { locale: toSiteLocale(frame.locale), log: (action, ...args) => post({ type: "action", action, args }) });
+  const content = scenario.render(frame.data as never, { locale: frame.locale, log: (action, ...args) => post({ type: "action", action, args }) });
   return <>{content}</>;
 }

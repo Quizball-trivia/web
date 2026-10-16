@@ -82,6 +82,10 @@ describe("LanguageSwitcher", () => {
     ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", "tr", /español/i, "/es/juegos-de-futbol/jugador-en-comun"],
     ["/en/football-games/football-name-chain", "en", /türkçe/i, "/tr/futbol-oyunlari/son-harfle-futbolcu"],
     ["/es/quiz-de-futbol/adivina-el-jugador", "es", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/en/football-quiz/career-path", "en", /русский/i, "/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere"],
+    ["/ru/futbolnaya-viktorina/viktorina-arsenal", "ru", /english/i, "/en/football-quiz/arsenal"],
+    ["/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii", "ru", /español/i, "/es/quiz-de-futbol/seleccion-espanola"],
+    ["/ru/futbolnaya-viktorina/ugaday-futbolista", "ru", /türkçe/i, "/en/football-quiz/guess-the-player"],
   ] as const)("keeps localized destinations after deferred loading on %s", async (pathname, locale, language, destination) => {
     navigation.pathname = pathname;
     navigation.search = "preview=public-test&ref=campaign";

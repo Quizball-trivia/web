@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import { getI18nText } from '@/lib/utils/i18n';
 import { useActiveAnnouncements, type AnnouncementItem } from '@/lib/queries/announcements.queries';
-import type { Locale } from '@/lib/i18n/locale';
+import type { Locale } from '@/lib/i18n/messages';
 
 type AnnouncementType = AnnouncementItem['type'];
 
@@ -25,6 +25,7 @@ const MONTHS_SHORT: Record<Locale, readonly string[]> = {
   ka: ['იან', 'თებ', 'მარ', 'აპრ', 'მაი', 'ივნ', 'ივლ', 'აგვ', 'სექ', 'ოქტ', 'ნოე', 'დეკ'],
   es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'],
   tr: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+  ru: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
 };
 
 function formatAnnouncementDate(iso: string, locale: Locale): string {
@@ -37,7 +38,7 @@ function formatAnnouncementDate(iso: string, locale: Locale): string {
 }
 
 export function PlayAnnouncements() {
-  const { t, siteLocale: locale } = useLocale();
+  const { t, locale } = useLocale();
   const dateLocale: Locale = locale;
   const { data } = useActiveAnnouncements();
   const announcements = data?.items ?? [];

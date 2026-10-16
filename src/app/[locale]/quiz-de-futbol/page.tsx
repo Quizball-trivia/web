@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       languages: {
         en: `${SITE_URL}/en/football-quiz`,
         es: canonical,
+        ru: `${SITE_URL}/ru/futbolnaya-viktorina`,
         'x-default': `${SITE_URL}/en/football-quiz`,
       },
     },
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: DESCRIPTION,
       url: canonical,
       locale: 'es_ES',
-      alternateLocale: ['en_GB'],
+      alternateLocale: ['en_GB', 'ru_RU'],
       images: [{
         url: SITE_OG_IMAGE_PATH,
         width: 1200,

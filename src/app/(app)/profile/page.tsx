@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { getMe, updateMe } from "@/lib/api/endpoints";
+import { ApiError } from "@/lib/api/api";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
@@ -173,8 +174,17 @@ export default function ProfilePage() {
       } catch (analyticsError) {
         console.error('Analytics tracking failed', analyticsError);
       }
+      // Club boards and standings follow the new club.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard.all });
       toast.success(t("profile.favoriteClubUpdated"));
     } catch (error) {
+      const retryAt = clubCooldownRetryAt(error);
+      if (retryAt) {
+        toast.error(t("profile.favoriteClubCooldown", {
+          date: retryAt.toLocaleDateString(locale, { day: "numeric", month: "long" }),
+        }));
+        return;
+      }
       toast.error(t("profile.favoriteClubUpdateFailed"), {
         description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
@@ -243,4 +253,13 @@ export default function ProfilePage() {
       isUpdating={isUpdating}
     />
   );
+}
+
+/** The 30-day club lock's end date, when the server refused a club switch for it. */
+function clubCooldownRetryAt(error: unknown): Date | null {
+  if (!(error instanceof ApiError) || error.status !== 409) return null;
+  const details = (error.data as { details?: { reason?: string; retryAt?: string } } | null)?.details;
+  if (details?.reason !== "affiliation_cooldown" || !details.retryAt) return null;
+  const date = new Date(details.retryAt);
+  return Number.isNaN(date.getTime()) ? null : date;
 }

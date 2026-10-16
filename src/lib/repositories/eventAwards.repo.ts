@@ -32,13 +32,14 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function getMyEventAwards() {
-  const data = await requestJson<EventAwardsApiResponse>("/api/v1/users/me/event-awards");
+  // boardTrophies=1: this client renders season country/club trophies (older clients do not get them).
+  const data = await requestJson<EventAwardsApiResponse>("/api/v1/users/me/event-awards?boardTrophies=1");
   return { data: data.awards, error: null };
 }
 
 export async function getUserEventAwards(userId: string) {
   const data = await requestJson<EventAwardsApiResponse>(
-    `/api/v1/users/${encodeURIComponent(userId)}/event-awards`
+    `/api/v1/users/${encodeURIComponent(userId)}/event-awards?boardTrophies=1`
   );
   return { data: data.awards, error: null };
 }

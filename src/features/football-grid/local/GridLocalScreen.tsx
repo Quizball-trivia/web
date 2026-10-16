@@ -9,7 +9,7 @@ import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { gridSoloApi, GridSoloError, type GridSoloBoard } from '@/lib/football-grid/soloApi';
 import { loadGridTypeaheadRoster, searchGridPlayers, type GridTypeaheadPreparedPlayer } from '@/lib/football-grid/typeahead';
-import type { Locale } from '@/lib/i18n/locale';
+import type { Locale } from '@/lib/i18n/messages';
 import type { FootballGridCommandResultPayload, FootballGridOption, FootballGridState } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ import { GridWinLine } from '../components/GridWinLine';
 import { GRID_WIN_LINE_HOLD_MS } from '../winLine';
 import { fillLocal, GRID_LOCAL_COPY, type GridLocalCopy } from './localCopy';
 import { LOCAL_SESSION_KEY, localSnapshotOf, parseLocalSnapshot, type LocalSnapshot } from './localSession';
+import { localizedPlayerName } from '@/lib/football-grid/playerName';
 import {
   agreeLocalDraw,
   canPickLocalCell,
@@ -104,7 +105,7 @@ function gridStateOf(deal: GridSoloBoard, game: LocalGame, locale: Locale): Foot
     claims: game.claims.map((claim) => ({
       cellIndex: claim.cellIndex,
       footballPlayerId: claim.player.playerId,
-      displayName: locale === 'ka' && claim.player.nameKa ? claim.player.nameKa : claim.player.name,
+      displayName: localizedPlayerName(locale, claim.player.name, claim.player),
       imageUrl: claim.player.imageUrl,
       claimantUserId: SEAT_ID[claim.seat],
       turnNumber: claim.turnNumber,
@@ -183,7 +184,7 @@ function useTurnRemaining(deadline: number | null, onExpire: () => void): number
 
 export function GridLocalScreen() {
   const router = useRouter();
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const copy = GRID_LOCAL_COPY[locale];
   const gridCopy = FOOTBALL_GRID_COPY[locale];
   const [stage, setStage] = useState<Stage>('setup');
@@ -404,7 +405,7 @@ export function GridLocalScreen() {
         else setFeedback('ambiguous');
       } else if (verdict.outcome === 'correct' && blocked[mover].some((player) => player.playerId === verdict.player.playerId)) {
         setFeedback(undefined);
-        setNotice(fillLocal(copy.suspended, { player: locale === 'ka' && verdict.player.nameKa ? verdict.player.nameKa : verdict.player.name }));
+        setNotice(fillLocal(copy.suspended, { player: localizedPlayerName(locale, verdict.player.name, verdict.player) }));
         applyGame(missLocalTurn(game));
       } else if (verdict.outcome === 'correct') {
         setFeedback('correct');
@@ -733,7 +734,7 @@ function SuspensionPicker({ copy, locale, title, body, onDone }: {
     [locale, picked, query, roster],
   );
   const full = picked.length >= LOCAL_SUSPENSIONS;
-  const shown = (player: { name: string; nameKa: string | null }) => (locale === 'ka' && player.nameKa ? player.nameKa : player.name);
+  const shown = (player: { name: string; nameKa: string | null; nameRu?: string | null }) => localizedPlayerName(locale, player.name, player);
   return (
     <>
       <header className="text-center">
@@ -764,9 +765,9 @@ function SuspensionPicker({ copy, locale, title, body, onDone }: {
           {results.map((player) => (
             <li key={player.id}>
               <button type="button"
-                onClick={() => { setPicked((current) => [...current, { playerId: player.id, name: player.nameEn, nameKa: player.nameKa, imageUrl: null }]); setQuery(''); }}
+                onClick={() => { setPicked((current) => [...current, { playerId: player.id, name: player.nameEn, nameKa: player.nameKa, nameRu: player.nameRu ?? null, imageUrl: null }]); setQuery(''); }}
                 className="flex w-full border-b border-white/5 px-3 py-3 text-left text-sm font-bold text-white last:border-b-0 hover:bg-white/5">
-                {locale === 'ka' && player.nameKa ? player.nameKa : player.nameEn}
+                {localizedPlayerName(locale, player.nameEn, player)}
               </button>
             </li>
           ))}

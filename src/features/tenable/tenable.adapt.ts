@@ -8,7 +8,7 @@ export function toSoloState(run: TenableServerRun, locale: string): TenableSoloS
   const l = asWordLocale(locale);
   return {
     day: run.day,
-    list: { title: run.list.title[l], note: run.list.note?.[l] ?? null, asOf: run.list.asOf, kind: run.list.kind, release: run.list.release },
+    list: { title: run.list.title[l] ?? run.list.title.en, note: (run.list.note?.[l] ?? run.list.note?.en) ?? null, asOf: run.list.asOf, kind: run.list.kind, release: run.list.release },
     slots: run.slots.map((slot) => ({
       rank: slot.rank,
       name: slot.name,

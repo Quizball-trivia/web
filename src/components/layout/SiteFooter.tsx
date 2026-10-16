@@ -16,6 +16,7 @@ const SECTION: Record<Locale, { games: string; daily: string; company: string; m
   ka: { games: 'თამაშის რეჟიმები', daily: 'ყოველდღიური გამოწვევები', company: 'QuizBall', methodology: 'რედაქციული მეთოდოლოგია', press: 'პრესა', index: 'საფეხბურთო ცოდნის ინდექსი' },
   es: { games: 'Modos de juego', daily: 'Retos diarios', company: 'QuizBall', methodology: 'Metodología editorial', press: 'Prensa', index: 'Índice de conocimiento futbolero' },
   tr: { games: 'Oyun modları', daily: 'Günlük görevler', company: 'QuizBall', methodology: 'Editoryal metodoloji', press: 'Basın', index: 'Futbol Bilgi Endeksi' },
+  ru: { games: 'Режимы игры', daily: 'Ежедневные испытания', company: 'QuizBall', methodology: 'Редакционная методология', press: 'Пресса', index: 'Индекс знаний о футболе' },
 };
 
 /**

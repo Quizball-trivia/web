@@ -1,4 +1,6 @@
 import type { DuelGameId, RoomGameId } from "@/lib/realtime/socket.types";
+/** Analytics only. Native replaces this module with its runtime platform. */
+export const CLIENT_PLATFORM = 'web' as const;
 
 function nonBlank(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
@@ -22,25 +24,15 @@ export const PHONE_AUTH_ENABLED = true;
 
 /** Guest friend lobbies (play Tic Tac Toe / Auction / Ranked sim with a friend without an account). Off = no route or socket change for guests. */
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
-/** Football Tenable's solo daily, Play card and public pages; off until its content is seeded (rooms follow NEXT_PUBLIC_ROOM_GAMES). */
-export const TENABLE_ENABLED = process.env.NEXT_PUBLIC_TENABLE === "true";
+const ALL_ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race"];
+const ROOM_GAMES_DISABLED = (process.env.NEXT_PUBLIC_ROOM_GAMES_DISABLED ?? "").split(",").map((game) => game.trim());
+/** Room games (2–6 players) offered in friend rooms: all of them, minus NEXT_PUBLIC_ROOM_GAMES_DISABLED (as the backend's room.config.ts). */
+export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = ALL_ROOM_GAMES.filter((game) => !ROOM_GAMES_DISABLED.includes(game));
 
 /**
  * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas,ultimo".
  * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
  */
-const isRoomGameId = (game: string): game is RoomGameId => game === "aproximado" || game === "shared_player" || game === "name_chain" || game === "tenable";
-const roomGameList = (raw: string | undefined): RoomGameId[] => (raw ?? "").split(",").map((game) => game.trim()).filter(isRoomGameId);
-/** On without any configuration (as on the backend); NEXT_PUBLIC_ROOM_GAMES_DISABLED still switches one off. */
-const ROOM_GAMES_ON_BY_DEFAULT: readonly RoomGameId[] = ["shared_player", "name_chain"];
-const ROOM_GAMES_DISABLED = roomGameList(process.env.NEXT_PUBLIC_ROOM_GAMES_DISABLED);
-/**
- * Room games (2–6 players) offered in friend rooms: the ones named in NEXT_PUBLIC_ROOM_GAMES (e.g. "aproximado") and
- * the ones on by default, minus the disabled ones. Mirrors the backend's room.config.ts.
- */
-export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = [...new Set([...roomGameList(process.env.NEXT_PUBLIC_ROOM_GAMES), ...ROOM_GAMES_ON_BY_DEFAULT])]
-  .filter((game) => !ROOM_GAMES_DISABLED.includes(game));
-
 export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
   .split(",")
   .map((game) => game.trim())

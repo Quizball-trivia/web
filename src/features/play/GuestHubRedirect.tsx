@@ -15,7 +15,7 @@ import { useAuthStore } from "@/stores/auth.store";
 export function GuestHubRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const status = useAuthStore((state) => state.status);
   const signingIn = searchParams.get("signin") === "1";
   useEffect(() => {

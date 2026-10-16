@@ -24,7 +24,7 @@ const GRACE_MS = 1_500;
  * call at a time. A run is only ever shown for the player and board it belongs to; only a newer version of it replaces
  * what is shown; a lost answer or a stale version is re-synced from the server, never blindly resent.
  */
-export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult }: {
+export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult, resendStaleAnswers = false, resendLostAnswers = false }: {
   api: WordDailyApi<State, Result>;
   calendar: WordDailyCalendar;
   locale: string;
@@ -35,6 +35,17 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   onEvent?: (event: "start" | "complete" | "replay", detail?: { score?: number }) => void;
   /** After a judged answer: the state before and after, the verdict and what was typed. */
   onResult?: (result: Result, next: State, typed: string) => void;
+  /**
+   * The game judges an answer the same whatever came before it (Tenable): one refused as stale (another tab moved the
+   * run on; the server saved nothing) is sent once more on the re-synced copy instead of being dropped.
+   */
+  resendStaleAnswers?: boolean;
+  /**
+   * The game has no clock and judges an answer the same whenever it arrives (Football Horserace): one lost on the
+   * network is sent again once the re-synced copy shows it never landed (still the version it was sent on). The version
+   * check makes a resend of one that did land a harmless stale refusal.
+   */
+  resendLostAnswers?: boolean;
 }) {
   const [today, setToday] = useState(() => releaseDay());
   const [versions, setVersions] = useState<Record<string, number> | null | undefined>(undefined);
@@ -74,6 +85,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   /** A re-sync failed on the network every time: the run is fetched again once the browser is back online. */
   const needsRecoveryRef = useRef(false);
   const recoverRef = useRef<() => void>(() => {});
+  /** An answer lost on the network while the re-sync could not reach the server either: sent again after recovery. */
+  const lostAnswerRef = useRef<{ owner: string; day: string; runId: string; version: number; resend: () => void } | null>(null);
   const startedRef = useRef(false);
   const currentRef = useRef({ owner, day });
   const handlers = useRef({ onDay, onEvent, onResult });
@@ -220,22 +233,29 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     }
   };
 
-  /** The server's copy of the run (after a lost answer, a stale version or an expired clock), retried; never a blind resend. */
-  const resync = async (o: string, d: string) => {
+  /**
+   * The server's copy of the run (after a lost answer, a stale version or an expired clock), retried; never a blind
+   * resend. True only when that copy was read and is on screen.
+   */
+  const resync = async (o: string, d: string): Promise<boolean> => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         const current = await api.start(d, contentVersion, locale, RESYNC_TIMEOUT_MS);
-        if (stillCurrent(o, d)) { needsRecoveryRef.current = false; apply(current, o, d); setNotice(null); }
-        return;
+        if (!stillCurrent(o, d)) return false;
+        needsRecoveryRef.current = false;
+        apply(current, o, d);
+        setNotice(null);
+        return runRef.current === current;
       } catch (error) {
-        if (!stillCurrent(o, d)) return;
-        if (!isNetworkFailure(error)) { handleError(error, d); return; }
+        if (!stillCurrent(o, d)) return false;
+        if (!isNetworkFailure(error)) { handleError(error, d); return false; }
         setNotice("connection");
         await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS * (attempt + 1)));
       }
     }
     // Every try failed on the network: say so, and recover as soon as the connection is back.
     if (stillCurrent(o, d)) { needsRecoveryRef.current = true; setNotice("connection"); }
+    return false;
   };
 
   const retryCloseRead = () => {
@@ -243,11 +263,21 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     closeReadPendingRef.current = false;
     setCloseReadAttempt((n) => n + 1);
   };
+  /** A re-sync, then the answer lost before it, if that copy shows it never landed. */
+  const syncThenResend = (o: string, d: string) => {
+    void exclusive("sync", () => resync(o, d)).then((synced) => {
+      const lost = lostAnswerRef.current;
+      if (!synced || !lost) return;
+      lostAnswerRef.current = null;
+      const fresh = runRef.current;
+      if (lost.owner === o && lost.day === d && stillCurrent(o, d) && fresh && !fresh.state.done && fresh.run.id === lost.runId && fresh.run.version === lost.version) lost.resend();
+    });
+  };
   const recover = () => {
     retryCloseRead();
     if (!needsRecoveryRef.current || inFlightRef.current) return;
     const { owner: o, day: d } = currentRef.current;
-    if (d) void exclusive("sync", () => resync(o, d));
+    if (d) syncThenResend(o, d);
   };
   useEffect(() => { recoverRef.current = recover; });
   /** A tab coming back into view catches up first: another tab may have moved the run on (its next answer would be stale). */
@@ -255,7 +285,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     if (document.visibilityState === "visible") retryCloseRead();
     if (document.visibilityState !== "visible" || inFlightRef.current || !runRef.current || runRef.current.state.done) return;
     const { owner: o, day: d } = currentRef.current;
-    if (d) void exclusive("sync", () => resync(o, d));
+    if (d) syncThenResend(o, d);
   };
   const catchUpRef = useRef(catchUp);
   useEffect(() => { catchUpRef.current = catchUp; });
@@ -283,30 +313,50 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   };
   useEffect(() => { pumpRef.current = pump; });
 
-  const act = (key: string, call: (run: WordRun<State>) => Promise<WordRun<State> & { result?: Result }>, typed?: string, needsRun = true) => {
+  const act = (key: string, call: (run: WordRun<State>) => Promise<WordRun<State> & { result?: Result }>, typed?: string, needsRun = true, resendStale = false, resendLost = false): Promise<(WordRun<State> & { result?: Result }) | null> => {
     if (!day) return Promise.resolve(null);
     const o = owner;
     const d = day;
     return exclusive(key, async () => {
       setNotice(null);
-      try {
-        const current = runRef.current;
-        if (needsRun && !current) return null;
-        const result = await call(current as WordRun<State>);
-        // Left meanwhile (another day, another player, the screen closed): the caller must not build a next move on it.
-        if (!stillCurrent(o, d)) return null;
-        apply(result, o, d, result.result, typed);
-        return result;
-      } catch (error) {
-        if (!stillCurrent(o, d)) return null;
-        if (isNetworkFailure(error) || (error instanceof DailyGameApiError && error.message === "stale_state")) {
-          if (isNetworkFailure(error)) setNotice("connection");
-          await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
-          await resync(o, d);
-        } else {
-          handleError(error, d);
+      // A new move replaces any answer still waiting for the connection.
+      lostAnswerRef.current = null;
+      for (let attempt = 0; ; attempt += 1) {
+        const sentOn = runRef.current;
+        try {
+          const current = runRef.current;
+          if (needsRun && !current) return null;
+          const result = await call(current as WordRun<State>);
+          // Left meanwhile (another day, another player, the screen closed): the caller must not build a next move on it.
+          if (!stillCurrent(o, d)) return null;
+          apply(result, o, d, result.result, typed);
+          return result;
+        } catch (error) {
+          if (!stillCurrent(o, d)) return null;
+          const stale = error instanceof DailyGameApiError && error.message === "stale_state";
+          if (isNetworkFailure(error) || stale) {
+            if (!stale) setNotice("connection");
+            await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
+            const synced = await resync(o, d);
+            // Only a stale refusal is known to be unsaved (a lost response may have been judged): resent once, and
+            // only onto the copy that re-sync itself read, while it is still open.
+            const fresh = runRef.current;
+            if (resendStale && stale && attempt === 0 && synced && stillCurrent(o, d) && fresh && !fresh.state.done) continue;
+            if (resendLost && !stale && sentOn && stillCurrent(o, d)) {
+              const unsaved = (r: WordRun<State> | null) => r !== null && !r.state.done && r.run.id === sentOn.run.id && r.run.version === sentOn.run.version;
+              if (synced && unsaved(fresh)) {
+                if (attempt < 2) continue;
+                // The server answers a re-sync but never got the answer: say so instead of leaving an idle screen.
+                setNotice("actionError");
+              }
+              // Still offline: the run could not be read, so whether it landed is unknown until the connection is back.
+              if (!synced) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, resend: () => void act(key, call, typed, needsRun, resendStale, resendLost) };
+            }
+          } else {
+            handleError(error, d);
+          }
+          return null;
         }
-        return null;
       }
     });
   };
@@ -348,7 +398,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     run, state, view, setView, pending, notice, clock, boardRefresh,
     play, openDay,
     next: () => act("next", (r) => api.next(r, locale)),
-    answer: (text: string, extra?: Record<string, unknown>) => act("answer", (r) => api.answer(r, text, locale, extra), text),
+    answer: (text: string, extra?: Record<string, unknown>) => act("answer", (r) => api.answer(r, text, locale, extra), text, true, resendStaleAnswers, resendLostAnswers),
     pass: () => act("pass", (r) => api.pass(r, locale)),
     reload: () => { setVersions(undefined); setBoardsAttempt((n) => n + 1); },
   };

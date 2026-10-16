@@ -243,7 +243,7 @@ function stateForScenario(scenario: ScenarioId): FootballGridState {
 }
 
 function MatchScenario({ scenario }: { scenario: ScenarioId }) {
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const state = useMemo(() => stateForScenario(scenario), [scenario]);
   const forcedSelection = ['answer-entry', 'correct', 'wrong', 'ambiguous', 'already-used'].includes(scenario) ? 2 : null;
@@ -299,7 +299,7 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
 }
 
 function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const { player } = usePlayer();
   const won = outcome === 'win';
@@ -367,7 +367,7 @@ function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
 }
 
 function ScenarioSurface({ scenario }: { scenario: ScenarioId }) {
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const { player } = usePlayer();
 
@@ -564,7 +564,7 @@ function ModeModalScenario() {
 
 export function FootballGridDevPreview() {
   const audio = useDevGameAudio();
-  const { siteLocale: locale, setLocale } = useLocale();
+  const { locale, setLocale } = useLocale();
   const [scenario, setScenario] = useState<ScenarioId>('board-labels');
   const [panelOpen, setPanelOpen] = useState(false);
   const selected = SCENARIOS.find((item) => item.id === scenario)!;
@@ -597,7 +597,7 @@ export function FootballGridDevPreview() {
           </div>
 
           <div className="mt-4 flex gap-2" aria-label="Preview language">
-            {(['en', 'ka', 'es', 'tr'] as const).map((language) => (
+            {(['en', 'ka', 'es', 'tr', 'ru'] as const).map((language) => (
               <button key={language} type="button" aria-pressed={locale === language} onClick={() => setLocale(language)}
                 className={cn('rounded-lg px-3 py-2 text-xs font-bold uppercase', locale === language ? 'bg-brand-yellow text-black' : 'bg-white/10 text-white')}>
                 {language}

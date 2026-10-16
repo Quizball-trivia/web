@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { partnerFromHost } from "@/features/partner/partnerHosts";
 import { isLoadFailure, reloadRestores } from "@/lib/recovery/loadFailure";
 
-type Language = "en" | "ka" | "es" | "tr";
+type Language = "en" | "ka" | "es" | "tr" | "ru";
 type Way = "reload" | "home" | "relaunch";
 
 // This screen replaces the root layout, so it has no providers, stylesheet or dictionaries to lean on.
@@ -45,9 +45,18 @@ const COPY: Record<Language, { title: string; loadFailed: string; crashed: strin
     reload: "Yeniden yükle",
     back: "Quizball'a dön",
   },
+  ru: {
+    title: "Что-то пошло не так",
+    loadFailed: "Часть страницы не загрузилась. Проверь соединение и перезагрузи страницу.",
+    crashed: "На странице возникла проблема. Обычно помогает перезагрузка.",
+    home: "Не удалось загрузить этот экран. Вернись в Quizball, чтобы снова подключиться к матчу.",
+    relaunch: "Не удалось загрузить этот экран. Перезагрузи страницу, а затем снова открой игру на сайте, откуда ты пришёл.",
+    reload: "Перезагрузить",
+    back: "Вернуться в Quizball",
+  },
 };
 
-const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr";
+const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru";
 
 function readLanguage(documentLanguage: string): Language {
   const fromPath = window.location.pathname.split("/")[1];

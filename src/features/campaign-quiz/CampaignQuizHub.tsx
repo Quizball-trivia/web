@@ -10,7 +10,7 @@ import type { CampaignQuizHubPage } from './campaignQuiz.types';
 import { CampaignQuizHubPageView } from './CampaignQuizHubPageView';
 import { CampaignTrackedLink } from './CampaignTrackedLink';
 import { CampaignSignupLink } from './CampaignSignupLink';
-import { campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from './campaignQuiz.hub-seo';
 import { SITE_URL } from '@/lib/seo/site';
@@ -19,6 +19,7 @@ const POPULAR_QUIZ_SLUGS = {
   en: ['club-badges', 'career-path', 'everton', 'liverpool'],
   ka: ['club-badges', 'career-path', 'everton', 'liverpool'],
   es: ['guess-the-player', 'club-badges', 'real-madrid', 'barcelona'],
+  ru: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
@@ -57,6 +58,20 @@ const HUB_COPY = {
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
     rankedBody: 'Los quizzes individuales son el calentamiento. Regístrate gratis para enfrentarte a aficionados reales y subir en la clasificación.',
     groups: { team: 'Quizzes de clubes', league: 'Quizzes de ligas', quiz_type: 'Retos de fútbol', article: 'Trivia de fútbol' },
+  },
+  ru: {
+    ranked: 'Рейтинговый матч', eyebrow: 'Бесплатные футбольные тесты',
+    // docs/SEO-GAME-NAMING-RU-2026-10-15.md §4: the H1 leads with "Футбольная викторина онлайн".
+    title: 'Футбольная викторина онлайн: тест на знание футбола',
+    intro: 'Выбери викторину, ответь на проверенные вопросы о футболе и сразу узнай свой результат. Все одиночные викторины бесплатные, аккаунт не нужен.',
+    popularHeading: 'Популярные футбольные викторины',
+    popularBody: 'Начни с самых популярных тестов: угадай футболиста по карьере и по подсказкам, узнай клуб по эмблеме и проверь, как хорошо ты знаешь «Реал».',
+    playFree: 'Играть бесплатно', verifiedHeading: 'Футбольные вопросы с проверенными фактами',
+    verifiedBody: 'Публичные викторины QuizBall состоят из проверенных вопросов о клубах, турнирах, футболистах и истории футбола.',
+    methodologyLink: 'Как QuizBall проверяет каждый вопрос',
+    rankedHeading: 'Проверь себя в рейтинговых матчах',
+    rankedBody: 'Одиночные викторины — это разминка. Зарегистрируйся бесплатно, чтобы сыграть с живыми соперниками и подняться в рейтинге QuizBall.',
+    groups: { team: 'Викторины по клубам и сборным', league: 'Викторины по лигам', quiz_type: 'Футбольные испытания', article: 'Футбольные факты' },
   },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
@@ -111,7 +126,7 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
     .filter((group) => group.pages.length > 0);
   const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;
-  const hubUrl = `${SITE_URL}${locale === 'es' ? '/es/quiz-de-futbol' : `/${locale}/football-quiz`}`;
+  const hubUrl = `${SITE_URL}${campaignHubPath(locale)}`;
   const jsonLd = buildCampaignQuizHubJsonLd({
     locale,
     url: hubUrl,
@@ -129,7 +144,7 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href={`/${locale}`} aria-label="QuizBall"><Image src="/assets/brand/quizball-logo.webp" alt="QuizBall" width={218} height={64} className="h-10 w-auto object-contain sm:h-12" /></Link>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher locale={locale} locales={['en', 'es']} className="hidden sm:inline-flex" />
+            <LanguageSwitcher locale={locale} locales={['en', 'es', 'ru']} className="hidden sm:inline-flex" />
             <CampaignSignupLink slug="football-quiz" placement="hero" href={`/${locale}?signup=1&source=football-quiz-hub-header`} className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90">{copy.ranked}</CampaignSignupLink>
           </div>
         </div>

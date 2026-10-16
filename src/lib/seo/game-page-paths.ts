@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/locale-config";
 
 /** Routing-only constants: safe for client chrome without downloading the SEO copy catalog. */
 export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = {
@@ -6,6 +6,7 @@ export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = {
   ka: "football-games",
   es: "juegos-de-futbol",
   tr: "futbol-oyunlari",
+  ru: "futbolnye-igry",
 };
 
 export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
@@ -13,4 +14,5 @@ export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
   ka: "daily-challenges",
   es: "retos-diarios",
   tr: "gunluk-futbol-gorevleri",
+  ru: "ezhednevnye-golovolomki",
 };

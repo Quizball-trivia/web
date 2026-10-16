@@ -25,7 +25,7 @@ const MAX_STAKE = 500;
 const HEARTBEAT_MS = 10_000;
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const text = (value: { en: string; ka: string; es?: string; tr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : value.en) || value.en;
+const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
 
 /** Partner play (Freecroco): free, start 100 points, no wallet, coins or live feeds; the host shows the result. */
 export interface TriviaMinesPartnerMode {

@@ -112,17 +112,18 @@ describe('PartyQuizResultsScreen', () => {
     expect(within(secondPlace).getByText('Mid Score')).toBeInTheDocument();
     expect(within(thirdPlace).getByText('Low Score')).toBeInTheDocument();
 
-    // Min-heights (not fixed heights) so blocks grow to fit the name + score
-    // instead of clipping; 1st remains the tallest, 3rd the shortest.
-    expect(firstPlace).toHaveClass('min-h-44', 'sm:min-h-52');
-    expect(secondPlace).toHaveClass('min-h-36', 'sm:min-h-44');
-    expect(thirdPlace).toHaveClass('min-h-32', 'sm:min-h-40');
+    // The cards share one grid row (same content height); each rank rises above it by a fixed lift, so gold stays
+    // tallest whatever its contents.
+    expect(firstPlace).toHaveClass('row-start-2', 'self-stretch', '-mt-12');
+    expect(secondPlace).toHaveClass('row-start-2', 'self-stretch', '-mt-4');
+    expect(thirdPlace).toHaveClass('row-start-2', 'self-stretch');
+    expect(thirdPlace.className).not.toMatch(/-mt-/);
     expect(firstPlace).toHaveStyle({ backgroundColor: '#FFD700' }); // gold
     expect(secondPlace).toHaveStyle({ backgroundColor: '#C7CBD1' }); // silver
     expect(thirdPlace).toHaveStyle({ backgroundColor: '#CD7F32' }); // bronze
 
-    expect(firstPlace.parentElement).toHaveClass('order-2');
-    expect(secondPlace.parentElement).toHaveClass('order-1');
-    expect(thirdPlace.parentElement).toHaveClass('order-3');
+    expect(firstPlace).toHaveClass('col-start-2');
+    expect(secondPlace).toHaveClass('col-start-1');
+    expect(thirdPlace).toHaveClass('col-start-3');
   });
 });

@@ -57,9 +57,10 @@ import { CriterionAsset } from './components/CriterionAsset';
 import { criterionPresentation } from './criterionPresentation';
 import { BOTH_CLUES_EXPLANATION, criterionExplanation } from './criterionExplanation';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
-import type { Locale } from '@/lib/i18n/locale';
+import type { Locale } from '@/lib/i18n/messages';
 import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { localizedPlayerName } from '@/lib/football-grid/playerName';
 
 export const FOOTBALL_GRID_COPY = {
   en: {
@@ -477,6 +478,110 @@ export const FOOTBALL_GRID_COPY = {
     famTrophy: 'Kupa',
     famWildcard: 'Özel',
     retry: 'Tekrar dene',
+  },
+  ru: {
+    title: 'Футбольные крестики-нолики',
+    opponentThinking: 'Соперник думает…',
+    searching: 'Ищем тебе соперника',
+    searchingBody: 'Ищем игрока…',
+    cancel: 'Отменить поиск',
+    cancelPick: 'Отмена',
+    matching: 'Готовим поле…',
+    ready: 'Соперник найден',
+    loading: 'Загружаем матч',
+    getReady: 'Приготовься',
+    yourTurn: 'Твой ход',
+    theirTurn: "Ход соперника",
+    pickCell: 'Выбери пустую клетку и назови футболиста, который подходит под обе подсказки.',
+    answerPlaceholder: 'Введи имя футболиста…',
+    submit: 'Ответить',
+    submitShort: 'Ответить',
+    correct: 'Клетка твоя!',
+    wrong: 'Этот ответ не подходит под обе подсказки.',
+    ambiguous: 'Уточни ответ — напиши полное имя.',
+    alreadyUsed: 'Этого футболиста уже называли.',
+    paused: 'Матч на паузе',
+    pausedBody: 'Ждём восстановления соединения. Время твоего хода сохранится.',
+    opponentDisconnected: 'Соперник отключился',
+    opponentDisconnectedBody: 'Если он не вернётся до конца таймера, ты выиграешь матч.',
+    selfDisconnected: 'Нет соединения',
+    selfDisconnectedBody: 'Подключаемся снова… вернись до конца таймера, иначе матч будет проигран.',
+    reconnectingStrip: 'Подключаемся снова…',
+    reconnectWindow: 'Осталось на переподключение',
+    interrupted: 'Матч временно прерван',
+    interruptedBody: 'Матч на паузе, пока мы восстанавливаем игровой сервис.',
+    report: 'Сообщить об отсутствующем ответе',
+    reported: 'Сообщение отправлено — спасибо',
+    quit: 'Покинуть матч',
+    resultWin: 'Поле за тобой',
+    resultLoss: 'Победа за соперником',
+    resultDraw: 'Ничья на поле',
+    noteOpponentLeft: 'Соперник покинул матч',
+    noteYouLeft: 'Ты покинул матч',
+    noteOpponentDisconnected: 'Соперник потерял связь',
+    noteYouDisconnected: 'Связь прервалась',
+    noteOpponentIdle: 'Соперник пропустил 3 хода подряд — серия завершена техническим поражением',
+    noteYouIdle: 'Ты пропустил 3 хода подряд — серия завершена техническим поражением',
+    noteOpponentNoShow: 'Соперник так и не подключился',
+    noteYouNoShow: 'Ты не подключился вовремя',
+    noteBothDisconnected: 'Оба игрока отключились',
+    noteNoShow: 'Матч не начался вовремя',
+    turnPillYou: 'Твой ход',
+    turnPillOpponent: 'Ход соперника',
+    skip: 'Пропустить',
+    requestDraw: 'Предложить ничью',
+    drawRequested: 'Ничья предложена…',
+    drawLocked: 'Отказано — попробуй снова через несколько ходов',
+    drawOfferTitle: 'Соперник предлагает ничью',
+    drawOfferBody: 'Согласись, чтобы завершить эту игру вничью и перейти к следующему полю.',
+    acceptDraw: 'Согласиться',
+    declineDraw: 'Отказаться',
+    drawDeclinedNote: 'Ничья отклонена',
+    gameOf: 'Игра {n} из {m}',
+    seriesLead: 'Ты впереди',
+    seriesTrail: 'Соперник впереди',
+    seriesLevel: 'Счёт равный',
+    nextGameSoon: 'Скоро начнётся следующая игра…',
+    gameWon: 'Ты выиграл игру {n}',
+    gameLost: 'Соперник выиграл игру {n}',
+    gameDrawn: 'Игра {n} завершилась вничью',
+    noteBoardDead: 'Ни у кого не осталось возможности собрать линию',
+    noteDrawAgreed: 'Ничья согласована',
+    seriesWin: 'Ты выиграл серию',
+    seriesLoss: 'Соперник выиграл серию',
+    seriesDraw: 'Серия завершилась вничью',
+    tapCellHint: 'Нажми на клетку и назови футболиста, который подходит под обе подсказки',
+    rematch: 'Реванш',
+    waitingRematch: 'Ждём соперника…',
+    rematchAccepted: 'Реванш принят',
+    declineRematch: 'Отказаться от реванша',
+    newOpponent: 'Найти нового соперника',
+    backToPlay: 'На главную',
+    you: 'Ты',
+    opponent: 'Соперник',
+    claimed: 'Занята',
+    sampleAnswers: 'Другие подходящие ответы',
+    sampleAnswersBody: 'Примеры для каждого пересечения',
+    xp: 'Получено XP',
+    coins: 'Получено монет',
+    signIn: 'Войди, чтобы играть онлайн',
+    signInBody: 'Футбольные крестики-нолики — это режим 1 на 1 в реальном времени. Войди, чтобы сыграть с другим игроком или умным соперником.',
+    goSignIn: 'Перейти ко входу',
+    unavailable: 'Футбольные крестики-нолики временно недоступны',
+    unavailableBody: 'Сейчас не удалось найти соперника. Твой аккаунт и прогресс в безопасности.',
+    pickOne: 'Выбери футболиста, который подходит под обе подсказки',
+    typeInstead: 'Я знаю ответ — введу его сам',
+    showOptions: 'Показать четыре варианта',
+    loadingOptions: 'Ищем четырёх футболистов…',
+    rulesTitle: 'Как засчитываются ответы',
+    famClub: 'Клуб',
+    famCountry: 'Страна',
+    famLeague: 'Лига',
+    famManager: 'Тренер',
+    famTeammate: 'Одноклубник',
+    famTrophy: 'Трофей',
+    famWildcard: 'Особое',
+    retry: 'Попробовать снова',
   },
 } as const;
 
@@ -1226,7 +1331,7 @@ export function FootballGridTurnPanel({
   const pickSuggestion = (index: number) => {
     const suggestion = suggestions[index];
     if (!suggestion) return;
-    const text = locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn;
+    const text = localizedPlayerName(locale, suggestion.nameEn, suggestion);
     setSuggestionsDismissed(true);
     setHighlightIndex(-1);
     onAnswerChange(text);
@@ -1403,7 +1508,7 @@ export function FootballGridTurnPanel({
                         {option ? (
                           <>
                             <FootballGridPortrait source={option.imageUrl} playerId={option.playerId} className="size-8 shrink-0 min-[360px]:size-9 min-[400px]:size-10" />
-                            <OptionName name={locale === 'ka' && option.nameKa ? option.nameKa : option.name} />
+                            <OptionName name={localizedPlayerName(locale, option.name, option)} />
                           </>
                         ) : (
                           <span className="mx-auto h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
@@ -1465,9 +1570,9 @@ export function FootballGridTurnPanel({
                       )}
                     >
                       <span className="truncate font-poppins text-sm font-bold text-white">
-                        {locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn}
+                        {localizedPlayerName(locale, suggestion.nameEn, suggestion)}
                       </span>
-                      {locale === 'ka' && suggestion.nameKa && (
+                      {localizedPlayerName(locale, suggestion.nameEn, suggestion) !== suggestion.nameEn && (
                         <span className="shrink-0 font-poppins text-[10px] font-semibold text-white/40">{suggestion.nameEn}</span>
                       )}
                     </button>
@@ -1839,7 +1944,7 @@ export function completionNote(reason: FootballGridCompletionReason | null, won:
 export function FootballGridFlowScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { siteLocale: locale } = useLocale();
+  const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
   const { player } = usePlayer();
   const authStatus = useAuthStore((current) => current.status);

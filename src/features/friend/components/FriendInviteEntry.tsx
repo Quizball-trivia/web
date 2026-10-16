@@ -17,7 +17,7 @@ import { isDuelGameEnabled, isRoomGameEnabled } from '@/lib/lobby/lobbyModes';
 export function FriendInviteEntry() {
   const params = useParams<{ code: string }>();
   const search = useSearchParams();
-  const { siteLocale: locale, t } = useLocale();
+  const { locale, t } = useLocale();
   const status = useAuthStore(state => state.status);
   const [playOnWeb, setPlayOnWeb] = useState(false);
   const raw = params.code?.trim() ?? '';

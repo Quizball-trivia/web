@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/posthog', () => ({ trackEvent: mocks.trackEvent }));
-vi.mock('@/lib/config', () => ({ API_BASE_URL: 'https://offline.invalid' }));
+vi.mock('@/lib/config', () => ({ API_BASE_URL: 'https://offline.invalid', CLIENT_PLATFORM: 'web' }));
 vi.mock('@/lib/auth/supabase', () => ({ getSupabaseAccessToken: mocks.accessToken }));
 vi.mock('@/lib/guest/guestSession', () => ({ peekGuestToken: mocks.guestToken }));
 vi.mock('@/lib/guest/guestJourney', () => ({ flushGuestJourney: mocks.flushJourney }));
@@ -52,6 +52,18 @@ afterEach(() => {
 });
 
 describe('API error operation context', () => {
+  it.each([undefined, {}, { userId: undefined }, { userId: null }])('rejects unresolved path parameters before network access (%j)', async (params) => {
+    await expect(request('get', '/api/v1/users/{userId}/achievements', { params })).rejects.toThrow(/API path parameter/);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mocks.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it('declares the real web platform even if a caller attempts to override it', async () => {
+    respond(200, { ok: true });
+    await request('get', '/api/v1/users/me', { headers: { 'X-Quizball-Platform': 'android' } });
+    expect(new Headers(fetchMock.mock.calls[0][1]!.headers).get('x-quizball-platform')).toBe('web');
+  });
+
   it.each<HttpMethod>(['get', 'post', 'put', 'patch', 'delete'])('reports the actual %s method without changing the error', async (method) => {
     let caught: unknown;
     try {

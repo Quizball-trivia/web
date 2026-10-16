@@ -8,6 +8,10 @@ import type { GameId, PlayMode } from "./types";
 export interface SoundEvent { moment: string; sound: string | null; where: string }
 
 export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>>> = {
+  carrera: {
+    duel: [{ moment: "Any 1v1 moment", sound: null, where: "prototype: no sounds yet" }],
+    room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
+  },
   aproximado: {
     solo: [
       { moment: "Lock in, 60+ accuracy points", sound: "dailyCorrect", where: "StatSniperGame lock-in" },
