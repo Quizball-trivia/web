@@ -16,6 +16,8 @@ describe('board URLs', () => {
     expect(parseBoardParams(new URLSearchParams('board=country&country=ar')).scope).toEqual({ kind: 'country', country: 'AR' });
     expect(parseBoardParams(new URLSearchParams('board=club&club=not-a-club')).scope).toBeNull();
     expect(parseBoardParams(new URLSearchParams('board=club&club=zlatan-fc')).scope).toBeNull();
+    // A hidden duplicate opens the real club's board.
+    expect(parseBoardParams(new URLSearchParams('board=club&club=wl-lyon')).scope).toEqual({ kind: 'club', club: 'olympique-lyonnais' });
     expect(parseBoardParams(new URLSearchParams('mode=poker&view=standings')).view).toBe('players');
   });
 });

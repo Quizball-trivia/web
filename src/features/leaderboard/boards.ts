@@ -23,12 +23,38 @@ export function countryLabel(code: string, locale: string): string {
   return displayNames.get(locale)?.of(code.toUpperCase()) ?? code.toUpperCase();
 }
 
+/** Hidden catalogue entries that are another club's duplicate; their board is the public club's (backend alias seed). */
+const CLUB_TWINS: Record<string, string> = {
+  "wl-basaksehir": "istanbul-basaksehir",
+  "wl-bayer-leverkusen": "bayer-04-leverkusen",
+  "wl-benfica": "sl-benfica",
+  "wl-besiktas": "besiktas",
+  "wl-bordeaux": "fc-girondins-de-bordeaux",
+  "wl-espanyol": "rcd-espanyol",
+  "wl-fenerbahce": "fenerbahce",
+  "wl-fiorentina": "acf-fiorentina",
+  "wl-galatasaray": "galatasaray",
+  "wl-hamburger-sv": "hamburger-sv",
+  "wl-internazionale": "inter-milan",
+  "wl-kaiserslautern": "1-fc-kaiserslautern",
+  "wl-lille": "losc-lille",
+  "wl-lyon": "olympique-lyonnais",
+  "wl-marseille": "olympique-de-marseille",
+  "wl-nice": "ogc-nice",
+  "wl-osasuna": "ca-osasuna",
+  "wl-rennes": "stade-rennais-fc",
+  "wl-trabzonspor": "trabzonspor",
+  "wl-vfl-wolfsburg": "wl-wolfsburg",
+  "wl-zaragoza": "real-zaragoza",
+};
+
 /** Every club a fan can pick; boards of other clubs appear once they have scoring players. */
 export const BOARD_CLUB_IDS: readonly string[] = clubs.filter((club) => !club.hidden && !club.restrictedToUserId).map((club) => club.id);
 
 /** A board's club: catalogue id or stored name. Owner-restricted clubs never get a public board. */
 export function clubOf(value: string | null | undefined): Club | null {
-  const club = getClub(value);
+  const found = getClub(value);
+  const club = found && CLUB_TWINS[found.id] ? getClub(CLUB_TWINS[found.id]) : found;
   return club && !club.restrictedToUserId ? club : null;
 }
 
