@@ -53,7 +53,7 @@ export function useUserAchievements(userId?: string) {
   return useQuery({
     // An unresolved public profile must not replace the own-profile queryFn
     // under the shared "me" key. Disabled queries can still be refetched.
-    queryKey: [...queryKeys.users.all, 'achievements', 'public', userId ?? 'unresolved'],
+    queryKey: [...queryKeys.users.all, 'achievements', 'public', authStatus, userId ?? 'unresolved'],
     queryFn: async (): Promise<Achievement[]> => {
       if (authStatus !== 'authenticated' || !validId) return [];
       const data = await getUserAchievements(userId!);

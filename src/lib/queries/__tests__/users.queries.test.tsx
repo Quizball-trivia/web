@@ -57,4 +57,14 @@ describe('achievement identity and auth guards', () => {
     await act(async () => { await result.current.refetch(); });
     expect(repos.getUserAchievements).not.toHaveBeenCalled();
   });
+
+  it('does not replace member results when an anonymous refetch shares the public UUID', async () => {
+    const { result } = renderHook(() => useUserAchievements(validId), { wrapper });
+    await waitFor(() => expect(result.current.data).toEqual([{ id: 'public' }]));
+    await act(async () => { useAuthStore.setState({ status: 'anonymous' }); });
+    await act(async () => { expect((await result.current.refetch()).data).toEqual([]); });
+    await act(async () => { useAuthStore.setState({ status: 'authenticated' }); });
+    await waitFor(() => expect(result.current.data).toEqual([{ id: 'public' }]));
+    expect(repos.getUserAchievements).toHaveBeenCalledTimes(1);
+  });
 });
