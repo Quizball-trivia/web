@@ -22,6 +22,8 @@ import { buildDemoDailySession } from "@/features/demos/data/demoDailySessions";
 import type { StatSniperSession } from "@/lib/domain/dailyChallenge";
 import { AproximadoSim, type SimConfig } from "./AproximadoSim";
 import { roomView } from "./fixtures/aproximado";
+import { FootballRaceSim, type RaceSimConfig } from "./FootballRaceSim";
+import { FootballRaceSoloSim, type RaceSoloConfig } from "./FootballRaceSoloSim";
 import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
@@ -231,7 +233,47 @@ const APROXIMADO_SOLO: Scenario<never>[] = [
   }),
 ];
 
+const RACE: RaceSimConfig = { seats: 3, speed: 1, target: 0, botSkill: 0.6, pickSeconds: 30, data: "real", nations: [], scopes: [], tournament: "random", seed: 1, finish: "instant" };
+const race = (id: string, name: string, config: Partial<RaceSimConfig>, note: string) =>
+  scenario<RaceSimConfig>({
+    id, name, note, data: { ...RACE, ...config },
+    render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><FootballRaceSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider>,
+  });
+const raceSolo = (id: string, name: string, config: Partial<RaceSoloConfig>, note: string) =>
+  scenario<RaceSoloConfig>({
+    id, name, note, data: { data: "real", day: "today", script: "play", ...config },
+    render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><FootballRaceSoloSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider>,
+  });
+const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" to any date). Your nation vs three; rivals start 2 spaces ahead. Real stats from the local private pack.";
+const RACE_NOTE = "Playable: you are seat 0, bots take the rest. Real stats come from the local private pack (public/dev-data, never committed); without it the invented fixture plays. Edit seats, tournament (random, WC, EURO, COPA, AFCON, ASIA, GOLD, WCQ, EUROQ, NL, ALL), target (0 = by lobby size), finish, botSkill, nations (codes, yours first) or seed in the state.";
+
 export const GAMES: GameEntry[] = [
+  {
+    id: "carrera",
+    name: "Football Horserace (prototype)",
+    scenarios: {
+      solo: [
+        raceSolo("daily", "Daily race · today", {}, SOLO_NOTE),
+        raceSolo("daily-tomorrow", "Daily race · another day", { day: "2026-10-20" }, SOLO_NOTE),
+        raceSolo("won", "Result · won in 6", { script: "won" }, SOLO_NOTE),
+        raceSolo("perfect", "Result · perfect 5 of 5", { script: "perfect" }, SOLO_NOTE),
+        raceSolo("lost", "Result · a rival got there first", { script: "lost" }, SOLO_NOTE),
+        raceSolo("invented", "Daily race · invented data", { data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+      duel: [
+        race("live-2", "Live 1v1", { seats: 2 }, RACE_NOTE),
+        race("live-2-classic", "Live 1v1 · Germany v Mexico, World Cup", { seats: 2, nations: ["GER", "MEX"], tournament: "WC" }, RACE_NOTE),
+        race("live-2-copa", "Live 1v1 · Copa América", { seats: 2, tournament: "COPA" }, RACE_NOTE),
+        race("live-2-invented", "Live 1v1 · invented data", { seats: 2, data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+      room: [
+        race("live-3", "Live 3 players", { seats: 3 }, RACE_NOTE),
+        race("live-3-video", "Live 3 · the video's trio (Germany, Spain, Mexico), World Cup", { seats: 3, nations: ["GER", "ESP", "MEX"], tournament: "WC" }, RACE_NOTE),
+        race("live-4", "Live 4 players", { seats: 4 }, RACE_NOTE),
+        race("live-4-invented", "Live 4 · invented data", { seats: 4, data: "invented" }, "The public fixture: invented nations and numbers."),
+      ],
+    },
+  },
   {
     id: "aproximado",
     name: "Closest Wins · Aproximado",

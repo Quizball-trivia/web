@@ -1,3 +1,4 @@
+import { FOOTBALL_RACE_ENABLED } from "@/lib/config";
 import { rankPlayGames, isNewPlayGame, type PlayGameStats } from "./playRanking";
 
 // The hand-made order: what the Play page shows when there are no numbers to order by, and how ties fall.
@@ -6,6 +7,7 @@ export const DAILY_CHALLENGE_SLUGS = [
   "minuto",
   "shared-player",
   "name-chain",
+  ...(FOOTBALL_RACE_ENABLED ? ["football-horserace"] : []),
   "buscaminas",
   "pistas",
   "ultimo",

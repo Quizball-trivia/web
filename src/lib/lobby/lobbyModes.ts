@@ -29,13 +29,24 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   room_game: { capacity: 6, playable: 6, guestAllowed: true, hostStart: { min: 2, max: 6 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "football_race"];
+
+/** Room games seating fewer than the room mode's six (mirrors the backend's ROOM_GAME_MAX_SEATS). */
+const ROOM_GAME_MAX_SEATS: Partial<Record<RoomGameId, number>> = { football_race: 4 };
+
+/** Members a mode choice can play: a room game may seat fewer than its mode. */
+export function choicePlayable(choice: { gameMode: LobbyGameMode; roomGame?: RoomGameId | null }): number {
+  const playable = LOBBY_MODES[choice.gameMode].playable;
+  if (choice.gameMode !== "room_game") return playable;
+  return Math.min(playable, ROOM_GAME_MAX_SEATS[choice.roomGame ?? ROOM_GAMES[0]] ?? playable);
+}
 
 /** Tab label, panel title and description of each room game. */
 export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey; title: MessageKey; description: MessageKey }>> = {
   aproximado: { tab: "friend.roomTabAproximado", title: "friend.roomAproximado", description: "friend.roomGameDescription" },
   shared_player: { tab: "friend.roomTabSharedPlayer", title: "friend.roomSharedPlayer", description: "friend.roomSharedPlayerDescription" },
   name_chain: { tab: "friend.roomTabNameChain", title: "friend.roomNameChain", description: "friend.roomNameChainDescription" },
+  football_race: { tab: "friend.roomTabFootballRace", title: "friend.roomFootballRace", description: "friend.roomFootballRaceDescription" },
 };
 
 export function isRoomGameEnabled(value: unknown, enabled: readonly RoomGameId[] = ROOM_GAMES_ENABLED): value is RoomGameId {
@@ -64,9 +75,10 @@ export function isDuelGameEnabled(value: unknown, enabled: readonly DuelGameId[]
   return isDuelGameId(value) && enabled.includes(value);
 }
 
-export function canHostStart(mode: LobbyGameMode | null | undefined, memberCount: number): boolean {
+export function canHostStart(mode: LobbyGameMode | null | undefined, memberCount: number, roomGame?: RoomGameId | null): boolean {
   const shape = lobbyModeCapabilities(mode).hostStart;
-  return shape !== null && memberCount >= shape.min && memberCount <= shape.max;
+  const max = mode === "room_game" ? Math.min(shape?.max ?? 0, choicePlayable({ gameMode: mode, roomGame })) : shape?.max ?? 0;
+  return shape !== null && memberCount >= shape.min && memberCount <= max;
 }
 
 /** One entry of the room's mode picker: a duel is one choice per game, and so is a room game. */

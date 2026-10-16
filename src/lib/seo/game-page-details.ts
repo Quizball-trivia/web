@@ -335,6 +335,32 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Arkadaşlarla eleme oyununa dönüşür. 2-6 kişilik bir oda aç ve tek bir zincirde sırayla oynayın: süresi biten o turdan elenir, ayakta kalan son oyuncu puanı alır ve 3 puana ilk ulaşan kazanır.",
     ],
   },
+  "football-horserace": {
+    en: [
+      "Football Horserace is the stat race from the football shorts, made into a game you can play every day. Each player owns a nation and every pick is a question about the real records: does your nation lead this stat or not? The nation that leads it moves, so a wrong pick pushes a rival forward.",
+      "The stats come from open records of every international match: World Cup, Euros, Copa América, Africa Cup of Nations, Asian Cup, Gold Cup, World Cup and Euro qualifiers and the Nations League, from the first internationals to today. There are 69 kinds of stat in 10 tournaments, from goals and wins to penalties conceded, own goals and the oldest player, and each one can be looked at all-time or in a recent era. After every pick you see each nation's number and the match behind it.",
+      "A new race arrives every day at midnight Argentina time, with nations dealt so the race is even. Without an account you play the previous days; signed-in players get today's race and the daily leaderboard, where a win in fewer picks ranks higher.",
+      "With friends it is a real race. Open a room for 2 to 4 players and pick the tournament, or let it be random. You take turns choosing your nations, then every round everyone picks a stat at the same time, in secret. The picks are shown fastest first and each one moves its leader: the first flag across the line wins.",
+    ],
+    ka: [
+      "ფეხბურთის დოღი საფეხბურთო ვიდეოებიდან ცნობილი სტატისტიკის რბოლაა, რომელიც ყოველდღიურ თამაშად იქცა. თითოეულ მოთამაშეს ნაკრები აქვს და ყოველი არჩევანი ნამდვილ მონაცემებზე დასმული კითხვაა: ლიდერობს თუ არა შენი ნაკრები ამ სტატისტიკაში? წინ ლიდერი მიდის, ამიტომ არასწორი არჩევანი მეტოქეს წინ წასწევს.",
+      "სტატისტიკა ყველა საერთაშორისო მატჩის ღია მონაცემებიდანაა: მსოფლიო ჩემპიონატი, ევროპის ჩემპიონატი, კოპა ამერიკა, აფრიკის ერთა თასი, აზიის თასი, ოქროს თასი, შესარჩევი ეტაპები და ერთა ლიგა. 10 ტურნირში 69 სახის სტატისტიკაა, გოლებიდან და მოგებებიდან გაშვებულ პენალტებამდე, ავტოგოლებამდე და ყველაზე ასაკოვან მოთამაშემდე. ყოველი არჩევანის შემდეგ ხედავ თითოეული ნაკრების რიცხვს და მის უკან მდგარ მატჩს.",
+      "ახალი დოღი ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით), ნაკრებები კი ისეა შერჩეული, რომ დოღი თანაბარი იყოს. ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და დღის რეიტინგს, სადაც ნაკლები არჩევანით მოგება მაღლა დგას.",
+      "მეგობრებთან ეს ნამდვილი რბოლაა. გახსენი ოთახი 2-დან 4 მოთამაშემდე და აირჩიე ტურნირი ან დატოვე შემთხვევითი. ნაკრებებს რიგრიგობით ირჩევთ, შემდეგ ყოველ რაუნდში ყველა ერთდროულად და ფარულად ირჩევს სტატისტიკას. არჩევანები სისწრაფის მიხედვით იხსნება და თითოეული თავის ლიდერს წინ წასწევს: ფინიშზე პირველი დროშა იგებს.",
+    ],
+    es: [
+      "La carrera de caballos futbolera es la carrera de estadísticas de los videos de fútbol, convertida en un juego para todos los días. Cada jugador tiene una selección y cada elección es una pregunta sobre los datos reales: ¿tu selección lidera esta estadística o no? Avanza la que la lidera, así que una mala elección empuja a un rival.",
+      "Las estadísticas salen de los registros abiertos de todos los partidos internacionales: Mundial, Eurocopa, Copa América, Copa Africana, Copa Asiática, Copa Oro, Eliminatorias, clasificación a la Eurocopa y la Liga de Naciones, desde los primeros partidos hasta hoy. Hay 69 tipos de estadística en 10 torneos, desde goles y victorias hasta penales en contra, goles en contra y el jugador más veterano, y cada una se puede mirar en toda la historia o en una época reciente. Después de cada elección ves el número de cada selección y el partido que está detrás.",
+      "Cada día a la medianoche de Argentina llega una carrera nueva, con selecciones repartidas para que sea pareja. Sin cuenta jugás los días anteriores; con tu cuenta jugás la de hoy y entrás al ranking del día, donde ganar con menos elecciones te deja más arriba.",
+      "Con amigos es una carrera de verdad. Abrí una sala de 2 a 4 jugadores y elegí el torneo, o dejalo al azar. Se turnan para elegir sus selecciones y después, en cada ronda, todos eligen una estadística al mismo tiempo y en secreto. Las elecciones se muestran de la más rápida a la más lenta y cada una hace avanzar a su líder: gana la primera bandera que cruza la meta.",
+    ],
+    tr: [
+      "Futbol At Yarışı, futbol videolarındaki istatistik yarışının her gün oynanabilen oyun hâli. Her oyuncunun bir milli takımı var ve her seçim gerçek verilerle ilgili bir soru: Takımın bu istatistikte önde mi, değil mi? Önde olan takım ilerler; yani yanlış seçim bir rakibi öne iter.",
+      "İstatistikler tüm milli maçların açık kayıtlarından gelir: Dünya Kupası, Avrupa Şampiyonası, Copa America, Afrika Uluslar Kupası, Asya Kupası, Altın Kupa, Dünya Kupası ve Avrupa Şampiyonası elemeleri ve Uluslar Ligi; ilk milli maçlardan bugüne. 10 turnuvada 69 çeşit istatistik var: gollerden ve galibiyetlerden verilen penaltılara, kendi kalesine atılan gollere ve en yaşlı oyuncuya kadar. Her seçimden sonra her takımın sayısını ve arkasındaki maçı görürsün.",
+      "Her gün Arjantin saatiyle gece yarısı yeni bir yarış gelir; takımlar yarış dengeli olsun diye dağıtılır. Hesapsız önceki günleri oynarsın; hesapla bugünün yarışını oynar ve günün sıralamasına girersin. Daha az seçimle kazanan üstte yer alır.",
+      "Arkadaşlarla gerçek bir yarışa dönüşür. 2-4 kişilik bir oda aç ve turnuvayı seç ya da rastgele bırak. Takımlarınızı sırayla seçersiniz; sonra her turda herkes aynı anda ve gizlice bir istatistik seçer. Seçimler en hızlıdan başlayarak açılır ve her biri kendi liderini ilerletir: çizgiyi ilk geçen bayrak kazanır.",
+    ],
+  },
   "last-answer-standing": {
     en: [
       "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",
