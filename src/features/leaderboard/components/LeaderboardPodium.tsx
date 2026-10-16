@@ -15,6 +15,8 @@ interface LeaderboardPodiumProps {
    * region-gated `isEventMode`.
    */
   eventMode?: boolean;
+  /** Optional title above each podium bar (e.g. "No.1 fan" on a club board). */
+  renderBadge?: (rank: PodiumRank) => React.ReactNode;
 }
 
 const poppins = {
@@ -24,7 +26,7 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-type PodiumRank = 1 | 2 | 3;
+export type PodiumRank = 1 | 2 | 3;
 
 const eventPodiumConfig: Record<
   PodiumRank,
@@ -96,7 +98,7 @@ const podiumConfig: Record<
   },
 };
 
-export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: LeaderboardPodiumProps) {
+export function LeaderboardPodium({ topThree, onEntryClick, eventMode, renderBadge }: LeaderboardPodiumProps) {
   const { isEventMode: regionEventMode } = useActiveEventMode();
   const tierLabelOf = useTierLabel();
   const isEventMode = eventMode ?? regionEventMode;
@@ -165,6 +167,8 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                     />
                   </div>
                 </div>
+
+                {renderBadge && <div className="mb-2 flex justify-center">{renderBadge(rank)}</div>}
 
                 {/* Bar */}
                 <div
@@ -254,6 +258,8 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                   {rank}
                 </div>
               </div>
+
+              {renderBadge && <div className="mb-2 flex justify-center">{renderBadge(rank)}</div>}
 
               {/* Gradient bar with dots */}
               <div
