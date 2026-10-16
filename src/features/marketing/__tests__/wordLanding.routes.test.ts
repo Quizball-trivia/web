@@ -47,7 +47,7 @@ describe("fixed word landing route parity", () => {
     expect(fixed.every((params) => !dynamic.some((other) => key(other) === key(params)))).toBe(true);
   });
 
-  it("enumerates exactly eight word landings (twelve with Football Horserace on) with unchanged metadata and rendering props", async () => {
+  it("enumerates exactly twelve word landings (Football Horserace included) with unchanged metadata and rendering props", async () => {
     let count = 0;
     for (const route of routes) {
       expect(route.module.dynamicParams).toBe(false);
