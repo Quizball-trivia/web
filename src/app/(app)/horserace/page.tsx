@@ -1,13 +1,12 @@
 "use client";
 
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useRef, useState } from "react";
 import { trackGameComplete, trackGameReplay, trackGameStart, type EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { FootballRaceDaily } from "@/features/football-race/FootballRaceDaily";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
-import { FOOTBALL_RACE_ENABLED } from "@/lib/config";
 
 function Route() {
   const router = useRouter();
@@ -37,7 +36,6 @@ function Route() {
 
 /** Football Horserace's daily race in the app shell. */
 export default function Page() {
-  if (!FOOTBALL_RACE_ENABLED) notFound();
   return (
     <Suspense fallback={null}>
       <Route />

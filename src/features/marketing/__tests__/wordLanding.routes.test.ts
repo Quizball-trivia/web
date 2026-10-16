@@ -10,7 +10,6 @@ import * as esShared from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/ju
 import * as trChain from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page";
 import * as trRace from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page";
 import * as trShared from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
-import { FOOTBALL_RACE_ENABLED } from "@/lib/config";
 import { findPublishedGame } from "@/lib/seo/public-games";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
@@ -67,18 +66,7 @@ describe("fixed word landing route parity", () => {
         expect(await element.props.params).toEqual({ locale, slug: route.slug });
       }
     }
-    expect(count).toBe(FOOTBALL_RACE_ENABLED ? 12 : 8);
-  });
-
-  it.skipIf(FOOTBALL_RACE_ENABLED)("keeps Football Horserace unpublished and a real 404 while its flag is off", async () => {
-    for (const route of [enRace, esRace, trRace]) {
-      expect(route.generateStaticParams()).toEqual([]);
-      const params = Promise.resolve({ locale: "en" });
-      expect(() => route.generateMetadata({ params })).toThrow("404");
-      expect(() => route.default({ params })).toThrow("404");
-    }
-    expect(publicGameStaticParams("football-games").some(({ slug }) => slug === "football-horserace")).toBe(false);
-    expect(findPublishedGame("en", "football-games", "football-horserace")).toBeNull();
+    expect(count).toBe(12);
   });
 
   it("keeps wrong-folder locales unavailable", async () => {
