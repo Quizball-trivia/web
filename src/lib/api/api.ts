@@ -1,6 +1,6 @@
 import { flushGuestJourney } from "@/lib/guest/guestJourney";
 import { peekGuestToken } from "@/lib/guest/guestSession";
-import { API_BASE_URL } from "@/lib/config";
+import { API_BASE_URL, CLIENT_PLATFORM } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { trackApiError } from "@/lib/analytics/game-events";
 import type { paths } from "@/types/api.generated";
@@ -87,10 +87,10 @@ export class ApiError extends Error {
 function buildUrl(path: string, params?: Record<string, unknown>, query?: Record<string, unknown>) {
   let urlPath = path;
   if (params) {
-    urlPath = urlPath.replace(/\{([^}]+)\}/g, (match, key) => {
+    urlPath = urlPath.replace(/\{([^}]+)\}/g, (_match, key) => {
       const value = params[key];
       if (value === undefined || value === null) {
-        return match;
+        throw new Error(`Missing API path parameter: ${key}`);
       }
       return encodeURIComponent(String(value));
     });
@@ -99,6 +99,7 @@ function buildUrl(path: string, params?: Record<string, unknown>, query?: Record
   const url = new URL(
     path.startsWith("http") ? urlPath : `${API_BASE_URL}${urlPath}`,
   );
+  if (/\{[^}]+\}/.test(urlPath)) throw new Error('Unresolved API path parameter');
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
@@ -135,6 +136,9 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
   options: ApiRequestOptions<M, P> = {},
 ): Promise<ApiResponse<M, P>> {
   const headers = new Headers(options.headers);
+  // An account's origin is recorded only on the winning backend insert.
+  // This declaration is not an authorization or device-trust signal.
+  headers.set('x-quizball-platform', CLIENT_PLATFORM);
   if (String(path).startsWith("/api/v1/auth/") || String(path) === "/api/v1/users/me") {
     // Give preceding play events a bounded chance to persist before signup claims the journey.
     await Promise.race([flushGuestJourney(), new Promise<void>(resolve => setTimeout(resolve, 1500))]);

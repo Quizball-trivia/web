@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const posthogMocks = vi.hoisted(() => ({
-  _isIdentified: vi.fn(),
+  get_property: vi.fn(),
   identify: vi.fn(),
   reset: vi.fn(),
   capture: vi.fn(),
@@ -11,12 +11,16 @@ vi.mock('posthog-js', () => ({
   default: posthogMocks,
 }));
 
-import { identifyUser, resetUser, trackEvent } from '../posthog';
+let identifyUser: typeof import('../posthog').identifyUser;
+let resetUser: typeof import('../posthog').resetUser;
+let trackEvent: typeof import('../posthog').trackEvent;
 
 describe('PostHog identity', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    vi.resetModules();
     vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'phc_test');
+    ({ identifyUser, resetUser, trackEvent } = await import('../posthog'));
   });
 
   afterEach(() => {
@@ -24,11 +28,38 @@ describe('PostHog identity', () => {
   });
 
   it('does not reset an anonymous identity', () => {
-    posthogMocks._isIdentified.mockReturnValue(false);
+    posthogMocks.get_property.mockReturnValue(undefined);
 
     resetUser();
 
     expect(posthogMocks.reset).not.toHaveBeenCalled();
+  });
+
+  it('preserves a guest across fresh page runtimes without counting each reload as a new identity', async () => {
+    let anonymousId = 'persisted-browser-guest';
+    posthogMocks.reset.mockImplementation(() => { anonymousId = 'incorrectly-new-guest'; });
+    const capturedIds: string[] = [];
+    posthogMocks.capture.mockImplementation(() => { capturedIds.push(anonymousId); });
+    for (let boot = 0; boot < 10; boot += 1) {
+      vi.resetModules();
+      const analytics = await import('../posthog');
+      analytics.resetUser();
+      analytics.trackEvent('game_start');
+    }
+    expect(new Set(capturedIds)).toEqual(new Set(['persisted-browser-guest']));
+    expect(posthogMocks.reset).not.toHaveBeenCalled();
+    expect(posthogMocks.capture).toHaveBeenCalledTimes(10);
+  });
+
+  it('detaches a restored member once when its login expires in a fresh page runtime', async () => {
+    let persistedUser: string | undefined = 'expired-member';
+    posthogMocks.get_property.mockImplementation(() => persistedUser);
+    posthogMocks.reset.mockImplementation(() => { persistedUser = undefined; });
+    for (let boot = 0; boot < 3; boot += 1) {
+      vi.resetModules();
+      (await import('../posthog')).resetUser();
+    }
+    expect(posthogMocks.reset).toHaveBeenCalledTimes(1);
   });
 
   it('keeps guest attribution when identify receives an invalid identity', () => {
@@ -65,15 +96,15 @@ describe('PostHog identity', () => {
   });
 
   it('resets an identified identity once', () => {
-    posthogMocks._isIdentified.mockReturnValue(true);
+    posthogMocks.get_property.mockReturnValue('restored-member');
 
     resetUser();
 
     expect(posthogMocks.reset).toHaveBeenCalledTimes(1);
   });
 
-  it('identifies again with the same signature after a skipped reset', () => {
-    posthogMocks._isIdentified.mockReturnValue(false);
+  it('identifies again after logout even if the SDK has lost its persisted member marker', () => {
+    posthogMocks.get_property.mockReturnValue(undefined);
     const properties = { email: 'user@example.com' };
     const setOnce = { signup_date: '2026-08-10' };
 
@@ -81,7 +112,13 @@ describe('PostHog identity', () => {
     resetUser();
     identifyUser('user-1', properties, setOnce);
 
-    expect(posthogMocks.reset).not.toHaveBeenCalled();
+    expect(posthogMocks.reset).toHaveBeenCalledTimes(1);
     expect(posthogMocks.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('takes the privacy-safe reset path when stored identity cannot be read', () => {
+    posthogMocks.get_property.mockImplementation(() => { throw Error('storage unavailable'); });
+    resetUser();
+    expect(posthogMocks.reset).toHaveBeenCalledTimes(1);
   });
 });

@@ -49,13 +49,17 @@ export function useMyAchievements() {
 
 export function useUserAchievements(userId?: string) {
   const authStatus = useAuthStore((state) => state.status);
+  const validId = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
   return useQuery({
-    queryKey: queryKeys.users.achievements(userId),
+    // An unresolved public profile must not replace the own-profile queryFn
+    // under the shared "me" key. Disabled queries can still be refetched.
+    queryKey: [...queryKeys.users.all, 'achievements', 'public', authStatus, userId ?? 'unresolved'],
     queryFn: async (): Promise<Achievement[]> => {
+      if (authStatus !== 'authenticated' || !validId) return [];
       const data = await getUserAchievements(userId!);
       return data.achievements;
     },
-    enabled: authStatus === "authenticated" && Boolean(userId),
+    enabled: authStatus === "authenticated" && validId,
     staleTime: 60_000,
     gcTime: 15 * 60_000,
   });

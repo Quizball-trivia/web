@@ -59,6 +59,7 @@ describe('guest conversion client', () => {
     recordGuestJourney('game_start', { mode_id: 'ticTacToe' }, 'guest');
     linkGuestJourney('member-1'); await flushGuestJourney();
     expect(mocks.fetch.mock.calls.map(c => String(c[0]).split('/').pop())).toEqual(['activity', 'link']);
+    expect(mocks.fetch.mock.calls.every(c => c[1].headers['x-quizball-platform'] === 'web')).toBe(true);
     expect(mocks.fetch.mock.calls[1][1].headers.Authorization).toBe('Bearer verified-member-token');
     expect(mocks.retireGuestToken).toHaveBeenCalledWith('a'.repeat(64));
     expect(sessionStorage.getItem('qb_guest_journey_pending_v1')).toBe('[]');
