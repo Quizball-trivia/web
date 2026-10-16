@@ -199,6 +199,7 @@ export function useFriendLobbyLogic({
   const clearError = useRealtimeMatchStore((state) => state.clearError);
   const pendingLobbyHandoffCode = useRealtimeMatchStore((state) => state.pendingLobbyHandoffCode);
   const clearLobbyHandoff = useRealtimeMatchStore((state) => state.clearLobbyHandoff);
+  const beginLobbyHandoff = useRealtimeMatchStore((state) => state.beginLobbyHandoff);
   // Auction lobbies hand off to `/auction`, not `/game`. The app-wide socket
   // handlers write the server's `auction:state` snapshot into this store, so it
   // flips as soon as the host's `lobby:start` creates the auction match.
@@ -269,6 +270,8 @@ export function useFriendLobbyLogic({
   // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
   const analyticsTrackedRef = useRef(false);
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
+  /** Bumped by a refusal of a settings change itself (not of a Ready or Start pressed on another game). */
+  const [settingsRefusedVersion, setSettingsRefusedVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
   // Bridges the lobby:ready round trip only; tagged with the room so it never
@@ -429,6 +432,12 @@ export function useFriendLobbyLogic({
         if (result) createInFlightRef.current = false;
         // Left the page before the answer (e.g. its 10 s deadline): no toast on another screen.
         if (!mountedRef.current) return;
+        if (result?.ok && result.inviteCode && !leavingRef.current && !inviteJoinCancelledRef.current) {
+          // A reload of /new would create another room and strand the invited friends in this one: move to its own link.
+          beginLobbyHandoff(result.inviteCode);
+          router.replace(`/friend/room/${result.inviteCode}?source=create`);
+          return;
+        }
         if (!result || result.ok || leavingRef.current || inviteJoinCancelledRef.current) return;
         createdRef.current = false;
         initActionRef.current = null;
@@ -552,6 +561,7 @@ export function useFriendLobbyLogic({
     principal.kind,
     joinRetryNonce,
     awaitingInviteLobby?.retryCount,
+    beginLobbyHandoff,
     createLobby,
     handoffTimedOutCode,
     hasActiveMatch,
@@ -568,6 +578,7 @@ export function useFriendLobbyLogic({
     normalizedRoomCode,
     pendingLobbyHandoffCode,
     roomCode,
+    router,
     shouldCreateLobby,
     shouldTrackSharedInvite,
     t,
@@ -895,7 +906,10 @@ export function useFriendLobbyLogic({
     if (isLobbySettingsError && !isInviteTransitionBusy && !isInviteNotFound) {
       // Out of the cleanup path (clearError() below re-runs this effect at once), so the rollback always lands.
       queueMicrotask(() => setSettingsErrorVersion((current) => current + 1));
+      if (error.code !== "LOBBY_SETTINGS_CHANGED") queueMicrotask(() => setSettingsRefusedVersion((current) => current + 1));
     }
+    // The server failed the change before writing it (no rollback: the screen keeps the choice until it times out).
+    if (error.code === "LOBBY_SETTINGS_ERROR") queueMicrotask(() => setSettingsRefusedVersion((current) => current + 1));
     if (error.code === "LOBBY_SETTINGS_CHANGED") {
       // The refused Ready never happened: without this the button would keep showing it.
       queueMicrotask(() => setOptimisticReadyState(null));
@@ -1130,6 +1144,7 @@ export function useFriendLobbyLogic({
     h2hSummary: opponent ? h2hSummary ?? null : null,
     allCategories,
     settingsErrorVersion,
+    settingsRefusedVersion,
     isStartingMatch,
     isLeaving: lobbyCommands.isLeaving,
     optimisticReady: derivedOptimisticReady,

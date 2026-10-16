@@ -103,6 +103,18 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "football-horserace",
+    title: { en: "Football Horserace", ka: "ფეხბურთის დოღი", es: "Carrera de caballos futbolera", tr: "Futbol At Yarışı", ru: "Футбольные скачки" },
+    description: {
+      en: "Your nation against three: pick the stats it leads and race to the line. One race a day.",
+      ka: "შენი ნაკრები სამის წინააღმდეგ: აირჩიე სტატისტიკა, რომელშიც ლიდერობს, და მიდი ფინიშისკენ. ერთი დოღი დღეში.",
+      es: "Tu selección contra tres: elegí las estadísticas que lidera y corré hasta la meta. Una carrera por día.",
+      tr: "Milli takımın üç rakibe karşı: önde olduğu istatistikleri seç ve çizgiye koş. Günde bir yarış.",
+      ru: "Твоя сборная против трёх: выбирай статистику, где она лидирует, и мчись к финишу. Одна гонка в день.",
+    },
+    group: "daily",
+  },
+  {
     slug: "ultimo",
     title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Futbolcu Sayma Oyunu", ru: "Последний ответ", },
     description: {

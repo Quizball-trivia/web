@@ -20,7 +20,7 @@ function Feedback({ state, locale }: { state: TenableSoloState; locale: string }
   const c = tenableCopy(locale);
   const f = state.last;
   const line = f && (f.kind === "right" && f.rank !== null
-    ? { tone: "ok", text: c.ok(state.slots[f.rank - 1].name ?? f.text, f.rank) }
+    ? { tone: "ok", text: c.ok(state.slots[f.rank - 1]?.name ?? f.text, f.rank) }
     : f.kind === "wrong" ? { tone: "bad", text: c.wrong(f.text) }
       : f.kind === "repeat" ? { tone: "warn", text: c.repeat(f.text) }
         : f.kind === "repeatWrong" ? { tone: "warn", text: c.repeatWrong(f.text) }
@@ -43,7 +43,7 @@ function Feedback({ state, locale }: { state: TenableSoloState; locale: string }
 
 export function TenablePlayView({ locale, number, state, pending, notice, lookup, onSay, onGiveUp, onResult, onExit }: {
   locale: string; number: number; state: TenableSoloState; pending: boolean; notice: string | null; lookup?: SuggestLookup;
-  onSay: (text: string, pick: string | null) => void; onGiveUp: () => void; onResult: () => void; onExit: () => void;
+  onSay: (text: string, pick: string | null) => void | Promise<boolean>; onGiveUp: () => void; onResult: () => void; onExit: () => void;
 }) {
   const c = tenableCopy(locale);
   const d = wordDailyCopy(locale);

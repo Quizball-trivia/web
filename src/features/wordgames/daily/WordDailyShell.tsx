@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Users } from "lucide-react";
 import { GUEST_LOBBIES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
+import { choicePlayable } from "@/lib/lobby/lobbyModes";
 import { cn } from "@/lib/utils";
 import { STORAGE_KEYS, storage } from "@/utils/storage";
 import { useAuthStore } from "@/stores/auth.store";
@@ -39,7 +40,7 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
     // App routes read the stored language, not the SEO page's URL: keep the room in the language the player is reading.
     <Link href={`/friend/room/new?room=${game.roomGame}`} prefetch={false} onClick={() => storage.set(STORAGE_KEYS.LOCALE, locale)} data-word-friends={game.roomGame}
       className={cn("flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black uppercase tracking-wide text-white hover:bg-brand-blue/90", className)} style={poppins}>
-      <Users className="size-4" aria-hidden />{c.friends}
+      <Users className="size-4" aria-hidden />{c.friends.replace("2–6", `2–${choicePlayable({ gameMode: "room_game", roomGame: game.roomGame })}`)}
     </Link>
   );
 }
@@ -145,7 +146,7 @@ export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranke
 }
 
 /** The states every word-game daily shares around its play and end screens. */
-export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end }: {
+export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end, wide = false }: {
   game: WordDailyGame; locale: string;
   daily: {
     versions: Record<string, number> | null | undefined; authReady: boolean; day: string | null; days: string[]; today: string; view: "intro" | "play" | "end" | "archive";
@@ -158,6 +159,8 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
   play: ReactNode | null;
   /** The end screen, or null until the run is finished. */
   end: ReactNode | null;
+  /** The play screen spreads out on desktop (a side panel beside the board). */
+  wide?: boolean;
 }) {
   const c = wordDailyCopy(locale);
   const { day } = daily;
@@ -193,5 +196,5 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
         guestOnPastBoard={daily.guestOnPastBoard} guestLockedOut={daily.guestLockedOut} onStart={onStart} onArchive={() => daily.setView("archive")} onExit={onExit} />
     );
   }
-  return <Frame lang={locale}>{body}</Frame>;
+  return <Frame lang={locale} wide={wide && daily.view === "play" && play !== null}>{body}</Frame>;
 }

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/config";
+import { API_BASE_URL, CLIENT_PLATFORM } from "@/lib/config";
 import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /**
@@ -30,7 +30,7 @@ function store(token: string): void {
 }
 
 async function mint(locale: string): Promise<string> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/guest/session`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locale }), signal: timeoutSignal(10_000) });
+  const res = await fetch(`${API_BASE_URL}/api/v1/guest/session`, { method: "POST", headers: { "Content-Type": "application/json", 'x-quizball-platform': CLIENT_PLATFORM }, body: JSON.stringify({ locale }), signal: timeoutSignal(10_000) });
   if (!res.ok) throw new GuestApiError(`Guest session failed (${res.status})`, res.status);
   const { token } = (await res.json()) as { token: string };
   store(token);
@@ -67,7 +67,7 @@ export async function guestFetch<T>(path: string, init: { method?: "GET" | "POST
   const token = await getGuestToken(init.locale);
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: init.method ?? "GET",
-    headers: { "Content-Type": "application/json", [GUEST_TOKEN_HEADER]: token },
+    headers: { "Content-Type": "application/json", 'x-quizball-platform': CLIENT_PLATFORM, [GUEST_TOKEN_HEADER]: token },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
     signal: timeoutSignal(15_000),
   });

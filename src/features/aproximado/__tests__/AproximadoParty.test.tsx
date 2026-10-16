@@ -53,8 +53,10 @@ describe("Stat Sniper rooms on the Party Quiz pieces", () => {
     expect(screen.getByText("¡Empate en el primer puesto!")).toBeTruthy();
     expect(screen.getByText("Rondas ganadas")).toBeTruthy();
     // Each player's rounds won and average error (view.results is empty here: averaged over 1).
-    expect(screen.getAllByText("4 rondas ganadas · error medio 100%").length).toBe(2);
-    expect(screen.getByText("1 ronda ganada · error medio 200%")).toBeTruthy();
+    // A podium detail wraps only between its parts (each part its own element): match the whole line.
+    const line = (text: string) => (_: string, el: Element | null) => el?.textContent?.replace(/\s+/g, " ") === text && ![...el.children].some((c) => c.textContent?.replace(/\s+/g, " ") === text);
+    expect(screen.getAllByText(line("4 rondas ganadas · error medio 100%")).length).toBe(2);
+    expect(screen.getByText(line("1 ronda ganada · error medio 200%"))).toBeTruthy();
     expect(screen.queryByText("results.xp")).toBeNull();
     expect(screen.queryByText("results.noXpEarned")).toBeNull();
     expect(screen.getByText(/P3 · Se fue/)).toBeTruthy();

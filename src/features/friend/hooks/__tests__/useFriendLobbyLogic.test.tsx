@@ -251,6 +251,12 @@ describe('useFriendLobbyLogic invite links', () => {
     expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:join_by_code', expect.anything(), expect.any(Function));
   });
 
+  it('moves a created room off /new so a reload rejoins it instead of creating another', async () => {
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'new', isHost: true, newRoomRoomGame: 'football_race' }));
+    await waitFor(() => expect(mocks.routerReplace).toHaveBeenCalledWith('/friend/room/CRE8ED?source=create'));
+    expect(useRealtimeMatchStore.getState().pendingLobbyHandoffCode).toBe('CRE8ED');
+  });
+
   it('does not expose a stale lobby when the URL invite code points to another room', async () => {
     act(() => {
       useRealtimeMatchStore.getState().setLobby(makeLobby('N3K5UZ'));

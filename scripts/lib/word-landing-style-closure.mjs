@@ -16,6 +16,8 @@ export const WORD_LANDING_ROOTS = [
     "juegos-de-futbol/cadena-de-futbolistas", "juegos-de-futbol/jugador-en-comun",
     "futbol-oyunlari/son-harfle-futbolcu", "futbol-oyunlari/ortak-futbolcu-oyunu",
     "futbolnye-igry/futbolisty-na-poslednyuyu-bukvu", "futbolnye-igry/igravshie-za-oba-kluba",
+    "football-games/football-horserace", "juegos-de-futbol/carrera-de-caballos-futbolera", "futbol-oyunlari/futbol-at-yarisi",
+    "futbolnye-igry/futbolnye-skachki",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -51,10 +53,11 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
     "@/features/minuto/MinutoGame", "@/features/ultimo/UltimoGame", "@/features/mini-games/components/GuessTheGoalGuest",
-    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily",
+    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily",
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),
+  boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/football-race/FootballRaceDailyBoard", "pre-play", "Scrolling can mount rankings without Play."),
   boundary("src/features/wordgames/daily/WordDailyLeaderboardRows.tsx", "./WordDailyLeaderboardTable", "pre-play", "A nonempty visible ranking loads its original table before Play; retain every row and failure-state style."),
   ...[
     "./PublicTopTen", "@/features/buscaminas/BuscaminasLeaderboard", "@/features/pistas/PistasLeaderboard",

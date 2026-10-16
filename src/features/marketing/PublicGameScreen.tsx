@@ -80,6 +80,14 @@ const NAME_CHAIN_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ru: { ...ULTIMO_PAGE.ru, label: "3 новые цепочки каждый день · аккаунт не нужен", note: "3 цепочки, по 10 секунд на имя. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшние цепочки и рейтинг." },
 };
 
+const FOOTBALL_HORSERACE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...NAME_CHAIN_PAGE.en, label: "A new race every day · no account needed", start: "Play now", note: "Your nation against three. As a guest you play past days; with an account, today's race and the leaderboard." },
+  ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე ახალი დოღი · ანგარიშის გარეშე", start: "თამაში", note: "შენი ნაკრები სამის წინააღმდეგ. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...NAME_CHAIN_PAGE.es, label: "Una carrera nueva cada día · sin cuenta", start: "Jugar ahora", note: "Tu selección contra tres. Sin cuenta jugás los días anteriores; con cuenta, la carrera de hoy y el ranking." },
+  tr: { ...NAME_CHAIN_PAGE.tr, label: "Her gün yeni bir yarış · hesap gerekmez", start: "Oyna", note: "Milli takımın üç rakibe karşı. Misafir olarak önceki günleri oynarsın; hesapla bugünün yarışını ve sıralamayı." },
+  ru: { ...NAME_CHAIN_PAGE.ru, label: "Новая гонка каждый день · аккаунт не нужен", start: "Играть сейчас", note: "Твоя сборная против трёх. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшняя гонка и рейтинг." },
+};
+
 const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
   ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
@@ -96,7 +104,7 @@ const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ru: { ...ULTIMO_PAGE.ru, label: "Новый топ-10 каждый день · прошлые дни бесплатно, без аккаунта", note: "Один скрытый список, 3 жизни. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшний список и рейтинг." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -167,7 +175,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

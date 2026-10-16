@@ -19,7 +19,7 @@ export function TenableDaily({ locale, onExit, onEvent, initialDay, onDay }: {
 }) {
   const game = tenableDailyGame(locale);
   const d = wordDailyCopy(locale);
-  const daily = useWordDaily<TenableServerRun, never>({ api: tenableDailyApi, calendar: TENABLE_CALENDAR, locale, initialDay, onDay, onEvent });
+  const daily = useWordDaily<TenableServerRun, never>({ api: tenableDailyApi, calendar: TENABLE_CALENDAR, locale, initialDay, onDay, onEvent, resendStaleAnswers: true });
   const { state, day } = daily;
   const solo = useMemo(() => (state ? toSoloState(state, locale) : null), [state, locale]);
   // The end sheet stays on the play screen until the player asks for the result (the last answer's moment).
@@ -31,7 +31,7 @@ export function TenableDaily({ locale, onExit, onEvent, initialDay, onDay }: {
 
   const play = solo && day ? (
     <TenablePlayView locale={locale} number={number} state={solo} pending={daily.pending !== null} notice={daily.notice ? d.notices[daily.notice] : null}
-      onSay={(text, pick) => { void daily.answer(text, pick ? { pick } : undefined); }}
+      onSay={(text, pick) => daily.answer(text, pick ? { pick } : undefined).then((run) => run !== null)}
       onGiveUp={() => { void daily.pass(); }}
       onResult={() => { setResultFor(runKey); daily.setView("end"); }}
       onExit={onExit ?? (() => daily.setView("intro"))} />

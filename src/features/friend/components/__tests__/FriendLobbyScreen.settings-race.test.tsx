@@ -402,6 +402,51 @@ describe("lobby: Ready and Start wait until the server holds the game the screen
     expect(room.readyButton()).toHaveTextContent("friend.markReady");
   });
 
+  it("a game chosen in another tab after this screen stopped waiting stands: the older choice is not sent again", async () => {
+    const room = await openRoom(SHARED_PLAYER, { host: false, guest: true });
+    room.click("friend.duelTabPistas");
+    // That request never gets an answer; the queue stops waiting for it.
+    await room.settle(3_100);
+    await room.serverDoes(() => { room.server.game = NAME_CHAIN; room.server.ready = { host: false, guest: false }; });
+    await room.settle();
+    expect(room.waiting().map(({ event }) => event)).toEqual(["lobby:update_settings"]);
+    expect(room.pressed("friend.roomTabNameChain")).toBe("true");
+  });
+
+  it("a given-up request that landed after the screen let it go is not mistaken later for this screen's own", async () => {
+    const room = await openRoom(SHARED_PLAYER, { host: false, guest: true });
+    room.click("friend.duelTabPistas");
+    await room.settle(6_100);
+    expect(room.pressed("friend.roomTabSharedPlayer")).toBe("true");
+    // Pistas lands late; then another tab takes the room back to Played for Both.
+    await room.deliver();
+    await room.settle();
+    await room.serverDoes(() => { room.server.game = SHARED_PLAYER; });
+    await room.settle();
+    room.click("friend.duelTabUltimo");
+    await room.settle(3_100);
+    // Another tab picks Pistas while this screen's Ultimo is still unanswered: that choice stands.
+    await room.serverDoes(() => { room.server.game = PISTAS; });
+    await room.settle();
+    expect(room.waiting().map(({ event }) => event)).toEqual(["lobby:update_settings"]);
+    expect(room.pressed("friend.duelTabPistas")).toBe("true");
+  });
+
+  it.each(["LOBBY_SETTINGS_LOCKED", "LOBBY_SETTINGS_ERROR"])("a given-up request the server refused late (%s) is never mistaken later for this screen's own", async (code) => {
+    const room = await openRoom(SHARED_PLAYER, { host: false, guest: true });
+    room.click("friend.duelTabPistas");
+    await room.settle(3_100);
+    await room.serverRefuses(code);
+    await room.settle();
+    room.click("friend.duelTabUltimo");
+    await room.settle(3_100);
+    // Another tab picks Pistas while this screen's Ultimo is still unanswered: that choice stands.
+    await room.serverDoes(() => { room.server.game = PISTAS; });
+    await room.settle();
+    expect(room.waiting().filter(({ event }) => event === "lobby:update_settings")).toHaveLength(2);
+    expect(room.pressed("friend.duelTabPistas")).toBe("true");
+  });
+
   it("an error about something else in the room does not throw the chosen game away", async () => {
     const room = await openRoom(SHARED_PLAYER, { host: false, guest: true });
     room.click("friend.duelTabPistas");

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ declarations: 0 }));
 vi.mock("next/dynamic", () => ({
   default: () => {
-    const name = state.declarations++ === 0 ? "sharedPlayer" : "nameChain";
+    const name = (["sharedPlayer", "tenable", "nameChain", "footballRace"] as const)[state.declarations++];
     return ({ locale }: { locale: string }) => <div data-testid="loaded-board">{name}:{locale}</div>;
   },
 }));
@@ -14,7 +14,7 @@ import { DeferredWordDailyBoard } from "../public/DeferredWordDailyBoard";
 afterEach(() => vi.unstubAllGlobals());
 
 describe("DeferredWordDailyBoard", () => {
-  it.each(["sharedPlayer", "nameChain"] as const)("loads %s only when its board enters the viewport", (modeId) => {
+  it.each(["sharedPlayer", "tenable", "nameChain", "footballRace"] as const)("loads %s only when its board enters the viewport", (modeId) => {
     let notify!: IntersectionObserverCallback;
     const observe = vi.fn();
     const disconnect = vi.fn();

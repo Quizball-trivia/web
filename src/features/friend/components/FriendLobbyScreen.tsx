@@ -11,7 +11,7 @@ import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 import { InviteFailureScreen } from "./InviteFailureScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DuelGameId, LobbySeenGame, RoomGameId } from "@/lib/realtime/socket.types";
-import { canHostStart, lobbyModeCapabilities, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { canHostStart, choicePlayable, lobbyModeCapabilities, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { toast } from "sonner";
 
 type ShownGame = { lobbyId: string | null; choiceKey: string; game: LobbySeenGame };
@@ -50,6 +50,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     h2hSummary,
     allCategories,
     settingsErrorVersion,
+    settingsRefusedVersion,
     isStartingMatch,
     isLeaving,
     optimisticReady,
@@ -141,7 +142,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && modeCaps.promotesToPartyQuiz);
   // Seats shown by mode (lib/lobby/lobbyModes): party quiz 6, auction 3 (empty
   // seats become bots), every 1v1 mode 2.
-  const lobbyMaxMembers = modeCaps.playable;
+  const lobbyMaxMembers = settings ? choicePlayable(settings) : modeCaps.playable;
   // Auction, grid and duels bring their own content: lobby quiz categories do not apply.
   const hasFriendlyCategories =
     !modeCaps.needsCategories ||
@@ -154,7 +155,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     : isDuelLobby
       ? t("friend.readyCopyDuel")
     : settings?.gameMode === "room_game"
-      ? t("friend.readyCopyRoomGame")
+      ? t(choicePlayable(settings) === 4 ? "friend.readyCopyRoomGameUpTo4" : "friend.readyCopyRoomGame")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
@@ -166,7 +167,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       isCurrentHost &&
         allReady &&
         lobby?.status === "waiting" &&
-        canHostStart(settings?.gameMode, members.length) &&
+        canHostStart(settings?.gameMode, members.length, settings?.roomGame) &&
         hasFriendlyCategories &&
         !isStartingMatch &&
         // Not while the settings screen shows a game the server has not confirmed: it would start the other one.
@@ -327,6 +328,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
             onUpdateSettings={actions.handleUpdateSettings}
             onRoomOptions={actions.handleRoomOptions}
             settingsErrorVersion={rollbackVersion}
+            settingsRefusedVersion={settingsRefusedVersion}
             onSavingChange={handleSettingsBusy}
             onGameShown={handleGameShown}
           />
