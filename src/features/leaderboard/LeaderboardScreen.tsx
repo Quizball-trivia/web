@@ -21,6 +21,7 @@ import type {
 import { normalizeCountryCode } from "@/lib/geo/countryCode";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import type { StandingsApiResponse } from "@/lib/repositories/leaderboard.repo";
@@ -45,7 +46,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const searchParams = useSearchParams();
   const { t } = useLocale();
   const { isEventMode } = useActiveEventMode();
-  const isGuest = useAuthStore((state) => state.status) !== "authenticated";
+  const authStatus = useAuthStore((state) => state.status);
+  const isGuest = authStatus !== "authenticated";
   const authUser = useAuthStore((state) => state.user);
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
@@ -100,7 +102,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const board = useBoard(mode, scope, currentPlayerId, season, !showStandings);
   const rank = useBoardRank(mode, scope, currentPlayerId, season, !isGuest);
 
-  const { data: seasonsData } = useLeaderboardSeasons();
+  const { data: seasonsData, isPending: seasonsPending } = useLeaderboardSeasons();
   const archivedSeasons = useMemo(() => seasonsData?.seasons ?? [], [seasonsData]);
   const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
   const seasonOptions = useMemo<LeaderboardSelectOption<string>[]>(
@@ -117,6 +119,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
   const entries = board.data;
   const userEntry = entries?.find((entry) => entry.isCurrentUser || entry.id === currentPlayerId) ?? rank.data?.entry ?? null;
+  // Until the session check ends nobody knows whether this is a member (rank strip) or a visitor (sign-in prompt).
+  const viewerPending = authStatus === "loading" || (authStatus === "authenticated" && !!currentPlayerId && rank.isPending);
   const boardStanding: BoardStanding | null = rank.data
     ? { rank: rank.data.entry.rank, total: rank.data.entry.total, nextTarget: rank.data.nextTarget, topTenSlot: null, topTenGap: null }
     : null;
@@ -165,6 +169,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
       seasonValue={seasonId ?? CURRENT_SEASON_VALUE}
       onSeasonChange={(value) => setSeasonId(value === CURRENT_SEASON_VALUE ? null : value)}
       isArchivedView={isRanked && seasonId !== null}
+      seasonsPending={seasonsPending}
       scope={scope}
       view={view}
       countryChoice={countryChoice}
@@ -181,15 +186,23 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
       standings={toStandings(activeStandings.data)}
       standingsLoading={activeStandings.isLoading}
       entries={entries}
-      isLoading={board.isLoading}
       isError={board.isError}
       userEntry={userEntry}
+      viewerPending={viewerPending}
       boardStanding={boardStanding}
       groupStanding={groupStanding}
       currentPlayerId={currentPlayerId}
       onEntryClick={handleEntryClick}
-      onSignIn={isGuest ? openAuthPrompt : undefined}
+      onSignIn={authStatus === "anonymous" ? openAuthPrompt : undefined}
       isEventMode={isEventMode}
     />
   );
+}
+
+/** The leaderboard route: the signed-in player's board view, or a visitor's. */
+export function LeaderboardPageScreen() {
+  const { player } = usePlayer();
+  // Signed-out visitors browse the same board; only a member has a rank of their own.
+  const isAuthenticated = useAuthStore((state) => state.status) === "authenticated";
+  return <LeaderboardScreen currentPlayerId={isAuthenticated ? player.id : undefined} />;
 }

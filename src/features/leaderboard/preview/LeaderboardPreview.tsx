@@ -110,7 +110,6 @@ export function LeaderboardPreview({ scenario, member }: { scenario: string; mem
         standings={scope.kind === "club" ? CLUBS : NATIONS}
         standingsLoading={false}
         entries={entries}
-        isLoading={false}
         isError={false}
         userEntry={userEntry}
         boardStanding={boardStanding}

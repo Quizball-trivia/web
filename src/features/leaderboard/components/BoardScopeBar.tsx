@@ -104,13 +104,14 @@ export function BoardScopeBar({
             <span className="block truncate text-base font-black uppercase tracking-wide text-white sm:text-lg">
               {boardName(groupKind, groupValue, locale)}
             </span>
-            {group && (
-              <span className="block truncate text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">
-                {SHOW_PLAYER_COUNTS
+            {/* The line keeps its place until the standings arrive, so the card does not grow. */}
+            <span className="block truncate text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">
+              {!group
+                ? "\u00a0"
+                : SHOW_PLAYER_COUNTS
                   ? t("leaderboard.selectorMeta", { rank: group.rank, players: group.players.toLocaleString(), score: group.score.toLocaleString(), unit: pointsUnit })
                   : t("leaderboard.selectorMetaShort", { rank: group.rank, score: group.score.toLocaleString(), unit: pointsUnit })}
-              </span>
-            )}
+            </span>
           </span>
           <span className="flex shrink-0 items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide text-white">
             {groupKind === "club" ? t("leaderboard.selectorChangeClub") : t("leaderboard.selectorChangeCountry")}
@@ -120,7 +121,7 @@ export function BoardScopeBar({
       )}
 
       {(groupKind || trailing) && (
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-h-11 items-center justify-between gap-3">
           {groupKind ? (
             <div role="tablist" aria-label={t("leaderboard.viewTablistAriaLabel")} className="inline-flex rounded-lg border border-white/10 bg-black/40 p-1">
               {(["players", "standings"] as const).map((value) => {

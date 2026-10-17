@@ -134,4 +134,25 @@ describe('LeaderboardScreen boards', () => {
     await user.click(await screen.findByRole('option', { name: /Season 1/ }));
     await waitFor(() => expect(getBoardMock).toHaveBeenCalledWith('ranked', { kind: 'global' }, 50, 0, 'season-1'));
   });
+
+  it('holds the board and the rank strip in place while the session check runs', () => {
+    useAuthStore.setState({ status: 'loading', user: null });
+    const { container } = render(<LeaderboardScreen />, { wrapper });
+    expect(container.querySelectorAll('[data-lb-skeleton-row]').length).toBeGreaterThan(0);
+    expect(container.querySelector('.animate-spin')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading rankings…');
+    // Members would see a sign-in card flash before their rank: nothing is offered until the session is known.
+    expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(getBoardMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the skeleton, not a spinner, while switching boards', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LeaderboardScreen currentPlayerId="me" />, { wrapper });
+    expect((await screen.findAllByText('TopOne')).length).toBeGreaterThan(0);
+    getBoardMock.mockImplementation(() => new Promise(() => {}));
+    await user.click(screen.getByRole('tab', { name: /Auction/i }));
+    expect(container.querySelectorAll('[data-lb-skeleton-row]').length).toBeGreaterThan(0);
+    expect(container.querySelector('.animate-spin')).toBeNull();
+  });
 });

@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Calendar, Loader2 } from "lucide-react";
-import { motion } from "motion/react";
+import { Calendar } from "lucide-react";
 
 import { useLocale } from "@/contexts/LocaleContext";
 import type {
@@ -19,6 +18,7 @@ import type { LeaderboardMode } from "./boards";
 import { BoardContext, GuestCta, VisitorNotice } from "./components/BoardContext";
 import { BoardPicker } from "./components/BoardPicker";
 import { BoardScopeBar } from "./components/BoardScopeBar";
+import { BoardSkeleton, SeasonSelectSkeleton, VIEWER_SLOT_CLASS, ViewerSkeleton } from "./components/BoardSkeleton";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { LeaderboardSelect, type LeaderboardSelectOption } from "./components/LeaderboardSelect";
 import { LeaderboardTable } from "./components/LeaderboardTable";
@@ -49,6 +49,8 @@ export interface LeaderboardViewProps {
   seasonValue: string;
   onSeasonChange: (value: string) => void;
   isArchivedView: boolean;
+  /** Seasons not loaded yet: hold the picker's place. */
+  seasonsPending?: boolean;
 
   scope: BoardScope;
   view: BoardView;
@@ -67,10 +69,12 @@ export interface LeaderboardViewProps {
   standings: LeaderboardStanding[];
   standingsLoading: boolean;
 
+  /** Undefined until this board's rows arrive (also while the session check holds the request back). */
   entries: LeaderboardEntry[] | undefined;
-  isLoading: boolean;
   isError: boolean;
   userEntry: LeaderboardEntry | null;
+  /** The session or the viewer's own rank is still loading, so neither the rank strip nor a sign-in prompt is known yet. */
+  viewerPending?: boolean;
   boardStanding: BoardStanding | null;
   /** Standings view: where the viewer's points sit inside their own group's top 10. */
   groupStanding: BoardStanding | null;
@@ -84,11 +88,11 @@ export interface LeaderboardViewProps {
 
 export function LeaderboardView(props: LeaderboardViewProps) {
   const {
-    mode, onModeChange, seasonOptions, seasonValue, onSeasonChange, isArchivedView,
+    mode, onModeChange, seasonOptions, seasonValue, onSeasonChange, isArchivedView, seasonsPending = false,
     scope, view, countryChoice, clubChoice, myCountry, myClub,
     onSelectKind, onSelectGroup, onViewChange, pickerKind, onOpenPicker, onClosePicker,
     pickerStandings, standings, standingsLoading,
-    entries, isLoading, isError, userEntry, boardStanding, groupStanding,
+    entries, isError, userEntry, viewerPending = false, boardStanding, groupStanding,
     currentPlayerId, onEntryClick, onSignIn, isEventMode,
   } = props;
   const { t, locale } = useLocale();
@@ -106,16 +110,29 @@ export function LeaderboardView(props: LeaderboardViewProps) {
   const isVisitor = !!groupKind && !!groupValue && groupValue !== mine;
   const showStandings = !!groupKind && view === "standings";
   const topThree = entries ? entries.slice(0, 3) : [];
+  const seasonPicker = !isRanked || showStandings
+    ? undefined
+    : seasonsPending
+      ? <SeasonSelectSkeleton />
+      : seasonOptions.length > 1
+        ? (
+          <LeaderboardSelect
+            eyebrow={t("leaderboard.seasonEyebrow")}
+            ariaLabel={t("leaderboard.seasonSelectAriaLabel")}
+            icon={Calendar}
+            options={seasonOptions}
+            value={seasonValue}
+            onChange={onSeasonChange}
+            accentHex={accentHex}
+          />
+        )
+        // No past season (or the list failed): keep the row the skeleton held, so the board does not jump up.
+        : <div aria-hidden className="invisible"><SeasonSelectSkeleton /></div>;
 
   return (
     <div className="relative flex flex-col bg-transparent font-fun" style={{ minHeight: "calc(100vh - 4rem)" }}>
       <div className="flex-1 container max-w-3xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-6 space-y-5 sm:space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="flex items-end justify-between gap-4"
-        >
+        <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-4xl sm:text-5xl md:text-6xl uppercase text-white" style={poppinsTitle}>
               {t("leaderboard.title")}
@@ -130,15 +147,10 @@ export function LeaderboardView(props: LeaderboardViewProps) {
               {userEntry.rankPoints.toLocaleString()} {pointsUnit}
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Mode tabs + season, then the board picker. */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.05 }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-white/10">
             <div className="flex items-center gap-4 sm:gap-7" role="tablist" aria-label={t("leaderboard.modeTablistAriaLabel")}>
               {MODE_TABS.map((tab) => {
@@ -178,17 +190,7 @@ export function LeaderboardView(props: LeaderboardViewProps) {
             accentHex={accentHex}
             standings={pickerStandingsFor(scope, standings)}
             pointsUnit={pointsUnit}
-            trailing={isRanked && seasonOptions.length > 1 && !showStandings ? (
-              <LeaderboardSelect
-                eyebrow={t("leaderboard.seasonEyebrow")}
-                ariaLabel={t("leaderboard.seasonSelectAriaLabel")}
-                icon={Calendar}
-                options={seasonOptions}
-                value={seasonValue}
-                onChange={onSeasonChange}
-                accentHex={accentHex}
-              />
-            ) : undefined}
+            trailing={seasonPicker}
             onSelectKind={onSelectKind}
             onOpenPicker={onOpenPicker}
             onViewChange={onViewChange}
@@ -199,37 +201,45 @@ export function LeaderboardView(props: LeaderboardViewProps) {
               {t("leaderboard.finalStandings")}
             </p>
           )}
-        </motion.div>
+        </div>
 
-        {/* Where the viewer stands on this board. */}
-        {!showStandings && userEntry && !isVisitor && (
-          <div className="relative space-y-2">
-            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              {groupKind && groupValue && boardStanding && boardStanding.rank <= 3 && (
-                <TopBadge kind={groupKind} value={groupValue} rank={boardStanding.rank as 1 | 2 | 3} />
-              )}
-              <BoardContext kind={scope.kind} value={groupValue} standing={boardStanding} pointsUnit={pointsUnit} />
-            </div>
-            {isEventMode && (
-              <div
-                className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
-                style={{ backgroundColor: "#FF6C0A", width: 120, height: 34, rotate: "-5.8deg", border: "2px solid #000", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
-              >
-                <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t("welcome.poweredBy")}</span>
-                <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+        {/* Where the viewer stands on this board. The slot keeps one height while the session and rank load, whatever ends up in it. */}
+        {!showStandings ? (
+          <div className={VIEWER_SLOT_CLASS}>
+            {userEntry && !isVisitor ? (
+              <div className="relative space-y-2">
+                <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  {groupKind && groupValue && boardStanding && boardStanding.rank <= 3 && (
+                    <TopBadge kind={groupKind} value={groupValue} rank={boardStanding.rank as 1 | 2 | 3} />
+                  )}
+                  <BoardContext kind={scope.kind} value={groupValue} standing={boardStanding} pointsUnit={pointsUnit} />
+                </div>
+                {isEventMode && (
+                  <div
+                    className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+                    style={{ backgroundColor: "#FF6C0A", width: 120, height: 34, rotate: "-5.8deg", border: "2px solid #000", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
+                  >
+                    <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t("welcome.poweredBy")}</span>
+                    <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+                  </div>
+                )}
               </div>
-            )}
+            ) : viewerPending ? (
+              <ViewerSkeleton />
+            ) : onSignIn ? (
+              <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />
+            ) : isVisitor && groupKind && groupValue ? (
+              <VisitorNotice kind={groupKind} value={groupValue} mine={mine} onGoMine={() => mine && onSelectGroup(groupKind, mine)} />
+            ) : null}
           </div>
-        )}
-        {onSignIn && <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />}
-        {!onSignIn && !showStandings && isVisitor && groupKind && groupValue && (
-          <VisitorNotice kind={groupKind} value={groupValue} mine={mine} onGoMine={() => mine && onSelectGroup(groupKind, mine)} />
+        ) : (
+          onSignIn && <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />
         )}
 
         {showStandings && groupKind ? (
           standingsLoading ? (
-            <Loading label={t("leaderboard.loading")} />
+            <BoardSkeleton withPodium={false} />
           ) : (
             <StandingsBoard
               kind={groupKind}
@@ -243,29 +253,24 @@ export function LeaderboardView(props: LeaderboardViewProps) {
           )
         ) : (
           <>
-            {isLoading && <Loading label={t("leaderboard.loading")} />}
+            {!entries && !isError && <BoardSkeleton withBadges={!!groupKind} />}
             {isError && (
               <div className="rounded-[10px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 px-4 py-6 text-center">
                 <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">{t("leaderboard.loadFailed")}</p>
               </div>
             )}
-            {!isLoading && !isError && entries && (
+            {!isError && entries && (
               <div className="space-y-5 sm:space-y-6">
                 {entries.length >= 3 && (
-                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
+                  <div>
                     <LeaderboardPodium
                       topThree={topThree}
                       onEntryClick={onEntryClick}
                       renderBadge={groupKind && groupValue ? (rank) => <TopBadge kind={groupKind} value={groupValue} rank={rank} /> : undefined}
                     />
-                  </motion.div>
+                  </div>
                 )}
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.25 }}
-                  className="space-y-3"
-                >
+                <div className="space-y-3">
                   <h2 className="text-2xl sm:text-3xl uppercase text-white" style={poppinsTitle}>{groupKind === "club" && groupValue
                       ? t("leaderboard.fansHeading", { name: boardName("club", groupValue, locale) })
                       : groupKind === "country" && groupValue
@@ -280,7 +285,7 @@ export function LeaderboardView(props: LeaderboardViewProps) {
                   ) : (
                     <LeaderboardTable entries={entries} currentUserId={currentPlayerId} onEntryClick={onEntryClick} pointsLabel={pointsUnit} />
                   )}
-                </motion.div>
+                </div>
               </div>
             )}
           </>
@@ -303,13 +308,4 @@ export function LeaderboardView(props: LeaderboardViewProps) {
 
 function pickerStandingsFor(scope: BoardScope, standings: LeaderboardStanding[]) {
   return scope.kind === "global" ? [] : standings;
-}
-
-function Loading({ label }: { label: string }) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className="size-8 text-brand-yellow animate-spin" />
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">{label}</p>
-    </motion.div>
-  );
 }
