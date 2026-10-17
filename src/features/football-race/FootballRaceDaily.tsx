@@ -15,11 +15,11 @@ import { peekGuestToken } from "@/lib/guest/guestSession";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { raceCopy } from "./race.copy";
-import { dailyShareLine, FOOTBALL_RACE_CALENDAR, footballRaceDailyApi, footballRaceDailyGame, loadRaceBoard, toDailyView, toDailyWording, type RaceDailyState } from "./race.daily";
+import { asNation, dailyShareLine, FOOTBALL_RACE_CALENDAR, footballRaceDailyApi, footballRaceDailyGame, loadRaceBoard, toDailyView, toDailyWording, type RaceDailyState, type RaceMove } from "./race.daily";
 import { l10n } from "./race.rules";
 import type { RaceView, RaceWording } from "./race.views";
-import { NationFlag, RaceTrack } from "./RaceRoom";
-import { SoloBoard } from "./RaceSolo";
+import { NationFlag } from "./RaceRoom";
+import { ChooseNation, LanesTrack, SoloBoard } from "./RaceSolo";
 
 export { footballRaceDailyGame };
 
@@ -52,7 +52,7 @@ function ResultCard({ state, view, wording, locale, number }: { state: RaceDaily
         <motion.p initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={cn("text-3xl font-black leading-tight", won ? "text-brand-yellow" : "text-white")} style={poppins} data-daily-final>{headline}</motion.p>
         <p aria-label={line} className="text-2xl tracking-wider">{line}</p>
       </div>
-      <RaceTrack view={view} copy={copy} locale={locale} />
+      <LanesTrack view={view} locale={locale} rivalTarget={state.rivalTarget} />
       <section>
         <h2 className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-white/60" style={poppins}>{copy.recap}</h2>
         <ol className="flex flex-col gap-1.5">
@@ -99,7 +99,7 @@ export function FootballRaceDaily({ locale, onExit, onEvent, initialDay, onDay }
   const game = footballRaceDailyGame(locale);
   const copy = raceCopy(locale);
   const d = wordDailyCopy(locale);
-  const daily = useWordDaily<RaceDailyState, "pick">({ api: footballRaceDailyApi, calendar: FOOTBALL_RACE_CALENDAR, locale, initialDay, onDay, onEvent, resendLostAnswers: true });
+  const daily = useWordDaily<RaceDailyState, RaceMove>({ api: footballRaceDailyApi, calendar: FOOTBALL_RACE_CALENDAR, locale, initialDay, onDay, onEvent, resendLostAnswers: true });
   const { state, day, run } = daily;
   const avatar = usePlayerAvatar();
   // Picks already seen on this run; the one after them is on its reveal card until "Next". A run opened (or
@@ -109,8 +109,14 @@ export function FootballRaceDaily({ locale, onExit, onEvent, initialDay, onDay }
   const showing = Boolean(state && state.results.length > seen);
   // A run kept from before a correction of its day comes back without the race (no nations, no stats): only its result.
   const hasRace = Boolean(state && state.racers.length === state.positions.length);
-  const wording = useMemo(() => (state && hasRace ? toDailyWording(state, locale) : null), [state, hasRace, locale]);
-  const view = state && wording ? toDailyView(state, wording, { name: copy.you, avatar }, showing, locale) : null;
+  // Before the first pick the player chooses a nation of the four; the tap is local until Start sends it.
+  const choosing = Boolean(state && hasRace && !state.done && state.nation === null && state.results.length === 0);
+  const [tapped, setTapped] = useState<{ run: string; nation: string } | null>(null);
+  const chosen = choosing && run && tapped?.run === run.run.id && state!.racers.some((r) => r.id === tapped.nation) ? tapped.nation : null;
+  const shown = state && chosen ? asNation(state, chosen) : state;
+  const wording = useMemo(() => (shown && hasRace ? toDailyWording(shown, locale) : null), [shown, hasRace, locale]);
+  const view = shown && wording ? toDailyView(shown, wording, { name: copy.you, avatar }, showing, locale) : null;
+  const dayOrder = useMemo(() => (state && hasRace && choosing ? toDailyWording(state, locale).nations : []), [state, hasRace, choosing, locale]);
   const busy = daily.pending !== null;
 
   const pick = (stat: string) => {
@@ -125,9 +131,15 @@ export function FootballRaceDaily({ locale, onExit, onEvent, initialDay, onDay }
   };
   const status: "new" | "started" | "done" = state?.done ? "done" : state && state.results.length > 0 ? "started" : "new";
 
-  const play = view && wording && day ? (
-    <SoloBoard view={view} wording={wording} locale={locale} busy={busy} notice={daily.notice ? d.notices[daily.notice] : null} onPick={pick} onNext={next} onExit={() => (onExit ? onExit() : daily.setView("intro"))} />
-  ) : null;
+  const exit = () => (onExit ? onExit() : daily.setView("intro"));
+  const play = view && wording && day && state ? (choosing ? (
+    <ChooseNation view={view} nations={dayOrder} chosen={chosen} locale={locale} rivalTarget={state.rivalTarget} busy={busy}
+      notice={daily.notice ? d.notices[daily.notice] : null} onExit={exit}
+      onChoose={(nation) => run && setTapped({ run: run.run.id, nation })}
+      onStart={() => { if (chosen && !busy) void daily.answer(chosen, { move: "choose" }); }} />
+  ) : (
+    <SoloBoard view={view} wording={wording} locale={locale} rivalTarget={state.rivalTarget} busy={busy} notice={daily.notice ? d.notices[daily.notice] : null} onPick={pick} onNext={next} onExit={exit} />
+  )) : null;
   const number = day ? puzzleNumber(FOOTBALL_RACE_CALENDAR, day) : 0;
   const end = state?.done && day ? (
     <DailyEnd game={game} locale={locale} day={day} shareText={`${copy.shareTitle(number)}\n${dailyShareLine(state)}`} guestOnPastBoard={daily.guestOnPastBoard}
