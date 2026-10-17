@@ -19,7 +19,8 @@ export function TopBadge({ kind, value, rank }: TopBadgeProps) {
       className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
       style={{ color: MEDAL[rank] }}
     >
-      <BoardBadge kind={kind} value={value} className={kind === "club" ? "size-4" : "text-[12px]"} />
+      {/* Country boards skip the flag: every avatar already wears it. */}
+      {kind === "club" && <BoardBadge kind={kind} value={value} className="size-4" />}
       {kind === "club" ? t("leaderboard.topFanBadge", { rank }) : t("leaderboard.topCountryBadge", { rank })}
     </span>
   );
