@@ -164,7 +164,7 @@ const es: typeof en = {
   chooseHint: "Hoy todos tienen las mismas cuatro selecciones",
   chooseFirst: "Tocá una selección",
   laneGoals: (you, rival) => `Vos necesitás ${you} · cada rival ${rival}`,
-  toGo: (n) => (n <= 0 ? "Llegó" : `Faltan ${n}`),
+  toGo: (n) => (n <= 0 ? "Llegó" : n === 1 ? "Falta 1" : `Faltan ${n}`),
   start: "Empezar",
   next: "Siguiente",
   pickCount: (n) => `Elección ${n}`,
