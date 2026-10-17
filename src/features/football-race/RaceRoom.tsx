@@ -64,8 +64,8 @@ function useLabels(wording: RaceWording, locale: string) {
   }, [wording, locale]);
 }
 
-const PITCH_STRIPES = { backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 44px, transparent 44px 88px)" } as const;
-const GOAL_NET = {
+export const PITCH_STRIPES = { backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 44px, transparent 44px 88px)" } as const;
+export const GOAL_NET = {
   backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
   backgroundSize: "7px 7px",
 } as const;

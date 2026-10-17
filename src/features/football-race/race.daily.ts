@@ -29,9 +29,13 @@ export interface RaceDailyState extends WordRunStateBase {
   cutoff: string;
   source: Label;
   tournament: { id: string; label: Label };
-  /** Index 0 is the player's nation. */
+  /** By seat: index 0 is the player's nation (the day's order until one is chosen). */
   racers: Array<{ id: string; code: string; flag: string; name: Label }>;
+  /** The nation the player races as; null until chosen (the choice closes at the first pick); absent from an older server. */
+  nation?: string | null;
   target: number;
+  /** Spaces a rival covers from its head start. */
+  rivalTarget: number;
   positions: number[];
   eras: Array<{ id: string; label: Label }>;
   families: Array<{ id: string; label: Label }>;
@@ -44,17 +48,28 @@ export interface RaceDailyState extends WordRunStateBase {
 type ServerState = Omit<RaceDailyState, "open" | "deadline" | "serverNow">;
 
 const BASE = "/api/v1/football-race";
-const base = createWordDailyApi<RaceDailyState, "pick", unknown>(BASE);
+export type RaceMove = "pick" | "choose";
+const base = createWordDailyApi<RaceDailyState, RaceMove, unknown>(BASE);
 const request = createDailyGameCall(BASE);
-const clockless = <R extends { state: ServerState }>(r: R) => ({ ...r, state: { ...r.state, open: false, deadline: null, serverNow: new Date().toISOString() } });
+// An older server has no choice and no rivalTarget: its rivals start 2 ahead, and the run plays as the day's first nation.
+const clockless = <R extends { state: ServerState }>(r: R) => ({
+  ...r, state: { ...r.state, rivalTarget: r.state.rivalTarget ?? r.state.target - 2, open: false, deadline: null, serverNow: new Date().toISOString() },
+});
 const withRun = (data: WordRun<RaceDailyState> | { run: null }) => ("state" in data ? clockless(data as unknown as { run: { id: string; version: number }; state: ServerState }) : data);
 
-/** The shared word-daily client with the race's own move: a pick (no clock, no next, no pass). */
+/**
+ * The shared word-daily client with the race's own moves (no clock, no next, no pass): a pick, or, with
+ * `{ move: "choose" }`, the nation to race as.
+ */
 export const footballRaceDailyApi: typeof base = {
   ...base,
   current: (day, locale) => base.current(day, locale).then(withRun),
   start: (day, contentVersion, locale, timeoutMs) => base.start(day, contentVersion, locale, timeoutMs).then((r) => clockless(r as unknown as { run: WordRun<RaceDailyState>["run"]; state: ServerState })),
-  answer: (run, stat, locale) => request<{ run: WordRun<RaceDailyState>["run"]; state: ServerState }>("/pick", "POST", { runId: run.run.id, version: run.run.version, stat }, locale, { timeoutMs: 8_000 }).then((r) => ({ ...clockless(r), result: "pick" as const })),
+  answer: (run, value, locale, extra) => {
+    const move: RaceMove = extra?.move === "choose" ? "choose" : "pick";
+    const body = { runId: run.run.id, version: run.run.version, ...(move === "choose" ? { nation: value } : { stat: value }) };
+    return request<{ run: WordRun<RaceDailyState>["run"]; state: ServerState }>(`/${move}`, "POST", body, locale, { timeoutMs: 8_000 }).then((r) => ({ ...clockless(r), result: move }));
+  },
   next: () => Promise.reject(new Error("unsupported")),
   pass: () => Promise.reject(new Error("unsupported")),
 };
@@ -101,6 +116,12 @@ export function toDailyView(s: RaceDailyState, wording: RaceWording, me: { name:
     standings: null, winners: null, endedBy: null,
   };
 }
+
+/** The run before its first pick as it looks racing as `nation`: that nation in seat 0, the rest in the day's order. */
+export const asNation = (s: RaceDailyState, nation: string): RaceDailyState => {
+  const mine = s.racers.find((r) => r.id === nation);
+  return mine ? { ...s, racers: [mine, ...s.racers.filter((r) => r.id !== nation)] } : s;
+};
 
 /** 🟩 your nation moved, 🟥 only a rival moved, 🏁 / ❌ how it ended: no stat or nation in it. */
 export const dailyShareLine = (s: RaceDailyState) =>

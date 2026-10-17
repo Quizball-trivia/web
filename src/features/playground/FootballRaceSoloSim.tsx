@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { RaceFrame } from "@/features/football-race/RaceRoom";
-import { SoloBoard, SoloIntro, SoloResult, toSoloView } from "@/features/football-race/RaceSolo";
+import { ChooseNation, SoloBoard, SoloResult, toSoloView } from "@/features/football-race/RaceSolo";
 import { compare, type RacePack } from "@/features/football-race/race.rules";
 import { dailyRace, soloPick, startSolo, type SoloConfig, type SoloState } from "@/features/football-race/race.solo";
 import { toWording } from "@/features/football-race/race.views";
@@ -14,7 +14,9 @@ import { inventedRacePack } from "./fixtures/football-race";
  * The daily race on this device on the real rules (race.solo.ts). `script` jumps to an end state for screenshots:
  * "won" (one wrong pick), "perfect" (5 of 5), "lost" (feeding one rival). The real pack is the local private file.
  */
-export interface RaceSoloConfig { data: "real" | "invented"; day: string; script: "play" | "won" | "perfect" | "lost" }
+export interface RaceSoloConfig {
+  data: "real" | "invented"; day: string; script: "play" | "won" | "perfect" | "lost";
+}
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -44,7 +46,10 @@ export function FootballRaceSoloSim({ config, locale, log }: { config: RaceSoloC
 
 function Daily({ pack, config, locale, log }: { pack: RacePack; config: RaceSoloConfig; locale: string; log: (action: string, ...args: unknown[]) => void }) {
   const day = config.day === "today" || !config.day ? today() : config.day;
-  const race = useMemo(() => dailyRace(pack, day), [pack, day]);
+  const dealt = useMemo(() => dailyRace(pack, day), [pack, day]);
+  const [chosen, setChosen] = useState<string | null>(config.script !== "play" ? dealt.racers[0] : null);
+  // Choosing a nation only reorders the same four: yours becomes racer 0, the rest keep the day's order.
+  const race = useMemo(() => (chosen ? { ...dealt, racers: [chosen, ...dealt.racers.filter((id) => id !== chosen)] } : dealt), [dealt, chosen]);
   const wording = useMemo(() => toWording(pack), [pack]);
   const me = useMemo(() => ({ name: raceCopy(locale).you, avatar: avatarFor(0) }), [locale]);
   const [state, setState] = useState<SoloState>(() => scripted(race, config.script));
@@ -52,6 +57,7 @@ function Daily({ pack, config, locale, log }: { pack: RacePack; config: RaceSolo
   const tournament = pack.tournaments?.find((t) => t.id === race.tournament)?.label ?? null;
   const view = toSoloView(state, race, race.scopes, tournament, me, stage === "reveal", locale);
   useEffect(() => { log("dailyRace", { day, tournament: race.tournament, racers: race.racers, stats: race.statIds.length }); }, [log, day, race]);
+  const choose = (id: string) => { log("onChoose", id); setChosen(id); setState(startSolo({ ...dealt, racers: [id, ...dealt.racers.filter((x) => x !== id)] })); };
   const pick = (statId: string) => {
     const res = soloPick(state, race, statId);
     log("onPick", statId, res.error ?? res.state.picks.at(-1)?.leaders);
@@ -60,13 +66,18 @@ function Daily({ pack, config, locale, log }: { pack: RacePack; config: RaceSolo
   };
   const share = async (text: string) => { log("onShare", text); try { await navigator.clipboard.writeText(text); return true; } catch { return false; } };
   if (state.result && stage !== "reveal") {
-    return <RaceFrame><SoloResult view={view} state={state} wording={wording} locale={locale} avatar={me.avatar} onShare={share} onFriends={() => log("onFriends")} /></RaceFrame>;
+    return <RaceFrame><SoloResult view={view} state={state} wording={wording} locale={locale} avatar={me.avatar} rivalTarget={race.rivalTarget} onShare={share} onFriends={() => log("onFriends")} /></RaceFrame>;
   }
+  const nationOf = new Map(pack.nations.map((n) => [n.id, n]));
+  const intro = (
+    <ChooseNation view={view} nations={dealt.racers.map((id) => nationOf.get(id)!)} chosen={chosen} locale={locale} rivalTarget={race.rivalTarget}
+      onChoose={choose} onStart={() => { log("onStart"); setStage("play"); }} onExit={() => log("onExit")} />
+  );
   return (
     <RaceFrame wide={stage !== "intro"}>
       {stage === "intro"
-        ? <SoloIntro view={view} wording={wording} locale={locale} day={day} onStart={() => { log("onStart"); setStage("play"); }} />
-        : <SoloBoard view={view} wording={wording} locale={locale} onPick={pick} onNext={() => setStage("play")} onExit={() => log("onExit")} />}
+        ? intro
+        : <SoloBoard view={view} wording={wording} locale={locale} onPick={pick} onNext={() => setStage("play")} onExit={() => log("onExit")} rivalTarget={race.rivalTarget} />}
     </RaceFrame>
   );
 }
