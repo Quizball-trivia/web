@@ -126,7 +126,8 @@ export function LeaderboardView(props: LeaderboardViewProps) {
             accentHex={accentHex}
           />
         )
-        : undefined;
+        // No past season (or the list failed): keep the row the skeleton held, so the board does not jump up.
+        : <div aria-hidden className="invisible"><SeasonSelectSkeleton /></div>;
 
   return (
     <div className="relative flex flex-col bg-transparent font-fun" style={{ minHeight: "calc(100vh - 4rem)" }}>

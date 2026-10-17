@@ -20,22 +20,23 @@ export function BoardContext({ kind, value, standing, pointsUnit }: BoardContext
   if (!standing) return null;
   const where = kind === "global" || !value ? t("leaderboard.boardWorld") : boardName(kind, value, locale);
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-[11px] font-black uppercase tracking-wide">
-      <span className="flex items-center gap-1.5 text-white/70">
+    // One line: the viewer slot above the board is sized for it, so a long rival name truncates instead of wrapping.
+    <div className="flex min-w-0 flex-nowrap items-center gap-x-4 px-1 text-[11px] font-black uppercase tracking-wide">
+      <span className="flex shrink-0 items-center gap-1.5 text-white/70">
         {kind !== "global" && value && <BoardBadge kind={kind} value={value} className={kind === "club" ? "size-5" : "text-[14px]"} />}
         {SHOW_PLAYER_COUNTS
           ? t("leaderboard.contextRank", { rank: standing.rank, total: standing.total.toLocaleString(), where })
           : t("leaderboard.contextRankShort", { rank: standing.rank, where })}
       </span>
       {standing.nextTarget ? (
-        <span className="flex items-center gap-1.5 text-brand-yellow">
-          <Target className="size-3.5" aria-hidden />
-          {t("leaderboard.contextNext", {
+        <span className="flex min-w-0 items-center gap-1.5 text-brand-yellow">
+          <Target className="size-3.5 shrink-0" aria-hidden />
+          <span className="truncate">{t("leaderboard.contextNext", {
             gap: standing.nextTarget.gap.toLocaleString(),
             unit: pointsUnit,
             name: standing.nextTarget.username,
             rank: standing.nextTarget.rank,
-          })}
+          })}</span>
         </span>
       ) : standing.rank === 1 ? (
         <span className="text-brand-yellow">{t("leaderboard.contextTop")}</span>
