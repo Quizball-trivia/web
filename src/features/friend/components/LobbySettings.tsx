@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
 import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySettingsState, LobbyState, RoomGameId } from "@/lib/realtime/socket.types";
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
-import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, roomGameLabels, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { choicePlayable, DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, roomGameLabels, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { FootballRaceOptions } from "./FootballRaceOptions";
 import { RoomGameOptions } from "./RoomGameOptions";
 import { GridRoomOptions } from './GridRoomOptions';
 import { logger } from "@/utils/logger";
@@ -735,7 +736,7 @@ export function LobbySettings({
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
               {modeTabs(serverDuelGame, serverRoomGame).map(({ choice, labelKey }) => {
                 const key = modeChoiceKey(choice);
-                const overCapacity = memberCount > LOBBY_MODES[choice.gameMode].playable;
+                const overCapacity = memberCount > choicePlayable(choice);
                 const guestLocked = hasGuest && !LOBBY_MODES[choice.gameMode].guestAllowed;
                 const selected = currentChoiceKey === key;
                 return (
@@ -1058,6 +1059,9 @@ export function LobbySettings({
             </h4>
             {roomGame === 'shared_player' && roomGame === serverRoomGame && (
               <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
+            {roomGame === 'football_race' && roomGame === serverRoomGame && (
+              <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
             )}
           </div>
         )}

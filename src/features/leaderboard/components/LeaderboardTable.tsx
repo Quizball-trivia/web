@@ -47,8 +47,9 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
     <div className="relative">
       {/* Column labels */}
       <div className={cn(
-        "grid grid-cols-12 px-3 pb-3 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45",
-        compact ? "gap-2" : "gap-2 sm:gap-4 sm:px-4 sm:text-xs",
+        "grid grid-cols-12 px-3 pb-3 text-[10px] font-fun font-black uppercase text-white/45",
+        // Compact columns are narrow: long headings (Georgian) wrap inside their own column instead of running into the next.
+        compact ? "gap-2 tracking-[0.04em] leading-tight [&>div]:min-w-0 [&>div]:[overflow-wrap:anywhere]" : "gap-2 tracking-[0.18em] sm:gap-4 sm:px-4 sm:text-xs",
       )}>
         <div className={cn(compact ? "col-span-2" : "col-span-3", "text-center")}>{t('leaderboard.colRank')}</div>
         <div className={cn(compact ? "col-span-5" : "col-span-4", "text-left")}>{t('leaderboard.colPlayer')}</div>

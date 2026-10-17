@@ -10,6 +10,10 @@ const WORD_GAME_PATHS = new Set([
   "/ka/football-games/played-for-both-clubs",
   "/tr/futbol-oyunlari/son-harfle-futbolcu",
   "/tr/futbol-oyunlari/ortak-futbolcu-oyunu",
+  "/en/football-games/football-horserace",
+  "/es/juegos-de-futbol/carrera-de-caballos-futbolera",
+  "/ka/football-games/football-horserace",
+  "/tr/futbol-oyunlari/futbol-at-yarisi",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {

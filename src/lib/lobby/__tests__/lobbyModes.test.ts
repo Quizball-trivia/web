@@ -4,6 +4,7 @@ import {
   DUEL_GAME_LABEL_KEYS,
   LOBBY_MODES,
   canHostStart,
+  choicePlayable,
   isDuelGameEnabled, isRoomGameEnabled,
   lobbyModeCapabilities,
   modeChoiceKey,
@@ -63,5 +64,16 @@ describe("lobby mode capability map (web mirror)", () => {
     expect(modeChoiceKey({ gameMode: "duel", duelGame: "pistas" })).toBe("duel:pistas");
     expect(modeChoiceKey({ gameMode: "duel", duelGame: "ultimo" })).toBe("duel:ultimo");
     expect(modeChoiceKey({ gameMode: "auction", duelGame: null })).toBe("auction");
+  });
+});
+
+describe("room games seating fewer than six", () => {
+  it("Football Horserace seats 2 to 4; the other room games keep 6", () => {
+    expect(choicePlayable({ gameMode: "room_game", roomGame: "football_race" })).toBe(4);
+    expect(choicePlayable({ gameMode: "room_game", roomGame: "name_chain" })).toBe(6);
+    expect(choicePlayable({ gameMode: "auction" })).toBe(3);
+    expect(canHostStart("room_game", 4, "football_race")).toBe(true);
+    expect(canHostStart("room_game", 5, "football_race")).toBe(false);
+    expect(canHostStart("room_game", 5, "name_chain")).toBe(true);
   });
 });

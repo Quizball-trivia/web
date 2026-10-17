@@ -76,6 +76,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu" },
   // Google Suggest 2026-10-15: "adivina el top 10 de fútbol" (ar/es/mx), "futbol top 10" (tr); en/ka "football tenable".
   "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10" },
+  "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -1020,6 +1021,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Biz bir futbolcu veriyoruz; sen, adının son harfiyle başlayan başka bir futbolcuyla cevap veriyorsun. Her isim için 10 saniyen var ve zincir uzadıkça süre kısalır. Günde üç zincir: kaç futbolcu sayabilirsin?",
       howToPlay: ["Oyun başlangıç için bir futbolcu verir ve gereken harfi gösterir.", "Adı ya da soyadı o harfle başlayan bir futbolcu yaz. Anthony Martial hem A hem M için geçerlidir.", "Her isim için 10 saniyen var; her beş isimde süre bir saniye kısalır. Aynı futbolcu iki kez söylenemez.", "Süre bitince zincir biter ve yenisi başlar. Günde üç zincir; puanın saydığın bütün futbolculardır."],
       reward: "Önceki günleri hesapsız oyna; bugünün zincirleri ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("football-horserace", "/horserace", "football-horserace", {
+    en: {
+      metaTitle: "Football Horserace — Pick the Stat, Race Your Nation | QuizBall",
+      metaDescription: "The Football Horserace game: your nation against three in one tournament. Pick the stats it leads and race to the line. One race a day, or 2 to 4 friends in a room.",
+      title: "Football Horserace",
+      intro: "Choose a nation in a tournament: Denmark at the Euros, Morocco at the World Cup. Three rival nations race against you. Pick a stat you think your nation leads, like most goals in a single match or fewest goals conceded, and if you are right your flag moves one space. Pick wrong and the nation that really leads it moves instead.",
+      howToPlay: ["Each day's race is one tournament and four nations, the same for everyone: choose yours, the other three are your rivals. You need five spaces, each rival needs three.", "Pick a stat from the list or type one: wins, penalties, clean sheets, red cards, comebacks and more. Every stat is a real record of that tournament.", "The nation that leads the stat moves one space, whoever picked it. A tie moves every nation that shares the lead.", "Reach the goal before the rivals, in as few picks as you can. Five out of five is a perfect race."],
+      reward: "Play past days without an account; sign in for today's race and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ფეხბურთის დოღი — აირჩიე სტატისტიკა და გაასწარი ნაკრებით | QuizBall",
+      metaDescription: "ფეხბურთის დოღი: შენი ნაკრები სამის წინააღმდეგ ერთ ტურნირში. აირჩიე სტატისტიკა, რომელშიც ლიდერობს, და მიდი ფინიშისკენ. ერთი დოღი დღეში ან 2-4 მეგობარი ოთახში.",
+      title: "ფეხბურთის დოღი",
+      intro: "აირჩიე ნაკრები ტურნირში: დანია ევროპის ჩემპიონატზე, მაროკო მსოფლიო ჩემპიონატზე. სამი მეტოქე ნაკრები შენთან ერთად რბის. აირჩიე სტატისტიკა, რომელშიც შენი ნაკრები ლიდერობს, მაგალითად ყველაზე მეტი გოლი ერთ მატჩში, და თუ მართალი ხარ, შენი დროშა ერთი უჯრით წინ მიდის. თუ შეცდები, წინ ის ნაკრები წავა, რომელიც სინამდვილეში ლიდერობს.",
+      howToPlay: ["დღის დოღი ერთი ტურნირი და ოთხი ნაკრებია, ყველასთვის ერთი და იგივე: აირჩიე შენი, დანარჩენი სამი შენი მეტოქეა. შენ ხუთი უჯრა გჭირდება, თითო მეტოქეს სამი.", "აირჩიე სტატისტიკა სიიდან ან დაწერე: მოგებები, პენალტები, მშრალი მატჩები, წითელი ბარათები და სხვა. ყველა სტატისტიკა ამ ტურნირის ნამდვილი მონაცემია.", "ნაკრები, რომელიც სტატისტიკაში ლიდერობს, ერთი უჯრით მიდის წინ, ვინც არ უნდა აირჩიოს. თანაბრობისას წინ ყველა ლიდერი მიდის.", "მიაღწიე ფინიშს მეტოქეებზე ადრე, რაც შეიძლება ნაკლები არჩევანით. 5-დან 5 იდეალური დოღია."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი დოღისთვის და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Carrera de caballos futbolera — Elegí la estadística y corré | QuizBall",
+      metaDescription: "La carrera de caballos futbolera: tu selección contra tres en un torneo. Elegí las estadísticas que lidera y llegá primero a la meta. Una carrera por día, o de 2 a 4 amigos en una sala.",
+      title: "Carrera de caballos futbolera",
+      intro: "Elegí una selección en un torneo: Uruguay en la Copa América, Marruecos en el Mundial. Tres selecciones rivales corren contra vos. Elegí una estadística que creas que lidera tu selección, como más goles en un partido o menos goles recibidos, y si acertás tu bandera avanza un casillero. Si te equivocás, avanza la selección que de verdad la lidera.",
+      howToPlay: ["La carrera del día es un torneo y cuatro selecciones, las mismas para todos: elegí la tuya y las otras tres son tus rivales. Vos necesitás cinco casilleros, cada rival tres.", "Elegí una estadística de la lista o escribila: victorias, penales, vallas invictas, tarjetas rojas, remontadas y más. Cada estadística es un dato real de ese torneo.", "La selección que lidera la estadística avanza un casillero, la haya elegido quien la haya elegido. Si hay empate, avanzan todas las que comparten el primer lugar.", "Llegá a la meta antes que las rivales, con la menor cantidad de elecciones. Cinco de cinco es una carrera perfecta."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, la carrera de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol At Yarışı — İstatistiği Seç, Milli Takımınla Yarış | QuizBall",
+      metaDescription: "Futbol At Yarışı: milli takımın tek bir turnuvada üç rakibe karşı. Önde olduğu istatistikleri seç ve çizgiye ilk sen ulaş. Günde bir yarış ya da odada 2-4 arkadaş.",
+      title: "Futbol At Yarışı",
+      intro: "Bir turnuvada milli takımını seç: Avrupa Şampiyonası'nda Türkiye, Dünya Kupası'nda Fas. Üç rakip milli takım seninle yarışır. Takımının önde olduğunu düşündüğün bir istatistik seç, örneğin tek maçta en çok gol ya da en az yenilen gol; haklıysan bayrağın bir kare ilerler. Yanılırsan o istatistikte gerçekten önde olan takım ilerler.",
+      howToPlay: ["Günün yarışı bir turnuva ve herkes için aynı dört milli takımdır: kendininkini seç, diğer üçü rakiplerin olur. Sana beş kare gerekir, her rakibe üç.", "Listeden bir istatistik seç ya da yaz: galibiyetler, penaltılar, gol yemeden biten maçlar, kırmızı kartlar, geri dönüşler ve daha fazlası. Her istatistik o turnuvanın gerçek bir verisidir.", "İstatistikte önde olan takım, kim seçmiş olursa olsun bir kare ilerler. Eşitlikte önde olan bütün takımlar ilerler.", "Rakiplerden önce, olabildiğince az seçimle kaleye ulaş. 5'te 5 kusursuz bir yarıştır."],
+      reward: "Önceki günleri hesapsız oyna; bugünün yarışı ve günün sıralaması için giriş yap.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {
