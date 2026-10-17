@@ -1,9 +1,10 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { GameFeedbackSlot } from "../GameFeedback";
 
 describe("GameFeedbackSlot", () => {
   beforeEach(() => localStorage.clear());
+  afterEach(() => vi.unstubAllGlobals());
 
   it("sends the stars, the online answer and the comment, then stays hidden for that game", async () => {
     const send = vi.fn().mockResolvedValue(null);
@@ -45,10 +46,11 @@ describe("GameFeedbackSlot", () => {
   });
 
   it("still shows when storage is blocked", () => {
-    const getItem = vi.spyOn(localStorage, "getItem").mockImplementation(() => { throw new Error("blocked"); });
+    // Replaces the storage object itself: test setups differ in which object (and prototype) holds the methods.
+    const getItem = vi.fn(() => { throw new Error("blocked"); });
+    vi.stubGlobal("localStorage", { getItem, setItem: getItem, removeItem: getItem, clear: getItem });
     render(<GameFeedbackSlot game="tenable" title="Football Tenable" locale="en" send={vi.fn()} />);
     expect(getItem).toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "How was Football Tenable?" })).toBeInTheDocument();
-    getItem.mockRestore();
   });
 });
