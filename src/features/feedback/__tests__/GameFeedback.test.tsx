@@ -14,6 +14,8 @@ describe("GameFeedbackSlot", () => {
     fireEvent.click(screen.getByRole("button", { name: "Yes" }));
     fireEvent.change(screen.getByPlaceholderText("Anything to tell us? (optional)"), { target: { value: "  more lists  " } });
     fireEvent.click(sendButton);
+    expect(screen.getByRole("radio", { name: "5 of 5 stars" })).toBeDisabled();
+    expect(screen.getByPlaceholderText("Anything to tell us? (optional)")).toBeDisabled();
     expect(send).toHaveBeenCalledWith({ rating: 4, wantsOnline: true, comment: "more lists" });
     expect(await screen.findByRole("status")).toHaveTextContent("Thanks!");
     expect(localStorage.getItem("quizball.gameFeedback.tenable")).toBe("sent");
@@ -43,8 +45,9 @@ describe("GameFeedbackSlot", () => {
   });
 
   it("still shows when storage is blocked", () => {
-    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
+    const getItem = vi.spyOn(localStorage, "getItem").mockImplementation(() => { throw new Error("blocked"); });
     render(<GameFeedbackSlot game="tenable" title="Football Tenable" locale="en" send={vi.fn()} />);
+    expect(getItem).toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "How was Football Tenable?" })).toBeInTheDocument();
     getItem.mockRestore();
   });

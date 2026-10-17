@@ -55,6 +55,8 @@ function FeedbackForm({ game, locale, onSend, onClose }: {
   const [wantsOnline, setWantsOnline] = useState<boolean | null>(null);
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  // The answer is frozen while it is on its way: a change made then would be lost behind the thanks.
+  const busy = status === "sending";
   if (status === "sent") return <p className="py-2 text-center text-sm font-bold text-white" role="status">{c.thanks}</p>;
   const submit = async () => {
     setStatus("sending");
@@ -62,7 +64,7 @@ function FeedbackForm({ game, locale, onSend, onClose }: {
   };
   return (
     <>
-      <fieldset className="flex justify-center gap-1.5">
+      <fieldset disabled={busy} className="flex justify-center gap-1.5">
         <legend className="sr-only">{c.title(game)}</legend>
         {[1, 2, 3, 4, 5].map((n) => (
           <label key={n} className="flex size-11 cursor-pointer items-center justify-center rounded-full hover:bg-white/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-white">
@@ -74,16 +76,16 @@ function FeedbackForm({ game, locale, onSend, onClose }: {
       <p className="mt-4 text-center text-sm font-semibold text-white/85">{c.online}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {([true, false] as const).map((v) => (
-          <button key={String(v)} type="button" aria-pressed={wantsOnline === v} onClick={() => setWantsOnline(v)}
+          <button key={String(v)} type="button" disabled={busy} aria-pressed={wantsOnline === v} onClick={() => setWantsOnline(v)}
             className={cn("h-11 rounded-full text-sm font-black uppercase tracking-wide", wantsOnline === v ? "bg-white text-brand-blue" : "bg-white/10 text-white/85 hover:bg-white/15")} style={poppins}>
             {v ? c.yes : c.no}
           </button>
         ))}
       </div>
-      <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={2} placeholder={c.comment}
+      <textarea disabled={busy} value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} rows={2} placeholder={c.comment}
         className="mt-3 w-full resize-none rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/45 focus:border-white/40 focus:outline-none" />
       {status === "failed" && <p role="alert" className="mt-3 text-center text-sm font-semibold text-brand-red-light">{c.error}</p>}
-      <button type="button" disabled={rating === 0 || status === "sending"} onClick={() => void submit()}
+      <button type="button" disabled={rating === 0 || busy} onClick={() => void submit()}
         className="mt-3 h-12 w-full rounded-full bg-brand-green text-sm font-black uppercase tracking-wide text-white hover:bg-brand-green-deep disabled:bg-white/15 disabled:text-white/50" style={poppins}>
         {status === "sending" ? c.sending : c.send}
       </button>
