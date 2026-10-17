@@ -87,9 +87,9 @@ export function PartyPage({ standings, flights, resolved, children }: { standing
 }
 
 /** The final table on the Party Quiz results screen: the game's own places (shared on ties), no XP. */
-export function PartyResults({ seats, standings, mySeat, headline, statLabel, detail, leftLabel, onRoom, onExit }: {
+export function PartyResults({ seats, standings, mySeat, headline, statLabel, detail, leftLabel, onRoom, onExit, footer }: {
   seats: readonly WordSeat[]; standings: readonly WordStanding[]; mySeat: number; headline: string; statLabel: string;
-  detail: (row: WordStanding) => string; leftLabel: string; onRoom: () => void; onExit: () => void;
+  detail: (row: WordStanding) => string; leftLabel: string; onRoom: () => void; onExit: () => void; footer?: ReactNode;
 }) {
   const firsts = standings.filter((r) => r.place === 1);
   const participants: MatchParticipant[] = seats.map((s) => ({
@@ -104,6 +104,6 @@ export function PartyResults({ seats, standings, mySeat, headline, statLabel, de
   return (
     <PartyResultsScreen finalResults={finalResults} participants={participants} selfUserId={idOf(mySeat)} onPlayAgain={onRoom} onMainMenu={onExit}
       headline={headline} hideXp correctLabel={statLabel} useGivenRanks rowDetail={Object.fromEntries(standings.map((r) => [idOf(r.seat), detail(r)]))}
-      notOnPodium={seats.filter((s) => s.status === "withdrawn").map((s) => idOf(s.seat))} />
+      notOnPodium={seats.filter((s) => s.status === "withdrawn").map((s) => idOf(s.seat))} footer={footer} />
   );
 }

@@ -1,4 +1,6 @@
 import { createWordDailyApi, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
+import type { GameFeedbackAnswer } from "@/features/feedback/GameFeedback";
+import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
 import { API_BASE_URL } from "@/lib/config";
 import { timeoutSignal } from "@/lib/timeoutSignal";
 import type { FigureUnit } from "./tenable.figures";
@@ -21,6 +23,14 @@ export interface TenableServerRun extends WordRunStateBase {
 export interface TenableReview { day: string; list: Localized; slots: Array<{ rank: number; name: string; figure: { value: number; unit: FigureUnit } }> }
 
 export const tenableDailyApi = createWordDailyApi<TenableServerRun, never, TenableReview>("/api/v1/tenable");
+
+const tenableCall = createDailyGameCall("/api/v1/tenable");
+/** The after-game card, from the solo daily or a room match. */
+export const sendTenableFeedback = (mode: "solo" | "room", answer: GameFeedbackAnswer, locale: string) =>
+  tenableCall<null>("/feedback", "POST", {
+    mode, rating: answer.rating, wantsOnline: answer.wantsOnline, locale: ["en", "ka", "es", "tr", "ru"].includes(locale) ? locale : "en",
+    ...(answer.comment ? { comment: answer.comment } : {}),
+  }, locale);
 
 export interface Suggestion { eid: string; label: string; qualifier: string | null }
 

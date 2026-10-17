@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -40,6 +40,8 @@ interface PartyQuizResultsScreenProps {
   notOnPodium?: readonly string[];
   /** A short per-player line under the name (room games: rounds won · average error), by userId. */
   rowDetail?: Readonly<Record<string, string>>;
+  /** Shown under the action buttons (room games: the feedback card). */
+  footer?: ReactNode;
 }
 
 interface StandingRow extends MatchStandingPayload {
@@ -342,6 +344,7 @@ export function PartyQuizResultsScreen({
   palette = 'medals',
   notOnPodium = [],
   rowDetail,
+  footer,
 }: PartyQuizResultsScreenProps) {
   const { t } = useLocale();
   const [isReturningToLobby, setIsReturningToLobby] = useState(false);
@@ -564,6 +567,7 @@ export function PartyQuizResultsScreen({
             {t('partyResults.mainMenu')}
           </button>
         </motion.div>
+        {footer}
       </div>
       <AnimatePresence>
         {isReturningToLobby && (
