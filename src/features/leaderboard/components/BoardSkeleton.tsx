@@ -1,4 +1,8 @@
+"use client";
+
+import { useLocale } from "@/contexts/LocaleContext";
 import { cn } from "@/lib/utils";
+import type { BoardParams } from "../boards";
 
 const block = "rounded-md bg-white/[0.07]";
 
@@ -18,9 +22,19 @@ interface BoardSkeletonProps {
   withPodium?: boolean;
 }
 
-export function BoardSkeleton({ withBadges = false, withPodium = true }: BoardSkeletonProps) {
+export function BoardSkeleton(props: BoardSkeletonProps) {
+  const { t } = useLocale();
   return (
-    <div data-lb-skeleton aria-hidden className="animate-pulse space-y-5 sm:space-y-6">
+    <div data-lb-skeleton role="status" aria-busy="true">
+      <span className="sr-only">{t("leaderboard.loading")}</span>
+      <BoardSkeletonShape {...props} />
+    </div>
+  );
+}
+
+function BoardSkeletonShape({ withBadges = false, withPodium = true }: BoardSkeletonProps) {
+  return (
+    <div data-lb-board aria-hidden className="animate-pulse space-y-5 sm:space-y-6">
       {withPodium && (
         <div className="px-4 pt-10 sm:px-6 sm:pt-14">
           <div className="mx-auto flex w-full max-w-md items-end justify-center gap-2 sm:gap-4">
@@ -67,20 +81,26 @@ export function BoardSkeleton({ withBadges = false, withPodium = true }: BoardSk
   );
 }
 
-/** Holds the place of the viewer's own rank strip while the session and rank load. */
-export function RankStripSkeleton() {
+/**
+ * The viewer's slot above the board: rank strip plus its context line for a
+ * ranked member. A guest's sign-in card, a visitor notice or nothing at all sit
+ * in the same height, so the board never moves once the session is known.
+ */
+export const VIEWER_SLOT_CLASS = "min-h-[134px] sm:min-h-[138px]";
+
+/** The rank strip and its context line while the session and rank load. */
+export function ViewerSkeleton() {
   return (
-    <div
-      data-lb-skeleton
-      aria-hidden
-      className="flex animate-pulse items-center gap-3 rounded-[10px] border-2 border-brand-green/40 px-3 py-3 sm:gap-4 sm:px-4 sm:py-3.5"
-    >
-      <div className="h-[81px] w-[58px] shrink-0 rounded-md bg-white/[0.07]" />
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className={cn(block, "h-4 w-2/5 sm:h-5")} />
-        <div className={cn(block, "h-3 w-1/4")} />
+    <div aria-hidden className="animate-pulse space-y-2">
+      <div className="flex items-center gap-3 rounded-[10px] border-2 border-brand-green/40 px-3 py-3 sm:gap-4 sm:px-4 sm:py-3.5">
+        <div className="h-[81px] w-[58px] shrink-0 rounded-md bg-white/[0.07]" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className={cn(block, "h-4 w-2/5 sm:h-5")} />
+          <div className={cn(block, "h-3 w-1/4")} />
+        </div>
+        <div className={cn(block, "h-7 w-12 sm:h-8")} />
       </div>
-      <div className={cn(block, "h-7 w-12 sm:h-8")} />
+      <div className={cn(block, "h-[17px] w-44")} />
     </div>
   );
 }
@@ -90,24 +110,46 @@ export function SeasonSelectSkeleton() {
   return <div aria-hidden className="h-11 w-[124px] animate-pulse rounded-lg border border-white/10 bg-black/40" />;
 }
 
-/** First paint before the screen can read its URL: the page's own frame, board included. */
-export function LeaderboardPageSkeleton() {
+/**
+ * Streamed first while the screen waits to read its URL: the same regions the
+ * screen renders for that board (measured heights), so it swaps in without moving.
+ */
+export function LeaderboardPageSkeleton({ params }: { params: BoardParams }) {
+  const { t } = useLocale();
+  const group = params.scope && params.scope.kind !== "global";
+  const standings = group && params.view === "standings";
+  const controlsRow = group || (params.mode === "ranked" && !standings);
   return (
     <div className="relative flex flex-col bg-transparent font-fun" style={{ minHeight: "calc(100vh - 4rem)" }}>
-      <div className="container mx-auto max-w-3xl flex-1 space-y-5 px-4 pb-6 pt-4 sm:space-y-6 sm:px-6 sm:pt-6">
-        <div aria-hidden className="animate-pulse">
+      <span role="status" className="sr-only">{t("leaderboard.loading")}</span>
+      <div aria-hidden className="container mx-auto max-w-3xl flex-1 space-y-5 px-4 pb-6 pt-4 sm:space-y-6 sm:px-6 sm:pt-6">
+        <div className="h-[61px] animate-pulse sm:h-[88px]">
           <div className={cn(block, "h-9 w-56 sm:h-12 sm:w-80")} />
           <div className={cn(block, "mt-2 h-[15px] w-40 sm:h-[17px]")} />
         </div>
-        <div aria-hidden className="animate-pulse space-y-4">
-          <div className="flex gap-4 border-b border-white/10 pb-2 pt-1 sm:gap-7">
+        <div className="animate-pulse space-y-4">
+          <div className="flex h-[29px] gap-4 border-b border-white/10 sm:h-7 sm:gap-7">
             {[0, 1, 2].map((tab) => (
               <div key={tab} className={cn(block, "h-[18px] w-16")} />
             ))}
           </div>
-          <div className="h-[50px] rounded-xl border border-white/10 bg-black/40" />
+          <div className="space-y-3">
+            <div className="h-[50px] rounded-xl border border-white/10 bg-black/40" />
+            {group && <div className="h-[63px] rounded-xl border-2 border-white/10 sm:h-[67px]" />}
+            {controlsRow && (
+              <div className="flex h-11 items-center justify-between">
+                {group ? <div className="h-[38px] w-40 rounded-lg border border-white/10 bg-black/40" /> : <span />}
+                {params.mode === "ranked" && !standings && <SeasonSelectSkeleton />}
+              </div>
+            )}
+          </div>
         </div>
-        <BoardSkeleton />
+        {!standings && (
+          <div className={VIEWER_SLOT_CLASS}>
+            <ViewerSkeleton />
+          </div>
+        )}
+        <BoardSkeletonShape withBadges={!!group} withPodium={!standings} />
       </div>
     </div>
   );

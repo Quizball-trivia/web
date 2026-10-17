@@ -18,7 +18,7 @@ import type { LeaderboardMode } from "./boards";
 import { BoardContext, GuestCta, VisitorNotice } from "./components/BoardContext";
 import { BoardPicker } from "./components/BoardPicker";
 import { BoardScopeBar } from "./components/BoardScopeBar";
-import { BoardSkeleton, RankStripSkeleton, SeasonSelectSkeleton } from "./components/BoardSkeleton";
+import { BoardSkeleton, SeasonSelectSkeleton, VIEWER_SLOT_CLASS, ViewerSkeleton } from "./components/BoardSkeleton";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { LeaderboardSelect, type LeaderboardSelectOption } from "./components/LeaderboardSelect";
 import { LeaderboardTable } from "./components/LeaderboardTable";
@@ -202,31 +202,38 @@ export function LeaderboardView(props: LeaderboardViewProps) {
           )}
         </div>
 
-        {/* Where the viewer stands on this board. */}
-        {!showStandings && userEntry && !isVisitor && (
-          <div className="relative space-y-2">
-            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              {groupKind && groupValue && boardStanding && boardStanding.rank <= 3 && (
-                <TopBadge kind={groupKind} value={groupValue} rank={boardStanding.rank as 1 | 2 | 3} />
-              )}
-              <BoardContext kind={scope.kind} value={groupValue} standing={boardStanding} pointsUnit={pointsUnit} />
-            </div>
-            {isEventMode && (
-              <div
-                className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
-                style={{ backgroundColor: "#FF6C0A", width: 120, height: 34, rotate: "-5.8deg", border: "2px solid #000", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
-              >
-                <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t("welcome.poweredBy")}</span>
-                <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+        {/* Where the viewer stands on this board. The slot keeps one height while the session and rank load, whatever ends up in it. */}
+        {!showStandings ? (
+          <div className={VIEWER_SLOT_CLASS}>
+            {userEntry && !isVisitor ? (
+              <div className="relative space-y-2">
+                <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  {groupKind && groupValue && boardStanding && boardStanding.rank <= 3 && (
+                    <TopBadge kind={groupKind} value={groupValue} rank={boardStanding.rank as 1 | 2 | 3} />
+                  )}
+                  <BoardContext kind={scope.kind} value={groupValue} standing={boardStanding} pointsUnit={pointsUnit} />
+                </div>
+                {isEventMode && (
+                  <div
+                    className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+                    style={{ backgroundColor: "#FF6C0A", width: 120, height: 34, rotate: "-5.8deg", border: "2px solid #000", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
+                  >
+                    <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t("welcome.poweredBy")}</span>
+                    <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+                  </div>
+                )}
               </div>
-            )}
+            ) : viewerPending ? (
+              <ViewerSkeleton />
+            ) : onSignIn ? (
+              <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />
+            ) : isVisitor && groupKind && groupValue ? (
+              <VisitorNotice kind={groupKind} value={groupValue} mine={mine} onGoMine={() => mine && onSelectGroup(groupKind, mine)} />
+            ) : null}
           </div>
-        )}
-        {!showStandings && !userEntry && viewerPending && <RankStripSkeleton />}
-        {onSignIn && <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />}
-        {!onSignIn && !viewerPending && !showStandings && isVisitor && groupKind && groupValue && (
-          <VisitorNotice kind={groupKind} value={groupValue} mine={mine} onGoMine={() => mine && onSelectGroup(groupKind, mine)} />
+        ) : (
+          onSignIn && <GuestCta kind={scope.kind} value={groupValue} onSignIn={onSignIn} />
         )}
 
         {showStandings && groupKind ? (

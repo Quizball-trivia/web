@@ -1,20 +1,23 @@
-"use client";
-
 import { Suspense } from "react";
 
-import { LeaderboardScreen } from "@/features/leaderboard/LeaderboardScreen";
+import { LeaderboardPageScreen } from "@/features/leaderboard/LeaderboardScreen";
+import { parseBoardParams } from "@/features/leaderboard/boards";
 import { LeaderboardPageSkeleton } from "@/features/leaderboard/components/BoardSkeleton";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { useAuthStore } from "@/stores/auth.store";
 
-export default function LeaderboardPage() {
-  const { player } = usePlayer();
-  // Signed-out visitors browse the same board; only a member has a rank of their own.
-  const isAuthenticated = useAuthStore((state) => state.status) === "authenticated";
-  // The board, mode and view live in the URL (useSearchParams), which needs a Suspense boundary.
+interface LeaderboardPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) {
+    if (typeof value === "string") query.set(key, value);
+  }
+  // The screen reads its board from the URL (useSearchParams), which needs a Suspense
+  // boundary; the fallback already has that board's shape so nothing moves when it streams in.
   return (
-    <Suspense fallback={<LeaderboardPageSkeleton />}>
-      <LeaderboardScreen currentPlayerId={isAuthenticated ? player.id : undefined} />
+    <Suspense fallback={<LeaderboardPageSkeleton params={parseBoardParams(query)} />}>
+      <LeaderboardPageScreen />
     </Suspense>
   );
 }

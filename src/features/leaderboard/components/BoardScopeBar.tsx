@@ -121,7 +121,7 @@ export function BoardScopeBar({
       )}
 
       {(groupKind || trailing) && (
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-h-11 items-center justify-between gap-3">
           {groupKind ? (
             <div role="tablist" aria-label={t("leaderboard.viewTablistAriaLabel")} className="inline-flex rounded-lg border border-white/10 bg-black/40 p-1">
               {(["players", "standings"] as const).map((value) => {

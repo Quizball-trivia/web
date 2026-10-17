@@ -140,6 +140,7 @@ describe('LeaderboardScreen boards', () => {
     const { container } = render(<LeaderboardScreen />, { wrapper });
     expect(container.querySelectorAll('[data-lb-skeleton-row]').length).toBeGreaterThan(0);
     expect(container.querySelector('.animate-spin')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading rankings…');
     // Members would see a sign-in card flash before their rank: nothing is offered until the session is known.
     expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
     expect(getBoardMock).not.toHaveBeenCalled();

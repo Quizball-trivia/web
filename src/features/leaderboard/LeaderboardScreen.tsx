@@ -21,6 +21,7 @@ import type {
 import { normalizeCountryCode } from "@/lib/geo/countryCode";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import type { StandingsApiResponse } from "@/lib/repositories/leaderboard.repo";
@@ -196,4 +197,12 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
       isEventMode={isEventMode}
     />
   );
+}
+
+/** The leaderboard route: the signed-in player's board view, or a visitor's. */
+export function LeaderboardPageScreen() {
+  const { player } = usePlayer();
+  // Signed-out visitors browse the same board; only a member has a rank of their own.
+  const isAuthenticated = useAuthStore((state) => state.status) === "authenticated";
+  return <LeaderboardScreen currentPlayerId={isAuthenticated ? player.id : undefined} />;
 }
