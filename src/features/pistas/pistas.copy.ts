@@ -326,10 +326,91 @@ const tr: Copy = {
   },
 };
 
-const COPY: Record<string, Copy> = { es, en, ka, tr };
+const ru: Copy = {
+  brandA: "Футбольные",
+  brandB: "подсказки",
+  player: (n, total) => `Игрок ${n} / ${total}`,
+  pointsInPlay: "На кону",
+  score: "Твои очки",
+  revealClue: "Открыть подсказку",
+  clueLocked: "Подсказка закрыта",
+  inputLabel: "Введи фамилию игрока",
+  inputPlaceholder: "Фамилия…",
+  inputHint: "Фамилия или прозвище · регистр и ударения не важны",
+  guess: "Ответить",
+  giveUp: "Сдаться",
+  wrong: "Неверно",
+  lastChance: (clues) => (clues > 0 ? `Последний шанс: можешь открыть ещё ${clues === 1 ? "1 подсказку" : `${clues} подсказки`} и у тебя будет 1 попытка.` : "Последний шанс: у тебя 1 попытка."),
+  solved: (n) => `Верно! +${n}`,
+  missed: "В этот раз не угадал",
+  was: (name) => `Это был ${name}`,
+  revealLater: "Сегодняшний ответ появится завтра в разделе «Прошлые дни».",
+  next: "Следующий игрок",
+  finish: "Посмотреть результат",
+  kinds: { confed: "Конфедерация", position: "Позиция", foot: "Сильная нога", decade: "Десятилетие", fact: "Подсказка" },
+  positions: { GK: "ВР", DF: "ЗАЩ", MF: "ПЗ", FW: "НАП" },
+  feet: { left: "Левая", right: "Правая" },
+  intro: {
+    lines: [
+      "Каждый день — 10 игроков, у каждого по 10 подсказок: от самых сложных до самых простых.",
+      "Угадай по первой подсказке — получишь 10 очков. Каждая открытая подсказка отнимает 1 очко.",
+      "Введи фамилию (ударения не важны). Если ошибёшься, будет ещё 1 попытка и не больше 3 подсказок.",
+    ],
+    start: "Играть",
+    resume: (n) => `Продолжить · игрок ${n}`,
+    past: "Прошлые дни",
+    newBoard: "Каждый день в 00:00 по времени Аргентины появляются 10 новых игроков.",
+    soon: "Скоро появятся первые подсказки.",
+  },
+  end: {
+    score: "Очки",
+    of: (max) => `из ${max}`,
+    solved: "Угадано",
+    avgClues: "Подсказок на ответ",
+    streak: "Серия",
+    days: (n) => (n === 1 ? "1 день" : `${n} дня`),
+    comeBack: "Завтра появятся 10 новых игроков.",
+    share: "Поделиться",
+    whatsapp: "WhatsApp",
+    copy: "Скопировать",
+    copied: "Скопировано!",
+    past: "Играть за прошлые дни",
+    more: "Другие игры",
+    answers: "Ответы",
+    answersLater: "Сегодняшние ответы появятся завтра.",
+    clues: (n) => (n === 1 ? "1 подсказка" : `${n} подсказки`),
+  },
+  archive: { title: "Прошлые дни", played: (s) => `${s} очк.`, inProgress: "В процессе", notPlayed: "Не сыграно", today: "Сегодня", back: "Назад" },
+  shareText: (n, score, grid, url) => `Футбольные подсказки #${n} — ${score}/100\n${grid}\nСможешь набрать больше? ${url}`,
+  report: "Сообщить об ошибке в подсказке",
+  reported: "Спасибо! Проверим.",
+  exit: "Выйти",
+  loading: "Загружаем подсказки…",
+  loadError: "Не удалось загрузить подсказки. Попробуй ещё раз чуть позже.",
+  retry: "Повторить",
+  actionError: "Связь прервалась. Попробуй ещё раз.",
+  restarted: "Твоя игра изменилась (на другом устройстве или после исправления). Мы перезагрузили её.",
+  dayOver: "День в Аргентине закончился: доступны новые игроки.",
+  guestYesterday: "Ты играешь за прошлый день. Создай аккаунт, чтобы сыграть за сегодня и попасть в рейтинг.",
+  playToday: "Играть за сегодня",
+  maintenance: "Игра на обслуживании. Загляни чуть позже.",
+  sessionChanged: "Твоя сессия изменилась. Начни заново.",
+  board: {
+    title: "Рейтинг за сегодня",
+    players: (n) => (n === 1 ? "Закончил 1 игрок" : `Закончили ${n} игрока`),
+    empty: "Пока никто не разгадал все сегодняшние подсказки. Будь первым!",
+    rank: (r) => `Сегодня #${r}`,
+    join: "Создай аккаунт, чтобы попасть в сегодняшний рейтинг",
+    joinButton: "Попасть в рейтинг",
+    unranked: "Прошлые дни не учитываются в рейтинге.",
+    guestPlay: "Ты играешь как гость: твои очки не попадут в рейтинг.",
+  },
+};
+
+const COPY: Record<string, Copy> = { es, en, ka, tr, ru };
 
 export const pistasCopy = (locale: string): Copy => COPY[locale] ?? en;
 
-/** Clue text in the page locale; ka/tr fall back to English, then Spanish. */
+/** Clue text in the page locale; ka/tr/ru fall back to English, then Spanish. */
 export const textFor = (text: LocalizedText, locale: string): string =>
-  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "es" ? text.es : text.en) || text.en || text.es;
+  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : text.en) || text.en || text.es;

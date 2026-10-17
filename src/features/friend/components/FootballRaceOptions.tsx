@@ -7,17 +7,17 @@ import { cn } from "@/lib/utils";
  * The tournaments a Football Horserace room can be pinned to, and the most players each one seats fairly (mirrors the
  * current data release; the server checks again at the start and refuses a group it cannot deal).
  */
-const TOURNAMENTS: ReadonlyArray<{ id: string; seats: number; label: Record<"en" | "es" | "ka" | "tr", string> }> = [
-  { id: "WC", seats: 4, label: { en: "World Cup", es: "Mundial", ka: "მსოფლიო ჩემპიონატი", tr: "Dünya Kupası" } },
-  { id: "EURO", seats: 4, label: { en: "Euros", es: "Eurocopa", ka: "ევროპის ჩემპიონატი", tr: "Avrupa Şampiyonası" } },
-  { id: "COPA", seats: 3, label: { en: "Copa América", es: "Copa América", ka: "კოპა ამერიკა", tr: "Copa América" } },
-  { id: "AFCON", seats: 3, label: { en: "Africa Cup of Nations", es: "Copa Africana", ka: "აფრიკის ერთა თასი", tr: "Afrika Uluslar Kupası" } },
-  { id: "ASIA", seats: 3, label: { en: "Asian Cup", es: "Copa Asiática", ka: "აზიის თასი", tr: "Asya Kupası" } },
-  { id: "GOLD", seats: 2, label: { en: "Gold Cup", es: "Copa Oro", ka: "ოქროს თასი", tr: "Altın Kupa" } },
-  { id: "WCQ", seats: 4, label: { en: "World Cup qualifiers", es: "Eliminatorias", ka: "მსოფლიო ჩემპიონატის შესარჩევი", tr: "Dünya Kupası elemeleri" } },
-  { id: "EUROQ", seats: 3, label: { en: "Euro qualifiers", es: "Clasificación Eurocopa", ka: "ევროს შესარჩევი", tr: "Avrupa Şampiyonası elemeleri" } },
-  { id: "NL", seats: 3, label: { en: "Nations League", es: "Liga de Naciones", ka: "ერთა ლიგა", tr: "Uluslar Ligi" } },
-  { id: "ALL", seats: 4, label: { en: "All internationals", es: "Todos los partidos", ka: "ყველა მატჩი", tr: "Tüm maçlar" } },
+const TOURNAMENTS: ReadonlyArray<{ id: string; seats: number; label: Record<"en" | "es" | "ka" | "tr" | "ru", string> }> = [
+  { id: "WC", seats: 4, label: { en: "World Cup", es: "Mundial", ka: "მსოფლიო ჩემპიონატი", tr: "Dünya Kupası", ru: "Чемпионат мира" } },
+  { id: "EURO", seats: 4, label: { en: "Euros", es: "Eurocopa", ka: "ევროპის ჩემპიონატი", tr: "Avrupa Şampiyonası", ru: "Чемпионат Европы" } },
+  { id: "COPA", seats: 3, label: { en: "Copa América", es: "Copa América", ka: "კოპა ამერიკა", tr: "Copa América", ru: "Кубок Америки" } },
+  { id: "AFCON", seats: 3, label: { en: "Africa Cup of Nations", es: "Copa Africana", ka: "აფრიკის ერთა თასი", tr: "Afrika Uluslar Kupası", ru: "Кубок африканских наций" } },
+  { id: "ASIA", seats: 3, label: { en: "Asian Cup", es: "Copa Asiática", ka: "აზიის თასი", tr: "Asya Kupası", ru: "Кубок Азии" } },
+  { id: "GOLD", seats: 2, label: { en: "Gold Cup", es: "Copa Oro", ka: "ოქროს თასი", tr: "Altın Kupa", ru: "Золотой кубок КОНКАКАФ" } },
+  { id: "WCQ", seats: 4, label: { en: "World Cup qualifiers", es: "Eliminatorias", ka: "მსოფლიო ჩემპიონატის შესარჩევი", tr: "Dünya Kupası elemeleri", ru: "Отборочные к чемпионату мира" } },
+  { id: "EUROQ", seats: 3, label: { en: "Euro qualifiers", es: "Clasificación Eurocopa", ka: "ევროს შესარჩევი", tr: "Avrupa Şampiyonası elemeleri", ru: "Отборочные к чемпионату Европы" } },
+  { id: "NL", seats: 3, label: { en: "Nations League", es: "Liga de Naciones", ka: "ერთა ლიგა", tr: "Uluslar Ligi", ru: "Лига наций" } },
+  { id: "ALL", seats: 4, label: { en: "All internationals", es: "Todos los partidos", ka: "ყველა მატჩი", tr: "Tüm maçlar", ru: "Все международные матчи" } },
 ];
 
 export function readFootballRaceTournament(raw: Record<string, unknown> | null | undefined): string {
@@ -39,7 +39,7 @@ export function FootballRaceOptions({ options, memberCount, canEdit, onChange }:
   onChange: (options: Record<string, unknown>) => void;
 }) {
   const { t, locale } = useLocale();
-  const lang = locale === "es" || locale === "ka" || locale === "tr" ? locale : "en";
+  const lang = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" ? locale : "en";
   const current = readFootballRaceTournament(options);
   const choices = [{ id: "random", seats: 4, label: t("friend.roomTournamentRandom") }, ...TOURNAMENTS.map((x) => ({ id: x.id, seats: x.seats, label: x.label[lang] }))];
   return (

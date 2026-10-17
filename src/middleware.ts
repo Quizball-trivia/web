@@ -9,6 +9,7 @@ import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerS
 import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
 import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
+import { campaignQuizPath, campaignSourceSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
 // pages are localized; everything else (app, auth, game) is intentionally
@@ -48,6 +49,13 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 };
 
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
+
+/** The 410 page of a retired quiz, in the language of the address it was asked for. */
+const QUIZ_GONE: Record<'en' | 'ka' | 'ru', { title: string; message: string }> = {
+  en: { title: 'Quiz no longer available', message: 'This quiz is no longer available.' },
+  ka: { title: 'ქვიზი აღარ არის ხელმისაწვდომი', message: 'ეს ქვიზი აღარ არის ხელმისაწვდომი.' },
+  ru: { title: 'Викторина больше недоступна', message: 'Эта викторина больше недоступна.' },
+};
 
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
 function decodedPath(pathname: string): string {
@@ -252,7 +260,7 @@ export async function middleware(req: NextRequest) {
   // A games folder belongs to its own locales (/en|ka/football-games,
   // /es/juegos-de-futbol, /tr/futbol-oyunlari). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/([a-z-]+)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru)\/([a-z-]+)(?:\/|$)/);
   if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
@@ -260,15 +268,18 @@ export async function middleware(req: NextRequest) {
   // Slug changes and retired CMS quiz pages are resolved before Next renders.
   // This is the only reliable way to return a real 410 (rather than a themed
   // 404 page) while keeping redirects locale-aware.
-  const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
+    ?? pathname.match(/^\/(ru)\/futbolnaya-viktorina\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | undefined;
+  const quizSource = quizPath && quizLocale ? campaignSourceSlug(quizPath[2], quizLocale) : '';
   if (
-    quizPath
+    quizPath && quizLocale
     && !req.nextUrl.searchParams.has('preview')
     && (req.method === 'GET' || req.method === 'HEAD')
   ) {
     try {
       const response = await fetch(
-        `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizPath[2])}`,
+        `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizSource)}`,
         {
           headers: { Accept: 'application/json' },
           cache: 'no-store',
@@ -279,14 +290,15 @@ export async function middleware(req: NextRequest) {
         const route = await response.json() as CampaignQuizRoute;
         if (route.kind === 'redirect' && route.target_slug) {
           const url = req.nextUrl.clone();
-          url.pathname = `/${quizPath[1]}/football-quiz/${route.target_slug}`;
+          url.pathname = campaignQuizPath(route.target_slug, quizLocale!);
           const redirectResponse = NextResponse.redirect(url, 301);
           redirectResponse.headers.set('Content-Security-Policy', csp);
           return redirectResponse;
         }
         if (route.kind === 'gone') {
+          const gone = QUIZ_GONE[quizLocale!];
           return new NextResponse(
-            '<!doctype html><html lang="en"><head><title>Quiz no longer available</title></head><body><main><h1>This quiz is no longer available.</h1></main></body></html>',
+            `<!doctype html><html lang="${quizLocale}"><head><title>${gone.title}</title></head><body><main><h1>${gone.message}</h1></main></body></html>`,
             {
             status: 410,
             headers: {

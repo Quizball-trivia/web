@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { FootballClipPlayer } from './FootballClipPlayer';
 import { bounceHeight } from '../lib/ballPhysics';
 import { ROAD_GOAL_X, ROAD_SHOT_X, ROAD_GOAL_IMPACT, sampleRoadShot, updateRoadFinish, type RoadFinishState } from '../lib/roadFinish';
+import { useMiniT } from '../lib/i18n';
 import type { KeeperSaveStyle } from '../lib/keeperSaves';
 import { FOOTBALL_STYLES, type FootballStyle } from '../lib/footballActions';
 import { RoadGoal, RoadKeeper } from './RoadGoal';
@@ -443,14 +444,15 @@ function MatchBall({ progress, phase, finish, saveStyle, actionStyle, tackleCloc
 }
 
 function ZoneCardRail({ progress, labels }: { progress: number; labels: RoadPitchState['labels'] }) {
+  const t = useMiniT();
   const start = Math.max(0, Math.min(progress - 1, MULTIPLIERS.length - 4));
   return <ol aria-label="Zone multipliers" className="relative z-10 mx-3 my-3 flex gap-1.5 rounded-2xl border border-white/20 bg-brand-blue p-1.5 backdrop-blur-md sm:absolute sm:bottom-3 sm:inset-x-auto sm:mx-0 sm:my-0 sm:left-1/2 sm:w-[min(620px,85%)] sm:-translate-x-1/2 sm:gap-2 sm:p-2">
     {MULTIPLIERS.slice(start, start + 4).map((multiplier, offset) => {
       const index = start + offset, cleared = index < progress, active = index === progress;
       return <li key={index} aria-current={active ? 'step' : undefined} className={`min-w-0 flex-1 rounded-xl px-2 py-2 sm:px-4 ${active ? 'bg-brand-yellow text-black' : 'text-white'}`}>
-        <div className={`mb-1 flex items-center justify-between text-[8px] font-semibold uppercase tracking-wider sm:text-[10px] ${active ? 'text-black/70' : 'text-white/80'}`}><span>Zone {String(index + 1).padStart(2, '0')}</span>{cleared && <span aria-label={labels.safe}>✓</span>}</div>
+        <div className={`mb-1 flex items-center justify-between text-[8px] font-semibold uppercase tracking-wider sm:text-[10px] ${active ? 'text-black/70' : 'text-white/80'}`}><span>{t('Zone')} {String(index + 1).padStart(2, '0')}</span>{cleared && <span aria-label={labels.safe}>✓</span>}</div>
         <div className="font-poppins text-base font-bold leading-none tabular-nums sm:text-xl">{multiplier.toFixed(2)}<span className="ml-0.5 text-xs opacity-60">×</span></div>
-        {active && <div className="mt-1 hidden truncate text-[8px] font-semibold uppercase tracking-wider sm:block">{index === FINAL_ZONE ? 'Goalkeeper' : labels.target}</div>}
+        {active && <div className="mt-1 hidden truncate text-[8px] font-semibold uppercase tracking-wider sm:block">{index === FINAL_ZONE ? t('Goalkeeper') : labels.target}</div>}
       </li>;
     })}
   </ol>;

@@ -253,6 +253,7 @@ export const TR: Record<string, string> = {
   "Man City to win": "Man City kazanır",
   "Bayern to win": "Bayern kazanır",
   "Goalkeeper": "Kaleci",
+  "Zone": "Bölge",
   "Defender": "Defans",
   "Midfielder": "Orta Saha",
   "Forward": "Forvet",

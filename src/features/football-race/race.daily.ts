@@ -20,7 +20,7 @@ export const footballRaceDailyGame = (locale: string): WordDailyGame => {
 };
 
 /** A label in the backend's four languages (Georgian and Turkish may be missing on a detail line). */
-type Label = { en: string; es: string; ka?: string; tr?: string };
+type Label = { en: string; es: string; ka?: string; tr?: string; ru?: string };
 export interface RaceDailyResult { stat: string; values: number[]; leaders: number[]; details: Array<Label | null> }
 
 /** Server-held run state (backend football-race.types PublicRunState); the race has no clock, so it is never `open`. */
@@ -80,7 +80,7 @@ export const loadRaceBoard = (day: string, locale: string): Promise<WordBoard> =
   return { ...board, top: board.top.map(picks), me: board.me && picks(board.me) };
 });
 
-const tx = (label: Label, locale: string) => (locale === "ka" || locale === "tr" ? label[locale] ?? label.en : locale === "es" ? label.es : label.en);
+const tx = (label: Label, locale: string) => (locale === "ka" || locale === "tr" || locale === "ru" ? label[locale] ?? label.en : locale === "es" ? label.es : label.en);
 /** A label already in the player's language, in the shape the screens read. */
 const same = (text: string): L10n => ({ en: text, es: text });
 

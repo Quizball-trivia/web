@@ -19,7 +19,7 @@ export function partnerTileState(tile: PartnerGameTile): PartnerTileState {
 }
 
 export function formatPartnerPoints(points: number, locale: PartnerLocale): string {
-  return new Intl.NumberFormat(locale === "ka" ? "ka-GE" : "en-GB").format(points);
+  return new Intl.NumberFormat(locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB").format(points);
 }
 
 export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile; locale: PartnerLocale; index: number }) {

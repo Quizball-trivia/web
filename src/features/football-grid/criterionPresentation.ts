@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.seed.json';
 import { criterionLabel } from './criterionLabel';
@@ -26,30 +26,30 @@ function shortPersonName(name: string): string {
 export function criterionPresentation(criterion: FootballGridCriterionView, locale: Locale): { title: string; eyebrow?: string } {
   const label = criterionLabel(criterion, locale);
   if (criterion.family === 'country' && criterion.labelEn === 'United States') {
-    return { title: copy(locale, { en: 'USA', ka: 'ა.შ.შ', es: 'EE. UU.', tr: 'ABD' }) };
+    return { title: copy(locale, { en: 'USA', ka: 'ა.შ.შ', es: 'EE. UU.', tr: 'ABD', ru: 'США' }) };
   }
   if (criterion.family === 'club' && /Borussia M[oö]nchengladbach/i.test(criterion.labelEn)) {
-    return { title: copy(locale, { en: 'M’gladbach', ka: 'გლადბახი', es: 'M’gladbach', tr: 'M’gladbach' }) };
+    return { title: copy(locale, { en: 'M’gladbach', ka: 'გლადბახი', es: 'M’gladbach', tr: 'M’gladbach', ru: 'Мёнхенгладбах' }) };
   }
   if (criterion.family === 'manager') return {
     title: shortPersonName(label),
-    eyebrow: copy(locale, { en: 'Managed by', ka: 'მწვრთნელი', es: 'Entrenador', tr: 'Teknik direktör' }),
+    eyebrow: copy(locale, { en: 'Managed by', ka: 'მწვრთნელი', es: 'Entrenador', tr: 'Teknik direktör', ru: 'Тренировал' }),
   };
   if (criterion.family === 'trophy_award') {
     const titles: Record<string, Copy> = {
-      'fa-cup': { en: 'FA Cup', ka: 'FA თასი', es: 'FA Cup', tr: 'FA Cup' },
-      'copa-del-rey': { en: 'Copa del Rey', ka: 'სამეფო თასი', es: 'Copa del Rey', tr: 'Kral Kupası' },
-      'coppa-italia': { en: 'Coppa Italia', ka: 'იტალიის თასი', es: 'Copa Italia', tr: 'İtalya Kupası' },
-      'dfb-pokal': { en: 'DFB-Pokal', ka: 'DFB თასი', es: 'DFB-Pokal', tr: 'DFB-Pokal' },
-      'knvb-cup': { en: 'KNVB Cup', ka: 'KNVB თასი', es: 'Copa KNVB', tr: 'KNVB Kupası' },
-      'uefa-champions-league': { en: 'Champions League', ka: 'ჩემპიონთა ლიგა', es: 'Champions League', tr: 'Şampiyonlar Ligi' },
-      'uefa-europa-league': { en: 'Europa League', ka: 'ევროპა ლიგა', es: 'Europa League', tr: 'Avrupa Ligi' },
-      'premier-league-title': { en: 'Premier League', ka: 'პრემიერ ლიგა', es: 'Premier League', tr: 'Premier Lig' },
+      'fa-cup': { en: 'FA Cup', ka: 'FA თასი', es: 'FA Cup', tr: 'FA Cup', ru: 'Кубок Англии' },
+      'copa-del-rey': { en: 'Copa del Rey', ka: 'სამეფო თასი', es: 'Copa del Rey', tr: 'Kral Kupası', ru: 'Кубок Испании' },
+      'coppa-italia': { en: 'Coppa Italia', ka: 'იტალიის თასი', es: 'Copa Italia', tr: 'İtalya Kupası', ru: 'Кубок Италии' },
+      'dfb-pokal': { en: 'DFB-Pokal', ka: 'DFB თასი', es: 'DFB-Pokal', tr: 'DFB-Pokal', ru: 'Кубок Германии' },
+      'knvb-cup': { en: 'KNVB Cup', ka: 'KNVB თასი', es: 'Copa KNVB', tr: 'KNVB Kupası', ru: 'Кубок Нидерландов' },
+      'uefa-champions-league': { en: 'Champions League', ka: 'ჩემპიონთა ლიგა', es: 'Champions League', tr: 'Şampiyonlar Ligi', ru: 'Лига чемпионов' },
+      'uefa-europa-league': { en: 'Europa League', ka: 'ევროპა ლიგა', es: 'Europa League', tr: 'Avrupa Ligi', ru: 'Лига Европы' },
+      'premier-league-title': { en: 'Premier League', ka: 'პრემიერ ლიგა', es: 'Premier League', tr: 'Premier Lig', ru: 'Премьер-лига' },
     };
     const titleKey = Object.keys(titles).find((key) => criterion.key === `trophy:${key}` || criterion.assetKey === key);
     return {
       title: titleKey ? titles[titleKey][locale] : label.replace(/ winner$| გამარჯვებული$| Şampiyonu$/i, '').replace(/^Campeón /i, ''),
-      eyebrow: copy(locale, { en: 'Winner', ka: 'მფლობელი', es: 'Ganador', tr: 'Kazanan' }),
+      eyebrow: copy(locale, { en: 'Winner', ka: 'მფლობელი', es: 'Ganador', tr: 'Kazanan', ru: 'Победитель' }),
     };
   }
   if (criterion.family === 'teammate') {
@@ -65,36 +65,36 @@ export function criterionPresentation(criterion: FootballGridCriterionView, loca
     const name = patterns.map((pattern) => label.match(pattern)?.[1]).find(Boolean);
     if (name) return {
       title: shortPersonName(name),
-      eyebrow: copy(locale, { en: 'Club teammate', ka: 'თანაგუნდელი კლუბში', es: 'Compañero de club', tr: 'Kulüp arkadaşı' }),
+      eyebrow: copy(locale, { en: 'Club teammate', ka: 'თანაგუნდელი კლუბში', es: 'Compañero de club', tr: 'Kulüp arkadaşı', ru: 'Одноклубник' }),
     };
   }
   const key = wildcardKey(criterion);
   const decade = key?.match(/^born-(\d{3})0s$/)?.[1];
   if (decade) return {
     title: `${decade}0–${decade.slice(-1)}9`,
-    eyebrow: copy(locale, { en: 'Born', ka: 'დაბადება', es: 'Nacimiento', tr: 'Doğum' }),
+    eyebrow: copy(locale, { en: 'Born', ka: 'დაბადება', es: 'Nacimiento', tr: 'Doğum', ru: 'Родился' }),
   };
   if (key === 'titles-multiple-countries') return {
-    title: copy(locale, { en: '2+ countries', ka: '2+ ქვეყანა', es: '2+ países', tr: '2+ ülke' }),
-    eyebrow: copy(locale, { en: 'League champion', ka: 'ლიგის ჩემპიონი', es: 'Campeón de liga', tr: 'Lig şampiyonu' }),
+    title: copy(locale, { en: '2+ countries', ka: '2+ ქვეყანა', es: '2+ países', tr: '2+ ülke', ru: '2+ стран' }),
+    eyebrow: copy(locale, { en: 'League champion', ka: 'ლიგის ჩემპიონი', es: 'Campeón de liga', tr: 'Lig şampiyonu', ru: 'Чемпион лиги' }),
   };
   if (key === 'champions-league-2plus') return {
-    title: copy(locale, { en: '2+ UCL titles', ka: '2+ UCL ტიტული', es: '2+ títulos UCL', tr: '2+ UCL kupası' }),
+    title: copy(locale, { en: '2+ UCL titles', ka: '2+ UCL ტიტული', es: '2+ títulos UCL', tr: '2+ UCL kupası', ru: '2+ титула Лиги чемпионов' }),
   };
   if (key === 'ballon-dor-winner') return {
-    title: copy(locale, { en: 'Ballon d’Or', ka: 'ოქროს ბურთი', es: 'Balón de Oro', tr: 'Ballon d’Or' }),
-    eyebrow: copy(locale, { en: 'Winner', ka: 'მფლობელი', es: 'Ganador', tr: 'Kazanan' }),
+    title: copy(locale, { en: 'Ballon d’Or', ka: 'ოქროს ბურთი', es: 'Balón de Oro', tr: 'Ballon d’Or', ru: 'Золотой мяч' }),
+    eyebrow: copy(locale, { en: 'Winner', ka: 'მფლობელი', es: 'Ganador', tr: 'Kazanan', ru: 'Победитель' }),
   };
   if (key === 'international-caps-100') return {
-    title: copy(locale, { en: '100+ caps', ka: '100+ მატჩი', es: '100+ partidos', tr: '100+ maç' }),
-    eyebrow: copy(locale, { en: 'National team', ka: 'ნაკრებში', es: 'Selección', tr: 'Millî takım' }),
+    title: copy(locale, { en: '100+ caps', ka: '100+ მატჩი', es: '100+ partidos', tr: '100+ maç', ru: '100+ матчей за сборную' }),
+    eyebrow: copy(locale, { en: 'National team', ka: 'ნაკრებში', es: 'Selección', tr: 'Millî takım', ru: 'Сборная' }),
   };
   if (key === 'major-leagues-3') return {
-    title: copy(locale, { en: '3+ top leagues', ka: '3+ ტოპ ლიგა', es: '3+ grandes ligas', tr: '3+ büyük lig' }),
+    title: copy(locale, { en: '3+ top leagues', ka: '3+ ტოპ ლიგა', es: '3+ grandes ligas', tr: '3+ büyük lig', ru: '3+ ведущих лиг' }),
   };
   if (key === 'played-for-rivals') return {
-    title: copy(locale, { en: 'Both rivals', ka: 'ორივე მეტოქე', es: 'Ambos rivales', tr: 'İki rakip' }),
-    eyebrow: copy(locale, { en: 'Derby', ka: 'დერბი', es: 'Derbi', tr: 'Derbi' }),
+    title: copy(locale, { en: 'Both rivals', ka: 'ორივე მეტოქე', es: 'Ambos rivales', tr: 'İki rakip', ru: 'Оба соперника' }),
+    eyebrow: copy(locale, { en: 'Derby', ka: 'დერბი', es: 'Derbi', tr: 'Derbi', ru: 'Дерби' }),
   };
   return { title: label };
 }

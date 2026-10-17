@@ -7,6 +7,9 @@
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/futbolisty-na-poslednyuyu-bukvu/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/futbolnye-skachki/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/igravshie-za-oba-kluba/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/carrera-de-caballos-futbolera/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page.tsx";
@@ -15,6 +18,7 @@
 @source "../app/layout.tsx";
 @source "../app/locale-asset-providers.es.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
+@source "../app/locale-asset-providers.ru.tsx";
 @source "../app/locale-asset-providers.tr.tsx";
 @source "../app/providers.tsx";
 @source "../app/route-providers.tsx";
@@ -53,6 +57,7 @@
 @source "../components/layout/app-shell/shellChromeLoader.ts";
 @source "../components/layout/app-shell/useAppShellViewModel.ts";
 @source "../components/layout/app-shell/useShellPopupIntent.ts";
+@source "../components/shared/BoardTrophy.tsx";
 @source "../components/shared/ConnectionQualitySignal.tsx";
 @source "../components/shared/ContactModal.tsx";
 @source "../components/shared/EventAwardCeremony.tsx";
@@ -82,6 +87,7 @@
 @source "../features/auth/AccountBannedScreen.tsx";
 @source "../features/auth/GuestAuthDialog.tsx";
 @source "../features/campaign-quiz/campaignAttribution.ts";
+@source "../features/campaign-quiz/campaignQuiz.plural.ts";
 @source "../features/campaign-quiz/campaignQuiz.routes.ts";
 @source "../features/demos/DemoModeArt.tsx";
 @source "../features/demos/DemoModeIcon.tsx";
@@ -101,6 +107,8 @@
 @source "../features/football-race/race.copy.ts";
 @source "../features/football-race/race.daily.ts";
 @source "../features/friend/hooks/useLobbyCommandMachine.ts";
+@source "../features/leaderboard/boards.ts";
+@source "../features/leaderboard/components/BoardBadge.tsx";
 @source "../features/leaderboard/components/LeaderboardTable.tsx";
 @source "../features/marketing/DailyCollectionScreen.tsx";
 @source "../features/marketing/PublicGameScreen.tsx";
@@ -120,6 +128,7 @@
 @source "../features/mini-games/lib/guessCard.ts";
 @source "../features/mini-games/lib/guessCardConstants.ts";
 @source "../features/mini-games/lib/i18n.es.ts";
+@source "../features/mini-games/lib/i18n.ru.ts";
 @source "../features/mini-games/lib/i18n.tr.ts";
 @source "../features/mini-games/lib/i18n.ts";
 @source "../features/mini-games/lib/matching.ts";

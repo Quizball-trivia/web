@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -25,7 +26,7 @@ const MAX_STAKE = 500;
 const HEARTBEAT_MS = 10_000;
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const text = (value: { en: string; ka: string; es?: string; tr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : value.en) || value.en;
+const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
 
 /** Partner play (Freecroco): free, start 100 points, no wallet, coins or live feeds; the host shows the result. */
 export interface TriviaMinesPartnerMode {
@@ -317,7 +318,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
               {state.phase === "question" && state.question && (
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 rounded-[20px] bg-brand-blue p-4 text-white lg:mt-0" style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
                   <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/70" style={poppins}>
-                    <span>{t("triviaMines.scoutQuestion")}</span><span className={cn("tabular-nums", qLeft <= 3 && "text-brand-red-soft")}>{qLeft}s</span>
+                    <span>{t("triviaMines.scoutQuestion")}</span><span className={cn("tabular-nums", qLeft <= 3 && "text-brand-red-soft")}>{secondsShort(qLeft, locale)}</span>
                   </div>
                   <p className="mb-3 text-[14px] font-bold leading-snug text-white" style={poppins}>{text(state.question.prompt, locale)}</p>
                   <div className="grid gap-2">

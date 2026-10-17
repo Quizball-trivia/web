@@ -44,6 +44,20 @@ const COPY: Record<PartnerLocale, RankedCopy> = {
     defeat: "მარცხი",
     draw: "ფრე",
   },
+  ru: {
+    back: "Назад к играм",
+    resume: "Вернуться в матч",
+    unavailable: "Рейтинговые матчи сейчас недоступны. Попробуй чуть позже.",
+    settling: "Считаем очки…",
+    cancelledTitle: "Матч отменён",
+    cancelledReturned: "В этот раз без очков. Игра возвращена.",
+    cancelledUsed: "В этот раз без очков. Игра засчитана как использованная.",
+    resultTitle: "Матч окончен",
+    resultUnavailable: "Не удалось загрузить результат. Оставшиеся игры видны в списке игр.",
+    victory: "Победа",
+    defeat: "Поражение",
+    draw: "Ничья",
+  },
 };
 
 export function rankedCopy(locale: PartnerLocale): RankedCopy {

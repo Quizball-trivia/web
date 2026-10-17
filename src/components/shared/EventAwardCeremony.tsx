@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { WorldCupUnlockOverlay } from '@/components/shared/WorldCupUnlockOverlay';
 import { WlChampionUnlockOverlay } from '@/components/shared/WlChampionUnlockOverlay';
 import { isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
+import { BoardTrophyUnlockOverlay, parseBoardTrophySlug } from '@/components/shared/BoardTrophy';
 import { useAckEventAward, useMyEventAwards } from '@/lib/queries/eventAwards.queries';
 import { useLocale } from '@/contexts/LocaleContext';
 import { rewardSession, useRewardSessionVersion } from '@/features/weekend-league/rewards/rewardSession';
@@ -35,6 +36,10 @@ export function EventAwardCeremony() {
   };
   // Each event family keeps its own medal + ceremony; the queue/ack flow is
   // shared. WL slugs are minted by the final's writeAwards.
+  const boardTrophy = parseBoardTrophySlug(pending.eventSlug);
+  if (boardTrophy) {
+    return <BoardTrophyUnlockOverlay key={pending.id} trophy={boardTrophy} place={pending.place} onClose={close} />;
+  }
   if (isWlAwardSlug(pending.eventSlug)) {
     return (
       <WlChampionUnlockOverlay

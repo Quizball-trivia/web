@@ -82,14 +82,15 @@ describe("public games manifest", () => {
     expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
   });
 
-  it("every game page is published in all four locales, and cards link to the localized page", () => {
+  it("every game page is published in all five locales, and cards link to the localized page", () => {
     for (const game of PUBLISHED_PUBLIC_GAMES.filter((g) => g.page)) {
-      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr"]);
+      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr", "ru"]);
     }
     expect(findPublishedGame("tr", "futbol-oyunlari", "auction")).not.toBeNull();
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
     expect(cardHref(auction, "tr")).toBe("/tr/futbol-oyunlari/auction");
     expect(cardHref(auction, "es")).toBe("/es/juegos-de-futbol/subasta");
+    expect(cardHref(auction, "ru")).toBe("/ru/futbolnye-igry/futbolnyy-auktsion");
   });
 
   it("a locale without a page body is not published there and its cards fall back to the English page", () => {
@@ -106,5 +107,8 @@ describe("public games manifest", () => {
       if (game.destination.kind === "quiz") expect(href.startsWith("/en/football-quiz/")).toBe(true);
     }
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "es")).toBe("/es/quiz-de-futbol/trayectoria-del-jugador");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "ru")).toBe("/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "ru")).toBe("/ru/futbolnaya-viktorina/ugaday-futbolista");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "tr")).toBe("/en/football-quiz/career-path");
   });
 });

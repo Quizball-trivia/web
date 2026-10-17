@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Check } from "lucide-react";
 import { aproximadoCopy } from "@/features/aproximado/aproximado.copy";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
+import { GameFeedbackSlot } from "@/features/feedback/GameFeedback";
 import { wordSharedCopy } from "@/features/wordgames/copy";
 import { PartyPage, PartyResults, scoreSourceAttr, toPartyStandings, useScoreFlights } from "@/features/wordgames/party";
 import { wordSeats, type RoomConnection, type RoomGameScreens } from "@/features/wordgames/RoomGameShell";
@@ -12,6 +13,7 @@ import { CountIn, Frame, GreenButton, QuietButton, RefusedReports, SeatCard, She
 import { SuggestBox, type SuggestLookup } from "./SuggestBox";
 import type { RoomStatePayload } from "@/lib/realtime/socket.types";
 import { cn } from "@/lib/utils";
+import { sendTenableFeedback } from "./tenable.api";
 import { tenableCopy } from "./tenable.copy";
 import { Lives, TenableTower } from "./TenableTower";
 import type { TenableCommand, TenableView } from "./tenable.view";
@@ -217,10 +219,12 @@ export function TenableResults({ view, snapshot, locale, onRoom, onExit }: { vie
   const me = view.mySeat;
   const own = table.find((r) => r.seat === me);
   const firsts = table.filter((r) => r.place === 1);
+  const feedback = <GameFeedbackSlot className="mt-4" game="tenable" title={t.title} locale={locale} send={(answer) => sendTenableFeedback("room", answer, locale)} />;
   if (view.format === "party") {
     return (
       <PartyResults seats={seats} standings={table} mySeat={me} headline={own?.place === 1 ? (firsts.length > 1 ? c.tieFirst : c.youWon) : c.youPlace(own?.place ?? table.length)}
-        statLabel={t.foundStat} detail={(row) => t.slotsDetail(view.seats[row.seat]?.found ?? 0)} leftLabel={c.left} onRoom={onRoom} onExit={onExit} />
+        statLabel={t.foundStat} detail={(row) => t.slotsDetail(view.seats[row.seat]?.found ?? 0)} leftLabel={c.left} onRoom={onRoom} onExit={onExit}
+        footer={<div className="mx-auto w-full max-w-md pb-4">{feedback}</div>} />
     );
   }
   const rival = me === 0 ? 1 : 0;
@@ -245,6 +249,7 @@ export function TenableResults({ view, snapshot, locale, onRoom, onExit }: { vie
         <div className="flex-1" />
         <GreenButton className="mt-6" onClick={onRoom}>{c.backToRoom}</GreenButton>
         <QuietButton className="mt-3" onClick={onExit}>{c.exit}</QuietButton>
+        {feedback}
       </div>
     </Frame>
   );

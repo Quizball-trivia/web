@@ -17,7 +17,7 @@ export const RANKED_START = "2026-09-30";
 export const PUBLISHED_DAYS = 30;
 export const LAST_DAY = addDays(CONTENT_START, PUBLISHED_DAYS - 1);
 
-export type LocalizedText = { es: string; en: string; ka?: string; tr?: string };
+export type LocalizedText = { es: string; en: string; ka?: string; tr?: string; ru?: string };
 export type EndReason = "time" | "misses" | "complete";
 
 export interface CategoryResult {

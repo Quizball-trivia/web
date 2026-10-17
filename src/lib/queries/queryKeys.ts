@@ -44,6 +44,12 @@ export const queryKeys = {
       [...queryKeys.leaderboard.all, "tic-tac-toe", "list", type, viewer ?? "guest"] as const,
     ticTacToeUser: (userId: string, type: LeaderboardType) =>
       [...queryKeys.leaderboard.all, "tic-tac-toe", "user", userId, type] as const,
+    board: (mode: string, board: string, season?: string, viewer?: string) =>
+      [...queryKeys.leaderboard.all, "board", mode, board, season ?? "current", viewer ?? "guest"] as const,
+    boardRank: (mode: string, board: string, userId: string, season?: string) =>
+      [...queryKeys.leaderboard.all, "board-rank", mode, board, userId, season ?? "current"] as const,
+    standings: (mode: string, kind: string, viewer?: string) =>
+      [...queryKeys.leaderboard.all, "standings", mode, kind, viewer ?? "guest"] as const,
   },
   ranked: {
     all: ["ranked"] as const,

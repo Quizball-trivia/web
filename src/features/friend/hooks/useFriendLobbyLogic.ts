@@ -4,6 +4,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
+
+const LOBBY_LOCALES = ["en", "ka", "es", "tr", "ru"] as const;
+const asLobbyLocale = (locale: string): (typeof LOBBY_LOCALES)[number] =>
+  (LOBBY_LOCALES as readonly string[]).includes(locale) ? (locale as (typeof LOBBY_LOCALES)[number]) : "en";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
@@ -166,7 +170,7 @@ export function useFriendLobbyLogic({
   newRoomGameMode = null,
 }: UseFriendLobbyLogicProps) {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // Socket replies land in callbacks created earlier: they read the current translator through this.
   const tRef = useRef(t);
   // The invite join's "is it my own room?" wait; replies and waits do nothing once this screen is gone.
@@ -1018,7 +1022,8 @@ export function useFriendLobbyLogic({
     }, 12000);
 
     const seen = seenGame(shown);
-    getSocket().emit("lobby:start", seen ? { seen } : undefined);
+    // The language a friendly Auction deals its cards in.
+    getSocket().emit("lobby:start", { ...(seen ? { seen } : {}), locale: asLobbyLocale(locale) });
     logger.info("Socket emit lobby:start", {
       lobbyId: activeLobby?.lobbyId ?? null,
     });

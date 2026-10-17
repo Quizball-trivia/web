@@ -7,7 +7,9 @@ import { isLiveDay, puzzleNumber } from "@/features/wordgames/daily/wordDaily.lo
 import { useWordDaily } from "@/features/wordgames/daily/useWordDaily";
 import { WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
-import { tenableDailyApi, type TenableServerRun } from "./tenable.api";
+import { GameFeedbackSlot } from "@/features/feedback/GameFeedback";
+import { sendTenableFeedback, tenableDailyApi, type TenableServerRun } from "./tenable.api";
+import { tenableCopy } from "./tenable.copy";
 import { toSoloState } from "./tenable.adapt";
 import { TENABLE_CALENDAR, TenableEndView, TenablePlayView, tenableDailyGame } from "./TenableSolo";
 
@@ -39,7 +41,10 @@ export function TenableDaily({ locale, onExit, onEvent, initialDay, onDay }: {
 
   const end = solo && day && state?.done ? (
     <TenableEndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadBoard} day={isLiveDay(TENABLE_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />}
+      leaderboard={<>
+        <GameFeedbackSlot className="mt-6" game="tenable" title={tenableCopy(locale).title} locale={locale} send={(answer) => sendTenableFeedback("solo", answer, locale)} />
+        <WordDailyLeaderboard game={game} locale={locale} load={loadBoard} day={isLiveDay(TENABLE_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />
+      </>}
       onArchive={() => daily.setView("archive")} onExit={onExit}
       onReport={(text) => tenableDailyApi.report(day, text, locale)} />
   ) : null;

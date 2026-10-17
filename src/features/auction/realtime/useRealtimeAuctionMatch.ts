@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type { AvatarCustomization } from '@/types/game';
-import type { Locale } from '@/lib/i18n/messages';
+import type { Locale } from '@/lib/i18n/locale';
 import type {
   AuctionBiddingStartedPayload,
   AuctionBidAcceptedPayload,
@@ -1330,12 +1330,14 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ka: 'თქვენ უკვე მატჩში ხართ. ხელახლა დაკავშირება…',
     es: 'Ya estás en una partida. Reconectando…',
     tr: 'Zaten bir maçtasın. Yeniden bağlanılıyor…',
+    ru: "Ты уже в матче. Переподключаемся…",
   },
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
     ka: 'ამჟამად აუქციონის კონტენტი მიუწვდომელია.',
     es: 'No hay contenido de subasta disponible ahora mismo.',
     tr: 'Şu anda kullanılabilir açık artırma içeriği yok.',
+    ru: 'Сейчас аукцион недоступен.',
   },
   // Turn-action rejections. These are the ones a player actually hits mid-match
   // (double-tap, losing a race to a rival, tapping after their turn passed), so
@@ -1345,42 +1347,49 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ka: 'სვლა უკვე დასრულდა — თქვენი ფსონი არ განთავსდა.',
     es: 'Ese turno ya terminó; tu puja no se realizó.',
     tr: 'O tur çoktan geçti — teklifin verilmedi.',
+    ru: "Этот ход уже прошёл — твоё предложение не принято.",
   },
   auction_no_active_bidding: {
     en: 'Bidding is not open right now.',
     ka: 'ვაჭრობა ამჟამად დახურულია.',
     es: 'Las pujas no están abiertas ahora mismo.',
     tr: 'Teklif verme şu anda açık değil.',
+    ru: 'Сейчас нельзя делать предложения.',
   },
   auction_seat_already_folded: {
     en: 'You already folded on this player.',
     ka: 'თქვენ უკვე გაჰყევით ამ მოთამაშეზე.',
     es: 'Ya te retiraste de la puja por este jugador.',
     tr: 'Bu oyuncu için zaten pas geçtin.',
+    ru: 'Ты уже отказался от этого игрока.',
   },
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
     ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
     es: 'Ya tienes la puja más alta.',
     tr: 'En yüksek teklif zaten sende.',
+    ru: 'Твоё предложение уже самое высокое.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
     ka: 'ამ მოთამაშეზე ვერ დადებთ ფსონს.',
     es: 'No puedes pujar por este jugador.',
     tr: 'Bu oyuncuya teklif veremezsin.',
+    ru: "Ты не можешь сделать предложение за этого игрока.",
   },
   auction_invalid_bid: {
     en: "That bid isn't valid any more — the price moved.",
     ka: 'ფსონი აღარ არის მოქმედი — ფასი შეიცვალა.',
     es: 'Esa puja ya no es válida; el precio ha cambiado.',
     tr: 'Bu teklif artık geçerli değil — fiyat değişti.',
+    ru: "Это предложение больше не действует — цена изменилась.",
   },
   auction_solo_pick_not_yours: {
     en: "That choice belongs to another player.",
     ka: 'ეს არჩევანი სხვა მოთამაშეს ეკუთვნის.',
     es: 'Esa elección pertenece a otro jugador.',
     tr: 'Bu seçim başka bir oyuncuya ait.',
+    ru: "Этот выбор принадлежит другому игроку.",
   },
 };
 
@@ -1389,6 +1398,7 @@ const AUCTION_ERROR_GENERIC = {
   ka: 'რაღაც შეცდომა მოხდა. სცადეთ თავიდან.',
   es: 'Algo salió mal. Inténtalo de nuevo.',
   tr: 'Bir şeyler ters gitti. Lütfen tekrar dene.',
+  ru: 'Что-то пошло не так. Попробуй ещё раз.',
 };
 
 function friendlyAuctionError(payload: AuctionErrorPayload, locale: Locale): string {

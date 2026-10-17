@@ -1,4 +1,4 @@
-export type CampaignQuizLocale = 'en' | 'ka' | 'es';
+export type CampaignQuizLocale = 'en' | 'ka' | 'es' | 'ru';
 
 const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
   'guess-the-player': 'adivina-el-jugador',
@@ -8,12 +8,65 @@ const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
   spain: 'seleccion-espanola',
 };
 
-const SOURCE_SLUGS_BY_SPANISH_SLUG = Object.fromEntries(
-  Object.entries(SPANISH_PUBLIC_SLUGS).map(([sourceSlug, publicSlug]) => [publicSlug, sourceSlug]),
+/**
+ * Russian public slugs: simplified BGN/PCGN transliteration of what Russians search
+ * ("викторина арсенал", "угадай футболиста по карьере"). The backend's Search Console
+ * mapping (campaign-quiz-search-console.service.ts) mirrors this table.
+ */
+const RUSSIAN_PUBLIC_SLUGS: Record<string, string> = {
+  'career-path': 'ugaday-futbolista-po-karere',
+  'guess-the-player': 'ugaday-futbolista',
+  'club-badges': 'ugaday-klub-po-embleme',
+  'premier-league': 'viktorina-apl',
+  'la-liga': 'viktorina-la-liga',
+  arsenal: 'viktorina-arsenal',
+  'aston-villa': 'viktorina-aston-villa',
+  bournemouth: 'viktorina-bornmut',
+  brentford: 'viktorina-brentford',
+  brighton: 'viktorina-brayton',
+  chelsea: 'viktorina-chelsi',
+  'coventry-city': 'viktorina-koventri-siti',
+  'crystal-palace': 'viktorina-kristal-pelas',
+  everton: 'viktorina-everton',
+  fulham: 'viktorina-fulkhem',
+  'hull-city': 'viktorina-khall-siti',
+  'ipswich-town': 'viktorina-ipsvich-taun',
+  'leeds-united': 'viktorina-lids-yunayted',
+  liverpool: 'viktorina-liverpul',
+  'manchester-city': 'viktorina-manchester-siti',
+  'manchester-united': 'viktorina-manchester-yunayted',
+  'newcastle-united': 'viktorina-nyukasl-yunayted',
+  'nottingham-forest': 'viktorina-nottingem-forest',
+  sunderland: 'viktorina-sanderlend',
+  tottenham: 'viktorina-tottenkhem',
+  'real-madrid': 'viktorina-real-madrid',
+  barcelona: 'viktorina-barselona',
+  argentina: 'viktorina-sbornaya-argentiny',
+  spain: 'viktorina-sbornaya-ispanii',
+};
+
+const PUBLIC_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = {
+  es: SPANISH_PUBLIC_SLUGS,
+  ru: RUSSIAN_PUBLIC_SLUGS,
+};
+
+const SOURCE_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = Object.fromEntries(
+  Object.entries(PUBLIC_SLUGS).map(([locale, slugs]) => [
+    locale,
+    Object.fromEntries(Object.entries(slugs).map(([sourceSlug, publicSlug]) => [publicSlug, sourceSlug])),
+  ]),
 );
 
+/** The hub folder per edition; English and Georgian share /football-quiz. */
+export const CAMPAIGN_HUB_FOLDER: Record<CampaignQuizLocale, string> = {
+  en: 'football-quiz',
+  ka: 'football-quiz',
+  es: 'quiz-de-futbol',
+  ru: 'futbolnaya-viktorina',
+};
+
 export function campaignHubPath(locale: CampaignQuizLocale): string {
-  return locale === 'es' ? '/es/quiz-de-futbol' : `/${locale}/football-quiz`;
+  return `/${locale}/${CAMPAIGN_HUB_FOLDER[locale]}`;
 }
 
 /** The API accepts lowercase, hyphen-separated slugs of at most 80 characters. */
@@ -39,11 +92,11 @@ export function normalizeCampaignSlug(slug: string): { kind: 'ok' } | { kind: 'r
 }
 
 export function campaignPublicSlug(sourceSlug: string, locale: CampaignQuizLocale): string {
-  return locale === 'es' ? SPANISH_PUBLIC_SLUGS[sourceSlug] ?? sourceSlug : sourceSlug;
+  return PUBLIC_SLUGS[locale]?.[sourceSlug] ?? sourceSlug;
 }
 
 export function campaignSourceSlug(publicSlug: string, locale: CampaignQuizLocale): string {
-  return locale === 'es' ? SOURCE_SLUGS_BY_SPANISH_SLUG[publicSlug] ?? publicSlug : publicSlug;
+  return SOURCE_SLUGS[locale]?.[publicSlug] ?? publicSlug;
 }
 
 export function campaignQuizPath(sourceSlug: string, locale: CampaignQuizLocale): string {
@@ -55,14 +108,8 @@ export function swapCampaignLocalePath(pathname: string, targetLocale: CampaignQ
   if (segments.length < 2) return null;
 
   const [currentLocale, hub, publicSlug] = segments;
-  const sourceLocale: CampaignQuizLocale | null =
-    currentLocale === 'en' && hub === 'football-quiz'
-      ? 'en'
-      : currentLocale === 'ka' && hub === 'football-quiz'
-        ? 'ka'
-      : currentLocale === 'es' && hub === 'quiz-de-futbol'
-        ? 'es'
-        : null;
+  const sourceLocale = (Object.keys(CAMPAIGN_HUB_FOLDER) as CampaignQuizLocale[])
+    .find((locale) => locale === currentLocale && CAMPAIGN_HUB_FOLDER[locale] === hub);
   if (!sourceLocale) return null;
 
   if (!publicSlug) return campaignHubPath(targetLocale);

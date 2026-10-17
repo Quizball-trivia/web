@@ -30,6 +30,7 @@ import { RankFrameCard } from './components/RankFrameCard';
 import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievementCard';
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
 import { WlChampionAchievementCard, isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
+import { BoardTrophyCard, parseBoardTrophySlug } from '@/components/shared/BoardTrophy';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
 import { formatCooldownDate } from '@/lib/api/nicknameErrors';
@@ -919,8 +920,10 @@ export function ProfileWeb({
                 {t('profileScreen.achievementsTitle')}
               </h3>
               <div className="space-y-3">
-                {eventAwards!.map((award) => (
-                  isWlAwardSlug(award.eventSlug) ? (
+                {eventAwards!.map((award) => {
+                  const boardTrophy = parseBoardTrophySlug(award.eventSlug);
+                  if (boardTrophy) return <BoardTrophyCard key={award.id} trophy={boardTrophy} place={award.place} />;
+                  return isWlAwardSlug(award.eventSlug) ? (
                     <WlChampionAchievementCard
                       key={award.id}
                       place={award.place}
@@ -928,8 +931,8 @@ export function ProfileWeb({
                     />
                   ) : (
                     <WorldCupAchievementCard key={award.id} place={award.place} />
-                  )
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           )}

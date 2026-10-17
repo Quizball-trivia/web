@@ -1,6 +1,6 @@
 import type { AproximadoQuestion } from "./aproximado.rules";
 
-type Locale = "es" | "en" | "ka" | "tr";
+type Locale = "es" | "en" | "ka" | "tr" | "ru";
 type Kind = AproximadoQuestion["kind"];
 
 const es = {
@@ -297,11 +297,84 @@ const tr: Copy = {
   finishedText: "Bu maç zaten bitti.",
 };
 
-const COPY: Record<Locale, Copy> = { es, en, ka, tr };
+const ru: Copy = {
+  ...es,
+  brandA: "Ближе всех",
+  brandB: "Побеждает",
+  round: (n, total) => `Вопрос ${n}/${total}`,
+  kinds: { fee: "Сумма трансфера", value: "Рыночная стоимость", goals: "Голы", attendance: "Зрители", height: "Рост", apps: "Матчи", age: "Возраст" },
+  inputLabel: "Твоё число",
+  inputHint: "Чем ближе, тем больше очков. Точное попадание — +1.",
+  invalid: "Введи число.",
+  confirm: "Зафиксировать",
+  you: "Ты",
+  answered: "Ответил",
+  thinking: "Думает…",
+  away: "Отключился",
+  withdrawn: "Вышел",
+  idle: "Отошёл",
+  waiting: (n) => (n === 1 ? "Ждём 1 игрока…" : `Ждём игроков: ${n}…`),
+  revealing: "Все ответили! Показываем ответы…",
+  yourGuess: (v) => `Твой ответ: ${v}`,
+  itWas: "Правильный ответ:",
+  off: (v) => `Разница — ${v}`,
+  exact: "Точное попадание!",
+  noGuess: "Нет ответа",
+  roundWinner: (name) => `${name} забирает раунд`,
+  youWonRound: "Ты забрал раунд!",
+  roundTie: "Лидеры поделили первое место",
+  nobody: "Никто не ответил",
+  introTitle: (n) => (n === 2 ? "1 на 1" : `${n} игроков`),
+  introRules: (top) => [
+    "10 вопросов о футбольных цифрах: трансферы, голы, зрители…",
+    "Введи число до конца отсчёта. Твой ответ увидят только после завершения раунда.",
+    top === 1 ? "Ближайший ответ приносит 1 очко. Точное попадание — +1." : `Ближайший ответ приносит ${top} очков, следующий — ${top - 1}… Точное попадание — +1.`,
+  ],
+  startsIn: (s) => `Начало через ${s}`,
+  finalTitle: "Итоговый результат",
+  youWon: "Ты победил!",
+  youPlace: (p) => `Твоё место: ${p}`,
+  tieFirst: "Ты разделил первое место!",
+  colPoints: "Очки",
+  colWins: "Выиграно раундов",
+  resultDetail: (wins, error) => `${wins} ${wins === 1 ? "раунд выигран" : "раундов выиграно"} · средняя ошибка ${error}%`,
+  colError: "Средняя ошибка",
+  backToRoom: "Вернуться в комнату",
+  exit: "Выйти",
+  scoringPodium: "Подиум (3-2-1)",
+  scoringClosest: "Очки только за самый близкий ответ",
+  colPlayer: "Игрок",
+  cancelledTitle: "Матч отменён",
+  cancelledText: "Для игры осталось слишком мало игроков.",
+  hurry: "Осталось 5 секунд!",
+  answeredOf: (a, b) => `Ответили: ${a} из ${b}`,
+  willSend: (v) => `Ты отправишь ответ: ${v}`,
+  sending: "Отправляем",
+  waitingClock: "Ждём окончания отсчёта…",
+  leave: "Покинуть матч",
+  leaveConfirm: "Покинуть матч? Вернуться уже не получится.",
+  leaveYes: "Покинуть",
+  leaveNo: "Продолжить игру",
+  offline: "Нет соединения: переподключаемся… Если вопрос ещё открыт, ты сможешь ответить, когда вернёшься.",
+  errors: { stale_round: "Вопрос уже закрыт.", excluded: "Матч начался без тебя.", not_active: "Матч ещё не идёт.", rate_limited: "Слишком быстро. Подожди немного.", room_not_found: "Такого матча нет или он уже завершился.", not_in_match: "Ты не участвуешь в этом матче.", not_open: "Вопрос уже закрыт.", already_answered: "Ты уже ответил на этот вопрос.", withdrawn: "Ты уже покинул матч.", invalid: "Для этого вопроса нужно ввести другое число.", default: "Не удалось отправить ответ. Попробуй ещё раз." },
+  youLeftTitle: "Ты покинул матч",
+  youLeftText: "Твои ответы учтены, но ты окажешься ниже тех, кто доиграл до конца.",
+  excludedTitle: "Матч начался без тебя",
+  excludedText: "Ты не подтвердил участие вовремя. Жди следующего матча в комнате.",
+  gateTitle: "Ждём остальных игроков…",
+  gateReady: "Готово",
+  gateWaiting: "Подключаемся…",
+  connecting: "Подключаемся…",
+  retry: "Повторить",
+  finishedTitle: "Матч завершён",
+  finishedText: "Этот матч уже завершился.",
+};
+
+const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru };
 export const aproximadoCopy = (locale: string): Copy => COPY[(locale in COPY ? locale : "en") as Locale];
 export type AproximadoCopy = Copy;
 
-const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR" };
+const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU" };
 /** "85,5 M€", "74.500 espectadores": the number in the reader's locale with the question's unit. */
 /** es/en pool units take a singular after exactly 1 ("a 1 gol"); ka and tr keep the singular after any number. */
 const SINGULAR_UNIT: Record<string, string> = {

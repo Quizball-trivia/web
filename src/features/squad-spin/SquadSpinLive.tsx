@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- player faces come from the first-party grid CDN */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -41,14 +42,14 @@ const QUESTION_S = 15;
 const ROLL_BASE_MS = 900;
 const ROLL_STAGGER_MS = 260;
 const ROLL_TICK_MS = 85;
-type RegistryItem = { id: string; labelEn: string; labelKa: string };
+type RegistryItem = { id: string; labelEn: string; labelKa: string; labelRu?: string };
 const DECOYS: Record<SquadSpinReel["family"], SquadSpinReel[]> = {
-  club: (clubsRegistry as RegistryItem[]).map((c) => ({ family: "club", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, asset_key: c.id })),
-  country: (countriesRegistry as RegistryItem[]).map((c) => ({ family: "country", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, asset_key: c.id })),
-  league: (leaguesRegistry as RegistryItem[]).map((c) => ({ family: "league", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, asset_key: c.id })),
-  manager: (managersRegistry as RegistryItem[]).map((c) => ({ family: "manager", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, asset_key: c.id })),
-  trophy_award: (competitionsRegistry as RegistryItem[]).map((c) => ({ family: "trophy_award", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, asset_key: c.id })),
-  position: (["GK", "DEF", "MID", "FWD"] as const).map((p) => ({ family: "position", id: p, key: p, label_en: p, label_ka: p, asset_key: null })),
+  club: (clubsRegistry as RegistryItem[]).map((c) => ({ family: "club", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
+  country: (countriesRegistry as RegistryItem[]).map((c) => ({ family: "country", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
+  league: (leaguesRegistry as RegistryItem[]).map((c) => ({ family: "league", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
+  manager: (managersRegistry as RegistryItem[]).map((c) => ({ family: "manager", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
+  trophy_award: (competitionsRegistry as RegistryItem[]).map((c) => ({ family: "trophy_award", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
+  position: (["GK", "DEF", "MID", "FWD"] as const).map((p) => ({ family: "position", id: p, key: p, label_en: p, label_ka: p, label_ru: p, asset_key: null })),
 };
 /** A run the sweeper settled while the tab was away is still shown if it ended this recently. */
 const RECENT_SETTLED_MS = 90_000;
@@ -56,8 +57,8 @@ const REEL_OPTIONS: Array<{ reels: 3 | 4 | 5; key: "reels3" | "reels4" | "reels5
 const POSITION_COLOR: Record<string, string> = { GK: "#FFE500", DEF: "#1CB0F6", MID: "#38B60E", FWD: "#FB3101" };
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : reel.label_en) || reel.label_en;
-const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : p.name_en);
+const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : reel.label_en) || reel.label_en;
+const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : locale === "ru" && p.name_ru ? p.name_ru : p.name_en);
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 
 /** Squad Spin, live: the reels and the answer set are held server-side; every answer, spin and cash-out is a request. */
@@ -334,7 +335,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/60" style={poppins}>
                     <span>{t("squadSpin.spinN", { n: String(state.spin.index) })} · ×{(state.spin.step_bp / 10000).toFixed(2)}</span>
-                    <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{Math.ceil(left)}s</span>
+                    <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{secondsShort(Math.ceil(left), locale)}</span>
                   </div>
                   <div className="relative mt-3">
                     <input

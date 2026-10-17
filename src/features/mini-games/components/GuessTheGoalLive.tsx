@@ -159,9 +159,9 @@ const SKEW_PAD_MS = 400;
 
 /** watch?v=, youtu.be/, shorts/, embed/ → bare video id (null if unparseable). */
 const DIFF_META: Record<string, { label: Record<MiniLocale, string>; color: string }> = {
-  easy: { label: { en: 'Easy', ka: 'მარტივი', es: 'Fácil', tr: 'Kolay' }, color: '#38B60E' },
-  medium: { label: { en: 'Medium', ka: 'საშუალო', es: 'Medio', tr: 'Orta' }, color: '#FFE500' },
-  hard: { label: { en: 'Hard', ka: 'რთული', es: 'Difícil', tr: 'Zor' }, color: '#FB3101' },
+  easy: { label: { en: 'Easy', ka: 'მარტივი', es: 'Fácil', tr: 'Kolay', ru: 'Легко' }, color: '#38B60E' },
+  medium: { label: { en: 'Medium', ka: 'საშუალო', es: 'Medio', tr: 'Orta', ru: 'Средне' }, color: '#FFE500' },
+  hard: { label: { en: 'Hard', ka: 'რთული', es: 'Difícil', tr: 'Zor', ru: 'Сложно' }, color: '#FB3101' },
 };
 
 /** Looping board replay for the collection overlay — its own clock, nothing

@@ -274,7 +274,7 @@ async function fixtureStatSniperBoard(): Promise<StatSniperLeaderboardData> {
 const tenableFriends = (ctx: ScenarioContext) => (
   <button type="button" onClick={() => ctx.log("openFriendRoom", "tenable")} style={{ fontFamily: "'Poppins', sans-serif" }}
     className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black uppercase tracking-wide text-white hover:bg-brand-blue/90">
-    <Users className="size-4" aria-hidden />{({ en: "Play with friends (2–6)", es: "Jugar con amigos (2–6)", tr: "Arkadaşlarınla oyna (2–6)", ka: "ითამაშე მეგობრებთან (2–6)" } as Record<string, string>)[ctx.locale] ?? "Play with friends (2–6)"}
+    <Users className="size-4" aria-hidden />{({ en: "Play with friends (2–6)", es: "Jugar con amigos (2–6)", tr: "Arkadaşlarınla oyna (2–6)", ka: "ითამაშე მეგობრებთან (2–6)", ru: "Играть с друзьями (2–6)" } as Record<string, string>)[ctx.locale] ?? "Play with friends (2–6)"}
   </button>
 );
 const tenableBoardStandIn = <div className="mt-6 rounded-2xl border border-dashed border-white/25 px-4 py-6 text-center text-xs text-white/60">Daily leaderboard: live data only (WordDailyLeaderboard)</div>;

@@ -23,6 +23,11 @@ function isTurkishLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'tr' || normalized?.startsWith('tr-') === true;
 }
 
+function isRussianLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'ru' || normalized?.startsWith('ru-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -53,6 +58,10 @@ export function inferLocaleFromSignals({
 
   if (browserLanguages.some(isTurkishLanguageTag)) {
     return 'tr';
+  }
+
+  if (browserLanguages.some(isRussianLanguageTag)) {
+    return 'ru';
   }
 
   return 'en';
