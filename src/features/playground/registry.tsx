@@ -376,7 +376,7 @@ const raceSolo = (id: string, name: string, config: Partial<RaceSoloConfig>, not
     id, name, note, data: { data: "real", day: "today", script: "play", ...config },
     render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><FootballRaceSoloSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider>,
   });
-const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" to any date). Your nation vs three; rivals start 2 spaces ahead. Real stats from the local private pack.";
+const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" to any date). Choose one of the day's four nations; everyone starts on the line, you need 5 and each rival needs 3. Real stats from the local private pack.";
 const RACE_NOTE = "Playable: you are seat 0, bots take the rest. Real stats come from the local private pack (public/dev-data, never committed); without it the invented fixture plays. Edit seats, tournament (random, WC, EURO, COPA, AFCON, ASIA, GOLD, WCQ, EUROQ, NL, ALL), target (0 = by lobby size), finish, botSkill, nations (codes, yours first) or seed in the state.";
 
 export const GAMES: GameEntry[] = [
