@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 
 import { LeaderboardScreen } from "@/features/leaderboard/LeaderboardScreen";
+import { LeaderboardPageSkeleton } from "@/features/leaderboard/components/BoardSkeleton";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -12,7 +13,7 @@ export default function LeaderboardPage() {
   const isAuthenticated = useAuthStore((state) => state.status) === "authenticated";
   // The board, mode and view live in the URL (useSearchParams), which needs a Suspense boundary.
   return (
-    <Suspense>
+    <Suspense fallback={<LeaderboardPageSkeleton />}>
       <LeaderboardScreen currentPlayerId={isAuthenticated ? player.id : undefined} />
     </Suspense>
   );
