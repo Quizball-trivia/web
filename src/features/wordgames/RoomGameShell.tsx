@@ -36,6 +36,10 @@ export interface RoomGameScreens<V, C> {
   Results: ComponentType<{ view: V; snapshot: RoomStatePayload; locale: string; onRoom: () => void; onExit: () => void }>;
   /** True while the board uses the wide (standings sidebar) layout. */
   wide: (view: V) => boolean;
+  /** A game that shows no clock at all: the ready gate keeps its deadline but does not count it down on screen. */
+  clockless?: boolean;
+  /** The game's own title and text for a cancelled match (null: the generic notice). */
+  cancelled?: (view: V, locale: string) => readonly [string, string] | null;
 }
 
 const LOADING_LIMIT_MS = 8_000;
@@ -116,7 +120,7 @@ export function RoomGameShell<V, C>({ room, screens }: { room: RoomConnection<C>
       </div>
     );
   } else if (snapshot.status === "cancelled") {
-    body = <AproximadoNotice kind="cancelled" locale={locale} onRoom={toRoom} />;
+    body = <AproximadoNotice kind="cancelled" locale={locale} onRoom={toRoom} message={view && screens.cancelled ? screens.cancelled(view, locale) : null} />;
   } else if (snapshot.status === "ready" && !snapshot.me.active) {
     body = <AproximadoNotice kind="left" locale={locale} onRoom={toRoom} />;
   } else if (snapshot.status === "ready") {
@@ -140,7 +144,7 @@ export function RoomGameShell<V, C>({ room, screens }: { room: RoomConnection<C>
             </li>
           ))}
         </ul>
-        {gateSeconds !== null && <p className="text-center text-lg font-black tabular-nums text-brand-yellow" style={poppins}>{copy.seconds(gateSeconds)}</p>}
+        {gateSeconds !== null && !screens.clockless && <p className="text-center text-lg font-black tabular-nums text-brand-yellow" style={poppins}>{copy.seconds(gateSeconds)}</p>}
         {error && <p role="alert" className="text-center text-sm font-semibold text-brand-red-light">{copy.errors[error] ?? copy.errors.default}</p>}
         <button type="button" onClick={() => { clearError(); setLeavingGate(true); room.leave(); }} disabled={leavingGate} aria-busy={leavingGate}
           className="mx-auto h-11 w-full max-w-xs rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15 disabled:opacity-60" style={poppins}>

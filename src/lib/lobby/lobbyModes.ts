@@ -26,19 +26,21 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   auction: { capacity: 3, playable: 3, guestAllowed: true, hostStart: { min: 1, max: 3 }, needsCategories: false, promotesToPartyQuiz: false },
   ranked_sim: { capacity: 6, playable: 2, guestAllowed: true, hostStart: null, needsCategories: false, promotesToPartyQuiz: true },
   duel: { capacity: 2, playable: 2, guestAllowed: true, hostStart: { min: 2, max: 2 }, needsCategories: false, promotesToPartyQuiz: false },
-  room_game: { capacity: 6, playable: 6, guestAllowed: true, hostStart: { min: 2, max: 6 }, needsCategories: false, promotesToPartyQuiz: false },
+  room_game: { capacity: 8, playable: 8, guestAllowed: true, hostStart: { min: 2, max: 8 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames"];
 
-/** Room games seating fewer than the room mode's six (mirrors the backend's ROOM_GAME_MAX_SEATS). */
-const ROOM_GAME_MAX_SEATS: Partial<Record<RoomGameId, number>> = { football_race: 4 };
+/** Seats of a room game without its own cap (the room mode holds eight; only Football Codenames uses them). */
+const ROOM_GAME_DEFAULT_SEATS = 6;
+/** Room games with their own seat cap (mirrors the backend's ROOM_GAME_MAX_SEATS). */
+const ROOM_GAME_MAX_SEATS: Partial<Record<RoomGameId, number>> = { football_race: 4, codenames: 8 };
 
 /** Members a mode choice can play: a room game may seat fewer than its mode. */
 export function choicePlayable(choice: { gameMode: LobbyGameMode; roomGame?: RoomGameId | null }): number {
   const playable = LOBBY_MODES[choice.gameMode].playable;
   if (choice.gameMode !== "room_game") return playable;
-  return Math.min(playable, ROOM_GAME_MAX_SEATS[choice.roomGame ?? ROOM_GAMES[0]] ?? playable);
+  return Math.min(playable, ROOM_GAME_MAX_SEATS[choice.roomGame ?? ROOM_GAMES[0]] ?? ROOM_GAME_DEFAULT_SEATS);
 }
 
 /** Tab label, panel title and description of each room game. */
@@ -48,6 +50,7 @@ export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey
   name_chain: { tab: "friend.roomTabNameChain", title: "friend.roomNameChain", description: "friend.roomNameChainDescription" },
   tenable: { tab: "friend.roomTabTenable", title: "friend.roomTenable", description: "friend.roomTenableDescription" },
   football_race: { tab: "friend.roomTabFootballRace", title: "friend.roomFootballRace", description: "friend.roomFootballRaceDescription" },
+  codenames: { tab: "friend.roomTabCodenames", title: "friend.roomCodenames", description: "friend.roomCodenamesDescription" },
 };
 
 /** Labels of a room game, or null for one this build does not know (a lobby set up by a newer client). */

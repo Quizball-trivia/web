@@ -19,7 +19,7 @@ describe("lobby mode capability map (web mirror)", () => {
 
   it("keeps the existing seat counts and guest rules", () => {
     expect(Object.fromEntries(Object.entries(LOBBY_MODES).map(([mode, caps]) => [mode, caps.playable]))).toEqual({
-      friendly_possession: 2, friendly_party_quiz: 6, football_grid: 2, auction: 3, ranked_sim: 2, duel: 2, room_game: 6,
+      friendly_possession: 2, friendly_party_quiz: 6, football_grid: 2, auction: 3, ranked_sim: 2, duel: 2, room_game: 8,
     });
     expect(Object.entries(LOBBY_MODES).filter(([, caps]) => caps.guestAllowed).map(([mode]) => mode).sort())
       .toEqual(["auction", "duel", "football_grid", "ranked_sim", "room_game"]);
@@ -67,7 +67,7 @@ describe("lobby mode capability map (web mirror)", () => {
   });
 });
 
-describe("room games seating fewer than six", () => {
+describe("room games with their own seat count", () => {
   it("Football Horserace seats 2 to 4; the other room games keep 6", () => {
     expect(choicePlayable({ gameMode: "room_game", roomGame: "football_race" })).toBe(4);
     expect(choicePlayable({ gameMode: "room_game", roomGame: "name_chain" })).toBe(6);
@@ -75,5 +75,12 @@ describe("room games seating fewer than six", () => {
     expect(canHostStart("room_game", 4, "football_race")).toBe(true);
     expect(canHostStart("room_game", 5, "football_race")).toBe(false);
     expect(canHostStart("room_game", 5, "name_chain")).toBe(true);
+  });
+
+  it("Football Codenames seats 2 to 8; a game without its own cap stays at 6", () => {
+    expect(choicePlayable({ gameMode: "room_game", roomGame: "codenames" })).toBe(8);
+    expect(canHostStart("room_game", 8, "codenames")).toBe(true);
+    expect(canHostStart("room_game", 9, "codenames")).toBe(false);
+    expect(canHostStart("room_game", 7, "tenable")).toBe(false);
   });
 });

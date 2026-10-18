@@ -35,6 +35,7 @@ import { Frame } from "@/features/wordgames/ui";
 import { Users } from "lucide-react";
 import { TenableRoomSim, TenableSoloSim, type TenableRoomConfig } from "./TenableSim";
 import { roomSnapshot, roomView as tenableRoomView, slotsWith, soloState } from "./fixtures/tenable";
+import { CODENAMES_ROOM, CODENAMES_SOLO } from "./codenamesScenarios";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
 interface DuelData { snapshot: DuelStatePayload; secondsLeft: number | null; connected: boolean; busy: boolean; error: string | null; confirmLeave: boolean }
@@ -380,6 +381,11 @@ const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" 
 const RACE_NOTE = "Playable: you are seat 0, bots take the rest. Real stats come from the local private pack (public/dev-data, never committed); without it the invented fixture plays. Edit seats, tournament (random, WC, EURO, COPA, AFCON, ASIA, GOLD, WCQ, EUROQ, NL, ALL), target (0 = by lobby size), finish, botSkill, nations (codes, yours first) or seed in the state.";
 
 export const GAMES: GameEntry[] = [
+  {
+    id: "codenames",
+    name: "Football Codenames (prototype)",
+    scenarios: { solo: CODENAMES_SOLO, room: CODENAMES_ROOM },
+  },
   {
     id: "carrera",
     name: "Football Horserace (prototype)",
