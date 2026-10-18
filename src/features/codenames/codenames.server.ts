@@ -40,11 +40,15 @@ export type CodenamesServerCommand =
  */
 /** Every pointer tap gets its own number: pointing back at a card is a new command, never a repeat of the first one. */
 let pointer = 0;
+/** The side and role this tab asked for last: an earlier ask is superseded (settled), never resent over it. */
+let latestJoin: string | null = null;
 
 export function toServerCommand(command: CodenamesCommand, view: CodenamesServerView): CodenamesServerCommand | null {
   const at = (id: string | null) => (id === null ? null : view.cards.findIndex((c) => c.id === id));
   switch (command.type) {
     case "join":
+      latestJoin = `${command.team}:${command.scout}`;
+      return command;
     case "kickoff":
       return command;
     case "shuffle":
@@ -87,7 +91,7 @@ export const codenamesRoomRules: RoomClientRules<CodenamesServerCommand> = {
     const me = v.players?.find((p) => p.seat === v.mySeat);
     if (c.type === "point") return true;
     if (c.type === "shuffle") return v.phase !== "teams" || (v.shuffles ?? 0) > (c.seen ?? -1);
-    if (c.type === "join") return v.phase !== "teams" || (me?.team === c.team && me.scout === c.scout);
+    if (c.type === "join") return v.phase !== "teams" || (latestJoin !== null && `${c.team}:${c.scout}` !== latestJoin) || (me?.team === c.team && me.scout === c.scout);
     if (c.type === "kickoff") return v.phase !== "teams";
     if (v.turnNo !== c.turn) return true;
     if (c.type === "clue") return v.phase !== "clue";

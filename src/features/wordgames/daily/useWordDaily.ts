@@ -381,7 +381,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
                 setNotice("actionError");
               }
               // Still offline: the run could not be read, so whether it landed is unknown until the connection is back.
-              if (!synced) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, resend: () => void act(key, call, typed, needsRun, resendStale, resendLost, missed), missed: missed && ((f) => { if (moved(f)) missed(sentOn, f, true); }) };
+              // A copy was read ("behind" too): reported above, so nothing waits for the connection.
+              if (!read) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, resend: () => void act(key, call, typed, needsRun, resendStale, resendLost, missed), missed: missed && ((f) => { if (moved(f)) missed(sentOn, f, true); }) };
             }
           } else {
             handleError(error, d);

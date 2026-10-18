@@ -310,6 +310,7 @@ export function CodenamesGame({ view, locale, busy, sending = false, error, onSe
 
 export function CodenamesResult({ view, locale, onRoom, onExit }: { view: CodenamesRoomView; locale: string; onRoom: () => void; onExit: () => void }) {
   const c = codenamesCopy(locale);
+  const altOf = useCardAlt(locale);
   const myTeam = myTeamOf(view);
   const r = view.result!;
   const won = r.winner === myTeam;
@@ -328,7 +329,7 @@ export function CodenamesResult({ view, locale, onRoom, onExit }: { view: Codena
               <span className="whitespace-nowrap">{c.yourTeam}: {cardsLeft(view, myTeam)}</span> · <span className="whitespace-nowrap">{c.rivalTeam}: {cardsLeft(view, other(myTeam))}</span>
             </p>
           </div>
-          <CodenamesBoard className="mt-3" cards={cards} mode="end" kinds={c.kinds} />
+          <CodenamesBoard className="mt-3" cards={cards} mode="end" kinds={c.kinds} cardLabel={c.cardLabel} altOf={altOf} />
         </div>
         <aside>
           <History c={c} view={view} myTeam={myTeam} />
