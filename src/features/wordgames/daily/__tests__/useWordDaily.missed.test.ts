@@ -119,6 +119,32 @@ describe("useWordDaily: onAnswerNotSaved", () => {
     expect(answer).toHaveBeenCalledTimes(1);
   });
 
+  it("a lost reply whose recovery was overtaken by a newer copy is reported once, not again on the next focus", async () => {
+    const answer = vi.fn(async () => { throw offline(); });
+    let release: (r: WordRun<State>) => void = () => {};
+    const start = vi.fn().mockResolvedValueOnce(runAt(1, [])).mockImplementationOnce(() => new Promise((resolve) => { release = resolve; })).mockResolvedValue(runAt(3, ["A", "C"]));
+    const missed = vi.fn<(m: WordAnswerMissed<State>) => void>();
+    const api = {
+      boards: vi.fn(async () => ({ days: { [DAY]: 1 } })),
+      current: vi.fn(async () => ({ run: null })),
+      start, answer,
+    } as unknown as WordDailyApi<State, "right">;
+    const hook = renderHook(({ locale }) => useWordDaily<State, "right">({ api, calendar: CALENDAR, locale, initialDay: DAY, resendLostAnswers: true, onAnswerNotSaved: missed }), { initialProps: { locale: "en" } });
+    await waitFor(() => expect(hook.result.current.day).toBe(DAY));
+    await act(async () => { await hook.result.current.play(); });
+    let done!: Promise<unknown>;
+    act(() => { done = hook.result.current.answer("B"); });
+    await waitFor(() => expect(start).toHaveBeenCalledTimes(2));
+    (api.current as ReturnType<typeof vi.fn>).mockResolvedValue(runAt(3, ["A", "C"]));
+    hook.rerender({ locale: "es" });
+    await waitFor(() => expect(hook.result.current.run?.run.version).toBe(3));
+    await act(async () => { release(runAt(2, ["A"])); await done; });
+    expect(missed).toHaveBeenCalledTimes(1);
+    await act(async () => { window.dispatchEvent(new Event("focus")); await new Promise((r) => setTimeout(r, 50)); });
+    expect(missed).toHaveBeenCalledTimes(1);
+    expect(answer).toHaveBeenCalledTimes(1);
+  });
+
   it("an answer waiting for the connection is dropped when the player opens another day", async () => {
     const answer = vi.fn(async () => { throw offline(); });
     const start = vi.fn().mockResolvedValueOnce(runAt(1, [])).mockRejectedValue(offline());

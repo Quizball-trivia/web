@@ -88,3 +88,15 @@ describe("codenames daily client", () => {
     expect(s.clues[0].cards).toEqual([{ id: "card-3", why: "why-es" }]);
   });
 });
+
+describe("a side/role ask superseded by a later one", () => {
+  it("settles (is never resent over the newer ask), while the latest one waits for the seat to show it", async () => {
+    const { toServerCommand, codenamesRoomRules } = await import("../codenames.server");
+    const view = { phase: "teams", mySeat: 0, players: [{ seat: 0, team: null, scout: false, status: "in", sawKey: false }], cards: [], turnNo: 0, shuffles: 0 } as never;
+    const first = toServerCommand({ type: "join", team: 0, scout: false }, view)!;
+    const second = toServerCommand({ type: "join", team: 1, scout: true }, view)!;
+    const now = { phase: "teams", mySeat: 0, players: [{ seat: 0, team: null, scout: false, status: "in", sawKey: false }] };
+    expect(codenamesRoomRules.settled(now, first)).toBe(true);
+    expect(codenamesRoomRules.settled(now, second)).toBe(false);
+  });
+});

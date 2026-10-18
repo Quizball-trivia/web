@@ -159,6 +159,7 @@ export function CodenamesEndView({ locale, number, state, guestOnPastBoard, lead
   onArchive: () => void; onExit?: () => void;
 }) {
   const c = codenamesCopy(locale);
+  const altOf = useCardAlt(locale);
   const found = soloFound(state);
   const total = mineTotal(state);
   return (
@@ -172,7 +173,7 @@ export function CodenamesEndView({ locale, number, state, guestOnPastBoard, lead
       <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/55">{c.history}</p>
       {state.disclosed === false && <p data-codenames-answers-later className="mt-2 text-sm font-semibold text-white/70">{c.answersLater}</p>}
       <div className="mt-2"><ClueRecap state={state} kinds={c.kinds} /></div>
-      <CodenamesBoard className="mt-4" cards={soloCards(state, true)} mode="end" kinds={c.kinds} />
+      <CodenamesBoard className="mt-4" cards={soloCards(state, true)} mode="end" kinds={c.kinds} cardLabel={c.cardLabel} altOf={altOf} />
     </DailyEnd>
   );
 }
