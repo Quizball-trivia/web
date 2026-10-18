@@ -11,7 +11,7 @@ import { SOUND_EVENTS } from "./sounds";
 import { isPlaygroundMessage, PLAYGROUND, type FromPreview } from "./protocol";
 import type { GameId, PlayMode } from "./types";
 
-const LOCALES: Locale[] = ["es", "en", "ka", "tr"];
+const LOCALES: Locale[] = ["es", "en", "ka", "tr", "ru"];
 const DEVICES = { small: { w: 320, h: 640, label: "Small phone 320×640" }, phone: { w: 390, h: 844, label: "Phone 390×844" }, tablet: { w: 768, h: 1024, label: "Tablet 768" }, desktop: { w: 1280, h: 800, label: "Desktop 1280" } } as const;
 type Device = keyof typeof DEVICES;
 type Tab = "state" | "actions" | "sounds";

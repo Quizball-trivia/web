@@ -54,6 +54,7 @@ const REAL_ROUTES: Record<string, string> = {
   "shared-player": "/ortak-futbolcu",
   "name-chain": "/son-harfle",
   "football-horserace": "/horserace",
+  "football-codenames": "/codenames",
   buscaminas: "/buscaminas",
   pistas: "/pistas",
   ultimo: "/ultimo",

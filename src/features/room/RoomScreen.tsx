@@ -7,6 +7,8 @@ import { AproximadoFrame } from "@/features/aproximado/AproximadoRoom";
 import { aproximadoCopy } from "@/features/aproximado/aproximado.copy";
 import { AproximadoRoomMatch } from "@/features/aproximado/RoomMatchScreen";
 import { useAproximadoRoom, type RoomCommand } from "@/features/aproximado/useRoom";
+import { codenamesScreens } from "@/features/codenames/CodenamesRoomScreens";
+import type { CodenamesServerCommand } from "@/features/codenames/codenames.server";
 import { footballRaceScreens } from "@/features/football-race/FootballRaceRoom";
 import type { FootballRaceCommand } from "@/features/football-race/race.server";
 import { nameChainScreens } from "@/features/name-chain/NameChainRoom";
@@ -38,6 +40,7 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "name_chain") return <RoomGameShell room={room as Connection<NameChainCommand>} screens={nameChainScreens} />;
   if (game === "tenable") return <RoomGameShell room={room as Connection<TenableCommand>} screens={tenableScreens} />;
   if (game === "football_race") return <RoomGameShell room={room as Connection<FootballRaceCommand>} screens={footballRaceScreens} />;
+  if (game === "codenames") return <RoomGameShell room={room as Connection<CodenamesServerCommand>} screens={codenamesScreens} />;
   return <Outdated />;
 }
 

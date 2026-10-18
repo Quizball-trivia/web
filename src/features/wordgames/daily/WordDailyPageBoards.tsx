@@ -3,6 +3,8 @@ import { createWordDailyApi, type WordRunStateBase } from "./wordDaily.api";
 import { nameChainDailyGame, sharedPlayerDailyGame } from "./wordDaily.games";
 import { WordDailyLeaderboard } from "./WordDailyLeaderboard";
 import { tenableDailyGame } from "@/features/tenable/tenable.game";
+import { codenamesCopy } from "@/features/codenames/codenames.copy";
+import { codenamesDailyGame, loadCodenamesBoard } from "@/features/codenames/codenames.daily";
 
 // Ranking modules must not import playable engines or animation UI.
 const sharedApi = createWordDailyApi<WordRunStateBase, string, unknown>("/api/v1/shared-player");
@@ -20,4 +22,7 @@ export function NameChainDailyBoard({ locale, className }: { locale: string; cla
 }
 export function TenableDailyBoard({ locale, className }: { locale: string; className?: string }) {
   return <WordDailyLeaderboard game={tenableDailyGame(locale)} locale={locale} load={loadTenable} className={className} />;
+}
+export function CodenamesDailyBoard({ locale, className }: { locale: string; className?: string }) {
+  return <WordDailyLeaderboard game={codenamesDailyGame(locale)} locale={locale} load={loadCodenamesBoard} pointsLabel={codenamesCopy(locale).foundLabel} className={className} />;
 }

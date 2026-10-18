@@ -18,6 +18,8 @@ export const WORD_LANDING_ROOTS = [
     "futbolnye-igry/futbolisty-na-poslednyuyu-bukvu", "futbolnye-igry/igravshie-za-oba-kluba",
     "football-games/football-horserace", "juegos-de-futbol/carrera-de-caballos-futbolera", "futbol-oyunlari/futbol-at-yarisi",
     "futbolnye-igry/futbolnye-skachki",
+    "football-games/football-codenames", "juegos-de-futbol/codenames-futbolero", "futbol-oyunlari/futbol-codenames",
+    "futbolnye-igry/kodovye-imena-futbol",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -53,7 +55,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
     "@/features/minuto/MinutoGame", "@/features/ultimo/UltimoGame", "@/features/mini-games/components/GuessTheGoalGuest",
-    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily",
+    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily", "@/features/codenames/CodenamesDaily",
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),
