@@ -20,6 +20,8 @@ export const SOUND_FILES = {
   auctionWon: "/sounds/auction/mixkit-free/won-casino-bling.mp3",
   auctionWarning: "/sounds/auction/mixkit-free/warning-racing-countdown.mp3",
   auctionFinished: "/sounds/auction/mixkit-free/finish-crowd-ovation.mp3",
+  // Synthesised for Quizball (scratch generator, stdlib only); no third-party audio.
+  codenamesOwnGoal: "/sounds/codenames/own-goal.mp3",
 } as const;
 
 const BGM_FILES = {
@@ -67,6 +69,7 @@ const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
   auctionWon: 0.3,
   auctionWarning: 0.28,
   auctionFinished: 0.22,
+  codenamesOwnGoal: 0.6,
 };
 
 function getSound(name: SoundName): Howl {
@@ -143,6 +146,15 @@ export function subscribeMuted(listener: () => void): () => void {
     window.removeEventListener(MUTE_CHANGED_EVENT, listener);
     window.removeEventListener('storage', listener);
   };
+}
+
+/** Load these sounds now so their first play starts on time. */
+export function preloadSfx(...names: SoundName[]) {
+  try {
+    names.forEach(getSound);
+  } catch {
+    // Same as playSfx: a missing file must not break the game.
+  }
 }
 
 /** Preload all sounds (call on game start) */

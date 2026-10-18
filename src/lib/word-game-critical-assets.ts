@@ -14,6 +14,10 @@ const WORD_GAME_PATHS = new Set([
   "/es/juegos-de-futbol/carrera-de-caballos-futbolera",
   "/ka/football-games/football-horserace",
   "/tr/futbol-oyunlari/futbol-at-yarisi",
+  "/en/football-games/football-codenames",
+  "/es/juegos-de-futbol/codenames-futbolero",
+  "/ka/football-games/football-codenames",
+  "/tr/futbol-oyunlari/futbol-codenames",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {
