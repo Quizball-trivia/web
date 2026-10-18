@@ -170,6 +170,7 @@ export function CodenamesEndView({ locale, number, state, guestOnPastBoard, lead
         <p className="mt-1 text-sm font-bold text-white/85">{state.endReason === "complete" ? c.endComplete : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
       </div>
       <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/55">{c.history}</p>
+      {state.disclosed === false && <p data-codenames-answers-later className="mt-2 text-sm font-semibold text-white/70">{c.answersLater}</p>}
       <div className="mt-2"><ClueRecap state={state} kinds={c.kinds} /></div>
       <CodenamesBoard className="mt-4" cards={soloCards(state, true)} mode="end" kinds={c.kinds} />
     </DailyEnd>

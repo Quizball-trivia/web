@@ -27,6 +27,8 @@ export interface CodenamesDailyState extends WordRunStateBase {
   found: number;
   total: number;
   misses: number;
+  /** The run is over and its day closed: the whole key, every clue, the cards each meant and why. */
+  disclosed?: boolean;
 }
 type ServerState = Omit<CodenamesDailyState, "open" | "deadline" | "serverNow">;
 
@@ -66,7 +68,7 @@ const pick = (label: Label, locale: string) => label[locale as keyof Label] ?? l
 export function toSoloState(s: CodenamesDailyState, locale: string): CodenamesSoloState {
   return {
     day: s.day,
-    cards: s.cards.map((c) => ({ id: c.id, kind: c.kind ?? "neutral" })),
+    cards: s.cards.map((c) => ({ id: c.id, kind: c.kind })),
     clues: s.clues.map((c) => ({ word: pick(c.word, locale), count: c.count, ...(c.cards ? { cards: c.cards.map((x) => ({ id: x.id, why: pick(x.why, locale) })) } : {}) })),
     totalClues: s.totalClues,
     total: s.total,
@@ -77,5 +79,6 @@ export function toSoloState(s: CodenamesDailyState, locale: string): CodenamesSo
     endReason: s.end,
     ranked: s.ranked,
     rank: s.rank,
+    disclosed: s.disclosed ?? false,
   };
 }

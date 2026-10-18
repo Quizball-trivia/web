@@ -30,8 +30,8 @@ export interface SoloFlip { cardId: string; kind: CardKind; clue: number }
 
 export interface CodenamesSoloState {
   day: string;
-  /** A card's kind is only known once it is flipped, or when the run is over. */
-  cards: { id: string; kind: CardKind }[];
+  /** A card's kind once it is flipped, or for every card once the run is disclosed (null: still hidden). */
+  cards: { id: string; kind: CardKind | null }[];
   /** The clues given so far (all of them once the run is over). */
   clues: DailyClue[];
   totalClues?: number;
@@ -44,6 +44,8 @@ export interface CodenamesSoloState {
   endReason: "complete" | "owngoal" | "clues" | null;
   ranked: boolean;
   rank?: number;
+  /** False on a day still open: the key, later clues and reasons come when the day closes. Fixtures leave it unset. */
+  disclosed?: boolean;
 }
 
 export const mineTotal = (s: Pick<CodenamesSoloState, "cards" | "total">) => s.total ?? s.cards.filter((c) => c.kind === "mine").length;
@@ -63,12 +65,12 @@ function nextClue(s: CodenamesSoloState): CodenamesSoloState {
 /** Codenames rules for one guesser: a right card keeps the clue going (count + 1 guesses), anything else ends it. */
 export function soloFlip(s: CodenamesSoloState, cardId: string): CodenamesSoloState {
   if (s.status !== "playing" || s.flips.some((f) => f.cardId === cardId)) return s;
-  const card = s.cards.find((c) => c.id === cardId);
-  if (!card) return s;
-  const flips = [...s.flips, { cardId, kind: card.kind, clue: s.clue }];
+  const kind = s.cards.find((c) => c.id === cardId)?.kind;
+  if (!kind) return s;
+  const flips = [...s.flips, { cardId, kind, clue: s.clue }];
   const next = { ...s, flips };
-  if (card.kind === "owngoal") return { ...next, status: "done", endReason: "owngoal" };
-  if (card.kind !== "mine") return nextClue(next);
+  if (kind === "owngoal") return { ...next, status: "done", endReason: "owngoal" };
+  if (kind !== "mine") return nextClue(next);
   if (soloFound(next) === mineTotal(next)) return { ...next, status: "done", endReason: "complete" };
   return next.guessesLeft - 1 === 0 ? nextClue(next) : { ...next, guessesLeft: next.guessesLeft - 1 };
 }

@@ -72,6 +72,8 @@ export interface CodenamesCopy {
   idleText: string;
   /** Over the result banner's two counts (cards each team still had to find). */
   cardsLeftTitle: string;
+  /** A finished run of today's board: the key and reasons wait for the day to close. */
+  answersLater: string;
   /** The daily's notes when another tab of the same run moved it on under the player's pick. */
   staleNotes: Record<"confirmAgain" | "notSent" | "clueChanged" | "cardTaken" | "finished" | "stopAgain", string>;
 }
@@ -152,6 +154,7 @@ const en: CodenamesCopy = {
   idleTitle: "Game over: no moves",
   idleText: "Nobody played for four turns in a row, so the game ended without a winner.",
   cardsLeftTitle: "Cards left",
+  answersLater: "Every card, the rest of the clues and the reasons appear here when today's board closes.",
   staleNotes: {
     confirmAgain: "The board changed in another tab. Your pick wasn't played: tap it again to confirm.",
     notSent: "Your pick wasn't played. Tap it again to confirm.",
@@ -238,6 +241,7 @@ const es: CodenamesCopy = {
   idleTitle: "Partido terminado: sin jugadas",
   idleText: "Nadie jugó durante cuatro turnos seguidos, así que el partido terminó sin ganador.",
   cardsLeftTitle: "Cartas restantes",
+  answersLater: "Todas las cartas, el resto de las pistas y las razones aparecen aquí cuando cierre el tablero de hoy.",
   staleNotes: {
     confirmAgain: "El tablero cambió en otra pestaña. Tu carta no se jugó: tócala otra vez para confirmar.",
     notSent: "Tu carta no se jugó. Tócala otra vez para confirmar.",
@@ -324,6 +328,7 @@ const tr: CodenamesCopy = {
   idleTitle: "Oyun bitti: hamle yok",
   idleText: "Dört tur üst üste kimse oynamadı, bu yüzden oyun kazanansız bitti.",
   cardsLeftTitle: "Kalan kartlar",
+  answersLater: "Tüm kartlar, kalan ipuçları ve nedenleri bugünün oyunu kapanınca burada görünecek.",
   staleNotes: {
     confirmAgain: "Oyun alanı başka bir sekmede değişti. Seçtiğin kart açılmadı: onaylamak için ona tekrar dokun.",
     notSent: "Seçtiğin kart açılmadı. Onaylamak için ona tekrar dokun.",
@@ -410,6 +415,7 @@ const ru: CodenamesCopy = {
   idleTitle: "Игра окончена: нет ходов",
   idleText: "Никто не ходил четыре хода подряд, поэтому игра закончилась без победителя.",
   cardsLeftTitle: "Осталось карточек",
+  answersLater: "Все карточки, остальные подсказки и объяснения появятся здесь, когда сегодняшнее поле закроется.",
   staleNotes: {
     confirmAgain: "Поле изменилось в другой вкладке. Карточка не была открыта: нажми на неё ещё раз, чтобы подтвердить.",
     notSent: "Карточка не была открыта. Нажми на неё ещё раз, чтобы подтвердить.",
@@ -496,6 +502,7 @@ const ka: CodenamesCopy = {
   idleTitle: "თამაში დასრულდა: სვლები არ არის",
   idleText: "ოთხი სვლის განმავლობაში არავინ ითამაშა, ამიტომ თამაში გამარჯვებულის გარეშე დასრულდა.",
   cardsLeftTitle: "დარჩენილი ბარათები",
+  answersLater: "ყველა ბარათი, დანარჩენი მინიშნებები და ახსნები აქ გამოჩნდება, როცა დღევანდელი დაფა დაიხურება.",
   staleNotes: {
     confirmAgain: "დაფა სხვა ჩანართში შეიცვალა. ბარათი არ გახსნილა: დასადასტურებლად ისევ შეეხე მას.",
     notSent: "ბარათი არ გახსნილა. დასადასტურებლად ისევ შეეხე მას.",
