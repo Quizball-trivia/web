@@ -24,7 +24,7 @@ const GRACE_MS = 1_500;
  * call at a time. A run is only ever shown for the player and board it belongs to; only a newer version of it replaces
  * what is shown; a lost answer or a stale version is re-synced from the server, never blindly resent.
  */
-export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult, resendStaleAnswers = false, resendLostAnswers = false }: {
+export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult, onAnswerNotSaved, resendStaleAnswers = false, resendLostAnswers = false, resumesOnScreen }: {
   api: WordDailyApi<State, Result>;
   calendar: WordDailyCalendar;
   locale: string;
@@ -46,6 +46,14 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
    * check makes a resend of one that did land a harmless stale refusal.
    */
   resendLostAnswers?: boolean;
+  /** A run the reload finds in a state the player was looking at (a revealed card waiting for Next): back on screen, not behind the intro. */
+  resumesOnScreen?: (state: State) => boolean;
+  /**
+   * An answer that is neither resent nor shown as judged: another tab moved the run on before it (stale), or its reply
+   * was lost and the re-synced copy has moved past the copy it was sent on. Called once that copy is on screen, only
+   * for the player and board the answer was made for; the game explains it and may ask for the answer again.
+   */
+  onAnswerNotSaved?: (missed: WordAnswerMissed<State>) => void;
 }) {
   const [today, setToday] = useState(() => releaseDay());
   const [versions, setVersions] = useState<Record<string, number> | null | undefined>(undefined);
@@ -155,7 +163,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
         setEntry({ owner, day, run: data });
         if (data.state.done) {
           setView((v) => (v === "intro" ? "end" : v));
-        } else if (data.state.open) {
+        } else if (data.state.open || resumesOnScreen?.(data.state)) {
           // A clock that is already running (a reload in the middle of a pair) is never kept behind another screen,
           // and its day stays the day on screen through midnight.
           setView("play");

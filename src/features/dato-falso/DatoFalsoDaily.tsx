@@ -16,6 +16,8 @@ import { DatoFalsoEndView, DatoFalsoPlayView } from "./DatoFalsoSolo";
 export { datoFalsoDailyGame };
 
 const loadBoard = (day: string, locale: string) => datoFalsoDailyApi.leaderboard(day, locale);
+/** A reload on a revealed card goes back to that reveal. */
+const revealedCard = (s: DatoFalsoDailyState) => s.settled !== null;
 
 /** Dato falso futbolero's daily on the shared daily screens (intro, archive, end, ranking). */
 export function DatoFalsoDaily({ locale, onExit, onEvent, initialDay, onDay }: {
@@ -24,7 +26,7 @@ export function DatoFalsoDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   const game = datoFalsoDailyGame(locale);
   const c = datoFalsoCopy(locale);
   const d = wordDailyCopy(locale);
-  const daily = useWordDaily<DatoFalsoDailyState, DatoFalsoResult>({ api: datoFalsoDailyApi, calendar: DATO_FALSO_CALENDAR, locale, initialDay, onDay, onEvent });
+  const daily = useWordDaily<DatoFalsoDailyState, DatoFalsoResult>({ api: datoFalsoDailyApi, calendar: DATO_FALSO_CALENDAR, locale, initialDay, onDay, onEvent, resumesOnScreen: revealedCard });
   const { state, day, clock } = daily;
   const busy = daily.pending !== null;
   const nowMs = useCallback(() => clock.serverMs + (performance.now() - clock.perfMs), [clock]);
