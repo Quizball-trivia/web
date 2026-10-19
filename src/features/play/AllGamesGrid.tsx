@@ -55,6 +55,7 @@ const REAL_ROUTES: Record<string, string> = {
   "name-chain": "/son-harfle",
   "football-horserace": "/horserace",
   "football-codenames": "/codenames",
+  "dato-falso-futbolero": "/dato-falso-futbolero",
   buscaminas: "/buscaminas",
   pistas: "/pistas",
   ultimo: "/ultimo",
