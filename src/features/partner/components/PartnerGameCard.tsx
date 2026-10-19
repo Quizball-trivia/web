@@ -9,6 +9,9 @@ import type { PartnerGameTile } from "../api/partnerApi.types";
 import { partnerCopy, type PartnerLocale } from "../partnerCopy";
 import { PARTNER_GAME_DEMO_SLUG, partnerGamePath, partnerGameTitle } from "../partnerGames";
 
+// Wide partner frames show four, then five, cards per row (the scroller's gap is 1rem from md up).
+const PARTNER_CARD_WIDTH = cn(CARD_WIDTH, "lg:w-[calc((100%_-_3rem)/4)] xl:w-[calc((100%_-_4rem)/5)]");
+
 export type PartnerTileState = "playable" | "done" | "coming_soon";
 
 export function partnerTileState(tile: PartnerGameTile): PartnerTileState {
@@ -77,7 +80,7 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
         data-game-id={tile.gameId}
         data-state={state}
         aria-label={`${title}: ${statusLabel}`}
-        className={cn(CARD_WIDTH, "relative flex flex-col overflow-hidden rounded-xl bg-brand-blue/50")}
+        className={cn(PARTNER_CARD_WIDTH, "relative flex flex-col overflow-hidden rounded-xl bg-brand-blue/50")}
       >
         {body}
       </div>
@@ -92,7 +95,7 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
       data-state={state}
       aria-label={`${title}: ${statusLabel}`}
       className={cn(
-        CARD_WIDTH,
+        PARTNER_CARD_WIDTH,
         "group relative flex animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-xl bg-brand-blue duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
       )}
       style={{ animationDelay: `${Math.min(index * 30, 300)}ms`, animationFillMode: "backwards" }}

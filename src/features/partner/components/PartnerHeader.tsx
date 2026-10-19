@@ -13,7 +13,7 @@ export function PartnerHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-surface-page/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] lg:max-w-[1600px] lg:pl-[max(2rem,env(safe-area-inset-left))] lg:pr-[max(2rem,env(safe-area-inset-right))]">
         <button
           type="button"
           onClick={() => postToPartnerParent({ type: "quizball:close" })}
