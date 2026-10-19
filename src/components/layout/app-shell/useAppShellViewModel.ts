@@ -108,7 +108,9 @@ export function useAppShellViewModel() {
     !!principal.userId &&
     !!lobby &&
     lobby.members.some((member) => member.userId === principal.userId);
+  // Not on game screens: the game covers the banner there, but its button stayed reachable by keyboard.
   const showLobbyBanner =
+    showNav &&
     !!lobby &&
     lobbyIncludesCurrentUser &&
     lobby.status === 'waiting' &&

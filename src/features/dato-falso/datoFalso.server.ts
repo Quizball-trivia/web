@@ -52,7 +52,7 @@ export function toRoomView(v: DatoFalsoServerView): DfRoomView {
     removed: v.mine.removed.map(String),
     myDoubled: v.mine.doubled,
     myPick: v.mine.pick === null ? null : String(v.mine.pick),
-    seats: v.seats.map((s) => ({ seat: s.seat, status: s.status, score: s.score, right: rights(s.seat), answered: s.answered, jokersUsed: used(s.jokers) })),
+    seats: v.seats.map((s) => ({ seat: s.seat, status: s.status, score: s.score, right: rights(s.seat), answered: s.answered, jokersUsed: used(s.jokers), idle: s.idle })),
     mySeat: v.mySeat,
     reveal: v.reveal && {
       fake: String(v.reveal.fake),

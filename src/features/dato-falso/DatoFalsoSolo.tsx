@@ -43,7 +43,7 @@ export function DatoFalsoPlayView({ locale, number, state, pending, nowMs = real
   const choice = selected && !state.removed.includes(selected) ? selected : null;
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar brand={c.brand} seconds={seconds} exitLabel={d.exit} onExit={onExit}
+      <TopBar wrap brand={c.brand} seconds={seconds} exitLabel={d.exit} onExit={onExit}
         right={<span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-xs font-black tabular-nums text-white" style={poppins} data-df-score>{c.points(state.score)}</span>} />
       <div className="mt-3 flex items-center gap-3">
         <span className="shrink-0 text-xs font-black uppercase tracking-wide text-white/55 tabular-nums" style={poppins}>#{number} · {c.cardOf(state.index + 1, state.total)}</span>

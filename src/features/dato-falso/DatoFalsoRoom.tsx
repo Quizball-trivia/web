@@ -69,7 +69,7 @@ export function DatoFalsoBoard({ view, snapshot, room, locale, error }: { view: 
     });
 
   const top = (
-    <TopBar brand={t.brand} seconds={view.phase === "card" ? secs : null} exitLabel={c.leave} onExit={() => setLeaving(true)}
+    <TopBar wrap brand={t.brand} seconds={view.phase === "card" ? secs : null} exitLabel={c.leave} onExit={() => setLeaving(true)}
       right={<span className="shrink-0 text-[11px] font-black uppercase tracking-wide text-white/55 tabular-nums" style={poppins}>{t.cardOf(view.index + 1, view.total)}</span>} />
   );
   const timeBar = view.phase === "card" && <TimeBar className="mt-3" share={msLeft / view.cardMs} urgent={msLeft <= 5_000} />;
@@ -101,6 +101,7 @@ export function DatoFalsoBoard({ view, snapshot, room, locale, error }: { view: 
         <>
           <DfClaim card={card} copy={t} className="mt-4" />
           {view.myDoubled && !reveal && <p className="mt-3 rounded-xl bg-brand-yellow/15 px-3 py-2 text-xs font-bold text-brand-yellow">{t.doubleOn}</p>}
+          {view.phase === "card" && view.seats[me]?.idle && !view.myPick && <p role="status" data-df-idle className="mt-3 rounded-xl bg-white/[0.08] px-3 py-2 text-xs font-bold text-white/85">{t.idleNote}</p>}
           <DfOptions card={card} copy={t} removed={view.removed} selected={choice} reveal={reveal} myPick={reveal ? mine?.pick ?? null : null} pickers={pickers}
             disabled={locked || busy || !room.connected || view.phase !== "card"} onSelect={setSelected} />
         </>
