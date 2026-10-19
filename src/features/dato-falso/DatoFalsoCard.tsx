@@ -30,7 +30,7 @@ export function DfClaim({ card, copy, className }: { card: DfCard; copy: DatoFal
   const [before, key, after] = copy.claims[card.category];
   return (
     <div className={cn("flex items-center gap-3.5", className)}>
-      <Portrait src={card.subject.portrait} className="size-[72px] shrink-0 rounded-2xl ring-2 ring-white/15" />
+      <Portrait key={card.subject.portrait ?? ""} src={card.subject.portrait} className="size-[72px] shrink-0 rounded-2xl ring-2 ring-white/15" />
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-black uppercase tracking-[0.12em] text-brand-yellow">{copy.eyebrow}</p>
         <p className="mt-0.5 text-xl font-black leading-tight text-white" style={poppins}>{card.subject.name}</p>
