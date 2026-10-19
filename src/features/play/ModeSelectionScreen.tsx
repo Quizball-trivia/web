@@ -237,9 +237,10 @@ function CompactModeCard({
   );
   const inner = (
     <>
+      {/* Phones centre the title, so there the badge sits on the picture instead (below). */}
       {badge && (
         <span
-          className="absolute right-2 top-2.5 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:right-4 md:top-4 md:px-2.5 md:py-1 md:text-[11px]"
+          className="absolute right-4 top-4 z-20 hidden rotate-[8deg] rounded-md bg-brand-yellow px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:block"
           style={poppins}
         >
           {badge}
@@ -258,11 +259,12 @@ function CompactModeCard({
           style={poppins}
         >
           {/* An invisible copy of the badge, floated: the title stays level with the
-              other cards and only a word that cannot fit beside the badge drops below it. */}
+              other cards and only a word that cannot fit beside the badge drops below it.
+              -mr-2: the badge sits 8px into the card padding. */}
           {badge && (
             <span
               aria-hidden
-              className="invisible float-right -mr-1 mb-1.5 ml-2 rounded-md md:-mr-2 px-2 py-0.5 text-[9px] font-black leading-normal tracking-wide md:mb-2 md:px-2.5 md:py-1 md:text-[11px]"
+              className="invisible float-right -mr-2 mb-2 ml-2 hidden rounded-md px-2.5 py-1 text-[11px] font-black leading-normal tracking-wide md:block"
             >
               {badge}
             </span>
@@ -271,13 +273,23 @@ function CompactModeCard({
         </h3>
         <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{subtitle}</p>
         <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-          <Image
-            src={iconSrc}
-            alt=""
-            width={500}
-            height={500}
-            className="h-[110px] w-[110px] object-contain pointer-events-none"
-          />
+          <div className="relative">
+            <Image
+              src={iconSrc}
+              alt=""
+              width={500}
+              height={500}
+              className="h-[110px] w-[110px] object-contain pointer-events-none"
+            />
+            {badge && (
+              <span
+                className="absolute -right-1 -top-1 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:hidden"
+                style={poppins}
+              >
+                {badge}
+              </span>
+            )}
+          </div>
         </div>
         <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
           {ctaLabel}
