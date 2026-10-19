@@ -39,6 +39,7 @@ import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/se
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 import { WinRateStat } from './WinRateStat';
 import { CARD_WIDTH, CardScroller } from './CardScroller';
+import { TrabzonsporQuizCard } from '@/features/campaigns/trabzonspor/TrabzonsporQuizCard';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -961,7 +962,9 @@ export function ModeSelectionScreen({
 
       {/* ─── 5. All Games — every mode as an artwork card, 3 per row on
               desktop / 2 on mobile (owner call). Sits above Recent Matches. ─── */}
-      <div className="mt-6 md:mt-8">
+      <TrabzonsporQuizCard onMoreGames={() => document.getElementById('play-all-games')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+
+      <div id="play-all-games" className="mt-6 scroll-mt-4 md:mt-8">
         <AllGamesGrid />
       </div>
 
