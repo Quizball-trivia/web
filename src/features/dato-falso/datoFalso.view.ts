@@ -68,6 +68,8 @@ export interface DfRoomSeat {
   answered: boolean;
   /** Jokers this seat has spent; another seat's are only shown once they are revealed. */
   jokersUsed: DfJoker[];
+  /** Missed two cards in a row: the others no longer wait for this seat (a pick brings it back). */
+  idle?: boolean;
 }
 
 /** The server's view of a room match, for one seat. */
