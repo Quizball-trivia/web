@@ -771,7 +771,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.codenamesSubtitle')}
           iconSrc="/assets/codenames-card-icon.webp"
           ctaLabel={t('common.play')}
-          badge={t('play.freeKicksNewBadge')}
+          badge={t('play.newBadge')}
           href="/codenames"
         />
         {isAuctionCardEnabled && (
