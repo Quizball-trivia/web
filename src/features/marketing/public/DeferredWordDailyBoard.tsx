@@ -12,8 +12,9 @@ const SharedPlayerBoard = dynamic(() => import("@/features/wordgames/daily/WordD
 const TenableBoard = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.TenableDailyBoard), { ssr: false, loading: BoardPlaceholder });
 const NameChainBoard = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.NameChainDailyBoard), { ssr: false, loading: BoardPlaceholder });
 const FootballRaceBoard = dynamic(() => import("@/features/football-race/FootballRaceDailyBoard").then((m) => m.FootballRaceDailyBoard), { ssr: false, loading: BoardPlaceholder });
+const DatoFalsoBoard = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.DatoFalsoDailyBoard), { ssr: false, loading: BoardPlaceholder });
 
-export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: "sharedPlayer" | "nameChain" | "tenable" | "footballRace"; locale: string; className?: string }) {
+export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: "sharedPlayer" | "nameChain" | "tenable" | "footballRace" | "datoFalso"; locale: string; className?: string }) {
   const container = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -34,7 +35,7 @@ export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: 
 
   return (
     <div ref={container} className={className}>
-      {!visible ? <BoardPlaceholder /> : modeId === "sharedPlayer" ? <SharedPlayerBoard locale={locale} /> : modeId === "tenable" ? <TenableBoard locale={locale} /> : modeId === "footballRace" ? <FootballRaceBoard locale={locale} /> : <NameChainBoard locale={locale} />}
+      {!visible ? <BoardPlaceholder /> : modeId === "sharedPlayer" ? <SharedPlayerBoard locale={locale} /> : modeId === "tenable" ? <TenableBoard locale={locale} /> : modeId === "footballRace" ? <FootballRaceBoard locale={locale} /> : modeId === "datoFalso" ? <DatoFalsoBoard locale={locale} /> : <NameChainBoard locale={locale} />}
     </div>
   );
 }

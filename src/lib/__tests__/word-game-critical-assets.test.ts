@@ -11,6 +11,7 @@ describe("word-game font discovery", () => {
     "/es/juegos-de-futbol/cadena-de-futbolistas", "/es/juegos-de-futbol/jugador-en-comun",
     "/ka/football-games/football-name-chain",
     "/en/football-games/football-horserace", "/es/juegos-de-futbol/carrera-de-caballos-futbolera", "/ka/football-games/football-horserace",
+    "/en/football-games/football-odd-one-out", "/es/juegos-de-futbol/dato-falso-futbolero", "/ka/football-games/football-odd-one-out",
   ])("preloads only the four Latin weights used above the fold on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(4);
@@ -23,7 +24,7 @@ describe("word-game font discovery", () => {
     expect(wordGameFontPreloads(url)).toEqual([]);
   });
 
-  it.each(["/tr/futbol-oyunlari/son-harfle-futbolcu", "/tr/futbol-oyunlari/ortak-futbolcu-oyunu/", "/tr/futbol-oyunlari/futbol-at-yarisi"])("also discovers Turkish glyphs early on %s", (url) => {
+  it.each(["/tr/futbol-oyunlari/son-harfle-futbolcu", "/tr/futbol-oyunlari/ortak-futbolcu-oyunu/", "/tr/futbol-oyunlari/futbol-at-yarisi", "/tr/futbol-oyunlari/hangisi-yanlis"])("also discovers Turkish glyphs early on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(8);
     expect(urls.filter((value) => value.includes("latin-ext"))).toHaveLength(4);

@@ -115,6 +115,18 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "dato-falso-futbolero",
+    title: { en: "Football Odd One Out", ka: "ყალბი ფაქტი", es: "Dato falso futbolero", tr: "Hangisi Yanlış?", ru: "Ложный факт" },
+    description: {
+      en: "One footballer, five facts, one of them fake. Spot it: 10 cards a day, two jokers.",
+      ka: "ერთი ფეხბურთელი, ხუთი ფაქტი, ერთი ყალბია. იპოვე: დღეში 10 ბარათი და ორი ჯოკერი.",
+      es: "Un futbolista, cinco datos y uno es falso. Encontralo: 10 cartas por día y dos comodines.",
+      tr: "Bir futbolcu, beş bilgi, biri yanlış. Bul onu: günde 10 kart, iki joker.",
+      ru: "Один футболист, пять фактов, один ложный. Найди его: 10 карточек в день и две подсказки.",
+    },
+    group: "daily",
+  },
+  {
     slug: "ultimo",
     title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Futbolcu Sayma Oyunu", ru: "Последний ответ", },
     description: {

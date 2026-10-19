@@ -45,7 +45,7 @@ describe("playOrderFrom", () => {
   });
 
   it("stops marking a game as new three weeks after its release", () => {
-    expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["tenable", "shared-player", "name-chain", "football-horserace"]);
+    expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["tenable", "shared-player", "name-chain", "football-horserace", "dato-falso-futbolero"]);
     expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual([]);
   });
 });
@@ -116,7 +116,8 @@ describe("createPlayOrderLoader", () => {
   it("does not hold the first page up for a slow first read", async () => {
     let finish: (value: ReturnType<typeof numbers>) => void = () => undefined;
     const read = vi.fn().mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
-    const load = createPlayOrderLoader(read, { firstWaitMs: 5 });
+    // A fixed day: on the real one, a game released that week would lead the row.
+    const load = createPlayOrderLoader(read, { firstWaitMs: 5, clock: () => Date.parse("2026-10-11T12:00:00Z") });
     expect(await load()).toMatchObject({ daily: null, coins: null });
     // Pages arriving while it is still running join the same read.
     expect(await load()).toMatchObject({ daily: null });
@@ -141,7 +142,8 @@ describe("createPlayOrderLoader", () => {
 
   it("uses a first read that answers while the page waits, on a moving clock", async () => {
     const read = vi.fn().mockImplementation(async () => numbers(900));
-    const load = createPlayOrderLoader(read);
+    let now = Date.parse("2026-10-11T12:00:00Z");
+    const load = createPlayOrderLoader(read, { clock: () => (now += 1) });
     expect((await load()).daily?.[0]).toBe("daily-statSniper");
   });
 

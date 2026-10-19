@@ -145,6 +145,15 @@ export function subscribeMuted(listener: () => void): () => void {
   };
 }
 
+/** Load these sounds now so their first play starts on time. */
+export function preloadSfx(...names: SoundName[]) {
+  try {
+    names.forEach(getSound);
+  } catch {
+    // Same as playSfx: a missing file must not break the game.
+  }
+}
+
 /** Preload all sounds (call on game start) */
 export function preloadAll() {
   ensureMutePreferenceLoaded();

@@ -29,11 +29,12 @@ export function Brand({ words, className }: { words: readonly [string, string] |
   );
 }
 
-export function TopBar({ brand, seconds, exitLabel, onExit, right }: { brand: readonly string[]; seconds?: number | null; exitLabel: string; onExit: () => void; right?: ReactNode }) {
+/** `wrap`: a long name (Georgian) wraps to two lines on a narrow phone instead of being cut. */
+export function TopBar({ brand, seconds, exitLabel, onExit, right, wrap = false }: { brand: readonly string[]; seconds?: number | null; exitLabel: string; onExit: () => void; right?: ReactNode; wrap?: boolean }) {
   return (
     <header className="flex items-center gap-3">
       <button type="button" onClick={onExit} aria-label={exitLabel} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"><X className="size-4" /></button>
-      <Brand words={brand} className="min-w-0 flex-1 truncate text-[13px]" />
+      <Brand words={brand} className={cn("min-w-0 flex-1 text-[13px]", wrap ? "break-words leading-tight" : "truncate")} />
       {right}
       {seconds != null && <ClockPill seconds={seconds} />}
     </header>
