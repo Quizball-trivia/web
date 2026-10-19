@@ -18,7 +18,7 @@ export const WORD_LANDING_ROOTS = [
     "futbolnye-igry/futbolisty-na-poslednyuyu-bukvu", "futbolnye-igry/igravshie-za-oba-kluba",
     "football-games/football-horserace", "juegos-de-futbol/carrera-de-caballos-futbolera", "futbol-oyunlari/futbol-at-yarisi",
     "futbolnye-igry/futbolnye-skachki",
-            "football-games/football-odd-one-out", "juegos-de-futbol/dato-falso-futbolero", "futbol-oyunlari/hangisi-yanlis",
+    "football-games/football-odd-one-out", "juegos-de-futbol/dato-falso-futbolero", "futbol-oyunlari/hangisi-yanlis",
     "futbolnye-igry/lozhnyj-fakt",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];

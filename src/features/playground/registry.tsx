@@ -387,8 +387,6 @@ export const GAMES: GameEntry[] = [
     scenarios: { solo: DATO_FALSO_SOLO, duel: DATO_FALSO_DUEL, room: DATO_FALSO_ROOM },
   },
   {
-    id:   },
-  {
     id: "carrera",
     name: "Football Horserace (prototype)",
     scenarios: {

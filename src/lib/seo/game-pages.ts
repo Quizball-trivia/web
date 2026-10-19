@@ -1280,33 +1280,6 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
 
   }),
-  mode({
-    en: {
-      intro: "Twenty football picture cards: caricatures of legends, famous stadiums and football memes. Your Scout gives one football clue and a number, like “Ferguson · 2” or “Hand of God · 1”, and you find the cards it points to. Eight cards belong to your team and one is the Own Goal: flip it and the game is over.",
-      howToPlay: ["Each day's board is 20 cards, the same for everyone: 8 are yours, 7 the rival's, 4 neutral and one is the Own Goal. Only the Scout knows which is which.", "The bot Scout gives you three clues, one at a time: a football word and a number, like “Real Madrid · 3”. The number says how many of your cards it points to.", "Flip a card you think fits. A right card keeps the clue going; a rival or neutral card ends that clue and the next one comes.", "Find all 8 before the clues run out. The Own Goal ends the run at once. Share your board and climb the daily leaderboard."],
-      reward: "Play past days without an account; sign in for today's board and the daily leaderboard.",
-    },
-    ka: {
-      intro: "ოცი საფეხბურთო სურათიანი ბარათი: ლეგენდების კარიკატურები, ცნობილი სტადიონები და საფეხბურთო მემები. შენი სკაუტი ასახელებს ერთ საფეხბურთო მინიშნებას და რიცხვს, მაგალითად „ფერგიუსონი · 2“ ან „ღმერთის ხელი · 1“, შენ კი პოულობ ბარათებს, რომლებზეც ის მიანიშნებს. რვა ბარათი შენი გუნდისაა, ერთი კი ავტოგოლია: გადააბრუნებ და თამაში დასრულდა.",
-      howToPlay: ["დღის დაფა 20 ბარათია, ყველასთვის ერთი და იგივე: 8 შენია, 7 მეტოქის, 4 ნეიტრალური და ერთი ავტოგოლია. რომელი ვისია, მხოლოდ სკაუტმა იცის.", "ბოტი სკაუტი სამ მინიშნებას გაძლევს, თითო-თითოდ: საფეხბურთო სიტყვას და რიცხვს, მაგალითად „რეალ მადრიდი · 3“. რიცხვი გეუბნება, შენს რამდენ ბარათზე მიანიშნებს.", "გადააბრუნე ბარათი, რომელიც გგონია, რომ ერგება. სწორი ბარათი მინიშნებას აგრძელებს; მეტოქის ან ნეიტრალური ბარათი ამ მინიშნებას ამთავრებს და შემდეგი მოდის.", "იპოვე 8-ვე ბარათი, სანამ მინიშნებები ამოიწურება. ავტოგოლი თამაშს მაშინვე ამთავრებს. გააზიარე შედეგი და აიწიე დღის რეიტინგში."],
-      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი დაფისთვის და დღის რეიტინგისთვის შედი ანგარიშში.",
-    },
-    es: {
-      intro: "Veinte cartas con dibujos de fútbol: caricaturas de leyendas, estadios famosos y memes futboleros. Tu Ojeador da una pista futbolera y un número, como “Ferguson · 2” o “Mano de Dios · 1”, y vos encontrás las cartas que señala. Ocho cartas son de tu equipo y una es el Autogol: si la das vuelta, se termina la partida.",
-      howToPlay: ["El tablero del día son 20 cartas, las mismas para todos: 8 son tuyas, 7 del rival, 4 neutrales y una es el Autogol. Solo el Ojeador sabe cuál es cuál.", "El Ojeador bot te da tres pistas, de a una: una palabra de fútbol y un número, como “Real Madrid · 3”. El número dice a cuántas de tus cartas apunta.", "Da vuelta una carta que creas que encaja. Si acertás, seguís con la pista; una carta rival o neutral la termina y llega la siguiente.", "Encontrá las 8 antes de que se acaben las pistas. El Autogol termina la partida al instante. Compartí tu tablero y subí en el ranking del día."],
-      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, el tablero de hoy y el ranking del día.",
-    },
-    tr: {
-      intro: "Yirmi resimli futbol kartı: efsanelerin karikatürleri, ünlü stadyumlar ve futbol capsleri. Gözlemcin bir futbol ipucu ve bir sayı verir, örneğin “Ferguson · 2” ya da “Tanrı'nın Eli · 1”; sen de işaret ettiği kartları bulursun. Sekiz kart senin takımının, biri ise Kendi Kalesine Gol: onu açarsan oyun biter.",
-      howToPlay: ["Günün tahtası herkes için aynı 20 karttır: 8'i senin, 7'si rakibin, 4'ü nötr, biri Kendi Kalesine Gol. Hangisinin kime ait olduğunu yalnızca Gözlemci bilir.", "Bot Gözlemci sana tek tek üç ipucu verir: bir futbol kelimesi ve bir sayı, örneğin “Real Madrid · 3”. Sayı, ipucunun senin kaç kartını işaret ettiğini söyler.", "Uyduğunu düşündüğün kartı aç. Doğru kart ipucunu sürdürür; rakip ya da nötr kart o ipucunu bitirir ve sıradaki gelir.", "İpuçları bitmeden 8 kartın hepsini bul. Kendi Kalesine Gol oyunu anında bitirir. Tahtanı paylaş ve günün sıralamasında yüksel."],
-      reward: "Önceki günleri hesapsız oyna; bugünün tahtası ve günün sıralaması için giriş yap.",
-    },
-    ru: {
-      intro: "Двадцать футбольных карточек с картинками: карикатуры на легенд, знаменитые стадионы и футбольные мемы. Твой Скаут даёт одну футбольную подсказку и число, например «Фергюсон · 2» или «Рука Бога · 1», а ты ищешь карточки, на которые она указывает. Восемь карточек принадлежат твоей команде, а одна — Автогол: откроешь её, и игра окончена.",
-      howToPlay: ["Поле дня — это 20 карточек, одинаковых для всех: 8 твоих, 7 соперника, 4 нейтральные и одна — Автогол. Где какая, знает только Скаут.", "Бот-Скаут даёт тебе три подсказки по очереди: футбольное слово и число, например «Реал Мадрид · 3». Число показывает, на сколько твоих карточек указывает подсказка.", "Открой карточку, которая, как тебе кажется, подходит. Верная карточка продлевает подсказку, чужая или нейтральная заканчивает её, и приходит следующая.", "Найди все 8 карточек, пока не закончились подсказки. Автогол сразу заканчивает игру. Поделись результатом и поднимайся в ежедневном рейтинге."],
-      reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшнее поле и попасть в ежедневный рейтинг.",
-    },
-  }),
   mode("football-odd-one-out", "/dato-falso-futbolero", "dato-falso", {
     en: {
       metaTitle: "Football Odd One Out — Spot the Fake Football Fact | QuizBall",

@@ -11,7 +11,7 @@ describe("word-game font discovery", () => {
     "/es/juegos-de-futbol/cadena-de-futbolistas", "/es/juegos-de-futbol/jugador-en-comun",
     "/ka/football-games/football-name-chain",
     "/en/football-games/football-horserace", "/es/juegos-de-futbol/carrera-de-caballos-futbolera", "/ka/football-games/football-horserace",
-        "/en/football-games/football-odd-one-out", "/es/juegos-de-futbol/dato-falso-futbolero", "/ka/football-games/football-odd-one-out",
+    "/en/football-games/football-odd-one-out", "/es/juegos-de-futbol/dato-falso-futbolero", "/ka/football-games/football-odd-one-out",
   ])("preloads only the four Latin weights used above the fold on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(4);

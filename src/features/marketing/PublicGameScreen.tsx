@@ -88,7 +88,6 @@ const FOOTBALL_HORSERACE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ru: { ...NAME_CHAIN_PAGE.ru, label: "Новая гонка каждый день · аккаунт не нужен", start: "Играть сейчас", note: "Твоя сборная против трёх. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшняя гонка и рейтинг." },
 };
 
-
 const DATO_FALSO_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { ...NAME_CHAIN_PAGE.en, label: "10 new cards every day · no account needed", start: "Play now", note: "One footballer, five facts, one fake. As a guest you play past days; with an account, today's cards and the leaderboard." },
   ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე 10 ახალი ბარათი · ანგარიშის გარეშე", start: "თამაში", note: "ერთი ფეხბურთელი, ხუთი ფაქტი, ერთი ყალბი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელ ბარათებს და რეიტინგს." },
@@ -113,6 +112,7 @@ const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   ru: { ...ULTIMO_PAGE.ru, label: "Новый топ-10 каждый день · прошлые дни бесплатно, без аккаунта", note: "Один скрытый список, 3 жизни. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшний список и рейтинг." },
 };
 
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -183,7 +183,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === | game.modeId === "datoFalso"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "datoFalso"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

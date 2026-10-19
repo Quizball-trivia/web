@@ -14,7 +14,7 @@ const WORD_GAME_PATHS = new Set([
   "/es/juegos-de-futbol/carrera-de-caballos-futbolera",
   "/ka/football-games/football-horserace",
   "/tr/futbol-oyunlari/futbol-at-yarisi",
-          "/en/football-games/football-odd-one-out",
+  "/en/football-games/football-odd-one-out",
   "/es/juegos-de-futbol/dato-falso-futbolero",
   "/ka/football-games/football-odd-one-out",
   "/tr/futbol-oyunlari/hangisi-yanlis",

@@ -35,6 +35,7 @@ export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: 
 
   return (
     <div ref={container} className={className}>
+      {!visible ? <BoardPlaceholder /> : modeId === "sharedPlayer" ? <SharedPlayerBoard locale={locale} /> : modeId === "tenable" ? <TenableBoard locale={locale} /> : modeId === "footballRace" ? <FootballRaceBoard locale={locale} /> : modeId === "datoFalso" ? <DatoFalsoBoard locale={locale} /> : <NameChainBoard locale={locale} />}
     </div>
   );
 }

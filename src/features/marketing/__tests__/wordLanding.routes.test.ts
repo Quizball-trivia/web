@@ -39,6 +39,7 @@ const modeOf: Record<string, string> = {
   "football-horserace": "footballRace", "carrera-de-caballos-futbolera": "footballRace", "futbol-at-yarisi": "footballRace",
   "football-odd-one-out": "datoFalso", "dato-falso-futbolero": "datoFalso", "hangisi-yanlis": "datoFalso",
 };
+const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", sharedPlayer: "shared-player", datoFalso: "dato-falso-futbolero" };
 const key = ({ locale, slug }: { locale: string; slug: string }) => `${locale}/${slug}`;
 
 describe("fixed word landing route parity", () => {
@@ -53,6 +54,7 @@ describe("fixed word landing route parity", () => {
     expect(fixed.every((params) => !dynamic.some((other) => key(other) === key(params)))).toBe(true);
   });
 
+  it("enumerates exactly sixteen word landings (Football Horserace and Football Odd One Out included) with unchanged metadata and rendering props", async () => {
     let count = 0;
     for (const route of routes) {
       expect(route.module.dynamicParams).toBe(false);
@@ -71,7 +73,7 @@ describe("fixed word landing route parity", () => {
         expect(await element.props.params).toEqual({ locale, slug: route.slug });
       }
     }
-    expect(count).toBe(20);
+    expect(count).toBe(16);
   });
 
   it("keeps wrong-folder locales unavailable", async () => {
