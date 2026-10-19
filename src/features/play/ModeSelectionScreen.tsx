@@ -38,6 +38,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 import { WinRateStat } from './WinRateStat';
+import { CARD_WIDTH, CardScroller } from './CardScroller';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -106,7 +107,7 @@ function MiniModeCard({
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
   const text = dark ? 'text-black' : 'text-white';
   const cardClassName = cn(
-    'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+    '@container relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
     className,
   );
   // Phones: pills sit in flow above the title (Georgian titles are too wide to
@@ -135,9 +136,10 @@ function MiniModeCard({
       )}
       <div className="relative z-10 flex h-full flex-col">
         {/* keep-all: Georgian has no hyphenation — auto-hyphens split words
-            mid-syllable with no visible hyphen ("გამოწვევ/ა"). */}
+            mid-syllable with no visible hyphen ("გამოწვევ/ა"). The 11cqi cap
+            shrinks a word too long for a narrow card ("Товарищеский" at 360). */}
         <h3
-          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
+          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[min(1rem,11cqi)] md:text-[min(clamp(1.4rem,2.2vw,2rem),11cqi)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
           style={poppins}
         >
           {title}
@@ -200,6 +202,125 @@ function MiniModeCard({
       role="button"
       tabIndex={0}
       className={cardClassName}
+      style={{ backgroundColor: bg }}
+    >
+      {inner}
+    </div>
+  );
+}
+
+/** Auction / Tic-Tac-Toe / Codenames card in the main swipe row: title,
+ *  subtitle, pictogram, black PLAY bar. The whole card is the tap target. */
+function CompactModeCard({
+  bg,
+  title,
+  subtitle,
+  iconSrc,
+  ctaLabel,
+  badge,
+  href,
+  onClick,
+}: {
+  bg: string;
+  title: string;
+  subtitle: string;
+  iconSrc: string;
+  ctaLabel: string;
+  badge?: string;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
+  const className = cn(
+    CARD_WIDTH,
+    'relative block cursor-pointer overflow-hidden rounded-[10px] p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+  );
+  const inner = (
+    <>
+      {/* Phones centre the title, so there the badge sits on the picture instead (below). */}
+      {badge && (
+        <span
+          className="absolute right-4 top-4 z-20 hidden rotate-[8deg] rounded-md bg-brand-yellow px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:block"
+          style={poppins}
+        >
+          {badge}
+        </span>
+      )}
+      <Image
+        src={iconSrc}
+        alt=""
+        width={160}
+        height={160}
+        className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+      />
+      <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
+        <h3
+          className="text-[0.95rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+          style={poppins}
+        >
+          {/* An invisible copy of the badge, floated: the title stays level with the
+              other cards and only a word that cannot fit beside the badge drops below it.
+              -mr-2: the badge sits 8px into the card padding. */}
+          {badge && (
+            <span
+              aria-hidden
+              className="invisible float-right -mr-2 mb-2 ml-2 hidden rounded-md px-2.5 py-1 text-[11px] font-black leading-normal tracking-wide md:block"
+            >
+              {badge}
+            </span>
+          )}
+          {title}
+        </h3>
+        <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{subtitle}</p>
+        <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
+          <div className="relative">
+            <Image
+              src={iconSrc}
+              alt=""
+              width={500}
+              height={500}
+              className="h-[110px] w-[110px] object-contain pointer-events-none"
+            />
+            {badge && (
+              <span
+                className="absolute -right-1 -top-1 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:hidden"
+                style={poppins}
+              >
+                {badge}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
+          {ctaLabel}
+        </div>
+        <div className="mt-auto hidden pt-8 lg:block">
+          <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
+            {ctaLabel}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={className} style={{ backgroundColor: bg }}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className={className}
       style={{ backgroundColor: bg }}
     >
       {inner}
@@ -640,130 +761,51 @@ export function ModeSelectionScreen({
 
       <PlayAnnouncements />
 
-      {/* ─── 2. Mode Cards — Auction + Tic-Tac-Toe (owner call: Friendly
-          Match and Daily Challenge cards removed; every other game now lives
-          in the All Games grid below). */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3">
-        {/* Friendly first (owner call) — the original create/join-room card.
-            Spans the mobile row so three cards never leave a dead half-column. */}
-        <MiniModeCard
-          bg={colors.blue.brand}
-          title={t('play.friendlyMatch')}
-          subtitle={t('play.friendlySubtitle')}
-          iconSrc="/assets/friendly_match-icon.webp"
-          ctaLabel={t('common.play')}
-          onClick={() => (isGuest && !GUEST_LOBBIES_ENABLED ? openAuthPrompt() : setSelectedMode('friendly'))}
-          className="col-span-2 lg:col-span-1"
-        />
-        {/* Friendly / Daily / Auction keep the PROD card design (owner call
-            2026-08-28): compact bespoke cards, not the MiniModeCard layout. */}
-        {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
-        {isAuctionCardEnabled && (
-          <div
-            onClick={openAuctionCard}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openAuctionCard();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-            style={{ backgroundColor: '#6B2FB3' }}
-          >
-            <Image
-              src="/assets/auction-card-icon.webp"
-              alt=""
-              width={160}
-              height={160}
-              className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
-            />
-            <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-              <h3
-                className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-                style={poppins}
-              >
-                {t('play.auctionTitle')}
-              </h3>
-              <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.auctionSubtitle')}</p>
-              <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-                <Image
-                  src="/assets/auction-card-icon.webp"
-                  alt=""
-                  width={500}
-                  height={500}
-                  className="h-[110px] w-[110px] object-contain pointer-events-none"
-                />
-              </div>
-              <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-                {t('common.play')}
-              </div>
-              <div className="mt-auto hidden pt-8 lg:block">
-                <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                  {t('common.play')}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Tic-Tac-Toe — same compact card family as the row above. */}
+      {/* ─── 2. Mode Cards — Friendly, Tic-Tac-Toe, Codenames, Auction in the
+          same swipe row as the daily games (owner call 2026-10-19). Every other
+          game lives in the All Games rows below. */}
+      <CardScroller>
+        <div className={cn(CARD_WIDTH, 'flex')}>
+          <MiniModeCard
+            bg={colors.blue.brand}
+            title={t('play.friendlyMatch')}
+            subtitle={t('play.friendlySubtitle')}
+            iconSrc="/assets/friendly_match-icon.webp"
+            ctaLabel={t('common.play')}
+            onClick={() => (isGuest && !GUEST_LOBBIES_ENABLED ? openAuthPrompt() : setSelectedMode('friendly'))}
+            className="w-full"
+          />
+        </div>
         {isTicTacToeEnabled && (
-          <div
+          <CompactModeCard
+            bg={colors.red.mid}
+            title={t('play.footballGridTitle')}
+            subtitle={t('play.footballGridSubtitle')}
+            iconSrc={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
+            ctaLabel={t('common.play')}
             onClick={openGridCard}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openGridCard();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-            style={{ backgroundColor: colors.red.mid }}
-          >
-            <span
-              className="absolute right-2 top-2.5 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:right-4 md:top-4 md:px-2.5 md:py-1 md:text-[11px]"
-              style={poppins}
-            >
-              {t('play.freeKicksNewBadge')}
-            </span>
-            <Image
-              src={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
-              alt=""
-              width={160}
-              height={160}
-              className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
-            />
-            <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-              <h3
-                className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-                style={poppins}
-              >
-                {t('play.footballGridTitle')}
-              </h3>
-              <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.footballGridSubtitle')}</p>
-              <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-                <Image
-                  src={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
-                  alt=""
-                  width={500}
-                  height={500}
-                  className="h-[110px] w-[110px] object-contain pointer-events-none"
-                />
-              </div>
-              <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-                {t('common.play')}
-              </div>
-              <div className="mt-auto hidden pt-8 lg:block">
-                <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                  {t('common.play')}
-                </div>
-              </div>
-            </div>
-          </div>
+          />
         )}
-      </div>
+        <CompactModeCard
+          bg={colors.green.shadow}
+          title={t('play.codenamesTitle')}
+          subtitle={t('play.codenamesSubtitle')}
+          iconSrc="/assets/codenames-card-icon.webp"
+          ctaLabel={t('common.play')}
+          badge={t('play.newBadge')}
+          href="/codenames"
+        />
+        {isAuctionCardEnabled && (
+          <CompactModeCard
+            bg="#6B2FB3"
+            title={t('play.auctionTitle')}
+            subtitle={t('play.auctionSubtitle')}
+            iconSrc="/assets/auction-card-icon.webp"
+            ctaLabel={t('common.play')}
+            onClick={openAuctionCard}
+          />
+        )}
+      </CardScroller>
 
       {/* ─── 3. Objectives ─── */}
       {objectivesEnabled && (
