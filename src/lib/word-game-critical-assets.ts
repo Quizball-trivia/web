@@ -18,6 +18,10 @@ const WORD_GAME_PATHS = new Set([
   "/es/juegos-de-futbol/codenames-futbolero",
   "/ka/football-games/football-codenames",
   "/tr/futbol-oyunlari/futbol-codenames",
+  "/en/football-games/football-odd-one-out",
+  "/es/juegos-de-futbol/dato-falso-futbolero",
+  "/ka/football-games/football-odd-one-out",
+  "/tr/futbol-oyunlari/hangisi-yanlis",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {

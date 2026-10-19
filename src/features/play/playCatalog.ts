@@ -9,6 +9,7 @@ export const DAILY_CHALLENGE_SLUGS = [
   "name-chain",
   "football-horserace",
   "football-codenames",
+  "dato-falso-futbolero",
   "buscaminas",
   "pistas",
   "ultimo",

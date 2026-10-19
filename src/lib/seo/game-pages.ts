@@ -82,6 +82,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10" },
   "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki" },
   "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol" },
+  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "najdi-lishnee" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -1320,6 +1321,48 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Двадцать футбольных карточек с картинками: карикатуры на легенд, знаменитые стадионы и футбольные мемы. Твой Скаут даёт одну футбольную подсказку и число, например «Фергюсон · 2» или «Рука Бога · 1», а ты ищешь карточки, на которые она указывает. Восемь карточек принадлежат твоей команде, а одна — Автогол: откроешь её, и игра окончена.",
       howToPlay: ["Поле дня — это 20 карточек, одинаковых для всех: 8 твоих, 7 соперника, 4 нейтральные и одна — Автогол. Где какая, знает только Скаут.", "Бот-Скаут даёт тебе три подсказки по очереди: футбольное слово и число, например «Реал Мадрид · 3». Число показывает, на сколько твоих карточек указывает подсказка.", "Открой карточку, которая, как тебе кажется, подходит. Верная карточка продлевает подсказку, чужая или нейтральная заканчивает её, и приходит следующая.", "Найди все 8 карточек, пока не закончились подсказки. Автогол сразу заканчивает игру. Поделись результатом и поднимайся в ежедневном рейтинге."],
       reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшнее поле и попасть в ежедневный рейтинг.",
+    },
+  }),
+  mode("football-odd-one-out", "/dato-falso-futbolero", "dato-falso", {
+    en: {
+      metaTitle: "Football Odd One Out — Spot the Fake Football Fact | QuizBall",
+      metaDescription: "Football Odd One Out: one footballer, a claim and five options. Four are true, one is fake. 10 cards a day, two jokers, or 2 to 6 friends in a room.",
+      title: "Football Odd One Out",
+      intro: "One footballer, one claim and five options: “played for ALL these clubs”, “wore ALL these shirt numbers”. Four are true and one is fake. Find the odd one out before the 30 seconds run down.",
+      howToPlay: ["Each card shows a footballer and a claim, such as every club he played for, the leagues he played in, the World Cup squads he was in, his shirt numbers or his trophies, with five options under it.", "Four options are true and one is fake. Tap the one you think is fake and confirm it. You have 30 seconds a card.", "A right answer is +1. Two jokers, once each per day: Remove 2 greys out two true options, Double or nothing is +2 if you are right and −1 if you are wrong.", "Ten cards a day, the same for everyone. Finish to see your score, share your grid and climb the daily leaderboard."],
+      reward: "Play past days without an account; sign in for today's cards and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ყალბი ფაქტი — იპოვე ყალბი საფეხბურთო ფაქტი | QuizBall",
+      metaDescription: "ყალბი ფაქტი: ერთი ფეხბურთელი, ერთი მტკიცება და ხუთი ვარიანტი. ოთხი სწორია, ერთი ყალბი. დღეში 10 ბარათი, ორი ჯოკერი ან 2-6 მეგობარი ოთახში.",
+      title: "ყალბი ფაქტი",
+      intro: "ერთი ფეხბურთელი, ერთი მტკიცება და ხუთი ვარიანტი: „ითამაშა ყველა ამ კლუბში“, „ატარა ყველა ეს ნომერი“. ოთხი ვარიანტი სწორია, ერთი ყალბი. იპოვე ის, სანამ 30 წამი ამოიწურება.",
+      howToPlay: ["ყოველ ბარათზე ფეხბურთელი და მტკიცებაა, მაგალითად ყველა კლუბი, რომელშიც ითამაშა, ლიგები, მსოფლიო ჩემპიონატები, რომლებზეც განაცხადში იყო, მისი ნომრები ან ტიტულები. ქვემოთ ხუთი ვარიანტია.", "ოთხი ვარიანტი სწორია, ერთი ყალბი. შეეხე იმას, რომელიც ყალბი გგონია, და დაადასტურე. თითო ბარათზე 30 წამი გაქვს.", "სწორი პასუხი +1-ია. ორი ჯოკერია, თითოს დღეში ერთხელ იყენებ: „2-ის მოშორება“ ამუქებს ორ სწორ ვარიანტს, „ორმაგი ან არაფერი“ კი სწორ პასუხზე +2-ს იძლევა, შეცდომაზე — −1-ს.", "დღეში 10 ბარათია, ყველასთვის ერთი და იგივე. დასრულების შემდეგ ნახავ შედეგს, გააზიარებ ბადეს და აიწევ დღის რეიტინგში."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი ბარათებისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Dato falso futbolero — Encontrá el dato falso | QuizBall",
+      metaDescription: "Dato falso futbolero: un futbolista, una afirmación y cinco opciones. Cuatro son verdaderas y una es falsa. 10 cartas por día, dos comodines, o de 2 a 6 amigos en una sala.",
+      title: "Dato falso futbolero",
+      intro: "Un futbolista, una afirmación y cinco opciones: “jugó en TODOS estos clubes”, “usó TODOS estos dorsales”. Cuatro son verdaderas y una es falsa. Encontrá la que no encaja antes de que se acaben los 30 segundos.",
+      howToPlay: ["Cada carta muestra a un futbolista y una afirmación, como todos los clubes en los que jugó, las ligas, los Mundiales a los que fue convocado, sus dorsales o sus títulos, con cinco opciones debajo.", "Cuatro opciones son verdaderas y una es falsa. Tocá la que creés que es falsa y confirmala. Tenés 30 segundos por carta.", "Acertar vale +1. Dos comodines, uno de cada por día: Descartar 2 tacha dos opciones verdaderas y Doble o nada da +2 si acertás y −1 si fallás.", "Son diez cartas por día, las mismas para todos. Al terminar ves tu puntaje, compartís tu grilla y subís en el ranking del día."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las cartas de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Hangisi Yanlış? — Yanlış Futbol Bilgisini Bul | QuizBall",
+      metaDescription: "Hangisi Yanlış?: bir futbolcu, bir iddia ve beş seçenek. Dördü doğru, biri yanlış. Günde 10 kart, iki joker ya da bir odada 2-6 arkadaş.",
+      title: "Hangisi Yanlış?",
+      intro: "Bir futbolcu, bir iddia ve beş seçenek: “bu kulüplerin HEPSİNDE oynadı”, “bu forma numaralarının HEPSİNİ giydi”. Dördü doğru, biri yanlış. 30 saniye dolmadan yanlış olanı bul.",
+      howToPlay: ["Her kart bir futbolcuyu ve bir iddiayı gösterir; örneğin oynadığı tüm kulüpler, ligler, kadrosunda yer aldığı Dünya Kupaları, forma numaraları ya da kupaları. Altında beş seçenek vardır.", "Seçeneklerin dördü doğru, biri yanlıştır. Yanlış olduğunu düşündüğüne dokun ve onayla. Kart başına 30 saniyen var.", "Doğru cevap +1 puan. Günde birer kez kullanabileceğin iki joker var: 2 Şık Sil iki doğru seçeneği soluklaştırır, Ya Hep Ya Hiç doğru bilirsen +2, yanlış bilirsen −1 verir.", "Günde 10 kart var, herkes için aynı. Bitirince puanını gör, ızgaranı paylaş ve günün sıralamasında yüksel."],
+      reward: "Önceki günleri hesapsız oyna; bugünün kartları ve günün sıralaması için giriş yap.",
+    },
+    ru: {
+      metaTitle: "Найди лишнее: какой футбольный факт ложный | QuizBall",
+      metaDescription: "Найди лишнее: один футболист, одно утверждение и пять вариантов. Четыре верных, один ложный. 10 карточек в день, две подсказки или комната на 2–6 друзей.",
+      title: "Найди лишнее: ложный футбольный факт",
+      intro: "Один футболист, одно утверждение и пять вариантов: «играл во ВСЕХ этих клубах», «носил ВСЕ эти номера». Четыре варианта верные, один ложный. Найди его, пока не вышли 30 секунд.",
+      howToPlay: ["На каждой карточке футболист и утверждение: все клубы, в которых он играл, чемпионаты, чемпионаты мира в заявке, игровые номера или трофеи. Под ним пять вариантов.", "Четыре варианта верные, один ложный. Нажми на тот, что кажется ложным, и подтверди. На карточку даётся 30 секунд.", "Верный ответ — +1. Две подсказки, каждую можно использовать раз в день: «Убрать 2» затемняет два верных варианта, «Всё или ничего» даёт +2, если угадал, и −1, если ошибся.", "Десять карточек в день, одинаковых для всех. В конце ты увидишь результат, сможешь поделиться сеткой и подняться в ежедневном рейтинге."],
+      reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшние карточки и попасть в ежедневный рейтинг.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {

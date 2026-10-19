@@ -1,5 +1,6 @@
 import { aproximadoRoomRules } from "@/features/aproximado/useRoom";
 import { codenamesRoomRules } from "@/features/codenames/codenames.server";
+import { datoFalsoRoomRules } from "@/features/dato-falso/datoFalso.server";
 import { footballRaceRoomRules } from "@/features/football-race/race.server";
 import { nameChainRoomRules } from "@/features/name-chain/nameChain.view";
 import { sharedPlayerRoomRules } from "@/features/shared-player/sharedPlayer.view";
@@ -14,6 +15,7 @@ const RULES: Record<string, RoomClientRules<never>> = {
   tenable: tenableRoomRules as RoomClientRules<never>,
   football_race: footballRaceRoomRules as RoomClientRules<never>,
   codenames: codenamesRoomRules as RoomClientRules<never>,
+  dato_falso: datoFalsoRoomRules as RoomClientRules<never>,
 };
 
 export const roomClientRulesFor = (game: string): RoomClientRules<unknown> | null => (RULES[game] as RoomClientRules<unknown> | undefined) ?? null;
