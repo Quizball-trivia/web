@@ -4,7 +4,7 @@ import { PublicGamePage, publicGameMetadata, publicGameStaticParams } from "@/fe
 
 type Params = Promise<{ locale: string }>;
 const FOLDER = "futbolnye-igry";
-const SLUG = "najdi-lishnee";
+const SLUG = "lozhnyj-fakt";
 
 export const dynamicParams = false;
 export function generateStaticParams() {

@@ -81,7 +81,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   // Google Suggest 2026-10-15: "adivina el top 10 de fútbol" (ar/es/mx), "futbol top 10" (tr); en/ka "football tenable"; ru "угадай топ-10".
   "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10" },
   "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki" },
-  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "najdi-lishnee" },
+  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -1341,9 +1341,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Önceki günleri hesapsız oyna; bugünün kartları ve günün sıralaması için giriş yap.",
     },
     ru: {
-      metaTitle: "Найди лишнее: какой футбольный факт ложный | QuizBall",
-      metaDescription: "Найди лишнее: один футболист, одно утверждение и пять вариантов. Четыре верных, один ложный. 10 карточек в день, две подсказки или комната на 2–6 друзей.",
-      title: "Найди лишнее: ложный футбольный факт",
+      metaTitle: "Ложный факт: найди неправду о футболисте | QuizBall",
+      metaDescription: "Ложный факт: один футболист, одно утверждение и пять вариантов. Четыре верных, один ложный. 10 карточек в день, две подсказки или комната на 2–6 друзей.",
+      title: "Ложный факт: футбольная игра",
       intro: "Один футболист, одно утверждение и пять вариантов: «играл во ВСЕХ этих клубах», «носил ВСЕ эти номера». Четыре варианта верные, один ложный. Найди его, пока не вышли 30 секунд.",
       howToPlay: ["На каждой карточке футболист и утверждение: все клубы, в которых он играл, чемпионаты, чемпионаты мира в заявке, игровые номера или трофеи. Под ним пять вариантов.", "Четыре варианта верные, один ложный. Нажми на тот, что кажется ложным, и подтверди. На карточку даётся 30 секунд.", "Верный ответ — +1. Две подсказки, каждую можно использовать раз в день: «Убрать 2» затемняет два верных варианта, «Всё или ничего» даёт +2, если угадал, и −1, если ошибся.", "Десять карточек в день, одинаковых для всех. В конце ты увидишь результат, сможешь поделиться сеткой и подняться в ежедневном рейтинге."],
       reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшние карточки и попасть в ежедневный рейтинг.",
