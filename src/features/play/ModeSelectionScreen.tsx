@@ -252,12 +252,21 @@ function CompactModeCard({
         height={160}
         className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
       />
-      {/* The title starts below the badge: a long translation ("НОВИНКА") would cover it on a narrow card. */}
-      <div className={cn('relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left', badge && 'pt-7 md:pt-8')}>
+      <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
         <h3
-          className={cn('text-[0.95rem] leading-[1.05] uppercase text-white break-words [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]')}
+          className="text-[0.95rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
           style={poppins}
         >
+          {/* An invisible copy of the badge, floated: the title stays level with the
+              other cards and only a word that cannot fit beside the badge drops below it. */}
+          {badge && (
+            <span
+              aria-hidden
+              className="invisible float-right -mr-1 mb-1.5 ml-2 rounded-md md:-mr-2 px-2 py-0.5 text-[9px] font-black leading-normal tracking-wide md:mb-2 md:px-2.5 md:py-1 md:text-[11px]"
+            >
+              {badge}
+            </span>
+          )}
           {title}
         </h3>
         <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{subtitle}</p>
