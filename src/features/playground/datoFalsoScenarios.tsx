@@ -64,7 +64,7 @@ const mixed = playThrough(["fake", "fake", "wrong", "fake", null, "fake", "fake"
 const perfect = playThrough(Array(10).fill("fake"), { 0: double });
 
 export const DATO_FALSO_SOLO: Scenario<never>[] = [
-  scenario<Record<string, never>>({ id: "live", name: "▶ Play the daily (11 real prototype cards)", note: "Live: 10 cards, 30 s each, both jokers. Real facts, fact-checked; these cards are burned for the real daily.", data: {},
+  scenario<Record<string, never>>({ id: "live", name: "▶ Play the daily (prototype deck)", note: "Live: 10 cards, 30 s each, both jokers. Uses the local private deck when the file is there, the invented deck otherwise.", data: {},
     render: (_d, ctx) => <DatoFalsoSoloSim key={ctx.locale} locale={ctx.locale} log={ctx.log} friends={friendsStandIn(ctx)} /> }),
   soloScreen("intro", "Intro", "intro", solo()),
   soloScreen("card", "Card 1 · fresh (tap one, then lock it in)", "play", solo()),
