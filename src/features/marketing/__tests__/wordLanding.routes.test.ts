@@ -3,12 +3,15 @@ import type { ReactElement } from "react";
 import { publicGameDynamicParams, publicGameMetadata, publicGameStaticParams } from "../publicGamePage";
 import * as enChain from "@/app/[locale]/(hub)/(word-shell)/football-games/football-name-chain/page";
 import * as enRace from "@/app/[locale]/(hub)/(word-shell)/football-games/football-horserace/page";
+import * as enOddOneOut from "@/app/[locale]/(hub)/(word-shell)/football-games/football-odd-one-out/page";
 import * as enShared from "@/app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page";
 import * as esChain from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page";
 import * as esRace from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/carrera-de-caballos-futbolera/page";
+import * as esDatoFalso from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/dato-falso-futbolero/page";
 import * as esShared from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page";
 import * as trChain from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page";
 import * as trRace from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page";
+import * as trHangisi from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/hangisi-yanlis/page";
 import * as trShared from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
 import { findPublishedGame } from "@/lib/seo/public-games";
 import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
@@ -27,12 +30,15 @@ const routes = [
   { folder: "football-games", slug: "football-horserace", module: enRace },
   { folder: "juegos-de-futbol", slug: "carrera-de-caballos-futbolera", module: esRace },
   { folder: "futbol-oyunlari", slug: "futbol-at-yarisi", module: trRace },
+  { folder: "football-games", slug: "football-odd-one-out", module: enOddOneOut },
+  { folder: "juegos-de-futbol", slug: "dato-falso-futbolero", module: esDatoFalso },
+  { folder: "futbol-oyunlari", slug: "hangisi-yanlis", module: trHangisi },
 ];
 const modeOf: Record<string, string> = {
   "football-name-chain": "nameChain", "cadena-de-futbolistas": "nameChain", "son-harfle-futbolcu": "nameChain",
   "football-horserace": "footballRace", "carrera-de-caballos-futbolera": "footballRace", "futbol-at-yarisi": "footballRace",
+  "football-odd-one-out": "datoFalso", "dato-falso-futbolero": "datoFalso", "hangisi-yanlis": "datoFalso",
 };
-const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", sharedPlayer: "shared-player" };
 const key = ({ locale, slug }: { locale: string; slug: string }) => `${locale}/${slug}`;
 
 describe("fixed word landing route parity", () => {
@@ -47,7 +53,6 @@ describe("fixed word landing route parity", () => {
     expect(fixed.every((params) => !dynamic.some((other) => key(other) === key(params)))).toBe(true);
   });
 
-  it("enumerates exactly twelve word landings (Football Horserace included) with unchanged metadata and rendering props", async () => {
     let count = 0;
     for (const route of routes) {
       expect(route.module.dynamicParams).toBe(false);
@@ -66,7 +71,7 @@ describe("fixed word landing route parity", () => {
         expect(await element.props.params).toEqual({ locale, slug: route.slug });
       }
     }
-    expect(count).toBe(12);
+    expect(count).toBe(20);
   });
 
   it("keeps wrong-folder locales unavailable", async () => {

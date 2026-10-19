@@ -474,6 +474,38 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "С друзьями это настоящая гонка. Создай комнату на 2–4 игроков и выбери турнир или оставь случайный. Вы по очереди выбираете сборные, а затем в каждом раунде все одновременно и втайне выбирают статистику. Выборы открываются от самого быстрого, и каждый двигает вперёд своего лидера: побеждает первый флаг на финише.",
     ],
   },
+  "football-odd-one-out": {
+    en: [
+      "Football Odd One Out is a spot-the-fake game about footballers. Every card shows one player, a claim about his career and five options. Four of the options are true and one is fake, and your job is to find the fake one.",
+      "The claim changes from card to card: played for ALL these clubs, played in the league of ALL these countries, played at ALL these World Cups, wore ALL these shirt numbers, won ALL these competitions. Tap the option you think is fake, then confirm it. You have 30 seconds per card, and a right answer scores +1.",
+      "A new set of 10 cards arrives every day at midnight Argentina time, the same for everyone. Two jokers help once a day each: Remove 2 greys out two true options, and Double or nothing makes the card worth +2 if you are right and −1 if you are wrong. Without an account you play the previous days; signed-in players get today's cards and the daily leaderboard. When you finish, share your grid of hits and misses.",
+      "With friends it is a race to the fake. Open a room for 2 to 6 players and everyone gets the same card at the same moment, with 20 seconds to answer. Right is +1, you get the same two jokers once per match, and nobody sees your joker until the card is revealed.",
+    ],
+    ka: [
+      "ყალბი ფაქტი თამაშია, სადაც ფეხბურთელებზე ყალბი ფაქტი უნდა იპოვო. ყოველ ბარათზე ერთი მოთამაშე, მისი კარიერის შესახებ მტკიცება და ხუთი ვარიანტია. ოთხი სწორია, ერთი ყალბი, შენი ამოცანა კი ყალბის პოვნაა.",
+      "მტკიცება ბარათიდან ბარათზე იცვლება: ითამაშა ყველა ამ კლუბში, ითამაშა ყველა ამ ქვეყნის ლიგაში, ითამაშა ყველა ამ მსოფლიო ჩემპიონატზე, ატარა ყველა ეს ნომერი, მოიგო ყველა ეს ტურნირი. შეეხე ვარიანტს, რომელიც ყალბი გგონია, და დაადასტურე. ბარათზე 30 წამი გაქვს, სწორი პასუხი +1-ს გაძლევს.",
+      "ყოველდღე შუაღამისას (არგენტინის დროით) 10 ბარათისგან შემდგარი ახალი კომპლექტი ჩნდება, ყველასთვის ერთი და იგივე. ორი ჯოკერი დღეში თითოჯერ გეხმარება: „2-ის მოშორება“ ამუქებს ორ სწორ ვარიანტს, „ორმაგი ან არაფერი“ კი ბარათს სწორ პასუხზე +2-ად, შეცდომაზე −1-ად აქცევს. ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით — დღევანდელ ბარათებს და დღის რეიტინგს. დასრულების შემდეგ გააზიარე შენი მოგებებისა და შეცდომების ბადე.",
+      "მეგობრებთან ეს ყალბის პოვნის რბოლაა. გახსენი ოთახი 2-დან 6 მოთამაშემდე: ყველა ერთსა და იმავე ბარათს ერთდროულად იღებს და პასუხისთვის 20 წამი აქვს. სწორი პასუხი +1-ია, იგივე ორი ჯოკერი მატჩში თითოჯერ გამოიყენება და შენს ჯოკერს არავინ ხედავს, სანამ ბარათი არ გაიხსნება.",
+    ],
+    es: [
+      "Dato falso futbolero es un juego de encontrar el engaño sobre futbolistas. Cada carta muestra un jugador, una afirmación sobre su carrera y cinco opciones. Cuatro son verdaderas y una es falsa: tu trabajo es encontrar la falsa.",
+      "La afirmación cambia de carta en carta: jugó en TODOS estos clubes, jugó en la liga de TODOS estos países, jugó TODOS estos Mundiales, usó TODOS estos dorsales, ganó TODAS estas competiciones. Tocá la opción que creés que es falsa y confirmala. Tenés 30 segundos por carta y acertar suma +1.",
+      "Cada día a la medianoche de Argentina llega un juego nuevo de 10 cartas, el mismo para todos. Dos comodines ayudan una vez al día cada uno: Descartar 2 tacha dos opciones verdaderas y Doble o nada hace que la carta valga +2 si acertás y −1 si fallás. Sin cuenta jugás los días anteriores; con tu cuenta jugás las cartas de hoy y entrás al ranking del día. Al terminar, compartí tu grilla de aciertos y errores.",
+      "Con amigos es una carrera por el dato falso. Abrí una sala de 2 a 6 jugadores y todos reciben la misma carta al mismo tiempo, con 20 segundos para responder. Acertar suma +1, tenés los mismos dos comodines una vez por partida y nadie ve tu comodín hasta que se revela la carta.",
+    ],
+    tr: [
+      "Hangisi Yanlış?, futbolcular üzerine yanlış bilgiyi bulma oyunu. Her kart bir oyuncuyu, kariyeriyle ilgili bir iddiayı ve beş seçeneği gösterir. Seçeneklerin dördü doğru, biri yanlıştır; işin yanlış olanı bulmak.",
+      "İddia karttan karta değişir: bu kulüplerin hepsinde oynadı, bu ülkelerin hepsinin liginde oynadı, bu Dünya Kupalarının hepsinde oynadı, bu forma numaralarının hepsini giydi, bu kupaların hepsini kazandı. Yanlış olduğunu düşündüğün seçeneğe dokun ve onayla. Kart başına 30 saniyen var, doğru cevap +1 puan getirir.",
+      "Her gün Arjantin saatiyle gece yarısı herkes için aynı 10 kartlık yeni bir set gelir. İki joker, her biri günde bir kez yardım eder: 2 Şık Sil iki doğru seçeneği soluklaştırır, Ya Hep Ya Hiç ise kartı doğru bilirsen +2, yanlış bilirsen −1 yapar. Hesapsız önceki günleri oynarsın; hesapla bugünün kartlarını oynar ve günün sıralamasına girersin. Bitirince doğru ve yanlışlarından oluşan ızgaranı paylaş.",
+      "Arkadaşlarla yanlışı bulma yarışına dönüşür. 2-6 kişilik bir oda aç; herkes aynı kartı aynı anda alır ve cevap için 20 saniyesi vardır. Doğru bilmek +1 puan, aynı iki joker maç başına bir kez kullanılır ve kart açılana kadar kimse jokerini göremez.",
+    ],
+    ru: [
+      "Найди лишнее — игра, в которой нужно найти ложный факт о футболисте. На каждой карточке один игрок, утверждение о его карьере и пять вариантов. Четыре верных, один ложный, и твоя задача — найти ложный.",
+      "Утверждение меняется от карточки к карточке: играл во ВСЕХ этих клубах, играл в чемпионатах ВСЕХ этих стран, играл на ВСЕХ этих чемпионатах мира, носил ВСЕ эти номера, выигрывал ВСЕ эти турниры. Нажми на вариант, который считаешь ложным, и подтверди. На карточку даётся 30 секунд, верный ответ приносит +1.",
+      "Каждый день в полночь по аргентинскому времени появляется новый набор из 10 карточек, одинаковый для всех. Две подсказки помогают по одному разу в день: «Убрать 2» затемняет два верных варианта, а «Всё или ничего» делает карточку стоящей +2, если угадал, и −1, если ошибся. Без аккаунта можно играть за прошлые дни; после входа доступны сегодняшние карточки и ежедневный рейтинг. В конце поделись сеткой своих попаданий и промахов.",
+      "С друзьями это гонка за ложным фактом. Создай комнату на 2–6 игроков: все получают одну и ту же карточку одновременно, на ответ дают 20 секунд. Верный ответ — +1, те же две подсказки можно использовать по одному разу за матч, а выбранную подсказку никто не видит, пока карточка не раскрыта.",
+    ],
+  },
   "last-answer-standing": {
     en: [
       "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",

@@ -8,6 +8,20 @@ import type { GameId, PlayMode } from "./types";
 export interface SoundEvent { moment: string; sound: string | null; where: string }
 
 export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>>> = {
+  datofalso: {
+    solo: [
+      { moment: "Your pick was the fake", sound: "correctRanked", where: "datoFalso.sounds.ts useRevealSound" },
+      { moment: "Wrong pick or time up", sound: "wrongAnswer", where: "datoFalso.sounds.ts useRevealSound" },
+    ],
+    duel: [
+      { moment: "Reveal: your pick was the fake", sound: "correctRanked", where: "datoFalso.sounds.ts useRevealSound" },
+      { moment: "Reveal: wrong or no pick", sound: "wrongAnswer", where: "datoFalso.sounds.ts useRevealSound" },
+    ],
+    room: [
+      { moment: "Reveal: your pick was the fake", sound: "correctRanked", where: "datoFalso.sounds.ts useRevealSound" },
+      { moment: "Reveal: wrong or no pick", sound: "wrongAnswer", where: "datoFalso.sounds.ts useRevealSound" },
+    ],
+  },
   carrera: {
     duel: [{ moment: "Any 1v1 moment", sound: null, where: "prototype: no sounds yet" }],
     room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
