@@ -101,8 +101,8 @@ const copy = {
     pointsStat: "Puan", rightStat: "Doğru", rightDetail: (n: number) => `${n} doğru`, nextCard: "Sıradaki kart…", lastCard: "Son kart!",
   },
   ru: {
-    brand: ["Найди", "лишнее"] as const,
-    title: "Найди лишнее", tag: "10 карточек в день",
+    brand: ["Ложный", "факт"] as const,
+    title: "Ложный факт", tag: "10 карточек в день",
     lines: [
       "На каждой карточке игрок и пять фактов. Четыре правдивы, один ложный.",
       "Найди ложный и получи очко. 30 секунд на карточку.",
@@ -125,7 +125,7 @@ const copy = {
     next: "Дальше", seeResult: "Результат",
     points: (n: number) => `${n} оч.`, rightOf: (n: number, of: number) => `${n}/${of} верно`,
     endTitle: (right: number, of: number) => (right === of ? "Идеально! Тебя не провести." : right >= of - 2 ? "Отличный глаз." : right >= of / 2 ? "Неплохо." : "Сегодня победила ложь."),
-    shareText: (n: number, points: number, grid: string) => `Найди лишнее #${n}: ${points} оч.\n${grid}`,
+    shareText: (n: number, points: number, grid: string) => `Ложный факт #${n}: ${points} оч.\n${grid}`,
     review: "Карточки дня",
     idleNote: "Ты пропустил две карточки, поэтому тебя больше не ждут. Сделай выбор, чтобы вернуться.",
     waiting: "Ждём остальных…", lockedIn: "Выбрано", answeredOf: (n: number, of: number) => `Ответили ${n}/${of}`,

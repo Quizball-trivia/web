@@ -21,7 +21,7 @@ export const WORD_LANDING_ROOTS = [
     "football-games/football-codenames", "juegos-de-futbol/codenames-futbolero", "futbol-oyunlari/futbol-codenames",
     "futbolnye-igry/kodovye-imena-futbol",
     "football-games/football-odd-one-out", "juegos-de-futbol/dato-falso-futbolero", "futbol-oyunlari/hangisi-yanlis",
-    "futbolnye-igry/najdi-lishnee",
+    "futbolnye-igry/lozhnyj-fakt",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
