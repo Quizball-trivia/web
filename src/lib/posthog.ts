@@ -113,7 +113,8 @@ export function stopSessionRecording(): void {
 }
 
 // Track custom events
-export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
+// `departing`: the page is going away (pagehide), so skip the batch queue and beacon it now.
+export function trackEvent(eventName: string, properties?: AnalyticsProperties, options?: { departing?: boolean }): void {
   // Analytics must never interrupt the action that triggered it.
   try {
     recordGuestJourney(eventName, properties ?? {}, String(properties?.access_type ?? properties?.access ?? accessType));
@@ -123,11 +124,13 @@ export function trackEvent(eventName: string, properties?: AnalyticsProperties):
   }
 
   try {
-    posthog.capture(eventName, {
+    const payload = {
       ...properties,
       access_type: properties?.access_type ?? accessType,
       event_source: 'web',
-    });
+    };
+    if (options?.departing) posthog.capture(eventName, payload, { send_instantly: true, transport: 'sendBeacon' });
+    else posthog.capture(eventName, payload);
   } catch (error) {
     console.error('PostHog trackEvent error:', error);
   }

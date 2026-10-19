@@ -27,6 +27,17 @@ describe('PostHog identity', () => {
     vi.unstubAllEnvs();
   });
 
+  it('beacons a departing event immediately and leaves ordinary events on the batch queue', () => {
+    trackEvent('campaign_quiz_abandon', { campaign_id: 'c' }, { departing: true });
+    expect(posthogMocks.capture).toHaveBeenLastCalledWith(
+      'campaign_quiz_abandon',
+      expect.objectContaining({ campaign_id: 'c', event_source: 'web' }),
+      { send_instantly: true, transport: 'sendBeacon' },
+    );
+    trackEvent('campaign_quiz_start', { campaign_id: 'c' });
+    expect(posthogMocks.capture.mock.lastCall).toHaveLength(2);
+  });
+
   it('does not reset an anonymous identity', () => {
     posthogMocks.get_property.mockReturnValue(undefined);
 
