@@ -5,5 +5,10 @@ import { PartnerGameHost } from "./PartnerGameHost";
 import { partnerGameRegistry } from "./registry";
 
 export function PartnerGamePage({ gameId }: { gameId: PartnerGameId }) {
-  return <PartnerGameHost gameId={gameId} registry={partnerGameRegistry} />;
+  // The home spans the partner's frame; a game keeps the column it was designed for.
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
+      <PartnerGameHost gameId={gameId} registry={partnerGameRegistry} />
+    </div>
+  );
 }
