@@ -107,7 +107,7 @@ function MiniModeCard({
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
   const text = dark ? 'text-black' : 'text-white';
   const cardClassName = cn(
-    'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+    '@container relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
     className,
   );
   // Phones: pills sit in flow above the title (Georgian titles are too wide to
@@ -136,9 +136,10 @@ function MiniModeCard({
       )}
       <div className="relative z-10 flex h-full flex-col">
         {/* keep-all: Georgian has no hyphenation — auto-hyphens split words
-            mid-syllable with no visible hyphen ("გამოწვევ/ა"). */}
+            mid-syllable with no visible hyphen ("გამოწვევ/ა"). The 11cqi cap
+            shrinks a word too long for a narrow card ("Товарищеский" at 360). */}
         <h3
-          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
+          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[min(1rem,11cqi)] md:text-[min(clamp(1.4rem,2.2vw,2rem),11cqi)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
           style={poppins}
         >
           {title}
@@ -251,10 +252,10 @@ function CompactModeCard({
         height={160}
         className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
       />
-      {/* Phones: the title is centred under the badge, so it starts below it. */}
-      <div className={cn('relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left', badge && 'pt-5 md:pt-0')}>
+      {/* The title starts below the badge: a long translation ("НОВИНКА") would cover it on a narrow card. */}
+      <div className={cn('relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left', badge && 'pt-7 md:pt-8')}>
         <h3
-          className={cn('text-[0.95rem] leading-[1.05] uppercase text-white break-words [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]', badge && 'md:pr-16')}
+          className={cn('text-[0.95rem] leading-[1.05] uppercase text-white break-words [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]')}
           style={poppins}
         >
           {title}
