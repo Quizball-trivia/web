@@ -17,7 +17,7 @@ export { datoFalsoDailyGame };
 
 const loadBoard = (day: string, locale: string) => datoFalsoDailyApi.leaderboard(day, locale);
 /** A reload on a revealed card goes back to that reveal. */
-const revealedCard = (s: DatoFalsoDailyState) => s.settled !== null;
+const revealedCard = (s: DatoFalsoDailyState) => Boolean(s.settled?.card);
 
 /** Dato falso futbolero's daily on the shared daily screens (intro, archive, end, ranking). */
 export function DatoFalsoDaily({ locale, onExit, onEvent, initialDay, onDay }: {
