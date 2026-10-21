@@ -96,7 +96,7 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   ) : null;
   const end = solo && state?.done && day ? (
     <CodenamesEndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard} onArchive={() => daily.setView("archive")} onExit={onExit}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} />
+      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} picker={picker} />
   ) : null;
 
   if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} onExit={() => setPracticing(false)} />;

@@ -166,8 +166,10 @@ export function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: 
   );
 }
 
-export function CodenamesEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, onArchive, onExit }: {
+export function CodenamesEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, onArchive, onExit, picker }: {
   locale: string; number: number; state: CodenamesSoloState; guestOnPastBoard: boolean; leaderboard: ReactNode; friends?: ReactNode;
+  /** The Pictures / Words switch: a finished daily opens on this screen, so the way to Words must be here too. */
+  picker?: ReactNode;
   onArchive: () => void; onExit?: () => void;
 }) {
   const c = codenamesCopy(locale);
@@ -177,6 +179,7 @@ export function CodenamesEndView({ locale, number, state, guestOnPastBoard, lead
   return (
     <DailyEnd game={codenamesDailyGame(locale)} locale={locale} day={state.day} shareText={c.shareText(number, found, total, shareGrid(state))}
       guestOnPastBoard={guestOnPastBoard} ranked={state.ranked} rank={state.rank} leaderboard={leaderboard} friends={friends} onArchive={onArchive} onExit={onExit}>
+      {picker && <div className="mb-4">{picker}</div>}
       <div className="rounded-3xl bg-brand-blue px-5 pb-5 pt-4 text-center">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75">{c.brand.join(" ")} #{number}</p>
         <p className="mt-2 text-6xl font-black tabular-nums" style={poppins}>{found}/{total}</p>
