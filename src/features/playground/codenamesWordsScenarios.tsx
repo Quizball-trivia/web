@@ -68,11 +68,11 @@ const live = (id: string, name: string, config: CodenamesRoomConfig, note: strin
   scenario<CodenamesRoomConfig>({ id, name, note, data: { board: "words", seed: 0, ...config },
     render: (d, ctx) => <CodenamesRoomSim key={`${JSON.stringify(d)}-${ctx.locale}`} config={d} locale={ctx.locale} log={ctx.log} /> });
 
-const LIVE_NOTE = "A new 25-word board every time (Spanish deck in es, English otherwise; set seed to replay one). Bots play the other seats.";
+const LIVE_NOTE = "A new 25-word board every time from the playground's invented deck, the same in every language (set seed to replay one). Bots play the other seats.";
 
 /** The locale's whole deck on real cards, with each word's clues: to read the list and check every word fits. */
 const deckCheck = scenario<Record<string, never>>({
-  id: "deck", name: "📖 The whole word deck", note: "Every word of this language's deck on a real card (Spanish in es, English otherwise), with the clues the bot links to it.", data: {},
+  id: "deck", name: "📖 The whole word deck", note: "Every word of the playground's invented deck on a real card, with the clues the bot links to it (the real decks are private and come from the server).", data: {},
   render: (_d, ctx) => {
     const deck = wordDeck(ctx.locale);
     return (

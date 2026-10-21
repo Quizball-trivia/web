@@ -52,7 +52,8 @@ export function CodenamesRoomSim({ config, locale, log, onExit }: { config: Code
   const players = useMemo(() => seatPlayers(n), [n]);
   const [kind, setKind] = useState<BoardKind>(config.board ?? "pictures");
   const deal = (k: BoardKind) => (k === "words" ? dealWords(config.seed || Math.floor(Math.random() * 1e9), wordDeck(locale)) : undefined);
-  const fresh = () => newRoomSim(players, config.scoutMe, Date.now(), true, deal(kind));
+  // "You're the Scout" starts seated as Scout; otherwise the visitor arrives without a side and picks one.
+  const fresh = () => newRoomSim(players, config.scoutMe, Date.now(), !config.scoutMe, deal(kind));
   const [sim, setSim] = useState<RoomSim>(() => fresh());
   const simRef = useRef(sim);
   useEffect(() => { simRef.current = sim; }, [sim]);
