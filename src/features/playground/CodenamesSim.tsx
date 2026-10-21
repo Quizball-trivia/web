@@ -52,8 +52,11 @@ export function CodenamesRoomSim({ config, locale, log, onExit }: { config: Code
   const players = useMemo(() => seatPlayers(n), [n]);
   const [kind, setKind] = useState<BoardKind>(config.board ?? "pictures");
   const deal = (k: BoardKind) => (k === "words" ? dealWords(config.seed || Math.floor(Math.random() * 1e9), wordDeck(locale)) : undefined);
-  // "You're the Scout" starts seated as Scout; otherwise the visitor arrives without a side and picks one.
-  const fresh = () => newRoomSim(players, config.scoutMe, Date.now(), !config.scoutMe, deal(kind));
+  // "You're the Scout" starts in the game as Scout; otherwise the visitor arrives without a side and picks one.
+  const fresh = () => {
+    const room = newRoomSim(players, config.scoutMe, Date.now(), !config.scoutMe, deal(kind));
+    return config.scoutMe ? command(room, { type: "kickoff" }, Date.now(), speed) : room;
+  };
   const [sim, setSim] = useState<RoomSim>(() => fresh());
   const simRef = useRef(sim);
   useEffect(() => { simRef.current = sim; }, [sim]);
@@ -80,7 +83,7 @@ export function CodenamesRoomSim({ config, locale, log, onExit }: { config: Code
   }, [sim.view.phase]);
   if (view.phase === "teams") return <CodenamesTeams view={view} locale={locale} onSend={send} onExit={exit} onBoard={switchBoard} />;
   if (view.phase === "over" && resultShown) return <CodenamesResult view={view} locale={locale} onRoom={reset} onExit={exit} />;
-  return <CodenamesGame view={view} locale={locale} busy={false} onSend={send} onExit={reset} />;
+  return <CodenamesGame view={view} locale={locale} busy={false} onSend={send} onExit={onExit ?? reset} />;
 }
 
 /**
