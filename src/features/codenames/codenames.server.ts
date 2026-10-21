@@ -17,7 +17,10 @@ export interface CodenamesServerView {
   turnNo: number;
   /** Team shuffles so far. */
   shuffles: number;
-  cards: Array<{ id: string; revealed: CardKey | null; key: CardKey | null; picks: number[] }>;
+  /** Word boards only (absent on a picture board). */
+  board?: "words";
+  lang?: string;
+  cards: Array<{ id: string; word?: string; revealed: CardKey | null; key: CardKey | null; picks: number[] }>;
   clue: { word: string; count: number; bot: boolean } | null;
   guessesLeft: number | null;
   history: Array<{ team: Team; clue: { word: string; count: number; bot: boolean } | null; flips: Array<{ card: number; key: CardKey; seat: number }> }>;
@@ -119,7 +122,8 @@ export function toRoomView(v: CodenamesServerView, snapshot: RoomStatePayload): 
     }),
     starting: v.starting,
     turn: v.turn,
-    cards: v.cards.map((c) => ({ id: c.id, key: c.key, revealed: c.revealed, picks: c.picks })),
+    ...(v.board === "words" ? { board: "words" as const } : {}),
+    cards: v.cards.map((c) => ({ id: c.id, ...(c.word !== undefined ? { word: c.word } : {}), key: c.key, revealed: c.revealed, picks: c.picks })),
     clue: v.clue,
     guessesLeft: v.guessesLeft,
     history: v.history.map((t) => ({ team: t.team, clue: t.clue, flips: t.flips.map((f) => f.key) })),

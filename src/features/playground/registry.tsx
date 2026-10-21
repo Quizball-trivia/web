@@ -37,6 +37,7 @@ import { TenableRoomSim, TenableSoloSim, type TenableRoomConfig } from "./Tenabl
 import { roomSnapshot, roomView as tenableRoomView, slotsWith, soloState } from "./fixtures/tenable";
 import { CODENAMES_ROOM, CODENAMES_SOLO } from "./codenamesScenarios";
 import { DATO_FALSO_DUEL, DATO_FALSO_ROOM, DATO_FALSO_SOLO } from "./datoFalsoScenarios";
+import { CODENAMES_WORDS_ROOM, CODENAMES_WORDS_SOLO } from "./codenamesWordsScenarios";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
 interface DuelData { snapshot: DuelStatePayload; secondsLeft: number | null; connected: boolean; busy: boolean; error: string | null; confirmLeave: boolean }
@@ -391,6 +392,11 @@ export const GAMES: GameEntry[] = [
     id: "codenames",
     name: "Football Codenames (prototype)",
     scenarios: { solo: CODENAMES_SOLO, room: CODENAMES_ROOM },
+  },
+  {
+    id: "codenames-words",
+    name: "Football Codenames · Words (prototype)",
+    scenarios: { solo: CODENAMES_WORDS_SOLO, room: CODENAMES_WORDS_ROOM },
   },
   {
     id: "carrera",

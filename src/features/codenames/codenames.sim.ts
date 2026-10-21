@@ -2,7 +2,7 @@
 // the server and sends it only to Scouts.
 import type { AvatarCustomization } from "@/types/game";
 import { FIXTURE_CARDS, FIXTURE_CLUES, FIXTURE_RIVAL_TURNS, FIXTURE_SINGLE_CLUES } from "./codenames.fixtures";
-import { cardsLeft, foldClue, type CardKey, type Clue, type CodenamesCommand, type CodenamesRoomView, type RoomPlayer, type Team } from "./codenames.view";
+import { cardsLeft, foldClue, kindFor, newSolo, WORDS_BOARD, type BoardKind, type CardKey, type Clue, type CodenamesCommand, type CodenamesRoomView, type CodenamesSoloState, type DailyClue, type RoomPlayer, type Team } from "./codenames.view";
 
 export interface RoomSim {
   view: CodenamesRoomView;
@@ -23,7 +23,10 @@ export interface DeckCard { id: string; face: boolean; clues: string[] }
 
 const sameClue = (a: string, b: string) => foldClue(a) === foldClue(b);
 
-export interface DealtBoard { cards: { id: string; key: CardKey }[]; clues: Record<string, string[]> }
+export interface DealtBoard { kind?: BoardKind; cards: { id: string; key: CardKey; word?: string }[]; clues: Record<string, string[]> }
+
+/** A word for the word board, with the clues it fits and its two meanings: football (`f`) and everyday (`o`) (a playground deck). */
+export interface DeckWord { w: string; clues: string[]; f?: string; o?: string }
 
 const shuffled = <T,>(items: T[], seed: number): T[] => {
   let x = seed || 1;
@@ -41,6 +44,74 @@ export function dealBoard(seed: number, deck: DeckCard[], faces = 6): DealtBoard
   return { cards: picked.map((c, i) => ({ id: c.id, key: order[i] })), clues: Object.fromEntries(picked.map((c) => [c.id, c.clues])) };
 }
 
+/** 25 random words keyed 9 / 8 / 7 / 1, the starting team (0) holding nine. */
+export function dealWords(seed: number, deck: DeckWord[]): DealtBoard {
+  const picked = shuffled(deck, seed).slice(0, WORDS_BOARD.size);
+  const keys: CardKey[] = [...Array(WORDS_BOARD.starting).fill("t0"), ...Array(WORDS_BOARD.other).fill("t1"), ...Array(WORDS_BOARD.neutral).fill("neutral"), "owngoal"];
+  const order = shuffled(keys, seed + 3);
+  const id = (w: string) => `w-${foldClue(w)}`;
+  return {
+    kind: "words",
+    cards: picked.map((c, i) => ({ id: id(c.w), key: order[i], word: c.w })),
+    clues: Object.fromEntries(picked.map((c) => [id(c.w), c.clues])),
+  };
+}
+
+/**
+ * A solo word board like the daily: 25 words, the player's 9 to find, and the bot Scout's clues fixed up front (each
+ * the clue covering most still-unclued words, never one that touches the Own Goal). Deals again (next seeds) until
+ * the clues cover all 9, so a perfect run is always possible. The result page explains each word.
+ */
+export function dealWordsSolo(seed: number, deck: DeckWord[], day: string, maxClues = 4): CodenamesSoloState {
+  const meaning = new Map(deck.map((d) => [`w-${foldClue(d.w)}`, d.f && d.o ? `${d.f} · ${d.o}` : d.w]));
+  let best: { board: DealtBoard; clues: DailyClue[]; covered: number } | null = null;
+  for (let tries = 0; tries < 200 && (!best || best.covered < WORDS_BOARD.starting); tries++) {
+    const board = dealWords(seed + tries * 7919, deck);
+    const clues = soloClues(board, maxClues, meaning);
+    const covered = clues.reduce((n, c) => n + c.count, 0);
+    if (!best || covered > best.covered) best = { board, clues, covered };
+  }
+  const { board, clues } = best!;
+  return newSolo(day, board.cards.map((c) => ({ id: c.id, word: c.word, kind: kindFor(c.key, 0) })), clues);
+}
+
+function soloClues(board: DealtBoard, maxClues: number, meaning: Map<string, string>): DailyClue[] {
+  const left = new Set(board.cards.filter((c) => c.key === "t0").map((c) => c.id));
+  const said = new Set<string>();
+  const clues: DailyClue[] = [];
+  while (left.size > 0 && clues.length < maxClues) {
+    const score = new Map<string, { ids: string[]; bad: number }>();
+    for (const card of board.cards) {
+      if (card.key === "t0" && !left.has(card.id)) continue;
+      for (const name of board.clues[card.id] ?? []) {
+        if (said.has(foldClue(name))) continue;
+        const e = score.get(name) ?? { ids: [], bad: 0 };
+        if (card.key === "t0") e.ids.push(card.id);
+        else e.bad += card.key === "owngoal" ? 100 : card.key === "t1" ? 2 : 1;
+        score.set(name, e);
+      }
+    }
+    const value = (e: { ids: string[]; bad: number }) => e.ids.length * 2 - e.bad;
+    const pick = [...score.entries()].filter(([, e]) => e.ids.length > 0 && e.bad < 100).sort(([, a], [, b]) => value(b) - value(a) || b.ids.length - a.ids.length)[0];
+    if (!pick) break;
+    const [word, e] = pick;
+    said.add(foldClue(word));
+    e.ids.forEach((id) => left.delete(id));
+    clues.push({ word, count: e.ids.length, cards: e.ids.map((id) => ({ id, why: meaning.get(id) ?? id })) });
+  }
+  return clues;
+}
+
+/** The teams screen's board switch: a new deal, everyone keeps their side. */
+export function reboard(sim: RoomSim, board?: DealtBoard): RoomSim {
+  if (sim.view.phase !== "teams") return sim;
+  const cards: DealtBoard["cards"] = board?.cards ?? FIXTURE_CARDS.map((c) => ({ id: c.id, key: toKey(c.kind) }));
+  return {
+    ...sim, keys: Object.fromEntries(cards.map((c) => [c.id, c.key])), deckClues: board?.clues ?? null, ourScript: 0, rivalScript: 0, rivalPlan: [],
+    view: { ...sim.view, board: board?.kind, cards: cards.map((c) => ({ id: c.id, word: c.word, key: null, revealed: null, picks: [] })) },
+  };
+}
+
 const toKey = (kind: string): CardKey => (kind === "mine" ? "t0" : kind === "theirs" ? "t1" : kind === "owngoal" ? "owngoal" : "neutral");
 const other = (t: Team): Team => (t === 0 ? 1 : 0);
 
@@ -55,12 +126,12 @@ export function newRoomSim(players: { name: string; avatar: AvatarCustomization 
     seat, name: p.name, avatar: p.avatar, team: arriving && seat === 0 ? null : ((seat % 2) as Team), status: "in",
     scout: arriving ? seat === 1 || seat === 2 : scoutMe ? seat === 0 || seat === 1 : seat === 2 || seat === 1,
   }));
-  const cards = board?.cards ?? FIXTURE_CARDS.map((c) => ({ id: c.id, key: toKey(c.kind) }));
+  const cards: DealtBoard["cards"] = board?.cards ?? FIXTURE_CARDS.map((c) => ({ id: c.id, key: toKey(c.kind) }));
   const keys = Object.fromEntries(cards.map((c) => [c.id, c.key]));
   return {
     view: {
-      phase: "teams", mySeat: 0, host: 0, turnNo: 0, botScout: [false, false], used: [], players: seats, starting: 0, turn: 0,
-      cards: cards.map((c) => ({ id: c.id, key: null, revealed: null, picks: [] })),
+      phase: "teams", board: board?.kind, mySeat: 0, host: 0, turnNo: 0, botScout: [false, false], used: [], players: seats, starting: 0, turn: 0,
+      cards: cards.map((c) => ({ id: c.id, word: c.word, key: null, revealed: null, picks: [] })),
       clue: null, guessesLeft: null, history: [], result: null,
     },
     keys, botAt: now + 2_500, ourScript: 0, rivalScript: 0, rivalPlan: [], rngSeed: 7, deckClues: board?.clues ?? null,

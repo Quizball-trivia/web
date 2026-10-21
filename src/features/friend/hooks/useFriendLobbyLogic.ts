@@ -1,4 +1,5 @@
 import { useGuestPrincipalStore, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
+import { roomOptionsKey } from "@/lib/realtime/roomOptionsKey";
 import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -944,7 +945,10 @@ export function useFriendLobbyLogic({
   const seenGame = (shown?: LobbySeenGame | null): LobbySeenGame | undefined => {
     if (shown) return shown;
     const settings = activeLobby?.settings;
-    return settings && { gameMode: settings.gameMode, duelGame: settings.duelGame ?? null, roomGame: settings.roomGame ?? null };
+    if (!settings) return undefined;
+    // Codenames' board (pictures or words) is part of what a Ready agrees to: one pressed on the old board is refused.
+    const options = settings.gameMode === "room_game" && settings.roomGame === "codenames" ? { roomOptions: roomOptionsKey(settings.roomOptions ?? null) } : {};
+    return { gameMode: settings.gameMode, duelGame: settings.duelGame ?? null, roomGame: settings.roomGame ?? null, ...options };
   };
 
   const handleSetReady = (ready: boolean, shown?: LobbySeenGame | null) => {

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Locale } from "@/lib/i18n/messages";
 
-export type GameId = "buscaminas" | "pistas" | "ultimo" | "aproximado" | "tenable" | "carrera" | "codenames" | "datofalso";
+export type GameId = "buscaminas" | "pistas" | "ultimo" | "aproximado" | "tenable" | "carrera" | "codenames" | "codenames-words" | "datofalso";
 /** `room` = 3–6 players (room runtime); a 2-player room plays as the 1v1 (`duel`). */
 export type PlayMode = "solo" | "duel" | "room";
 

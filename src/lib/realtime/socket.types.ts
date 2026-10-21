@@ -13,6 +13,8 @@ export interface LobbySeenGame {
   gameMode: LobbyGameMode;
   duelGame?: DuelGameId | null;
   roomGame?: RoomGameId | null;
+  /** The room options the screen showed (`roomOptionsKey`). */
+  roomOptions?: string | null;
 }
 
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';

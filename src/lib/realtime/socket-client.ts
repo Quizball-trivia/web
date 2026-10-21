@@ -1,4 +1,4 @@
-import { CLIENT_ROOM_GAMES } from "./clientGames";
+import { CLIENT_GAME_VERSIONS, CLIENT_ROOM_GAMES } from "./clientGames";
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
@@ -357,8 +357,8 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     // storms at token-expiry boundaries → players stuck frozen mid-match).
     auth: (cb) => {
       void ensureValidAccessToken()
-        .then((token) => cb({ token: token ?? undefined, games: CLIENT_ROOM_GAMES }))
-        .catch(() => cb({ token: undefined, games: CLIENT_ROOM_GAMES }));
+        .then((token) => cb({ token: token ?? undefined, games: [...CLIENT_ROOM_GAMES, ...CLIENT_GAME_VERSIONS] }))
+        .catch(() => cb({ token: undefined, games: [...CLIENT_ROOM_GAMES, ...CLIENT_GAME_VERSIONS] }));
     },
     transports: ['websocket'],
     // A token-source principal is bearer-only: never pair it with Quizball's cookies.

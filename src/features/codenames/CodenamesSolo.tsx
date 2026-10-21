@@ -31,13 +31,14 @@ export function ClueBanner({ word, count, top, bottom, tone = "you" }: { word: s
   );
 }
 
-const soloCards = (state: CodenamesSoloState, reveal: boolean): BoardCard[] =>
-  state.cards.map((c) => ({ id: c.id, kind: reveal ? c.kind : null, revealed: state.flips.find((f) => f.cardId === c.id)?.kind ?? null }));
+export const soloCards = (state: CodenamesSoloState, reveal: boolean): BoardCard[] =>
+  state.cards.map((c) => ({ id: c.id, word: c.word, kind: reveal ? c.kind : null, revealed: state.flips.find((f) => f.cardId === c.id)?.kind ?? null }));
 
 const TONE: Record<CardKind, string> = { mine: "text-white", theirs: "text-brand-red-light", neutral: "text-brand-yellow", owngoal: "text-brand-red-light" };
 
 export function CodenamesPlayView({ locale, number, state, pending, onFlip, onStop, onResult, onExit, selected: heldPick, onSelect, notice }: {
-  locale: string; number: number; state: CodenamesSoloState; pending: boolean;
+  /** The daily's board number; null on a practice board (no number). */
+  locale: string; number: number | null; state: CodenamesSoloState; pending: boolean;
   onFlip: (cardId: string) => void; onStop: () => void; onResult: () => void; onExit: () => void;
   /** Held by the caller (the daily keeps a confirmed pick the server refused); `onFlip` then owns clearing it. */
   selected?: string | null; onSelect?: (cardId: string | null) => void;
@@ -64,7 +65,7 @@ export function CodenamesPlayView({ locale, number, state, pending, onFlip, onSt
     <div className="flex flex-1 flex-col">
       <TopBar brand={c.brand} exitLabel={d.exit} onExit={onExit} wrap
         right={<span data-codenames-found className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-xs font-black uppercase text-white" style={poppins}>{c.found(soloFound(state), total)}</span>} />
-      <p className="mt-3 text-xs font-black uppercase tracking-wide text-white/55" style={poppins}>#{number}</p>
+      {number !== null && <p className="mt-3 text-xs font-black uppercase tracking-wide text-white/55" style={poppins}>#{number}</p>}
       {!done && (
         <ClueBanner word={clue.word} count={clue.count} top={c.clueOf(state.clue + 1, state.totalClues ?? state.clues.length)} bottom={c.guessesLeft(state.guessesLeft)} />
       )}
@@ -109,8 +110,9 @@ function KindIcon({ kind }: { kind: CardKind }) {
 }
 
 /** Each clue with the cards picked for it, in order, then the cards it meant with the football reason behind each. */
-function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: Record<CardKind, string> }) {
+export function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: Record<CardKind, string> }) {
   const kindOf = new Map(state.cards.map((c) => [c.id, c.kind]));
+  const wordOf = new Map(state.cards.map((c) => [c.id, c.word]));
   const found = new Set(state.flips.filter((f) => f.kind === "mine").map((f) => f.cardId));
   return (
     <ol data-codenames-recap className="space-y-2">
@@ -127,7 +129,12 @@ function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: Record<
             </div>
             {picks.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {picks.map((f) => (
+                {picks.map((f) => wordOf.get(f.cardId) ? (
+                  <span key={f.cardId} className={cn("flex h-8 items-center gap-1.5 rounded-lg bg-white pl-2 pr-1 text-xs font-black uppercase text-black ring-[3px]", RING[f.kind])} title={kinds[f.kind]} style={poppins}>
+                    {wordOf.get(f.cardId)}
+                    <span className={cn("flex size-5 items-center justify-center rounded-full", BADGE[f.kind])}><KindIcon kind={f.kind} /></span>
+                  </span>
+                ) : (
                   <span key={f.cardId} className={cn("relative size-14 overflow-hidden rounded-lg bg-white ring-[3px]", RING[f.kind])} title={kinds[f.kind]}>
                     <Image src={cardArt(f.cardId)} alt={kinds[f.kind]} fill sizes="56px" className="object-cover" />
                     <span className={cn("absolute bottom-0.5 right-0.5 flex size-5 items-center justify-center rounded-full", BADGE[f.kind])}><KindIcon kind={f.kind} /></span>
@@ -139,9 +146,13 @@ function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: Record<
               <ul className="mt-2 space-y-1">
                 {clue.cards.map((m) => (
                   <li key={m.id} className="flex items-center gap-2 text-xs text-white/75">
-                    <span className={cn("relative size-8 shrink-0 overflow-hidden rounded-md bg-white", found.has(m.id) ? "ring-2 ring-brand-green" : "opacity-70")}>
-                      <Image src={cardArt(m.id)} alt={kinds[kindOf.get(m.id) ?? "mine"]} fill sizes="32px" className="object-cover" />
-                    </span>
+                    {wordOf.get(m.id) ? (
+                      <span className={cn("shrink-0 rounded-md bg-white px-1.5 py-1 text-[11px] font-black uppercase leading-none text-black", found.has(m.id) ? "ring-2 ring-brand-green" : "opacity-70")} style={poppins}>{wordOf.get(m.id)}</span>
+                    ) : (
+                      <span className={cn("relative size-8 shrink-0 overflow-hidden rounded-md bg-white", found.has(m.id) ? "ring-2 ring-brand-green" : "opacity-70")}>
+                        <Image src={cardArt(m.id)} alt={kinds[kindOf.get(m.id) ?? "mine"]} fill sizes="32px" className="object-cover" />
+                      </span>
+                    )}
                     <span className="min-w-0">{m.why}</span>
                   </li>
                 ))}
