@@ -943,12 +943,14 @@ export function useFriendLobbyLogic({
 
   /** `shown`: the game on the caller's screen when it differs from the stored settings (the host's unconfirmed choice). */
   const seenGame = (shown?: LobbySeenGame | null): LobbySeenGame | undefined => {
-    if (shown) return shown;
     const settings = activeLobby?.settings;
-    if (!settings) return undefined;
+    const game = shown ?? (settings && { gameMode: settings.gameMode, duelGame: settings.duelGame ?? null, roomGame: settings.roomGame ?? null });
+    if (!game) return undefined;
     // Codenames' board (pictures or words) is part of what a Ready agrees to: one pressed on the old board is refused.
-    const options = settings.gameMode === "room_game" && settings.roomGame === "codenames" ? { roomOptions: roomOptionsKey(settings.roomOptions ?? null) } : {};
-    return { gameMode: settings.gameMode, duelGame: settings.duelGame ?? null, roomGame: settings.roomGame ?? null, ...options };
+    // The board shown is the room's stored one (its picker appears once the room is on Codenames); otherwise Pictures.
+    if (game.gameMode !== "room_game" || game.roomGame !== "codenames") return game;
+    const options = settings?.gameMode === "room_game" && settings.roomGame === "codenames" ? settings.roomOptions ?? null : null;
+    return { ...game, roomOptions: roomOptionsKey(options) };
   };
 
   const handleSetReady = (ready: boolean, shown?: LobbySeenGame | null) => {

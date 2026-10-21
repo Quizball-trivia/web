@@ -99,8 +99,9 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
       leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} />
   ) : null;
 
-  if (practicing) return <CodenamesWordsPractice locale={locale} onExit={() => setPracticing(false)} />;
-  if (board === "words" && daily.view === "intro") {
+  if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} onExit={() => setPracticing(false)} />;
+  // Words has its own screens: whatever the picture daily restores (a finished run, the archive) does not take over.
+  if (board === "words") {
     return (
       <Frame lang={locale}>
         <DailyIntro game={{ ...game, tag: c.words.practiceTag, lines: c.words.lines }} locale={locale} number={null} status="new" busy={false} notice={null}

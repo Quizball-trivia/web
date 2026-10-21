@@ -23,6 +23,8 @@ describe("word boards", () => {
 
   it("refuses a clue that is a board word, part of one, or contains one", () => {
     const board = ["STONES", "BAR", "CROSS", "PIQUÉ"];
+    expect(clueOnBoard("B A R", board)).toBe("BAR");
+    expect(clueOnBoard("Cross-bar", board)).not.toBeNull();
     expect(clueOnBoard("stones", board)).toBe("STONES");
     expect(clueOnBoard("Stone", board)).toBe("STONES");
     expect(clueOnBoard("Crossbar", board)).toBe("BAR");

@@ -56,6 +56,7 @@ export function CodenamesPlayView({ locale, number, state, pending, onFlip, onSt
   const last = state.flips.at(-1);
   useFlipSounds(state.flips.length, last?.kind ?? null, true);
   const total = mineTotal(state);
+  const wordBoard = state.cards.some((card) => card.word !== undefined);
   const tap = (id: string) => {
     if (selected !== id) return setSelected(id);
     if (!held) setSelected(null);
@@ -91,7 +92,7 @@ export function CodenamesPlayView({ locale, number, state, pending, onFlip, onSt
       {done && (
         <div data-codenames-end className="sticky bottom-0 mt-3 rounded-3xl bg-brand-blue px-5 pb-4 pt-3 text-white shadow-2xl shadow-black/40">
           <div className="flex items-end justify-between gap-3">
-            <p className="text-xl font-black leading-tight" style={poppins}>{state.endReason === "complete" ? c.endComplete : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
+            <p className="text-xl font-black leading-tight" style={poppins}>{state.endReason === "complete" ? (wordBoard ? c.words.endComplete : c.endComplete) : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
             <p className="shrink-0 text-4xl font-black tabular-nums" style={poppins}>{soloFound(state)}/{total}</p>
           </div>
           <GreenButton className="mt-3" onClick={onResult}>{c.seeResult}</GreenButton>

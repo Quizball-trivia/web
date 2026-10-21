@@ -34,10 +34,12 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
     const n = ++request.current;
     loadPractice(locale).then((dealt) => {
       if (n !== request.current) return;
+      // A board without clues cannot be played (the server should never send one).
+      if (dealt.cards.length !== 25 || dealt.clues.length === 0) { setFailed("unavailable"); return; }
       setBoard(dealt);
       setState(practiceState(dealt));
       onEvent?.("start");
-    }, (error: { status?: number }) => {
+    }).catch((error: { status?: number }) => {
       if (n === request.current) setFailed(error?.status === 503 ? "unavailable" : "error");
     });
   }, [locale, onEvent]);
@@ -92,7 +94,7 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
       <div data-codenames-practice-result className="rounded-3xl bg-brand-blue px-5 pb-5 pt-4 text-center text-white">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75">{c.brand.join(" ")} · {c.board.words}</p>
         <p className="mt-2 text-6xl font-black tabular-nums" style={poppins}>{found}/{total}</p>
-        <p className="mt-1 text-sm font-bold text-white/85">{state.endReason === "complete" ? c.endComplete : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
+        <p className="mt-1 text-sm font-bold text-white/85">{state.endReason === "complete" ? c.words.endComplete : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
       </div>
       <GreenButton className="mt-4" onClick={deal}>{c.words.newBoard}</GreenButton>
       <p className="mt-6 text-xs font-black uppercase tracking-wide text-white/55">{c.history}</p>

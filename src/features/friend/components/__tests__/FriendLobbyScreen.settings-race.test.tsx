@@ -73,12 +73,12 @@ const readyOn = (game: Game) => ({ event: "lobby:ready", payload: { ready: true,
  * silence, a Ready or a Start pressed on another game than the room's is refused (and the room's state sent again),
  * and a start plays the game the SERVER holds. `stateLost` models a state push that never arrives.
  */
-async function openRoom(game: Game, ready: { host: boolean; guest: boolean }) {
-  const server = { lobbyId: "lobby-1", game, isPublic: false, ready: { ...ready }, started: null as Game | null, stateLost: false };
+async function openRoom(game: Game, ready: { host: boolean; guest: boolean }, roomOptions: Record<string, unknown> | null = null) {
+  const server = { lobbyId: "lobby-1", game, isPublic: false, ready: { ...ready }, started: null as Game | null, stateLost: false, roomOptions };
   const sent: Sent[] = [];
   const state = (): LobbyState => ({
     lobbyId: server.lobbyId, mode: "friendly", status: "waiting", inviteCode: "ROOM01", displayName: "Room", isPublic: server.isPublic, hostUserId: "host",
-    settings: { ...server.game, friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null },
+    settings: { ...server.game, friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null, roomOptions: server.roomOptions },
     members: (["host", "guest"] as const).map((userId) => ({ userId, username: userId, avatarUrl: null, isReady: server.ready[userId], isHost: userId === "host", isGuest: false })),
   }) as LobbyState;
   const push = () => { if (!server.stateLost) useRealtimeMatchStore.getState().setLobby(state()); };
@@ -154,6 +154,18 @@ describe("lobby: Ready and Start wait until the server holds the game the screen
     useRealtimeMatchStore.getState().reset();
   });
   afterEach(() => { vi.useRealTimers(); });
+
+  it("a Ready on a Codenames room says which board it was pressed on (a Ready for Pictures cannot land on Words)", async () => {
+    const CODENAMES: Game = { gameMode: "room_game", duelGame: null, roomGame: "codenames" };
+    const room = await openRoom(CODENAMES, { host: false, guest: true }, { lang: "en", board: "words" });
+    room.click(/friend\.markReady/);
+    const ready = room.waiting().find(({ event }) => event === "lobby:ready");
+    expect(ready?.payload.seen).toEqual({ ...seen(CODENAMES), roomOptions: '{"board":"words","lang":"en"}' });
+    // Other games' Ready is unchanged.
+    const other = await openRoom(SHARED_PLAYER, { host: false, guest: true });
+    other.click(/friend\.markReady/);
+    expect(other.waiting().find(({ event }) => event === "lobby:ready")?.payload.seen).toEqual(seen(SHARED_PLAYER));
+  });
 
   it("change the game, press Ready at once, Start: the match is the game that was chosen", async () => {
     const room = await openRoom(SHARED_PLAYER, { host: false, guest: true });

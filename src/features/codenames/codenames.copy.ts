@@ -21,7 +21,7 @@ export interface CodenamesCopy {
   nameKinds: Record<"player" | "manager" | "club" | "nation" | "stadium" | "word", string>;
   clueUsed: string;
   /** Word boards. */
-  words: { placeholder: string; rule: string; onBoard: (word: string) => string; onBoardAny: string; scoutKeyNote: string; tag: string; lines: string[]; starts: string; otherCards: string; wordsIn: string; practiceTag: string; newBoard: string; unavailable: string };
+  words: { placeholder: string; rule: string; onBoard: (word: string) => string; onBoardAny: string; scoutKeyNote: string; tag: string; lines: string[]; starts: string; otherCards: string; wordsIn: string; practiceTag: string; newBoard: string; unavailable: string; endComplete: string };
   board: { label: string; pictures: string; words: string; picturesNote: string; wordsNote: string; hostPicks: string };
   number: string;
   youAreScout: string;
@@ -111,7 +111,7 @@ const en: CodenamesCopy = {
       "The Scout links your words with one clue and a number, like “Wedding · 3” for RICE, BEST and TIE.",
       "The bot gives 4 clues. For each you may flip up to its number + 1 cards: tap a card to pick it, tap it again to flip.",
       "A right card keeps the clue going. A rival or neutral card ends it. The Own Goal ends the game.",
-    ], starts: "starts · 9 cards", otherCards: "8 cards", wordsIn: "Words in English", practiceTag: "Practice · new board every time", newBoard: "New board", unavailable: "Word boards are not ready in this language yet. Try again later." },
+    ], starts: "starts · 9 cards", otherCards: "8 cards", wordsIn: "Words in English", practiceTag: "Practice · new board every time", newBoard: "New board", unavailable: "Word boards are not ready in this language yet. Try again later.", endComplete: "All 9 found!" },
   board: { label: "Board", pictures: "Pictures", words: "Words", picturesNote: "20 football pictures", wordsNote: "25 two-meaning words", hostPicks: "The host picks the board." },
   number: "Cards",
   youAreScout: "You're the Scout",
@@ -205,7 +205,7 @@ const es: CodenamesCopy = {
       "El Ojeador une tus palabras con una pista y un número, como “Ajedrez · 3” para TORRES, REINA y CASILLAS.",
       "El bot da 4 pistas. En cada una puedes dar vuelta hasta su número + 1 cartas: toca una carta para elegirla y tócala otra vez para darla vuelta.",
       "Si aciertas, sigues con la pista. Una carta rival o neutral la termina. El Autogol termina la partida.",
-    ], starts: "empieza · 9 cartas", otherCards: "8 cartas", wordsIn: "Palabras en español", practiceTag: "Práctica · tablero nuevo cada vez", newBoard: "Tablero nuevo", unavailable: "Los tableros de palabras aún no están listos en este idioma. Prueba más tarde." },
+    ], starts: "empieza · 9 cartas", otherCards: "8 cartas", wordsIn: "Palabras en español", practiceTag: "Práctica · tablero nuevo cada vez", newBoard: "Tablero nuevo", unavailable: "Los tableros de palabras aún no están listos en este idioma. Prueba más tarde.", endComplete: "¡Las 9!" },
   board: { label: "Tablero", pictures: "Imágenes", words: "Palabras", picturesNote: "20 dibujos futboleros", wordsNote: "25 palabras con doble sentido", hostPicks: "El anfitrión elige el tablero." },
   number: "Cartas",
   youAreScout: "Eres el Ojeador",
@@ -299,7 +299,7 @@ const tr: CodenamesCopy = {
       "Gözlemci kelimelerini tek bir ipucu ve bir sayıyla bağlar: KALE ve TAÇ için “Kral · 2” gibi.",
       "Bot 4 ipucu verir. Her biri için sayısının 1 fazlasına kadar kart çevirebilirsin: seçmek için karta dokun, çevirmek için tekrar dokun.",
       "Doğru kart ipucunu sürdürür. Rakip ya da nötr kart bitirir. Kendi Kalesine Gol oyunu bitirir.",
-    ], starts: "başlar · 9 kart", otherCards: "8 kart", wordsIn: "Türkçe kelimeler", practiceTag: "Antrenman · her seferinde yeni tahta", newBoard: "Yeni tahta", unavailable: "Bu dilde kelime tahtaları henüz hazır değil. Daha sonra tekrar dene." },
+    ], starts: "başlar · 9 kart", otherCards: "8 kart", wordsIn: "Türkçe kelimeler", practiceTag: "Antrenman · her seferinde yeni tahta", newBoard: "Yeni tahta", unavailable: "Bu dilde kelime tahtaları henüz hazır değil. Daha sonra tekrar dene.", endComplete: "9'u da bulundu!" },
   board: { label: "Tahta", pictures: "Resimler", words: "Kelimeler", picturesNote: "20 futbol resmi", wordsNote: "İki anlamlı 25 kelime", hostPicks: "Tahtayı oda sahibi seçer." },
   number: "Kart",
   youAreScout: "Gözlemci sensin",
@@ -393,7 +393,7 @@ const ru: CodenamesCopy = {
       "Скаут связывает твои слова одной подсказкой и числом: «Спортзал · 2» для ШТАНГА и СКАМЕЙКА.",
       "Бот даёт 4 подсказки. На каждую можно открыть до её числа + 1 карт: нажми на карту, чтобы выбрать, и ещё раз, чтобы открыть.",
       "Верная карточка продлевает подсказку. Чужая или нейтральная — заканчивает её. Автогол заканчивает игру.",
-    ], starts: "начинает · 9 карт", otherCards: "8 карт", wordsIn: "Слова на русском", practiceTag: "Тренировка · каждый раз новое поле", newBoard: "Новое поле", unavailable: "Поля со словами на этом языке ещё не готовы. Попробуй позже." },
+    ], starts: "начинает · 9 карт", otherCards: "8 карт", wordsIn: "Слова на русском", practiceTag: "Тренировка · каждый раз новое поле", newBoard: "Новое поле", unavailable: "Поля со словами на этом языке ещё не готовы. Попробуй позже.", endComplete: "Все 9!" },
   board: { label: "Поле", pictures: "Картинки", words: "Слова", picturesNote: "20 футбольных картинок", wordsNote: "25 слов с двойным смыслом", hostPicks: "Поле выбирает хозяин комнаты." },
   number: "Карт",
   youAreScout: "Ты — Скаут",
@@ -487,7 +487,7 @@ const ka: CodenamesCopy = {
       "სკაუტი შენს სიტყვებს ერთი მინიშნებითა და რიცხვით აკავშირებს: მაგალითად „სახლი · 2“ — კარი და კედელი.",
       "ბოტი იძლევა 4 მინიშნებას. თითოეულზე შეგიძლია გადააბრუნო მის რიცხვს + 1 ბარათამდე: შეეხე ბარათს ასარჩევად და კიდევ ერთხელ გადასაბრუნებლად.",
       "სწორი ბარათი მინიშნებას აგრძელებს. მეტოქის ან ნეიტრალური ამთავრებს. ავტოგოლი თამაშს ამთავრებს.",
-    ], starts: "იწყებს · 9 ბარათი", otherCards: "8 ბარათი", wordsIn: "სიტყვები ქართულად", practiceTag: "ვარჯიში · ყოველ ჯერზე ახალი დაფა", newBoard: "ახალი დაფა", unavailable: "ამ ენაზე სიტყვიანი დაფები ჯერ მზად არ არის. სცადე მოგვიანებით." },
+    ], starts: "იწყებს · 9 ბარათი", otherCards: "8 ბარათი", wordsIn: "სიტყვები ქართულად", practiceTag: "ვარჯიში · ყოველ ჯერზე ახალი დაფა", newBoard: "ახალი დაფა", unavailable: "ამ ენაზე სიტყვიანი დაფები ჯერ მზად არ არის. სცადე მოგვიანებით.", endComplete: "9-ივე ნაპოვნია!" },
   board: { label: "დაფა", pictures: "სურათები", words: "სიტყვები", picturesNote: "20 საფეხბურთო სურათი", wordsNote: "25 ორმნიშვნელოვანი სიტყვა", hostPicks: "დაფას ოთახის მასპინძელი ირჩევს." },
   number: "ბარათი",
   youAreScout: "შენ ხარ სკაუტი",

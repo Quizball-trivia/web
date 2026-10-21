@@ -172,10 +172,11 @@ export const foldClue = (text: string): string =>
 
 /**
  * Word boards: the original rule that a clue may not be a word still showing on the board, or contain one, or be
- * part of one (STONE for STONES, CROSSBAR for BAR). Each word of a two-word clue is checked on its own.
+ * part of one (STONE for STONES, CROSSBAR for BAR). Each word of the clue is checked, and the whole clue run together
+ * ("B A R" is BAR). Mirrors the backend's clueOnBoard, which is the one that decides.
  */
 export function clueOnBoard(clue: string, boardWords: string[]): string | null {
-  const parts = clue.split(/\s+/).map(foldClue).filter(Boolean);
+  const parts = [...clue.split(/[\s-]+/), clue].map(foldClue).filter(Boolean);
   for (const word of boardWords) {
     const w = foldClue(word);
     if (parts.some((p) => p === w || (p.length >= 3 && w.includes(p)) || (w.length >= 3 && p.includes(w)))) return word;
