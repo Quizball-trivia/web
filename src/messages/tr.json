@@ -1465,7 +1465,7 @@
     "roomFootballRaceDescription": "Her oyuncu bir turnuvadan bir milli takımla yarışır. Her turda, takımının önde olduğunu düşündüğün bir istatistiği gizlice seç: önde olan bir adım ilerler. Yanılırsan bir rakibi öne itersin. Çizgiye ilk ulaşan kazanır. Jeton ya da RP yok.",
     "roomTabCodenames": "Futbol Codenames (2–8)",
     "roomCodenames": "Futbol Codenames · 2–8 oyuncu",
-    "roomCodenamesDescription": "İki takım ve 20 futbol resimli kart. Scout'unuz bir futbol ipucu ve bir sayı verir; takımınız işaret ettiği kartları bulur. Kendi kalene golden kaçın. Scout yok mu? İpuçlarını bot verir. Jeton ya da RP yok.",
+    "roomCodenamesDescription": "İki takım ve 20 futbol resminden ya da iki anlamlı 25 kelimeden oluşan bir tahta. Scout'unuz bir ipucu ve bir sayı verir; takımınız işaret ettiği kartları bulur. Kendi kalene golden kaçın. Scout yok mu? İpuçlarını bot verir. Jeton ya da RP yok.",
     "roomTabDatoFalso": "Hangisi Yanlış? (2–6)",
     "roomDatoFalso": "Hangisi Yanlış? · 2 ila 6 oyuncu",
     "roomDatoFalsoDescription": "Herkes aynı kartı aynı anda görür: bir futbolcu, bir iddia ve beş seçenek, biri yanlış. Onu bul. Maç başına iki joker. Jeton veya RP yok.",

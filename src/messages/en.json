@@ -1465,7 +1465,7 @@
     "roomFootballRaceDescription": "Each player races a nation from one tournament. Every round, pick a stat you think your nation leads in secret: the leader moves one step. Pick wrong and you push a rival forward. First to the line wins. No coins or RP at stake.",
     "roomTabCodenames": "Football Codenames (2–8)",
     "roomCodenames": "Football Codenames · 2 to 8 players",
-    "roomCodenamesDescription": "Two teams and 20 football picture cards. Your Scout gives a football clue and a number; your team finds the cards it points to. Avoid the Own Goal. No Scout? The bot gives the clues. No coins or RP at stake.",
+    "roomCodenamesDescription": "Two teams and a board of 20 football pictures or 25 words with two meanings. Your Scout gives one clue and a number; your team finds the cards it points to. Avoid the Own Goal. No Scout? The bot gives the clues. No coins or RP at stake.",
     "roomTabDatoFalso": "Football Odd One Out (2–6)",
     "roomDatoFalso": "Football Odd One Out · 2 to 6 players",
     "roomDatoFalsoDescription": "Everyone gets the same card at once: a footballer, a claim and five options, one of them fake. Find it. Two jokers each per match. No coins or RP at stake.",
