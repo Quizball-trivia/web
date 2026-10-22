@@ -24,7 +24,7 @@ export function PartnerHome() {
   if (isPending) {
     return (
       <div role="status" aria-busy className="mt-4 flex flex-col gap-6">
-        <div className="aspect-[21/9] w-full animate-pulse rounded-2xl bg-white/[0.06] lg:aspect-auto lg:h-[340px]" />
+        <div className="aspect-[21/9] w-full animate-pulse rounded-2xl bg-white/[0.06] lg:aspect-auto lg:h-[349px]" />
         <div className="flex gap-2.5">
           <div className="aspect-[4/3] flex-1 animate-pulse rounded-xl bg-white/[0.06]" />
           <div className="aspect-[4/3] flex-1 animate-pulse rounded-xl bg-white/[0.06]" />
