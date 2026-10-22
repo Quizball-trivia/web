@@ -82,6 +82,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
+  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : 'en-GB';
   return (
     <section
       id="quiz-rating"
@@ -93,7 +94,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
       </h2>
       <p className="mt-1 text-sm font-semibold text-white/75">
         {aggregate.count > 0 && aggregate.average !== null
-          ? `${aggregate.average.toFixed(1)} ${copy.outOf} · ${aggregate.count.toLocaleString(locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : 'en-GB')} ${
+          ? `${aggregate.average.toLocaleString(numberLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${copy.outOf} · ${aggregate.count.toLocaleString(numberLocale)} ${
               locale === 'ru'
                 ? russianPlural(aggregate.count, 'оценка', 'оценки', 'оценок')
                 : aggregate.count === 1 ? copy.rating : copy.ratings

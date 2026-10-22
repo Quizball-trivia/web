@@ -2226,12 +2226,12 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "pt": "A dinastia do Brasil na Copa do Mundo"
     },
     "prompt": {
-      "en": "At the 1958 World Cup final in Sweden, Brazil crushed the hosts 5–2 — their first ever title. Who was the top scorer of that final, netting twice?",
+      "en": "At the 1958 World Cup final in Sweden, Brazil crushed the hosts 5–2 — their first ever title. Who scored Brazil's first two goals of that final?",
       "ka": "1958 წლის მსოფლიო ჩემპიონატის ფინალში შვედეთში, ბრაზილიამ მასპინძლები 5–2 გაანადგურა — ეს მათი პირველი ტიტული იყო. ვინ გახდა ამ ფინალის ბომბარდირი ორი გატანილი გოლით?",
       "es": "En la final de la Copa Mundial de 1958 en Suecia, Brasil aplastó a los anfitriones 5-2, su primer título. ¿Quién fue el máximo goleador de esa final, anotando dos veces?",
       "tr": "1958 İsveç'teki Dünya Kupası finalinde Brezilya ev sahibi ülkeyi 5-2 yenerek ilk şampiyonluğunu kazandı. O finalde iki gol atan oyunculardan biri kimdi?",
       "ru": "Кто оформил дубль за сборную Бразилии в финале чемпионата мира 1958 года против Швеции (5:2)?",
-      "pt": "Na final da Copa do Mundo de 1958, na Suécia, o Brasil venceu os anfitriões por 5–2 e conquistou seu primeiro título. Quem foi o artilheiro da final, com dois gols?"
+      "pt": "Na final da Copa do Mundo de 1958, na Suécia, o Brasil venceu os anfitriões por 5–2 e conquistou seu primeiro título. Quem marcou os dois primeiros gols do Brasil nessa final?"
     },
     "options": [
       {

@@ -8577,11 +8577,11 @@ const SESSIONS = {
             },
             {
               "id": "c81935a6-26fd-4175-84ee-a6271dd8063f",
-              "text": "Greece"
+              "text": "Grécia"
             },
             {
               "id": "087b074e-ec0d-4140-9cb3-f67ef72fe091",
-              "text": "Denmark"
+              "text": "Dinamarca"
             },
             {
               "id": "85249799-7726-4e18-9754-052dec852365",
@@ -8601,7 +8601,7 @@ const SESSIONS = {
             },
             {
               "id": "2225dfa8-2a85-4cd7-b249-0d9a923804db",
-              "text": "Sweden"
+              "text": "Suécia"
             }
           ],
           "correctOptionIds": [

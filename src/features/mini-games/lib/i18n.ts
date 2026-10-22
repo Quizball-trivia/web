@@ -835,7 +835,7 @@ const PT: Record<string, string> = {
   "Tap to open": "Toque para abrir",
   "Add to squad": "Adicionar ao time",
   "Squad complete!": "Time completo!",
-  "Reward: +2,000 🪙": "Recompensa: +2,000 🪙",
+  "Reward: +2,000 🪙": "Recompensa: +2.000 🪙",
   "Start a new squad": "Monte um novo time",
   "Bronze": "Bronze",
   "Silver": "Prata",
