@@ -124,7 +124,7 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "football-codenames",
-    title: { en: "Football Codenames", ka: "ფეხბურთის Codenames", es: "Codenames Futbolero", tr: "Futbol Codenames", ru: "Кодовые имена: футбол", pt: "Codenames do Futebol" },
+    title: { en: "Football Codenames", ka: "ფეხბურთის Codenames", es: "Codenames Futbolero", tr: "Futbol Codenames", ru: "Кодовые имена: футбол", pt: "Codenames de Futebol" },
     description: {
       en: "20 picture cards, one football clue from the Scout. Find your 8 and dodge the Own Goal. A new board every day.",
       ka: "20 სურათიანი ბარათი და სკაუტის ერთი საფეხბურთო მინიშნება. იპოვე შენი 8 და აარიდე თავი ავტოგოლს. ყოველდღე ახალი დაფა.",

@@ -458,7 +458,7 @@ const ru: CodenamesCopy = {
 };
 
 const pt: CodenamesCopy = {
-  brand: ["Futebol", "Codenames"],
+  brand: ["Codenames", "de futebol"],
   tag: "Dicas com imagens",
   lines: [
     "20 cartas com imagens. 8 são suas, 7 do adversário, 4 neutras e uma é o Gol contra.",
@@ -525,7 +525,7 @@ const pt: CodenamesCopy = {
   endClues: "As dicas acabaram",
   why: "Motivo",
   seeResult: "Ver resultado",
-  shareText: (number, found, total, grid) => `Futebol Codenames #${number} · ${found}/${total}\n${grid}`,
+  shareText: (number, found, total, grid) => `Codenames de futebol #${number} · ${found}/${total}\n${grid}`,
   botScout: "Olheiro bot",
   botScoutNote: "Um time sem Olheiro terá o Olheiro bot. Se estiver jogando sozinho, você adivinha e o bot dá as dicas.",
   passed: "O Olheiro passou a vez",
