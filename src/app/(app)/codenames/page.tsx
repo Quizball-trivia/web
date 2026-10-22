@@ -31,7 +31,7 @@ function Route() {
   }, []);
   // Read once: the game owns the day from here on (the address only follows it).
   const [initialDay] = useState(day);
-  return <CodenamesDaily locale={locale} initialDay={initialDay} onDay={onDay} onEvent={onEvent} onExit={() => router.push("/play")} />;
+  return <CodenamesDaily surface="app" locale={locale} initialDay={initialDay} onDay={onDay} onEvent={onEvent} onExit={() => router.push("/play")} />;
 }
 
 /** Football Codenames' daily board in the app shell. */

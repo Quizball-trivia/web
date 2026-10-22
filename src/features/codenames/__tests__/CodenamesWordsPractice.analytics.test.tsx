@@ -2,8 +2,9 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
 const events: string[] = [];
+const surfaces: string[] = [];
 vi.mock("@/lib/analytics/public-games.analytics", () => ({
-  trackGameStart: (p: { sessionId: string }) => events.push(`start:${p.sessionId}`),
+  trackGameStart: (p: { sessionId: string; surface?: string }) => { surfaces.push(p.surface ?? ""); events.push(`start:${p.sessionId}`); },
   trackGameReplay: (p: { previousSessionId: string }) => events.push(`replay:${p.previousSessionId}`),
   trackGameComplete: (p: { sessionId: string }) => events.push(`complete:${p.sessionId}`),
 }));
@@ -24,7 +25,7 @@ import { CodenamesWordsPractice } from "../CodenamesWordsPractice";
 const flush = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
 
 describe("Words practice analytics", () => {
-  beforeEach(() => { events.length = 0; n = 0; load.mockReset(); });
+  beforeEach(() => { events.length = 0; surfaces.length = 0; n = 0; load.mockReset(); });
 
   it("one session per board: start, then replay + start for a new board", async () => {
     load.mockResolvedValue(board());
@@ -60,5 +61,15 @@ describe("Words practice analytics", () => {
     resolve(board());
     await flush();
     expect(events).toEqual([]);
+  });
+
+  it("counts where it runs: a public game page by default, the app when the app route says so", async () => {
+    load.mockResolvedValue(board());
+    const { unmount } = render(<CodenamesWordsPractice locale="en" onExit={() => {}} />);
+    await flush();
+    unmount();
+    render(<CodenamesWordsPractice locale="en" surface="app" onExit={() => {}} />);
+    await flush();
+    expect(surfaces).toEqual(["public_game", "app"]);
   });
 });
