@@ -30,6 +30,12 @@ export function CodenamesRoomOptions({ options, canEdit, onChange }: {
   const serverBoard = current ? "words" : "pictures";
   // The host's pick shows at once; it gives way as soon as the room's stored board changes (the echo, or a refusal).
   const [picked, setPicked] = useState<{ over: "words" | "pictures"; board: "words" | "pictures" } | null>(null);
+  // Any change of the stored board ends the pick (so a later return to the old board cannot revive it).
+  const [seenServer, setSeenServer] = useState(serverBoard);
+  if (seenServer !== serverBoard) {
+    setSeenServer(serverBoard);
+    setPicked(null);
+  }
   const board = picked && picked.over === serverBoard ? picked.board : serverBoard;
   const preset = useRef(false);
   useEffect(() => {
