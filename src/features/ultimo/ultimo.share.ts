@@ -1,10 +1,10 @@
 import { COMPLETE_BONUS, CATEGORIES_PER_DAY, latestDay, puzzleNumber, releaseDay, type Tier } from "./ultimo.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt";
 const LETTER: Record<Tier, string> = { complete: "c", good: "g", some: "s", none: "n" };
 const TIER: Record<string, Tier> = { c: "complete", g: "good", s: "some", n: "none" };
 /** `ue-` keeps these apart from Buscaminas and Pistas codes on the shared /r/ route. */
-const CODE = /^ue-(\d{1,3})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru)$/;
+const CODE = /^ue-(\d{1,3})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru|pt)$/;
 
 export interface UltimoShareResult {
   number: number;
@@ -14,7 +14,7 @@ export interface UltimoShareResult {
 }
 
 export function encodeUltimoShare(number: number, score: number, tiers: readonly Tier[], locale: string): string {
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" ? locale : "en";
   return `ue-${number}-${score}-${tiers.map((t) => LETTER[t]).join("")}-${shareLocale}`;
 }
 
@@ -43,4 +43,5 @@ export const ULTIMO_SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: st
   ka: { brandA: "ბოლომდე", brandB: "დარჩენილი", points: "ქულა", challenge: "უფრო დიდხანს გაძლებ?", title: (n, s) => `ბოლომდე დარჩენილი #${n}: ${s} ქულა`, description: "დღეში 5 საფეხბურთო კატეგორია. დაასახელე რაც შეიძლება მეტი პასუხი, სანამ დრო ამოიწურება.", open: "ითამაშე" },
   tr: { brandA: "Futbolcu", brandB: "Sayma", points: "puan", challenge: "Benden uzun dayanabilir misin?", title: (n, s) => `Futbolcu Sayma Oyunu #${n}: ${s} puan`, description: "Günde 5 futbol kategorisi. Süre bitmeden olabildiğince çok cevap say.", open: "Oyna" },
   ru: { brandA: "Последний ответ", brandB: "на ногах", points: "очк.", challenge: "Сможешь продержаться дольше?", title: (n, s) => `Последний ответ на ногах #${n}: ${s} очк.`, description: "Каждый день — 5 футбольных категорий. Назови как можно больше ответов, пока не вышло время.", open: "Играть в «Последний ответ на ногах»" },
+  pt: { brandA: "Última resposta", brandB: "em pé", points: "pts", challenge: "Você consegue aguentar mais?", title: (n, s) => `Última resposta em pé #${n}: ${s} pts`, description: "5 categorias de futebol por dia. Diga o máximo de respostas que puder antes que o tempo acabe.", open: "Jogue Última resposta em pé" },
 };

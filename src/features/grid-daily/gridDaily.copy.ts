@@ -212,7 +212,49 @@ const ru: Copy = {
   signInToday: "Войди, чтобы сыграть в сегодняшнюю сетку. Вчерашние сетки открываются для гостей после окончания дня.",
 };
 
-export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru };
+const pt: Copy = {
+  title: "Grade diária",
+  subtitle: "Uma grade por dia. Nove tentativas para preencher nove casas.",
+  guesses: "Tentativas",
+  time: "Tempo",
+  filled: "Preenchidas",
+  tapCell: "Toque em uma casa e diga o nome de um jogador que atenda às duas dicas.",
+  finish: "Encerrar aqui",
+  kickOff: "Começar",
+  kickOffFailed: "Não foi possível iniciar a grade. Tente de novo.",
+  movedElsewhere: "A grade mudou em outra aba, então essa tentativa não foi contabilizada. Tente de novo.",
+  movedElsewhereDone: "A grade foi concluída em outra aba, então essa tentativa não foi contabilizada.",
+  kickOffNote: "As casas ficam ocultas até você começar. O cronômetro começa nesse momento.",
+  finishConfirm: "Encerrar com {n} tentativas restantes?",
+  yes: "Sim, encerrar",
+  no: "Continuar jogando",
+  ambiguous: "Digite o nome completo para identificar melhor. Nenhuma tentativa foi usada.",
+  wrong: "Não corresponde. Você gastou uma tentativa.",
+  alreadyUsed: "Você já usou esse jogador. Tentativa usada.",
+  correct: "Casa preenchida!",
+  resultTitle: "{score} de 9",
+  resultPerfect: "Grade perfeita",
+  resultTime: "em {time}",
+  rank: "Sua posição hoje: {rank}",
+  practice: "Partida de prática: não entra no ranking.",
+  share: "Compartilhar",
+  copied: "Copiado",
+  shareText: "Grade diária do Quizball #{n}\n{score}/9 · {time}\n{grid}\n{url}",
+  leaderboard: "Ranking do dia",
+  players: "Jogadores: {n}",
+  empty: "Ninguém terminou ainda. Você pode ser o primeiro.",
+  leaderboardFailed: "Não foi possível carregar o ranking.",
+  guestNote: "Você está jogando a grade de ontem. Entre na sua conta para jogar a de hoje e aparecer no ranking.",
+  signIn: "Entrar",
+  loading: "Carregando a grade…",
+  unavailable: "A grade diária não está disponível no momento.",
+  retry: "Tente de novo",
+  back: "Voltar",
+  comeBack: "Uma nova grade chega todos os dias.",
+  signInToday: "Entre na sua conta para jogar a grade de hoje. As grades anteriores ficam disponíveis para visitantes após o fim do dia.",
+};
+
+export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt };
 export type GridDailyCopy = Copy;
 
 export const fillDaily = (template: string, values: Record<string, string | number>): string =>

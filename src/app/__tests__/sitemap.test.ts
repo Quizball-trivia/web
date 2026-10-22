@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const listCampaignQuizPagesMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
+vi.mock('@/features/campaign-quiz/campaignQuiz.api', async (importOriginal) => ({
+  CampaignQuizApiError: (await importOriginal<typeof import('@/features/campaign-quiz/campaignQuiz.api')>()).CampaignQuizApiError,
   listCampaignQuizPages: listCampaignQuizPagesMock,
 }));
 
 import sitemap from '../sitemap';
+import { CampaignQuizApiError } from '@/features/campaign-quiz/campaignQuiz.api';
 import { DOWNLOAD_UPDATED_AT } from '@/lib/seo/app-download';
 
 describe('sitemap lastModified signals', () => {
@@ -75,5 +77,39 @@ describe('sitemap lastModified signals', () => {
     expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/ugaday-klub-po-embleme')).toBe(true);
     expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/viktorina-liverpul')).toBe(false);
     expect(entries.some((entry) => entry.url.endsWith('/en/football-quiz/liverpool'))).toBe(true);
+  });
+
+  it('lists the pt hub and a pt quiz page only when the pt catalog has its edition', async () => {
+    const pages = [
+      { slug: 'club-badges', locale_mode: 'en_only', updated_at: '2026-08-12T10:00:00.000Z' },
+      { slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' },
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === 'pt' ? pages.slice(0, 1) : pages));
+
+    const entries = await sitemap();
+
+    expect(entries.find((entry) => entry.url === 'https://quizball.io/pt/quiz-de-futebol')?.lastModified)
+      .toEqual(new Date('2026-08-12T10:00:00.000Z'));
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/pt/quiz-de-futebol/adivinhe-o-time-pelo-escudo')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/pt/quiz-de-futebol/quiz-do-liverpool')).toBe(false);
+  });
+
+  it('a backend without Portuguese pages (400 on locale=pt) gives no pt entries instead of failing', async () => {
+    const pages = [{ slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' }];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'pt') throw new CampaignQuizApiError(400);
+      return pages;
+    });
+
+    const entries = await sitemap();
+
+    expect(entries.some((entry) => entry.url.includes('/pt/quiz-de-futebol'))).toBe(false);
+    expect(entries.some((entry) => entry.url.endsWith('/en/football-quiz/liverpool'))).toBe(true);
+
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'pt') throw new CampaignQuizApiError(503);
+      return pages;
+    });
+    await expect(sitemap()).rejects.toBeInstanceOf(CampaignQuizApiError);
   });
 });

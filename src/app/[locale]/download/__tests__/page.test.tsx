@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { LOCALES } from '@/lib/i18n/locale';
+import { HTML_LANG, LOCALES } from '@/lib/i18n/locale';
 import { DOWNLOAD_COPY, DOWNLOAD_UPDATED_AT, GOOGLE_PLAY_URL, buildDownloadStructuredData } from '@/lib/seo/app-download';
 import { isLightweightSeoRoute } from '@/lib/seo/lightweight-routes';
 
@@ -35,7 +35,7 @@ describe('official Android download page', () => {
     expect(doc.querySelector(`a[href="/${locale}"]`)).not.toBeNull();
     expect(doc.querySelectorAll('h1')).toHaveLength(1);
     for (const alternate of LOCALES) {
-      expect(doc.querySelector(`a[href="/${alternate}/download"][hreflang="${alternate}"]`)).not.toBeNull();
+      expect(doc.querySelector(`a[href="/${alternate}/download"][hreflang="${HTML_LANG[alternate]}"]`)).not.toBeNull();
     }
     const script = doc.querySelector('script[type="application/ld+json"]');
     expect(script?.getAttribute('nonce')).toBe('test-download-nonce');
@@ -65,7 +65,7 @@ describe('official Android download page', () => {
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/download', ka: 'https://quizball.io/ka/download',
       es: 'https://quizball.io/es/download', tr: 'https://quizball.io/tr/download',
-      ru: 'https://quizball.io/ru/download',
+      ru: 'https://quizball.io/ru/download', 'pt-BR': 'https://quizball.io/pt/download',
       'x-default': 'https://quizball.io/en/download',
     });
     // Inherit production/preview robots from the root; do not accidentally index previews.
@@ -100,6 +100,9 @@ describe('official Android download page', () => {
     expect(isLightweightSeoRoute('/es/quiz-de-futbol')).toBe(true);
     expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina')).toBe(true);
     expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina/viktorina-arsenal')).toBe(true);
+    expect(isLightweightSeoRoute('/pt/quiz-de-futebol')).toBe(true);
+    expect(isLightweightSeoRoute('/pt/quiz-de-futebol/adivinhe-o-jogador')).toBe(true);
+    expect(isLightweightSeoRoute('/pt/quiz-de-futbol')).toBe(false);
     for (const path of ['/en', '/play', '/auth/welcome', '/xx/download', '/en/download/other', '/download']) {
       expect(isLightweightSeoRoute(path)).toBe(false);
     }

@@ -23,7 +23,7 @@ export function buildFriendInviteUrl(code: string, origin?: string): string | nu
  * game entry points and the public locale pages (a visitor who signed in from a
  * public game page lands back on it). Same-origin, path-only, no query/hash.
  */
-const RETURNABLE_PATH = /^\/(play|leaderboard|events|auction|tic-tac-toe|friend|weekend-league|free-kicks|road-to-goal|trivia-mines|buscaminas|pistas|ultimo|minuto|ortak-futbolcu|son-harfle|daily-grid|football-tenable|horserace|codenames|dato-falso-futbolero|squad-spin|guess-the-goal|missing-xi|daily\/challenges\/[a-z0-9-]+|(en|ka|es|tr|ru)(\/[a-z0-9-]+(\/[a-z0-9-]+)?)?)\/?$/;
+const RETURNABLE_PATH = /^\/(play|leaderboard|events|auction|tic-tac-toe|friend|weekend-league|free-kicks|road-to-goal|trivia-mines|buscaminas|pistas|ultimo|minuto|ortak-futbolcu|son-harfle|daily-grid|football-tenable|horserace|codenames|dato-falso-futbolero|squad-spin|guess-the-goal|missing-xi|daily\/challenges\/[a-z0-9-]+|(en|ka|es|tr|ru|pt)(\/[a-z0-9-]+(\/[a-z0-9-]+)?)?)\/?$/;
 
 export function normalizePostAuthRedirect(pathname: string | null | undefined): string | null {
   if (!pathname) return null;

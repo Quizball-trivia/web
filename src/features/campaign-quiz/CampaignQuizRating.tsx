@@ -15,7 +15,18 @@ interface CampaignQuizRatingProps {
 }
 
 export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: CampaignQuizRatingProps) {
-  const copy = locale === 'ru'
+  const copy = locale === 'pt'
+    ? {
+        saved: 'Obrigado! Sua avaliação foi salva.',
+        failed: 'Não foi possível salvar sua avaliação. Tente novamente.',
+        heading: 'Que nota você dá para este quiz?',
+        first: 'Seja o primeiro a avaliar.',
+        rate: 'Avaliar',
+        outOf: 'de 5',
+        rating: 'avaliação',
+        ratings: 'avaliações',
+      }
+    : locale === 'ru'
     ? {
         saved: 'Спасибо — твоя оценка сохранена.',
         failed: 'Не удалось сохранить оценку. Попробуй ещё раз.',
@@ -71,6 +82,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
+  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : 'en-GB';
   return (
     <section
       id="quiz-rating"
@@ -82,7 +94,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
       </h2>
       <p className="mt-1 text-sm font-semibold text-white/75">
         {aggregate.count > 0 && aggregate.average !== null
-          ? `${aggregate.average.toFixed(1)} ${copy.outOf} · ${aggregate.count.toLocaleString(locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : 'en-GB')} ${
+          ? `${aggregate.average.toLocaleString(numberLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${copy.outOf} · ${aggregate.count.toLocaleString(numberLocale)} ${
               locale === 'ru'
                 ? russianPlural(aggregate.count, 'оценка', 'оценки', 'оценок')
                 : aggregate.count === 1 ? copy.rating : copy.ratings

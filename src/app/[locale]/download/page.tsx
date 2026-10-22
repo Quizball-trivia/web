@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, ChevronDown, Smartphone } from 'lucide-react';
-import { LOCALES, isLocale } from '@/lib/i18n/locale';
+import { HTML_LANG, LOCALES, isLocale } from '@/lib/i18n/locale';
 import { LOCALES as LANGUAGE_OPTIONS } from '@/lib/i18n/messages';
 import { buildLocalizedMetadata } from '@/lib/i18n/metadata';
 import { DOWNLOAD_COPY, GOOGLE_PLAY_URL, buildDownloadStructuredData, downloadPath } from '@/lib/seo/app-download';
@@ -42,7 +42,7 @@ export default async function DownloadPage({ params }: { params: Params }) {
           {LANGUAGE_OPTIONS.map((option) => (
             // A full navigation refreshes the server-derived <html lang>, which
             // Next's persistent root layout does not update on a client transition.
-            <a key={option.code} href={downloadPath(option.code)} hrefLang={option.code} lang={option.code} aria-current={option.code === locale ? 'page' : undefined}
+            <a key={option.code} href={downloadPath(option.code)} hrefLang={HTML_LANG[option.code]} lang={HTML_LANG[option.code]} aria-current={option.code === locale ? 'page' : undefined}
               className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-yellow ${option.code === locale ? 'bg-brand-yellow text-black' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
               {option.nativeName}
             </a>

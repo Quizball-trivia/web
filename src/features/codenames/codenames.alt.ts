@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type AltMap = Record<string, string>;
 const loaded = new Map<string, AltMap>();
 const pending = new Map<string, Promise<AltMap | null>>();
-const LOCALES = ["en", "es", "tr", "ru", "ka"];
+const LOCALES = ["en", "es", "pt", "tr", "ru", "ka"];
 
 /** One load per language at a time; a failed one is not kept, so the next board asks again. */
 function load(lang: string): Promise<AltMap | null> {

@@ -1,6 +1,6 @@
 /** Copy of the word games' screens (played for both, name chain). The lobby and SEO pages keep their own strings. */
-export type WordLocale = "tr" | "en" | "es" | "ka" | "ru";
-export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" ? locale : "en");
+export type WordLocale = "tr" | "en" | "es" | "ka" | "ru" | "pt";
+export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" || locale === "pt" ? locale : "en");
 
 /** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
 export const russianPlural = (n: number, one: string, few: string, many: string) =>
@@ -19,6 +19,12 @@ const shared = {
     youWon: "Ты победил!", tieFirst: "Разделили первое место!", youPlace: (n: number) => `Ты занял ${n}-е место`, left: "Вышел", away: "Нет связи", backToRoom: "Вернуться в комнату",
     rivalLeft: "Соперник вышел.", offline: "Нет связи: переподключаемся…", leave: "Покинуть матч", leaveConfirm: "Покинуть матч? Вернуться уже не получится.", leaveYes: "Выйти", leaveNo: "Продолжить игру",
     iWasRight: "Я написал правильно", reported: "Спасибо, мы проверим.", startsIn: "Начинаем",
+  },
+  pt: {
+    exit: "Sair", you: "Você", rival: "Adversário", placeholder: "Digite o nome de um jogador", say: "Enviar", won: "Você venceu a partida!", lost: "Você perdeu a partida", draw: "Empate",
+    youWon: "Você venceu!", tieFirst: "Empate no primeiro lugar!", youPlace: (n: number) => `Você ficou em ${n}º lugar`, left: "Saiu", away: "Desconectado", backToRoom: "Voltar à sala",
+    rivalLeft: "Seu adversário saiu.", offline: "Sem conexão: reconectando…", leave: "Sair da partida", leaveConfirm: "Sair da partida? Você não poderá voltar.", leaveYes: "Sair", leaveNo: "Continuar jogando",
+    iWasRight: "Eu escrevi certo", reported: "Obrigado, vamos verificar.", startsIn: "Começando",
   },
   en: {
     exit: "Exit", you: "You", rival: "Rival", placeholder: "Type a footballer", say: "Send", won: "You won the match!", lost: "You lost the match", draw: "Draw",
@@ -64,6 +70,18 @@ const sharedPlayer = {
     answers: (n: number) => `Правильные ответы (${n})`, more: (n: number) => `Ещё: ${n}`, next: "Следующая пара скоро…",
     answeredCount: (n: number, of: number) => `${n}/${of} игроков нашли ответ`, firstWas: (name: string) => `Первым нашёл: ${name}`, youFirst: "Ты ответил первым!", noAnswer: "без ответа",
     foundStat: "Найдено", foundDetail: (n: number, of: number) => `${n} из ${of} пар`, summary: "Пары",
+  },
+  pt: {
+    brand: ["JOGADOR EM", "COMUM"] as const,
+    rules: ["Dois clubes são revelados ao mesmo tempo.", "Digite o nome de um jogador que atuou pelos dois clubes. Empréstimos contam.", "Uma resposta errada bloqueia você por 1 segundo."],
+    duelRule: "A primeira resposta certa vale o ponto. Quem chegar a 3 pontos primeiro vence.", partyRule: "8 rodadas. A primeira resposta certa vale 3 pontos, a segunda vale 2 e as outras valem 1.",
+    prompt: "Digite o nome de um jogador que atuou pelos dois clubes", round: (n: number, of: number) => `Rodada ${n} / ${of}`, roundOpen: (n: number) => `Rodada ${n}`,
+    wrong: (text: string) => `“${text}” não jogou pelos dois clubes`, locked: (s: number) => `Errado! Aguarde ${s} s`, got: (name: string) => `Resposta certa: ${name}!`,
+    waitRival: "Sua resposta foi registrada…", lockedIn: "Sua resposta foi registrada. Aguardando os outros…", sending: "Enviando…",
+    pointYou: "Ponto para você!", pointRival: "Ponto para o adversário", pointBoth: "Ponto dividido", nobody: "Ninguém acertou",
+    answers: (n: number) => `Respostas corretas (${n})`, more: (n: number) => `+${n} a mais`, next: "Próximo par chegando…",
+    answeredCount: (n: number, of: number) => `${n}/${of} jogadores acertaram`, firstWas: (name: string) => `Primeiro a acertar: ${name}`, youFirst: "Você acertou primeiro!", noAnswer: "sem resposta",
+    foundStat: "Encontrados", foundDetail: (n: number, of: number) => `${n} de ${of} pares`, summary: "Pares",
   },
   en: {
     brand: ["PLAYED FOR", "BOTH"] as const,
@@ -124,6 +142,16 @@ const nameChain = {
     out: "Выбыл", youOut: "Ты выбыл из этого раунда. Жди следующего.", knocked: (name: string) => `${name} выбыл`, roundTo: (name: string) => `Раунд забирает ${name}`, lastStanding: "Последний игрок в игре",
     answersStat: "Ответы", answersDetail: (n: number) => `${n} правильных ответов`, chainTitle: "Цепочка",
   },
+  pt: {
+    brand: ["JOGO DA", "ÚLTIMA LETRA"] as const,
+    yourTurn: (letter: string) => `Sua vez: diga o nome de um jogador que comece com ${letter}`, seatTurn: (name: string, letter: string) => `${name} está digitando: letra ${letter}`,
+    nextLetter: "Próxima letra", round: (n: number) => `Rodada ${n}`, supplied: "Nome escolhido pelo jogo", fresh: "Não há mais nomes com essa letra; o jogo escolheu outro.",
+    unknown: (text: string) => `“${text}” não está na lista, tente de novo`, letter: (name: string, starts: string, need: string) => `${name} começa com ${starts}, você precisa de ${need}`, repeat: (name: string) => `${name} já foi usado`,
+    roundWon: "A rodada é sua!", roundLost: "Você perdeu a rodada", time: "O tempo acabou", passed: "Desistiu", leftTurn: "Saiu da partida", giveUp: "Desistir",
+    could: (letter: string) => `Nomes que começam com ${letter}`, nextRound: "Próxima rodada começando…", waiting: "Seu adversário está digitando…", sending: "Enviando…",
+    out: "Eliminado", youOut: "Você foi eliminado desta rodada. Aguarde a próxima.", knocked: (name: string) => `${name} foi eliminado`, roundTo: (name: string) => `${name} venceu a rodada`, lastStanding: "Último jogador restante",
+    answersStat: "Respostas", answersDetail: (n: number) => `${n} ${n === 1 ? "resposta correta" : "respostas corretas"}`, chainTitle: "Sequência",
+  },
   en: {
     brand: ["NAME", "CHAIN"] as const,
     yourTurn: (letter: string) => `Your turn: a footballer starting with ${letter}`, seatTurn: (name: string, letter: string) => `${name} is typing: letter ${letter}`,
@@ -175,6 +203,15 @@ const daily = {
     share: "Поделиться", copy: "Скопировать", copied: "Скопировано", friends: "Играть с друзьями (2–6)", friendsSignIn: "Войди, чтобы играть с друзьями", points: "очк.",
     board: { title: "Рейтинг за сегодня", players: (n: number) => `${n} ${russianPlural(n, "игрок", "игрока", "игроков")}`, empty: "Сегодня ещё никто не закончил. Стань первым.", join: "Зарегистрируйся, чтобы попасть в рейтинг.", joinButton: "Зарегистрироваться" },
   },
+  pt: {
+    loading: "Carregando…", loadError: "Não foi possível carregar o jogo.", retry: "Tentar novamente", exit: "Sair", soon: "O primeiro dia será aberto em breve.", back: "Voltar",
+    play: "Jogar", resume: "Continuar", seeResult: "Ver resultado", archive: "Dias anteriores", archiveTitle: "Dias anteriores", today: "Hoje", next: "Próximo",
+    guestPast: "Você está jogando um dia anterior como visitante. Ele não conta para o ranking.", guestToday: "É preciso ter uma conta para jogar hoje. Como visitante, você pode jogar dias anteriores.",
+    playToday: "Cadastre-se para jogar hoje", practice: "Este dia não conta para o ranking (treino).", rank: (n: number) => `Hoje você está em ${n}º lugar`,
+    notices: { dayOver: "O dia terminou. Um novo já está disponível.", guestToday: "É preciso ter uma conta para jogar hoje.", maintenance: "Manutenção rápida. Tente de novo em instantes.", restarted: "O conteúdo deste dia foi atualizado; você começará de novo.", sessionChanged: "Sua sessão mudou. Comece de novo.", actionError: "Algo deu errado. Tente de novo.", connection: "Sem conexão: reconectando…" },
+    share: "Compartilhar", copy: "Copiar", copied: "Copiado", friends: "Jogar com amigos (2–6)", friendsSignIn: "Entre na sua conta para jogar com amigos", points: "pts",
+    board: { title: "Ranking de hoje", players: (n: number) => `${n} ${n === 1 ? "jogador" : "jogadores"}`, empty: "Ninguém terminou hoje ainda. Seja o primeiro.", join: "Cadastre-se para entrar no ranking.", joinButton: "Cadastrar-se" },
+  },
   en: {
     loading: "Loading…", loadError: "The game could not be loaded.", retry: "Try again", exit: "Exit", soon: "The first day opens soon.", back: "Back",
     play: "Play", resume: "Continue", seeResult: "See the result", archive: "Past days", archiveTitle: "Past days", today: "Today", next: "Next",
@@ -221,6 +258,14 @@ const sharedPlayerDaily = {
     endTitle: "На сегодня всё", result: (n: number, of: number) => `Ты нашёл ${n} из ${of} пар`, summary: "Пары", notFound: "не найдено", late: "Время уже вышло, ответ не засчитан.",
     shareText: (number: number, score: number, of: number) => `Играл за обе команды #${number}: ${score}/${of}`, speedLabel: "Скорость",
   },
+  pt: {
+    title: "Jogador em comum", tag: "10 pares por dia",
+    lines: (seconds: number) => ["Dez pares de clubes todos os dias.", `Em cada par, digite um jogador que atuou pelos dois clubes: você tem ${seconds} segundos.`, "Cada par encontrado vale 1 ponto. Quem for mais rápido sobe no ranking."],
+    pair: (n: number, of: number) => `Par ${n}/${of}`, found: "Correto!", missed: "O tempo acabou", yourAnswer: (name: string) => `Sua resposta: ${name}`,
+    answersTomorrow: (n: number) => `Há ${n} respostas corretas. Os nomes serão revelados quando o dia terminar.`, nextPair: "Próximo par", finish: "Ver resultado",
+    endTitle: "Fim por hoje", result: (n: number, of: number) => `Você encontrou ${n} de ${of} pares`, summary: "Pares", notFound: "não encontrado", late: "O tempo acabou e a resposta não valeu.",
+    shareText: (number: number, score: number, of: number) => `Jogador em comum #${number}: ${score}/${of}`, speedLabel: "Velocidade",
+  },
   en: {
     title: "Played for Both", tag: "Ten pairs a day",
     lines: (seconds: number) => ["Ten club pairs every day.", `For each pair, type a footballer who played for both: you have ${seconds} seconds.`, "Every pair you find is 1 point. Faster players rank higher."],
@@ -263,6 +308,14 @@ const nameChainDaily = {
     chainOver: "Цепочка закончилась", capped: "Цепочка завершена!", soFar: (n: number) => `Пока футболистов: ${n}`, nextChain: "Следующая цепочка", finish: "Посмотреть результат",
     endTitle: "На сегодня всё", footballers: (n: number) => `${n} ${n === 1 ? "футболист" : n >= 2 && n <= 4 ? "футболиста" : "футболистов"}`, longest: (n: number) => `Самая длинная цепочка: ${n}`, chains: "Цепочки", longestLabel: "Самая длинная",
     shareText: (number: number, score: number, chains: string) => `Футбольная цепочка имён #${number}: ${score} футболистов (${chains})`,
+  },
+  pt: {
+    title: "Jogo da última letra", tag: "3 sequências por dia",
+    lines: ["Vamos dar o nome de um jogador de futebol. Digite outro cujo nome comece com a última letra desse nome.", "Vale o nome ou o sobrenome: Anthony Martial serve para A e M.", "Você tem 10 segundos por resposta; o tempo diminui conforme a sequência cresce. São 3 sequências por dia: quantos jogadores ao todo?"],
+    chainOf: (n: number, of: number) => `Sequência ${n}/${of}`, tooFast: "Rápido demais! Aguarde um instante.", late: "O tempo acabou e a resposta não valeu.",
+    chainOver: "Fim da sequência", capped: "Sequência completa!", soFar: (n: number) => `Até agora: ${n} jogadores`, nextChain: "Próxima sequência", finish: "Ver resultado",
+    endTitle: "Fim por hoje", footballers: (n: number) => `${n} ${n === 1 ? "jogador" : "jogadores"}`, longest: (n: number) => `Maior sequência: ${n}`, chains: "Sequências", longestLabel: "Maior",
+    shareText: (number: number, score: number, chains: string) => `Jogo da última letra #${number}: ${score} jogadores (${chains})`,
   },
   en: {
     title: "Football Name Chain", tag: "Three chains a day",

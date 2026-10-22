@@ -6,7 +6,7 @@ import {
   SITE_OG_IMAGE_PATH,
   SITE_URL,
 } from "@/lib/seo/site";
-import { DEFAULT_LOCALE, LOCALES, OG_LOCALE, type Locale } from "./locale";
+import { DEFAULT_LOCALE, HTML_LANG, LOCALES, OG_LOCALE, type Locale } from "./locale";
 
 interface LocalizedMetadataInput {
   locale: Locale;
@@ -41,7 +41,7 @@ export function buildLocalizedMetadata({
   for (const l of LOCALES) {
     const localized = paths ? paths[l] : suffix;
     if (localized === undefined) continue;
-    languages[l] = `${SITE_URL}/${l}${normalize(localized)}`;
+    languages[HTML_LANG[l]] = `${SITE_URL}/${l}${normalize(localized)}`;
   }
   const defaultPath = paths ? paths[DEFAULT_LOCALE] : suffix;
   if (defaultPath !== undefined) languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}${normalize(defaultPath)}`;

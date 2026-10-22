@@ -25,7 +25,7 @@ export interface paths {
                         /** Format: uri */
                         redirect_to?: string;
                         /** @enum {string} */
-                        locale?: "en" | "ka" | "es" | "tr" | "ru";
+                        locale?: "en" | "ka" | "es" | "tr" | "ru" | "pt";
                     };
                 };
             };
@@ -8474,7 +8474,7 @@ export interface paths {
                         /** Format: uuid */
                         matchId: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr" | "ru";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt";
                         /** @enum {string} */
                         kind: "vote";
                         removeOrder: boolean;
@@ -8483,7 +8483,7 @@ export interface paths {
                         /** Format: uuid */
                         matchId: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr" | "ru";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt";
                         /** @enum {string} */
                         kind: "idea";
                         idea: string;

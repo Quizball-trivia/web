@@ -5,24 +5,28 @@ import { ChevronRight } from "lucide-react";
 import { trackEvent } from "@/lib/posthog";
 import type { SeoPageLocale } from "@/lib/seo/game-pages";
 
-const TO_TRIVIA: Record<SeoPageLocale, { title: string; text: string }> = {
+type BuscaminasBannerLocale = SeoPageLocale | "pt";
+
+const TO_TRIVIA: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
   es: { title: "¿Buscabas Minas de trivia?", text: "El juego de casillas con defensas ocultos, preguntas y monedas sigue acá." },
   en: { title: "Looking for Trivia Mines?", text: "The tile game with hidden defenders, questions and coins is here." },
   ka: { title: "ეძებ ტრივია-მაღაროებს?", text: "უჯრების თამაში დამალული მცველებით, კითხვებით და ქოინებით აქაა." },
   tr: { title: "Bilgi Mayınları'nı mı arıyorsun?", text: "Gizli defanslı, sorulu ve jetonlu kare oyunu burada." },
   ru: { title: "Ищешь «Минное поле с викториной»?", text: "Игра с клетками, скрытыми защитниками, вопросами и монетами уже здесь." },
+  pt: { title: "Procurando Minas de Trivia?", text: "O jogo de casas com defensores escondidos, perguntas e moedas está aqui." },
 };
 
-const COPY: Record<SeoPageLocale, { title: string; text: string }> = {
+const COPY: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
   es: { title: "¿Buscabas el buscaminas futbolero de jugadores?", text: "16 futbolistas, 12 cumplen la consigna y 4 son minas. 20 rondas, tablero nuevo cada día." },
   en: { title: "Looking for the player version?", text: "Football Minesweeper: 16 players, 12 fit the clue and 4 are mines. 20 rounds, a new board every day." },
   ka: { title: "ეძებ მოთამაშეების ვერსიას?", text: "საფეხბურთო მაღაროები: 16 მოთამაშე, 12 შეესაბამება, 4 მაღაროა. 20 რაუნდი, ყოველდღე ახალი დაფა." },
   tr: { title: "Oyunculu versiyonu mu arıyorsun?", text: "Futbol Mayın Tarlası: 16 oyuncu, 12'si ipucuna uyar, 4'ü mayın. 20 tur, her gün yeni tahta." },
   ru: { title: "Ищешь версию с игроками?", text: "Футбольный сапёр: 16 игроков, 12 подходят под подсказку, 4 — мины. 20 раундов, каждый день новое поле." },
+  pt: { title: "Procurando a versão com jogadores?", text: "Campo Minado do Futebol: 16 jogadores, 12 combinam com a dica e 4 são minas. 20 rodadas, um tabuleiro novo por dia." },
 };
 
 /** Sends Trivia Mines visitors who searched for the player-card game to Buscaminas futbolero. */
-export function BuscaminasBanner({ locale, href, target = "buscaminas" }: { locale: SeoPageLocale; href: string; target?: "buscaminas" | "triviaMines" }) {
+export function BuscaminasBanner({ locale, href, target = "buscaminas" }: { locale: BuscaminasBannerLocale; href: string; target?: "buscaminas" | "triviaMines" }) {
   const copy = target === "triviaMines" ? TO_TRIVIA[locale] : COPY[locale];
   return (
     <Link

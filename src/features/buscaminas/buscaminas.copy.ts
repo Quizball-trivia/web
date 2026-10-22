@@ -402,7 +402,87 @@ const ru: Copy = {
   },
 };
 
-export const buscaminasCopy = (locale: string): Copy => (locale === "es" ? es : locale === "ka" ? ka : locale === "tr" ? tr : locale === "ru" ? ru : en);
-/** Prompts ship in es/en and, from content v2, ka/tr/ru; a missing locale falls back to English. */
-export const promptFor = (prompt: { es: string; en: string; ka?: string; tr?: string; ru?: string }, locale: string) =>
-  (locale === "es" ? prompt.es : locale === "ka" ? prompt.ka : locale === "tr" ? prompt.tr : locale === "ru" ? prompt.ru : undefined) ?? prompt.en;
+const pt: Copy = {
+  brandA: "Futebol",
+  brandB: "Campo Minado",
+  round: (n, total) => `Rodada ${n} / ${total}`,
+  difficulty: { easy: "Fácil", medium: "Média", hard: "Difícil" },
+  found: "Acertos",
+  pot: "Pote",
+  points: "pts",
+  bank: (n) => `Garantir · +${n}`,
+  bankHint: "Acerte pelo menos uma para garantir seus pontos",
+  next: "Próxima rodada",
+  finish: "Ver resultado",
+  perfect: (n) => `Rodada perfeita! +${n}`,
+  banked: (n) => `Pontos garantidos: +${n}`,
+  mine: (lost) => (lost > 0 ? `Mina! Pontos perdidos nesta rodada: ${lost}` : "Mina!"),
+  mineCard: "Mina",
+  fitCard: "Se encaixava na dica",
+  revealLater: "As respostas de hoje aparecem amanhã em “Dias anteriores”.",
+  tooManyRuns: "Você atingiu o limite de partidas de hoje como convidado. Crie uma conta para continuar jogando e entrar no ranking.",
+  intro: {
+    title: (n) => `Campo Minado do Futebol #${n}`,
+    lines: [
+      "20 rodadas que ficam cada vez mais difíceis.",
+      "Cada rodada tem 16 jogadores: 12 se encaixam na dica e 4 são minas.",
+      "Toque nos que se encaixam. Se tocar em uma mina, você perde os pontos da rodada.",
+      "Garanta seus acertos quando quiser. Acertar os 12 dá bônus de +3.",
+    ],
+    start: "Jogar",
+    resume: (n) => `Continuar · rodada ${n}`,
+    past: "Dias anteriores",
+    newBoard: "Um novo tabuleiro todos os dias à meia-noite (horário da Argentina).",
+  },
+  end: {
+    title: (n) => `Campo Minado do Futebol #${n}`,
+    score: "Pontos",
+    of: (max) => `de ${max}`,
+    perfects: "Rodadas perfeitas",
+    mines: "Minas acionadas",
+    streak: "Sequência",
+    days: (n) => `Dias: ${n}`,
+    comeBack: "Amanhã tem um novo tabuleiro.",
+    share: "Compartilhar resultado",
+    whatsapp: "WhatsApp",
+    copy: "Copiar",
+    copied: "Copiado!",
+    past: "Jogar dias anteriores",
+    signup: "Crie uma conta e jogue todos os jogos do QuizBall",
+    signupButton: "Criar conta",
+    more: "Mais jogos",
+    trivia: "Minas de Trivia",
+    grid: "Jogo da Velha do Futebol",
+  },
+  archive: { title: "Dias anteriores", played: (s) => `${s} pts`, inProgress: "Em andamento", notPlayed: "Não jogado", today: "Hoje", back: "Voltar" },
+  shareText: (n, score, grid, url) => `Campo Minado do Futebol #${n} — ${score} pts\n${grid}\nVocê consegue me vencer? ${url}`,
+  report: "Relatar um erro",
+  reported: "Valeu! Vamos conferir.",
+  exit: "Sair",
+  loading: "Carregando o tabuleiro…",
+  loadError: "Não foi possível carregar o tabuleiro. Tente de novo em instantes.",
+  retry: "Tentar novamente",
+  actionError: "Conexão perdida. Tente novamente.",
+  restarted: "Sua partida mudou (outro dispositivo ou uma correção). Recarregamos.",
+  dayOver: "O dia acabou na Argentina: o novo tabuleiro já está disponível.",
+  guestYesterday: "Você está jogando o tabuleiro de ontem. Crie uma conta para jogar o de hoje e entrar no ranking.",
+  playToday: "Jogar o tabuleiro de hoje",
+  maintenance: "O jogo está em manutenção. Volte em instantes.",
+  sessionChanged: "Sua sessão mudou. Comece a partida de novo.",
+  board: {
+    title: "Ranking de hoje",
+    players: (n) => `Jogadores que terminaram: ${n}`,
+    empty: "Ninguém terminou o tabuleiro de hoje ainda. Jogue primeiro!",
+    you: "Você",
+    rank: (r) => `Posição #${r}`,
+    join: "Crie uma conta e entre no ranking de hoje",
+    joinButton: "Entrar no ranking",
+    unranked: "Os dias anteriores não contam para o ranking.",
+    guestPlay: "Você está jogando como convidado: sua pontuação não entra no ranking.",
+  },
+};
+
+export const buscaminasCopy = (locale: string): Copy => (locale === "es" ? es : locale === "ka" ? ka : locale === "tr" ? tr : locale === "ru" ? ru : locale === "pt" ? pt : en);
+/** Prompts ship in es/en and, from content v2, ka/tr/ru/pt; a missing locale falls back to English. */
+export const promptFor = (prompt: { es: string; en: string; ka?: string; tr?: string; ru?: string; pt?: string }, locale: string) =>
+  (locale === "es" ? prompt.es : locale === "ka" ? prompt.ka : locale === "tr" ? prompt.tr : locale === "ru" ? prompt.ru : locale === "pt" ? prompt.pt : undefined) ?? prompt.en;

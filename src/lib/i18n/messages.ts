@@ -1,13 +1,14 @@
 import en from "@/messages/en.json";
 import es from "@/messages/es.json";
 import ka from "@/messages/ka.json";
+import pt from "@/messages/pt.json";
 import ru from "@/messages/ru.json";
 import tr from "@/messages/tr.json";
 
 import type { Locale } from "./locale-config";
 export { LOCALES, isSupportedLocale, normalizeLocale, type Locale } from "./locale-config";
 
-export const messages = { en, ka, es, tr, ru } as const;
+export const messages = { en, ka, es, tr, ru, pt } as const;
 
 type Primitive = string | number | boolean | null;
 type DotPrefix<TPrefix extends string, TKey extends string> = TPrefix extends "" ? TKey : `${TPrefix}.${TKey}`;

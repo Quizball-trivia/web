@@ -106,6 +106,27 @@ const copy = {
     listOf: (n: number, of: number) => `Список ${n}/${of}`, listDone: "Список собран!", listOut: "Все выбыли", nextList: "Следующий список на подходе…",
     pointsStat: "Очки", foundStat: "Угадано", slotsDetail: (n: number) => `угадано: ${n}`, lifeLost: (name: string) => `${name} теряет жизнь`, outOfList: "Выбыл",
   },
+  pt: {
+    brand: ["Acerte o", "Top 10"] as const,
+    title: "Acerte o top 10 do futebol", tag: "Um top 10 por dia",
+    lines: [
+      "Uma lista secreta de top 10 por dia. Diga quem está nela.",
+      "Cada acerto sobe para sua posição na torre. Repetir uma resposta que já está nela não custa nada.",
+      "3 erros e a torre vence. Você consegue acertar os dez?",
+    ],
+    roomLines: ["Cada pessoa diz, na sua vez, uma resposta da mesma lista secreta.", "Cada posição vale seu número: #10 = 10 pontos.", "Resposta errada ou tempo esgotado = perde uma vida. 2 vidas por lista, 3 listas."],
+    hidden: "Lista secreta", asOf: (d: string) => `Em ${d}`, found: (n: number) => `${n}/10`,
+    placeholder: "Quem está na lista?", say: "Enviar", giveUp: "Desistir",
+    ok: (name: string, rank: number) => `#${rank} ${name}`, wrong: (t: string) => `${t} não está na lista`, repeat: (t: string) => `${t} já está na torre`,
+    unknown: (t: string) => `Não conhecemos "${t}": confira a grafia`, repeatWrong: (t: string) => `${t}: você já tentou, sem perder vida`, opensTomorrow: "O restante da lista será revelado amanhã, quando o ranking de hoje fechar.", corrected: "Esta lista foi corrigida depois que você jogou, por isso as respostas não aparecem aqui.", ambiguous: (t: string) => `"${t}" pode ser mais de um jogador: digite o nome completo`, time: "O tempo acabou",
+    missesTitle: "Fora da lista", livesLeft: (n: number) => `Vidas restantes: ${n}`,
+    endComplete: "Top 10 completo!", endLives: "A torre venceu", endGaveUp: "Você desistiu",
+    score: (n: number) => `${n}/10`, missedTitle: "Você não acertou",
+    shareText: (n: number, found: number, tower: string) => `Acerte o top 10 #${n}: ${found}/10\n${tower}`,
+    yourTurn: "Sua vez", seatTurn: (name: string) => `Vez de ${name}`, waiting: "Aguarde sua vez", sending: "Conferindo…", youOut: "Sem vidas nesta lista",
+    listOf: (n: number, of: number) => `Lista ${n}/${of}`, listDone: "Lista completa!", listOut: "Todos foram eliminados", nextList: "Próxima lista chegando…",
+    pointsStat: "Pontos", foundStat: "Acertos", slotsDetail: (n: number) => `${n} acertos`, lifeLost: (name: string) => `${name} perdeu uma vida`, outOfList: "Eliminado",
+  },
 } as const;
 
 export const tenableCopy = (locale: string) => copy[asWordLocale(locale)];

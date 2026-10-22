@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { partnerFromHost } from "@/features/partner/partnerHosts";
 import { isLoadFailure, reloadRestores } from "@/lib/recovery/loadFailure";
 
-type Language = "en" | "ka" | "es" | "tr" | "ru";
+type Language = "en" | "ka" | "es" | "tr" | "ru" | "pt";
 type Way = "reload" | "home" | "relaunch";
 
 // This screen replaces the root layout, so it has no providers, stylesheet or dictionaries to lean on.
@@ -54,9 +54,20 @@ const COPY: Record<Language, { title: string; loadFailed: string; crashed: strin
     reload: "Перезагрузить",
     back: "Вернуться в Quizball",
   },
+  pt: {
+    title: "Algo deu errado",
+    loadFailed: "Parte da página não carregou. Confira sua conexão e recarregue.",
+    crashed: "A página teve um problema. Recarregar geralmente resolve.",
+    home: "Esta tela não carregou. Volte ao Quizball para voltar à sua partida.",
+    relaunch: "Esta tela não carregou. Recarregue e abra o jogo novamente pelo site de onde você veio.",
+    reload: "Recarregar",
+    back: "Voltar ao Quizball",
+  },
 };
 
-const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru";
+/** Kept local: this screen must not depend on the app's locale modules. */
+const documentLang = (language: Language): string => (language === "pt" ? "pt-BR" : language);
+const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru" || value === "pt";
 
 function readLanguage(documentLanguage: string): Language {
   const fromPath = window.location.pathname.split("/")[1];
@@ -78,7 +89,8 @@ const QUIET = { display: "block", margin: "16px auto 0", padding: 8, border: 0, 
 export default function GlobalError({ error }: { error: Error & { digest?: string }; reset: () => void }) {
   const loadFailed = isLoadFailure(error);
   // Read before this screen's own <html> replaces the attribute.
-  const [pageLanguage] = useState(() => (typeof document === "undefined" ? "" : document.documentElement.lang));
+  // <html lang> may carry a region (pt-BR); the screen keys its copy by the base language.
+  const [pageLanguage] = useState(() => (typeof document === "undefined" ? "" : document.documentElement.lang.split("-")[0]));
   const [view, setView] = useState<{ language: Language; way: Way } | null>(null);
 
   useEffect(() => {
@@ -89,7 +101,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
 
   const copy = COPY[view?.language ?? "en"];
   return (
-    <html lang={view?.language ?? (isLanguage(pageLanguage) ? pageLanguage : "en")}>
+    <html lang={documentLang(view?.language ?? (isLanguage(pageLanguage) ? pageLanguage : "en"))}>
       <body style={{ margin: 0, minHeight: "100dvh", display: "grid", placeItems: "center", background: "#071013", color: "#fff", fontFamily: "Poppins, system-ui, sans-serif" }}>
         {view && (
           <main style={{ maxWidth: 360, padding: 24, textAlign: "center" }} data-recovery={loadFailed ? "load" : "crash"}>

@@ -6,7 +6,7 @@ import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
 import { getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
 import type { CampaignQuiz } from './campaignQuiz.types';
-import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { CAMPAIGN_HREFLANG, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
@@ -14,6 +14,7 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   ka: 'ka-GE',
   es: 'es-ES',
   ru: 'ru-RU',
+  pt: 'pt-BR',
 };
 
 const OG_LOCALE: Record<CampaignQuizLocale, string> = {
@@ -21,6 +22,7 @@ const OG_LOCALE: Record<CampaignQuizLocale, string> = {
   ka: 'ka_GE',
   es: 'es_ES',
   ru: 'ru_RU',
+  pt: 'pt_BR',
 };
 
 const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
@@ -28,24 +30,38 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   ka: { home: 'მთავარი', hub: 'ფეხბურთის ქვიზი' },
   es: { home: 'Inicio', hub: 'Quiz de Fútbol' },
   ru: { home: 'Главная', hub: 'Футбольная викторина' },
+  pt: { home: 'Início', hub: 'Quiz de futebol' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
   getCampaignQuiz(slug, preview, locale));
 
 /**
- * The quiz endpoint answers a missing Russian edition in English, so a Russian page exists only when the quiz says it
- * has that edition. Older backends do not say: the Russian catalog decides, and a catalog that cannot be read means no
- * edition (never an English page under a Russian address).
+ * The quiz endpoint answers a missing Russian or Portuguese edition in English, so such a page exists only when the
+ * quiz says it has that edition. Older backends do not say: that language's catalog decides, and a catalog that cannot
+ * be read means no edition (never an English page under a Russian or Portuguese address). A backend without
+ * Portuguese pages rejects the pt catalog, so pt stays closed there.
  */
-export const hasRussianEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => {
-  if (quiz.editions) return quiz.editions.ru;
+export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>, locale: 'ru' | 'pt') => {
+  const said = quiz.editions?.[locale];
+  if (typeof said === 'boolean') return said;
   try {
-    return (await listCampaignQuizPages('ru')).some((page) => page.slug === slug);
+    return (await listCampaignQuizPages(locale)).some((page) => page.slug === slug);
   } catch {
     return false;
   }
 });
+
+export const hasRussianEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'ru');
+export const hasPortugueseEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'pt');
+
+/** True when this page may be served under `locale`: Russian and Portuguese need their edition (previews always render). */
+function servable(locale: CampaignQuizLocale, preview: string | undefined, editions: { ru: boolean; pt: boolean }): boolean {
+  if (preview) return true;
+  if (locale === 'ru') return editions.ru;
+  if (locale === 'pt') return editions.pt;
+  return true;
+}
 
 function absoluteImage(url: string): string {
   return url.startsWith('http') ? url : `${SITE_URL}${url}`;
@@ -58,18 +74,25 @@ export async function buildCampaignQuizMetadata(
 ): Promise<Metadata> {
   try {
     const quiz = await loadQuiz(sourceSlug, preview, locale);
-    const russian = await hasRussianEdition(sourceSlug, quiz);
-    if (locale === 'ru' && !preview && !russian) return {};
+    const editions = {
+      ru: await hasRussianEdition(sourceSlug, quiz),
+      pt: await hasPortugueseEdition(sourceSlug, quiz),
+    };
+    if (!servable(locale, preview, editions)) return {};
     const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
     if (!content) return {};
 
     const pageUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, locale)}`;
     const englishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'en')}`;
-    const languages = {
-      en: englishUrl,
-      ...(content.localeMode === 'en_ka' ? { ka: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ka')}` } : {}),
-      es: `${SITE_URL}${campaignQuizPath(sourceSlug, 'es')}`,
-      ...(russian ? { ru: `${SITE_URL}${campaignQuizPath(sourceSlug, 'ru')}` } : {}),
+    const editionLocales: CampaignQuizLocale[] = [
+      'en',
+      ...(content.localeMode === 'en_ka' ? ['ka' as const] : []),
+      'es',
+      ...(editions.ru ? ['ru' as const] : []),
+      ...(editions.pt ? ['pt' as const] : []),
+    ];
+    const languages: Record<string, string> = {
+      ...Object.fromEntries(editionLocales.map((edition) => [CAMPAIGN_HREFLANG[edition], `${SITE_URL}${campaignQuizPath(sourceSlug, edition)}`])),
       'x-default': englishUrl,
     };
     const image = content.ogImage ?? content.heroImage;
@@ -87,9 +110,7 @@ export async function buildCampaignQuizMetadata(
         description: content.description,
         url: pageUrl,
         locale: OG_LOCALE[locale],
-        alternateLocale: (Object.keys(languages) as Array<keyof typeof languages>)
-          .filter((language): language is CampaignQuizLocale => language !== locale && language !== 'x-default')
-          .map((language) => OG_LOCALE[language]),
+        alternateLocale: editionLocales.filter((edition) => edition !== locale).map((edition) => OG_LOCALE[edition]),
         images: [{ url: absoluteImage(image), alt: imageAlt }],
       },
       twitter: {
@@ -112,7 +133,8 @@ export async function renderCampaignQuizPage(
   // Loaded first: a renamed quiz is a 404 here, which the route turns into its redirect.
   const quiz = await loadQuiz(sourceSlug, preview, locale);
   const russian = await hasRussianEdition(sourceSlug, quiz);
-  if (locale === 'ru' && !preview && !russian) notFound();
+  const portuguese = await hasPortugueseEdition(sourceSlug, quiz);
+  if (!servable(locale, preview, { ru: russian, pt: portuguese })) notFound();
   const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
   if (!content) notFound();
 
@@ -150,7 +172,7 @@ export async function renderCampaignQuizPage(
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} portugueseEdition={portuguese} />
     </>
   );
 }

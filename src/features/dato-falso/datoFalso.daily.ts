@@ -3,7 +3,7 @@ import { createWordDailyApi, type WordRun, type WordRunStateBase } from "@/featu
 import { toArt } from "./datoFalso.server";
 import type { DfCard, DfCategory, DfJoker, DfSoloState } from "./datoFalso.view";
 
-type Label = { en: string; es: string; tr: string; ru: string; ka: string };
+type Label = { en: string; es: string; tr: string; ru: string; pt?: string; ka: string };
 type ServerArt = Parameters<typeof toArt>[0];
 interface ServerCard { id: string; category: DfCategory; player: { name: Label; portrait: string | null }; options: Array<{ label: Label; art: ServerArt }> }
 interface ServerResult { pick: number | null; cut: boolean; dbl: boolean; right: boolean; pts: number; card: ServerCard | null; fake: number | null; explain: Label | null }
@@ -55,7 +55,7 @@ export const localCard = (c: ServerCard, locale: string): DfCard => ({
 const jokersOf = (j: { cut: boolean; double: boolean }): DfJoker[] => [...(j.cut ? ["cut" as const] : []), ...(j.double ? ["double" as const] : [])];
 
 /** A finished run whose day was corrected since comes back without cards: its result needs none. */
-const NO_CARD: ServerCard = { id: "", category: "clubs", player: { name: { en: "", es: "", tr: "", ru: "", ka: "" }, portrait: null }, options: [] };
+const NO_CARD: ServerCard = { id: "", category: "clubs", player: { name: { en: "", es: "", tr: "", ru: "", pt: "", ka: "" }, portrait: null }, options: [] };
 
 /** The server run in the screens' shape, in the reader's language. Null before the first card is opened. */
 export function toSoloState(s: DatoFalsoDailyState, locale: string): DfSoloState | null {

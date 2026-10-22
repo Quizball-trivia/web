@@ -19,6 +19,7 @@ export interface GgtI18nText {
   es?: string | null;
   tr?: string | null;
   ru?: string | null;
+  pt?: string | null;
 }
 
 export interface GgtPlayer {

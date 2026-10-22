@@ -220,7 +220,7 @@ export function StatPicker({ view, wording, copy, locale, busy, onPick }: {
   const choice = view.stats.find((s) => s.id === selected && !usedBy.has(s.id));
   const playedLabel = (p: PickResult) => (p.leaders.length === 0 ? copy.nobodyMoves
     : copy.movedBy(p.leaders.map((seat) => l10n(view.seats[seat].nation.name, locale)).join(", "), p.leaders.includes(view.mySeat)));
-  const familyLabel = (id: string) => copy.families[id] ?? l10n(wording.families.find((f) => f.id === id)?.label ?? { en: id, es: id }, locale);
+  const familyLabel = (id: string) => copy.families[id] ?? l10n(wording.families.find((f) => f.id === id)?.label ?? { en: id, es: id, pt: id }, locale);
   return (
     <div className="flex flex-col gap-2.5">
       <h2 className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/70" style={poppins}>{copy.pickTitle}</h2>

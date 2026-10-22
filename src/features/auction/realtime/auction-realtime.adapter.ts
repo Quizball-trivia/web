@@ -31,7 +31,7 @@ export interface AuctionStateAdapterOptions {
   humanAvatarCustomization?: AvatarCustomization | null;
   serverTimeOffsetMs?: number | null;
   /** App locale; text hints are shown in it when the server carried that language. */
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
 }
 
 export function findMyAuctionSeatId(
@@ -255,7 +255,13 @@ function toClientSoloPickOption(
 function getRoundClues(round: PublicAuctionRoundState, locale?: AuctionStateAdapterOptions['locale']): string[] {
   // A card without Russian clues reads in English rather than in the match's dealing language.
   const localized = locale
-    ? round.footballer.cluesByLocale?.[locale] ?? (locale === 'ru' ? round.footballer.cluesByLocale?.en : undefined)
+    ? round.footballer.cluesByLocale?.[locale] ?? (
+        locale === 'ru'
+          ? round.footballer.cluesByLocale?.en
+          : locale === 'pt'
+            ? round.footballer.cluesByLocale?.en
+            : undefined
+      )
     : undefined;
   const visibleClues = localized?.length
     ? [...localized]

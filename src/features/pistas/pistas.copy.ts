@@ -407,10 +407,91 @@ const ru: Copy = {
   },
 };
 
-const COPY: Record<string, Copy> = { es, en, ka, tr, ru };
+const pt: Copy = {
+  brandA: "Pistas",
+  brandB: "de futebol",
+  player: (n, total) => `Jogador ${n} / ${total}`,
+  pointsInPlay: "Pontos em jogo",
+  score: "Seus pontos",
+  revealClue: "Revelar dica",
+  clueLocked: "Dica bloqueada",
+  inputLabel: "Digite o sobrenome do jogador",
+  inputPlaceholder: "Sobrenome…",
+  inputHint: "Sobrenome ou apelido · acentos e maiúsculas não importam",
+  guess: "Adivinhar",
+  giveUp: "Desistir",
+  wrong: "Errado",
+  lastChance: (clues) => (clues > 0 ? `Última chance: você pode revelar ${clues === 1 ? "mais 1 dica" : `mais ${clues} dicas`} e tem mais 1 tentativa.` : "Última chance: você tem mais 1 tentativa."),
+  solved: (n) => `Acertou! +${n}`,
+  missed: "Não foi dessa vez",
+  was: (name) => `Era ${name}`,
+  revealLater: "A resposta de hoje aparece amanhã em “Dias anteriores”.",
+  next: "Próximo jogador",
+  finish: "Ver resultado",
+  kinds: { confed: "Confederação", position: "Posição", foot: "Perna dominante", decade: "Década", fact: "Dica" },
+  positions: { GK: "GOL", DF: "DEF", MF: "MEI", FW: "ATA" },
+  feet: { left: "Esquerda", right: "Direita" },
+  intro: {
+    lines: [
+      "10 jogadores por dia, cada um com 10 dicas que vão da mais difícil à mais fácil.",
+      "Adivinhe com a primeira dica e ganhe 10 pontos. Cada dica que você pedir tira 1 ponto.",
+      "Digite o sobrenome (acentos não importam). Se errar, você tem mais 1 tentativa e no máximo mais 3 dicas.",
+    ],
+    start: "Jogue",
+    resume: (n) => `Continuar · jogador ${n}`,
+    past: "Dias anteriores",
+    newBoard: "10 jogadores novos todos os dias às 00:00 (horário da Argentina).",
+    soon: "As primeiras dicas chegam em breve.",
+  },
+  end: {
+    score: "Pontos",
+    of: (max) => `de ${max}`,
+    solved: "Acertos",
+    avgClues: "Dicas por acerto",
+    streak: "Sequência",
+    days: (n) => (n === 1 ? "1 dia" : `${n} dias`),
+    comeBack: "Amanhã tem 10 jogadores novos.",
+    share: "Compartilhar",
+    whatsapp: "WhatsApp",
+    copy: "Copiar",
+    copied: "Copiado!",
+    past: "Jogar dias anteriores",
+    more: "Mais jogos",
+    answers: "Respostas",
+    answersLater: "As respostas de hoje aparecem amanhã.",
+    clues: (n) => (n === 1 ? "1 dica" : `${n} dicas`),
+  },
+  archive: { title: "Dias anteriores", played: (s) => `${s} pts`, inProgress: "Em andamento", notPlayed: "Não jogado", today: "Hoje", back: "Voltar" },
+  shareText: (n, score, grid, url) => `Pistas de futebol #${n} — ${score}/100\n${grid}\nVocê consegue me superar? ${url}`,
+  report: "Relatar erro em uma dica",
+  reported: "Valeu! Vamos verificar.",
+  exit: "Sair",
+  loading: "Carregando as dicas…",
+  loadError: "Não foi possível carregar as dicas. Tente de novo em instantes.",
+  retry: "Tentar de novo",
+  actionError: "Conexão perdida. Tente de novo.",
+  restarted: "Sua partida mudou (em outro dispositivo ou após uma correção). Carregamos de novo.",
+  dayOver: "O dia terminou na Argentina: os novos jogadores já estão disponíveis.",
+  guestYesterday: "Você está jogando um dia anterior. Crie uma conta para jogar o desafio de hoje e entrar no ranking.",
+  playToday: "Jogar o desafio de hoje",
+  maintenance: "O jogo está em manutenção. Volte em breve.",
+  sessionChanged: "Sua sessão mudou. Comece de novo.",
+  board: {
+    title: "Ranking do dia",
+    players: (n) => (n === 1 ? "1 jogador terminou" : `${n} jogadores terminaram`),
+    empty: "Ninguém terminou as dicas de hoje ainda. Seja a primeira pessoa!",
+    rank: (r) => `#${r} hoje`,
+    join: "Crie uma conta para entrar no ranking de hoje",
+    joinButton: "Entrar no ranking",
+    unranked: "Dias anteriores não contam para o ranking.",
+    guestPlay: "Você está jogando como convidado: sua pontuação não entra no ranking.",
+  },
+};
+
+const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt };
 
 export const pistasCopy = (locale: string): Copy => COPY[locale] ?? en;
 
-/** Clue text in the page locale; ka/tr/ru fall back to English, then Spanish. */
+/** Clue text in the page locale; ka/tr/ru/pt fall back to English, then Spanish. */
 export const textFor = (text: LocalizedText, locale: string): string =>
-  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : text.en) || text.en || text.es;
+  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : text.en) || text.en || text.es;

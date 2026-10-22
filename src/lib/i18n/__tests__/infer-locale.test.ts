@@ -54,4 +54,13 @@ describe('inferLocaleFromSignals', () => {
       timeZone: 'Europe/Paris',
     })).toBe('en');
   });
+
+  it('uses Portuguese for Brazilian browser language tags', () => {
+    expect(inferLocaleFromSignals({ languages: ['pt-BR'], language: 'pt-BR' })).toBe('pt');
+  });
+
+  it('follows the browser order between the languages we offer', () => {
+    expect(inferLocaleFromSignals({ languages: ['pt-BR', 'es'], language: 'pt-BR' })).toBe('pt');
+    expect(inferLocaleFromSignals({ languages: ['en-US', 'ru', 'pt-BR'], language: 'en-US' })).toBe('ru');
+  });
 });

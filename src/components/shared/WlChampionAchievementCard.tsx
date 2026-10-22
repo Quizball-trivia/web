@@ -88,6 +88,8 @@ const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
 const ES_MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const PT_MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const TR_MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 // Genitive: "8 августа 2026".
 const RU_MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
@@ -98,7 +100,7 @@ export function wlAwardWeekLabel(eventSlug: string, locale: Locale = "ka"): stri
   if (!isWlAwardSlug(eventSlug)) return undefined;
   const m = eventSlug.match(/(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return undefined;
-  const months = locale === "ka" ? KA_MONTHS : locale === "es" ? ES_MONTHS : locale === "tr" ? TR_MONTHS : locale === "ru" ? RU_MONTHS : EN_MONTHS;
+  const months = locale === "ka" ? KA_MONTHS : locale === "es" ? ES_MONTHS : locale === "pt" ? PT_MONTHS : locale === "tr" ? TR_MONTHS : locale === "ru" ? RU_MONTHS : EN_MONTHS;
   const month = months[Number(m[2]) - 1] ?? m[2];
   return `${Number(m[3])} ${month} ${m[1]}`;
 }
