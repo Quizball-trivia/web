@@ -426,10 +426,11 @@ export function AproximadoPodium({ view, locale, onRoom, onExit }: { view: Aprox
 }
 
 /** A full-screen notice: the match was cancelled, you left it, or it started without you. */
-export function AproximadoNotice({ kind, locale, onRoom }: { kind: "cancelled" | "left" | "excluded" | "finished"; locale: string; onRoom: () => void }) {
+/** `message`: a game's own title and text for this notice (why its match was cancelled), instead of the generic one. */
+export function AproximadoNotice({ kind, locale, onRoom, message }: { kind: "cancelled" | "left" | "excluded" | "finished"; locale: string; onRoom: () => void; message?: readonly [string, string] | null }) {
   const copy = aproximadoCopy(locale);
-  const [title, text] = kind === "cancelled" ? [copy.cancelledTitle, copy.cancelledText] : kind === "left" ? [copy.youLeftTitle, copy.youLeftText]
-    : kind === "finished" ? [copy.finishedTitle, copy.finishedText] : [copy.excludedTitle, copy.excludedText];
+  const [title, text] = message ?? (kind === "cancelled" ? [copy.cancelledTitle, copy.cancelledText] : kind === "left" ? [copy.youLeftTitle, copy.youLeftText]
+    : kind === "finished" ? [copy.finishedTitle, copy.finishedText] : [copy.excludedTitle, copy.excludedText]);
   return (
     <div role="status" className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
       <p className="text-2xl font-black" style={poppins}>{title}</p>

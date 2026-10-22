@@ -24,7 +24,7 @@ export const PHONE_AUTH_ENABLED = true;
 
 /** Guest friend lobbies (play Tic Tac Toe / Auction / Ranked sim with a friend without an account). Off = no route or socket change for guests. */
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
-const ALL_ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "dato_falso"];
+const ALL_ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso"];
 const ROOM_GAMES_DISABLED = (process.env.NEXT_PUBLIC_ROOM_GAMES_DISABLED ?? "").split(",").map((game) => game.trim());
 /** Room games (2–6 players) offered in friend rooms: all of them, minus NEXT_PUBLIC_ROOM_GAMES_DISABLED (as the backend's room.config.ts). */
 export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = ALL_ROOM_GAMES.filter((game) => !ROOM_GAMES_DISABLED.includes(game));

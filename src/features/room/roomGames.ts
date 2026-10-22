@@ -1,9 +1,11 @@
 import { aproximadoRoomRules } from "@/features/aproximado/useRoom";
+import { codenamesRoomRules } from "@/features/codenames/codenames.server";
 import { datoFalsoRoomRules } from "@/features/dato-falso/datoFalso.server";
 import { footballRaceRoomRules } from "@/features/football-race/race.server";
 import { nameChainRoomRules } from "@/features/name-chain/nameChain.view";
 import { sharedPlayerRoomRules } from "@/features/shared-player/sharedPlayer.view";
 import { tenableRoomRules } from "@/features/tenable/tenable.view";
+import { CLIENT_GAME_VERSIONS } from "@/lib/realtime/clientGames";
 import type { RoomClientRules } from "./useRoomConnection";
 
 /** Command rules of every room game this build can draw. */
@@ -13,10 +15,11 @@ const RULES: Record<string, RoomClientRules<never>> = {
   name_chain: nameChainRoomRules as RoomClientRules<never>,
   tenable: tenableRoomRules as RoomClientRules<never>,
   football_race: footballRaceRoomRules as RoomClientRules<never>,
+  codenames: codenamesRoomRules as RoomClientRules<never>,
   dato_falso: datoFalsoRoomRules as RoomClientRules<never>,
 };
 
 export const roomClientRulesFor = (game: string): RoomClientRules<unknown> | null => (RULES[game] as RoomClientRules<unknown> | undefined) ?? null;
 
 /** The room games this build can draw: sent to the server, which seats nobody in a game their screen did not list. */
-export const ROOM_CLIENT_GAMES: readonly string[] = Object.keys(RULES);
+export const ROOM_CLIENT_GAMES: readonly string[] = [...Object.keys(RULES), ...CLIENT_GAME_VERSIONS];

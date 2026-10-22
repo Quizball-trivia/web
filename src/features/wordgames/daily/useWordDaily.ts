@@ -10,6 +10,16 @@ export type WordDailyView = "intro" | "play" | "end" | "archive";
 /** What a refused or failed call means for the screen. */
 export type WordDailyNotice = "dayOver" | "guestToday" | "maintenance" | "restarted" | "sessionChanged" | "actionError" | "connection";
 export interface ServerClock { serverMs: number; perfMs: number }
+/** An answer the server's copy, now on screen, does not hold for sure (see `onAnswerNotSaved`). */
+export interface WordAnswerMissed<State extends WordRunStateBase> {
+  /** The copy the answer was sent on, and the server's copy since re-synced. */
+  sentOn: WordRun<State>;
+  fresh: WordRun<State>;
+  text: string;
+  extra?: Record<string, unknown>;
+  /** True: the reply was lost, so the answer may still have landed (the game checks `fresh`). False: refused as stale, nothing saved. */
+  lost: boolean;
+}
 
 /** A dropped connection usually comes back within a second: wait briefly before re-syncing. */
 const RECOVERY_DELAY_MS = 300;
@@ -24,7 +34,7 @@ const GRACE_MS = 1_500;
  * call at a time. A run is only ever shown for the player and board it belongs to; only a newer version of it replaces
  * what is shown; a lost answer or a stale version is re-synced from the server, never blindly resent.
  */
-export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult, resendStaleAnswers = false, resendLostAnswers = false, resumesOnScreen }: {
+export function useWordDaily<State extends WordRunStateBase, Result extends string>({ api, calendar, locale, initialDay, onDay, onEvent, onResult, onAnswerNotSaved, resendStaleAnswers = false, resendLostAnswers = false, resumesOnScreen }: {
   api: WordDailyApi<State, Result>;
   calendar: WordDailyCalendar;
   locale: string;
@@ -48,6 +58,12 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   resendLostAnswers?: boolean;
   /** A run the reload finds in a state the player was looking at (a revealed card waiting for Next): back on screen, not behind the intro. */
   resumesOnScreen?: (state: State) => boolean;
+  /**
+   * An answer that is neither resent nor shown as judged: another tab moved the run on before it (stale), or its reply
+   * was lost and the re-synced copy has moved past the copy it was sent on. Called once that copy is on screen, only
+   * for the player and board the answer was made for; the game explains it and may ask for the answer again.
+   */
+  onAnswerNotSaved?: (missed: WordAnswerMissed<State>) => void;
 }) {
   const [today, setToday] = useState(() => releaseDay());
   const [versions, setVersions] = useState<Record<string, number> | null | undefined>(undefined);
@@ -88,15 +104,17 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   const needsRecoveryRef = useRef(false);
   const recoverRef = useRef<() => void>(() => {});
   /** An answer lost on the network while the re-sync could not reach the server either: sent again after recovery. */
-  const lostAnswerRef = useRef<{ owner: string; day: string; runId: string; version: number; resend: () => void } | null>(null);
+  const lostAnswerRef = useRef<{ owner: string; day: string; runId: string; version: number; resend?: () => void; missed?: (fresh: WordRun<State>) => void } | null>(null);
   const startedRef = useRef(false);
   const currentRef = useRef({ owner, day });
-  const handlers = useRef({ onDay, onEvent, onResult });
-  useEffect(() => { handlers.current = { onDay, onEvent, onResult }; });
+  const handlers = useRef({ onDay, onEvent, onResult, onAnswerNotSaved });
+  useEffect(() => { handlers.current = { onDay, onEvent, onResult, onAnswerNotSaved }; });
   useEffect(() => {
     currentRef.current = { owner, day };
     expiryDueRef.current = false;
     needsRecoveryRef.current = false;
+    // An answer waiting for the connection belongs to the board and player it was made on.
+    lostAnswerRef.current = null;
     // Another board or another player: its first play is a start of its own.
     startedRef.current = false;
   }, [owner, day]);
@@ -237,9 +255,10 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
 
   /**
    * The server's copy of the run (after a lost answer, a stale version or an expired clock), retried; never a blind
-   * resend. True only when that copy was read and is on screen.
+   * resend. "shown": that copy was read and is on screen; "behind": it was read but a newer one (another read) already
+   * is; false: it could not be read.
    */
-  const resync = async (o: string, d: string): Promise<boolean> => {
+  const readBack = async (o: string, d: string): Promise<"shown" | "behind" | false> => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         const current = await api.start(d, contentVersion, locale, RESYNC_TIMEOUT_MS);
@@ -247,7 +266,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
         needsRecoveryRef.current = false;
         apply(current, o, d);
         setNotice(null);
-        return runRef.current === current;
+        return runRef.current === current ? "shown" : "behind";
       } catch (error) {
         if (!stillCurrent(o, d)) return false;
         if (!isNetworkFailure(error)) { handleError(error, d); return false; }
@@ -259,6 +278,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     if (stillCurrent(o, d)) { needsRecoveryRef.current = true; setNotice("connection"); }
     return false;
   };
+  /** True only when the server's copy was read and is on screen (the copy a resend may be judged against). */
+  const resync = async (o: string, d: string): Promise<boolean> => (await readBack(o, d)) === "shown";
 
   const retryCloseRead = () => {
     if (!closeReadPendingRef.current || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
@@ -267,12 +288,14 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   };
   /** A re-sync, then the answer lost before it, if that copy shows it never landed. */
   const syncThenResend = (o: string, d: string) => {
-    void exclusive("sync", () => resync(o, d)).then((synced) => {
+    void exclusive("sync", () => readBack(o, d)).then((read) => {
       const lost = lostAnswerRef.current;
-      if (!synced || !lost) return;
+      if (!read || !lost) return;
       lostAnswerRef.current = null;
       const fresh = runRef.current;
-      if (lost.owner === o && lost.day === d && stillCurrent(o, d) && fresh && !fresh.state.done && fresh.run.id === lost.runId && fresh.run.version === lost.version) lost.resend();
+      if (lost.owner !== o || lost.day !== d || !stillCurrent(o, d) || !fresh) return;
+      if (read === "shown" && lost.resend && !fresh.state.done && fresh.run.id === lost.runId && fresh.run.version === lost.version) lost.resend();
+      else lost.missed?.(fresh);
     });
   };
   const recover = () => {
@@ -315,7 +338,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
   };
   useEffect(() => { pumpRef.current = pump; });
 
-  const act = (key: string, call: (run: WordRun<State>) => Promise<WordRun<State> & { result?: Result }>, typed?: string, needsRun = true, resendStale = false, resendLost = false): Promise<(WordRun<State> & { result?: Result }) | null> => {
+  const act = (key: string, call: (run: WordRun<State>) => Promise<WordRun<State> & { result?: Result }>, typed?: string, needsRun = true, resendStale = false, resendLost = false, missed?: (sentOn: WordRun<State>, fresh: WordRun<State>, lost: boolean) => void): Promise<(WordRun<State> & { result?: Result }) | null> => {
     if (!day) return Promise.resolve(null);
     const o = owner;
     const d = day;
@@ -339,11 +362,19 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
           if (isNetworkFailure(error) || stale) {
             if (!stale) setNotice("connection");
             await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
-            const synced = await resync(o, d);
+            const read = await readBack(o, d);
+            const synced = read === "shown";
             // Only a stale refusal is known to be unsaved (a lost response may have been judged): resent once, and
             // only onto the copy that re-sync itself read, while it is still open.
             const fresh = runRef.current;
             if (resendStale && stale && attempt === 0 && synced && stillCurrent(o, d) && fresh && !fresh.state.done) continue;
+            const moved = (r: WordRun<State> | null) => r !== null && sentOn !== null && (r.run.id !== sentOn.run.id || r.run.version !== sentOn.run.version);
+            if (missed && sentOn && stillCurrent(o, d)) {
+              // A newer copy may have overtaken the re-sync's own read: it is the one on screen, so it is the one explained.
+              if (read && fresh && moved(fresh)) missed(sentOn, fresh, !stale);
+              // Refused as stale but the copy could not be read: explained once recovery reads it.
+              else if (stale && !synced && needsRecoveryRef.current) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, missed: (f) => missed(sentOn, f, false) };
+            }
             if (resendLost && !stale && sentOn && stillCurrent(o, d)) {
               const unsaved = (r: WordRun<State> | null) => r !== null && !r.state.done && r.run.id === sentOn.run.id && r.run.version === sentOn.run.version;
               if (synced && unsaved(fresh)) {
@@ -352,7 +383,8 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
                 setNotice("actionError");
               }
               // Still offline: the run could not be read, so whether it landed is unknown until the connection is back.
-              if (!synced) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, resend: () => void act(key, call, typed, needsRun, resendStale, resendLost) };
+              // A copy was read ("behind" too): reported above, so nothing waits for the connection.
+              if (!read) lostAnswerRef.current = { owner: o, day: d, runId: sentOn.run.id, version: sentOn.run.version, resend: () => void act(key, call, typed, needsRun, resendStale, resendLost, missed), missed: missed && ((f) => { if (moved(f)) missed(sentOn, f, true); }) };
             }
           } else {
             handleError(error, d);
@@ -399,8 +431,11 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
     today, day, days: openableDays, versions, authReady, owner, guestLockedOut, guestOnPastBoard,
     run, state, view, setView, pending, notice, clock, boardRefresh,
     play, openDay,
+    /** A server call is in flight (read at once, ahead of the `pending` render): a tap now would be dropped. */
+    busy: () => inFlightRef.current,
     next: () => act("next", (r) => api.next(r, locale)),
-    answer: (text: string, extra?: Record<string, unknown>) => act("answer", (r) => api.answer(r, text, locale, extra), text, true, resendStaleAnswers, resendLostAnswers),
+    answer: (text: string, extra?: Record<string, unknown>) => act("answer", (r) => api.answer(r, text, locale, extra), text, true, resendStaleAnswers, resendLostAnswers,
+      handlers.current.onAnswerNotSaved && ((sentOn, fresh, lost) => handlers.current.onAnswerNotSaved?.({ sentOn, fresh, text, extra, lost }))),
     pass: () => act("pass", (r) => api.pass(r, locale)),
     reload: () => { setVersions(undefined); setBoardsAttempt((n) => n + 1); },
   };

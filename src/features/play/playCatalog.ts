@@ -8,6 +8,7 @@ export const DAILY_CHALLENGE_SLUGS = [
   "shared-player",
   "name-chain",
   "football-horserace",
+  "football-codenames",
   "dato-falso-futbolero",
   "buscaminas",
   "pistas",

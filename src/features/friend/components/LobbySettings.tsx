@@ -14,6 +14,7 @@ import type { DuelGameId, LobbyGameMode, LobbySeenGame, LobbySettings as LobbySe
 import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
 import { choicePlayable, DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey, roomGameLabels, ROOM_GAMES, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { FootballRaceOptions } from "./FootballRaceOptions";
+import { CodenamesRoomOptions } from './CodenamesRoomOptions';
 import { RoomGameOptions } from "./RoomGameOptions";
 import { GridRoomOptions } from './GridRoomOptions';
 import { logger } from "@/utils/logger";
@@ -1059,6 +1060,9 @@ export function LobbySettings({
             </h4>
             {roomGame === 'shared_player' && roomGame === serverRoomGame && (
               <RoomGameOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
+            {roomGame === 'codenames' && roomGame === serverRoomGame && (
+              <CodenamesRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
             )}
             {roomGame === 'football_race' && roomGame === serverRoomGame && (
               <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

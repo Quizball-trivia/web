@@ -21,6 +21,7 @@ const LOCAL_MODE_IMAGES = new Map([
   ["name-chain", "son-harfle"],
   ["tenable", "lab-top-10-knockout"],
   ["football-horserace", "football-horserace"],
+  ["football-codenames", "football-codenames"],
   ["dato-falso", "dato-falso"],
   ["dato-falso-futbolero", "dato-falso"],
   ["daily-clues", "daily-clues"],

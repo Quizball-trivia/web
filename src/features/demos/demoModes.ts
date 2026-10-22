@@ -115,6 +115,18 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "football-codenames",
+    title: { en: "Football Codenames", ka: "ფეხბურთის Codenames", es: "Codenames Futbolero", tr: "Futbol Codenames", ru: "Кодовые имена: футбол" },
+    description: {
+      en: "20 picture cards, one football clue from the Scout. Find your 8 and dodge the Own Goal. A new board every day.",
+      ka: "20 სურათიანი ბარათი და სკაუტის ერთი საფეხბურთო მინიშნება. იპოვე შენი 8 და აარიდე თავი ავტოგოლს. ყოველდღე ახალი დაფა.",
+      es: "20 cartas con dibujos y una pista futbolera del Ojeador. Encontrá tus 8 y esquivá el Autogol. Un tablero nuevo por día.",
+      tr: "20 resimli kart, Gözlemci'den tek futbol ipucu. Kendi 8 kartını bul, Kendi Kalesine Gol'den kaç. Her gün yeni tahta.",
+      ru: "20 карточек с картинками и одна футбольная подсказка от Скаута. Найди свои 8 и не открой Автогол. Новое поле каждый день.",
+    },
+    group: "daily",
+  },
+  {
     slug: "dato-falso-futbolero",
     title: { en: "Football Odd One Out", ka: "ყალბი ფაქტი", es: "Dato falso futbolero", tr: "Hangisi Yanlış?", ru: "Ложный факт" },
     description: {
