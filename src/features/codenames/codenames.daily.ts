@@ -6,7 +6,7 @@ import { codenamesCopy } from "./codenames.copy";
 import type { CardKind, CodenamesSoloState } from "./codenames.view";
 
 /** Same calendar as the backend (codenames.days.ts): board #1 is the launch day. */
-export const CODENAMES_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-19", rankedStart: "2026-10-19", publishedDays: 68 };
+export const CODENAMES_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-20", rankedStart: "2026-10-20", publishedDays: 68 };
 
 export const codenamesDailyGame = (locale: string): WordDailyGame => {
   const c = codenamesCopy(locale);
