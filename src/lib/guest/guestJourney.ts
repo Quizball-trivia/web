@@ -1,5 +1,6 @@
 import { API_BASE_URL, CLIENT_PLATFORM } from '@/lib/config';
 import { getGuestToken, peekGuestToken, retireGuestToken } from './guestSession';
+import { normalizeLocale } from '@/lib/i18n/locale-config';
 import { getSupabaseAccessToken } from '@/lib/auth/supabase';
 import { timeoutSignal } from '@/lib/timeoutSignal';
 import { createRealtimeCommandId } from '@/lib/realtime/command-id';
@@ -118,7 +119,8 @@ export function recordGuestJourney(event: string, props: Props, access: string):
       await drain();
       return;
     }
-    const token = await getGuestToken(document.documentElement.lang || 'en');
+    // <html lang> carries a region for some languages (pt-BR); the API takes the app locale code.
+    const token = await getGuestToken(normalizeLocale(document.documentElement.lang || 'en'));
     save([...pending(), { id, token, ...activity, createdAt: Date.now() }]);
     await drain();
   }).catch(() => undefined);

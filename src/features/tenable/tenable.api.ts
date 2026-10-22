@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { timeoutSignal } from "@/lib/timeoutSignal";
 import type { FigureUnit } from "./tenable.figures";
 
-type Localized = { es: string; en: string; ka: string; tr: string; ru?: string };
+type Localized = { es: string; en: string; ka: string; tr: string; ru?: string; pt?: string };
 export type EntityKind = "player" | "manager" | "club" | "nation";
 
 /** Server-held run state (backend tenable-daily.rules PublicRunState). */
@@ -28,7 +28,7 @@ const tenableCall = createDailyGameCall("/api/v1/tenable");
 /** The after-game card, from the solo daily or a room match. */
 export const sendTenableFeedback = (mode: "solo" | "room", answer: GameFeedbackAnswer, locale: string) =>
   tenableCall<null>("/feedback", "POST", {
-    mode, rating: answer.rating, wantsOnline: answer.wantsOnline, locale: ["en", "ka", "es", "tr", "ru"].includes(locale) ? locale : "en",
+    mode, rating: answer.rating, wantsOnline: answer.wantsOnline, locale: ["en", "ka", "es", "tr", "ru", "pt"].includes(locale) ? locale : "en",
     ...(answer.comment ? { comment: answer.comment } : {}),
   }, locale);
 

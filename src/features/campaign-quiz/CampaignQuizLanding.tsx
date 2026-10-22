@@ -41,6 +41,8 @@ interface CampaignQuizLandingProps {
   previewToken?: string;
   /** Offered in the language switcher only when the quiz has a Russian edition. */
   russianEdition?: boolean;
+  /** Offered in the language switcher only when the quiz has a Brazilian Portuguese edition. */
+  portugueseEdition?: boolean;
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
@@ -164,6 +166,31 @@ const COPY = {
     playQuiz: 'Играть',
     footer: '© 2026 QuizBall. Футбольная викторина для настоящего соперничества.',
   },
+  pt: {
+    rankedTrivia: 'Quiz de futebol ranqueado',
+    playRanked: 'Jogar no ranqueado',
+    home: 'Início',
+    footballQuiz: 'Quiz de futebol',
+    verifiedQuestions: 'perguntas verificadas',
+    startQuiz: 'Começar o quiz',
+    noLogin: 'Sem precisar de conta',
+    easy: 'fáceis',
+    medium: 'médias',
+    hard: 'difíceis',
+    soloWarmup: 'Aquecimento individual',
+    answerPrompt: 'Escolha uma resposta para cada pergunta. Seu resultado aparece na hora.',
+    factChecked: 'Perguntas com fatos verificados',
+    fiveMinutes: 'Cerca de 5 minutos',
+    instantScore: 'Resultado na hora',
+    readyRanked: 'Pronto para o ranqueado?',
+    fairPlay: 'Feito para o jogo limpo',
+    publicOnly: 'Estas perguntas públicas de aquecimento ficam separadas do banco de perguntas das partidas ranqueadas.',
+    keepPlaying: 'Continue jogando',
+    relatedQuizzes: 'Quizzes de futebol relacionados',
+    allQuizzes: 'Todos os quizzes de futebol',
+    playQuiz: 'Jogar',
+    footer: '© 2026 QuizBall. Quiz de futebol feito para competir de verdade.',
+  },
 } as const satisfies Record<CampaignQuizLocale, Record<string, string>>;
 
 /** Russian words after a count change form (1 лёгкий, 3 лёгких); the other editions use the COPY string as is. */
@@ -174,7 +201,16 @@ const RUSSIAN_COUNT_FORMS = {
   hard: ['сложный', 'сложных', 'сложных'],
 } as const;
 
+/** Portuguese takes the singular only for exactly one (1 pergunta verificada, 0 perguntas). */
+const PORTUGUESE_SINGULAR = {
+  verifiedQuestions: 'pergunta verificada',
+  easy: 'fácil',
+  medium: 'média',
+  hard: 'difícil',
+} as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
+
 function countLabel(locale: CampaignQuizLocale, count: number, key: keyof typeof RUSSIAN_COUNT_FORMS): string {
+  if (locale === 'pt' && count === 1) return PORTUGUESE_SINGULAR[key];
   if (locale !== 'ru') return COPY[locale][key];
   const [one, few, many] = RUSSIAN_COUNT_FORMS[key];
   return russianPlural(count, one, few, many);
@@ -201,7 +237,7 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
   }, []);
 }
 
-export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, russianEdition }: CampaignQuizLandingProps) {
+export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, russianEdition, portugueseEdition }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
   const hubPath = campaignHubPath(locale);
@@ -248,7 +284,11 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </span>
             <LanguageSwitcher
               locale={locale}
-              locales={[...(content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] as const : ['en', 'es'] as const), ...(russianEdition ? ['ru'] as const : [])]}
+              locales={[
+                ...(content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] as const : ['en', 'es'] as const),
+                ...(russianEdition ? ['ru'] as const : []),
+                ...(portugueseEdition ? ['pt'] as const : []),
+              ]}
               className="hidden sm:inline-flex"
             />
             <CampaignSignupLink

@@ -5,7 +5,7 @@ import { Brain, Swords, MessageCircle } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
-import { campaignHubPath } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { quizHubHref } from '@/lib/seo/public-games';
 
 interface WelcomeFooterProps {
   duelsCount: number;
@@ -14,7 +14,7 @@ interface WelcomeFooterProps {
 
 export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFooterProps) {
   const { t, locale } = useLocale();
-  const quizzesHref = campaignHubPath(locale === 'es' ? 'es' : 'en');
+  const quizzesHref = quizHubHref(locale);
 
   return (
     <footer className="py-10 font-poppins">
@@ -22,11 +22,11 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Brain className="size-4" />
-            <span className="text-sm">{t('welcome.verifiedQuestions', { count: verifiedQuestionsCount.toLocaleString() })}</span>
+            <span className="text-sm">{t('welcome.verifiedQuestions', { count: verifiedQuestionsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined) })}</span>
           </div>
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Swords className="size-4" />
-            <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString() })}</span>
+            <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined) })}</span>
           </div>
         </div>
         {/* Socials + contact (one inline row) */}

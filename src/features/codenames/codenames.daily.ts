@@ -13,7 +13,7 @@ export const codenamesDailyGame = (locale: string): WordDailyGame => {
   return { modeId: "codenames", route: "/codenames", roomGame: "codenames", brand: c.brand, hero: "/assets/demos/game-modes/football-codenames.webp", calendar: CODENAMES_CALENDAR, tag: c.tag, lines: c.lines };
 };
 
-type Label = { en: string; es: string; tr: string; ru: string; ka: string };
+type Label = { en: string; es: string; tr: string; ru: string; pt?: string; ka: string };
 
 /** Server-held run state (backend codenames.types PublicRunState); the board has no clock, so it is never `open`. */
 export interface CodenamesDailyState extends WordRunStateBase {

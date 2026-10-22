@@ -12,7 +12,7 @@ import {
   SITE_OG_IMAGE_PATH,
   IS_PRODUCTION_DEPLOYMENT,
 } from "@/lib/seo/site";
-import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
+import { HTML_LANG, explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
 import { messages } from "@/lib/i18n/messages";
 import {
   buildSiteStructuredData,
@@ -134,7 +134,7 @@ export default async function RootLayout({
   const localeAssetSeed = startupLocaleAssetSeedEnabled(process.env);
 
   return (
-    <html lang={locale} className="dark" suppressHydrationWarning>
+    <html lang={HTML_LANG[locale]} className="dark" suppressHydrationWarning>
       <body
         className="antialiased"
         style={{ fontFamily: "'Poppins', sans-serif" }}

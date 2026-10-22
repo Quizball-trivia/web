@@ -44,12 +44,12 @@ export const GGT_OPTION_CLASS =
  *  games' entries there). */
 export const GGT_ACTION_META: Record<
   TacticsStepKind,
-  { label: Record<MiniLocale, string>; color: string }
+  { label: Record<MiniLocale | 'pt', string>; color: string }
 > = {
-  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი', es: 'Regate', tr: 'Dribling', ru: 'Дриблинг' }, color: '#1c2b21' },
-  run: { label: { en: 'Run', ka: 'შერბენა', es: 'Carrera', tr: 'Koşu', ru: 'Рывок' }, color: '#1c2b21' },
-  pass: { label: { en: 'Pass', ka: 'პასი', es: 'Pase', tr: 'Pas', ru: 'Пас' }, color: '#ffffff' },
-  shot: { label: { en: 'Shot!', ka: 'დარტყმა!', es: '¡Tiro!', tr: 'Şut!', ru: 'Удар!' }, color: '#FFE500' },
+  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი', es: 'Regate', tr: 'Dribling', ru: 'Дриблинг', pt: 'Drible' }, color: '#1c2b21' },
+  run: { label: { en: 'Run', ka: 'შერბენა', es: 'Carrera', tr: 'Koşu', ru: 'Рывок', pt: 'Corrida' }, color: '#1c2b21' },
+  pass: { label: { en: 'Pass', ka: 'პასი', es: 'Pase', tr: 'Pas', ru: 'Пас', pt: 'Passe' }, color: '#ffffff' },
+  shot: { label: { en: 'Shot!', ka: 'დარტყმა!', es: '¡Tiro!', tr: 'Şut!', ru: 'Удар!', pt: 'Chute!' }, color: '#FFE500' },
 };
 
 export function GgtActionGlyph({ kind, color }: { kind: TacticsStepKind; color: string }) {

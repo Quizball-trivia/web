@@ -262,6 +262,42 @@ const COPY = {
     target: 'цель',
     finish: 'Гол',
   },
+  pt: {
+    title: 'Caminho até o Gol',
+    subtitle: 'Supere 10 defensores e o goleiro. Uma pergunta de futebol por zona.',
+    balance: 'Saldo',
+    zone: 'Zona',
+    stake: 'Aposta',
+    introEyebrow: 'O desafio das onze zonas',
+    introTitle: 'Saiba. Drible. Garanta.',
+    introBody: 'Cada resposta inicia um teste de sobrevivência. Respostas corretas aumentam suas chances. Depois de cada zona segura, garanta o prêmio ou ataque o próximo defensor.',
+    kickOff: 'Comece com {stake}',
+    noFunds: 'Pontos insuficientes para essa aposta',
+    nextReturn: 'Próximo retorno',
+    currentReturn: 'Retorno atual',
+    question: 'Pergunta',
+    answerFast: 'Responda antes que o defensor chegue',
+    clean: 'Defensor driblado',
+    cleanBody: 'Você passou pela zona {zone}. O próximo defensor já está chegando.',
+    continue: 'Ataque a zona {zone}',
+    cashOut: 'Resgatar {amount}',
+    saved: 'Defesa!',
+    savedBody: 'O goleiro defendeu seu chute final. Você perdeu a aposta.',
+    tackled: 'Desarmado!',
+    tackledBody: 'O defensor interrompeu sua jogada na zona {zone}. Você perdeu a aposta.',
+    correctWas: 'Resposta correta: {answer}',
+    newRun: 'Nova tentativa',
+    cashed: 'Prêmio garantido',
+    cashedBody: 'Zonas concluídas: {zones} · {mult}×.',
+    finalTitle: 'Gol!',
+    finalBody: 'Dez defensores driblados. Goleiro superado. Uma sequência perfeita de 4.00×.',
+    won: 'Você garantiu {amount}',
+    startAgain: 'Jogar de novo',
+    liveRoute: 'Rota ao vivo',
+    safe: 'superada',
+    target: 'alvo',
+    finish: 'Gol',
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -287,8 +323,8 @@ function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): T
   return DIFFICULTIES.map((difficulty) => pools[difficulty].pop() ?? fallback.pop()!);
 }
 
-function points(value: number) {
-  return value.toLocaleString(undefined, {
+function points(value: number, locale: string) {
+  return value.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined, {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });
@@ -1331,7 +1367,7 @@ export function RoadToGoal({
       accent="#58CC02"
       wide
       disclaimer={!sample && !partner}
-      headerRight={partner ? undefined : <StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
+      headerRight={partner ? undefined : <StatPill label={copy.balance} value={points(effectiveBalance, locale)} color="#FFE500" />}
     >
       {sample && (
         <div className="mt-1 px-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp('coinSample.practiceChip')}</div>
@@ -1431,7 +1467,7 @@ export function RoadToGoal({
                     }
                     className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
                   >
-                    <Play className="size-4 fill-current" /> {fill(copy.kickOff, { stake: points(stake) })}
+                    <Play className="size-4 fill-current" /> {fill(copy.kickOff, { stake: points(stake, locale) })}
                   </button>
                   {effectiveBalance < stake && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">{copy.noFunds}</p>}
                   {live && !newRunsEnabled && (
@@ -1459,7 +1495,7 @@ export function RoadToGoal({
                   </div>
                   <div className="rounded-xl bg-brand-yellow px-2.5 py-1.5 text-right text-game-ink">
                     <div className="font-poppins text-[8px] font-black uppercase tracking-wider opacity-55">{copy.nextReturn}</div>
-                    <div className="font-poppins text-sm font-black tabular-nums">{points(nextReturn)} · {nextMultiplier.toFixed(2)}×</div>
+                    <div className="font-poppins text-sm font-black tabular-nums">{points(nextReturn, locale)} · {nextMultiplier.toFixed(2)}×</div>
                   </div>
                 </div>
 
@@ -1537,14 +1573,14 @@ export function RoadToGoal({
                 </p>
                 <div className="mx-auto mt-4 rounded-2xl border border-brand-yellow/25 bg-brand-yellow/10 px-5 py-2.5">
                   <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-brand-yellow/70">{copy.currentReturn}</div>
-                  <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
+                  <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn, locale)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
                 </div>
                 <div className="mt-3 grid gap-2">
                   <button type="button" data-testid="road-to-goal-continue" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     {fill(copy.continue, { zone: progress + 1 })}
                   </button>
                   <button type="button" data-testid="road-to-goal-cashout" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
-                    <LockKeyhole className="size-4" /> {fill(copy.cashOut, { amount: points(currentReturn) })}
+                    <LockKeyhole className="size-4" /> {fill(copy.cashOut, { amount: points(currentReturn, locale) })}
                   </button>
                 </div>
               </motion.div>
@@ -1579,7 +1615,7 @@ export function RoadToGoal({
                 <p className="mt-1 font-poppins text-xs font-semibold text-white/75">
                   {fill(copy.cashedBody, { zones: progress, mult: currentMultiplier.toFixed(2) })}
                 </p>
-                <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout)}</div>
+                <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout, locale)}</div>
                 <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                   {partner ? partner.finishLabel : <><RotateCcw className="size-4" /> {copy.startAgain}</>}
                 </button>
@@ -1594,7 +1630,7 @@ export function RoadToGoal({
                 <h2 className="mt-4 font-poppins text-3xl font-black uppercase text-brand-yellow">{copy.finalTitle}</h2>
                 <p className="mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">{copy.finalBody}</p>
                 <div className="mt-4 rounded-2xl bg-brand-green px-6 py-3 font-poppins text-xl font-black text-game-ink">
-                  {fill(copy.won, { amount: points(payout) })}
+                  {fill(copy.won, { amount: points(payout, locale) })}
                 </div>
                 <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 font-poppins text-sm font-black uppercase text-white transition-[background,transform] hover:bg-white/15 active:scale-[0.99]">
                   {partner ? partner.finishLabel : <><RotateCcw className="size-4" /> {copy.startAgain}</>}

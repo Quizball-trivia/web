@@ -1,9 +1,9 @@
 import { ROUNDS_PER_DAY, MAX_SCORE, type RoundOutcome, type RoundResult } from "./buscaminas.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt";
 const LETTER: Record<RoundOutcome, string> = { perfect: "p", banked: "b", mine: "m" };
 const OUTCOME: Record<string, RoundOutcome> = { p: "perfect", b: "banked", m: "mine" };
-const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{20})-(es|en|ka|tr|ru)$/;
+const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{20})-(es|en|ka|tr|ru|pt)$/;
 
 export interface ShareResult {
   number: number;
@@ -15,7 +15,7 @@ export interface ShareResult {
 /** Compact, unsigned result code for share links; purely cosmetic (it drives a preview image, nothing else). */
 export function encodeShare(number: number, results: readonly RoundResult[], locale: string): string {
   const score = results.reduce((sum, r) => sum + r.points, 0);
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" ? locale : "en";
   return `${number}-${score}-${results.map((r) => LETTER[r.outcome]).join("")}-${shareLocale}`;
 }
 
@@ -35,4 +35,5 @@ export const SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: string; p
   ka: { brandA: "საფეხბურთო", brandB: "მაღაროები", points: "ქულა", challenge: "მაჯობებ?", title: (n, s) => `საფეხბურთო მაღაროები #${n}: ${s} ქულა`, description: "16 მოთამაშე, 12 შეესაბამება, 4 მაღაროა. რამდენ ქულას აიღებ?", open: "ითამაშე" },
   tr: { brandA: "Futbol", brandB: "Mayın Tarlası", points: "puan", challenge: "Beni geçebilir misin?", title: (n, s) => `Futbol Mayın Tarlası #${n}: ${s} puan`, description: "16 oyuncu, 12'si uyar, 4'ü mayın. Kaç puan alırsın?", open: "Oyna" },
   ru: { brandA: "Футбол", brandB: "Сапёр", points: "очк.", challenge: "Сможешь меня обыграть?", title: (n, s) => `Футбольный сапёр #${n}: ${s} очк.`, description: "16 игроков: 12 подходят под условие, а 4 — мины. Сколько очков наберёшь?", open: "Играть в футбольного сапёра" },
+  pt: { brandA: "Futebol", brandB: "Campo Minado", points: "pts", challenge: "Você consegue me vencer?", title: (n, s) => `Campo Minado de Futebol #${n}: ${s} pts`, description: "16 jogadores, 12 atendem à dica e 4 são minas. Quantos pontos você consegue fazer?", open: "Jogue Campo Minado de Futebol" },
 };

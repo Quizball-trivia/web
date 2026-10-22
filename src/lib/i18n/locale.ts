@@ -5,7 +5,7 @@ import { isSupportedLocale, type Locale } from "./locale-config";
 
 export { isSupportedLocale as isLocale, type Locale } from "./locale-config";
 
-export const LOCALES = ["en", "ka", "es", "tr", "ru"] as const satisfies readonly Locale[];
+export const LOCALES = ["en", "ka", "es", "tr", "ru", "pt"] as const satisfies readonly Locale[];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -28,6 +28,7 @@ export const OG_LOCALE: Record<Locale, string> = {
   es: "es_ES",
   tr: "tr_TR",
   ru: "ru_RU",
+  pt: "pt_BR",
 };
 
 export const HTML_LANG: Record<Locale, string> = {
@@ -36,4 +37,5 @@ export const HTML_LANG: Record<Locale, string> = {
   es: "es",
   tr: "tr",
   ru: "ru",
+  pt: "pt-BR",
 };

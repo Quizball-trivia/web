@@ -34,4 +34,21 @@ describe("retired and renamed quiz pages", () => {
     expect(response.status).toBe(301);
     expect(new URL(response.headers.get("location")!).pathname).toBe("/en/football-quiz/career-path");
   });
+
+  it("answers a retired Portuguese quiz with a pt-BR 410, looked up by its English source slug", async () => {
+    const fetchMock = routeLookup({ kind: "gone" });
+    const response = await middleware(new NextRequest("https://quizball.io/pt/quiz-de-futebol/adivinhe-o-time-pelo-escudo"));
+    expect(response.status).toBe(410);
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toMatch(/\/campaign-quizzes\/routes\/club-badges$/);
+    const body = await response.text();
+    expect(body).toContain('lang="pt-BR"');
+    expect(body).toContain("Este quiz não está mais disponível.");
+  });
+
+  it("moves a renamed Portuguese quiz to the Portuguese page of its new slug", async () => {
+    routeLookup({ kind: "redirect", target_slug: "career-path" });
+    const response = await middleware(new NextRequest("https://quizball.io/pt/quiz-de-futebol/adivinhe-o-time-pelo-escudo"));
+    expect(response.status).toBe(301);
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira");
+  });
 });

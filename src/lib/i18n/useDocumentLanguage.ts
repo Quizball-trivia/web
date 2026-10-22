@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Locale } from "./locale-config";
+import { HTML_LANG, type Locale } from "./locale";
 
 /**
  * The server writes <html lang> from the address of the first page only. Client navigation keeps that element, and
@@ -7,6 +7,6 @@ import type { Locale } from "./locale-config";
  */
 export function useDocumentLanguage(language: Locale): void {
   useEffect(() => {
-    document.documentElement.lang = language;
+    document.documentElement.lang = HTML_LANG[language];
   }, [language]);
 }

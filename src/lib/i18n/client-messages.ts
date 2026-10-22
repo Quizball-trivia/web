@@ -12,6 +12,7 @@ const loaders = {
   ka: () => import("@/messages/ka.json").then((module) => module.default),
   tr: () => import("@/messages/tr.json").then((module) => module.default),
   ru: () => import("@/messages/ru.json").then((module) => module.default),
+  pt: () => import("@/messages/pt.json").then((module) => module.default),
 };
 
 export function cachedLocaleMessages(locale: Locale): MessageDictionary | undefined {

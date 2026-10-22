@@ -123,12 +123,35 @@ const ru = {
   "errors.INSUFFICIENT_TICKETS": "Недостаточно билетов"
 } satisfies Record<keyof typeof en, string>;
 
+const pt = {
+  "dailyChallenge.answerPrefix": "Resposta",
+  "dailyChallenge.chainComplete": "Sequência concluída.",
+  "dailyChallenge.correct": "Correto.",
+  "dailyChallenge.correctAnswers": "Respostas corretas",
+  "dailyChallenge.higherValueInstruction": "Escolha quem tem o valor mais alto. Uma resposta errada encerra a sequência.",
+  "dailyChallenge.imposterInstruction": "Selecione o conjunto exato de respostas corretas.",
+  "dailyChallenge.matchup": "Confronto",
+  "dailyChallenge.pick": "Escolha",
+  "dailyChallenge.round": "Rodada",
+  "dailyChallenge.roundFailed": "Rodada perdida.",
+  "dailyChallenge.score": "Pontuação",
+  "common.submit": "Enviar",
+  "dailyChallenge.submitSelection": "Enviar seleção",
+  "dailyChallenge.typePlayerName": "Digite o nome do jogador",
+  "dailyChallenge.typeYourAnswer": "Digite sua resposta",
+  "auth.sessionEnded": "Sua sessão terminou",
+  "notifications.challengeReceivedToast": "Desafio de {name}",
+  "notifications.challengeAccepted": "Desafio aceito",
+  "notifications.challengeDeclined": "Desafio recusado",
+  "notifications.challengeExpired": "Desafio expirado",
+  "errors.INSUFFICIENT_TICKETS": "Ingressos insuficientes"
+} satisfies Record<keyof typeof en, string>;
+
 export type RuntimeMessageKey = keyof typeof en;
 export const RUNTIME_MESSAGE_KEYS = Object.keys(en) as RuntimeMessageKey[];
-const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru };
+const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru, pt };
 
 export function translateRuntimeCopy(locale: Locale, key: RuntimeMessageKey, params?: Record<string, string | number>): string {
   const template = dictionaries[locale][key];
   return params ? template.replace(/\{(\w+)\}/g, (match, name: string) => params[name] === undefined ? match : String(params[name])) : template;
 }
-

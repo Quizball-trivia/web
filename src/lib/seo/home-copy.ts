@@ -132,6 +132,29 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
       { q: "Что будет, если я зарегистрируюсь после игры?", a: "Ты вернёшься в игру, в которую играл." },
     ],
   },
+  pt: {
+    metaTitle: "Quizball — Jogos de futebol e quiz online",
+    metaDescription: "Jogue quizzes de futebol online, incluindo Jogo da velha de futebol, Leilão de jogadores e Quiz de futebol com amigos. Comece como visitante e depois participe do modo Ranqueado e da Weekend League.",
+    h1: "Jogos de futebol e quiz multiplayer online",
+    intro: "Jogue quiz de futebol no Quizball, o jogo oficial em quizball.io. Experimente Jogo da velha de futebol ou Leilão de jogadores no navegador, ou baixe Quizball para Android. Crie uma conta para jogar no modo Ranqueado e na Weekend League. Cada evento mostra as moedas do jogo e os pacotes de itens cosméticos raros como recompensas.",
+    accessLine: "Você pode jogar como visitante sem criar uma conta. Para jogar no modo Ranqueado e na Weekend League, é preciso entrar na conta.",
+    nav: { games: "Jogos de futebol", quizzes: "Quizzes de futebol", signIn: "Entrar" },
+    sections: { competitive: "Compita e ganhe recompensas no jogo", daily: "Desafios diários", dailyHint: "Uma nova seleção por dia. Treine aqui e jogue o desafio oficial no app.", dailyAll: "Todos os desafios diários", whyAccount: "Por que criar uma conta no Quizball", quizzes: "Quizzes de futebol", faq: "Dúvidas" },
+    cards: { practice: "Rodada de treino", accountRequired: "Conta necessária", guest: "Jogar como visitante", playLabel: "Jogar", rankedTitle: "Modo Ranqueado", rankedText: "Teste seus conhecimentos de futebol contra outros jogadores e suba no ranking. É necessário ter uma conta.", rankedCta: "Inscreva-se no modo Ranqueado", wlTitle: "Weekend League", wlText: "Participe da competição de fim de semana do Quizball para ganhar moedas do jogo e itens cosméticos raros. É preciso ter uma conta; há requisitos de qualificação e regras do evento.", wlCta: "Ver detalhes da Weekend League", quizPage: "Abrir o quiz" },
+    whyAccount: [
+      "Jogue como visitante para experimentar Quizball na hora. Crie uma conta quando quiser competir no modo Ranqueado e na Weekend League.",
+      "Suba no ranking e acompanhe sua posição. As recompensas da Weekend League são moedas do jogo e pacotes de itens cosméticos raros, não dinheiro, cartões-presente ou vouchers. Consulte o calendário, os requisitos de qualificação e os detalhes das recompensas do evento atual antes de participar.",
+      "Os resultados dos jogos de treino como visitante não dão pontos no Ranqueado, moedas nem qualificação para a Weekend League.",
+    ],
+    about: { title: "Sobre os jogos", text: "O Quizball transforma seu conhecimento de futebol em jogos online. Relacione jogadores às categorias no Jogo da velha de futebol, faça suas escolhas no Leilão de jogadores ou responda a perguntas de futebol em um Quiz de futebol com amigos. Escolha o formato de que você mais gosta e consulte as regras na página do jogo. Você também pode explorar quizzes sobre jogadores, clubes e ligas e, quando quiser, participar das competições que exigem uma conta." },
+    quizLinks: { hub: "Todos os quizzes de futebol", guessPlayer: "Adivinhe o jogador", careerPath: "Adivinhe o jogador pela carreira" },
+    faq: [
+      { q: "Posso jogar sem criar uma conta?", a: "Sim. Você pode jogar como visitante nos jogos exibidos aqui, sem se cadastrar. O modo Ranqueado e a Weekend League exigem uma conta." },
+      { q: "Quais são as recompensas da Weekend League?", a: "A Weekend League oferece moedas do jogo e pacotes de itens cosméticos raros. As recompensas variam conforme o evento e o resultado. Não são dinheiro, cartões-presente ou vouchers e não podem ser trocadas por dinheiro. Consulte os requisitos e as recompensas do evento atual." },
+      { q: "As pontuações dos minijogos contam no modo Ranqueado?", a: "Os resultados dos minijogos como visitante não dão pontos no Ranqueado nem qualificam você para a Weekend League. A progressão no modo Ranqueado segue as regras da própria competição." },
+      { q: "O que acontece se eu me cadastrar depois de uma partida?", a: "Você volta para a partida que estava jogando." },
+    ],
+  },
 };
 
 export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDescription: string; h1: string; intro: string; reset: string }> = {
@@ -140,4 +163,5 @@ export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDes
   ka: { metaTitle: "ყოველდღიური საფეხბურთო გამოწვევები — ახალი ნაკრები ყოველდღე | QuizBall", metaDescription: "Quizball-ის ყოველდღიური გამოწვევები: Money Drop, სწორია თუ არა, Countdown, მეტი თუ ნაკლები, შემპარავი და ბარათის დეტექტივი. ივარჯიშე სტუმრად; ნამდვილი აპლიკაციაშია.", h1: "ყოველდღიური საფეხბურთო გამოწვევები", intro: "ყოველდღე ახალი საფეხბურთო თავსატეხები. სცადე თითოეულის სავარჯიშო რაუნდი აქ ანგარიშის გარეშე; ნამდვილი ყოველდღიური ნაკრები, ქოინები და სერიები აპლიკაციაშია.", reset: "ყოველდღიური ნაკრები 04:00-ზე, საქართველოს დროით (UTC შუაღამე) განახლდება." },
   tr: { metaTitle: "Günlük Futbol Görevleri — Her Gün Yeni Bir Set | QuizBall", metaDescription: "Quizball'un günlük futbol görevleri: Money Drop, Doğru mu Yanlış mı, Countdown, Higher or Lower Futbolcu, Köstebek ve Kart Dedektifi. Misafir olarak alıştır, gerçeğini uygulamada oyna.", h1: "Günlük futbol görevleri", intro: "Her gün her tür için yeni bir set. Burada misafir olarak alıştırma turu oyna; gerçek set, jetonlar ve seri için uygulamaya giriş yap.", reset: "Setler her gün 04:00'te, Gürcistan saatiyle (UTC gece yarısı) yenilenir." },
   ru: { metaTitle: "Ежедневные футбольные испытания — новый набор каждый день | QuizBall", metaDescription: "Ежедневные футбольные испытания Quizball: Money Drop, «Верно или неверно», Countdown, Higher or Lower, Imposter и Card Detective. Тренируйся как гость, а настоящее ежедневное испытание проходи в приложении.", h1: "Ежедневные футбольные испытания", intro: "Каждый день — новый набор футбольных головоломок. Попробуй тренировочный раунд каждого испытания здесь, без аккаунта; настоящий ежедневный набор, монеты и серии ждут тебя в приложении.", reset: "Ежедневные наборы обновляются в 04:00 по времени Грузии (в полночь UTC)." },
+  pt: { metaTitle: "Jogos diários de futebol — novos desafios todos os dias | QuizBall", metaDescription: "Os desafios diários do Quizball: Moedas nas respostas, Verdadeiro ou falso do futebol, Fale jogadores de futebol contra o relógio, Higher or Lower do futebol: quem vale mais?, Encontre o intruso e Adivinhe o jogador pela carta. Treine como visitante; jogue o desafio diário oficial no app.", h1: "Jogos diários de futebol", intro: "Todos os dias, você encontra novos desafios de futebol. Experimente aqui uma rodada de treino de cada jogo sem criar uma conta. O desafio diário oficial, as moedas e sua sequência ficam no app.", reset: "Os desafios diários são renovados às 04:00 no horário da Geórgia (meia-noite UTC)." },
 };

@@ -96,6 +96,22 @@ const COPY: Record<Locale, {
       "Побеждает тот, кто наберёт больше очков за десять вопросов.",
     ],
   },
+  pt: {
+    description: "Dez números reais do futebol: valores de transferências, gols e público. Quem chegar mais perto vence — solo ou ao vivo com os amigos.",
+    solo: "Jogar o desafio diário",
+    done: (time) => `Desafio diário concluído · volte em ${time}`,
+    friends: "Jogue com amigos (2–6)",
+    friendsHint: "Sala privada com link: todos respondem à mesma pergunta ao mesmo tempo.",
+    rules: "Como jogar",
+    rulesTitle: "Como jogar",
+    rulesList: [
+      "Dez perguntas com um número real: valor de transferência, gols em uma temporada, público de uma final.",
+      "Desafio diário (solo): deslize até seu palpite; quanto mais perto, mais pontos. 100 é um acerto perfeito.",
+      "Com amigos (2 a 6): todos veem a mesma pergunta e digitam um número em 20 segundos.",
+      "2 jogadores: quem chegar mais perto ganha a rodada. 3 ou mais: quem chegar mais perto recebe mais pontos (até 3), depois o próximo; +1 por acerto exato.",
+      "Quem fizer mais pontos após dez perguntas vence.",
+    ],
+  },
 };
 
 /**

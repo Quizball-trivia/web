@@ -22,6 +22,8 @@ export const WORD_LANDING_ROOTS = [
     "futbolnye-igry/kodovye-imena-futbol",
     "football-games/football-odd-one-out", "juegos-de-futbol/dato-falso-futbolero", "futbol-oyunlari/hangisi-yanlis",
     "futbolnye-igry/lozhnyj-fakt",
+    "jogos-de-futebol/jogo-da-ultima-letra", "jogos-de-futebol/jogador-em-comum", "jogos-de-futebol/corrida-das-selecoes",
+    "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -38,9 +40,9 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
     "../../shared/ContactModal", "./AppShellProfileMenu", "./AppShellLogoutDialog",
   ].map((specifier) => boundary("src/components/layout/app-shell/shellChromeLoader.ts", specifier, "pre-play", "Explicit intent loads an original popup; include its complete styles, not just the first viewport.")),
   boundary("src/app/route-providers.tsx", "./providers", "pre-play", "Hub word routes render FullProviders immediately, including toast UI."),
-  ...["es", "tr", "ka", "ru"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
+  ...["es", "tr", "ka", "ru", "pt"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
   boundary("src/app/route-providers.tsx", "@/features/partner/PartnerProviders", "other-host", "Partner hosts never render these Quizball word routes."),
-  ...["es", "ka", "tr", "ru"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
+  ...["es", "ka", "tr", "ru", "pt"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
   boundary("src/components/auth/AppAuthGate.tsx", "@/features/auth/GuestAuthDialog", "pre-play", "Guest authentication can open before Play."),
   boundary("src/components/auth/AppAuthGate.tsx", "@/components/shared/LoadingScreen", "pre-play", "Retain all authentication loading states."),
   boundary("src/components/AppLogo.tsx", "./AnimatedAppLogo", "pre-play", "Preserve animated-logo styling even when currently dormant."),

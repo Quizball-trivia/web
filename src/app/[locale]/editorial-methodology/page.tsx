@@ -10,6 +10,7 @@ import { campaignHubPath, campaignQuizPath } from "@/features/campaign-quiz/camp
 import { isLocale } from "@/lib/i18n/locale";
 import { buildLocalizedMetadata } from "@/lib/i18n/metadata";
 import { getEditorialMethodologyCopy } from "@/lib/seo/editorial-methodology";
+import { campaignLocaleOf } from "@/lib/seo/public-games";
 import {
   buildEditorialPageStructuredData,
   serializeJsonLd,
@@ -41,7 +42,7 @@ export default async function EditorialMethodologyPage({
   if (!isLocale(locale)) notFound();
 
   const copy = getEditorialMethodologyCopy(locale);
-  const quizLocale = locale === "es" || locale === "ru" ? locale : "en";
+  const quizLocale = campaignLocaleOf(locale);
   const headerList = await headers();
   const nonce = headerList.get("x-nonce") ?? undefined;
   const structuredData = buildEditorialPageStructuredData({

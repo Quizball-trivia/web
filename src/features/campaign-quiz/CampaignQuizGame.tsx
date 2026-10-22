@@ -116,6 +116,23 @@ const UI_COPY = {
     score: 'Посмотреть мой результат',
     next: 'Следующий вопрос',
   },
+  pt: {
+    answerError: 'Não foi possível conferir essa resposta. Tente novamente.',
+    fullTime: 'Fim de jogo',
+    youScored: 'Você fez',
+    playRanked: 'Jogar no modo ranqueado',
+    playAgain: 'Jogar de novo',
+    question: 'Pergunta',
+    of: 'de',
+    correctCount: 'acertos',
+    correctAnswer: 'Resposta correta',
+    incorrectAnswer: 'Sua resposta está incorreta',
+    checking: 'Conferindo sua resposta…',
+    correctFeedback: 'Correto — mandou bem!',
+    incorrectFeedback: 'Quase! A resposta correta está destacada.',
+    score: 'Ver meu resultado',
+    next: 'Próxima pergunta',
+  },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**
@@ -124,7 +141,7 @@ const UI_COPY = {
  * the question, so the heading is kept for screen readers only in that case.
  * Prompts that carry real extra wording are always shown.
  */
-const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста'];
+const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста', 'Adivinhe o jogador'];
 
 function isRedundantCareerPrompt(question: CampaignQuizQuestion): boolean {
   if (question.type !== 'career_path' || question.details.length === 0) return false;

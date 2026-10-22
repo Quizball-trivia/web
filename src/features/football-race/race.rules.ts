@@ -2,8 +2,8 @@
  * Football Race (prototype): every player owns a racer (a nation), picks a stat, and the racer that really leads that
  * stat moves one space, whoever picked it. This file is the content model and the comparisons; no clock, no state.
  */
-export type L10n = { en: string; es: string };
-export const l10n = (text: L10n, locale: string) => (locale === "es" ? text.es : text.en);
+export type L10n = { en: string; es: string; pt?: string };
+export const l10n = (text: L10n, locale: string) => (locale === "pt" ? (text.pt ?? text.en) : locale === "es" ? text.es : text.en);
 
 export interface RaceNation {
   id: string; name: L10n; /** flag-icons code; none for invented nations */ flag?: string; /** 0 = most appearances */ tier: number;
@@ -58,7 +58,7 @@ export function compare(stat: RaceStat, metric: RaceMetric, racers: readonly str
 
 export function formatValue(metric: RaceMetric, value: number, locale: string): string {
   if (metric.kind === "year") return String(value);
-  const text = displayed(value, metric.decimals).toLocaleString(locale, { minimumFractionDigits: metric.decimals, maximumFractionDigits: metric.decimals });
+  const text = displayed(value, metric.decimals).toLocaleString(locale === "pt" ? "pt-BR" : locale, { minimumFractionDigits: metric.decimals, maximumFractionDigits: metric.decimals });
   return metric.kind === "percent" ? `${text}%` : text;
 }
 
@@ -216,7 +216,7 @@ export function searchStats(pack: Pick<RacePack, "metrics" | "scopes">, stats: r
   return stats.filter((s) => {
     const m = metricOf.get(s.metric)!;
     const sc = scopeOf.get(s.scope)!;
-    const hay = fold(`${m.label.en} ${m.label.es} ${m.keywords} ${sc.label.en} ${sc.label.es}`);
+    const hay = fold(`${m.label.en} ${m.label.es} ${m.label.pt ?? m.label.en} ${m.keywords} ${sc.label.en} ${sc.label.es} ${sc.label.pt ?? sc.label.en}`);
     return words.every((w) => hay.includes(w));
   });
 }

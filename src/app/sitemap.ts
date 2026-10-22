@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
+import { CampaignQuizApiError, listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { DOWNLOAD_UPDATED_AT } from "@/lib/seo/app-download";
@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     number,
     Date?,
   ]> = [
-    // "" = the locale homepage (/en, /ka, /es), which is the Football Games hub.
+    // "" = the locale homepage (/en, /ka, /es, /pt), which is the Football Games hub.
     ["", "weekly", 1.0],
     ["/about", "monthly", 0.7, editorialContentUpdated],
     ["/download", "monthly", 0.8, new Date(DOWNLOAD_UPDATED_AT)],
@@ -75,6 +75,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const campaignPages = await listCampaignQuizPages('en');
   // Only quizzes with a Russian edition: the quiz endpoint would answer the rest in English under a Russian URL.
   const russianSlugs = new Set((await listCampaignQuizPages('ru')).map((page) => page.slug));
+  // Only quizzes with a complete pt edition (page copy and every question). A backend without Portuguese pages
+  // rejects the locale (400): no pt entries rather than a failed sitemap.
+  const portuguesePages = await listCampaignQuizPages('pt').catch((error: unknown) => {
+    if (error instanceof CampaignQuizApiError && error.status === 400) return [];
+    throw error;
+  });
+  const portugueseSlugs = new Set(portuguesePages.map((page) => page.slug));
 
   const campaignEntries: MetadataRoute.Sitemap = [
     entry(
@@ -104,6 +111,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0],
     ),
+    ...(portuguesePages.length
+      ? [entry(
+          '/pt/quiz-de-futebol',
+          'weekly',
+          0.9,
+          portuguesePages
+            .map((page) => validLastModified(page.updated_at))
+            .filter((date): date is Date => Boolean(date))
+            .sort((a, b) => b.getTime() - a.getTime())[0],
+        )]
+      : []),
     ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
       ? [entry(
           '/ka/football-quiz',
@@ -133,7 +151,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...english,
         url: `${SITE_URL}${campaignQuizPath(page.slug, 'ru')}`,
       };
-      const editions = russianSlugs.has(page.slug) ? [spanish, russian] : [spanish];
+      const portuguese = {
+        ...english,
+        url: `${SITE_URL}${campaignQuizPath(page.slug, 'pt')}`,
+      };
+      const editions = [
+        spanish,
+        ...(russianSlugs.has(page.slug) ? [russian] : []),
+        ...(portugueseSlugs.has(page.slug) ? [portuguese] : []),
+      ];
       return page.locale_mode === 'en_ka'
         ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, ...editions]
         : [english, ...editions];

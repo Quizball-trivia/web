@@ -304,6 +304,59 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     careerPathLink: "Викторина «Карьера футболиста»",
     clubBadgesLink: "Викторина «Эмблемы футбольных клубов»",
   },
+  pt: {
+    metaTitle: "Metodologia editorial do QuizBall — Como verificamos as perguntas",
+    metaDescription:
+      "Veja como o QuizBall pesquisa, revisa, atualiza e corrige perguntas sobre futebol para seus quizzes gratuitos e seu jogo multijogador.",
+    backLabel: "Sobre o QuizBall",
+    eyebrow: "Padrões editoriais",
+    title: "Como o QuizBall verifica as perguntas sobre futebol",
+    intro:
+      "Um bom quiz de futebol deve testar seu conhecimento, sem depender de enunciados vagos. Este é o processo que usamos para deixar as perguntas claras, atualizadas e justas.",
+    updated: "Última atualização: 30 de agosto de 2026",
+    sections: [
+      {
+        title: "1. Começamos com um fato verificável sobre futebol",
+        body:
+          "Cada pergunta começa com um fato identificável sobre um jogador, clube, competição, partida ou recorde. Sempre que possível, preferimos fontes oficiais de competições e clubes, bancos de dados estatísticos reconhecidos e reportagens confiáveis, em vez de listas sem fontes.",
+      },
+      {
+        title: "2. Conferimos a resposta e todas as alternativas",
+        body:
+          "Revisamos juntos a resposta correta, o enunciado e cada alternativa. Uma opção incorreta deve ser plausível o bastante para deixar a pergunta interessante, mas não pode criar uma segunda resposta defensável.",
+      },
+      {
+        title: "3. Incluímos a data ou a temporada quando os fatos podem mudar",
+        body:
+          "Transferências, recordes, rankings e elencos atuais mudam. Perguntas sobre fatos que podem mudar devem incluir a temporada, a competição ou a data relevante para que a resposta continue inequívoca.",
+      },
+      {
+        title: "4. Definimos a dificuldade sem truques",
+        body:
+          "A dificuldade deve vir do conhecimento de futebol necessário, não de uma gramática confusa nem de suposições ocultas. Misturamos perguntas acessíveis com fatos menos conhecidos e analisamos os dados de desempenho quando há respostas de jogadores suficientes.",
+      },
+      {
+        title: "5. Separamos os quizzes públicos das partidas ranqueadas",
+        body:
+          "Publicar um quiz para quem chega pelos mecanismos de busca não inclui automaticamente suas perguntas nas partidas ranqueadas. As páginas públicas de quiz e o banco de perguntas para partidas ranqueadas têm controles de disponibilidade separados.",
+      },
+      {
+        title: "6. Corrigimos erros relevantes e registramos atualizações reais",
+        body:
+          "Quando encontramos um erro relevante, corrigimos ou removemos a pergunta afetada. Os sinais de atualização da página, incluindo as datas do sitemap, só devem mudar após uma atualização significativa do conteúdo, não automaticamente a cada solicitação.",
+      },
+    ],
+    correctionHeading: "Encontrou uma pergunta que merece ser revista?",
+    correctionBody:
+      "Envie o nome do quiz, a pergunta e a fonte que, na sua opinião, confirma a correção. Vamos revisar o fato e o enunciado.",
+    correctionLink: "Fale com a gente pelo e-mail support@quizball.io",
+    exploreHeading: "Veja o método na prática",
+    exploreBody:
+      "Comece por dois dos formatos do QuizBall que melhor testam seus conhecimentos sobre futebol ou explore todos os quizzes gratuitos.",
+    hubLink: "Explore todos os quizzes de futebol",
+    careerPathLink: "Adivinhe o jogador pela carreira",
+    clubBadgesLink: "Quiz dos escudos de clubes de futebol",
+  },
 };
 
 export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
@@ -381,6 +434,21 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     hubLink: "Все футбольные викторины",
     careerPathLink: "Викторина «Карьера футболиста»",
     clubBadgesLink: "Викторина «Эмблемы клубов»",
+  },
+  pt: {
+    eyebrow: "Quizzes de futebol em que você pode confiar",
+    title: "Perguntas claras, fatos verificados e atualizações transparentes",
+    body:
+      "O QuizBall mostra como as perguntas são pesquisadas, revisadas e corrigidas. Os quizzes públicos encontrados pelos mecanismos de busca também são gerenciados separadamente do banco de partidas ranqueadas.",
+    methodologyLink: "Leia nossa metodologia editorial",
+    reportLink: "Leia o Índice de Conhecimento sobre Futebol 2026",
+    pressLink: "Recursos para imprensa e citações",
+    exploreHeading: "Explore o QuizBall",
+    exploreBody:
+      "Explore todos os quizzes gratuitos de futebol ou experimente Adivinhe o jogador pela carreira e o quiz de escudos de clubes, dois formatos preferidos pelos torcedores.",
+    hubLink: "Todos os quizzes de futebol",
+    careerPathLink: "Adivinhe o jogador pela carreira",
+    clubBadgesLink: "Quiz dos escudos de clubes",
   },
 };
 
