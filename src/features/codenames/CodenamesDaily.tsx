@@ -1,11 +1,16 @@
 "use client";
 import "@/styles/application-utilities.css";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { wordDailyCopy } from "@/features/wordgames/copy";
 import { useWordDaily } from "@/features/wordgames/daily/useWordDaily";
 import { isLiveDay, puzzleNumber } from "@/features/wordgames/daily/wordDaily.logic";
-import { WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
+import { DailyIntro, PlayRoomWithFriends, WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
+import { Frame } from "@/features/wordgames/ui";
+import { BoardPicker } from "./BoardPicker";
+import { readBoard, setRoomPreset, writeBoard } from "./codenames.board";
+import { CodenamesWordsPractice } from "./CodenamesWordsPractice";
+import type { BoardKind } from "./codenames.view";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { codenamesCopy } from "./codenames.copy";
 import { CODENAMES_CALENDAR, codenamesDailyApi, codenamesDailyGame, loadCodenamesBoard, toSoloState, type CodenamesDailyState, type CodenamesMove } from "./codenames.daily";
@@ -13,6 +18,9 @@ import { afterMissed, pickOn, reconcilePick, type DailyPick, type StaleNote } fr
 import { CodenamesEndView, CodenamesPlayView } from "./CodenamesSolo";
 
 export { codenamesDailyGame };
+
+/** The stored board changes only through this screen: nothing to subscribe to. */
+const noSubscription = () => () => {};
 
 /** Football Codenames' daily board on the shared daily screens (intro, archive, end, ranking). */
 export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
@@ -37,6 +45,13 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
     },
   });
   const { state, day, run, owner } = daily;
+  // Pictures (the ranked daily) or Words (practice boards): remembered per viewer, read after mount (no storage on the server).
+  const stored = useSyncExternalStore(noSubscription, readBoard, () => "pictures" as const);
+  const [picked, setPicked] = useState<BoardKind | null>(null);
+  const board = picked ?? stored;
+  const [practicing, setPracticing] = useState(false);
+  const pickBoard = (next: BoardKind) => { setPicked(next); writeBoard(next); };
+  const picker = <BoardPicker locale={locale} value={board} onChange={pickBoard} />;
   const busy = daily.pending !== null;
   const solo = state ? toSoloState(state, locale) : null;
   const number = day ? puzzleNumber(CODENAMES_CALENDAR, day) : 0;
@@ -81,8 +96,22 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   ) : null;
   const end = solo && state?.done && day ? (
     <CodenamesEndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard} onArchive={() => daily.setView("archive")} onExit={onExit}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} />
+      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} picker={picker} />
   ) : null;
 
-  return <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void daily.play()} onExit={onExit} play={play} end={end} wide />;
+  if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} onExit={() => setPracticing(false)} />;
+  // Words has its own screens: whatever the picture daily restores (a finished run, the archive) does not take over.
+  if (board === "words") {
+    return (
+      <Frame lang={locale}>
+        <DailyIntro game={{ ...game, tag: c.words.practiceTag, lines: c.words.lines }} locale={locale} number={null} status="new" busy={false} notice={null}
+          guestOnPastBoard={false} guestLockedOut={false} picker={picker} onStart={() => setPracticing(true)} onExit={onExit}
+          friends={<div onClickCapture={() => setRoomPreset("words")}><PlayRoomWithFriends game={game} locale={locale} className="mt-3" /></div>} />
+      </Frame>
+    );
+  }
+  return (
+    <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void daily.play()} onExit={onExit} play={play} end={end} wide
+      picker={picker} />
+  );
 }

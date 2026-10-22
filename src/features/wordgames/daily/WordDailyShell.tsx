@@ -45,11 +45,14 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
   );
 }
 
-export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends }: {
-  game: WordDailyGame; locale: string; number: number; status: "new" | "started" | "done"; busy: boolean; notice: WordDailyNotice | null;
-  guestOnPastBoard: boolean; guestLockedOut: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void;
+export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends, picker }: {
+  /** `number` null and no `onArchive`: a game without days (a practice board). */
+  game: WordDailyGame; locale: string; number: number | null; status: "new" | "started" | "done"; busy: boolean; notice: WordDailyNotice | null;
+  guestOnPastBoard: boolean; guestLockedOut: boolean; onStart: () => void; onArchive?: () => void; onExit?: () => void;
   /** Replaces the friend-room link (the playground draws a stand-in). */
   friends?: ReactNode;
+  /** A choice between two versions of the game, under its name. */
+  picker?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   return (
@@ -63,9 +66,10 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
         <Image src={game.hero} alt="" fill sizes="(max-width: 480px) 100vw, 448px" className="object-cover" priority />
       </div>
       <Brand words={game.brand} className="mt-5 text-3xl leading-none" />
-      <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number} · {game.tag}</p>
+      {picker && <div className="mt-4">{picker}</div>}
+      <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>{number !== null && `#${number} · `}{game.tag}</p>
       <ul className="mt-4 space-y-2 text-sm leading-snug text-white/85">
-        {(typeof game.lines === "function" ? game.lines(number) : game.lines).map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
+        {(typeof game.lines === "function" ? game.lines(number ?? 0) : game.lines).map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
       </ul>
       {guestOnPastBoard && (
         <div className="mt-4 rounded-2xl border border-brand-yellow/60 bg-brand-yellow/10 px-4 py-3">
@@ -77,7 +81,7 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
       <div className="flex-1" />
       <GreenButton className="mt-6" disabled={busy} onClick={onStart}>{status === "done" ? c.seeResult : status === "started" ? c.resume : c.play}</GreenButton>
       {friends ?? <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />}
-      <button type="button" onClick={onArchive} className="mx-auto mt-3 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{c.archive}</button>
+      {onArchive && <button type="button" onClick={onArchive} className="mx-auto mt-3 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{c.archive}</button>}
     </div>
   );
 }
@@ -146,7 +150,7 @@ export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranke
 }
 
 /** The states every word-game daily shares around its play and end screens. */
-export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end, wide = false }: {
+export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end, wide = false, picker }: {
   game: WordDailyGame; locale: string;
   daily: {
     versions: Record<string, number> | null | undefined; authReady: boolean; day: string | null; days: string[]; today: string; view: "intro" | "play" | "end" | "archive";
@@ -161,6 +165,8 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
   end: ReactNode | null;
   /** The play screen spreads out on desktop (a side panel beside the board). */
   wide?: boolean;
+  /** A choice between two versions of the game on the intro (DailyIntro's `picker`). */
+  picker?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   const { day } = daily;
@@ -193,7 +199,7 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
   } else {
     body = (
       <DailyIntro game={game} locale={locale} number={puzzleNumber(game.calendar, day)} status={status} busy={daily.pending !== null} notice={daily.notice}
-        guestOnPastBoard={daily.guestOnPastBoard} guestLockedOut={daily.guestLockedOut} onStart={onStart} onArchive={() => daily.setView("archive")} onExit={onExit} />
+        guestOnPastBoard={daily.guestOnPastBoard} guestLockedOut={daily.guestLockedOut} onStart={onStart} onArchive={() => daily.setView("archive")} onExit={onExit} picker={picker} />
     );
   }
   return <Frame lang={locale} wide={wide && daily.view === "play" && play !== null}>{body}</Frame>;

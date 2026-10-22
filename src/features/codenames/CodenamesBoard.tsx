@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { Shirt, Skull, Users } from "lucide-react";
@@ -12,6 +12,8 @@ import { cardArt, type CardKind } from "./codenames.view";
 
 export interface BoardCard {
   id: string;
+  /** Word boards: the word printed on the card instead of a picture. */
+  word?: string;
   /** The key colour, when this viewer may see it (Scouts, or everyone once the game is over). */
   kind: CardKind | null;
   revealed: CardKind | null;
@@ -75,6 +77,44 @@ function OwnGoalBlast({ label }: { label: string }) {
   );
 }
 
+/** Largest word size, as a share of the card's width, capped: most words share it and only long ones shrink. */
+const WORD_MAX_SHARE = 0.2;
+const WORD_MAX_PX = 19;
+const WORD_MIN_PX = 7;
+/** Each side: the Scout's 3px colour frame (thinner on word cards) plus a little air. */
+const WORD_INSET_PX = 5;
+
+/**
+ * A word card. The word is measured in its card and shrunk until it fits on one line: letter widths differ too much
+ * between words and scripts for a size worked out from the length, and a word must never split.
+ */
+function WordFace({ word, covered }: { word: string; covered: boolean }) {
+  const fitRef = useCallback((el: HTMLSpanElement | null) => {
+    if (!el?.parentElement) return;
+    const box = el.parentElement;
+    const fit = () => {
+      const room = box.clientWidth - 2 * WORD_INSET_PX;
+      let size = Math.min(WORD_MAX_PX, Math.floor(box.clientWidth * WORD_MAX_SHARE * 2) / 2);
+      el.style.fontSize = `${size}px`;
+      while (el.offsetWidth > room && size > WORD_MIN_PX) {
+        size -= 0.5;
+        el.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    void document.fonts?.ready.then(fit);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <span className={cn("absolute inset-0 flex items-center justify-center", covered && "opacity-0")}>
+      <span ref={fitRef} className="font-poppins inline-block whitespace-nowrap font-black uppercase leading-none tracking-tight text-black">{word}</span>
+    </span>
+  );
+}
+
 export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLabel, cardLabel, altOf, onTap, className, finale = false }: {
   cards: BoardCard[];
   mode: BoardMode;
@@ -94,10 +134,11 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
   usePreloadCodenamesSounds();
   const [goneOffBefore] = useState(() => new Set(finale ? [] : cards.filter((c) => c.revealed === "owngoal").map((c) => c.id)));
   const blast = cards.some((c) => c.revealed === "owngoal" && !goneOffBefore.has(c.id));
+  const words = cards.some((c) => c.word !== undefined);
   return (
     <>
     {blast && <OwnGoalBlast label={kinds.owngoal} />}
-    <motion.div data-codenames-board={mode} className={cn("grid grid-cols-4 gap-1.5 sm:gap-2 lg:grid-cols-5", className)}
+    <motion.div data-codenames-board={mode} data-codenames-words={words || undefined} className={cn("grid sm:gap-2", words ? "grid-cols-5 gap-1" : "grid-cols-4 gap-1.5 lg:grid-cols-5", className)}
       animate={blast ? { x: [0, -14, 12, -9, 7, -4, 2, 0], y: [0, 6, -5, 4, -2, 0] } : undefined} transition={{ duration: 0.65 }}>
       {cards.map((card, position) => {
         const shown = card.revealed ?? (mode !== "guess" ? card.kind : null);
@@ -111,19 +152,24 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
             data-card={card.id}
             data-revealed={card.revealed ?? undefined}
             data-key={mode !== "guess" ? card.kind ?? undefined : undefined}
-            aria-label={[cardLabel?.(position + 1), altOf?.(card.id), label].filter(Boolean).join(" · ") || undefined}
+            aria-label={[cardLabel?.(position + 1), card.word ?? altOf?.(card.id), label].filter(Boolean).join(" · ") || undefined}
             aria-pressed={mode === "guess" ? isSelected : undefined}
             disabled={!tappable}
             onClick={() => tappable && onTap?.(card.id)}
             whileTap={tappable ? { scale: 0.96 } : undefined}
             className={cn(
-              "relative aspect-square overflow-hidden rounded-xl bg-white/90 shadow-md shadow-black/30 transition-shadow",
+              "relative overflow-hidden rounded-xl shadow-md shadow-black/30 transition-shadow",
+              card.word !== undefined ? "@container aspect-[5/4] bg-white/95" : "aspect-square bg-white/90",
               tappable && "cursor-pointer hover:ring-2 hover:ring-white/60",
               isSelected && "ring-4 ring-white",
               mode === "end" && !card.revealed && "opacity-90",
             )}
           >
-            <Image src={cardArt(card.id)} alt="" fill sizes="(max-width: 480px) 25vw, 200px" className={cn("object-cover", card.revealed && "scale-90 opacity-60 saturate-50")} />
+            {card.word !== undefined ? (
+              <WordFace word={card.word} covered={!!card.revealed} />
+            ) : (
+              <Image src={cardArt(card.id)} alt="" fill sizes="(max-width: 480px) 25vw, 200px" className={cn("object-cover", card.revealed && "scale-90 opacity-60 saturate-50")} />
+            )}
             {card.revealed && (
               <motion.span
                 initial={{ rotateY: 90, opacity: 0 }}
@@ -131,18 +177,27 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
                 transition={{ duration: 0.35 }}
                 className={cn("absolute inset-0 flex items-center justify-center", COVER[card.revealed])}
               >
-                <CoverIcon kind={card.revealed} />
+                {card.word !== undefined ? (
+                  <span className="flex flex-col items-center gap-0.5">
+                    <CoverIcon kind={card.revealed} />
+                    <span className={cn("font-poppins max-w-full truncate px-1 text-[min(11px,11cqi)] font-black uppercase", card.revealed === "mine" || card.revealed === "neutral" ? "text-black/70" : "text-white/85")}>{card.word}</span>
+                  </span>
+                ) : (
+                  <CoverIcon kind={card.revealed} />
+                )}
               </motion.span>
             )}
             {!card.revealed && shown && (
-              <span className={cn("absolute inset-0 rounded-xl border-[5px]", FRAME[shown])} aria-hidden>
+              <span className={cn("absolute inset-0 rounded-xl", card.word !== undefined ? "border-[3px]" : "border-[5px]", FRAME[shown])} aria-hidden>
                 {shown === "owngoal" && (
-                  <span className={cn("absolute left-1 top-1 flex size-6 items-center justify-center rounded-full", DOT[shown])}><Skull className="size-4 text-white" strokeWidth={3} /></span>
+                  <span className={cn("absolute flex items-center justify-center rounded-full", DOT[shown], card.word !== undefined ? "left-0.5 top-0.5 size-4" : "left-1 top-1 size-6")}>
+                    <Skull className={card.word !== undefined ? "size-3" : "size-4"} strokeWidth={3} color="white" />
+                  </span>
                 )}
               </span>
             )}
             {!card.revealed && card.picks && card.picks.length > 0 && (
-              <span className="absolute right-1 top-1 flex -space-x-2" aria-hidden>
+              <span className={cn("absolute flex -space-x-2", card.word !== undefined ? "right-0.5 top-0.5 origin-top-right scale-[0.55]" : "right-1 top-1")} aria-hidden>
                 {card.picks.slice(0, 3).map((a, i) => <DuelAvatar key={i} customization={a} size="xs" className="rounded-full bg-white/90 p-0.5 shadow" />)}
               </span>
             )}

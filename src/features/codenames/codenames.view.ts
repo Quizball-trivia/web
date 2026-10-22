@@ -10,6 +10,10 @@ export const BOARD_SIZE = 20;
 export const STARTING_TEAM_CARDS = 8;
 export const OTHER_TEAM_CARDS = 7;
 
+/** Picture cards (20, keyed 8/7/4/1) or word cards like the original game (25, keyed 9/8/7/1). */
+export type BoardKind = "pictures" | "words";
+export const WORDS_BOARD = { size: 25, starting: 9, other: 8, neutral: 7 } as const;
+
 export const cardArt = (id: string) => `/assets/codenames/cards/${id}.webp`;
 
 export function kindFor(key: CardKey, team: Team): CardKind {
@@ -31,7 +35,7 @@ export interface SoloFlip { cardId: string; kind: CardKind; clue: number }
 export interface CodenamesSoloState {
   day: string;
   /** A card's kind once it is flipped, or for every card once the run is disclosed (null: still hidden). */
-  cards: { id: string; kind: CardKind | null }[];
+  cards: { id: string; kind: CardKind | null; word?: string }[];
   /** The clues given so far (all of them once the run is over). */
   clues: DailyClue[];
   totalClues?: number;
@@ -106,6 +110,8 @@ export interface RoomPlayer {
 
 export interface RoomCard {
   id: string;
+  /** Word boards: the card's word (picture boards draw the card's art from its id). */
+  word?: string;
   /** Sent to Scouts during play and to everyone once the game is over; null for guessers. */
   key: CardKey | null;
   revealed: CardKey | null;
@@ -118,6 +124,8 @@ export interface RoomTurn { team: Team; clue: (Clue & { bot?: boolean }) | null;
 
 export interface CodenamesRoomView {
   phase: "teams" | "clue" | "guess" | "over";
+  /** Unset: pictures. */
+  board?: BoardKind;
   mySeat: number;
   /** Who shuffles and kicks off on the teams screen. */
   host: number;
@@ -149,12 +157,29 @@ export type CodenamesCommand =
 export const me = (v: CodenamesRoomView) => v.players.find((p) => p.seat === v.mySeat)!;
 /** Everyone has a side once the game starts. */
 export const myTeamOf = (v: CodenamesRoomView): Team => me(v).team ?? 0;
-export const teamCards = (team: Team, starting: Team) => (team === starting ? STARTING_TEAM_CARDS : OTHER_TEAM_CARDS);
+export function teamCards(team: Team, starting: Team, board: BoardKind = "pictures"): number {
+  if (board === "words") return team === starting ? WORDS_BOARD.starting : WORDS_BOARD.other;
+  return team === starting ? STARTING_TEAM_CARDS : OTHER_TEAM_CARDS;
+}
 
-export function cardsLeft(v: Pick<CodenamesRoomView, "cards" | "starting">, team: Team): number {
-  return teamCards(team, v.starting) - v.cards.filter((c) => c.revealed === `t${team}`).length;
+export function cardsLeft(v: Pick<CodenamesRoomView, "cards" | "starting" | "board">, team: Team): number {
+  return teamCards(team, v.starting, v.board) - v.cards.filter((c) => c.revealed === `t${team}`).length;
 }
 
 /** The server's folding: case, accents, Turkish dotted letters, punctuation and spacing never make a clue new. */
 export const foldClue = (text: string): string =>
   text.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase("en").replace(/ı/g, "i").replace(/[^\p{L}\p{N}]+/gu, "");
+
+/**
+ * Word boards: the original rule that a clue may not be a word still showing on the board, or contain one, or be
+ * part of one (STONE for STONES, CROSSBAR for BAR). Each word of the clue is checked, and the whole clue run together
+ * ("B A R" is BAR). Mirrors the backend's clueOnBoard, which is the one that decides.
+ */
+export function clueOnBoard(clue: string, boardWords: string[]): string | null {
+  const parts = [...clue.split(/[\s-]+/), clue].map(foldClue).filter(Boolean);
+  for (const word of boardWords) {
+    const w = foldClue(word);
+    if (parts.some((p) => p === w || (p.length >= 3 && w.includes(p)) || (w.length >= 3 && p.includes(w)))) return word;
+  }
+  return null;
+}

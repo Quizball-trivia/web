@@ -26,6 +26,9 @@ export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>
     solo: [{ moment: "Any daily moment", sound: null, where: "prototype: no sounds yet" }],
     room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
   },
+  "codenames-words": {
+    room: [{ moment: "Any room moment", sound: null, where: "same sounds as the picture board (codenames.sounds.ts)" }],
+  },
   carrera: {
     duel: [{ moment: "Any 1v1 moment", sound: null, where: "prototype: no sounds yet" }],
     room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
