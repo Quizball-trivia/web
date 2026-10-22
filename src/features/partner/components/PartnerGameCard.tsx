@@ -9,8 +9,8 @@ import type { PartnerGameTile } from "../api/partnerApi.types";
 import { partnerCopy, type PartnerLocale } from "../partnerCopy";
 import { PARTNER_GAME_DEMO_SLUG, partnerGamePath, partnerGameTitle } from "../partnerGames";
 
-// Wide partner frames show four, then five, cards per row (the scroller's gap is 1rem from md up).
-const PARTNER_CARD_WIDTH = cn(CARD_WIDTH, "lg:w-[calc((100%_-_3rem)/4)] xl:w-[calc((100%_-_4rem)/5)]");
+// Wide partner frames show four cards per row (the scroller's gap is 1rem from md up).
+const PARTNER_CARD_WIDTH = cn(CARD_WIDTH, "lg:w-[calc((100%_-_3rem)/4)]");
 
 export type PartnerTileState = "playable" | "done" | "coming_soon";
 
