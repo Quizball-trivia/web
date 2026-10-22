@@ -23,7 +23,9 @@ export { codenamesDailyGame };
 const noSubscription = () => () => {};
 
 /** Football Codenames' daily board on the shared daily screens (intro, archive, end, ranking). */
-export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
+export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay, surface = "public_game" }: {
+  /** Where the screen runs, for analytics (Words practice tracks its own sessions). */
+  surface?: "app" | "public_game";
   locale: string; onExit?: () => void; onEvent?: (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => void; initialDay?: string | null; onDay?: (day: string, newest: boolean) => void;
 }) {
   const game = codenamesDailyGame(locale);
@@ -99,7 +101,7 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay }: {
       leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} picker={picker} />
   ) : null;
 
-  if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} onExit={() => setPracticing(false)} />;
+  if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} surface={surface} onExit={() => setPracticing(false)} />;
   // Words has its own screens: whatever the picture daily restores (a finished run, the archive) does not take over.
   if (board === "words") {
     return (

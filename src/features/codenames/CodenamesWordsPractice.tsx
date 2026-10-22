@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackGameComplete, trackGameReplay, trackGameStart } from "@/lib/analytics/public-games.analytics";
+import { createRealtimeCommandId } from "@/lib/realtime/command-id";
+import { useAuthStore } from "@/stores/auth.store";
 import { wordDailyCopy } from "@/features/wordgames/copy";
 import { Centered } from "@/features/wordgames/daily/WordDailyShell";
 import { Frame, GreenButton, QuietButton, poppins } from "@/features/wordgames/ui";
@@ -18,9 +21,10 @@ const DOT: Record<CardKind, string> = { mine: "bg-brand-green", theirs: "bg-bran
  * Solo word boards: a new board each time, unranked (no day, no leaderboard). The server deals the board and its
  * clues; the run is played on the device. The result explains every word's two meanings.
  */
-export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
+export function CodenamesWordsPractice({ locale, onExit, surface = "public_game" }: {
   locale: string; onExit: () => void;
-  onEvent?: (event: "start" | "complete") => void;
+  /** Where the screen runs, for analytics: the app route or a public game page. */
+  surface?: "app" | "public_game";
 }) {
   const c = codenamesCopy(locale);
   const d = wordDailyCopy(locale);
@@ -30,6 +34,9 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
   const [failed, setFailed] = useState<"unavailable" | "error" | null>(null);
   // Only the newest request lands: a slow answer to an older "New board" is dropped.
   const request = useRef(0);
+  /** Analytics: one session per dealt board (unranked practice = "training"); a later board is a replay of the last. */
+  const session = useRef<{ id: string; startedAt: number } | null>(null);
+  useEffect(() => () => { request.current += 1; }, []);
   const fetchBoard = useCallback(() => {
     const n = ++request.current;
     loadPractice(locale).then((dealt) => {
@@ -38,11 +45,15 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
       if (dealt.cards.length !== 25 || dealt.clues.length === 0) { setFailed("unavailable"); return; }
       setBoard(dealt);
       setState(practiceState(dealt));
-      onEvent?.("start");
+      const previous = session.current;
+      session.current = { id: createRealtimeCommandId(), startedAt: Date.now() };
+      if (previous) trackGameReplay({ modeId: "codenames", previousSessionId: previous.id });
+      const access = useAuthStore.getState().status === "authenticated" ? "member" : "guest";
+      trackGameStart({ modeId: "codenames", access, sessionId: session.current.id, sessionKind: "training", surface });
     }).catch((error: { status?: number }) => {
       if (n === request.current) setFailed(error?.status === 503 ? "unavailable" : "error");
     });
-  }, [locale, onEvent]);
+  }, [locale, surface]);
   useEffect(() => { fetchBoard(); }, [fetchBoard]);
   const deal = () => {
     setBoard(null);
@@ -57,8 +68,9 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
   useEffect(() => {
     if (!done || !state || completed.current === state) return;
     completed.current = state;
-    onEvent?.("complete");
-  }, [done, state, onEvent]);
+    const s = session.current;
+    if (s) trackGameComplete({ modeId: "codenames", sessionId: s.id, sessionKind: "training", durationMs: Date.now() - s.startedAt, score: soloFound(state) });
+  }, [done, state]);
 
   if (failed) {
     return (
