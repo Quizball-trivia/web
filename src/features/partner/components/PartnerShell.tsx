@@ -11,7 +11,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh w-full flex-col overflow-x-clip bg-surface-page text-white">
       <PartnerHeader />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] lg:max-w-[1600px] lg:pl-[max(2rem,env(safe-area-inset-left))] lg:pr-[max(2rem,env(safe-area-inset-right))]">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] lg:max-w-5xl">
         {state.status === "ready" ? children : <PartnerStatusScreen state={state} />}
       </main>
     </div>
