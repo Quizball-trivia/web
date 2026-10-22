@@ -1,10 +1,17 @@
 "use client";
 
+import type { KeyboardEvent } from "react";
 import { ImageIcon, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { poppins } from "@/features/wordgames/ui";
 import { codenamesCopy } from "./codenames.copy";
 import type { BoardKind } from "./codenames.view";
+
+/**
+ * The board a keyboard switch moved to: the screen around the picker may be replaced by the switch (the daily and the
+ * Words intro are different trees), so the picked button takes the focus when it mounts again.
+ */
+let focusAfterSwitch: BoardKind | null = null;
 
 /** Pictures or words: the board of the daily, and of a friend room (the host picks; the others see the choice). */
 export function BoardPicker({ locale, value, onChange, className }: { locale: string; value: BoardKind; onChange?: (board: BoardKind) => void; className?: string }) {
@@ -13,12 +20,27 @@ export function BoardPicker({ locale, value, onChange, className }: { locale: st
     { id: "pictures", label: c.pictures, note: c.picturesNote, Icon: ImageIcon },
     { id: "words", label: c.words, note: c.wordsNote, Icon: Type },
   ] as const;
+  // A radio group: Tab reaches the picked board, the arrow keys move between the two.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onChange || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const next = value === "pictures" ? "words" : "pictures";
+    focusAfterSwitch = next;
+    onChange(next);
+    event.currentTarget.querySelector<HTMLButtonElement>(`[data-board="${next}"]`)?.focus();
+  };
   return (
-    <div role="radiogroup" aria-label={c.label} data-codenames-board-picker className={cn("grid grid-cols-2 gap-2", className)}>
+    <div role="radiogroup" aria-label={c.label} data-codenames-board-picker className={cn("grid grid-cols-2 gap-2", className)} onKeyDown={onKeyDown}>
       {options.map(({ id, label, note, Icon }) => {
         const on = value === id;
         return (
-          <button key={id} type="button" role="radio" aria-checked={on} disabled={!onChange} onClick={() => onChange?.(id)} data-board={id}
+          <button key={id} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} disabled={!onChange} onClick={() => onChange?.(id)} data-board={id}
+            ref={(button) => {
+              if (button && on && focusAfterSwitch === id) {
+                focusAfterSwitch = null;
+                button.focus();
+              }
+            }}
             className={cn("flex min-h-16 flex-col items-start justify-center rounded-2xl px-3 py-2 text-left transition-colors",
               on ? "bg-white text-black" : "bg-white/[0.07] text-white enabled:hover:bg-white/[0.12]", !onChange && !on && "opacity-50")}>
             <span className="flex items-center gap-1.5 text-sm font-black uppercase" style={poppins}><Icon className="size-4 shrink-0" aria-hidden />{label}</span>
