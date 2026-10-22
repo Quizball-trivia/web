@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { command, dealWords, dealWordsSolo, flip, giveClue, newRoomSim, tick, viewFor, type RoomSim } from "@/features/codenames/codenames.sim";
 import { soloFlip, soloStop, type CodenamesRoomView, type CodenamesSoloState } from "@/features/codenames/codenames.view";
 import { CodenamesEndView, CodenamesPlayView } from "@/features/codenames/CodenamesSolo";
@@ -7,7 +8,7 @@ import { codenamesCopy } from "@/features/codenames/codenames.copy";
 import { Frame } from "@/features/wordgames/ui";
 import { CodenamesHubSim, CodenamesRoomSim, seatPlayers, type CodenamesRoomConfig } from "./CodenamesSim";
 import { wordDeck } from "./codenamesWords.data";
-import { scenario, type Scenario } from "./types";
+import { scenario, type Scenario, type ScenarioContext } from "./types";
 
 const T0 = Date.parse("2031-05-01T12:00:00.000Z");
 const SEED = 2026;
@@ -58,7 +59,7 @@ const frozen = (id: string, seats = 6) =>
     render: (d, ctx) => {
       const view: CodenamesRoomView = viewFor(screens[d.screen].build(ctx.locale, d.seats));
       const send = (cmd: unknown) => ctx.log("send", cmd);
-      if (view.phase === "teams") return <CodenamesTeams view={view} locale={ctx.locale} onSend={send} onExit={() => ctx.log("onExit")} onBoard={(b) => ctx.log("board", b)} />;
+      if (view.phase === "teams") return <FrozenTeams view={view} locale={ctx.locale} ctx={ctx} />;
       if (view.phase === "over") return <CodenamesResult view={view} locale={ctx.locale} onRoom={() => ctx.log("onRoom")} onExit={() => ctx.log("onExit")} />;
       return <CodenamesGame view={view} locale={ctx.locale} busy={false} onSend={send} onExit={() => ctx.log("onExit")} />;
     },
@@ -141,3 +142,11 @@ export const CODENAMES_WORDS_ROOM: Scenario<never>[] = [
   frozen("guess", 8),
 ];
 
+/** The frozen teams screen keeps the picked board, so the switch (and its arrow keys) behaves as in a room. */
+function FrozenTeams({ view, locale, ctx }: { view: CodenamesRoomView; locale: string; ctx: ScenarioContext }) {
+  const [board, setBoard] = useState(view.board);
+  return (
+    <CodenamesTeams view={{ ...view, board }} locale={locale} onSend={(cmd) => ctx.log("send", cmd)} onExit={() => ctx.log("onExit")}
+      onBoard={(next) => { setBoard(next); ctx.log("board", next); }} />
+  );
+}
