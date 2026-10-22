@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { BoardPicker } from "@/features/codenames/BoardPicker";
 import { codenamesCopy } from "@/features/codenames/codenames.copy";
@@ -27,6 +27,10 @@ export function CodenamesRoomOptions({ options, canEdit, onChange }: {
   const { locale } = useLocale();
   const c = codenamesCopy(locale);
   const current = readCodenamesOptions(options);
+  const serverBoard = current ? "words" : "pictures";
+  // The host's pick shows at once; it gives way as soon as the room's stored board changes (the echo, or a refusal).
+  const [picked, setPicked] = useState<{ over: "words" | "pictures"; board: "words" | "pictures" } | null>(null);
+  const board = picked && picked.over === serverBoard ? picked.board : serverBoard;
   const preset = useRef(false);
   useEffect(() => {
     if (preset.current || !canEdit || current) return;
@@ -35,8 +39,11 @@ export function CodenamesRoomOptions({ options, canEdit, onChange }: {
   }, [canEdit, current, locale, onChange]);
   return (
     <div data-codenames-room-options className="mt-2 w-full text-left">
-      <BoardPicker locale={locale} value={current ? "words" : "pictures"}
-        onChange={canEdit ? (board) => onChange(board === "words" ? { board: "words", lang: locale } : null) : undefined} />
+      <BoardPicker locale={locale} value={board}
+        onChange={canEdit ? (next) => {
+          setPicked({ over: serverBoard, board: next });
+          onChange(next === "words" ? { board: "words", lang: locale } : null);
+        } : undefined} />
       {current && <p className="mt-2 text-center text-xs font-semibold text-white/70">{c.board.words} · {LANGUAGE[current.lang] ?? current.lang}</p>}
       {!canEdit && <p className="mt-1 text-center text-xs text-white/55">{c.board.hostPicks}</p>}
     </div>
