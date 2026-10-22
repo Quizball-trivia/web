@@ -16,6 +16,7 @@ import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
 import { PlayAnnouncements } from '@/features/play/PlayAnnouncements';
 import { useLocale } from '@/contexts/LocaleContext';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
 import type { MatchStatsSummary } from '@/lib/domain';
@@ -305,7 +306,7 @@ function CompactModeCard({
   );
   if (href) {
     return (
-      <Link href={href} className={className} style={{ backgroundColor: bg }}>
+      <Link href={href} onClick={onClick} className={className} style={{ backgroundColor: bg }}>
         {inner}
       </Link>
     );
@@ -795,6 +796,8 @@ export function ModeSelectionScreen({
           ctaLabel={t('common.play')}
           badge={t('play.newBadge')}
           href="/codenames"
+          // App routes read the stored language: a guest on a localized hub keeps reading in it.
+          onClick={() => storage.set(STORAGE_KEYS.LOCALE, locale)}
         />
         {isAuctionCardEnabled && (
           <CompactModeCard

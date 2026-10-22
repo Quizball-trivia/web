@@ -20,7 +20,8 @@ const DOT: Record<CardKind, string> = { mine: "bg-brand-green", theirs: "bg-bran
  */
 export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
   locale: string; onExit: () => void;
-  onEvent?: (event: "start" | "complete") => void;
+  /** Analytics: "start" when a board is dealt, "complete" when its run ends, "replay" before another board. */
+  onEvent?: (event: "start" | "complete" | "replay") => void;
 }) {
   const c = codenamesCopy(locale);
   const d = wordDailyCopy(locale);
@@ -30,6 +31,9 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
   const [failed, setFailed] = useState<"unavailable" | "error" | null>(null);
   // Only the newest request lands: a slow answer to an older "New board" is dropped.
   const request = useRef(0);
+  // Read at call time: a new callback (the player signs in) must not deal a new board mid-game.
+  const eventRef = useRef(onEvent);
+  useEffect(() => { eventRef.current = onEvent; }, [onEvent]);
   const fetchBoard = useCallback(() => {
     const n = ++request.current;
     loadPractice(locale).then((dealt) => {
@@ -38,13 +42,14 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
       if (dealt.cards.length !== 25 || dealt.clues.length === 0) { setFailed("unavailable"); return; }
       setBoard(dealt);
       setState(practiceState(dealt));
-      onEvent?.("start");
+      eventRef.current?.("start");
     }).catch((error: { status?: number }) => {
       if (n === request.current) setFailed(error?.status === 503 ? "unavailable" : "error");
     });
-  }, [locale, onEvent]);
+  }, [locale]);
   useEffect(() => { fetchBoard(); }, [fetchBoard]);
   const deal = () => {
+    eventRef.current?.("replay");
     setBoard(null);
     setState(null);
     setFailed(null);
@@ -57,8 +62,8 @@ export function CodenamesWordsPractice({ locale, onExit, onEvent }: {
   useEffect(() => {
     if (!done || !state || completed.current === state) return;
     completed.current = state;
-    onEvent?.("complete");
-  }, [done, state, onEvent]);
+    eventRef.current?.("complete");
+  }, [done, state]);
 
   if (failed) {
     return (
