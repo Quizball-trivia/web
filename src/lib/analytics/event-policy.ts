@@ -1,5 +1,6 @@
 // PostHog bills per event (identified events ~5x), so events nobody reads are not sent
-// (audit 2026-10-21: no insight, alert, experiment, report or runbook uses them).
+// (audit 2026-10-21: no saved insight, alert, experiment or recurring report uses them; a few
+// appear only in launch funnel specs/checklists that were never queried after August).
 // Remove a name here to start collecting it again. Mirrors backend src/core/analytics/disabled-events.ts.
 const DISABLED_EVENTS: ReadonlySet<string> = new Set([
   'buscaminas_archive_open',
