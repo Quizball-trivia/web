@@ -5,6 +5,7 @@ const posthogMocks = vi.hoisted(() => ({
   identify: vi.fn(),
   reset: vi.fn(),
   capture: vi.fn(),
+  get_distinct_id: vi.fn(),
 }));
 
 vi.mock('posthog-js', () => ({
@@ -36,6 +37,23 @@ describe('PostHog identity', () => {
     );
     trackEvent('campaign_quiz_start', { campaign_id: 'c' });
     expect(posthogMocks.capture.mock.lastCall).toHaveLength(2);
+  });
+
+  it('does not send disabled events and tags sampled round events', async () => {
+    const { ROUND_EVENT_SAMPLE_RATE } = await import('../analytics/event-policy');
+    trackEvent('play_card_clicked', { mode_id: 'ranked' });
+    expect(posthogMocks.capture).not.toHaveBeenCalled();
+    const sampled = Array.from({ length: 200 }, (_, i) => `p-${i}`).find((d) => {
+      posthogMocks.get_distinct_id.mockReturnValue(d);
+      trackEvent('buscaminas_round_end', { round_number: 1 });
+      return posthogMocks.capture.mock.calls.length > 0;
+    });
+    expect(sampled).toBeDefined();
+    expect(posthogMocks.capture).toHaveBeenCalledTimes(1);
+    expect(posthogMocks.capture).toHaveBeenLastCalledWith(
+      'buscaminas_round_end',
+      expect.objectContaining({ round_number: 1, sample_rate: ROUND_EVENT_SAMPLE_RATE, event_source: 'web' }),
+    );
   });
 
   it('does not reset an anonymous identity', () => {
@@ -77,9 +95,9 @@ describe('PostHog identity', () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     resetUser();
     identifyUser('   ');
-    trackEvent('game_exit', { mode_id: 'missingXi' });
+    trackEvent('wl_tab_viewed', { mode_id: 'missingXi' });
     expect(posthogMocks.identify).not.toHaveBeenCalled();
-    expect(posthogMocks.capture).toHaveBeenLastCalledWith('game_exit', expect.objectContaining({ access_type: 'guest' }));
+    expect(posthogMocks.capture).toHaveBeenLastCalledWith('wl_tab_viewed', expect.objectContaining({ access_type: 'guest' }));
     warning.mockRestore();
   });
 
@@ -89,11 +107,11 @@ describe('PostHog identity', () => {
     identifyUser('member-transition');
     trackEvent('mini_game_round_settled', { game: 'free_kicks' });
     resetUser();
-    trackEvent('game_exit', { mode_id: 'freeKicks' });
+    trackEvent('wl_tab_viewed', { mode_id: 'freeKicks' });
     expect(posthogMocks.capture.mock.calls.map(([event, props]) => [event, props.access_type, props.event_source])).toEqual([
       ['game_complete', 'guest', 'web'],
       ['mini_game_round_settled', 'member', 'web'],
-      ['game_exit', 'guest', 'web'],
+      ['wl_tab_viewed', 'guest', 'web'],
     ]);
   });
 
