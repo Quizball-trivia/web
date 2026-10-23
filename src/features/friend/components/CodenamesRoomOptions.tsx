@@ -97,7 +97,11 @@ export function CodenamesRoomOptions({ options, canEdit, onChange }: {
   useEffect(() => {
     if (preset.current || !canEdit || stored.board === "words") return;
     preset.current = true;
-    if (takeRoomPreset()) onChange(writeCodenamesOptions({ ...stored, board: "words", lang: wordDeckLang(locale) }));
+    if (!takeRoomPreset()) return;
+    const words: CodenamesOptions = { ...stored, board: "words", lang: wordDeckLang(locale) };
+    // As a pending pick, so a timer chosen before the room confirms Words builds on it (set after this effect).
+    queueMicrotask(() => setPending(words));
+    onChange(writeCodenamesOptions(words));
   }, [canEdit, stored, locale, onChange]);
   return (
     <div data-codenames-room-options className="mt-2 w-full text-left">
