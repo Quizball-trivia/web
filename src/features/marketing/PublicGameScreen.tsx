@@ -98,12 +98,12 @@ const FOOTBALL_HORSERACE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
 };
 
 const FOOTBALL_CODENAMES_PAGE: Record<SeoPageLocale, FullGameCopy> = {
-  en: { ...NAME_CHAIN_PAGE.en, label: "A new board every day · no account needed", start: "Play now", note: "20 picture cards, 3 clues, 8 cards to find. As a guest you play past days; with an account, today's board and the leaderboard." },
-  ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე ახალი დაფა · ანგარიშის გარეშე", start: "თამაში", note: "20 სურათიანი ბარათი, 3 მინიშნება, 8 საპოვნი ბარათი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
-  es: { ...NAME_CHAIN_PAGE.es, label: "Un tablero nuevo cada día · sin cuenta", start: "Jugar ahora", note: "20 cartas con dibujos, 3 pistas, 8 cartas para encontrar. Sin cuenta jugás los días anteriores; con cuenta, el tablero de hoy y el ranking." },
-  tr: { ...NAME_CHAIN_PAGE.tr, label: "Her gün yeni bir tahta · hesap gerekmez", start: "Oyna", note: "20 resimli kart, 3 ipucu, bulunacak 8 kart. Misafir olarak önceki günleri oynarsın; hesapla bugünün tahtasını ve sıralamayı." },
-  ru: { ...NAME_CHAIN_PAGE.ru, label: "Новое поле каждый день · аккаунт не нужен", start: "Играть сейчас", note: "20 карточек с картинками, 3 подсказки, 8 карточек, которые нужно найти. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшнее поле и рейтинг." },
-  pt: { ...NAME_CHAIN_PAGE.pt, label: "Um tabuleiro novo todo dia · sem precisar de conta", start: "Jogue agora", note: "20 cartas ilustradas, 3 dicas, encontre 8 cartas. Como visitante, você joga os dias anteriores; com uma conta, acessa o tabuleiro de hoje e o ranking." },
+  en: { ...NAME_CHAIN_PAGE.en, label: "A new board every day · no account needed", start: "Play now", note: "Pictures: 20 cards, 3 clues, 8 to find. Words: a new 25-word board every time. As a guest you play past days; with an account, today's board and the leaderboard." },
+  ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე ახალი დაფა · ანგარიშის გარეშე", start: "თამაში", note: "სურათები: 20 ბარათი, 3 მინიშნება, 8 საპოვნი. სიტყვები: ყოველ ჯერზე ახალი დაფა 25 სიტყვით. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...NAME_CHAIN_PAGE.es, label: "Un tablero nuevo cada día · sin cuenta", start: "Jugar ahora", note: "Imágenes: 20 cartas, 3 pistas, 8 para encontrar. Palabras: un tablero nuevo de 25 palabras cada vez. Sin cuenta jugás los días anteriores; con cuenta, el tablero de hoy y el ranking." },
+  tr: { ...NAME_CHAIN_PAGE.tr, label: "Her gün yeni bir tahta · hesap gerekmez", start: "Oyna", note: "Resimler: 20 kart, 3 ipucu, bulunacak 8 kart. Kelimeler: her seferinde 25 kelimelik yeni tahta. Misafir olarak önceki günleri oynarsın; hesapla bugünün tahtasını ve sıralamayı." },
+  ru: { ...NAME_CHAIN_PAGE.ru, label: "Новое поле каждый день · аккаунт не нужен", start: "Играть сейчас", note: "Картинки: 20 карточек, 3 подсказки, 8 нужно найти. Слова: каждый раз новое поле из 25 слов. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшнее поле и рейтинг." },
+  pt: { ...NAME_CHAIN_PAGE.pt, label: "Um tabuleiro novo todo dia · sem precisar de conta", start: "Jogue agora", note: "Imagens: 20 cartas, 3 dicas, encontre 8. Palavras: um tabuleiro novo de 25 palavras a cada vez. Como visitante, você joga os dias anteriores; com uma conta, acessa o tabuleiro de hoje e o ranking." },
 };
 
 const DATO_FALSO_PAGE: Record<SeoPageLocale, FullGameCopy> = {

@@ -359,7 +359,7 @@ export function RaceBoard({ view, wording, locale, secondsLeft, busy, onPick, er
   const committed = view.phase === "pick" && view.myPick !== null;
   const picked = view.myPick ? view.stats.find((s) => s.id === view.myPick) ?? null : null;
   return (
-    <div className="flex flex-1 flex-col gap-3">
+    <div className="@container flex flex-1 flex-col gap-3">
       <header className="flex items-center gap-2">
         {onLeave && (
           <button type="button" onClick={onLeave} aria-label={copy.leave} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"><X className="size-4" /></button>
@@ -381,13 +381,13 @@ export function RaceBoard({ view, wording, locale, secondsLeft, busy, onPick, er
       </header>
       <p className="sr-only" aria-live="polite">{view.phase === "pick" ? `${copy.round(view.round + 1)}. ${copy.pickTitle}` : ""}</p>
       <p className="sr-only" aria-live="assertive">{view.phase === "pick" && !committed && secondsLeft !== null && secondsLeft <= 5 && secondsLeft > 0 ? copy.hurry : ""}</p>
-      <div className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-3 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-5">
-        <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-4 lg:order-2">
+      <div className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-3 @4xl:grid-cols-[minmax(0,1fr)_400px] @4xl:items-start @4xl:gap-5">
+        <div className="flex min-w-0 flex-col gap-2 @4xl:sticky @4xl:top-4 @4xl:order-2">
           <RaceTrack view={view} copy={copy} locale={locale} />
           {view.suddenDeath && <p role="status" className="rounded-xl bg-brand-yellow/15 px-3 py-2 text-center text-xs font-black text-brand-yellow" style={poppins}>{copy.suddenDeath}</p>}
-          <p className="hidden text-[11px] leading-snug text-white/45 lg:block">{l10n(wording.source, locale)}</p>
+          <p className="hidden text-[11px] leading-snug text-white/45 @4xl:block">{l10n(wording.source, locale)}</p>
         </div>
-        <div className="min-w-0 lg:order-1">
+        <div className="min-w-0 @4xl:order-1">
           {view.phase === "pick" && !committed ? (
             <StatPicker key={view.round} view={view} wording={wording} copy={copy} locale={locale} busy={busy} onPick={onPick} />
           ) : committed ? (

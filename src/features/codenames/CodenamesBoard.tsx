@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { Shirt, Skull, Users } from "lucide-react";
+import { Check, Shirt, Skull, Users } from "lucide-react";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
 import { cn } from "@/lib/utils";
 import type { AvatarCustomization } from "@/types/game";
@@ -115,10 +115,12 @@ function WordFace({ word, covered }: { word: string; covered: boolean }) {
   );
 }
 
-export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLabel, cardLabel, altOf, onTap, className, finale = false }: {
+export function CodenamesBoard({ cards, mode, selected, marked, disabled, kinds, flipLabel, cardLabel, altOf, onTap, className, finale = false }: {
   cards: BoardCard[];
   mode: BoardMode;
   selected?: string | null;
+  /** A Scout giving a clue: the own cards marked as what it is for (taps on the Scout's own hidden cards toggle them). */
+  marked?: readonly string[];
   disabled?: boolean;
   kinds: Record<CardKind, string>;
   flipLabel?: string;
@@ -142,8 +144,10 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
       animate={blast ? { x: [0, -14, 12, -9, 7, -4, 2, 0], y: [0, 6, -5, 4, -2, 0] } : undefined} transition={{ duration: 0.65 }}>
       {cards.map((card, position) => {
         const shown = card.revealed ?? (mode !== "guess" ? card.kind : null);
-        const tappable = mode === "guess" && !card.revealed && !disabled && !!onTap;
+        const marking = mode === "scout" && marked !== undefined;
+        const tappable = !card.revealed && !disabled && !!onTap && (mode === "guess" || (marking && card.kind === "mine"));
         const isSelected = selected === card.id && !card.revealed;
+        const isMarked = marking && marked.includes(card.id);
         const label = card.revealed ? kinds[card.revealed] : mode !== "guess" && card.kind ? kinds[card.kind] : undefined;
         return (
           <motion.button
@@ -153,7 +157,7 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
             data-revealed={card.revealed ?? undefined}
             data-key={mode !== "guess" ? card.kind ?? undefined : undefined}
             aria-label={[cardLabel?.(position + 1), card.word ?? altOf?.(card.id), label].filter(Boolean).join(" · ") || undefined}
-            aria-pressed={mode === "guess" ? isSelected : undefined}
+            aria-pressed={mode === "guess" ? isSelected : marking && card.kind === "mine" && !card.revealed ? isMarked : undefined}
             disabled={!tappable}
             onClick={() => tappable && onTap?.(card.id)}
             whileTap={tappable ? { scale: 0.96 } : undefined}
@@ -161,7 +165,7 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
               "relative overflow-hidden rounded-xl shadow-md shadow-black/30 transition-shadow",
               card.word !== undefined ? "@container aspect-[5/4] bg-white/95" : "aspect-square bg-white/90",
               tappable && "cursor-pointer hover:ring-2 hover:ring-white/60",
-              isSelected && "ring-4 ring-white",
+              (isSelected || isMarked) && "ring-4 ring-white",
               mode === "end" && !card.revealed && "opacity-90",
             )}
           >
@@ -199,6 +203,11 @@ export function CodenamesBoard({ cards, mode, selected, disabled, kinds, flipLab
             {!card.revealed && card.picks && card.picks.length > 0 && (
               <span className={cn("absolute flex -space-x-2", card.word !== undefined ? "right-0.5 top-0.5 origin-top-right scale-[0.55]" : "right-1 top-1")} aria-hidden>
                 {card.picks.slice(0, 3).map((a, i) => <DuelAvatar key={i} customization={a} size="xs" className="rounded-full bg-white/90 p-0.5 shadow" />)}
+              </span>
+            )}
+            {isMarked && (
+              <span data-codenames-marked className={cn("absolute flex items-center justify-center rounded-full bg-white text-black shadow", card.word !== undefined ? "right-0.5 top-0.5 size-5" : "right-1 top-1 size-7")} aria-hidden>
+                <Check className={card.word !== undefined ? "size-3.5" : "size-5"} strokeWidth={3.5} />
               </span>
             )}
             {isSelected && flipLabel && (

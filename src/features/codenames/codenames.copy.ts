@@ -23,6 +23,12 @@ export interface CodenamesCopy {
   /** Word boards. */
   words: { placeholder: string; rule: string; onBoard: (word: string) => string; onBoardAny: string; scoutKeyNote: string; tag: string; lines: string[]; starts: string; otherCards: string; wordsIn: string; practiceTag: string; newBoard: string; unavailable: string; endComplete: string };
   board: { label: string; pictures: string; words: string; picturesNote: string; wordsNote: string; hostPicks: string };
+  /** The Play screen's Codenames dialog (members). */
+  modal: { tagline: string; pickBoard: string; daily: string; rules: string; rulesTitle: string; rulesList: string[]; onlineSoon: string };
+  /** The room's turn timer: the host's pick in the lobby and the clock in play. */
+  timer: { label: string; off: string; option: (seconds: number) => string; note: string; hostPicks: string; timeUp: string; secondsLeft: (n: number) => string };
+  /** The cards a Scout marks with a clue, shown when the game is over. */
+  meant: { mark: string; marked: (n: number, count: number) => string; clear: string; title: string; none: string };
   number: string;
   youAreScout: string;
   scoutKeyNote: string;
@@ -113,6 +119,17 @@ const en: CodenamesCopy = {
       "A right card keeps the clue going. A rival or neutral card ends it. The Own Goal ends the game.",
     ], starts: "starts · 9 cards", otherCards: "8 cards", wordsIn: "Words in English", practiceTag: "Practice · new board every time", newBoard: "New board", unavailable: "Word boards are not ready in this language yet. Try again later.", endComplete: "All 9 found!" },
   board: { label: "Board", pictures: "Pictures", words: "Words", picturesNote: "20 football pictures", wordsNote: "25 two-meaning words", hostPicks: "The host picks the board." },
+  modal: { tagline: "One clue, many cards: find your team's cards before the rivals find theirs.", pickBoard: "Choose your board", daily: "Daily board", rules: "Rules", rulesTitle: "How to play", rulesList: [
+      "Two teams, Home and Away. Each has a Scout, the only one who sees which card is whose.",
+      "The Scout gives one clue and a number: “Real Madrid · 3” means three of your cards link to Real Madrid.",
+      "Your team flips cards. A right card lets you go on, up to the number + 1. A neutral or rival card ends your turn.",
+      "One card is the Own Goal: flip it and your team loses on the spot.",
+      "The first team to find all its cards wins.",
+      "Pictures: 20 football drawings. Words: 25 words with a football meaning and an everyday one.",
+      "Alone, the bot is your Scout (Daily board). With friends, 2 to 8 players share a room.",
+    ], onlineSoon: "Online matches are coming soon. For now, play with friends." },
+  timer: { label: "Turn timer", off: "Off", option: (s) => (s >= 120 ? `${s / 60} min` : `${s} s`), note: "The Scout gets this long for the clue, then the team as long to guess.", hostPicks: "The host picks the board and the timer.", timeUp: "Out of time", secondsLeft: (n) => `${n} seconds left` },
+  meant: { mark: "Tap your cards to show what the clue is for. Optional: only shown when the game ends.", marked: (n, count) => `${n} of ${count} marked`, clear: "Clear", title: "What each clue meant", none: "Not marked" },
   number: "Cards",
   youAreScout: "You're the Scout",
   scoutKeyNote: "Only Scouts see the colours. Give one football clue that links your green cards.",
@@ -207,6 +224,17 @@ const es: CodenamesCopy = {
       "Si aciertas, sigues con la pista. Una carta rival o neutral la termina. El Autogol termina la partida.",
     ], starts: "empieza · 9 cartas", otherCards: "8 cartas", wordsIn: "Palabras en español", practiceTag: "Práctica · tablero nuevo cada vez", newBoard: "Tablero nuevo", unavailable: "Los tableros de palabras aún no están listos en este idioma. Prueba más tarde.", endComplete: "¡Las 9!" },
   board: { label: "Tablero", pictures: "Imágenes", words: "Palabras", picturesNote: "20 dibujos futboleros", wordsNote: "25 palabras con doble sentido", hostPicks: "El anfitrión elige el tablero." },
+  modal: { tagline: "Una pista, varias cartas: encuentra las de tu equipo antes que el rival encuentre las suyas.", pickBoard: "Elige tu tablero", daily: "Tablero del día", rules: "Reglas", rulesTitle: "Cómo se juega", rulesList: [
+      "Dos equipos, Local y Visitante. Cada uno tiene un Ojeador, el único que sabe de quién es cada carta.",
+      "El Ojeador da una pista y un número: “Real Madrid · 3” quiere decir que tres de tus cartas tienen que ver con el Real Madrid.",
+      "Tu equipo da vuelta cartas. Si aciertas, sigues, hasta el número + 1. Una carta neutral o del rival termina tu turno.",
+      "Una carta es el Autogol: si la das vuelta, tu equipo pierde en el acto.",
+      "Gana el primer equipo que encuentra todas sus cartas.",
+      "Imágenes: 20 dibujos futboleros. Palabras: 25 palabras con un sentido futbolero y otro de todos los días.",
+      "Solo, el bot es tu Ojeador (Tablero del día). Con amigos, de 2 a 8 jugadores en una sala.",
+    ], onlineSoon: "Las partidas online llegan pronto. Por ahora, juega con amigos." },
+  timer: { label: "Tiempo por turno", off: "Sin tiempo", option: (s) => (s >= 120 ? `${s / 60} min` : `${s} s`), note: "El Ojeador tiene este tiempo para la pista y el equipo, otro tanto para adivinar.", hostPicks: "El anfitrión elige el tablero y el tiempo.", timeUp: "Se acabó el tiempo", secondsLeft: (n) => `Quedan ${n} segundos` },
+  meant: { mark: "Toca tus cartas para marcar a qué apunta la pista. Opcional: solo se ve al final.", marked: (n, count) => `${n} de ${count} marcadas`, clear: "Borrar", title: "Qué quería decir cada pista", none: "Sin marcar" },
   number: "Cartas",
   youAreScout: "Eres el Ojeador",
   scoutKeyNote: "Solo los Ojeadores ven los colores. Da una pista futbolera que una tus cartas verdes.",
@@ -301,6 +329,17 @@ const tr: CodenamesCopy = {
       "Doğru kart ipucunu sürdürür. Rakip ya da nötr kart bitirir. Kendi Kalesine Gol oyunu bitirir.",
     ], starts: "başlar · 9 kart", otherCards: "8 kart", wordsIn: "Türkçe kelimeler", practiceTag: "Antrenman · her seferinde yeni tahta", newBoard: "Yeni tahta", unavailable: "Bu dilde kelime tahtaları henüz hazır değil. Daha sonra tekrar dene.", endComplete: "9'u da bulundu!" },
   board: { label: "Tahta", pictures: "Resimler", words: "Kelimeler", picturesNote: "20 futbol resmi", wordsNote: "İki anlamlı 25 kelime", hostPicks: "Tahtayı oda sahibi seçer." },
+  modal: { tagline: "Tek ipucu, birçok kart: rakip kendi kartlarını bulmadan sen takımının kartlarını bul.", pickBoard: "Tahtanı seç", daily: "Günün tahtası", rules: "Kurallar", rulesTitle: "Nasıl oynanır", rulesList: [
+      "İki takım: Ev sahibi ve Deplasman. Her takımın bir Gözlemcisi var; hangi kartın kimin olduğunu yalnızca o görür.",
+      "Gözlemci bir ipucu ve bir sayı verir: “Real Madrid · 3”, üç kartının Real Madrid ile bağlantılı olduğu anlamına gelir.",
+      "Takımın kart çevirir. Doğru kart çevirdikçe sayının 1 fazlasına kadar devam edersin. Nötr ya da rakip kart sıranı bitirir.",
+      "Kartlardan biri Kendi Kalesine Gol: onu çevirirsen takımın anında kaybeder.",
+      "Bütün kartlarını ilk bulan takım kazanır.",
+      "Resimler: 20 futbol çizimi. Kelimeler: hem futbolda hem günlük hayatta anlamı olan 25 kelime.",
+      "Tek başına oynarken Gözlemcin bot olur (Günün tahtası). Arkadaşlarla bir odada 2–8 kişi oynanır.",
+    ], onlineSoon: "Online maçlar yakında. Şimdilik arkadaşlarınla oyna." },
+  timer: { label: "Tur süresi", off: "Kapalı", option: (s) => (s >= 120 ? `${s / 60} dk` : `${s} sn`), note: "Gözlemci ipucu için bu kadar süre alır, takım da tahmin için aynı süreyi.", hostPicks: "Tahtayı ve süreyi oda sahibi seçer.", timeUp: "Süre doldu", secondsLeft: (n) => `${n} saniye kaldı` },
+  meant: { mark: "İpucunun hangi kartlar için olduğunu işaretlemek için kartlarına dokun. İsteğe bağlı: yalnızca oyun bitince görünür.", marked: (n, count) => `${count} karttan ${n} işaretli`, clear: "Temizle", title: "Her ipucu neyi kastetti", none: "İşaretlenmedi" },
   number: "Kart",
   youAreScout: "Gözlemci sensin",
   scoutKeyNote: "Renkleri sadece Gözlemciler görür. Yeşil kartlarını bağlayan bir futbol ipucu ver.",
@@ -395,6 +434,17 @@ const ru: CodenamesCopy = {
       "Верная карточка продлевает подсказку. Чужая или нейтральная — заканчивает её. Автогол заканчивает игру.",
     ], starts: "начинает · 9 карт", otherCards: "8 карт", wordsIn: "Слова на русском", practiceTag: "Тренировка · каждый раз новое поле", newBoard: "Новое поле", unavailable: "Поля со словами на этом языке ещё не готовы. Попробуй позже.", endComplete: "Все 9!" },
   board: { label: "Поле", pictures: "Картинки", words: "Слова", picturesNote: "20 футбольных картинок", wordsNote: "25 слов с двойным смыслом", hostPicks: "Поле выбирает хозяин комнаты." },
+  modal: { tagline: "Одна подсказка — несколько карточек: найди карты своей команды раньше соперника.", pickBoard: "Выбери поле", daily: "Поле дня", rules: "Правила", rulesTitle: "Как играть", rulesList: [
+      "Две команды: Хозяева и Гости. В каждой есть Скаут — только он видит, чья карта чья.",
+      "Скаут даёт одну подсказку и число: «Реал Мадрид · 3» значит, что три твои карты связаны с «Реалом».",
+      "Команда открывает карты. Верная карта даёт идти дальше, до числа + 1. Нейтральная или чужая заканчивает ход.",
+      "Одна карта — Автогол: открыл её — и команда сразу проиграла.",
+      "Побеждает команда, которая первой найдёт все свои карты.",
+      "Картинки: 20 футбольных рисунков. Слова: 25 слов с футбольным и обычным значением.",
+      "Одному Скаутом будет бот (Поле дня). С друзьями — от 2 до 8 игроков в комнате.",
+    ], onlineSoon: "Онлайн-матчи скоро. Пока играй с друзьями." },
+  timer: { label: "Время на ход", off: "Без таймера", option: (s) => (s >= 120 ? `${s / 60} мин` : `${s} с`), note: "У Скаута столько времени на подсказку, у команды — столько же на ответы.", hostPicks: "Поле и таймер выбирает хозяин комнаты.", timeUp: "Время вышло", secondsLeft: (n) => `Осталось ${n} с` },
+  meant: { mark: "Отметь свои карты, к которым относится подсказка. Необязательно: видно только в конце игры.", marked: (n, count) => `Отмечено ${n} из ${count}`, clear: "Сбросить", title: "Что имелось в виду", none: "Не отмечено" },
   number: "Карт",
   youAreScout: "Ты — Скаут",
   scoutKeyNote: "Цвета видят только Скауты. Дай одну футбольную подсказку, которая связывает твои зелёные карточки.",
@@ -485,6 +535,17 @@ const pt: CodenamesCopy = {
       "O Olheiro liga suas palavras com uma dica e um número, como “Wedding · 3” para RICE, BEST e TIE.",
     ], starts: "começa · 9 cartas", otherCards: "8 cartas", wordsIn: "Palavras em inglês", practiceTag: "Treino · tabuleiro novo a cada vez", newBoard: "Novo tabuleiro", unavailable: "Os tabuleiros de palavras ainda não estão prontos neste idioma. Tente mais tarde.", endComplete: "Achou as 9!" },
   board: { label: "Tabuleiro", pictures: "Imagens", words: "Palavras", picturesNote: "20 imagens de futebol", wordsNote: "25 palavras com duplo sentido", hostPicks: "O anfitrião escolhe o tabuleiro." },
+  modal: { tagline: "Uma dica, várias cartas: encontre as do seu time antes que o adversário encontre as dele.", pickBoard: "Escolha seu tabuleiro", daily: "Tabuleiro do dia", rules: "Regras", rulesTitle: "Como jogar", rulesList: [
+      "Dois times, Mandante e Visitante. Cada um tem um Olheiro, o único que vê de quem é cada carta.",
+      "O Olheiro dá uma dica e um número: “Real Madrid · 3” quer dizer que três das suas cartas têm a ver com o Real Madrid.",
+      "Seu time vira cartas. Acertou, continua, até o número + 1. Uma carta neutra ou do adversário encerra a vez.",
+      "Uma carta é o Gol contra: virou, seu time perde na hora.",
+      "Vence o primeiro time que encontrar todas as suas cartas.",
+      "Imagens: 20 desenhos de futebol. Palavras: 25 palavras com um sentido no futebol e outro do dia a dia.",
+      "Sozinho, o bot é seu Olheiro (Tabuleiro do dia). Com amigos, de 2 a 8 jogadores numa sala.",
+    ], onlineSoon: "Partidas online em breve. Por enquanto, jogue com amigos." },
+  timer: { label: "Tempo por vez", off: "Sem tempo", option: (s) => (s >= 120 ? `${s / 60} min` : `${s} s`), note: "O Olheiro tem esse tempo para a dica, e o time o mesmo para adivinhar.", hostPicks: "O anfitrião escolhe o tabuleiro e o tempo.", timeUp: "Tempo esgotado", secondsLeft: (n) => `Faltam ${n} segundos` },
+  meant: { mark: "Toque nas suas cartas para marcar a que a dica se refere. Opcional: só aparece no fim.", marked: (n, count) => `${n} de ${count} marcadas`, clear: "Limpar", title: "O que cada dica queria dizer", none: "Sem marcação" },
   clueRule: "Só vale futebol: jogador, clube, técnico, estádio, seleção ou momento famoso. Ex.: Mourinho, Real Madrid, Mão de Deus.",
   nameKinds: { player: "Jogador", manager: "Técnico", club: "Clube", nation: "Seleção", stadium: "Estádio", word: "Palavra do futebol" },
   clueUsed: "Já usada nesta partida",
@@ -582,6 +643,17 @@ const ka: CodenamesCopy = {
       "სწორი ბარათი მინიშნებას აგრძელებს. მეტოქის ან ნეიტრალური ამთავრებს. ავტოგოლი თამაშს ამთავრებს.",
     ], starts: "იწყებს · 9 ბარათი", otherCards: "8 ბარათი", wordsIn: "სიტყვები ქართულად", practiceTag: "ვარჯიში · ყოველ ჯერზე ახალი დაფა", newBoard: "ახალი დაფა", unavailable: "ამ ენაზე სიტყვიანი დაფები ჯერ მზად არ არის. სცადე მოგვიანებით.", endComplete: "9-ივე ნაპოვნია!" },
   board: { label: "დაფა", pictures: "სურათები", words: "სიტყვები", picturesNote: "20 საფეხბურთო სურათი", wordsNote: "25 ორმნიშვნელოვანი სიტყვა", hostPicks: "დაფას ოთახის მასპინძელი ირჩევს." },
+  modal: { tagline: "ერთი მინიშნება, რამდენიმე ბარათი: იპოვე შენი გუნდის ბარათები, სანამ მეტოქე თავისას იპოვის.", pickBoard: "აირჩიე დაფა", daily: "დღის დაფა", rules: "წესები", rulesTitle: "როგორ ვითამაშო", rulesList: [
+      "ორი გუნდია, მასპინძელი და სტუმარი. თითოეულს ჰყავს სკაუტი — მხოლოდ მან იცის, რომელი ბარათი ვისია.",
+      "სკაუტი ასახელებს ერთ მინიშნებას და რიცხვს: „რეალ მადრიდი · 3“ ნიშნავს, რომ შენი სამი ბარათი რეალ მადრიდს უკავშირდება.",
+      "გუნდი ბარათებს აბრუნებს. სწორი ბარათის შემდეგ აგრძელებ, რიცხვს + 1-მდე. ნეიტრალური ან მეტოქის ბარათი სვლას ამთავრებს.",
+      "ერთი ბარათი ავტოგოლია: თუ გადააბრუნე, შენი გუნდი მაშინვე აგებს.",
+      "იგებს გუნდი, რომელიც ყველა თავის ბარათს პირველი იპოვის.",
+      "სურათები: 20 საფეხბურთო ნახატი. სიტყვები: 25 სიტყვა, რომელსაც ფეხბურთშიც აქვს მნიშვნელობა და ყოველდღიურ ცხოვრებაშიც.",
+      "მარტო თამაშისას შენი სკაუტი ბოტია (დღის დაფა). მეგობრებთან ერთ ოთახში 2-დან 8 მოთამაშემდე თამაშობს.",
+    ], onlineSoon: "ონლაინ მატჩები მალე დაემატება. ჯერჯერობით ითამაშე მეგობრებთან." },
+  timer: { label: "სვლის დრო", off: "გარეშე", option: (s) => (s >= 120 ? `${s / 60} წთ` : `${s} წმ`), note: "სკაუტს მინიშნებისთვის ამდენი დრო აქვს, გუნდს კი იმდენივე გამოსაცნობად.", hostPicks: "დაფას და დროს ოთახის მასპინძელი ირჩევს.", timeUp: "დრო ამოიწურა", secondsLeft: (n) => `დარჩა ${n} წამი` },
+  meant: { mark: "შეეხე შენს ბარათებს და მონიშნე, რომელზეა მინიშნება. სურვილისამებრ: ჩანს მხოლოდ თამაშის ბოლოს.", marked: (n, count) => `მონიშნულია ${n} / ${count}`, clear: "გასუფთავება", title: "რას გულისხმობდა თითო მინიშნება", none: "არ მონიშნულა" },
   number: "ბარათი",
   youAreScout: "შენ ხარ სკაუტი",
   scoutKeyNote: "ფერებს მხოლოდ სკაუტები ხედავენ. მოიფიქრე ერთი საფეხბურთო მინიშნება, რომელიც შენს მწვანე ბარათებს აკავშირებს.",
