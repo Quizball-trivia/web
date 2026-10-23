@@ -1,4 +1,5 @@
 import { recordGuestJourney } from "@/lib/guest/guestJourney";
+import { decideAnalyticsSend } from "@/lib/analytics/event-policy";
 import posthog from 'posthog-js';
 
 export { posthog };
@@ -124,8 +125,11 @@ export function trackEvent(eventName: string, properties?: AnalyticsProperties, 
   }
 
   try {
+    const decision = decideAnalyticsSend(eventName, () => posthog.get_distinct_id(), Date.now(), properties);
+    if (!decision.send) return;
     const payload = {
       ...properties,
+      ...decision.extraProperties,
       access_type: properties?.access_type ?? accessType,
       event_source: 'web',
     };
