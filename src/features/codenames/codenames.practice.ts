@@ -12,9 +12,12 @@ const call = createDailyGameCall("/api/v1/codenames");
 
 export const PRACTICE_LANGS = ["en", "es", "tr", "ru", "ka"] as const;
 
+/** The word deck a reader plays: their language's, or English for a language without word boards. */
+export const wordDeckLang = (locale: string): string => ((PRACTICE_LANGS as readonly string[]).includes(locale) ? locale : "en");
+
 /** A new board in the reader's language (English for a language without word boards). */
 export function loadPractice(locale: string): Promise<PracticeBoard> {
-  const lang = (PRACTICE_LANGS as readonly string[]).includes(locale) ? locale : "en";
+  const lang = wordDeckLang(locale);
   return call<PracticeBoard>(`/words/practice?lang=${lang}`, "GET", undefined, locale, { identity: "none" });
 }
 

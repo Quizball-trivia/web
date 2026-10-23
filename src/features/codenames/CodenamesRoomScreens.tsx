@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { RoomConnection, RoomGameScreens } from "@/features/wordgames/RoomGameShell";
 import { GreenButton, QuietButton, Sheet, poppins, useResendRetained } from "@/features/wordgames/ui";
+import { useSecondsLeft } from "@/features/duel/useDuel";
 import { wordSharedCopy } from "@/features/wordgames/copy";
 import type { RoomStatePayload } from "@/lib/realtime/socket.types";
 import { codenamesCopy } from "./codenames.copy";
@@ -30,11 +31,13 @@ function Board({ view, snapshot, room, locale, error }: { view: CodenamesServerV
   const busy = !room.connected || unconfirmed;
   // A clue is one per turn: the form waits for the first one's answer, so a second one is never sent into its slot.
   const sending = room.inFlight > 0;
+  // A room with a turn timer counts the running phase down on the synced server clock.
+  const secondsLeft = useSecondsLeft(view.clockEndsAt ? new Date(view.clockEndsAt).toISOString() : null, room.nowMs);
   return (
     <>
       {view.phase === "teams"
         ? <CodenamesTeams view={shown} locale={locale} error={error} onSend={send} onExit={() => setLeaving(true)} />
-        : <CodenamesGame view={shown} locale={locale} busy={busy} sending={sending} error={error} onSend={send} onExit={() => setLeaving(true)} />}
+        : <CodenamesGame view={shown} locale={locale} busy={busy} sending={sending} error={error} onSend={send} onExit={() => setLeaving(true)} secondsLeft={secondsLeft} />}
       {!room.connected && <p role="status" className="mt-3 text-center text-xs font-semibold text-white/60">{c.offline}</p>}
       {leaving && (
         <Sheet label={c.leave} asks>

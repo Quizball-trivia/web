@@ -8,6 +8,7 @@ import type { AboutCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locale";
 import { ABOUT_GAME_MODES_COPY } from "@/lib/seo/about-game-modes";
 import { ABOUT_CREDIBILITY_COPY } from "@/lib/seo/editorial-methodology";
+import { campaignLocaleOf } from "@/lib/seo/public-games";
 
 interface AboutScreenProps {
   copy: AboutCopy;
@@ -20,6 +21,7 @@ const BACK_LABEL: Record<Locale, string> = {
   es: "Volver",
   tr: "Geri",
   ru: "Назад",
+  pt: "Voltar",
 };
 
 const HOME_LABEL: Record<Locale, string> = {
@@ -28,6 +30,7 @@ const HOME_LABEL: Record<Locale, string> = {
   es: "Inicio de QuizBall",
   tr: "QuizBall ana sayfası",
   ru: "Главная QuizBall",
+  pt: "Início do QuizBall",
 };
 
 const MODE_COLORS = [
@@ -40,7 +43,7 @@ const MODE_COLORS = [
 export function AboutScreen({ copy, locale }: AboutScreenProps) {
   const credibility = ABOUT_CREDIBILITY_COPY[locale];
   const gameModes = ABOUT_GAME_MODES_COPY[locale];
-  const quizLocale = locale === "es" || locale === "ru" ? locale : "en";
+  const quizLocale = campaignLocaleOf(locale);
   const reportLocale = locale === "es" ? "es" : "en";
 
   return (

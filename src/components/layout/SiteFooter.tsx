@@ -6,8 +6,7 @@ import { ChevronDown, MessageCircle } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
-import { campaignHubPath } from '@/features/campaign-quiz/campaignQuiz.routes';
-import { PUBLIC_GAMES, cardHref } from '@/lib/seo/public-games';
+import { PUBLIC_GAMES, cardHref, quizHubHref } from '@/lib/seo/public-games';
 import type { Locale } from '@/lib/i18n/locale';
 import { DOWNLOAD_COPY, downloadPath } from '@/lib/seo/app-download';
 
@@ -17,6 +16,7 @@ const SECTION: Record<Locale, { games: string; daily: string; company: string; m
   es: { games: 'Modos de juego', daily: 'Retos diarios', company: 'QuizBall', methodology: 'Metodología editorial', press: 'Prensa', index: 'Índice de conocimiento futbolero' },
   tr: { games: 'Oyun modları', daily: 'Günlük görevler', company: 'QuizBall', methodology: 'Editoryal metodoloji', press: 'Basın', index: 'Futbol Bilgi Endeksi' },
   ru: { games: 'Режимы игры', daily: 'Ежедневные испытания', company: 'QuizBall', methodology: 'Редакционная методология', press: 'Пресса', index: 'Индекс знаний о футболе' },
+  pt: { games: 'Modos de jogo', daily: 'Desafios diários', company: 'QuizBall', methodology: 'Metodologia editorial', press: 'Imprensa', index: 'Índice de conhecimento sobre futebol' },
 };
 
 /**
@@ -29,9 +29,9 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
   const { t, locale: contextLocale } = useLocale();
   const locale = (forcedLocale ?? contextLocale) as Locale;
   const labels = SECTION[locale] ?? SECTION.en;
-  // Campaign quizzes, the knowledge index and press pages exist in en/es only.
+  // The knowledge index and press pages exist in en/es only; campaign quizzes also in ru/pt.
   const editorialLocale = locale === 'en' || locale === 'es' ? locale : 'en';
-  const quizzesHref = campaignHubPath(editorialLocale);
+  const quizzesHref = quizHubHref(locale);
   // Crawlable links only where a page exists: published game pages and the quiz
   // pages that own Career Path / Who Am I. Account-only modes have no public page.
   const linkable = PUBLIC_GAMES.filter((game) => game.page || game.destination.kind === 'quiz');

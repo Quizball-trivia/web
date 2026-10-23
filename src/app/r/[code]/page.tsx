@@ -14,7 +14,7 @@ type Params = Promise<{ code: string }>;
 
 function target(locale: string, modeId: "buscaminas" | "pistas" | "ultimo" = "buscaminas"): string {
   const game = findPublicGameByModeId(modeId);
-  const path = game ? publicPagePathFor(game, locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" ? locale : "en") : "/";
+  const path = game ? publicPagePathFor(game, locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" ? locale : "en") : "/";
   return `${path}?utm_source=share&utm_medium=${modeId}`;
 }
 

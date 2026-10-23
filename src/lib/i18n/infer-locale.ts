@@ -28,6 +28,11 @@ function isRussianLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'ru' || normalized?.startsWith('ru-') === true;
 }
 
+function isPortugueseLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'pt' || normalized?.startsWith('pt-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -52,16 +57,12 @@ export function inferLocaleFromSignals({
     return 'ka';
   }
 
-  if (browserLanguages.some(isSpanishLanguageTag)) {
-    return 'es';
-  }
-
-  if (browserLanguages.some(isTurkishLanguageTag)) {
-    return 'tr';
-  }
-
-  if (browserLanguages.some(isRussianLanguageTag)) {
-    return 'ru';
+  // Otherwise the first language the browser lists that we offer.
+  for (const tag of browserLanguages) {
+    if (isSpanishLanguageTag(tag)) return 'es';
+    if (isTurkishLanguageTag(tag)) return 'tr';
+    if (isRussianLanguageTag(tag)) return 'ru';
+    if (isPortugueseLanguageTag(tag)) return 'pt';
   }
 
   return 'en';

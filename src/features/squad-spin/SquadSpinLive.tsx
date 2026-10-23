@@ -42,14 +42,14 @@ const QUESTION_S = 15;
 const ROLL_BASE_MS = 900;
 const ROLL_STAGGER_MS = 260;
 const ROLL_TICK_MS = 85;
-type RegistryItem = { id: string; labelEn: string; labelKa: string; labelRu?: string };
-const DECOYS: Record<SquadSpinReel["family"], SquadSpinReel[]> = {
-  club: (clubsRegistry as RegistryItem[]).map((c) => ({ family: "club", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
-  country: (countriesRegistry as RegistryItem[]).map((c) => ({ family: "country", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
-  league: (leaguesRegistry as RegistryItem[]).map((c) => ({ family: "league", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
-  manager: (managersRegistry as RegistryItem[]).map((c) => ({ family: "manager", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
-  trophy_award: (competitionsRegistry as RegistryItem[]).map((c) => ({ family: "trophy_award", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, asset_key: c.id })),
-  position: (["GK", "DEF", "MID", "FWD"] as const).map((p) => ({ family: "position", id: p, key: p, label_en: p, label_ka: p, label_ru: p, asset_key: null })),
+type RegistryItem = { id: string; labelEn: string; labelKa: string; labelRu?: string; labelPt?: string };
+const DECOYS: Record<SquadSpinReel["family"], Array<SquadSpinReel & { label_pt?: string | null }>> = {
+  club: (clubsRegistry as RegistryItem[]).map((c) => ({ family: "club", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, label_pt: c.labelPt ?? c.labelEn, asset_key: c.id })),
+  country: (countriesRegistry as RegistryItem[]).map((c) => ({ family: "country", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, label_pt: c.labelPt ?? c.labelEn, asset_key: c.id })),
+  league: (leaguesRegistry as RegistryItem[]).map((c) => ({ family: "league", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, label_pt: c.labelPt ?? c.labelEn, asset_key: c.id })),
+  manager: (managersRegistry as RegistryItem[]).map((c) => ({ family: "manager", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, label_pt: c.labelPt ?? c.labelEn, asset_key: c.id })),
+  trophy_award: (competitionsRegistry as RegistryItem[]).map((c) => ({ family: "trophy_award", id: c.id, key: c.id, label_en: c.labelEn, label_ka: c.labelKa, label_ru: c.labelRu ?? null, label_pt: c.labelPt ?? c.labelEn, asset_key: c.id })),
+  position: (["GK", "DEF", "MID", "FWD"] as const).map((p) => ({ family: "position", id: p, key: p, label_en: p, label_ka: p, label_ru: p, label_pt: p, asset_key: null })),
 };
 /** A run the sweeper settled while the tab was away is still shown if it ended this recently. */
 const RECENT_SETTLED_MS = 90_000;
@@ -57,7 +57,7 @@ const REEL_OPTIONS: Array<{ reels: 3 | 4 | 5; key: "reels3" | "reels4" | "reels5
 const POSITION_COLOR: Record<string, string> = { GK: "#FFE500", DEF: "#1CB0F6", MID: "#38B60E", FWD: "#FB3101" };
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : reel.label_en) || reel.label_en;
+const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : locale === "pt" ? reel.label_pt : reel.label_en) || reel.label_en;
 const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : locale === "ru" && p.name_ru ? p.name_ru : p.name_en);
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 
@@ -287,7 +287,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
 
         <div className="mb-1 flex items-center gap-3">
           {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
-          <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString()}</span>
+          <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString(locale === "pt" ? "pt-BR" : undefined)}</span>
         </div>
 
         {!state && !sample && <RunsBoard runs={topRuns} className="mt-4" />}
@@ -298,11 +298,11 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
               <div className="mb-3 grid grid-cols-3 text-center">
                 <div>
                   <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("squadSpin.stake")}</div>
-                  <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{state.stake_coins.toLocaleString()}</div>
+                  <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{state.stake_coins.toLocaleString(locale === "pt" ? "pt-BR" : undefined)}</div>
                 </div>
                 <div>
                   <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{settled ? (state.status === "cashed" ? t("squadSpin.banked") : t("squadSpin.lost")) : t("squadSpin.pot")}</div>
-                  <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}><CoinIcon size={14} />{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString()}</div>
+                  <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}><CoinIcon size={14} />{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString(locale === "pt" ? "pt-BR" : undefined)}</div>
                 </div>
                 <div>
                   <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("squadSpin.multiplier")}</div>
@@ -372,7 +372,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
                   )}
                   <div className="flex gap-2">
                     <button type="button" onClick={cashout} disabled={busy} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-green text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
-                      <CoinIcon size={16} /> {t("squadSpin.cashOut", { pot: state.pot_coins.toLocaleString() })}
+                      <CoinIcon size={16} /> {t("squadSpin.cashOut", { pot: state.pot_coins.toLocaleString(locale === "pt" ? "pt-BR" : undefined) })}
                     </button>
                     <button type="button" onClick={spinAgain} disabled={busy} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-blue text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
                       <RotateCw className="size-4" /> {t("squadSpin.spinAgain")}
@@ -389,7 +389,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
                 {settled && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 rounded-[20px] px-4 py-3 text-center text-white lg:mt-0", state.status === "cashed" ? "bg-brand-green" : "bg-brand-blue")}>
                     <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{state.status === "cashed" ? t("squadSpin.banked") : lastMiss === "late" ? t("squadSpin.late") : t("squadSpin.lost")}</p>
-                    <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}><CoinIcon size={20} />{(state.status === "cashed" ? state.payout_coins ?? 0 : 0).toLocaleString()}</p>
+                    <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}><CoinIcon size={20} />{(state.status === "cashed" ? state.payout_coins ?? 0 : 0).toLocaleString(locale === "pt" ? "pt-BR" : undefined)}</p>
                     {state.status === "lost" && state.reveal && state.reveal.answers.length > 0 && (
                       <div className="mt-3">
                         <p className="text-[10px] font-black uppercase tracking-wide text-white/70" style={poppins}>{t("squadSpin.answersWere")}</p>

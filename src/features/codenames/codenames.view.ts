@@ -119,8 +119,11 @@ export interface RoomCard {
   picks: number[];
 }
 
-/** `clue` null: the bot Scout had no safe clue left and passed. */
-export interface RoomTurn { team: Team; clue: (Clue & { bot?: boolean }) | null; flips: CardKey[] }
+/**
+ * `clue` null: the bot Scout had no safe clue left and passed, or (`timeout`) the Scout ran out of time. `flipped`: the
+ * flipped cards' ids. `meant`: once the game is over, the cards the clue was given for (null: the Scout marked none).
+ */
+export interface RoomTurn { team: Team; clue: (Clue & { bot?: boolean }) | null; flips: CardKey[]; flipped?: string[]; meant?: string[] | null; timeout?: boolean }
 
 export interface CodenamesRoomView {
   phase: "teams" | "clue" | "guess" | "over";
@@ -143,13 +146,15 @@ export interface CodenamesRoomView {
   guessesLeft: number | null;
   history: RoomTurn[];
   result: { winner: Team; reason: "cleared" | "owngoal" | "left" } | null;
+  /** The room's turn timer in seconds (null: none). */
+  timer?: number | null;
 }
 
 export type CodenamesCommand =
   | { type: "join"; team: Team; scout: boolean }
   | { type: "shuffle" }
   | { type: "kickoff" }
-  | { type: "clue"; word: string; count: number }
+  | { type: "clue"; word: string; count: number; cardIds?: string[] }
   | { type: "pick"; cardId: string | null }
   | { type: "flip"; cardId: string }
   | { type: "endTurn" };

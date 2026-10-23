@@ -1,4 +1,4 @@
-export type Locale = "en" | "ka" | "es" | "tr" | "ru";
+export type Locale = "en" | "ka" | "es" | "tr" | "ru" | "pt";
 
 // Routing and language menus need this small list, not every translated string.
 export const LOCALES = [
@@ -7,10 +7,11 @@ export const LOCALES = [
   { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", countryCode: "es", shortName: "ESP" },
   { code: "tr", name: "Turkish", nativeName: "Türkçe", flag: "🇹🇷", countryCode: "tr", shortName: "TUR" },
   { code: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺", countryCode: "ru", shortName: "RUS" },
+  { code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇧🇷", countryCode: "br", shortName: "POR" },
 ] as const;
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {
-  return value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru";
+  return value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru" || value === "pt";
 }
 
 export function normalizeLocale(value: string | null | undefined): Locale {
@@ -19,5 +20,6 @@ export function normalizeLocale(value: string | null | undefined): Locale {
   if (value?.toLowerCase().startsWith("es")) return "es";
   if (value?.toLowerCase().startsWith("tr")) return "tr";
   if (value?.toLowerCase().startsWith("ru")) return "ru";
+  if (value?.toLowerCase().startsWith("pt")) return "pt";
   return "en";
 }

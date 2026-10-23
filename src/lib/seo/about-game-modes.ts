@@ -308,4 +308,60 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
     ],
     rankedMeta: "Обычно 12–18 вопросов · Около 5 минут · На кону очки рейтинга",
   },
+  pt: {
+    overviewEyebrow: "O jogo",
+    overviewTitle: "Conhecimento de futebol com clima de partida",
+    modesEyebrow: "Modos de jogo",
+    modesTitle: "Como jogar QuizBall",
+    modesIntro:
+      "Aqueça com um desafio diário, jogue com um amigo sem se preocupar com o ranking ou entre em um 1v1 competitivo e suba na classificação. Cada modo usa seu conhecimento de futebol de um jeito diferente.",
+    modes: [
+      {
+        id: "ranked",
+        title: "Quem sabe mais de futebol? Quiz 1v1 online",
+        body:
+          "Jogue uma partida ao vivo contra outro jogador, conquiste a posse de bola com respostas certas, marque gols e ganhe RP para avançar pelos níveis do QuizBall.",
+      },
+      {
+        id: "friendly",
+        title: "Quiz de futebol com amigos",
+        body:
+          "Crie ou entre em uma sala privada e jogue com um amigo usando regras personalizadas. Seus Pontos de Ranking não estão em jogo.",
+      },
+      {
+        id: "daily",
+        title: "Jogos diários de futebol",
+        body:
+          "Jogue uma seleção rotativa de jogos rápidos de futebol, como Adivinhe o jogador pelas dicas, Verdadeiro ou falso do futebol, Adivinhe o jogador pela carreira, Higher or Lower do futebol: quem vale mais? e Moedas nas respostas. Volte para novos desafios.",
+      },
+      {
+        id: "auction",
+        title: "Leilão de jogadores",
+        body:
+          "Use um orçamento de $350M para dar lances por jogadores misteriosos e montar um time com sete jogadores. Preços inteligentes, lucro e entrosamento do time definem quem vence.",
+      },
+    ],
+    rankedEyebrow: "Modo competitivo",
+    rankedTitle: "Como funciona o 1v1 ranqueado",
+    rankedIntro:
+      "No modo ranqueado, as mesmas perguntas de futebol viram uma partida curta ao vivo contra outro jogador.",
+    rankedSteps: [
+      {
+        title: "Bloqueie uma categoria",
+        body:
+          "Três categorias aleatórias de futebol aparecem. Cada jogador bloqueia uma, e a partida usa a categoria que sobrar.",
+      },
+      {
+        title: "Conquiste a posse de bola",
+        body:
+          "Os dois jogadores respondem a perguntas ao vivo. Respostas certas mudam a posse de bola, constroem ataques e criam chances de gol.",
+      },
+      {
+        title: "Marque gols e suba no ranking",
+        body:
+          "Os gols definem o resultado. Depois da partida, seus Pontos de Ranking atualizam seu nível e sua posição no ranking.",
+      },
+    ],
+    rankedMeta: "Geralmente 12–18 perguntas · Cerca de 5 minutos · Pontos de Ranking em jogo",
+  },
 };

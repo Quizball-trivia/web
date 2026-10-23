@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 
-const LOBBY_LOCALES = ["en", "ka", "es", "tr", "ru"] as const;
+const LOBBY_LOCALES = ["en", "ka", "es", "pt", "tr", "ru"] as const;
 const asLobbyLocale = (locale: string): (typeof LOBBY_LOCALES)[number] =>
   (LOBBY_LOCALES as readonly string[]).includes(locale) ? (locale as (typeof LOBBY_LOCALES)[number]) : "en";
 import type { MessageKey } from "@/lib/i18n/messages";

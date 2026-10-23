@@ -20,6 +20,7 @@ const POPULAR_QUIZ_SLUGS = {
   ka: ['club-badges', 'career-path', 'everton', 'liverpool'],
   es: ['guess-the-player', 'club-badges', 'real-madrid', 'barcelona'],
   ru: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
+  pt: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
@@ -73,6 +74,20 @@ const HUB_COPY = {
     rankedBody: 'Одиночные викторины — это разминка. Зарегистрируйся бесплатно, чтобы сыграть с живыми соперниками и подняться в рейтинге QuizBall.',
     groups: { team: 'Викторины по клубам и сборным', league: 'Викторины по лигам', quiz_type: 'Футбольные испытания', article: 'Футбольные факты' },
   },
+  pt: {
+    ranked: 'Jogar no ranqueado', eyebrow: 'Quiz de futebol grátis',
+    // docs/SEO-GAME-NAMING-PT-2026-10-21.md §4: the H1 of the "football quiz" landing.
+    title: 'Quiz de futebol: perguntas e respostas online',
+    intro: 'Escolha um quiz, responda perguntas de futebol verificadas e veja seu resultado na hora. Todos os quizzes individuais são grátis e não precisam de conta.',
+    popularHeading: 'Quizzes de futebol mais populares',
+    popularBody: 'Comece pelos favoritos: adivinhe o jogador pela carreira e pelas dicas, acerte o time pelo escudo e mostre o quanto você sabe sobre o Real Madrid.',
+    playFree: 'Jogar grátis', verifiedHeading: 'Perguntas de futebol com fatos verificados',
+    verifiedBody: 'Os quizzes públicos do QuizBall usam perguntas verificadas sobre times, campeonatos, jogadores e a história do futebol.',
+    methodologyLink: 'Como o QuizBall confere cada pergunta',
+    rankedHeading: 'Leve seu resultado para os duelos ranqueados',
+    rankedBody: 'Os quizzes individuais são o aquecimento. Crie sua conta grátis para enfrentar torcedores de verdade e subir no ranking do QuizBall.',
+    groups: { team: 'Quizzes de times e seleções', league: 'Quizzes de campeonatos', quiz_type: 'Desafios de futebol', article: 'Curiosidades do futebol' },
+  },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
@@ -110,6 +125,8 @@ function QuizCard({ page, locale, label, preload = false }: {
 export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }) {
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
+  // The Portuguese hub is offered once at least one quiz has a pt edition.
+  const hasPortuguese = (locale === 'pt' ? pages : await loadHubPages('pt')).length > 0;
   const popularSlugs = POPULAR_QUIZ_SLUGS[locale];
   const popularSlugSet = new Set<string>(popularSlugs);
   const popularPages = popularSlugs.flatMap((slug) => {
@@ -144,7 +161,7 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href={`/${locale}`} aria-label="QuizBall"><Image src="/assets/brand/quizball-logo.webp" alt="QuizBall" width={218} height={64} className="h-10 w-auto object-contain sm:h-12" /></Link>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher locale={locale} locales={['en', 'es', 'ru']} className="hidden sm:inline-flex" />
+            <LanguageSwitcher locale={locale} locales={hasPortuguese ? ['en', 'es', 'ru', 'pt'] : ['en', 'es', 'ru']} className="hidden sm:inline-flex" />
             <CampaignSignupLink slug="football-quiz" placement="hero" href={`/${locale}?signup=1&source=football-quiz-hub-header`} className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90">{copy.ranked}</CampaignSignupLink>
           </div>
         </div>

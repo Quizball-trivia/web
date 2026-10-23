@@ -71,4 +71,37 @@ describe('localized campaign quiz routes', () => {
     expect(swapCampaignLocalePath('/es/quiz-de-futbol', 'ru')).toBe('/ru/futbolnaya-viktorina');
     expect(swapCampaignLocalePath('/ru/football-quiz/arsenal', 'en')).toBeNull();
   });
+
+  it('uses Brazilian Portuguese search phrases (lowercase ASCII) for every published page', () => {
+    expect(campaignHubPath('pt')).toBe('/pt/quiz-de-futebol');
+    expect(campaignQuizPath('career-path', 'pt')).toBe('/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira');
+    expect(campaignQuizPath('guess-the-player', 'pt')).toBe('/pt/quiz-de-futebol/adivinhe-o-jogador');
+    expect(campaignQuizPath('club-badges', 'pt')).toBe('/pt/quiz-de-futebol/adivinhe-o-time-pelo-escudo');
+    expect(campaignQuizPath('arsenal', 'pt')).toBe('/pt/quiz-de-futebol/quiz-do-arsenal');
+    expect(campaignQuizPath('spain', 'pt')).toBe('/pt/quiz-de-futebol/quiz-da-selecao-espanhola');
+
+    const portugueseSlugs = PUBLISHED_SOURCE_SLUGS.map((slug) => campaignPublicSlug(slug, 'pt'));
+    expect(new Set(portugueseSlugs).size).toBe(PUBLISHED_SOURCE_SLUGS.length);
+    for (const [index, slug] of portugueseSlugs.entries()) {
+      expect(slug).not.toBe(PUBLISHED_SOURCE_SLUGS[index]);
+      expect(slug).toMatch(CAMPAIGN_SLUG_PATTERN);
+      expect(slug).toMatch(/^[a-z0-9-]+$/);
+      expect(slug.split('-').length).toBeGreaterThanOrEqual(3);
+      expect(slug.split('-').length).toBeLessThanOrEqual(6);
+      expect(campaignSourceSlug(slug, 'pt')).toBe(PUBLISHED_SOURCE_SLUGS[index]);
+    }
+  });
+
+  it('switches between the Portuguese and the other editions', () => {
+    expect(swapCampaignLocalePath('/en/football-quiz/career-path', 'pt'))
+      .toBe('/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira');
+    expect(swapCampaignLocalePath('/pt/quiz-de-futebol/quiz-da-selecao-argentina', 'es'))
+      .toBe('/es/quiz-de-futbol/seleccion-argentina');
+    expect(swapCampaignLocalePath('/pt/quiz-de-futebol/quiz-do-manchester-united', 'ru'))
+      .toBe('/ru/futbolnaya-viktorina/viktorina-manchester-yunayted');
+    expect(swapCampaignLocalePath('/ru/futbolnaya-viktorina', 'pt')).toBe('/pt/quiz-de-futebol');
+    expect(swapCampaignLocalePath('/pt/football-quiz/arsenal', 'en')).toBeNull();
+    // Spanish and Portuguese folders differ by one letter: neither is read as the other.
+    expect(swapCampaignLocalePath('/pt/quiz-de-futbol/adivina-el-jugador', 'en')).toBeNull();
+  });
 });

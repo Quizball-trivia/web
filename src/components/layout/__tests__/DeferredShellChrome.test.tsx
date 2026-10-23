@@ -42,7 +42,7 @@ describe("deferred shell, same existing widgets", () => {
     for (const loader of [mocks.language, mocks.contact, mocks.social, mocks.profile, mocks.logout]) expect(loader.load).not.toHaveBeenCalled();
   });
 
-  it.each([["{ArrowDown}", /english/i], ["{ArrowUp}", /русский/i]] as const)("first %s opens the real menu with the correct focused item and Escape returns focus", async (key, firstItem) => {
+  it.each([["{ArrowDown}", /english/i], ["{ArrowUp}", /português/i]] as const)("first %s opens the real menu with the correct focused item and Escape returns focus", async (key, firstItem) => {
     const user = userEvent.setup(); render(<LanguageSwitcher locale="en" />);
     const trigger = screen.getByRole("button", { name: /current language/i }); trigger.focus(); await user.keyboard(key);
     const item = await screen.findByRole("menuitem", { name: firstItem }); await waitFor(() => expect(item).toHaveFocus());
@@ -59,10 +59,10 @@ describe("deferred shell, same existing widgets", () => {
     const user = userEvent.setup(); render(<LanguageSwitcher locale="en" />);
     screen.getByRole("button", { name: /current language/i }).focus();
     await user.keyboard("{ArrowUp}");
-    const russian = await screen.findByRole("menuitem", { name: /русский/i });
-    await waitFor(() => expect(russian).toHaveFocus());
+    const portuguese = await screen.findByRole("menuitem", { name: /português/i });
+    await waitFor(() => expect(portuguese).toHaveFocus());
     await user.keyboard("{ArrowUp}");
-    expect(screen.getByRole("menuitem", { name: /türkçe/i })).toHaveFocus();
+    expect(screen.getByRole("menuitem", { name: /русский/i })).toHaveFocus();
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.getByRole("button", { name: /current language/i })).toHaveFocus());
     await user.keyboard("{ArrowDown}");
@@ -76,7 +76,7 @@ describe("deferred shell, same existing widgets", () => {
     await user.click(screen.getByRole("button", { name: /current language/i }));
     await screen.findByRole("menu");
     await user.keyboard("{End}");
-    expect(screen.getByRole("menuitem", { name: /русский/i })).toHaveFocus();
+    expect(screen.getByRole("menuitem", { name: /português/i })).toHaveFocus();
     await user.keyboard("{Home}");
     expect(screen.getByRole("menuitem", { name: /english/i })).toHaveFocus();
   });

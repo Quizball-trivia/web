@@ -163,7 +163,7 @@ export const TRAINING_PENALTY_QUESTIONS: GameQuestion[] = [
 ];
 
 // ─── Localization ────────────────────────────────────────────────
-// The training questions are hardcoded (no backend), so their es/ka variants
+// The training questions are hardcoded (no backend), so their es/ka/pt variants
 // live here too and are swapped in at render time via localizeTrainingQuestion.
 
 interface QuestionL10n {
@@ -191,6 +191,26 @@ const L10N: Record<string, Record<string, QuestionL10n>> = {
     "train-pen-4": { prompt: "¿Qué país ganó la final del Mundial 2022 en los penaltis?", options: ["Francia", "Brasil", "Argentina", "Croacia"] },
     "train-pen-5": { prompt: "¿Qué tarjeta expulsa a un jugador del campo?", options: ["Amarilla", "Roja", "Azul", "Verde"] },
     "train-pen-6": { prompt: "¿Con cuántos jugadores sale un equipo de fútbol al inicio del partido?", options: ["9", "10", "11", "12"] },
+  },
+  pt: {
+    "train-1": { prompt: "Qual país conquistou mais Copas do Mundo da FIFA?", options: ["Alemanha", "Brasil", "Argentina", "Itália"] },
+    "train-2": { prompt: "Quem detém o recorde de mais gols em um ano-calendário (91 gols em 2012)?", options: ["Cristiano Ronaldo", "Lionel Messi", "Gerd Müller", "Robert Lewandowski"] },
+    "train-3": { prompt: "Qual clube conquistou mais títulos da Champions League?", options: ["AC Milan", "Barcelona", "Real Madrid", "Liverpool"] },
+    "train-4": { prompt: "Em que ano a Premier League começou oficialmente, substituindo a antiga First Division?", options: ["1988", "1990", "1992", "1996"] },
+    "train-5": { prompt: "Qual jogador marcou o gol da 'Mão de Deus' na Copa do Mundo de 1986?", options: ["Pelé", "Diego Maradona", "Zinedine Zidane", "Johan Cruyff"] },
+    "train-6": { prompt: "Qual é o número máximo de substituições permitido por time em uma partida padrão da FIFA (desde 2022)?", options: ["3", "4", "5", "6"] },
+    "train-7": { prompt: "Qual país venceu a Copa do Mundo de 2022 no Catar?", options: ["França", "Argentina", "Brasil", "Croácia"] },
+    "train-8": { prompt: "Quem é este jogador?", options: ["Harry Kane", "Jamie Vardy", "Wayne Rooney", "Alan Shearer"] },
+    "train-9": { prompt: "Qual é a distância entre a marca do pênalti e a linha do gol?", options: ["10 jardas", "11 jardas", "12 jardas", "14 jardas"] },
+    "train-10": { prompt: "Qual técnico conquistou mais títulos da Premier League?", options: ["Arsène Wenger", "José Mourinho", "Sir Alex Ferguson", "Pep Guardiola"] },
+    "train-11": { prompt: "Qual seleção africana foi a primeira a chegar às quartas de final de uma Copa do Mundo, em 1990?", options: ["Nigéria", "Camarões", "Gana", "Senegal"] },
+    "train-12": { prompt: "Qual jogador marcou mais gols na história da Champions League?", options: ["Lionel Messi", "Cristiano Ronaldo", "Robert Lewandowski", "Raúl"] },
+    "train-pen-1": { prompt: "De quantas jardas é cobrado um pênalti?", options: ["10", "12", "14", "16"] },
+    "train-pen-2": { prompt: "Qual destes é um goleiro italiano lendário?", options: ["Gianluigi Buffon", "Paolo Maldini", "Andrea Pirlo", "Francesco Totti"] },
+    "train-pen-3": { prompt: "Como se chama quando um jogador marca três gols em uma partida?", options: ["Dois gols", "Um hat-trick", "Um triplete", "Um triplo"] },
+    "train-pen-4": { prompt: "Qual país venceu a final da Copa do Mundo de 2022 nos pênaltis?", options: ["França", "Brasil", "Argentina", "Croácia"] },
+    "train-pen-5": { prompt: "Qual cor de cartão expulsa um jogador de campo?", options: ["Amarelo", "Vermelho", "Azul", "Verde"] },
+    "train-pen-6": { prompt: "Quantos jogadores um time de futebol coloca em campo no início da partida?", options: ["9", "10", "11", "12"] },
   },
   ka: {
     "train-1": { prompt: "რომელ ქვეყანას აქვს მოგებული ყველაზე მეტი FIFA-ს მსოფლიო თასი?", options: ["გერმანია", "ბრაზილია", "არგენტინა", "იტალია"] },

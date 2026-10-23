@@ -11,7 +11,7 @@ const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then(
 /** Engines that render their own way out ("Skip training"); the layer hides its exit control for them. */
 export const SELF_EXITING_ENGINES = new Set(["match", "auction", "mini-football-grid"]);
 
-export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık", ru: "Выйти из тренировки" };
+export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık", ru: "Выйти из тренировки", pt: "Sair do treino" };
 
 /**
  * Full-viewport layer for a practice round. The engines are full-screen

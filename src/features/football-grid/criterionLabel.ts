@@ -6,6 +6,7 @@ interface LabelledCriterion {
   labelEs?: string | null;
   labelTr?: string | null;
   labelRu?: string | null;
+  labelPt?: string | null;
 }
 
 /** Criterion label in the app locale; English when that language has no label yet. */
@@ -19,6 +20,8 @@ export function criterionLabel(criterion: LabelledCriterion, locale: Locale): st
       return criterion.labelTr || criterion.labelEn;
     case 'ru':
       return criterion.labelRu || criterion.labelEn;
+    case 'pt':
+      return criterion.labelPt || criterion.labelEn;
     default:
       return criterion.labelEn;
   }
@@ -29,5 +32,6 @@ export function compactCriterionLabel(criterion: LabelledCriterion, locale: Loca
   return criterionLabel(criterion, locale)
     .replace(/^Club teammate of (.+)$/, 'Club teammate · $1')
     .replace(/^Compañero de club de (.+)$/, 'Compañero de club · $1')
+    .replace(/^Companheiro de clube de (.+)$/, 'Companheiro de clube · $1')
     .replace(/^(.+) ile aynı kulüpte oynadı$/, '$1 · aynı kulüp');
 }

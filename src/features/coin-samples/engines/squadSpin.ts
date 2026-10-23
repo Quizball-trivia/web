@@ -118,7 +118,7 @@ export interface SquadSpinSampleClient {
 export function createSquadSpinSample(input: { combos: SampleSquadSpinCombo[]; wallet: SampleWalletPort; seed: number; onSettled?: (r: { stake: number; payout: number; status: "cashed" | "lost" }) => void; now?: () => number }): SquadSpinSampleClient {
   const now = input.now ?? (() => Date.now());
   let round: Round | null = null; let last: Round | null = null; let counter = 0;
-  const reelView = (r: SampleSquadSpinCombo["reels"][number]) => ({ family: r.family, id: r.id, key: r.key, label_en: r.label_en, label_ka: r.label_ka, label_ru: r.label_ru ?? null, asset_key: r.asset_key });
+  const reelView = (r: SampleSquadSpinCombo["reels"][number]) => ({ family: r.family, id: r.id, key: r.key, label_en: r.label_en, label_ka: r.label_ka, label_ru: r.label_ru ?? null, label_pt: r.label_pt ?? null, asset_key: r.asset_key });
   const toState = (r: Round): SquadSpinState => ({
     round_id: r.id, status: r.status, phase: r.phase, state_version: r.version, stake_coins: r.stake, reels: r.reels,
     pot_coins: r.status === "active" ? (r.spinsCleared > 0 ? cashoutValue(r.potMilli, SAMPLE_STEPS.margin) : r.stake) : r.status === "cashed" ? r.payout ?? 0 : 0,

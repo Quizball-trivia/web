@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
+import { DEFAULT_LOCALE, HTML_LANG, type Locale } from "@/lib/i18n/locale";
 import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
 import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug, previousGamePagePaths } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
@@ -51,10 +51,11 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
 
 /** The 410 page of a retired quiz, in the language of the address it was asked for. */
-const QUIZ_GONE: Record<'en' | 'ka' | 'ru', { title: string; message: string }> = {
+const QUIZ_GONE: Record<'en' | 'ka' | 'ru' | 'pt', { title: string; message: string }> = {
   en: { title: 'Quiz no longer available', message: 'This quiz is no longer available.' },
   ka: { title: 'ქვიზი აღარ არის ხელმისაწვდომი', message: 'ეს ქვიზი აღარ არის ხელმისაწვდომი.' },
   ru: { title: 'Викторина больше недоступна', message: 'Эта викторина больше недоступна.' },
+  pt: { title: 'Quiz indisponível', message: 'Este quiz não está mais disponível.' },
 };
 
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
@@ -258,9 +259,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // A games folder belongs to its own locales (/en|ka/football-games,
-  // /es/juegos-de-futbol, /tr/futbol-oyunlari). Other combinations answer 404
+  // /es/juegos-de-futbol, /tr/futbol-oyunlari, /pt/jogos-de-futebol). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru)\/([a-z-]+)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru|pt)\/([a-z-]+)(?:\/|$)/);
   if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
@@ -269,8 +270,9 @@ export async function middleware(req: NextRequest) {
   // This is the only reliable way to return a real 410 (rather than a themed
   // 404 page) while keeping redirects locale-aware.
   const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-    ?? pathname.match(/^\/(ru)\/futbolnaya-viktorina\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
-  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | undefined;
+    ?? pathname.match(/^\/(ru)\/futbolnaya-viktorina\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
+    ?? pathname.match(/^\/(pt)\/quiz-de-futebol\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | 'pt' | undefined;
   const quizSource = quizPath && quizLocale ? campaignSourceSlug(quizPath[2], quizLocale) : '';
   if (
     quizPath && quizLocale
@@ -298,7 +300,7 @@ export async function middleware(req: NextRequest) {
         if (route.kind === 'gone') {
           const gone = QUIZ_GONE[quizLocale!];
           return new NextResponse(
-            `<!doctype html><html lang="${quizLocale}"><head><title>${gone.title}</title></head><body><main><h1>${gone.message}</h1></main></body></html>`,
+            `<!doctype html><html lang="${HTML_LANG[quizLocale!]}"><head><title>${gone.title}</title></head><body><main><h1>${gone.message}</h1></main></body></html>`,
             {
             status: 410,
             headers: {
