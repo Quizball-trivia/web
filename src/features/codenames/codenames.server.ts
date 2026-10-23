@@ -23,9 +23,12 @@ export interface CodenamesServerView {
   cards: Array<{ id: string; word?: string; revealed: CardKey | null; key: CardKey | null; picks: number[] }>;
   clue: { word: string; count: number; bot: boolean } | null;
   guessesLeft: number | null;
-  history: Array<{ team: Team; clue: { word: string; count: number; bot: boolean } | null; flips: Array<{ card: number; key: CardKey; seat: number }> }>;
+  history: Array<{ team: Team; clue: { word: string; count: number; bot: boolean } | null; flips: Array<{ card: number; key: CardKey; seat: number }>; meant?: number[] | null; timeout?: true }>;
   used: string[];
   result: { winner: Team; reason: "cleared" | "owngoal" | "left" } | null;
+  /** Turn timer in seconds (absent before timers), and when the running one ends (epoch ms, server clock). */
+  timer?: number | null;
+  clockEndsAt?: number | null;
 }
 
 /** What the server takes (backend codenamesCommandSchema): cards by board position, play commands for one turn. */
@@ -33,7 +36,7 @@ export type CodenamesServerCommand =
   | { type: "join"; team: Team; scout: boolean }
   | { type: "shuffle"; seen?: number }
   | { type: "kickoff" }
-  | { type: "clue"; turn: number; word: string; count: number }
+  | { type: "clue"; turn: number; word: string; count: number; cards?: number[] }
   | { type: "point"; turn: number; card: number | null; n?: number }
   | { type: "flip"; turn: number; card: number }
   | { type: "endTurn"; turn: number };
@@ -56,8 +59,11 @@ export function toServerCommand(command: CodenamesCommand, view: CodenamesServer
       return command;
     case "shuffle":
       return { type: "shuffle", seen: view.shuffles };
-    case "clue":
-      return { type: "clue", turn: view.turnNo, word: command.word, count: command.count };
+    case "clue": {
+      const cards = command.cardIds?.map((id) => at(id)!);
+      if (cards?.some((i) => i < 0)) return null;
+      return { type: "clue", turn: view.turnNo, word: command.word, count: command.count, ...(cards?.length ? { cards } : {}) };
+    }
     case "pick": {
       const card = at(command.cardId);
       pointer = (pointer + 1) % 100_000;
@@ -126,7 +132,11 @@ export function toRoomView(v: CodenamesServerView, snapshot: RoomStatePayload): 
     cards: v.cards.map((c) => ({ id: c.id, ...(c.word !== undefined ? { word: c.word } : {}), key: c.key, revealed: c.revealed, picks: c.picks })),
     clue: v.clue,
     guessesLeft: v.guessesLeft,
-    history: v.history.map((t) => ({ team: t.team, clue: t.clue, flips: t.flips.map((f) => f.key) })),
+    history: v.history.map((t) => ({
+      team: t.team, clue: t.clue, flips: t.flips.map((f) => f.key), flipped: t.flips.map((f) => v.cards[f.card]?.id ?? ""),
+      ...(t.meant !== undefined ? { meant: t.meant?.map((i) => v.cards[i]?.id ?? "") ?? null } : {}), ...(t.timeout ? { timeout: true } : {}),
+    })),
     result: v.result,
+    timer: v.timer ?? null,
   };
 }

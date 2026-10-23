@@ -130,7 +130,7 @@ export function SoloBoard({ view, wording, locale, rivalTarget, onPick, onNext, 
 }) {
   const copy = raceCopy(locale);
   return (
-    <div className="flex flex-1 flex-col gap-3">
+    <div className="@container flex flex-1 flex-col gap-3">
       <header className="flex items-center gap-2">
         <button type="button" onClick={onExit} aria-label={copy.leave} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"><X className="size-4" /></button>
         <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] font-black uppercase leading-tight text-brand-yellow" style={poppins}>
@@ -138,12 +138,12 @@ export function SoloBoard({ view, wording, locale, rivalTarget, onPick, onNext, 
         </p>
         <span className="rounded-full bg-surface-page px-3 py-1 text-xs font-black uppercase tabular-nums" style={poppins}>{copy.pickCount(view.round + (view.phase === "pick" ? 1 : 0))}</span>
       </header>
-      <div className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-3 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-5">
-        <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-4 lg:order-2">
+      <div className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-3 @4xl:grid-cols-[minmax(0,1fr)_400px] @4xl:items-start @4xl:gap-5">
+        <div className="flex min-w-0 flex-col gap-2 @4xl:sticky @4xl:top-4 @4xl:order-2">
           <LanesTrack view={view} locale={locale} rivalTarget={rivalTarget} />
-          <p className="hidden text-[11px] leading-snug text-white/45 lg:block">{l10n(wording.source, locale)}</p>
+          <p className="hidden text-[11px] leading-snug text-white/45 @4xl:block">{l10n(wording.source, locale)}</p>
         </div>
-        <div className="min-w-0 lg:order-1">
+        <div className="min-w-0 @4xl:order-1">
           {view.phase === "pick" ? (
             <StatPicker key={view.round} view={view} wording={wording} copy={copy} locale={locale} busy={busy} onPick={onPick} />
           ) : (

@@ -12,6 +12,9 @@ import { TrainingOfferModal } from '@/features/training/components/TrainingOffer
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { RankedModeModal } from '@/features/play/RankedModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
+import { CodenamesModeModal } from '@/features/codenames/CodenamesModeModal';
+import { setRoomPreset, writeBoard } from '@/features/codenames/codenames.board';
+import type { BoardKind } from '@/features/codenames/codenames.view';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
 import { PlayAnnouncements } from '@/features/play/PlayAnnouncements';
@@ -476,6 +479,25 @@ export function ModeSelectionScreen({
     setGridModalOpen(true);
   };
   // The hero opens the ranked dialog for everyone (same shape as Auction).
+  // Codenames: guests read the public page (it hosts the daily, Words practice and the room link); members get the dialog.
+  const [codenamesModalOpen, setCodenamesModalOpen] = useState(false);
+  const openCodenamesCard = () => {
+    // App routes read the stored language: a player on a localized hub keeps reading in it.
+    storage.set(STORAGE_KEYS.LOCALE, locale);
+    if (settledGuest) {
+      const href = publicPageFor('codenames');
+      if (href) { router.push(href); return; }
+    }
+    setCodenamesModalOpen(true);
+  };
+  const codenamesRoom = (board: BoardKind) => {
+    setRoomPreset(board);
+    router.push('/friend/room/new?room=codenames');
+  };
+  const codenamesDaily = () => {
+    writeBoard('pictures');
+    router.push('/codenames');
+  };
   const [rankedModalOpen, setRankedModalOpen] = useState(false);
   const openRankedFlow = () => setRankedModalOpen(true);
   // "Find opponents": guests sign in; brand-new members get the training offer first.
@@ -795,9 +817,7 @@ export function ModeSelectionScreen({
           iconSrc="/assets/codenames-card-icon.webp"
           ctaLabel={t('common.play')}
           badge={t('play.newBadge')}
-          href="/codenames"
-          // App routes read the stored language: a guest on a localized hub keeps reading in it.
-          onClick={() => storage.set(STORAGE_KEYS.LOCALE, locale)}
+          onClick={openCodenamesCard}
         />
         {isAuctionCardEnabled && (
           <CompactModeCard
@@ -1038,6 +1058,12 @@ export function ModeSelectionScreen({
           }}
         />
       )}
+      <CodenamesModeModal
+        isOpen={codenamesModalOpen}
+        onOpenChange={setCodenamesModalOpen}
+        onPlayWithFriend={(board) => { setCodenamesModalOpen(false); codenamesRoom(board); }}
+        onDaily={() => { setCodenamesModalOpen(false); codenamesDaily(); }}
+      />
       <FootballGridModeModal
         isOpen={gridModalOpen}
         onOpenChange={setGridModalOpen}

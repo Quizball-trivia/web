@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Bot, Eye, Minus, Plus, Shuffle } from "lucide-react";
+import Image from "next/image";
+import { Bot, Check, Eye, Minus, Plus, Shuffle, Timer } from "lucide-react";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
 import { Frame, GreenButton, QuietButton, TopBar, poppins } from "@/features/wordgames/ui";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ import { codenamesCopy, type CodenamesCopy } from "./codenames.copy";
 import { ClueBanner } from "./CodenamesSolo";
 import { useCardAlt } from "./codenames.alt";
 import { knownName, suggestNames } from "./codenames.names";
-import { cardsLeft, clueOnBoard, foldClue, kindFor, me, myTeamOf, type BoardKind, type CodenamesCommand, type CodenamesRoomView, type RoomPlayer, type Team } from "./codenames.view";
+import { cardArt, cardsLeft, clueOnBoard, foldClue, kindFor, me, myTeamOf, type BoardKind, type CodenamesCommand, type CodenamesRoomView, type RoomPlayer, type Team } from "./codenames.view";
 
 const other = (t: Team): Team => (t === 0 ? 1 : 0);
 
@@ -49,14 +50,18 @@ const MAX_CLUE = 30;
 const MAX_WORDS = 4;
 
 /** Any football clue the Scout types; names from our list are suggested while typing. */
-function ClueForm({ c, locale, disabled, used, boardWords, onGive }: {
+function ClueForm({ c, locale, disabled, used, boardWords, marked, onClear, onGive }: {
   c: CodenamesCopy; locale: string; disabled: boolean; used: string[];
   /** Word boards: the words still showing, which a clue may not use. Picture boards suggest football names instead. */
   boardWords?: string[];
+  /** Own cards the Scout marked on the board: the clue's number follows them. */
+  marked: number;
+  onClear: () => void;
   onGive: (word: string, count: number) => void;
 }) {
   const [draft, setDraft] = useState("");
-  const [count, setCount] = useState(2);
+  const [picked, setCount] = useState(2);
+  const count = marked > 0 ? marked : picked;
   const [tried, setTried] = useState(false);
   // The suggestion highlighted with the arrow keys, for the draft it was highlighted in; Escape closes the list.
   const [active, setActive] = useState<{ draft: string; index: number } | null>(null);
@@ -114,12 +119,18 @@ function ClueForm({ c, locale, disabled, used, boardWords, onGive }: {
           {known && <span className="pointer-events-none absolute inset-x-0 bottom-1.5 text-center text-[10px] font-black uppercase text-black/60">{c.nameKinds[known.kind]}</span>}
         </div>
         <div className="flex h-14 shrink-0 items-center gap-1 rounded-[20px] bg-white/10 px-1.5" role="group" aria-label={c.number}>
-          <button type="button" onClick={() => setCount((n) => Math.max(1, n - 1))} aria-label="−" className="flex size-10 items-center justify-center rounded-full hover:bg-white/10"><Minus className="size-4" /></button>
+          <button type="button" onClick={() => setCount((n) => Math.max(1, n - 1))} disabled={marked > 0} aria-label="−" className="flex size-10 items-center justify-center rounded-full enabled:hover:bg-white/10 disabled:opacity-30"><Minus className="size-4" /></button>
           <span className="w-6 text-center text-xl font-black tabular-nums" style={poppins}>{count}</span>
-          <button type="button" onClick={() => setCount((n) => Math.min(9, n + 1))} aria-label="+" className="flex size-10 items-center justify-center rounded-full hover:bg-white/10"><Plus className="size-4" /></button>
+          <button type="button" onClick={() => setCount((n) => Math.min(9, n + 1))} disabled={marked > 0} aria-label="+" className="flex size-10 items-center justify-center rounded-full enabled:hover:bg-white/10 disabled:opacity-30"><Plus className="size-4" /></button>
         </div>
       </div>
       <p className="text-center text-xs text-white/55">{boardWords ? c.words.rule : c.clueRule}</p>
+      {marked > 0 ? (
+        <p data-codenames-marks className="flex items-center justify-center gap-2 text-xs font-bold text-white/80">
+          <Check className="size-3.5" aria-hidden />{c.meant.marked(marked, count)}
+          <button type="button" onClick={onClear} className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-black uppercase hover:bg-white/15">{c.meant.clear}</button>
+        </p>
+      ) : <p className="text-center text-xs text-white/55">{c.meant.mark}</p>}
       {/* A board word is flagged while typing: it is the rule players forget. */}
       {(tried || problem === "board") && problem && <p role="alert" className="text-center text-sm font-semibold text-brand-red-light">{problem === "used" ? c.clueUsed : problem === "board" ? c.words.onBoard(onBoard!) : c.clueProblems[problem]}</p>}
       <GreenButton onClick={submit} disabled={disabled}>{c.giveClue}</GreenButton>
@@ -127,25 +138,63 @@ function ClueForm({ c, locale, disabled, used, boardWords, onGive }: {
   );
 }
 
-function History({ c, view, myTeam }: { c: CodenamesCopy; view: CodenamesRoomView; myTeam: Team }) {
+/** A card the recap names: its word, or a small picture. Ringed when the team found it on that clue. */
+function MeantCard({ card, found, alt }: { card: CodenamesRoomView["cards"][number] | undefined; found: boolean; alt: string }) {
+  if (!card) return null;
+  return card.word ? (
+    <span className={cn("flex h-7 items-center rounded-md bg-white px-1.5 text-[11px] font-black uppercase leading-none text-black", found ? "ring-2 ring-brand-green" : "opacity-60")} style={poppins}>{card.word}</span>
+  ) : (
+    <span className={cn("relative size-10 shrink-0 overflow-hidden rounded-md bg-white", found ? "ring-2 ring-brand-green" : "opacity-60")}>
+      <Image src={cardArt(card.id)} alt={alt} fill sizes="40px" className="object-cover" />
+      {found && <span className="absolute bottom-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-green"><Check className="size-3 text-black" strokeWidth={3.5} /></span>}
+    </span>
+  );
+}
+
+/** The clues so far; once the game is over (`recap`), each with the cards it was meant for. */
+function History({ c, view, myTeam, recap = false, altOf }: { c: CodenamesCopy; view: CodenamesRoomView; myTeam: Team; recap?: boolean; altOf?: (id: string) => string | undefined }) {
   if (view.history.length === 0) return null;
+  const cardOf = new Map(view.cards.map((card) => [card.id, card]));
   return (
     <div className="mt-4">
-      <p className="text-xs font-black uppercase tracking-wide text-white/55">{c.history}</p>
+      <p className="text-xs font-black uppercase tracking-wide text-white/55">{recap ? c.meant.title : c.history}</p>
       <ul className="mt-2 space-y-1.5">
         {view.history.map((t, i) => (
-          <li key={i} className={cn("flex items-center gap-2 rounded-2xl px-3 py-2 text-sm", t.team === myTeam ? "bg-brand-green/10" : "bg-brand-blue/15")}>
-            <span className="min-w-0 flex-1 truncate font-black uppercase" style={poppins}>{t.clue ? `${t.clue.word} · ${t.clue.count}` : c.passed}</span>
-            <span className="flex gap-1" aria-hidden>
-              {t.flips.map((k, j) => {
-                const kind = kindFor(k, myTeam);
-                return <span key={j} className={cn("size-3 rounded-sm", kind === "mine" ? "bg-brand-green" : kind === "theirs" ? "bg-brand-blue" : kind === "neutral" ? "bg-brand-slate-light" : "bg-brand-red")} />;
-              })}
-            </span>
+          <li key={i} data-codenames-turn={i} className={cn("rounded-2xl px-3 py-2 text-sm", t.team === myTeam ? "bg-brand-green/10" : "bg-brand-blue/15")}>
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 truncate font-black uppercase" style={poppins}>
+                {t.clue ? `${t.clue.word} · ${t.clue.count}` : t.timeout ? <span className="inline-flex items-center gap-1"><Timer className="size-3.5" aria-hidden />{c.timer.timeUp}</span> : c.passed}
+              </span>
+              <span className="flex gap-1" aria-hidden>
+                {t.flips.map((k, j) => {
+                  const kind = kindFor(k, myTeam);
+                  return <span key={j} className={cn("size-3 rounded-sm", kind === "mine" ? "bg-brand-green" : kind === "theirs" ? "bg-brand-blue" : kind === "neutral" ? "bg-brand-slate-light" : "bg-brand-red")} />;
+                })}
+              </span>
+            </div>
+            {recap && t.clue && (
+              t.meant && t.meant.length > 0 ? (
+                <div data-codenames-meant className="mt-2 flex flex-wrap gap-1.5">
+                  {t.meant.map((id) => <MeantCard key={id} card={cardOf.get(id)} found={t.flipped?.includes(id) ?? false} alt={altOf?.(id) ?? ""} />)}
+                </div>
+              ) : <p className="mt-1 text-xs text-white/50">{c.meant.none}</p>
+            )}
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/** The turn timer: the phase's seconds left, red for the last ten. */
+function TurnClock({ c, seconds }: { c: CodenamesCopy; seconds: number }) {
+  const m = Math.floor(seconds / 60);
+  const ss = String(seconds % 60).padStart(2, "0");
+  return (
+    <span data-codenames-clock role="timer" aria-label={c.timer.secondsLeft(seconds)}
+      className={cn("flex h-11 shrink-0 items-center gap-1.5 rounded-2xl px-3 text-lg font-black tabular-nums", seconds <= 10 ? "animate-pulse bg-brand-red text-white" : "bg-white/10 text-white")} style={poppins}>
+      <Timer className="size-4" aria-hidden />{m}:{ss}
+    </span>
   );
 }
 
@@ -238,8 +287,10 @@ export function CodenamesTeams({ view, locale, error, onSend, onExit, onBoard }:
   );
 }
 
-export function CodenamesGame({ view, locale, busy, sending = false, error, onSend, onExit, finale = false }: {
+export function CodenamesGame({ view, locale, busy, sending = false, error, onSend, onExit, finale = false, secondsLeft = null }: {
   view: CodenamesRoomView; locale: string; busy: boolean; error?: string | null; onSend: (cmd: CodenamesCommand) => void; onExit: () => void;
+  /** The turn timer's seconds left in this phase (null: no clock). */
+  secondsLeft?: number | null;
   /** A command of this screen is on its way (the clue form waits for it). */
   sending?: boolean;
   /** The game just ended on this board: no controls, the Own Goal goes off. */
@@ -251,6 +302,10 @@ export function CodenamesGame({ view, locale, busy, sending = false, error, onSe
   const [picked, setPicked] = useState<{ turn: number; id: string } | null>(null);
   const selected = picked?.turn === view.turnNo ? picked.id : null;
   const setSelected = (id: string | null) => setPicked(id === null ? null : { turn: view.turnNo, id });
+  // The Scout's marks for the clue being written, in the turn they were made.
+  const [marks, setMarks] = useState<{ turn: number; ids: string[] }>({ turn: -1, ids: [] });
+  const marked = marks.turn === view.turnNo ? marks.ids : [];
+  const toggleMark = (id: string) => setMarks({ turn: view.turnNo, ids: marked.includes(id) ? marked.filter((x) => x !== id) : marked.length >= 9 ? marked : [...marked, id] });
   const self = me(view);
   const myTeam = myTeamOf(view);
   const myTurn = view.turn === myTeam;
@@ -269,7 +324,9 @@ export function CodenamesGame({ view, locale, busy, sending = false, error, onSe
     revealed: card.revealed ? kindFor(card.revealed, myTeam) : null,
     picks: card.picks.filter((s) => s !== view.mySeat).flatMap((s) => view.players.find((p) => p.seat === s)?.avatar ?? []),
   }));
+  const writingClue = !finale && view.phase === "clue" && myTurn && self.scout;
   const tap = (id: string) => {
+    if (writingClue) { toggleMark(id); return; }
     if (selected !== id) {
       setSelected(id);
       onSend({ type: "pick", cardId: id });
@@ -310,10 +367,15 @@ export function CodenamesGame({ view, locale, busy, sending = false, error, onSe
             <TeamPill c={c} label={c.yourTeam} players={view.players.filter((p) => p.team === myTeam)} left={cardsLeft(view, myTeam)} mine active={myTurn} bot={view.botScout[myTeam]} />
             <TeamPill c={c} label={c.rivalTeam} players={view.players.filter((p) => p.team !== myTeam)} left={cardsLeft(view, other(myTeam))} mine={false} active={!myTurn} bot={view.botScout[other(myTeam)]} />
           </div>
-          <div className="mt-3 lg:mt-0">{banner}</div>
+          <div className="mt-3 flex items-stretch gap-2 lg:mt-0">
+            <div className="min-w-0 flex-1">{banner}</div>
+            {secondsLeft !== null && !finale && <TurnClock c={c} seconds={secondsLeft} />}
+          </div>
           {error && CLUE_ERRORS.has(error) && <p role="alert" className="mt-2 text-center text-sm font-semibold text-brand-red-light">{error === "used" ? c.clueUsed : error === "blocked" ? c.clueBlocked : error === "board" ? c.words.onBoardAny : c.clueProblems[error as "empty" | "words" | "long"]}</p>}
-          <CodenamesBoard className="mt-3" cards={cards} mode={self.scout && !finale ? "scout" : "guess"} selected={selected} disabled={!canGuess} kinds={c.kinds} flipLabel={c.flip} cardLabel={c.cardLabel} altOf={altOf} onTap={tap} finale={finale} />
-          {!finale && view.phase === "clue" && myTurn && self.scout && <ClueForm key={view.turnNo} c={c} locale={locale} disabled={busy || sending} used={view.used} boardWords={wordBoard ? view.cards.filter((x) => !x.revealed && x.word).map((x) => x.word!) : undefined} onGive={(word, count) => onSend({ type: "clue", word, count })} />}
+          <CodenamesBoard className="mt-3" cards={cards} mode={self.scout && !finale ? "scout" : "guess"} selected={selected} marked={writingClue ? marked : undefined} disabled={writingClue ? busy || sending : !canGuess} kinds={c.kinds} flipLabel={c.flip} cardLabel={c.cardLabel} altOf={altOf} onTap={tap} finale={finale} />
+          {writingClue && <ClueForm key={view.turnNo} c={c} locale={locale} disabled={busy || sending} used={view.used} boardWords={wordBoard ? view.cards.filter((x) => !x.revealed && x.word).map((x) => x.word!) : undefined}
+            marked={marked.length} onClear={() => setMarks({ turn: view.turnNo, ids: [] })}
+            onGive={(word, count) => onSend({ type: "clue", word, count, ...(marked.length > 0 ? { cardIds: marked } : {}) })} />}
           {self.sawKey && !self.scout && view.phase !== "over" && <p className="mt-3 text-center text-xs text-white/60">{c.sawKeyNote}</p>}
           {canGuess && flippedThisTurn && <QuietButton className="mt-3" onClick={() => { setSelected(null); onSend({ type: "endTurn" }); }}>{c.endTurn}</QuietButton>}
           <div className="lg:hidden"><History c={c} view={view} myTeam={myTeam} /></div>
@@ -354,7 +416,7 @@ export function CodenamesResult({ view, locale, onRoom, onExit }: { view: Codena
           <CodenamesBoard className="mt-3" cards={cards} mode="end" kinds={c.kinds} cardLabel={c.cardLabel} altOf={altOf} />
         </div>
         <aside>
-          <History c={c} view={view} myTeam={myTeam} />
+          <History c={c} view={view} myTeam={myTeam} recap altOf={altOf} />
           <GreenButton className="mt-5" onClick={onRoom}>{c.backToRoom}</GreenButton>
           <QuietButton className="mt-3" onClick={onExit}>{c.leave}</QuietButton>
         </aside>
