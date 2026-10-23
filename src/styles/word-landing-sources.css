@@ -190,6 +190,7 @@
 @source "../features/wordgames/daily/wordDaily.games.ts";
 @source "../features/wordgames/daily/wordDaily.logic.ts";
 @source "../hooks/useTierLabel.ts";
+@source "../lib/analytics/event-policy.ts";
 @source "../lib/analytics/game-events.ts";
 @source "../lib/analytics/public-games.analytics.ts";
 @source "../lib/analytics/seo-routes.ts";
