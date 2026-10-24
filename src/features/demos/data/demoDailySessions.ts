@@ -268,7 +268,7 @@ const EXTRA = {
   "FIFA Cards": {
     "es": "Cartas FIFA",
     "pt": "Cartas FIFA",
-    "de": "Spielerkarte erraten",
+    "de": "Goldkarte erraten",
     "tr": "FIFA Kartları"
   },
   "Card Detective": {
