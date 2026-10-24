@@ -1709,7 +1709,7 @@ const DE: Record<string, string> = {
 
   // FIFA Cards
   "Guess the Card": "Spielerkarte erraten",
-  "FIFA Cards": "Spielerkarte erraten",
+  "FIFA Cards": "Goldkarte erraten",
   "Spin for a FIFA edition, then name the player from the stats": "Dreh eine FIFA-Ausgabe und errate den Spieler anhand der Werte",
   "Spinning the edition…": "FIFA-Ausgabe wird ausgewählt …",
   "Locked in!": "Festgelegt!",

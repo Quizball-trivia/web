@@ -826,7 +826,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   fifaCards: {
-    title: { en: "FIFA Cards", ka: "FIFA ბარათები", es: "Cartas FIFA", tr: "FIFA Kartları", ru: "Карточки FIFA", pt: "Cartas FIFA", de: "Spielerkarte erraten", },
+    title: { en: "FIFA Cards", ka: "FIFA ბარათები", es: "Cartas FIFA", tr: "FIFA Kartları", ru: "Карточки FIFA", pt: "Cartas FIFA", de: "Goldkarte erraten", },
     description: {
       en: "A gold card, stats only — name the player before the clues run out.",
       ka: "ოქროს ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე, სანამ მინიშნებები ამოიწურება.",
