@@ -24,6 +24,8 @@ describe('PostHog capture policy', () => {
     '/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere?utm_source=yandex',
     'https://quizball.io/pt/quiz-de-futebol',
     '/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira?utm_source=google',
+    'https://quizball.io/de/fussball-quiz',
+    '/de/fussball-quiz/karrierestationen-erraten?utm_source=google',
   ])('keeps Web Vitals for public football quiz pages: %s', (url) => {
     expect(preparePostHogCapture(webVitals(url))?.event).toBe('$web_vitals');
   });

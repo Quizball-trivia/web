@@ -32,9 +32,10 @@ const COPY = {
   ka: { done: "დემო დასრულდა", round: "რაუნდი დასრულდა", saved: "შენახული თანხა", score: "ქულა", again: "თავიდან თამაში", demos: "დემოებზე დაბრუნება", exit: "გასვლა" },
   es: { done: "Demo completada", round: "Ronda completada", saved: "dinero conservado", score: "puntos", again: "Jugar de nuevo", demos: "Volver a las demos", exit: "Salir" },
   pt: { done: "Demo concluída", round: "Rodada concluída", saved: "dinheiro salvo", score: "pontuação", again: "Jogue de novo", demos: "Voltar às demos", exit: "Sair" },
+  de: { done: "Demo abgeschlossen", round: "Runde abgeschlossen", saved: "Münzen gesichert", score: "Punkte", again: "Nochmal spielen", demos: "Zurück zu den Demos", exit: "Verlassen" },
   tr: { done: "Demo tamamlandı", round: "Tur tamamlandı", saved: "kalan para", score: "puan", again: "Tekrar oyna", demos: "Demolara dön", exit: "Çık" },
 } as const;
-const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", pt: "Jogue o desafio real de hoje", tr: "Bugünün gerçek görevini oyna" } as const;
+const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", pt: "Jogue o desafio real de hoje", de: "Spiel die echte Tages-Challenge", tr: "Bugünün gerçek görevini oyna" } as const;
 
 export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta, subtitle, secondary, extra }: DemoResultScreenProps) {
   const { locale } = useLocale();
@@ -57,7 +58,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
           {embedded ? c.round : c.done}
         </p>
         <div className="mt-5 text-4xl font-bold text-white" style={poppins}>
-          {isMoney ? `$${score.toLocaleString(locale === "pt" ? "pt-BR" : undefined)}` : score}
+          {isMoney ? `$${score.toLocaleString(locale === "de" ? "de-DE" : locale === "pt" ? "pt-BR" : undefined)}` : score}
         </div>
         <p className="mt-1 text-[12px] uppercase tracking-wide text-white/70" style={poppins}>
           {subtitle ?? (isMoney ? c.saved : c.score)}

@@ -51,4 +51,21 @@ describe("retired and renamed quiz pages", () => {
     expect(response.status).toBe(301);
     expect(new URL(response.headers.get("location")!).pathname).toBe("/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira");
   });
+
+  it("answers a retired German quiz with a de 410, looked up by its English source slug", async () => {
+    const fetchMock = routeLookup({ kind: "gone" });
+    const response = await middleware(new NextRequest("https://quizball.io/de/fussball-quiz/fussball-wappen-quiz"));
+    expect(response.status).toBe(410);
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toMatch(/\/campaign-quizzes\/routes\/club-badges$/);
+    const body = await response.text();
+    expect(body).toContain('lang="de"');
+    expect(body).toContain("Dieses Quiz ist nicht mehr verfügbar.");
+  });
+
+  it("moves a renamed German quiz to the German page of its new slug", async () => {
+    routeLookup({ kind: "redirect", target_slug: "career-path" });
+    const response = await middleware(new NextRequest("https://quizball.io/de/fussball-quiz/fussball-wappen-quiz"));
+    expect(response.status).toBe(301);
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/de/fussball-quiz/karrierestationen-erraten");
+  });
 });

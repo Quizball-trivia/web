@@ -82,9 +82,9 @@ describe("public games manifest", () => {
     expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
   });
 
-  it("every game page is published in all six locales, and cards link to the localized page", () => {
+  it("every game page is published in all seven locales, and cards link to the localized page", () => {
     for (const game of PUBLISHED_PUBLIC_GAMES.filter((g) => g.page)) {
-      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr", "ru", "pt"]);
+      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr", "ru", "pt", "de"]);
     }
     expect(findPublishedGame("tr", "futbol-oyunlari", "auction")).not.toBeNull();
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
@@ -112,6 +112,9 @@ describe("public games manifest", () => {
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "ru")).toBe("/ru/futbolnaya-viktorina/ugaday-futbolista");
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "pt")).toBe("/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira");
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "pt")).toBe("/pt/quiz-de-futebol/adivinhe-o-jogador");
+    // career-path has no game page of its own: the de card goes to the campaign quiz that reuses its slug.
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "de")).toBe("/de/fussball-quiz/karrierestationen-erraten");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "de")).toBe("/de/fussball-quiz/fussballer-erraten");
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "tr")).toBe("/en/football-quiz/career-path");
   });
 });

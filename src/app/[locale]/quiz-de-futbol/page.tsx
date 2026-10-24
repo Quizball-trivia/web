@@ -2,7 +2,7 @@ import "@/styles/application-utilities.css";
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { CampaignQuizHub } from '@/features/campaign-quiz/CampaignQuizHub';
-import { hasPortugueseCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
+import { hasGermanCampaignHub, hasPortugueseCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
 import {
   SITE_NAME,
   SITE_OG_IMAGE_ALT,
@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (locale !== 'es') return {};
   const canonical = `${SITE_URL}/es/quiz-de-futbol`;
   const portuguese = await hasPortugueseCampaignHub();
+  const german = await hasGermanCampaignHub();
   return {
     title: { absolute: TITLE },
     description: DESCRIPTION,
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         es: canonical,
         ru: `${SITE_URL}/ru/futbolnaya-viktorina`,
         ...(portuguese ? { 'pt-BR': `${SITE_URL}/pt/quiz-de-futebol` } : {}),
+        ...(german ? { de: `${SITE_URL}/de/fussball-quiz` } : {}),
         'x-default': `${SITE_URL}/en/football-quiz`,
       },
     },
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: DESCRIPTION,
       url: canonical,
       locale: 'es_ES',
-      alternateLocale: ['en_GB', 'ru_RU', ...(portuguese ? ['pt_BR'] : [])],
+      alternateLocale: ['en_GB', 'ru_RU', ...(portuguese ? ['pt_BR'] : []), ...(german ? ['de_DE'] : [])],
       images: [{
         url: SITE_OG_IMAGE_PATH,
         width: 1200,

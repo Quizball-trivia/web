@@ -90,7 +90,7 @@ export interface CampaignQuiz {
    * Which language editions exist (a missing one is served in English). Absent from older backends; `pt` is absent
    * from backends older than the Brazilian Portuguese pages (and needs the page copy and every question in pt).
    */
-  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean };
+  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean };
 }
 
 export interface CampaignQuizAnswer {

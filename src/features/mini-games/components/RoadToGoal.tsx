@@ -298,6 +298,42 @@ const COPY = {
     target: 'alvo',
     finish: 'Gol',
   },
+  de: {
+    title: 'Weg zum Tor',
+    subtitle: 'Besiege 10 Verteidiger und den Torwart. Eine Fußballfrage pro Zone.',
+    balance: 'Punktestand',
+    zone: 'Zone',
+    stake: 'Punkte',
+    introEyebrow: 'Der Parcours durch elf Zonen',
+    introTitle: 'Wissen. Dribbeln. Sichern.',
+    introBody: 'Jede Antwort löst eine Überlebensprobe aus. Richtige Antworten verbessern deine Chancen. Nach jeder sicheren Zone kannst du dir den Betrag sichern oder den nächsten Verteidiger angreifen.',
+    kickOff: 'Mit {stake} starten',
+    noFunds: 'Nicht genug Punkte für diese Runde',
+    nextReturn: 'Nächster Betrag',
+    currentReturn: 'Aktueller Betrag',
+    question: 'Frage',
+    answerFast: 'Antworte, bevor der Verteidiger dich abfängt',
+    clean: 'Verteidiger ausgespielt',
+    cleanBody: 'Du hast Zone {zone} geschafft. Der nächste Verteidiger rückt schon vor.',
+    continue: 'Greif Zone {zone} an',
+    cashOut: 'Sichere {amount}',
+    saved: 'Pariert!',
+    savedBody: 'Der Torwart pariert deinen letzten Schuss. Deine Punkte sind weg.',
+    tackled: 'Abgefangen!',
+    tackledBody: 'Der Verteidiger stoppt dich in Zone {zone}. Deine Punkte sind weg.',
+    correctWas: 'Richtige Antwort: {answer}',
+    newRun: 'Neue Runde',
+    cashed: 'Runde gesichert',
+    cashedBody: 'Geschafft: {zones} · Multiplikator: {mult}×.',
+    finalTitle: 'Tor!',
+    finalBody: 'Zehn Verteidiger ausgespielt, den Torwart bezwungen. Perfekte Runde mit 4,00×.',
+    won: 'Gesichert: {amount}',
+    startAgain: 'Nochmal spielen',
+    liveRoute: 'Live-Route',
+    safe: 'geschafft',
+    target: 'Ziel',
+    finish: 'Tor',
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -324,7 +360,7 @@ function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): T
 }
 
 function points(value: number, locale: string) {
-  return value.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined, {
+  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'pt' ? 'pt-BR' : undefined, {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });

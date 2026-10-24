@@ -10,7 +10,7 @@ import { criterionExplanation } from '../criterionExplanation';
 import { cn } from '@/lib/utils';
 import snapshot from './criteria-review.json';
 
-const CRITERIA = snapshot.criteria as (FootballGridCriterionView & { labelPt?: string | null })[];
+const CRITERIA = snapshot.criteria as (FootballGridCriterionView & { labelPt?: string | null; labelDe?: string | null })[];
 const FAMILIES = [
   ['wildcard', 'Special rules'], ['teammate', 'Teammates'], ['manager', 'Managers'],
   ['club', 'Clubs'], ['country', 'Countries'], ['league', 'Leagues'], ['trophy_award', 'Trophies & awards'],
@@ -35,7 +35,7 @@ export function CriterionGallery() {
     const query = search.trim().toLocaleLowerCase();
     return (mode === 'overview' ? OVERVIEW : CRITERIA).filter((c) =>
       (family === 'all' || c.family === family) && (!query ||
-        [c.labelEn, c.labelKa, c.labelEs, c.labelPt, c.labelTr].some((label) => label?.toLocaleLowerCase().includes(query))));
+        [c.labelEn, c.labelKa, c.labelEs, c.labelPt, c.labelDe, c.labelTr].some((label) => label?.toLocaleLowerCase().includes(query))));
   }, [mode, family, search]);
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pages - 1);
@@ -58,7 +58,7 @@ export function CriterionGallery() {
               {value === 'overview' ? 'Clue types' : `All ${CRITERIA.length} clues`}
             </button>)}
             <div className="flex gap-1 sm:ml-auto" aria-label="Review language">
-              {(['en', 'ka', 'es', 'tr', 'ru', 'pt'] as const).map((value) => <button key={value} type="button" aria-pressed={locale === value}
+              {(['en', 'ka', 'es', 'tr', 'ru', 'pt', 'de'] as const).map((value) => <button key={value} type="button" aria-pressed={locale === value}
                 onClick={() => setLocale(value)} className={cn(control, 'uppercase', locale === value && 'border-brand-yellow text-brand-yellow')}>
                 {value}
               </button>)}

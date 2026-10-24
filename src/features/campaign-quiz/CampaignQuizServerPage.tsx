@@ -15,6 +15,7 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   es: 'es-ES',
   ru: 'ru-RU',
   pt: 'pt-BR',
+  de: 'de-DE',
 };
 
 const OG_LOCALE: Record<CampaignQuizLocale, string> = {
@@ -23,6 +24,7 @@ const OG_LOCALE: Record<CampaignQuizLocale, string> = {
   es: 'es_ES',
   ru: 'ru_RU',
   pt: 'pt_BR',
+  de: 'de_DE',
 };
 
 const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
@@ -31,18 +33,19 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   es: { home: 'Inicio', hub: 'Quiz de Fútbol' },
   ru: { home: 'Главная', hub: 'Футбольная викторина' },
   pt: { home: 'Início', hub: 'Quiz de futebol' },
+  de: { home: 'Startseite', hub: 'Fußball-Quiz' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
   getCampaignQuiz(slug, preview, locale));
 
 /**
- * The quiz endpoint answers a missing Russian or Portuguese edition in English, so such a page exists only when the
- * quiz says it has that edition. Older backends do not say: that language's catalog decides, and a catalog that cannot
- * be read means no edition (never an English page under a Russian or Portuguese address). A backend without
- * Portuguese pages rejects the pt catalog, so pt stays closed there.
+ * The quiz endpoint answers a missing Russian, Portuguese or German edition in English, so such a page exists only
+ * when the quiz says it has that edition. Older backends do not say: that language's catalog decides, and a catalog
+ * that cannot be read means no edition (never an English page under a Russian, Portuguese or German address). A
+ * backend without Portuguese or German pages rejects that catalog, so the language stays closed there.
  */
-export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>, locale: 'ru' | 'pt') => {
+export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>, locale: 'ru' | 'pt' | 'de') => {
   const said = quiz.editions?.[locale];
   if (typeof said === 'boolean') return said;
   try {
@@ -54,12 +57,14 @@ export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<Campaign
 
 export const hasRussianEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'ru');
 export const hasPortugueseEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'pt');
+export const hasGermanEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'de');
 
-/** True when this page may be served under `locale`: Russian and Portuguese need their edition (previews always render). */
-function servable(locale: CampaignQuizLocale, preview: string | undefined, editions: { ru: boolean; pt: boolean }): boolean {
+/** True when this page may be served under `locale`: Russian, Portuguese and German need their edition (previews always render). */
+function servable(locale: CampaignQuizLocale, preview: string | undefined, editions: { ru: boolean; pt: boolean; de: boolean }): boolean {
   if (preview) return true;
   if (locale === 'ru') return editions.ru;
   if (locale === 'pt') return editions.pt;
+  if (locale === 'de') return editions.de;
   return true;
 }
 
@@ -77,6 +82,7 @@ export async function buildCampaignQuizMetadata(
     const editions = {
       ru: await hasRussianEdition(sourceSlug, quiz),
       pt: await hasPortugueseEdition(sourceSlug, quiz),
+      de: await hasGermanEdition(sourceSlug, quiz),
     };
     if (!servable(locale, preview, editions)) return {};
     const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
@@ -90,6 +96,7 @@ export async function buildCampaignQuizMetadata(
       'es',
       ...(editions.ru ? ['ru' as const] : []),
       ...(editions.pt ? ['pt' as const] : []),
+      ...(editions.de ? ['de' as const] : []),
     ];
     const languages: Record<string, string> = {
       ...Object.fromEntries(editionLocales.map((edition) => [CAMPAIGN_HREFLANG[edition], `${SITE_URL}${campaignQuizPath(sourceSlug, edition)}`])),
@@ -134,7 +141,8 @@ export async function renderCampaignQuizPage(
   const quiz = await loadQuiz(sourceSlug, preview, locale);
   const russian = await hasRussianEdition(sourceSlug, quiz);
   const portuguese = await hasPortugueseEdition(sourceSlug, quiz);
-  if (!servable(locale, preview, { ru: russian, pt: portuguese })) notFound();
+  const german = await hasGermanEdition(sourceSlug, quiz);
+  if (!servable(locale, preview, { ru: russian, pt: portuguese, de: german })) notFound();
   const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
   if (!content) notFound();
 
@@ -172,7 +180,7 @@ export async function renderCampaignQuizPage(
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} portugueseEdition={portuguese} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} portugueseEdition={portuguese} germanEdition={german} />
     </>
   );
 }

@@ -66,6 +66,7 @@ describe('official Android download page', () => {
       en: 'https://quizball.io/en/download', ka: 'https://quizball.io/ka/download',
       es: 'https://quizball.io/es/download', tr: 'https://quizball.io/tr/download',
       ru: 'https://quizball.io/ru/download', 'pt-BR': 'https://quizball.io/pt/download',
+      de: 'https://quizball.io/de/download',
       'x-default': 'https://quizball.io/en/download',
     });
     // Inherit production/preview robots from the root; do not accidentally index previews.
@@ -102,6 +103,9 @@ describe('official Android download page', () => {
     expect(isLightweightSeoRoute('/ru/futbolnaya-viktorina/viktorina-arsenal')).toBe(true);
     expect(isLightweightSeoRoute('/pt/quiz-de-futebol')).toBe(true);
     expect(isLightweightSeoRoute('/pt/quiz-de-futebol/adivinhe-o-jogador')).toBe(true);
+    expect(isLightweightSeoRoute('/de/fussball-quiz')).toBe(true);
+    expect(isLightweightSeoRoute('/de/fussball-quiz/fussballer-erraten')).toBe(true);
+    expect(isLightweightSeoRoute('/de/fussball-quiz-mit-freunden')).toBe(false);
     expect(isLightweightSeoRoute('/pt/quiz-de-futbol')).toBe(false);
     for (const path of ['/en', '/play', '/auth/welcome', '/xx/download', '/en/download/other', '/download']) {
       expect(isLightweightSeoRoute(path)).toBe(false);

@@ -22,11 +22,11 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Brain className="size-4" />
-            <span className="text-sm">{t('welcome.verifiedQuestions', { count: verifiedQuestionsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined) })}</span>
+            <span className="text-sm">{t('welcome.verifiedQuestions', { count: verifiedQuestionsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : undefined) })}</span>
           </div>
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Swords className="size-4" />
-            <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : undefined) })}</span>
+            <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString(locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : undefined) })}</span>
           </div>
         </div>
         {/* Socials + contact (one inline row) */}

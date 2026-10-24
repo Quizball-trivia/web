@@ -73,7 +73,7 @@ export function TenablePlayView({ locale, number, state, pending, notice, lookup
       <div className="flex-1" />
       {!done && (
         <>
-          <SuggestBox className="z-20" kind={state.list.kind} release={state.list.release} lookup={lookup} placeholder={c.placeholder} say={c.say} disabled={pending} note={pending ? c.sending : null} onSubmit={onSay} />
+          <SuggestBox className="z-20" kind={state.list.kind} release={state.list.release} locale={locale} lookup={lookup} placeholder={c.placeholder} say={c.say} disabled={pending} note={pending ? c.sending : null} onSubmit={onSay} />
           <button type="button" onClick={onGiveUp} disabled={pending}
             className="mx-auto mt-1 min-h-9 px-3 text-xs font-bold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-white hover:underline disabled:opacity-50">{c.giveUp}</button>
         </>

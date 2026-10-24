@@ -1,0 +1,23 @@
+name: release policy
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  staging-first:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require production releases to come from staging
+        env:
+          RELEASE_HEAD_BRANCH: ${{ github.head_ref }}
+          RELEASE_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ "$RELEASE_HEAD_BRANCH" != "staging" ] || [ "$RELEASE_HEAD_REPOSITORY" != "$RELEASE_REPOSITORY" ]; then
+            echo "::error::Production releases must come from this repository's staging branch. Merge and verify the change on staging first, then open staging -> main."
+            exit 1
+          fi

@@ -112,6 +112,22 @@ const COPY: Record<Locale, {
       "Quem fizer mais pontos após dez perguntas vence.",
     ],
   },
+  de: {
+    description: "Zehn echte Fußballzahlen: Ablösen, Tore, Zuschauerzahlen. Wer am nächsten dran ist, gewinnt – allein oder live gegen Freunde.",
+    solo: "Tages-Challenge spielen",
+    done: (time) => `Tages-Challenge erledigt · in ${time} zurück`,
+    friends: "Mit Freunden spielen (2–6)",
+    friendsHint: "Privater Raum mit Link: Alle beantworten gleichzeitig dieselbe Frage.",
+    rules: "So wird gespielt",
+    rulesTitle: "So wird gespielt",
+    rulesList: [
+      "Zehn Fragen mit echten Zahlen: Ablöse, Tore einer Saison, Zuschauer bei einem Finale.",
+      "Tages-Challenge (solo): Schiebe deine Antwort; je näher, desto mehr Punkte. 100 ist ein Volltreffer.",
+      "Mit Freunden (2 bis 6): Alle sehen dieselbe Frage und geben innerhalb von 20 Sekunden eine Zahl ein.",
+      "2 Spieler: Wer am nächsten dran ist, gewinnt die Runde. Ab 3: Wer am nächsten liegt, erhält die meisten Punkte (bis zu 3), dann der Nächste; bei exakter Antwort +1.",
+      "Wer nach zehn Fragen die meisten Punkte hat, gewinnt.",
+    ],
+  },
 };
 
 /**

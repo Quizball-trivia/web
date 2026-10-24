@@ -21,6 +21,7 @@ const WEEKDAYS: Record<string, readonly string[]> = {
   tr: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
   ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
   pt: ['Dom.', 'Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.'],
+  de: ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'],
 };
 
 /** Weekday index (0 = Sunday) and 'HH:MM' of an instant in `timeZone`

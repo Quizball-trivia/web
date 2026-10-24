@@ -31,7 +31,7 @@ export interface AuctionStateAdapterOptions {
   humanAvatarCustomization?: AvatarCustomization | null;
   serverTimeOffsetMs?: number | null;
   /** App locale; text hints are shown in it when the server carried that language. */
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
 }
 
 export function findMyAuctionSeatId(
@@ -260,7 +260,9 @@ function getRoundClues(round: PublicAuctionRoundState, locale?: AuctionStateAdap
           ? round.footballer.cluesByLocale?.en
           : locale === 'pt'
             ? round.footballer.cluesByLocale?.en
-            : undefined
+            : locale === 'de'
+              ? round.footballer.cluesByLocale?.en
+              : undefined
       )
     : undefined;
   const visibleClues = localized?.length

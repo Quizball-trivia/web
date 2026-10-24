@@ -18,6 +18,14 @@ describe('compact board clues', () => {
     expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:fa-cup' }), 'ka'))
       .toEqual({ title: 'FA თასი', eyebrow: 'მფლობელი' });
   });
+  it('shows German trophy compounds as the competition name', () => {
+    expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:la-liga-title', labelEn: 'La Liga winner', labelDe: 'La-Liga-Sieger' }), 'de'))
+      .toEqual({ title: 'La Liga', eyebrow: 'Sieger' });
+    expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:bundesliga-title', labelEn: 'Bundesliga winner', labelDe: 'Bundesliga-Sieger' }), 'de'))
+      .toEqual({ title: 'Bundesliga', eyebrow: 'Sieger' });
+    expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:la-liga-title', labelEn: 'La Liga winner', labelEs: 'Campeón La Liga' }), 'es'))
+      .toEqual({ title: 'La Liga', eyebrow: 'Ganador' });
+  });
   it('keeps the birth decade explicit rather than a cryptic shield abbreviation', () => {
     expect(criterionPresentation(clue({ key: 'wildcard:born-1990s' }), 'en')).toEqual({ title: '1990–99', eyebrow: 'Born' });
     expect(criterionPresentation(clue({ key: 'wildcard:born-2000s' }), 'ka')).toEqual({ title: '2000–09', eyebrow: 'დაბადება' });

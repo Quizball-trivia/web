@@ -17,6 +17,7 @@ export const STAT_SNIPER_JOIN_COPY: Record<Locale, { text: string; signUp: strin
   tr: { text: "Puanının bugünün sıralamasına girmesi için hesap oluştur.", signUp: "Hesap oluştur" },
   ru: { text: "Создай аккаунт, чтобы твой результат попал в сегодняшний рейтинг.", signUp: "Создать аккаунт" },
   pt: { text: "Crie uma conta para colocar sua pontuação no ranking de hoje.", signUp: "Criar conta" },
+  de: { text: "Erstelle ein Konto, damit deine Punktzahl in der heutigen Rangliste erscheint.", signUp: "Konto erstellen" },
 };
 
 /**

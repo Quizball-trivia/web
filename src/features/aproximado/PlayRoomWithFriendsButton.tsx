@@ -16,6 +16,7 @@ const COPY: Record<Locale, { label: string; hint: string }> = {
   tr: { label: "Arkadaşlarla oyna (2–6)", hint: "Özel oda: bağlantıyı paylaş, hesap olmadan canlı oynayın." },
   ru: { label: "Играй с друзьями (2–6)", hint: "Приватная комната: поделись ссылкой и играй вместе в реальном времени, аккаунт не нужен." },
   pt: { label: "Jogue com amigos (2–6)", hint: "Sala privada: compartilhe o link e jogue ao vivo, sem precisar de conta." },
+  de: { label: "Mit Freunden spielen (2–6)", hint: "Privater Raum: Teile den Link und spiel live mit, ganz ohne Konto." },
 };
 
 /**
