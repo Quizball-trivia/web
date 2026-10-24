@@ -222,6 +222,7 @@
 @source "../lib/auth/useIsGuest.ts";
 @source "../lib/auth/validation.ts";
 @source "../lib/avatars.ts";
+@source "../lib/avatars/assetUrl.ts";
 @source "../lib/avatars/collection.ts";
 @source "../lib/avatars/frames.ts";
 @source "../lib/avatars/partNames.ts";
@@ -234,6 +235,7 @@
 @source "../lib/football-grid/assets.ts";
 @source "../lib/friend/inviteCode.ts";
 @source "../lib/geo/countryCode.ts";
+@source "../lib/geo/geoEligibilityResolver.ts";
 @source "../lib/geo/useGeoEligibility.ts";
 @source "../lib/guest/guestJourney.ts";
 @source "../lib/guest/guestSession.ts";
