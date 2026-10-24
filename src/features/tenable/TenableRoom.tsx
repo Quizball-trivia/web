@@ -117,7 +117,7 @@ export function TenableBoard({ view, snapshot, room, locale, error, lookup }: { 
   const waitingNote = outOfLives ? t.youOut : busy ? t.sending : !room.connected ? c.offline : t.waiting;
   const answerBox = view.phase === "turn" && (
     // On phones the party standings bar is pinned to the bottom: the answer box sticks above it.
-    <SuggestBox className={cn("z-20", !duel && "bottom-[104px] lg:bottom-0")} kind={view.current.kind} release={view.current.release} lookup={lookup}
+    <SuggestBox className={cn("z-20", !duel && "bottom-[104px] lg:bottom-0")} kind={view.current.kind} release={view.current.release} locale={locale} lookup={lookup}
       placeholder={t.placeholder} say={t.say} disabled={!myTurn || busy || !room.connected} note={waitingNote}
       onSubmit={(text, pick) => room.send({ type: "answer", epoch: view.epoch, attempt: view.attempt, text, pick })} />
   );
