@@ -25,6 +25,7 @@ const env = vi.hoisted(() => ({
   isGuest: true,
   user: null as { country: string | null } | null,
 }));
+const geoChecks = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/analytics/campaign-quiz.analytics', () => ({
   trackCampaignQuizView: analytics.view,
@@ -35,7 +36,10 @@ vi.mock('@/lib/analytics/campaign-quiz.analytics', () => ({
   trackCampaignQuizCta: analytics.cta,
 }));
 vi.mock('@/lib/geo/useGeoEligibility', () => ({
-  useGeoEligibility: () => ({ countryCode: env.geoCountry, isGeorgia: false, isGeoExperimentEnabled: false, showBetson: false, source: 'header' }),
+  useGeoEligibility: (options: { enabled: boolean }) => {
+    geoChecks(options);
+    return { countryCode: env.geoCountry, isGeorgia: false, isGeoExperimentEnabled: false, showBetson: false, source: 'header' };
+  },
 }));
 vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: env.locale, t: (k: string) => k }) }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(env.search) }));
@@ -106,6 +110,7 @@ describe('TrabzonsporQuizCard', () => {
     env.geoCountry = 'TR';
     const { container } = render(<TrabzonsporQuizCard />);
     expect(container).toBeEmptyDOMElement();
+    expect(geoChecks).toHaveBeenLastCalledWith({ enabled: false });
   });
 
   it('renders nothing for a visitor outside Turkey', () => {

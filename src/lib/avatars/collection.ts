@@ -1,3 +1,4 @@
+import { avatarAssetUrl } from "./assetUrl";
 import type { AvatarPart } from './parts';
 
 /** Approved collection with calibrated avatar geometry. */
@@ -13,7 +14,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_chelsea.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_chelsea.webp"),
     "productSlug": "avatar_jersey_chelsea"
   },
   {
@@ -27,7 +28,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_tottenham.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_tottenham.webp"),
     "productSlug": "avatar_jersey_tottenham"
   },
   {
@@ -41,7 +42,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_benfica.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_benfica.webp"),
     "productSlug": "avatar_jersey_benfica"
   },
   {
@@ -55,7 +56,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_porto.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_porto.webp"),
     "productSlug": "avatar_jersey_porto"
   },
   {
@@ -69,7 +70,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_sporting.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_sporting.webp"),
     "productSlug": "avatar_jersey_sporting"
   },
   {
@@ -83,7 +84,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_marseille.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_marseille.webp"),
     "productSlug": "avatar_jersey_marseille"
   },
   {
@@ -97,7 +98,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_galatasaray.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_galatasaray.webp"),
     "productSlug": "avatar_jersey_galatasaray"
   },
   {
@@ -111,7 +112,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_fenerbahce.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_fenerbahce.webp"),
     "productSlug": "avatar_jersey_fenerbahce"
   },
   {
@@ -125,7 +126,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_boca_juniors.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_boca_juniors.webp"),
     "productSlug": "avatar_jersey_boca_juniors"
   },
   {
@@ -139,7 +140,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_river_plate.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_river_plate.webp"),
     "productSlug": "avatar_jersey_river_plate"
   },
   {
@@ -153,7 +154,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_portugal.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_portugal.webp"),
     "productSlug": "avatar_jersey_portugal"
   },
   {
@@ -167,7 +168,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_spain.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_spain.webp"),
     "productSlug": "avatar_jersey_spain"
   },
   {
@@ -181,7 +182,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_croatia.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_croatia.webp"),
     "productSlug": "avatar_jersey_croatia"
   },
   {
@@ -195,7 +196,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_japan.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_japan.webp"),
     "productSlug": "avatar_jersey_japan"
   },
   {
@@ -209,7 +210,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_morocco.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_morocco.webp"),
     "productSlug": "avatar_jersey_morocco"
   },
   {
@@ -223,7 +224,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_nigeria.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_nigeria.webp"),
     "productSlug": "avatar_jersey_nigeria"
   },
   {
@@ -237,7 +238,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_mexico.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_mexico.webp"),
     "productSlug": "avatar_jersey_mexico"
   },
   {
@@ -251,7 +252,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_uruguay.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_uruguay.webp"),
     "productSlug": "avatar_jersey_uruguay"
   },
   {
@@ -265,7 +266,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_retro_keeper.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_retro_keeper.webp"),
     "productSlug": "avatar_jersey_retro_keeper"
   },
   {
@@ -279,7 +280,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_neon_training.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_neon_training.webp"),
     "productSlug": "avatar_jersey_neon_training"
   },
   {
@@ -293,7 +294,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_street_football.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_street_football.webp"),
     "productSlug": "avatar_jersey_street_football"
   },
   {
@@ -307,7 +308,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 10000,
     "group": "Jerseys",
-    "asset": "/assets/store/collection/jersey_gold_champion.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/jersey_gold_champion.webp"),
     "productSlug": "avatar_jersey_gold_champion"
   },
   {
@@ -321,7 +322,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_ronaldinho.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_ronaldinho.webp"),
     "productSlug": "avatar_hair_ronaldinho",
     "storePosition": {
       "top": -2,
@@ -340,7 +341,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_neymar_mohawk.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_neymar_mohawk.webp"),
     "productSlug": "avatar_hair_neymar_mohawk",
     "storePosition": {
       "top": -7.25,
@@ -359,7 +360,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_zidane.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_zidane.webp"),
     "productSlug": "avatar_hair_zidane",
     "clipPath": "polygon(0 30%, 24% 30%, 36% 100%, 0 100%)",
     "storePosition": {
@@ -379,7 +380,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_haaland.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_haaland.webp"),
     "productSlug": "avatar_hair_haaland",
     "storePosition": {
       "top": -1,
@@ -398,7 +399,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_beckham_mohawk.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_beckham_mohawk.webp"),
     "productSlug": "avatar_hair_beckham_mohawk",
     "storePosition": {
       "top": -4.75,
@@ -417,7 +418,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_valderrama.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_valderrama.webp"),
     "productSlug": "avatar_hair_valderrama",
     "storePosition": {
       "top": -20.75,
@@ -437,7 +438,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_gullit.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_gullit.webp"),
     "productSlug": "avatar_hair_gullit",
     "storePosition": {
       "top": -3,
@@ -456,7 +457,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Iconic players",
-    "asset": "/assets/store/collection/hair_baggio.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_baggio.webp"),
     "productSlug": "avatar_hair_baggio",
     "storePosition": {
       "top": -1.5,
@@ -475,7 +476,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_high_afro.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_high_afro.webp"),
     "productSlug": "avatar_hair_high_afro",
     "storePosition": {
       "top": -4,
@@ -495,7 +496,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_braided_bun.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_braided_bun.webp"),
     "productSlug": "avatar_hair_braided_bun",
     "storePosition": {
       "top": -7.75,
@@ -516,7 +517,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_ponytail.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_ponytail.webp"),
     "productSlug": "avatar_hair_ponytail",
     "storePosition": {
       "top": -4,
@@ -536,7 +537,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_messy_fringe.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_messy_fringe.webp"),
     "productSlug": "avatar_hair_messy_fringe",
     "storePosition": {
       "top": -4,
@@ -556,7 +557,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_mullet.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_mullet.webp"),
     "productSlug": "avatar_hair_mullet",
     "storePosition": {
       "top": -4,
@@ -575,7 +576,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_spiky.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_spiky.webp"),
     "productSlug": "avatar_hair_spiky",
     "storePosition": {
       "top": -13.5,
@@ -594,7 +595,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_shoulder_curls.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_shoulder_curls.webp"),
     "productSlug": "avatar_hair_shoulder_curls",
     "storePosition": {
       "top": -4.75,
@@ -614,7 +615,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 6000,
     "group": "Hair",
-    "asset": "/assets/store/collection/hair_side_shave.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/hair_side_shave.webp"),
     "productSlug": "avatar_hair_side_shave",
     "storePosition": {
       "top": -5.25,
@@ -635,7 +636,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "priceCoins": 6000,
     "group": "Headwear",
     "hideHair": true,
-    "asset": "/assets/store/collection/headwear_cech.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/headwear_cech.webp"),
     "productSlug": "avatar_headwear_cech"
   },
   {
@@ -649,7 +650,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 4000,
     "group": "Facial hair",
-    "asset": "/assets/store/collection/facial_long.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/facial_long.webp"),
     "productSlug": "avatar_facial_long",
     "storePosition": {
       "top": 23.75,
@@ -668,7 +669,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 4000,
     "group": "Facial hair",
-    "asset": "/assets/store/collection/facial_chin_goatee.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/facial_chin_goatee.webp"),
     "productSlug": "avatar_facial_chin_goatee"
   },
   {
@@ -682,7 +683,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 3000,
     "group": "Accessories",
-    "asset": "/assets/store/collection/earwear_studs.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/earwear_studs.webp"),
     "productSlug": "avatar_earwear_studs"
   },
   {
@@ -696,7 +697,7 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     },
     "priceCoins": 3000,
     "group": "Accessories",
-    "asset": "/assets/store/collection/earwear_hoop.webp",
+    "asset": avatarAssetUrl("/assets/store/collection/earwear_hoop.webp"),
     "productSlug": "avatar_earwear_hoop",
     "storePosition": {
       "top": 34,

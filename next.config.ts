@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import { partnerHostPattern } from "./src/features/partner/partnerHosts";
 import { limitClientInitialRequests, startupRequestLimitEnabled } from "./scripts/lib/initial-request-limit";
 import { deferredShellChromeEnabled, optimizeWordShellStartup } from "./scripts/lib/deferred-shell-chrome";
+import { buildAvatarAssetCache } from "./scripts/lib/avatar-asset-cache";
+
+const avatarAssetHeaders = buildAvatarAssetCache(process.cwd());
 
 // Only the canonical production deployment should be indexable. Vercel
 // sets VERCEL_ENV at build time — "production" on quizball.io, "preview"
@@ -166,6 +169,7 @@ const nextConfig: NextConfig = {
         PARTNER_HOST_RULE,
         brandAssets,
         ...criticalAssets,
+        ...avatarAssetHeaders,
         fontLicense,
       ];
     }
@@ -181,6 +185,7 @@ const nextConfig: NextConfig = {
       PARTNER_HOST_RULE,
       brandAssets,
       ...criticalAssets,
+      ...avatarAssetHeaders,
       fontLicense,
       // Local development only: the games playground shows its preview page in a same-origin iframe.
       ...(process.env.NODE_ENV === "development"

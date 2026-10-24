@@ -102,9 +102,9 @@ export function TrabzonsporQuizCard({ onMoreGames }: { onMoreGames?: () => void 
   const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const profileCountry = useAuthStore((state) => state.user?.country ?? null);
-  const geo = useGeoEligibility();
   const hasLink = useCampaignLink();
   const live = useClientValue(() => Date.now() < TRABZONSPOR_CAMPAIGN_ENDS_AT, false);
+  const geo = useGeoEligibility({ enabled: live });
   // Nothing renders until `live` is true on the client, so reading storage here cannot cause a hydration mismatch.
   const [stored, setStoredState] = useState<Stored>(readStored);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });

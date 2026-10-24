@@ -61,7 +61,7 @@ export function useActiveEventMode(): ActiveEventMode {
   const user = useAuthStore((state) => state.user);
   const country = user?.country ?? null;
   const isLoggedIn = Boolean(user);
-  const geo = useGeoEligibility();
+  const geo = useGeoEligibility({ enabled: eventEnabled && !isLoggedIn });
 
   // Participation: ONLY the stored region counts, and only when logged in.
   const canParticipate = eventEnabled && isLoggedIn && country === ELIGIBLE_COUNTRY;
