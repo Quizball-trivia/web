@@ -714,7 +714,119 @@ const pt: LocaleCopy = {
   },
 };
 
-const copy: Record<Locale, LocaleCopy> = { en, ka, es, tr, ru, pt };
+const de: LocaleCopy = {
+  about: {
+    metaTitle: "Über QuizBall – Multiplayer-Fußballquiz",
+    metaDescription:
+      "Erfahre mehr über QuizBall, ein Multiplayer-Fußballquiz, bei dem Fans Fragen beantworten, den Ballbesitz kontrollieren, Tore erzielen und mit Freunden antreten.",
+    title: "Über QuizBall",
+    subtitle: "Multiplayer-Fußballquiz – mehr Spiel als Quiz",
+    paragraphs: [
+      "QuizBall ist ein Multiplayer-Fußballquiz, bei dem richtige Antworten den Ballbesitz sichern, Torchancen schaffen und Tore erzielen. Spiele live 1-gegen-1-Matches, fordere Freunde heraus, komm für tägliche Formate zurück und klettere in der Rangliste nach oben.",
+    ],
+  },
+  terms: {
+    metaTitle: "Nutzungsbedingungen – QuizBall",
+    metaDescription:
+      "Lies die QuizBall-Nutzungsbedingungen – die Regeln für unser Fußballquiz und die Nutzung der Plattform.",
+    title: "Nutzungsbedingungen",
+    updated: "Zuletzt aktualisiert: 30. Januar 2026",
+    sections: [
+      {
+        title: "1. Zustimmung zu den Bedingungen",
+        body: 'Wenn du auf QuizBall („der Dienst“) zugreifst oder ihn nutzt, erklärst du dich mit diesen Nutzungsbedingungen einverstanden. Wenn du einem Teil der Bedingungen nicht zustimmst, darfst du den Dienst nicht nutzen.',
+      },
+      {
+        title: "2. Beschreibung des Dienstes",
+        body: "QuizBall ist ein Multiplayer-Fußballquiz in Echtzeit. Wir bieten eine Plattform, auf der Nutzer in Quiz-Matches gegeneinander antreten, Wertungen erzielen und ihren Fortschritt verfolgen können. Wir behalten uns das Recht vor, den Dienst jederzeit ohne Vorankündigung zu ändern oder einzustellen.",
+      },
+      {
+        title: "3. Benutzerkonten",
+        body: "Du bist dafür verantwortlich, deine Zugangsdaten vertraulich zu behandeln. Du übernimmst die Verantwortung für alle Aktivitäten, die über dein Konto stattfinden. Wir behalten uns das Recht vor, Konten zu schließen, die gegen unsere Community-Richtlinien verstoßen oder bei Wettkämpfen betrügen.",
+      },
+      {
+        title: "4. Virtuelle Währung und Gegenstände",
+        body: 'Der Dienst kann virtuelle Währung („Münzen“) oder Gegenstände enthalten. Diese haben keinen realen Geldwert und können nicht gegen Bargeld eingetauscht werden. Wir garantieren nicht, dass Nutzerdaten oder virtuelle Gegenstände erhalten bleiben, und übernehmen dafür keine Verantwortung.',
+      },
+      {
+        title: "5. Verbotenes Verhalten",
+        body: "Du stimmst zu, den Dienst weder für rechtswidrige Zwecke noch für Folgendes zu nutzen:",
+        bullets: [
+          "Andere Personen belästigen, missbrauchen oder ihnen Schaden zufügen.",
+          "Bots, Cheats oder Automatisierungssoftware verwenden.",
+          "Den ordnungsgemäßen Betrieb des Dienstes beeinträchtigen.",
+        ],
+      },
+      {
+        title: "6. Haftungsbeschränkung",
+        body: "QuizBall sowie seine Geschäftsführer, Mitarbeiter, Partner, Vertreter, Lieferanten und verbundenen Unternehmen haften unter keinen Umständen für indirekte, beiläufige, besondere, Folge- oder Strafschäden, einschließlich, aber nicht beschränkt auf entgangene Gewinne, Datenverluste, Nutzungsausfälle, Reputationsschäden oder sonstige immaterielle Verluste.",
+      },
+      {
+        title: "7. Änderungen der Bedingungen",
+        body: "Wir behalten uns das Recht vor, diese Bedingungen nach eigenem Ermessen jederzeit zu ändern oder zu ersetzen. Bei wesentlichen Änderungen bemühen wir uns, dich mindestens 30 Tage vor Inkrafttreten der neuen Bedingungen zu informieren.",
+      },
+      {
+        title: "8. Kontakt",
+        body: "Wenn du Fragen zu diesen Bedingungen hast, schreib uns bitte an support@quizball.com.",
+      },
+    ],
+  },
+  privacy: {
+    metaTitle: "Datenschutzerklärung – QuizBall",
+    metaDescription:
+      "Lies die Datenschutzerklärung von QuizBall – wie wir Daten erfassen, verwenden und schützen, wenn du unser Fußballquiz spielst.",
+    title: "Datenschutzerklärung",
+    updated: "Zuletzt aktualisiert: 30. Januar 2026",
+    sections: [
+      {
+        title: "1. Einleitung",
+        body: 'QuizBall („wir“, „uns“ oder „unser“) betreibt die Website quizball.com und die mobile App („der Dienst“). Auf dieser Seite informieren wir dich über unsere Richtlinien zur Erfassung, Verwendung und Offenlegung personenbezogener Daten, wenn du unseren Dienst nutzt, sowie über deine Wahlmöglichkeiten in Bezug auf diese Daten.',
+      },
+      {
+        title: "2. Erfassung und Verwendung von Informationen",
+        body: "Wir erfassen verschiedene Arten von Informationen zu unterschiedlichen Zwecken, um unseren Dienst bereitzustellen und zu verbessern:",
+        bullets: [
+          "Personenbezogene Daten: Während du unseren Dienst nutzt, bitten wir dich möglicherweise um bestimmte personenbezogene Angaben (z. B. E-Mail-Adresse, Spitzname).",
+          "Nutzungsdaten: Wir können auch Informationen darüber erfassen, wie auf den Dienst zugegriffen wird und wie er genutzt wird (z. B. Spielstatistiken, Geräteinformationen).",
+        ],
+      },
+      {
+        title: "3. Verwendung der Daten",
+        body: "QuizBall verwendet die erfassten Daten für verschiedene Zwecke:",
+        bullets: [
+          "Um den Dienst bereitzustellen und zu warten",
+          "Um dich über Änderungen an unserem Dienst zu informieren",
+          "Um dir die Teilnahme an interaktiven Funktionen zu ermöglichen",
+          "Um Kundenservice und Support anzubieten",
+          "Um die Nutzung des Dienstes zu überwachen",
+        ],
+      },
+      {
+        title: "4. Datensicherheit",
+        body: "Die Sicherheit deiner Daten ist uns wichtig. Bitte beachte jedoch, dass keine Übertragung über das Internet und keine elektronische Speicherung zu 100 % sicher ist. Wir bemühen uns, deine personenbezogenen Daten mit wirtschaftlich vertretbaren Mitteln zu schützen, können ihre absolute Sicherheit aber nicht garantieren.",
+      },
+      {
+        title: "5. Dienste von Drittanbietern",
+        body: 'Wir können Drittunternehmen und Einzelpersonen beauftragen, die unseren Dienst ermöglichen („Dienstleister“), ihn in unserem Auftrag bereitstellen oder uns dabei helfen, seine Nutzung zu analysieren. Diese Dritten haben nur Zugriff auf deine personenbezogenen Daten, um diese Aufgaben in unserem Auftrag auszuführen. Sie sind verpflichtet, die Daten nicht offenzulegen und nicht für andere Zwecke zu verwenden.',
+      },
+      {
+        title: "6. Speicherung und Löschung von Daten",
+        body: "Du kannst die Löschung deines QuizBall-Kontos und der zugehörigen personenbezogenen Daten beantragen, indem du dich anmeldest, die Einstellungen öffnest, zu „Konto & Sicherheit“ gehst und „Konto löschen“ auswählst. Dein Konto wird sofort deaktiviert und zur Löschung vorgemerkt. Hilfe bei Löschanfragen erhältst du auch unter nika@quizball.io.",
+      },
+    ],
+  },
+  landing: {
+    metaTitle: "QuizBall – Multiplayer-Fußballquiz",
+    metaDescription:
+      "Spiele live Fußballquiz-Matches mit Freunden. Beantworte Fragen, kontrolliere den Ballbesitz, schieße Tore und klettere in der Rangliste nach oben.",
+    languageSwitch: "English",
+    aboutLink: "Über uns",
+    termsLink: "Nutzungsbedingungen",
+    privacyLink: "Datenschutz",
+  },
+};
+
+const copy: Record<Locale, LocaleCopy> = { en, ka, es, tr, ru, pt, de };
 
 export function getCopy(locale: Locale): LocaleCopy {
   return copy[locale];

@@ -11,8 +11,8 @@ export const CONTENT_START = "2026-09-29";
 export const RANKED_START = "2026-10-02";
 export const PUBLISHED_DAYS = 75;
 
-export type MinutoLocale = "es" | "en" | "ka" | "tr" | "pt";
-export type LocalizedName = Record<Exclude<MinutoLocale, "pt">, string> & { pt?: string };
+export type MinutoLocale = "es" | "en" | "ka" | "tr" | "pt" | "de";
+export type LocalizedName = Record<Exclude<MinutoLocale, "pt" | "de">, string> & { pt?: string; de?: string };
 export type Competition = "FIWC" | "EURO" | "COPA" | "CL" | "EL" | "CLI" | "KLUB" | "USC";
 export type Stage = "final" | "third" | "semi" | "quarter" | "r16" | "r32" | "group" | "playoff" | "other";
 

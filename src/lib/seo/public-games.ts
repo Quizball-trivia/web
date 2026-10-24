@@ -154,12 +154,13 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 
 /** Where a card links: its page, the established quiz page, or the app. */
 /**
- * Campaign quiz pages have English, Spanish, Russian and Brazilian Portuguese editions; the Georgian edition is per
- * page, so ka links to English. pt pages appear only once their content is complete: ship the pt web after the pt
- * campaign content is on the target (scripts/campaign-quizzes-pt.ts), or these links 404.
+ * Campaign quiz pages have English, Spanish, Russian, Brazilian Portuguese and German editions; the Georgian edition
+ * is per page, so ka links to English. pt and de pages appear only once their content is complete: ship the pt / de
+ * web after that campaign content is on the target (scripts/campaign-quizzes-pt.ts, scripts/campaign-quizzes-de.ts),
+ * or these links 404.
  */
-export const campaignLocaleOf = (locale: Locale): "en" | "es" | "ru" | "pt" =>
-  (locale === "es" || locale === "ru" || locale === "pt" ? locale : "en");
+export const campaignLocaleOf = (locale: Locale): "en" | "es" | "ru" | "pt" | "de" =>
+  (locale === "es" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en");
 
 /** Locales in which this game's public page exists (page flag + a written body). */
 export function publishedLocalesOf(game: PublicGame): SeoPageLocale[] {

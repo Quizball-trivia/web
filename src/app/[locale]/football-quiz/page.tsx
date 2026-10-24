@@ -23,7 +23,7 @@ import {
   SITE_URL,
 } from '@/lib/seo/site';
 import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from '@/features/campaign-quiz/campaignQuiz.hub-seo';
-import { hasPortugueseCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
+import { hasGermanCampaignHub, hasPortugueseCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
 
 const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
 const DESCRIPTION = 'Play free football quizzes on clubs, players, badges, career paths and Premier League history. Instant scores, no sign-up needed.';
@@ -148,6 +148,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const hasGeorgianHub = englishPages.some((page) => page.locale_mode === 'en_ka');
   if (locale === 'ka' && !hasGeorgianHub) return {};
   const hasPortugueseHub = await hasPortugueseCampaignHub();
+  const hasGermanHub = await hasGermanCampaignHub();
   const pageUrl = `${SITE_URL}/${locale}/football-quiz`;
   const title = locale === 'ka' ? KA_TITLE : TITLE;
   const description = locale === 'ka' ? KA_DESCRIPTION : DESCRIPTION;
@@ -157,6 +158,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     es: `${SITE_URL}/es/quiz-de-futbol`,
     ru: `${SITE_URL}/ru/futbolnaya-viktorina`,
     ...(hasPortugueseHub ? { 'pt-BR': `${SITE_URL}/pt/quiz-de-futebol` } : {}),
+    ...(hasGermanHub ? { de: `${SITE_URL}/de/fussball-quiz` } : {}),
     'x-default': `${SITE_URL}/en/football-quiz`,
   };
   return {
@@ -190,12 +192,14 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
   if (rawLocale === 'es') permanentRedirect('/es/quiz-de-futbol');
   if (rawLocale === 'ru') permanentRedirect('/ru/futbolnaya-viktorina');
   if (rawLocale === 'pt') permanentRedirect('/pt/quiz-de-futebol');
+  if (rawLocale === 'de') permanentRedirect('/de/fussball-quiz');
   if (rawLocale !== 'en' && rawLocale !== 'ka') notFound();
   const locale = rawLocale as 'en' | 'ka';
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
   if (pages.length === 0) notFound();
   const hasPortugueseHub = await hasPortugueseCampaignHub();
+  const hasGermanHub = await hasGermanCampaignHub();
   const popularPages = POPULAR_QUIZ_SLUGS.flatMap((slug) => {
     const page = pages.find((candidate) => candidate.slug === slug);
     return page ? [page] : [];
@@ -234,6 +238,7 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
               locales={[
                 ...(pages.some((page) => page.locale_mode === 'en_ka') ? ['en', 'ka', 'es', 'ru'] as const : ['en', 'es', 'ru'] as const),
                 ...(hasPortugueseHub ? ['pt'] as const : []),
+                ...(hasGermanHub ? ['de'] as const : []),
               ]}
               className="hidden sm:inline-flex"
             />

@@ -12,7 +12,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El legado de Maradona en el Mundial",
       "tr": "Maradona'nın Dünya Kupası Mirası",
       "ru": "Марадона на чемпионатах мира",
-      "pt": "O legado de Maradona na Copa do Mundo"
+      "pt": "O legado de Maradona na Copa do Mundo",
+      "de": "Maradonas WM-Vermächtnis"
     },
     "prompt": {
       "en": "In the 1990 FIFA World Cup semi-final, Diego Maradona and Argentina defeated which host nation on penalties?",
@@ -20,7 +21,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En la semifinal de la Copa Mundial de la FIFA 1990, ¿Diego Maradona y Argentina derrotaron a qué país anfitrión en penales?",
       "tr": "1990 FIFA Dünya Kupası yarı finalinde Diego Maradona ve Arjantin, penaltılarda hangi ev sahibi ülkeyi mağlup etti?",
       "ru": "Какую страну-хозяйку Диего Марадона и Аргентина победили по пенальти в полуфинале ЧМ-1990?",
-      "pt": "Na semifinal da Copa do Mundo FIFA de 1990, Diego Maradona e a Argentina venceram qual país-sede nos pênaltis?"
+      "pt": "Na semifinal da Copa do Mundo FIFA de 1990, Diego Maradona e a Argentina venceram qual país-sede nos pênaltis?",
+      "de": "Bei welchem Gastgeberland setzten sich Diego Maradona und Argentinien im Halbfinale der FIFA-Weltmeisterschaft 1990 im Elfmeterschießen durch?"
     },
     "options": [
       {
@@ -31,7 +33,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "España",
           "tr": "İspanya",
           "ru": "Испания",
-          "pt": "Espanha"
+          "pt": "Espanha",
+          "de": "Spanien"
         }
       },
       {
@@ -42,7 +45,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Italia",
           "tr": "İtalya",
           "ru": "Италия",
-          "pt": "Itália"
+          "pt": "Itália",
+          "de": "Italien"
         }
       },
       {
@@ -53,7 +57,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Alemania Occidental",
           "tr": "Batı Almanya",
           "ru": "ФРГ",
-          "pt": "Alemanha Ocidental"
+          "pt": "Alemanha Ocidental",
+          "de": "Westdeutschland"
         }
       },
       {
@@ -64,7 +69,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Inglaterra",
           "tr": "İngiltere",
           "ru": "Англия",
-          "pt": "Inglaterra"
+          "pt": "Inglaterra",
+          "de": "England"
         }
       }
     ],
@@ -79,7 +85,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El legado de Alemania en la Copa Mundial",
       "tr": "Almanya'nın Dünya Kupası Mirası",
       "ru": "Наследие Германии на чемпионатах мира",
-      "pt": "O legado da Alemanha na Copa do Mundo"
+      "pt": "O legado da Alemanha na Copa do Mundo",
+      "de": "Deutschlands WM-Vermächtnis"
     },
     "prompt": {
       "en": "Which German player scored twice against Portugal in the 2006 World Cup third-place match?",
@@ -87,7 +94,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué jugador alemán marcó dos goles contra Portugal en el partido por el tercer puesto del Mundial de 2006?",
       "tr": "2006 Dünya Kupası üçüncülük maçında Portekiz'e karşı iki gol atan Alman oyuncu kimdi?",
       "ru": "Какой немецкий игрок сделал дубль в ворота Португалии в матче за третье место ЧМ-2006?",
-      "pt": "Qual jogador alemão marcou duas vezes contra Portugal na disputa pelo terceiro lugar da Copa do Mundo de 2006?"
+      "pt": "Qual jogador alemão marcou duas vezes contra Portugal na disputa pelo terceiro lugar da Copa do Mundo de 2006?",
+      "de": "Welcher deutsche Spieler erzielte im Spiel um Platz drei der WM 2006 gegen Portugal zwei Tore?"
     },
     "options": [
       {
@@ -98,7 +106,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Michael Ballack",
           "tr": "Michael Ballack",
           "ru": "Михаэль Баллак",
-          "pt": "Michael Ballack"
+          "pt": "Michael Ballack",
+          "de": "Michael Ballack"
         }
       },
       {
@@ -109,7 +118,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Miroslav Klose",
           "tr": "Miroslav Klose",
           "ru": "Мирослав Клозе",
-          "pt": "Miroslav Klose"
+          "pt": "Miroslav Klose",
+          "de": "Miroslav Klose"
         }
       },
       {
@@ -120,7 +130,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Bastian Schweinsteiger",
           "tr": "Bastian Schweinsteiger",
           "ru": "Бастиан Швайнштайгер",
-          "pt": "Bastian Schweinsteiger"
+          "pt": "Bastian Schweinsteiger",
+          "de": "Bastian Schweinsteiger"
         }
       },
       {
@@ -131,7 +142,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Lukas Podolski",
           "tr": "Lukas Podolski",
           "ru": "Лукас Подольски",
-          "pt": "Lukas Podolski"
+          "pt": "Lukas Podolski",
+          "de": "Lukas Podolski"
         }
       }
     ],
@@ -146,7 +158,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Premier League",
       "tr": "Premier League",
       "ru": "Премьер-лига",
-      "pt": "Premier League"
+      "pt": "Premier League",
+      "de": "Premier League"
     },
     "prompt": {
       "en": "Which former Leeds United player was famously nicknamed the \"Yorkshire Pele\"?",
@@ -154,7 +167,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué exjugador del Leeds United fue apodado famosamente \"El Pelé de Yorkshire\"?",
       "tr": "Hangi eski Leeds United oyuncusu \"Yorkshire Pele\" lakabıyla ünlüydü?",
       "ru": "Кто из бывших игроков «Лидс Юнайтед» получил прозвище «Йоркширский Пеле»?",
-      "pt": "Qual ex-jogador do Leeds United ficou famoso pelo apelido de \"Pelé de Yorkshire\"?"
+      "pt": "Qual ex-jogador do Leeds United ficou famoso pelo apelido de \"Pelé de Yorkshire\"?",
+      "de": "Welcher ehemalige Spieler von Leeds United trug den berühmten Spitznamen „Yorkshire Pelé“?"
     },
     "options": [
       {
@@ -165,7 +179,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "James Milner",
           "tr": "James Milner",
           "ru": "Джеймс Милнер",
-          "pt": "James Milner"
+          "pt": "James Milner",
+          "de": "James Milner"
         }
       },
       {
@@ -176,7 +191,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Kalvin Phillips",
           "tr": "Kalvin Phillips",
           "ru": "Калвин Филлипс",
-          "pt": "Kalvin Phillips"
+          "pt": "Kalvin Phillips",
+          "de": "Kalvin Phillips"
         }
       },
       {
@@ -187,7 +203,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "David Batty",
           "tr": "David Batty",
           "ru": "Дэвид Бэтти",
-          "pt": "David Batty"
+          "pt": "David Batty",
+          "de": "David Batty"
         }
       },
       {
@@ -198,7 +215,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Archie Gray",
           "tr": "Archie Gray",
           "ru": "Арчи Грей",
-          "pt": "Archie Gray"
+          "pt": "Archie Gray",
+          "de": "Archie Gray"
         }
       }
     ],
@@ -213,7 +231,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Sueño Mundialista Holandés",
       "tr": "Hollanda Dünya Kupası Hayali",
       "ru": "Мечта Нидерландов на чемпионатах мира",
-      "pt": "O sonho dos Países Baixos na Copa do Mundo"
+      "pt": "O sonho dos Países Baixos na Copa do Mundo",
+      "de": "Der WM-Traum der Niederlande"
     },
     "prompt": {
       "en": "Which country managed to end the historic run of the Netherlands in the 1974 World Cup final match by a score of 2-1?",
@@ -221,7 +240,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué país puso fin a la histórica racha de Países Bajos en la final de la Copa Mundial de 1974 con un marcador de 2-1?",
       "tr": "1974 Dünya Kupası final maçında Hollanda'yı 2-1'lik skorla mağlup eden ülke hangisiydi?",
       "ru": "Какая страна обыграла Нидерланды в финале ЧМ-1974 со счетом 2:1?",
-      "pt": "Qual país encerrou a campanha histórica dos Países Baixos na final da Copa do Mundo de 1974, vencendo por 2 a 1?"
+      "pt": "Qual país encerrou a campanha histórica dos Países Baixos na final da Copa do Mundo de 1974, vencendo por 2 a 1?",
+      "de": "Welches Land beendete den historischen Lauf der Niederlande im WM-Finale 1974 mit einem 2:1?"
     },
     "options": [
       {
@@ -232,7 +252,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Brasil",
           "tr": "Brezilya",
           "ru": "Бразилия",
-          "pt": "Brasil"
+          "pt": "Brasil",
+          "de": "Brasilien"
         }
       },
       {
@@ -243,7 +264,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Argentina",
           "tr": "Arjantin",
           "ru": "Аргентина",
-          "pt": "Argentina"
+          "pt": "Argentina",
+          "de": "Argentinien"
         }
       },
       {
@@ -254,7 +276,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Alemania Occidental",
           "tr": "Batı Almanya",
           "ru": "ФРГ",
-          "pt": "Alemanha Ocidental"
+          "pt": "Alemanha Ocidental",
+          "de": "Westdeutschland"
         }
       },
       {
@@ -265,7 +288,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Suecia",
           "tr": "İsveç",
           "ru": "Швеция",
-          "pt": "Suécia"
+          "pt": "Suécia",
+          "de": "Schweden"
         }
       }
     ],
@@ -280,7 +304,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Argentina 1978",
       "tr": "Dünya Kupası Arjantin 1978",
       "ru": "ЧМ-1978 в Аргентине",
-      "pt": "Copa do Mundo: Argentina 1978"
+      "pt": "Copa do Mundo: Argentina 1978",
+      "de": "WM 1978 in Argentinien"
     },
     "prompt": {
       "en": "Which confederation did the winning team of the World Cup 1978 represent?",
@@ -288,7 +313,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué confederación representó el equipo ganador de la Copa del Mundo de 1978?",
       "tr": "1978 Dünya Kupası'nı kazanan takım hangi konfederasyonu temsil ediyordu?",
       "ru": "Какую конфедерацию представляла команда-победитель чемпионата мира 1978 года?",
-      "pt": "De qual confederação era a seleção campeã da Copa do Mundo de 1978?"
+      "pt": "De qual confederação era a seleção campeã da Copa do Mundo de 1978?",
+      "de": "Welchen Kontinentalverband vertrat das Siegerteam der WM 1978?"
     },
     "options": [
       {
@@ -299,7 +325,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "UEFA",
           "tr": "UEFA",
           "ru": "УЕФА",
-          "pt": "UEFA"
+          "pt": "UEFA",
+          "de": "UEFA"
         }
       },
       {
@@ -310,7 +337,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "CONCACAF",
           "tr": "CONCACAF",
           "ru": "КОНКАКАФ",
-          "pt": "CONCACAF"
+          "pt": "CONCACAF",
+          "de": "CONCACAF"
         }
       },
       {
@@ -321,7 +349,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "CONMEBOL",
           "tr": "CONMEBOL",
           "ru": "КОНМЕБОЛ",
-          "pt": "CONMEBOL"
+          "pt": "CONMEBOL",
+          "de": "CONMEBOL"
         }
       },
       {
@@ -332,7 +361,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "CAF",
           "tr": "CAF",
           "ru": "КАФ",
-          "pt": "CAF"
+          "pt": "CAF",
+          "de": "CAF"
         }
       }
     ],
@@ -347,7 +377,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La Liga",
       "tr": "La Liga",
       "ru": "Ла Лига",
-      "pt": "La Liga"
+      "pt": "La Liga",
+      "de": "La Liga"
     },
     "prompt": {
       "en": "In 2010, Barcelona signed which Spanish striker from Valencia who went on to score in the 2011 Champions League final?",
@@ -355,7 +386,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En 2010, el Barcelona fichó al delantero español que jugaba en el Valencia y que marcó en la final de la Champions League de 2011.",
       "tr": "2010 yılında Barcelona, Valencia'dan hangi İspanyol forveti transfer etti ve bu oyuncu 2011 Şampiyonlar Ligi finalinde gol attı?",
       "ru": "Какого испанского нападающего «Барселона» подписала у «Валенсии» в 2010 году, и который затем забил гол в финале Лиги чемпионов 2011 года?",
-      "pt": "Em 2010, o Barcelona contratou do Valencia qual atacante espanhol, que depois marcou na final da Champions League de 2011?"
+      "pt": "Em 2010, o Barcelona contratou do Valencia qual atacante espanhol, que depois marcou na final da Champions League de 2011?",
+      "de": "Welchen spanischen Stürmer verpflichtete Barcelona 2010 vom FC Valencia, der später im Champions-League-Finale 2011 ein Tor erzielte?"
     },
     "options": [
       {
@@ -366,7 +398,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "David Villa",
           "tr": "David Villa",
           "ru": "Давид Вилья",
-          "pt": "David Villa"
+          "pt": "David Villa",
+          "de": "David Villa"
         }
       },
       {
@@ -377,7 +410,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Paco Alcácer",
           "tr": "Paco Alcácer",
           "ru": "Пако Алькасер",
-          "pt": "Paco Alcácer"
+          "pt": "Paco Alcácer",
+          "de": "Paco Alcácer"
         }
       },
       {
@@ -388,7 +422,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Bojan Krkić",
           "tr": "Bojan Krkić",
           "ru": "Боян Кркич",
-          "pt": "Bojan Krkić"
+          "pt": "Bojan Krkić",
+          "de": "Bojan Krkić"
         }
       },
       {
@@ -399,7 +434,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Nolito",
           "tr": "Nolito",
           "ru": "Нолито",
-          "pt": "Nolito"
+          "pt": "Nolito",
+          "de": "Nolito"
         }
       }
     ],
@@ -414,7 +450,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Premier League",
       "tr": "Premier League",
       "ru": "Премьер-лига",
-      "pt": "Premier League"
+      "pt": "Premier League",
+      "de": "Premier League"
     },
     "prompt": {
       "en": "What color is the traditional Everton home shirt?",
@@ -422,7 +459,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿De qué color es la camiseta tradicional del Everton?",
       "tr": "Everton'ın geleneksel iç saha forması hangi renktir?",
       "ru": "Какого цвета традиционная домашняя футболка «Эвертона»?",
-      "pt": "Qual é a cor tradicional do uniforme do Everton como mandante?"
+      "pt": "Qual é a cor tradicional do uniforme do Everton como mandante?",
+      "de": "Welche Farbe hat Evertons traditionelles Heimtrikot?"
     },
     "options": [
       {
@@ -433,7 +471,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Rojo",
           "tr": "Kırmızı",
           "ru": "Красная",
-          "pt": "Vermelho"
+          "pt": "Vermelho",
+          "de": "Rot"
         }
       },
       {
@@ -444,7 +483,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Negro",
           "tr": "Siyah",
           "ru": "Черная",
-          "pt": "Preto"
+          "pt": "Preto",
+          "de": "Schwarz"
         }
       },
       {
@@ -455,7 +495,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Azul Real",
           "tr": "Kraliyet Mavisi",
           "ru": "Королевский синий",
-          "pt": "Azul royal"
+          "pt": "Azul royal",
+          "de": "Königsblau"
         }
       },
       {
@@ -466,7 +507,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Blanco",
           "tr": "Beyaz",
           "ru": "Белая",
-          "pt": "Branco"
+          "pt": "Branco",
+          "de": "Weiß"
         }
       }
     ],
@@ -481,7 +523,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Brasil 2014",
       "tr": "Dünya Kupası Brezilya 2014",
       "ru": "ЧМ-2014 в Бразилии",
-      "pt": "Copa do Mundo: Brasil 2014"
+      "pt": "Copa do Mundo: Brasil 2014",
+      "de": "WM 2014 in Brasilien"
     },
     "prompt": {
       "en": "Which stadium hosted the final of the World Cup 2014?",
@@ -489,7 +532,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué estadio albergó la final de la Copa del Mundo de 2014?",
       "tr": "2014 Dünya Kupası finaline hangi stadyum ev sahipliği yaptı?",
       "ru": "На каком стадионе прошёл финал чемпионата мира 2014 года?",
-      "pt": "Qual estádio recebeu a final da Copa do Mundo de 2014?"
+      "pt": "Qual estádio recebeu a final da Copa do Mundo de 2014?",
+      "de": "In welchem Stadion fand das Finale der WM 2014 statt?"
     },
     "options": [
       {
@@ -500,7 +544,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Arena Corinthians",
           "tr": "Arena Corinthians",
           "ru": "Арена Коринтианс",
-          "pt": "Arena Corinthians"
+          "pt": "Arena Corinthians",
+          "de": "Arena Corinthians"
         }
       },
       {
@@ -511,7 +556,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Mineirão",
           "tr": "Mineirão",
           "ru": "Минейран",
-          "pt": "Mineirão"
+          "pt": "Mineirão",
+          "de": "Mineirão"
         }
       },
       {
@@ -522,7 +568,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Estadio Nacional",
           "tr": "Estádio Nacional",
           "ru": "Национальный стадион",
-          "pt": "Estádio Nacional"
+          "pt": "Estádio Nacional",
+          "de": "Estádio Nacional"
         }
       },
       {
@@ -533,7 +580,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Maracanã",
           "tr": "Maracanã",
           "ru": "Маракана",
-          "pt": "Maracanã"
+          "pt": "Maracanã",
+          "de": "Maracanã"
         }
       }
     ],
@@ -548,7 +596,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Which player holds the record for the most goals in a single calendar year (91 goals in 2012)?",
@@ -556,7 +605,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué jugador ostenta el récord de más goles en un solo año natural (91 goles en 2012)?",
       "tr": "Tek bir takvim yılında en çok gol atma rekorunu (2012'de 91 gol) hangi oyuncu elinde tutuyor?",
       "ru": "Какой игрок установил рекорд по голам за один календарный год — 91 гол в 2012 году?",
-      "pt": "Qual jogador detém o recorde de mais gols em um único ano civil (91 gols em 2012)?"
+      "pt": "Qual jogador detém o recorde de mais gols em um único ano civil (91 gols em 2012)?",
+      "de": "Welcher Spieler hält den Rekord für die meisten Tore in einem Kalenderjahr (91 Tore im Jahr 2012)?"
     },
     "options": [
       {
@@ -567,7 +617,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Cristiano Ronaldo",
           "tr": "Cristiano Ronaldo",
           "ru": "Криштиану Роналду",
-          "pt": "Cristiano Ronaldo"
+          "pt": "Cristiano Ronaldo",
+          "de": "Cristiano Ronaldo"
         }
       },
       {
@@ -578,7 +629,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Pelé",
           "tr": "Pelé",
           "ru": "Пеле",
-          "pt": "Pelé"
+          "pt": "Pelé",
+          "de": "Pelé"
         }
       },
       {
@@ -589,7 +641,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Gerd Müller",
           "tr": "Gerd Müller",
           "ru": "Герд Мюллер",
-          "pt": "Gerd Müller"
+          "pt": "Gerd Müller",
+          "de": "Gerd Müller"
         }
       },
       {
@@ -600,7 +653,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Lionel Messi",
           "tr": "Lionel Messi",
           "ru": "Лионель Месси",
-          "pt": "Lionel Messi"
+          "pt": "Lionel Messi",
+          "de": "Lionel Messi"
         }
       }
     ],
@@ -615,7 +669,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "UEFA EURO",
       "tr": "UEFA EURO",
       "ru": "Евро",
-      "pt": "Euro da UEFA"
+      "pt": "Euro da UEFA",
+      "de": "UEFA EURO"
     },
     "prompt": {
       "en": "Which national team won the UEFA Euro 2020 title?",
@@ -623,7 +678,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué selección nacional ganó el título de la UEFA Euro 2020?",
       "tr": "UEFA Euro 2020 şampiyonluğunu hangi milli takım kazandı?",
       "ru": "Какая сборная выиграла Евро-2020?",
-      "pt": "Qual seleção venceu a Euro da UEFA de 2020?"
+      "pt": "Qual seleção venceu a Euro da UEFA de 2020?",
+      "de": "Welche Nationalmannschaft gewann die UEFA EURO 2020?"
     },
     "options": [
       {
@@ -634,7 +690,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Inglaterra",
           "tr": "İngiltere",
           "ru": "Англия",
-          "pt": "Inglaterra"
+          "pt": "Inglaterra",
+          "de": "England"
         }
       },
       {
@@ -645,7 +702,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Italia",
           "tr": "İtalya",
           "ru": "Италия",
-          "pt": "Itália"
+          "pt": "Itália",
+          "de": "Italien"
         }
       },
       {
@@ -656,7 +714,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "España",
           "tr": "İspanya",
           "ru": "Испания",
-          "pt": "Espanha"
+          "pt": "Espanha",
+          "de": "Spanien"
         }
       },
       {
@@ -667,7 +726,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Dinamarca",
           "tr": "Danimarka",
           "ru": "Дания",
-          "pt": "Dinamarca"
+          "pt": "Dinamarca",
+          "de": "Dänemark"
         }
       }
     ],
@@ -682,7 +742,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Sueño Mundialista de Ronaldo",
       "tr": "Ronaldo'nun Dünya Kupası Hayali",
       "ru": "Мечта Роналду о чемпионате мира",
-      "pt": "O sonho de Ronaldo na Copa do Mundo"
+      "pt": "O sonho de Ronaldo na Copa do Mundo",
+      "de": "Ronaldos WM-Traum"
     },
     "prompt": {
       "en": "Who coached Brazil in 1994 and kept 17-year-old Ronaldo on the bench for the whole tournament?",
@@ -690,7 +751,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién entrenó a Brasil en 1994 y mantuvo a Ronaldo, de 17 años, en el banquillo durante todo el torneo?",
       "tr": "1994'te Brezilya'yı kim çalıştırdı ve 17 yaşındaki Ronaldo'yu turnuva boyunca yedek kulübesinde tuttu?",
       "ru": "Кто тренировал Бразилию в 1994-м и продержал 17-летнего Роналдо в запасе весь турнир?",
-      "pt": "Quem comandou o Brasil em 1994 e deixou Ronaldo, de 17 anos, no banco durante todo o torneio?"
+      "pt": "Quem comandou o Brasil em 1994 e deixou Ronaldo, de 17 anos, no banco durante todo o torneio?",
+      "de": "Wer trainierte Brasilien 1994 und ließ den 17-jährigen Ronaldo während des gesamten Turniers auf der Bank?"
     },
     "options": [
       {
@@ -701,7 +763,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Luiz Felipe Scolari",
           "tr": "Luiz Felipe Scolari",
           "ru": "Луис Фелипе Сколари",
-          "pt": "Luiz Felipe Scolari"
+          "pt": "Luiz Felipe Scolari",
+          "de": "Luiz Felipe Scolari"
         }
       },
       {
@@ -712,7 +775,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Mário Zagallo",
           "tr": "Mário Zagallo",
           "ru": "Марио Загалло",
-          "pt": "Mário Zagallo"
+          "pt": "Mário Zagallo",
+          "de": "Mário Zagallo"
         }
       },
       {
@@ -723,7 +787,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Carlos Alberto Parreira",
           "tr": "Carlos Alberto Parreira",
           "ru": "Карлос Альберто Паррейра",
-          "pt": "Carlos Alberto Parreira"
+          "pt": "Carlos Alberto Parreira",
+          "de": "Carlos Alberto Parreira"
         }
       },
       {
@@ -734,7 +799,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Vanderlei Luxemburgo",
           "tr": "Vanderlei Luxemburgo",
           "ru": "Вандерлей Лушембурго",
-          "pt": "Vanderlei Luxemburgo"
+          "pt": "Vanderlei Luxemburgo",
+          "de": "Vanderlei Luxemburgo"
         }
       }
     ],
@@ -749,7 +815,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "How many teams will play in the next tournament after the 2022 FIFA World Cup?",
@@ -757,7 +824,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuántos equipos jugarán en el próximo torneo después de la Copa Mundial de la FIFA 2022?",
       "tr": "2022 FIFA Dünya Kupası'ndan sonraki turnuvada kaç takım mücadele edecek?",
       "ru": "Сколько команд сыграет в следующем турнире после чемпионата мира по футболу 2022 года?",
-      "pt": "Quantos times disputarão a próxima Copa do Mundo FIFA após a edição de 2022?"
+      "pt": "Quantos times disputarão a próxima Copa do Mundo FIFA após a edição de 2022?",
+      "de": "Wie viele Mannschaften spielen beim nächsten Turnier nach der FIFA-Weltmeisterschaft 2022?"
     },
     "options": [
       {
@@ -768,7 +836,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "32",
           "tr": "32",
           "ru": "32",
-          "pt": "32"
+          "pt": "32",
+          "de": "32"
         }
       },
       {
@@ -779,7 +848,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "40",
           "tr": "40",
           "ru": "40",
-          "pt": "40"
+          "pt": "40",
+          "de": "40"
         }
       },
       {
@@ -790,7 +860,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "48",
           "tr": "48",
           "ru": "48",
-          "pt": "48"
+          "pt": "48",
+          "de": "48"
         }
       },
       {
@@ -801,7 +872,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "64",
           "tr": "64",
           "ru": "64",
-          "pt": "64"
+          "pt": "64",
+          "de": "64"
         }
       }
     ],
@@ -816,7 +888,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Inglaterra",
       "tr": "İngiltere",
       "ru": "Англия",
-      "pt": "Inglaterra"
+      "pt": "Inglaterra",
+      "de": "England"
     },
     "prompt": {
       "en": "Who was England's top scorer at the 1990 FIFA World Cup?",
@@ -824,7 +897,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién fue el máximo goleador de Inglaterra en la Copa Mundial de la FIFA 1990?",
       "tr": "1990 FIFA Dünya Kupası'nda İngiltere'nin en golcü oyuncusu kimdi?",
       "ru": "Кто стал лучшим бомбардиром сборной Англии на чемпионате мира 1990 года?",
-      "pt": "Quem foi o artilheiro da Inglaterra na Copa do Mundo FIFA de 1990?"
+      "pt": "Quem foi o artilheiro da Inglaterra na Copa do Mundo FIFA de 1990?",
+      "de": "Wer war Englands bester Torschütze bei der FIFA-Weltmeisterschaft 1990?"
     },
     "options": [
       {
@@ -835,7 +909,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "David Platt",
           "tr": "David Platt",
           "ru": "Дэвид Платт",
-          "pt": "David Platt"
+          "pt": "David Platt",
+          "de": "David Platt"
         }
       },
       {
@@ -846,7 +921,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Gary Lineker",
           "tr": "Gary Lineker",
           "ru": "Гари Линекер",
-          "pt": "Gary Lineker"
+          "pt": "Gary Lineker",
+          "de": "Gary Lineker"
         }
       },
       {
@@ -857,7 +933,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Paul Gascoigne",
           "tr": "Paul Gascoigne",
           "ru": "Пол Гаскойн",
-          "pt": "Paul Gascoigne"
+          "pt": "Paul Gascoigne",
+          "de": "Paul Gascoigne"
         }
       },
       {
@@ -868,7 +945,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Peter Beardsley",
           "tr": "Peter Beardsley",
           "ru": "Питер Бирдсли",
-          "pt": "Peter Beardsley"
+          "pt": "Peter Beardsley",
+          "de": "Peter Beardsley"
         }
       }
     ],
@@ -883,7 +961,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El legado de Maradona en el Mundial",
       "tr": "Maradona'nın Dünya Kupası Mirası",
       "ru": "Марадона на чемпионатах мира",
-      "pt": "O legado de Maradona na Copa do Mundo"
+      "pt": "O legado de Maradona na Copa do Mundo",
+      "de": "Maradonas WM-Vermächtnis"
     },
     "prompt": {
       "en": "Who scored the winning goal in the 1986 FIFA World Cup Final from a pass provided by Diego Maradona?",
@@ -891,7 +970,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el gol de la victoria en la final de la Copa Mundial de la FIFA 1986 a pase de Diego Maradona?",
       "tr": "Diego Maradona'nın sağladığı bir pasla 1986 FIFA Dünya Kupası Finali'nin kazanan golünü kim attı?",
       "ru": "Кто забил победный гол в финале чемпионата мира ФИФА 1986 года после передачи Диего Марадоны?",
-      "pt": "Quem marcou o gol do título na final da Copa do Mundo FIFA de 1986 após passe de Diego Maradona?"
+      "pt": "Quem marcou o gol do título na final da Copa do Mundo FIFA de 1986 após passe de Diego Maradona?",
+      "de": "Wer erzielte nach einer Vorlage von Diego Maradona das Siegtor im Finale der FIFA-Weltmeisterschaft 1986?"
     },
     "options": [
       {
@@ -902,7 +982,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Jorge Valdano",
           "tr": "Jorge Valdano",
           "ru": "Хорхе Вальдано",
-          "pt": "Jorge Valdano"
+          "pt": "Jorge Valdano",
+          "de": "Jorge Valdano"
         }
       },
       {
@@ -913,7 +994,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Jorge Burruchaga",
           "tr": "Jorge Burruchaga",
           "ru": "Хорхе Бурручага",
-          "pt": "Jorge Burruchaga"
+          "pt": "Jorge Burruchaga",
+          "de": "Jorge Burruchaga"
         }
       },
       {
@@ -924,7 +1006,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Oscar Ruggeri",
           "tr": "Oscar Ruggeri",
           "ru": "Оскар Руджери",
-          "pt": "Oscar Ruggeri"
+          "pt": "Oscar Ruggeri",
+          "de": "Oscar Ruggeri"
         }
       },
       {
@@ -935,7 +1018,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Claudio Caniggia",
           "tr": "Claudio Caniggia",
           "ru": "Клаудио Каниджа",
-          "pt": "Claudio Caniggia"
+          "pt": "Claudio Caniggia",
+          "de": "Claudio Caniggia"
         }
       }
     ],
@@ -950,7 +1034,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Bayern Múnich",
       "tr": "Bayern Münih",
       "ru": "Бавария",
-      "pt": "Bayern de Munique"
+      "pt": "Bayern de Munique",
+      "de": "Bayern München"
     },
     "prompt": {
       "en": "Who is the head coach of Bayern Munich in 2025-2026?",
@@ -958,7 +1043,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién es el entrenador del Bayern de Múnich en la temporada 2025-2026?",
       "tr": "2025-2026 sezonunda Bayern Münih'in teknik direktörü kimdir?",
       "ru": "Кто является главным тренером «Баварии» в сезоне 2025-2026?",
-      "pt": "Quem é o técnico do Bayern de Munique na temporada 2025-2026?"
+      "pt": "Quem é o técnico do Bayern de Munique na temporada 2025-2026?",
+      "de": "Wer ist in der Saison 2025/26 Cheftrainer des FC Bayern München?"
     },
     "options": [
       {
@@ -969,7 +1055,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Thomas Tuchel",
           "tr": "Thomas Tuchel",
           "ru": "Томас Тухель",
-          "pt": "Thomas Tuchel"
+          "pt": "Thomas Tuchel",
+          "de": "Thomas Tuchel"
         }
       },
       {
@@ -980,7 +1067,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Hansi Flick",
           "tr": "Hansi Flick",
           "ru": "Ханси Флик",
-          "pt": "Hansi Flick"
+          "pt": "Hansi Flick",
+          "de": "Hansi Flick"
         }
       },
       {
@@ -991,7 +1079,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Vincent Kompany",
           "tr": "Vincent Kompany",
           "ru": "Венсан Компани",
-          "pt": "Vincent Kompany"
+          "pt": "Vincent Kompany",
+          "de": "Vincent Kompany"
         }
       },
       {
@@ -1002,7 +1091,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Julian Nagelsmann",
           "tr": "Julian Nagelsmann",
           "ru": "Юлиан Нагельсманн",
-          "pt": "Julian Nagelsmann"
+          "pt": "Julian Nagelsmann",
+          "de": "Julian Nagelsmann"
         }
       }
     ],
@@ -1017,7 +1107,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Portugal",
       "tr": "Portekiz",
       "ru": "Португалия",
-      "pt": "Portugal"
+      "pt": "Portugal",
+      "de": "Portugal"
     },
     "prompt": {
       "en": "In which year did Portugal win their first-ever major trophy at the UEFA European Championship?",
@@ -1025,7 +1116,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿En qué año ganó Portugal su primer gran trofeo en el Campeonato de Europa de la UEFA?",
       "tr": "Portekiz, UEFA Avrupa Şampiyonası'nda ilk büyük kupasını hangi yıl kazandı?",
       "ru": "В каком году Португалия выиграла свой первый крупный трофей на UEFA Чемпионате Европы?",
-      "pt": "Em que ano Portugal conquistou seu primeiro grande título, na Eurocopa?"
+      "pt": "Em que ano Portugal conquistou seu primeiro grande título, na Eurocopa?",
+      "de": "In welchem Jahr gewann Portugal bei der UEFA-Europameisterschaft seinen ersten großen Titel?"
     },
     "options": [
       {
@@ -1036,7 +1128,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2004",
           "tr": "2004",
           "ru": "2004",
-          "pt": "2004"
+          "pt": "2004",
+          "de": "2004"
         }
       },
       {
@@ -1047,7 +1140,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2012",
           "tr": "2012",
           "ru": "2012",
-          "pt": "2012"
+          "pt": "2012",
+          "de": "2012"
         }
       },
       {
@@ -1058,7 +1152,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2016",
           "tr": "2016",
           "ru": "2016",
-          "pt": "2016"
+          "pt": "2016",
+          "de": "2016"
         }
       },
       {
@@ -1069,7 +1164,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2020",
           "tr": "2020",
           "ru": "2020",
-          "pt": "2020"
+          "pt": "2020",
+          "de": "2020"
         }
       }
     ],
@@ -1084,7 +1180,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Premier League",
       "tr": "Premier League",
       "ru": "Премьер-лига",
-      "pt": "Premier League"
+      "pt": "Premier League",
+      "de": "Premier League"
     },
     "prompt": {
       "en": "Which team won the title in 2011–12 thanks to a 94th-minute goal by Sergio Aguero?",
@@ -1092,7 +1189,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué equipo ganó el título en 2011-12 gracias a un gol de Sergio Agüero en el minuto 94?",
       "tr": "Sergio Aguero'nun 94. dakika golüyle 2011-12 sezonunda şampiyon olan takım hangisiydi?",
       "ru": "Какая команда выиграла чемпионский титул в сезоне 2011–12 благодаря голу Серхио Агуэро на 94-й минуте?",
-      "pt": "Qual time foi campeão da temporada 2011–12 graças a um gol de Sergio Aguero aos 94 minutos?"
+      "pt": "Qual time foi campeão da temporada 2011–12 graças a um gol de Sergio Aguero aos 94 minutos?",
+      "de": "Welche Mannschaft wurde 2011/12 dank Sergio Agüeros Tor in der 94. Minute Meister?"
     },
     "options": [
       {
@@ -1103,7 +1201,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Manchester United",
           "tr": "Manchester United",
           "ru": "Манчестер Юнайтед",
-          "pt": "Manchester United"
+          "pt": "Manchester United",
+          "de": "Manchester United"
         }
       },
       {
@@ -1114,7 +1213,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Manchester City",
           "tr": "Manchester City",
           "ru": "Манчестер Сити",
-          "pt": "Manchester City"
+          "pt": "Manchester City",
+          "de": "Manchester City"
         }
       },
       {
@@ -1125,7 +1225,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Chelsea",
           "tr": "Chelsea",
           "ru": "Челси",
-          "pt": "Chelsea"
+          "pt": "Chelsea",
+          "de": "Chelsea"
         }
       },
       {
@@ -1136,7 +1237,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Liverpool",
           "tr": "Liverpool",
           "ru": "Ливерпуль",
-          "pt": "Liverpool"
+          "pt": "Liverpool",
+          "de": "Liverpool"
         }
       }
     ],
@@ -1151,7 +1253,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Champions League",
       "tr": "Şampiyonlar Ligi",
       "ru": "Лига чемпионов",
-      "pt": "Champions League"
+      "pt": "Champions League",
+      "de": "Champions League"
     },
     "prompt": {
       "en": "In what year did the UEFA Champions League introduce the new \"League Phase\" format replacing the traditional group stage?",
@@ -1159,7 +1262,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿En qué año la UEFA Champions League introdujo el nuevo formato de \"Fase de Ligas\" reemplazando la fase de grupos tradicional?",
       "tr": "UEFA Şampiyonlar Ligi, geleneksel grup aşaması yerine yeni \"Lig Aşaması\" formatını hangi yıl tanıttı?",
       "ru": "В каком году UEFA Champions League ввела новый формат «Общего этапа» взамен традиционного группового?",
-      "pt": "Em que ano a UEFA Champions League adotou o novo formato de \"fase de liga\", que substituiu a tradicional fase de grupos?"
+      "pt": "Em que ano a UEFA Champions League adotou o novo formato de \"fase de liga\", que substituiu a tradicional fase de grupos?",
+      "de": "In welchem Jahr führte die UEFA Champions League das neue Ligaphasenformat ein, das die traditionelle Gruppenphase ersetzte?"
     },
     "options": [
       {
@@ -1170,7 +1274,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2022",
           "tr": "2022",
           "ru": "2022",
-          "pt": "2022"
+          "pt": "2022",
+          "de": "2022"
         }
       },
       {
@@ -1181,7 +1286,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2023",
           "tr": "2023",
           "ru": "2023",
-          "pt": "2023"
+          "pt": "2023",
+          "de": "2023"
         }
       },
       {
@@ -1192,7 +1298,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2024",
           "tr": "2024",
           "ru": "2024",
-          "pt": "2024"
+          "pt": "2024",
+          "de": "2024"
         }
       },
       {
@@ -1203,7 +1310,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2025",
           "tr": "2025",
           "ru": "2025",
-          "pt": "2025"
+          "pt": "2025",
+          "de": "2025"
         }
       }
     ],
@@ -1218,7 +1326,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El reinado de Pelé en el Mundial",
       "tr": "Pelé'nin Dünya Kupası Saltanatı",
       "ru": "Владычество Пеле на чемпионатах мира",
-      "pt": "O reinado de Pelé na Copa do Mundo"
+      "pt": "O reinado de Pelé na Copa do Mundo",
+      "de": "Pelés WM-Ära"
     },
     "prompt": {
       "en": "When Pelé and Brazil lost the coin toss for kit colors against Sweden in the 1958 FIFA World Cup final, how did the team logistics staff solve the uniform crisis?",
@@ -1226,7 +1335,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Cuando Pelé y Brasil perdieron el sorteo de las camisetas contra Suecia en la final de la Copa Mundial de la FIFA de 1958, ¿cómo resolvió el personal de logística del equipo la crisis de uniformes?",
       "tr": "1958 FIFA Dünya Kupası finalinde Pelé ve Brezilya, İsveç'e karşı forma renkleri için yazı tura atışını kaybettiğinde, takım lojistik personeli forma krizini nasıl çözdü?",
       "ru": "Как Бразилия решила проблему совпадения цветов формы со Швецией в финале ЧМ-1958?",
-      "pt": "Quando Pelé e o Brasil perderam no cara ou coroa a escolha das cores dos uniformes contra a Suécia na final da Copa do Mundo FIFA de 1958, como a equipe de logística resolveu o problema?"
+      "pt": "Quando Pelé e o Brasil perderam no cara ou coroa a escolha das cores dos uniformes contra a Suécia na final da Copa do Mundo FIFA de 1958, como a equipe de logística resolveu o problema?",
+      "de": "Wie löste das Betreuerteam das Trikotproblem, nachdem Pelé und Brasilien beim Münzwurf um die Trikotfarben gegen Schweden im Finale der FIFA-Weltmeisterschaft 1958 verloren hatten?"
     },
     "options": [
       {
@@ -1237,7 +1347,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Llevaban sus petos de entrenamiento blancos del revés.",
           "tr": "Beyaz antrenman yeleklerini ters giydiler",
           "ru": "Надели белые тренировочные манишки наизнанку",
-          "pt": "Eles vestiram os coletes brancos de treino do avesso"
+          "pt": "Eles vestiram os coletes brancos de treino do avesso",
+          "de": "Sie trugen ihre weißen Trainingsleibchen auf links"
         }
       },
       {
@@ -1248,7 +1359,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Compraron camisetas azules lisas en Estocolmo y cosieron a mano los emblemas brasileños.",
           "tr": "Stockholm'de düz mavi tişörtler aldılar ve üzerlerine Brezilya amblemlerini elle diktiler.",
           "ru": "Купили в Стокгольме синие футболки и вручную пришили эмблемы",
-          "pt": "Eles compraram camisas azuis lisas em Estocolmo e costuraram nelas, à mão, os escudos do Brasil"
+          "pt": "Eles compraram camisas azuis lisas em Estocolmo e costuraram nelas, à mão, os escudos do Brasil",
+          "de": "Sie kauften in Stockholm schlichte blaue Trikots und nähten die brasilianischen Wappen von Hand darauf"
         }
       },
       {
@@ -1259,7 +1371,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Pidieron prestadas camisetas rojas de repuesto de la bóveda del estadio local",
           "tr": "Yerel stadyum kasasından yedek kırmızı formaları ödünç aldılar",
           "ru": "Одолжили запасную красную форму из хранилища стадиона",
-          "pt": "Eles pegaram emprestados uniformes vermelhos reservas do depósito do estádio anfitrião"
+          "pt": "Eles pegaram emprestados uniformes vermelhos reservas do depósito do estádio anfitrião",
+          "de": "Sie liehen sich rote Ersatztrikots aus dem Lager des Stadions vor Ort"
         }
       },
       {
@@ -1270,7 +1383,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Amenazaron con boicotear el partido a menos que Suecia cambiara de colores",
           "tr": "İsveç renklerini değiştirmese maçı boykot etmekle tehdit ettiler",
           "ru": "Угрожали бойкотом матча, если Швеция не сменит цвета",
-          "pt": "Eles ameaçaram boicotar a partida se a Suécia não trocasse as cores do uniforme"
+          "pt": "Eles ameaçaram boicotar a partida se a Suécia não trocasse as cores do uniforme",
+          "de": "Sie drohten, das Spiel zu boykottieren, falls Schweden die Trikotfarben nicht änderte"
         }
       }
     ],
@@ -1285,7 +1399,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Viaje de Messi por el Mundial",
       "tr": "Messi'nin Dünya Kupası Yolculuğu",
       "ru": "Путь Месси на чемпионатах мира",
-      "pt": "A trajetória de Messi na Copa do Mundo"
+      "pt": "A trajetória de Messi na Copa do Mundo",
+      "de": "Messis WM-Reise"
     },
     "prompt": {
       "en": "What personal career milestone coincided with Messi's appearance against Australia in the Round of 16 at the 2022 FIFA World Cup?",
@@ -1293,7 +1408,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué hito personal en la carrera de Messi coincidió con su aparición contra Australia en los octavos de final de la Copa Mundial de la FIFA 2022?",
       "tr": "Messi'nin 2022 FIFA Dünya Kupası son 16 turunda Avustralya'ya karşı forma giydiği maçla hangi kişisel kariyer dönüm noktası aynı zamana denk geldi?",
       "ru": "Какое личное достижение Месси совпало с матчем против Австралии в 1/8 финала ЧМ-2022?",
-      "pt": "Qual marco pessoal da carreira de Messi coincidiu com sua partida contra a Austrália nas oitavas de final da Copa do Mundo FIFA de 2022?"
+      "pt": "Qual marco pessoal da carreira de Messi coincidiu com sua partida contra a Austrália nas oitavas de final da Copa do Mundo FIFA de 2022?",
+      "de": "Welcher persönliche Karriere-Meilenstein fiel mit Messis Einsatz gegen Australien im Achtelfinale der FIFA-Weltmeisterschaft 2022 zusammen?"
     },
     "options": [
       {
@@ -1304,7 +1420,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fue su gol número 500 en su carrera",
           "tr": "Bu onun kariyerindeki 500. golüydü",
           "ru": "Это был его 500-й гол в карьере",
-          "pt": "Foi o 500º gol da carreira dele"
+          "pt": "Foi o 500º gol da carreira dele",
+          "de": "Es war sein 500. Karrieretor"
         }
       },
       {
@@ -1315,7 +1432,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fue su partido profesional número 1.000",
           "tr": "Bu onun 1.000. profesyonel maçıydı",
           "ru": "Это был его 1000-й профессиональный матч",
-          "pt": "Foi a milésima partida profissional dele"
+          "pt": "Foi a milésima partida profissional dele",
+          "de": "Es war sein 1.000. Profispiel"
         }
       },
       {
@@ -1326,7 +1444,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fue su partido número 100 como capitán de Argentina",
           "tr": "Arjantin kaptanı olarak çıktığı 100. maçtı",
           "ru": "Это была его 100-я игра в качестве капитана Аргентины",
-          "pt": "Foi sua 100ª partida como capitão da Argentina"
+          "pt": "Foi sua 100ª partida como capitão da Argentina",
+          "de": "Es war sein 100. Spiel als Kapitän Argentiniens"
         }
       },
       {
@@ -1337,7 +1456,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fue su décimo aniversario con la selección nacional.",
           "tr": "Milli takımdaki 10. yılıydı",
           "ru": "Это был его 10-летний юбилей в сборной",
-          "pt": "Foi seu décimo aniversário na seleção"
+          "pt": "Foi seu décimo aniversário na seleção",
+          "de": "Es war sein 10-jähriges Jubiläum in der Nationalmannschaft"
         }
       }
     ],
@@ -1352,7 +1472,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "UEFA EURO",
       "tr": "UEFA EURO",
       "ru": "Евро",
-      "pt": "Euro da UEFA"
+      "pt": "Euro da UEFA",
+      "de": "UEFA EURO"
     },
     "prompt": {
       "en": "Which national team won the UEFA Euro 1996 title?",
@@ -1360,7 +1481,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué selección nacional ganó el título de la Eurocopa 1996 de la UEFA?",
       "tr": "UEFA Euro 1996 şampiyonluğunu hangi milli takım kazandı?",
       "ru": "Какая сборная выиграла Евро-1996?",
-      "pt": "Qual seleção venceu a Euro da UEFA de 1996?"
+      "pt": "Qual seleção venceu a Euro da UEFA de 1996?",
+      "de": "Welche Nationalmannschaft gewann die UEFA EURO 1996?"
     },
     "options": [
       {
@@ -1371,7 +1493,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "República Checa",
           "tr": "Çek Cumhuriyeti",
           "ru": "Чехия",
-          "pt": "República Tcheca"
+          "pt": "República Tcheca",
+          "de": "Tschechien"
         }
       },
       {
@@ -1382,7 +1505,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Alemania",
           "tr": "Almanya",
           "ru": "Германия",
-          "pt": "Alemanha"
+          "pt": "Alemanha",
+          "de": "Deutschland"
         }
       },
       {
@@ -1393,7 +1517,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Inglaterra",
           "tr": "İngiltere",
           "ru": "Англия",
-          "pt": "Inglaterra"
+          "pt": "Inglaterra",
+          "de": "England"
         }
       },
       {
@@ -1404,7 +1529,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Francia",
           "tr": "Fransa",
           "ru": "Франция",
-          "pt": "França"
+          "pt": "França",
+          "de": "Frankreich"
         }
       }
     ],
@@ -1419,7 +1545,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial Alemania Occidental 1974",
       "tr": "1974 Dünya Kupası Batı Almanya",
       "ru": "ЧМ-1974 в ФРГ",
-      "pt": "Copa do Mundo: Alemanha Ocidental 1974"
+      "pt": "Copa do Mundo: Alemanha Ocidental 1974",
+      "de": "WM 1974 in Westdeutschland"
     },
     "prompt": {
       "en": "Which famous tactical system was pioneered by the Netherlands at World Cup 1974?",
@@ -1427,7 +1554,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué famoso sistema táctico fue introducido por los Países Bajos en el Mundial de 1974?",
       "tr": "1974 Dünya Kupası'nda Hollanda'nın öncülük ettiği ünlü taktik sistem hangisidir?",
       "ru": "Какую известную тактическую систему впервые применила сборная Нидерландов на чемпионате мира 1974 года?",
-      "pt": "Qual famoso sistema tático foi criado pelos Países Baixos na Copa do Mundo de 1974?"
+      "pt": "Qual famoso sistema tático foi criado pelos Países Baixos na Copa do Mundo de 1974?",
+      "de": "Welches berühmte taktische System wurde von den Niederlanden bei der WM 1974 geprägt?"
     },
     "options": [
       {
@@ -1438,7 +1566,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Catenaccio",
           "tr": "Catenaccio",
           "ru": "Катеначчо",
-          "pt": "Catenaccio"
+          "pt": "Catenaccio",
+          "de": "Catenaccio"
         }
       },
       {
@@ -1449,7 +1578,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Tiki-Taka",
           "tr": "Tiki-Taka",
           "ru": "Тики-така",
-          "pt": "Tiki-Taka"
+          "pt": "Tiki-Taka",
+          "de": "Tiki-Taka"
         }
       },
       {
@@ -1460,7 +1590,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Gegenpressing",
           "tr": "Gegenpressing",
           "ru": "Гегенпрессинг",
-          "pt": "Gegenpressing"
+          "pt": "Gegenpressing",
+          "de": "Gegenpressing"
         }
       },
       {
@@ -1471,7 +1602,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fútbol Total",
           "tr": "Total Futbol",
           "ru": "Тотальный футбол",
-          "pt": "Futebol Total"
+          "pt": "Futebol Total",
+          "de": "Totaler Fußball"
         }
       }
     ],
@@ -1486,7 +1618,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Camino de España hacia la Gloria",
       "tr": "İspanya'nın Zafer Yolu",
       "ru": "Путь Испании к триумфу",
-      "pt": "A campanha da Espanha rumo ao título"
+      "pt": "A campanha da Espanha rumo ao título",
+      "de": "Spaniens Weg zum Ruhm"
     },
     "prompt": {
       "en": "What was the final score when Spain lost to the Netherlands in the 2014 World Cup?",
@@ -1494,7 +1627,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuál fue el resultado final cuando España perdió contra los Países Bajos en la Copa Mundial de 2014?",
       "tr": "İspanya'nın 2014 Dünya Kupası'nda Hollanda'ya yenildiği maçın son skoru neydi?",
       "ru": "С каким счётом Испания проиграла Нидерландам на чемпионате мира 2014 года?",
-      "pt": "Qual foi o placar da derrota da Espanha para os Países Baixos na Copa do Mundo de 2014?"
+      "pt": "Qual foi o placar da derrota da Espanha para os Países Baixos na Copa do Mundo de 2014?",
+      "de": "Wie lautete der Endstand, als Spanien bei der WM 2014 gegen die Niederlande verlor?"
     },
     "options": [
       {
@@ -1505,7 +1639,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "1-3",
           "tr": "1-3",
           "ru": "1:3",
-          "pt": "1-3"
+          "pt": "1-3",
+          "de": "1:3"
         }
       },
       {
@@ -1516,7 +1651,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "1-4",
           "tr": "1-4",
           "ru": "1:4",
-          "pt": "1-4"
+          "pt": "1-4",
+          "de": "1:4"
         }
       },
       {
@@ -1527,7 +1663,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "1-5",
           "tr": "1-5",
           "ru": "1:5",
-          "pt": "1-5"
+          "pt": "1-5",
+          "de": "1:5"
         }
       },
       {
@@ -1538,7 +1675,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "0-2",
           "tr": "0-2",
           "ru": "0:2",
-          "pt": "0-2"
+          "pt": "0-2",
+          "de": "0:2"
         }
       }
     ],
@@ -1553,7 +1691,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Premier League",
       "tr": "Premier League",
       "ru": "Премьер-лига",
-      "pt": "Premier League"
+      "pt": "Premier League",
+      "de": "Premier League"
     },
     "prompt": {
       "en": "What symbol of Yorkshire is featured on the Leeds United club badge?",
@@ -1561,7 +1700,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué símbolo de Yorkshire aparece en el escudo del Leeds United?",
       "tr": "Leeds United kulüp ambleminde hangi Yorkshire sembolü yer alır?",
       "ru": "Какой символ Йоркшира изображен на эмблеме «Лидс Юнайтед»?",
-      "pt": "Qual símbolo de Yorkshire aparece no escudo do Leeds United?"
+      "pt": "Qual símbolo de Yorkshire aparece no escudo do Leeds United?",
+      "de": "Welches Symbol aus Yorkshire ist auf dem Vereinswappen von Leeds United zu sehen?"
     },
     "options": [
       {
@@ -1572,7 +1712,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "La Rosa Roja",
           "tr": "Kızıl Gül",
           "ru": "Алая роза",
-          "pt": "A Rosa Vermelha"
+          "pt": "A Rosa Vermelha",
+          "de": "Die rote Rose"
         }
       },
       {
@@ -1583,7 +1724,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "La Rosa Blanca",
           "tr": "Beyaz Gül",
           "ru": "Белая роза",
-          "pt": "A Rosa Branca"
+          "pt": "A Rosa Branca",
+          "de": "Die weiße Rose"
         }
       },
       {
@@ -1594,7 +1736,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Un árbol de roble",
           "tr": "Bir Meşe Ağacı",
           "ru": "Дуб",
-          "pt": "Um carvalho"
+          "pt": "Um carvalho",
+          "de": "Eine Eiche"
         }
       },
       {
@@ -1605,7 +1748,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Un León Dorado",
           "tr": "Altın Bir Aslan",
           "ru": "Золотой лев",
-          "pt": "Um leão dourado"
+          "pt": "Um leão dourado",
+          "de": "Ein goldener Löwe"
         }
       }
     ],
@@ -1620,7 +1764,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La era de los 1980",
       "tr": "1980'ler Dönemi",
       "ru": "Эпоха 1980-х",
-      "pt": "A década de 1980"
+      "pt": "A década de 1980",
+      "de": "Die 1980er-Jahre"
     },
     "prompt": {
       "en": "Which English club was banned from Europe for the longest period following the Heysel disaster?",
@@ -1628,7 +1773,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué club inglés fue sancionado de Europa durante el mayor período tras el desastre de Heysel?",
       "tr": "Heysel faciasının ardından Avrupa'dan en uzun süre men edilen İngiliz kulübü hangisiydi?",
       "ru": "Какой английский клуб был отстранен от еврокубков на самый долгий срок после трагедии на «Эйзеле»?",
-      "pt": "Qual clube inglês ficou mais tempo banido das competições europeias após a tragédia de Heysel?"
+      "pt": "Qual clube inglês ficou mais tempo banido das competições europeias após a tragédia de Heysel?",
+      "de": "Welcher englische Verein wurde nach der Katastrophe von Heysel am längsten für europäische Wettbewerbe gesperrt?"
     },
     "options": [
       {
@@ -1639,7 +1785,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Liverpool",
           "tr": "Liverpool",
           "ru": "Ливерпуль",
-          "pt": "Liverpool"
+          "pt": "Liverpool",
+          "de": "Liverpool"
         }
       },
       {
@@ -1650,7 +1797,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Everton",
           "tr": "Everton",
           "ru": "Эвертон",
-          "pt": "Everton"
+          "pt": "Everton",
+          "de": "Everton"
         }
       },
       {
@@ -1661,7 +1809,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Arsenal",
           "tr": "Arsenal",
           "ru": "Арсенал",
-          "pt": "Arsenal"
+          "pt": "Arsenal",
+          "de": "Arsenal"
         }
       },
       {
@@ -1672,7 +1821,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Tottenham",
           "tr": "Tottenham",
           "ru": "Тоттенхэм",
-          "pt": "Tottenham"
+          "pt": "Tottenham",
+          "de": "Tottenham"
         }
       }
     ],
@@ -1687,7 +1837,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Serie A",
       "tr": "Serie A",
       "ru": "Серия А",
-      "pt": "Serie A"
+      "pt": "Serie A",
+      "de": "Serie A"
     },
     "prompt": {
       "en": "Which club finished second in the 1978–79 Serie A despite going the whole season unbeaten?",
@@ -1695,7 +1846,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué club terminó segundo en la Serie A 1978-79 a pesar de terminar toda la temporada invicto?",
       "tr": "Sezonu namağlup tamamlamasına rağmen 1978-79 Serie A'da ikinci olan kulüp hangisiydi?",
       "ru": "Какой клуб занял второе место в Серии А сезона 1978–79, не потерпев ни одного поражения за весь сезон?",
-      "pt": "Qual clube terminou em segundo lugar na Serie A de 1978–79, apesar de passar a temporada inteira invicto?"
+      "pt": "Qual clube terminou em segundo lugar na Serie A de 1978–79, apesar de passar a temporada inteira invicto?",
+      "de": "Welcher Verein wurde in der Serie A 1978/79 Zweiter, obwohl er die gesamte Saison ungeschlagen blieb?"
     },
     "options": [
       {
@@ -1706,7 +1858,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Perugia",
           "tr": "Perugia",
           "ru": "Перуджа",
-          "pt": "Perugia"
+          "pt": "Perugia",
+          "de": "Perugia"
         }
       },
       {
@@ -1717,7 +1870,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Torino",
           "tr": "Torino",
           "ru": "Торино",
-          "pt": "Torino"
+          "pt": "Torino",
+          "de": "FC Turin"
         }
       },
       {
@@ -1728,7 +1882,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Bologna",
           "tr": "Bologna",
           "ru": "Болонья",
-          "pt": "Bologna"
+          "pt": "Bologna",
+          "de": "Bologna"
         }
       },
       {
@@ -1739,7 +1894,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Cagliari",
           "tr": "Cagliari",
           "ru": "Кальяри",
-          "pt": "Cagliari"
+          "pt": "Cagliari",
+          "de": "Cagliari"
         }
       }
     ],
@@ -1754,7 +1910,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial España 1982",
       "tr": "Dünya Kupası İspanya 1982",
       "ru": "ЧМ-1982 в Испании",
-      "pt": "Copa do Mundo: Espanha 1982"
+      "pt": "Copa do Mundo: Espanha 1982",
+      "de": "WM 1982 in Spanien"
     },
     "prompt": {
       "en": "Who scored Poland's third goal in their 3-2 win over France at the 1982 World Cup?",
@@ -1762,7 +1919,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el tercer gol de Polonia en su victoria por 3-2 sobre Francia en el Mundial de 1982?",
       "tr": "1982 Dünya Kupası'nda Polonya'nın Fransa'yı 3-2 yendiği maçta üçüncü golü kim attı?",
       "ru": "Кто забил третий гол сборной Польши в победном матче со счётом 3:2 против Франции на чемпионате мира 1982 года?",
-      "pt": "Quem marcou o terceiro gol da Polônia na vitória por 3 a 2 sobre a França na Copa do Mundo de 1982?"
+      "pt": "Quem marcou o terceiro gol da Polônia na vitória por 3 a 2 sobre a França na Copa do Mundo de 1982?",
+      "de": "Wer erzielte Polens drittes Tor beim 3:2-Sieg gegen Frankreich bei der WM 1982?"
     },
     "options": [
       {
@@ -1773,7 +1931,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Andrzej Szarmach",
           "tr": "Andrzej Szarmach",
           "ru": "Анджей Шармах",
-          "pt": "Andrzej Szarmach"
+          "pt": "Andrzej Szarmach",
+          "de": "Andrzej Szarmach"
         }
       },
       {
@@ -1784,7 +1943,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Zbigniew Boniek",
           "tr": "Zbigniew Boniek",
           "ru": "Збигнев Бонек",
-          "pt": "Zbigniew Boniek"
+          "pt": "Zbigniew Boniek",
+          "de": "Zbigniew Boniek"
         }
       },
       {
@@ -1795,7 +1955,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Janusz Kupcewicz",
           "tr": "Janusz Kupcewicz",
           "ru": "Януш Купцевич",
-          "pt": "Janusz Kupcewicz"
+          "pt": "Janusz Kupcewicz",
+          "de": "Janusz Kupcewicz"
         }
       },
       {
@@ -1806,7 +1967,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Stefan Majewski",
           "tr": "Stefan Majewski",
           "ru": "Стефан Маевский",
-          "pt": "Stefan Majewski"
+          "pt": "Stefan Majewski",
+          "de": "Stefan Majewski"
         }
       }
     ],
@@ -1821,7 +1983,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "España",
       "tr": "İspanya",
       "ru": "Испания",
-      "pt": "Espanha"
+      "pt": "Espanha",
+      "de": "Spanien"
     },
     "prompt": {
       "en": "Which host nation knocked Spain out of the 1934 World Cup quarter-finals?",
@@ -1829,7 +1992,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué país anfitrión eliminó a España en los cuartos de final del Mundial de 1934?",
       "tr": "1934 Dünya Kupası çeyrek finalinde İspanya'yı hangi ev sahibi ülke eledi?",
       "ru": "Какая страна-хозяйка выбила Испанию в четвертьфинале ЧМ-1934?",
-      "pt": "Qual país-sede eliminou a Espanha nas quartas de final da Copa do Mundo de 1934?"
+      "pt": "Qual país-sede eliminou a Espanha nas quartas de final da Copa do Mundo de 1934?",
+      "de": "Welches Gastgeberland warf Spanien im Viertelfinale der WM 1934 aus dem Turnier?"
     },
     "options": [
       {
@@ -1840,7 +2004,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Francia",
           "tr": "Fransa",
           "ru": "Франция",
-          "pt": "França"
+          "pt": "França",
+          "de": "Frankreich"
         }
       },
       {
@@ -1851,7 +2016,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Uruguay",
           "tr": "Uruguay",
           "ru": "Уругвай",
-          "pt": "Uruguai"
+          "pt": "Uruguai",
+          "de": "Uruguay"
         }
       },
       {
@@ -1862,7 +2028,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Brasil",
           "tr": "Brezilya",
           "ru": "Бразилия",
-          "pt": "Brasil"
+          "pt": "Brasil",
+          "de": "Brasilien"
         }
       },
       {
@@ -1873,7 +2040,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Italia",
           "tr": "İtalya",
           "ru": "Италия",
-          "pt": "Itália"
+          "pt": "Itália",
+          "de": "Italien"
         }
       }
     ],
@@ -1888,7 +2056,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Alemania 2006",
       "tr": "2006 Dünya Kupası Almanya",
       "ru": "ЧМ-2006 в Германии",
-      "pt": "Copa do Mundo: Alemanha 2006"
+      "pt": "Copa do Mundo: Alemanha 2006",
+      "de": "WM 2006 in Deutschland"
     },
     "prompt": {
       "en": "Who scored the first goal for Germany in their penalty shootout victory against Argentina at the World Cup 2006?",
@@ -1896,7 +2065,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el primer gol para Alemania en su victoria en la tanda de penaltis contra Argentina en el Mundial de 2006?",
       "tr": "2006 Dünya Kupası'nda Almanya'nın Arjantin'e karşı penaltı atışları zaferinde Almanya'nın ilk golünü kim attı?",
       "ru": "Кто забил первый гол Германии в серии пенальти против Аргентины на ЧМ-2006?",
-      "pt": "Quem marcou o primeiro gol da Alemanha na vitória sobre a Argentina nos pênaltis na Copa do Mundo de 2006?"
+      "pt": "Quem marcou o primeiro gol da Alemanha na vitória sobre a Argentina nos pênaltis na Copa do Mundo de 2006?",
+      "de": "Wer verwandelte Deutschlands ersten Elfmeter beim Sieg im Elfmeterschießen gegen Argentinien bei der WM 2006?"
     },
     "options": [
       {
@@ -1907,7 +2077,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Michael Ballack",
           "tr": "Michael Ballack",
           "ru": "Михаэль Баллак",
-          "pt": "Michael Ballack"
+          "pt": "Michael Ballack",
+          "de": "Michael Ballack"
         }
       },
       {
@@ -1918,7 +2089,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Oliver Neuville",
           "tr": "Oliver Neuville",
           "ru": "Оливер Нёвилль",
-          "pt": "Oliver Neuville"
+          "pt": "Oliver Neuville",
+          "de": "Oliver Neuville"
         }
       },
       {
@@ -1929,7 +2101,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Bastian Schweinsteiger",
           "tr": "Bastian Schweinsteiger",
           "ru": "Бастиан Швайнштайгер",
-          "pt": "Bastian Schweinsteiger"
+          "pt": "Bastian Schweinsteiger",
+          "de": "Bastian Schweinsteiger"
         }
       },
       {
@@ -1940,7 +2113,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Lukas Podolski",
           "tr": "Lukas Podolski",
           "ru": "Лукас Подольски",
-          "pt": "Lukas Podolski"
+          "pt": "Lukas Podolski",
+          "de": "Lukas Podolski"
         }
       }
     ],
@@ -1955,7 +2129,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Dinamo Tiflis",
       "tr": "Dinamo Tbilisi",
       "ru": "Динамо Тбилиси",
-      "pt": "Dinamo Tbilisi"
+      "pt": "Dinamo Tbilisi",
+      "de": "Dinamo Tiflis"
     },
     "prompt": {
       "en": "Dinamo Tbilisi won their first Soviet Cup in 1976, beating the defending holders 3-0 in the Moscow final. Who did they defeat?",
@@ -1963,7 +2138,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Dinamo de Tiflis ganó su primera Copa Soviética en 1976, venciendo a los vigentes campeones por 3-0 en la final de Moscú. ¿A quién derrotaron?",
       "tr": "1976'da Dinamo Tiflis, Moskova finalinde son şampiyonu 3-0 yenerek ilk Sovyet Kupası'nı kazandı. Kimi mağlup ettiler?",
       "ru": "Тбилисское «Динамо» выиграло свой первый Кубок СССР в 1976 году, победив действующих чемпионов 3:0 в московском финале. Кого они обыграли?",
-      "pt": "O Dinamo Tbilisi conquistou sua primeira Copa Soviética em 1976 ao vencer por 3 a 0, na final em Moscou, o então campeão. Qual time foi derrotado?"
+      "pt": "O Dinamo Tbilisi conquistou sua primeira Copa Soviética em 1976 ao vencer por 3 a 0, na final em Moscou, o então campeão. Qual time foi derrotado?",
+      "de": "Dinamo Tiflis gewann 1976 seinen ersten Sowjetpokal und besiegte den Titelverteidiger im Moskauer Finale mit 3:0. Gegen wen?"
     },
     "options": [
       {
@@ -1974,7 +2150,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ararat Ereván",
           "tr": "Ararat Yerevan",
           "ru": "«Арарат» Ереван",
-          "pt": "Ararat Yerevan"
+          "pt": "Ararat Yerevan",
+          "de": "Ararat Jerewan"
         }
       },
       {
@@ -1985,7 +2162,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Spartak de Moscú",
           "tr": "Spartak Moskova",
           "ru": "«Спартак» Москва",
-          "pt": "Spartak Moscow"
+          "pt": "Spartak Moscow",
+          "de": "Spartak Moskau"
         }
       },
       {
@@ -1996,7 +2174,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Dinamo de Kiev",
           "tr": "Dynamo Kyiv",
           "ru": "«Динамо» Киев",
-          "pt": "Dynamo Kyiv"
+          "pt": "Dynamo Kyiv",
+          "de": "Dynamo Kiew"
         }
       },
       {
@@ -2007,7 +2186,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Shakhtar Donetsk",
           "tr": "Shakhtar Donetsk",
           "ru": "«Шахтер» Донецк",
-          "pt": "Shakhtar Donetsk"
+          "pt": "Shakhtar Donetsk",
+          "de": "Schachtar Donezk"
         }
       }
     ],
@@ -2022,7 +2202,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Corea/Japón 2002",
       "tr": "2002 Dünya Kupası Kore/Japonya",
       "ru": "ЧМ-2002 в Южной Корее и Японии",
-      "pt": "Copa do Mundo: Coreia do Sul/Japão 2002"
+      "pt": "Copa do Mundo: Coreia do Sul/Japão 2002",
+      "de": "WM 2002 in Südkorea/Japan"
     },
     "prompt": {
       "en": "In Group G of World Cup 2002, Mexico finished first. Who finished second to qualify?",
@@ -2030,7 +2211,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En el Grupo G del Mundial 2002, México quedó primero. ¿Quién quedó segundo para clasificarse?",
       "tr": "2002 Dünya Kupası G Grubu'nda Meksika birinci oldu. Kim ikinci olarak tur atladı?",
       "ru": "В группе G на ЧМ-2002 Мексика заняла первое место. Кто стал вторым и вышел в плей-офф?",
-      "pt": "No Grupo G da Copa do Mundo de 2002, o México terminou em primeiro. Qual seleção ficou em segundo e se classificou?"
+      "pt": "No Grupo G da Copa do Mundo de 2002, o México terminou em primeiro. Qual seleção ficou em segundo e se classificou?",
+      "de": "Wer belegte in Gruppe G der WM 2002 hinter Mexiko den zweiten Platz und qualifizierte sich?"
     },
     "options": [
       {
@@ -2041,7 +2223,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Croacia",
           "tr": "Hırvatistan",
           "ru": "Хорватия",
-          "pt": "Croácia"
+          "pt": "Croácia",
+          "de": "Kroatien"
         }
       },
       {
@@ -2052,7 +2235,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ecuador",
           "tr": "Ekvador",
           "ru": "Эквадор",
-          "pt": "Equador"
+          "pt": "Equador",
+          "de": "Ecuador"
         }
       },
       {
@@ -2063,7 +2247,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Italia",
           "tr": "İtalya",
           "ru": "Италия",
-          "pt": "Itália"
+          "pt": "Itália",
+          "de": "Italien"
         }
       },
       {
@@ -2074,7 +2259,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ninguno de los anteriores",
           "tr": "Yukarıdakilerden hiçbiri",
           "ru": "Никто из вышеперечисленных",
-          "pt": "Nenhuma das alternativas"
+          "pt": "Nenhuma das alternativas",
+          "de": "Keine der genannten Antworten"
         }
       }
     ],
@@ -2089,7 +2275,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Brasil 2014",
       "tr": "Dünya Kupası Brezilya 2014",
       "ru": "ЧМ-2014 в Бразилии",
-      "pt": "Copa do Mundo: Brasil 2014"
+      "pt": "Copa do Mundo: Brasil 2014",
+      "de": "WM 2014 in Brasilien"
     },
     "prompt": {
       "en": "Which team did Colombia defeat 2-0 in the round of 16 at the World Cup 2014?",
@@ -2097,7 +2284,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿A qué equipo derrotó Colombia por 2-0 en los octavos de final del Mundial de 2014?",
       "tr": "2014 Dünya Kupası son 16 turunda Kolombiya, hangi takımı 2-0 mağlup etti?",
       "ru": "Какую команду Колумбия обыграла со счётом 2:0 в 1/8 финала чемпионата мира 2014 года?",
-      "pt": "Qual time a Colômbia venceu por 2 a 0 nas oitavas de final da Copa do Mundo de 2014?"
+      "pt": "Qual time a Colômbia venceu por 2 a 0 nas oitavas de final da Copa do Mundo de 2014?",
+      "de": "Welche Mannschaft besiegte Kolumbien im Achtelfinale der WM 2014 mit 2:0?"
     },
     "options": [
       {
@@ -2108,7 +2296,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Uruguay",
           "tr": "Uruguay",
           "ru": "Уругвай",
-          "pt": "Uruguai"
+          "pt": "Uruguai",
+          "de": "Uruguay"
         }
       },
       {
@@ -2119,7 +2308,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Chile",
           "tr": "Şili",
           "ru": "Чили",
-          "pt": "Chile"
+          "pt": "Chile",
+          "de": "Chile"
         }
       },
       {
@@ -2130,7 +2320,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Brasil",
           "tr": "Brezilya",
           "ru": "Бразилия",
-          "pt": "Brasil"
+          "pt": "Brasil",
+          "de": "Brasilien"
         }
       },
       {
@@ -2141,7 +2332,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Grecia",
           "tr": "Yunanistan",
           "ru": "Греция",
-          "pt": "Grécia"
+          "pt": "Grécia",
+          "de": "Griechenland"
         }
       }
     ],
@@ -2156,7 +2348,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Portugal",
       "tr": "Portekiz",
       "ru": "Португалия",
-      "pt": "Portugal"
+      "pt": "Portugal",
+      "de": "Portugal"
     },
     "prompt": {
       "en": "Which Portuguese player scored four goals in a single match against Andorra in 2016?",
@@ -2164,7 +2357,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué jugador portugués marcó cuatro goles en un solo partido contra Andorra en 2016?",
       "tr": "2016'da Andorra'ya karşı tek maçta dört gol atan Portekizli oyuncu kimdi?",
       "ru": "Какой португальский футболист забил четыре гола в одном матче против Андорры в 2016 году?",
-      "pt": "Qual jogador português marcou quatro gols em uma partida contra Andorra em 2016?"
+      "pt": "Qual jogador português marcou quatro gols em uma partida contra Andorra em 2016?",
+      "de": "Welcher portugiesische Spieler erzielte 2016 in einem Spiel gegen Andorra vier Tore?"
     },
     "options": [
       {
@@ -2175,7 +2369,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "André Silva",
           "tr": "André Silva",
           "ru": "Андре Силва",
-          "pt": "André Silva"
+          "pt": "André Silva",
+          "de": "André Silva"
         }
       },
       {
@@ -2186,7 +2381,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Cristiano Ronaldo",
           "tr": "Cristiano Ronaldo",
           "ru": "Криштиану Роналду",
-          "pt": "Cristiano Ronaldo"
+          "pt": "Cristiano Ronaldo",
+          "de": "Cristiano Ronaldo"
         }
       },
       {
@@ -2197,7 +2393,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Nani",
           "tr": "Nani",
           "ru": "Нани",
-          "pt": "Nani"
+          "pt": "Nani",
+          "de": "Nani"
         }
       },
       {
@@ -2208,7 +2405,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ricardo Quaresma",
           "tr": "Ricardo Quaresma",
           "ru": "Рикарду Куарежма",
-          "pt": "Ricardo Quaresma"
+          "pt": "Ricardo Quaresma",
+          "de": "Ricardo Quaresma"
         }
       }
     ],
@@ -2223,7 +2421,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La Dinastía de Brasil en la Copa Mundial",
       "tr": "Brezilya'nın Dünya Kupası Hanedanlığı",
       "ru": "Бразильская династия на чемпионатах мира",
-      "pt": "A dinastia do Brasil na Copa do Mundo"
+      "pt": "A dinastia do Brasil na Copa do Mundo",
+      "de": "Brasiliens WM-Dynastie"
     },
     "prompt": {
       "en": "At the 1958 World Cup final in Sweden, Brazil crushed the hosts 5–2 — their first ever title. Who scored Brazil's first two goals of that final?",
@@ -2231,7 +2430,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En la final de la Copa Mundial de 1958 en Suecia, Brasil aplastó a los anfitriones 5-2, su primer título. ¿Quién fue el máximo goleador de esa final, anotando dos veces?",
       "tr": "1958 İsveç'teki Dünya Kupası finalinde Brezilya ev sahibi ülkeyi 5-2 yenerek ilk şampiyonluğunu kazandı. O finalde iki gol atan oyunculardan biri kimdi?",
       "ru": "Кто оформил дубль за сборную Бразилии в финале чемпионата мира 1958 года против Швеции (5:2)?",
-      "pt": "Na final da Copa do Mundo de 1958, na Suécia, o Brasil venceu os anfitriões por 5–2 e conquistou seu primeiro título. Quem marcou os dois primeiros gols do Brasil nessa final?"
+      "pt": "Na final da Copa do Mundo de 1958, na Suécia, o Brasil venceu os anfitriões por 5–2 e conquistou seu primeiro título. Quem marcou os dois primeiros gols do Brasil nessa final?",
+      "de": "Brasilien besiegte Schweden im Finale der WM 1958 mit 5:2 und holte seinen ersten Titel. Wer erzielte die ersten beiden brasilianischen Tore?"
     },
     "options": [
       {
@@ -2242,7 +2442,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Pelé",
           "tr": "Pelé",
           "ru": "Пеле",
-          "pt": "Pelé"
+          "pt": "Pelé",
+          "de": "Pelé"
         }
       },
       {
@@ -2253,7 +2454,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Garrincha",
           "tr": "Garrincha",
           "ru": "Гарринча",
-          "pt": "Garrincha"
+          "pt": "Garrincha",
+          "de": "Garrincha"
         }
       },
       {
@@ -2264,7 +2466,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Vavá",
           "tr": "Vavá",
           "ru": "Вава",
-          "pt": "Vavá"
+          "pt": "Vavá",
+          "de": "Vavá"
         }
       },
       {
@@ -2275,7 +2478,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Didi",
           "tr": "Didi",
           "ru": "Диди",
-          "pt": "Didi"
+          "pt": "Didi",
+          "de": "Didi"
         }
       }
     ],
@@ -2290,7 +2494,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Georgianos en la Copa Mundial",
       "tr": "Georgians at the World Cup",
       "ru": "Грузины на чемпионатах мира",
-      "pt": "Georgianos na Copa do Mundo"
+      "pt": "Georgianos na Copa do Mundo",
+      "de": "Georgier bei der WM"
     },
     "prompt": {
       "en": "Dinamo Tbilisi's triumph in the 1981 UEFA Cup Winners' Cup — beating Carl Zeiss Jena in the final — is the greatest club achievement in Georgian football history. This golden generation of players formed the backbone of the Soviet World Cup squad the following year in Spain. Who was the coach who led Dinamo Tbilisi to that European glory?",
@@ -2298,7 +2503,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El triunfo del Dinamo de Tiflis en la Recopa de Europa de 1981 —venciendo al Carl Zeiss Jena en la final— es el mayor logro de club en la historia del fútbol georgiano. Esta generación dorada de jugadores formó la columna vertebral de la selección soviética para la Copa Mundial del año siguiente en España. ¿Quién fue el entrenador que llevó al Dinamo de Tiflis a esa gloria europea?",
       "tr": "Dinamo Tiflis'in 1981 UEFA Kupa Galipleri Kupası'nda Carl Zeiss Jena'yı finalde yenerek kazandığı zafer, Gürcistan futbol tarihinin en büyük kulüp başarısıdır. Bu altın nesil oyuncular, ertesi yıl İspanya'daki Dünya Kupası kadrosunun bel kemiğini oluşturdu. Dinamo Tiflis'i o Avrupa zaferine taşıyan teknik direktör kimdi?",
       "ru": "Кто тренировал тбилисское «Динамо» в победном финале Кубка обладателей кубков UEFA 1981 года?",
-      "pt": "A conquista da Recopa Europeia de 1981 pelo Dinamo Tbilisi, com vitória sobre o Carl Zeiss Jena na final, é o maior feito de um clube na história do futebol georgiano. Essa geração de ouro formou a base da seleção soviética na Copa do Mundo do ano seguinte, na Espanha. Quem era o técnico que levou o Dinamo Tbilisi a essa conquista europeia?"
+      "pt": "A conquista da Recopa Europeia de 1981 pelo Dinamo Tbilisi, com vitória sobre o Carl Zeiss Jena na final, é o maior feito de um clube na história do futebol georgiano. Essa geração de ouro formou a base da seleção soviética na Copa do Mundo do ano seguinte, na Espanha. Quem era o técnico que levou o Dinamo Tbilisi a essa conquista europeia?",
+      "de": "Dinamo Tiflis’ Triumph im Europapokal der Pokalsieger 1981 mit dem Finalsieg gegen Carl Zeiss Jena gilt als größter Vereinserfolg im georgischen Fußball. Diese goldene Spielergeneration bildete im folgenden Jahr in Spanien das Rückgrat der sowjetischen WM-Mannschaft. Wer führte Dinamo Tiflis als Trainer zu diesem europäischen Triumph?"
     },
     "options": [
       {
@@ -2309,7 +2515,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Nodar Akhalkatsi",
           "tr": "Nodar Akhalkatsi",
           "ru": "Нодар Ахалкаци",
-          "pt": "Nodar Akhalkatsi"
+          "pt": "Nodar Akhalkatsi",
+          "de": "Nodar Akhalkatsi"
         }
       },
       {
@@ -2320,7 +2527,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Gavril Kachalin",
           "tr": "Gavril Kachalin",
           "ru": "Гавриил Качалин",
-          "pt": "Gavril Kachalin"
+          "pt": "Gavril Kachalin",
+          "de": "Gavril Kachalin"
         }
       },
       {
@@ -2331,7 +2539,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Konstantin Beskov",
           "tr": "Konstantin Beskov",
           "ru": "Константин Бесков",
-          "pt": "Konstantin Beskov"
+          "pt": "Konstantin Beskov",
+          "de": "Konstantin Beskov"
         }
       },
       {
@@ -2342,7 +2551,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Aleksandr Sevidov",
           "tr": "Aleksandr Sevidov",
           "ru": "Александр Севидов",
-          "pt": "Aleksandr Sevidov"
+          "pt": "Aleksandr Sevidov",
+          "de": "Aleksandr Sevidov"
         }
       }
     ],
@@ -2357,7 +2567,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Who was the manager of the French team during the 2018 FIFA World Cup?",
@@ -2365,7 +2576,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién fue el entrenador de la selección francesa durante la Copa Mundial de la FIFA 2018?",
       "tr": "2018 FIFA Dünya Kupası'nda Fransa takımının teknik direktörü kimdi?",
       "ru": "Кто был тренером сборной Франции на чемпионате мира ФИФА 2018 года?",
-      "pt": "Quem era o técnico da seleção francesa durante a Copa do Mundo FIFA de 2018?"
+      "pt": "Quem era o técnico da seleção francesa durante a Copa do Mundo FIFA de 2018?",
+      "de": "Wer trainierte die französische Mannschaft bei der FIFA-Weltmeisterschaft 2018?"
     },
     "options": [
       {
@@ -2376,7 +2588,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Zinedine Zidane",
           "tr": "Zinedine Zidane",
           "ru": "Зинедин Зидан",
-          "pt": "Zinedine Zidane"
+          "pt": "Zinedine Zidane",
+          "de": "Zinedine Zidane"
         }
       },
       {
@@ -2387,7 +2600,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Didier Deschamps",
           "tr": "Didier Deschamps",
           "ru": "Дидье Дешам",
-          "pt": "Didier Deschamps"
+          "pt": "Didier Deschamps",
+          "de": "Didier Deschamps"
         }
       },
       {
@@ -2398,7 +2612,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Laurent Blanc",
           "tr": "Laurent Blanc",
           "ru": "Лоран Блан",
-          "pt": "Laurent Blanc"
+          "pt": "Laurent Blanc",
+          "de": "Laurent Blanc"
         }
       },
       {
@@ -2409,7 +2624,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Thierry Henry",
           "tr": "Thierry Henry",
           "ru": "Тьерри Анри",
-          "pt": "Thierry Henry"
+          "pt": "Thierry Henry",
+          "de": "Thierry Henry"
         }
       }
     ],
@@ -2424,7 +2640,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Which team finished in third place in the 1982 World Cup?",
@@ -2432,7 +2649,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué equipo terminó en tercer lugar en el Mundial de 1982?",
       "tr": "1982 Dünya Kupası'nda üçüncülük elde eden takım hangisiydi?",
       "ru": "Какая команда заняла третье место на ЧМ-1982?",
-      "pt": "Qual seleção terminou em terceiro lugar na Copa do Mundo de 1982?"
+      "pt": "Qual seleção terminou em terceiro lugar na Copa do Mundo de 1982?",
+      "de": "Welche Mannschaft belegte bei der WM 1982 den dritten Platz?"
     },
     "options": [
       {
@@ -2443,7 +2661,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Francia",
           "tr": "Fransa",
           "ru": "Франция",
-          "pt": "França"
+          "pt": "França",
+          "de": "Frankreich"
         }
       },
       {
@@ -2454,7 +2673,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Polonia",
           "tr": "Polonya",
           "ru": "Польша",
-          "pt": "Polônia"
+          "pt": "Polônia",
+          "de": "Polen"
         }
       },
       {
@@ -2465,7 +2685,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Brasil",
           "tr": "Brezilya",
           "ru": "Бразилия",
-          "pt": "Brasil"
+          "pt": "Brasil",
+          "de": "Brasilien"
         }
       },
       {
@@ -2476,7 +2697,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Bélgica",
           "tr": "Belçika",
           "ru": "Бельгия",
-          "pt": "Bélgica"
+          "pt": "Bélgica",
+          "de": "Belgien"
         }
       }
     ],
@@ -2491,7 +2713,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Who scored Argentina's late winning goal in the 1986 World Cup Final?",
@@ -2499,7 +2722,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el gol de la victoria de Argentina en los minutos finales de la Final de la Copa Mundial de 1986?",
       "tr": "1986 Dünya Kupası Finali'nde Arjantin'in galibiyeti getiren son golünü kim attı?",
       "ru": "Кто забил поздний победный гол Аргентины в финале ЧМ-1986?",
-      "pt": "Quem marcou o gol da vitória da Argentina no fim da final da Copa do Mundo de 1986?"
+      "pt": "Quem marcou o gol da vitória da Argentina no fim da final da Copa do Mundo de 1986?",
+      "de": "Wer erzielte Argentiniens spätes Siegtor im Finale der WM 1986?"
     },
     "options": [
       {
@@ -2510,7 +2734,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Diego Maradona",
           "tr": "Diego Maradona",
           "ru": "Диего Марадона",
-          "pt": "Diego Maradona"
+          "pt": "Diego Maradona",
+          "de": "Diego Maradona"
         }
       },
       {
@@ -2521,7 +2746,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Jorge Valdano",
           "tr": "Jorge Valdano",
           "ru": "Хорхе Вальдано",
-          "pt": "Jorge Valdano"
+          "pt": "Jorge Valdano",
+          "de": "Jorge Valdano"
         }
       },
       {
@@ -2532,7 +2758,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Jorge Burruchaga",
           "tr": "Jorge Burruchaga",
           "ru": "Хорхе Бурручага",
-          "pt": "Jorge Burruchaga"
+          "pt": "Jorge Burruchaga",
+          "de": "Jorge Burruchaga"
         }
       },
       {
@@ -2543,7 +2770,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "José Luis Brown",
           "tr": "José Luis Brown",
           "ru": "Хосе Луис Браун",
-          "pt": "José Luis Brown"
+          "pt": "José Luis Brown",
+          "de": "José Luis Brown"
         }
       }
     ],
@@ -2558,7 +2786,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Who scored Croatia's first goal in the 2018 FIFA World Cup final?",
@@ -2566,7 +2795,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el primer gol de Croacia en la final de la Copa Mundial de la FIFA 2018?",
       "tr": "2018 FIFA Dünya Kupası finalinde Hırvatistan'ın ilk golünü kim attı?",
       "ru": "Кто забил первый гол сборной Хорватии в финале ЧМ-2018?",
-      "pt": "Quem marcou o primeiro gol da Croácia na final da Copa do Mundo FIFA de 2018?"
+      "pt": "Quem marcou o primeiro gol da Croácia na final da Copa do Mundo FIFA de 2018?",
+      "de": "Wer erzielte Kroatiens erstes Tor im Finale der FIFA-Weltmeisterschaft 2018?"
     },
     "options": [
       {
@@ -2577,7 +2807,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Luka Modrić",
           "tr": "Luka Modrić",
           "ru": "Лука Модрич",
-          "pt": "Luka Modrić"
+          "pt": "Luka Modrić",
+          "de": "Luka Modrić"
         }
       },
       {
@@ -2588,7 +2819,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ivan Rakitić",
           "tr": "Ivan Rakitić",
           "ru": "Иван Ракитич",
-          "pt": "Ivan Rakitić"
+          "pt": "Ivan Rakitić",
+          "de": "Ivan Rakitić"
         }
       },
       {
@@ -2599,7 +2831,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ivan Perišić",
           "tr": "Ivan Perišić",
           "ru": "Иван Перишич",
-          "pt": "Ivan Perišić"
+          "pt": "Ivan Perišić",
+          "de": "Ivan Perišić"
         }
       },
       {
@@ -2610,7 +2843,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ante Rebić",
           "tr": "Ante Rebić",
           "ru": "Анте Ребич",
-          "pt": "Ante Rebić"
+          "pt": "Ante Rebić",
+          "de": "Ante Rebić"
         }
       }
     ],
@@ -2625,7 +2859,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Alemania",
       "tr": "Almanya",
       "ru": "Германия",
-      "pt": "Alemanha"
+      "pt": "Alemanha",
+      "de": "Deutschland"
     },
     "prompt": {
       "en": "In Euro 1996, Germany defeated which team in the final to become champions?",
@@ -2633,7 +2868,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En la Eurocopa de 1996, ¿a qué equipo derrotó Alemania en la final para convertirse en campeón?",
       "tr": "1996 Avrupa Şampiyonası finalinde Almanya hangi takımı yenerek şampiyon oldu?",
       "ru": "Какую команду Германия победила в финале Евро-1996, став чемпионом?",
-      "pt": "Na Euro de 1996, qual seleção a Alemanha venceu na final para conquistar o título?"
+      "pt": "Na Euro de 1996, qual seleção a Alemanha venceu na final para conquistar o título?",
+      "de": "Gegen welche Mannschaft gewann Deutschland das Finale der EURO 1996 und wurde damit Europameister?"
     },
     "options": [
       {
@@ -2644,7 +2880,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Inglaterra",
           "tr": "İngiltere",
           "ru": "Англия",
-          "pt": "Inglaterra"
+          "pt": "Inglaterra",
+          "de": "England"
         }
       },
       {
@@ -2655,7 +2892,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "República Checa",
           "tr": "Çek Cumhuriyeti",
           "ru": "Чехия",
-          "pt": "República Tcheca"
+          "pt": "República Tcheca",
+          "de": "Tschechien"
         }
       },
       {
@@ -2666,7 +2904,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Italia",
           "tr": "İtalya",
           "ru": "Италия",
-          "pt": "Itália"
+          "pt": "Itália",
+          "de": "Italien"
         }
       },
       {
@@ -2677,7 +2916,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Francia",
           "tr": "Fransa",
           "ru": "Франция",
-          "pt": "França"
+          "pt": "França",
+          "de": "Frankreich"
         }
       }
     ],
@@ -2692,7 +2932,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Países Bajos",
       "tr": "Hollanda",
       "ru": "Нидерланды",
-      "pt": "Países Baixos"
+      "pt": "Países Baixos",
+      "de": "Niederlande"
     },
     "prompt": {
       "en": "Which player is the second all-time top scorer for the Netherlands behind Van Persie?",
@@ -2700,7 +2941,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué jugador es el segundo máximo goleador de todos los tiempos de los Países Bajos, por detrás de Van Persie?",
       "tr": "Van Persie'nin ardından Hollanda'nın en golcü ikinci oyuncusu kimdir?",
       "ru": "Кто занимает второе место в списке лучших бомбардиров сборной Нидерландов после ван Перси?",
-      "pt": "Qual jogador é o segundo maior artilheiro da história dos Países Baixos, atrás de Van Persie?"
+      "pt": "Qual jogador é o segundo maior artilheiro da história dos Países Baixos, atrás de Van Persie?",
+      "de": "Welcher Spieler liegt in der ewigen Torschützenliste der Niederlande hinter Van Persie auf Platz zwei?"
     },
     "options": [
       {
@@ -2711,7 +2953,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Dennis Bergkamp",
           "tr": "Dennis Bergkamp",
           "ru": "Деннис Бергкамп",
-          "pt": "Dennis Bergkamp"
+          "pt": "Dennis Bergkamp",
+          "de": "Dennis Bergkamp"
         }
       },
       {
@@ -2722,7 +2965,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Klaas-Jan Huntelaar",
           "tr": "Klaas-Jan Huntelaar",
           "ru": "Клас-Ян Хунтелар",
-          "pt": "Klaas-Jan Huntelaar"
+          "pt": "Klaas-Jan Huntelaar",
+          "de": "Klaas-Jan Huntelaar"
         }
       },
       {
@@ -2733,7 +2977,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Patrick Kluivert",
           "tr": "Patrick Kluivert",
           "ru": "Патрик Клюйверт",
-          "pt": "Patrick Kluivert"
+          "pt": "Patrick Kluivert",
+          "de": "Patrick Kluivert"
         }
       },
       {
@@ -2744,7 +2989,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Memphis Depay",
           "tr": "Memphis Depay",
           "ru": "Мемфис Депай",
-          "pt": "Memphis Depay"
+          "pt": "Memphis Depay",
+          "de": "Memphis Depay"
         }
       }
     ],
@@ -2759,7 +3005,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La Historia de Argentina en la Copa del Mundo",
       "tr": "Arjantin'in Dünya Kupası Hikayesi",
       "ru": "Аргентина на чемпионатах мира",
-      "pt": "A história da Argentina na Copa do Mundo"
+      "pt": "A história da Argentina na Copa do Mundo",
+      "de": "Argentiniens WM-Geschichte"
     },
     "prompt": {
       "en": "Who scored Argentina's only goal in their 1-1 draw against Iceland in 2018?",
@@ -2767,7 +3014,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el único gol de Argentina en su empate 1-1 contra Islandia en 2018?",
       "tr": "2018'de Arjantin'in İzlanda ile 1-1 berabere kaldığı maçta Arjantin'in tek golünü kim attı?",
       "ru": "Кто забил единственный гол Аргентины в ничейном матче с Исландией (1:1) в 2018 году?",
-      "pt": "Quem marcou o único gol da Argentina no empate por 1 a 1 contra a Islândia em 2018?"
+      "pt": "Quem marcou o único gol da Argentina no empate por 1 a 1 contra a Islândia em 2018?",
+      "de": "Wer erzielte 2018 Argentiniens einziges Tor beim 1:1 gegen Island?"
     },
     "options": [
       {
@@ -2778,7 +3026,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Lionel Messi",
           "tr": "Lionel Messi",
           "ru": "Лионель Месси",
-          "pt": "Lionel Messi"
+          "pt": "Lionel Messi",
+          "de": "Lionel Messi"
         }
       },
       {
@@ -2789,7 +3038,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Sergio Agüero",
           "tr": "Sergio Agüero",
           "ru": "Серхио Агуэро",
-          "pt": "Sergio Agüero"
+          "pt": "Sergio Agüero",
+          "de": "Sergio Agüero"
         }
       },
       {
@@ -2800,7 +3050,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Marcos Rojo",
           "tr": "Marcos Rojo",
           "ru": "Маркос Рохо",
-          "pt": "Marcos Rojo"
+          "pt": "Marcos Rojo",
+          "de": "Marcos Rojo"
         }
       },
       {
@@ -2811,7 +3062,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ángel Di María",
           "tr": "Ángel Di María",
           "ru": "Анхель Ди Мария",
-          "pt": "Ángel Di María"
+          "pt": "Ángel Di María",
+          "de": "Ángel Di María"
         }
       }
     ],
@@ -2826,7 +3078,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Viaje de Messi por el Mundial",
       "tr": "Messi'nin Dünya Kupası Yolculuğu",
       "ru": "Путь Месси на чемпионатах мира",
-      "pt": "A trajetória de Messi na Copa do Mundo"
+      "pt": "A trajetória de Messi na Copa do Mundo",
+      "de": "Messis WM-Reise"
     },
     "prompt": {
       "en": "What was the final score of Messi's FIFA World Cup debut match against Serbia and Montenegro in 2006?",
@@ -2834,7 +3087,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuál fue el resultado final del partido debut de Messi en la Copa del Mundo contra Serbia y Montenegro en 2006?",
       "tr": "Messi'nin 2006'da Sırbistan-Karadağ'a karşı oynadığı FIFA Dünya Kupası ilk maçının skoru neydi?",
       "ru": "С каким счетом закончился дебютный матч Месси на ЧМ против Сербии и Черногории в 2006 году?",
-      "pt": "Qual foi o placar da estreia de Messi em Copas do Mundo, contra Sérvia e Montenegro, em 2006?"
+      "pt": "Qual foi o placar da estreia de Messi em Copas do Mundo, contra Sérvia e Montenegro, em 2006?",
+      "de": "Wie endete Messis erstes Spiel bei einer FIFA-Weltmeisterschaft 2006 gegen Serbien und Montenegro?"
     },
     "options": [
       {
@@ -2845,7 +3099,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2-0",
           "tr": "2-0",
           "ru": "2:0",
-          "pt": "2-0"
+          "pt": "2-0",
+          "de": "2:0"
         }
       },
       {
@@ -2856,7 +3111,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "3-1",
           "tr": "3-1",
           "ru": "3:1",
-          "pt": "3-1"
+          "pt": "3-1",
+          "de": "3:1"
         }
       },
       {
@@ -2867,7 +3123,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "6-0",
           "tr": "6-0",
           "ru": "6:0",
-          "pt": "6-0"
+          "pt": "6-0",
+          "de": "6:0"
         }
       },
       {
@@ -2878,7 +3135,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "4-0",
           "tr": "4-0",
           "ru": "4:0",
-          "pt": "4-0"
+          "pt": "4-0",
+          "de": "4:0"
         }
       }
     ],
@@ -2893,7 +3151,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Legado de Italia en la Copa Mundial",
       "tr": "İtalya'nın Dünya Kupası Mirası",
       "ru": "Наследие Италии на чемпионатах мира",
-      "pt": "O legado da Itália na Copa do Mundo"
+      "pt": "O legado da Itália na Copa do Mundo",
+      "de": "Italiens WM-Vermächtnis"
     },
     "prompt": {
       "en": "What was the final score of the \"Game of the Century\" between Italy and West Germany in the 1970 FIFA World Cup?",
@@ -2901,7 +3160,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuál fue el resultado final del \"Partido del Siglo\" entre Italia y Alemania Occidental en la Copa Mundial de la FIFA de 1970?",
       "tr": "1970 FIFA Dünya Kupası'ndaki \"Yüzyılın Maçı\" İtalya ile Batı Almanya arasında kaç kaç bitti?",
       "ru": "Каков был итоговый счет «Матча века» между Италией и ФРГ на чемпионате мира ФИФА 1970 года?",
-      "pt": "Qual foi o placar do \"Jogo do Século\" entre Itália e Alemanha Ocidental na Copa do Mundo FIFA de 1970?"
+      "pt": "Qual foi o placar do \"Jogo do Século\" entre Itália e Alemanha Ocidental na Copa do Mundo FIFA de 1970?",
+      "de": "Wie endete das „Spiel des Jahrhunderts“ zwischen Italien und Westdeutschland bei der FIFA-Weltmeisterschaft 1970?"
     },
     "options": [
       {
@@ -2912,7 +3172,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "3-2 para Italia",
           "tr": "İtalya 3-2",
           "ru": "3:2 в пользу Италии",
-          "pt": "3 a 2 para a Itália"
+          "pt": "3 a 2 para a Itália",
+          "de": "3:2 für Italien"
         }
       },
       {
@@ -2923,7 +3184,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "4-3 para Italia",
           "tr": "4-3 İtalya lehine",
           "ru": "4:3 в пользу Италии",
-          "pt": "4 a 3 para a Itália"
+          "pt": "4 a 3 para a Itália",
+          "de": "4:3 für Italien"
         }
       },
       {
@@ -2934,7 +3196,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2-1 para Italia",
           "tr": "İtalya 2-1",
           "ru": "2:1 в пользу Италии",
-          "pt": "2 a 1 para a Itália"
+          "pt": "2 a 1 para a Itália",
+          "de": "2:1 für Italien"
         }
       },
       {
@@ -2945,7 +3208,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "5-4 para Italia",
           "tr": "İtalya 5-4",
           "ru": "5:4 в пользу Италии",
-          "pt": "5 a 4 para a Itália"
+          "pt": "5 a 4 para a Itália",
+          "de": "5:4 für Italien"
         }
       }
     ],
@@ -2960,7 +3224,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Real Madrid",
       "tr": "Real Madrid",
       "ru": "Реал Мадрид",
-      "pt": "Real Madrid"
+      "pt": "Real Madrid",
+      "de": "Real Madrid"
     },
     "prompt": {
       "en": "What nickname was given to Real Madrid's all-Spanish side that won the 1966 European Cup?",
@@ -2968,7 +3233,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué apodo recibió el equipo del Real Madrid, compuesto íntegramente por españoles, que ganó la Copa de Europa de 1966?",
       "tr": "1966 Avrupa Kupası'nı kazanan Real Madrid'in tamamen İspanyol oyuncularından oluşan takımına ne lakap takılmıştı?",
       "ru": "Какое прозвище получил чисто испанский состав «Реал Мадрид», выигравший Кубок чемпионов 1966 года?",
-      "pt": "Qual apelido recebeu o elenco totalmente espanhol do Real Madrid que venceu a Copa dos Campeões da Europa de 1966?"
+      "pt": "Qual apelido recebeu o elenco totalmente espanhol do Real Madrid que venceu a Copa dos Campeões da Europa de 1966?",
+      "de": "Welchen Spitznamen erhielt Real Madrids rein spanische Mannschaft, die 1966 den Europapokal gewann?"
     },
     "options": [
       {
@@ -2979,7 +3245,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Los Yé-yés",
           "tr": "Los Yé-yés",
           "ru": "Los Yé-yés",
-          "pt": "Los Yé-yés"
+          "pt": "Los Yé-yés",
+          "de": "Los Yé-yés"
         }
       },
       {
@@ -2990,7 +3257,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "La Quinta del Buitre",
           "tr": "La Quinta del Buitre",
           "ru": "La Quinta del Buitre",
-          "pt": "La Quinta del Buitre"
+          "pt": "La Quinta del Buitre",
+          "de": "La Quinta del Buitre"
         }
       },
       {
@@ -3001,7 +3269,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Los Galácticos",
           "tr": "Los Galácticos",
           "ru": "Los Galácticos",
-          "pt": "Los Galácticos"
+          "pt": "Los Galácticos",
+          "de": "Los Galácticos"
         }
       },
       {
@@ -3012,7 +3281,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "La Furia Blanca",
           "tr": "La Furia Blanca",
           "ru": "La Furia Blanca",
-          "pt": "La Furia Blanca"
+          "pt": "La Furia Blanca",
+          "de": "La Furia Blanca"
         }
       }
     ],
@@ -3027,7 +3297,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Legado de Italia en la Copa Mundial",
       "tr": "İtalya'nın Dünya Kupası Mirası",
       "ru": "Наследие Италии на чемпионатах мира",
-      "pt": "O legado da Itália na Copa do Mundo"
+      "pt": "O legado da Itália na Copa do Mundo",
+      "de": "Italiens WM-Vermächtnis"
     },
     "prompt": {
       "en": "When Italy won the tournament in 1982, what unique statistical anomaly occurred during their first-round group stage progression?",
@@ -3035,7 +3306,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Cuando Italia ganó el torneo en 1982, ¿qué anomalía estadística única ocurrió durante su progresión en la fase de grupos de la primera ronda?",
       "tr": "İtalya 1982'de turnuvayı kazandığında, ilk tur grup aşamasında ilerlerken istatistiksel olarak hangi eşsiz anomali meydana geldi?",
       "ru": "Когда Италия выиграла турнир в 1982 году, какая необычная статистическая особенность отличала её выход из группы первого раунда?",
-      "pt": "Quando a Itália venceu o torneio em 1982, que fato estatístico incomum marcou sua classificação na fase de grupos da primeira rodada?"
+      "pt": "Quando a Itália venceu o torneio em 1982, que fato estatístico incomum marcou sua classificação na fase de grupos da primeira rodada?",
+      "de": "Welche ungewöhnliche statistische Besonderheit gab es, als Italien 1982 die erste Gruppenphase des Turniers überstand?"
     },
     "options": [
       {
@@ -3046,7 +3318,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Avanzaron sin marcar un solo gol",
           "tr": "Tek bir gol atmadan ilerlediler",
           "ru": "Они вышли из группы, не забив ни одного гола",
-          "pt": "A seleção avançou sem marcar nenhum gol"
+          "pt": "A seleção avançou sem marcar nenhum gol",
+          "de": "Sie kamen weiter, ohne ein einziges Tor zu erzielen"
         }
       },
       {
@@ -3057,7 +3330,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Avanzaron sin ganar un solo partido",
           "tr": "Hiç maç kazanmadan tur atladılar",
           "ru": "Они вышли из группы, не одержав ни одной победы",
-          "pt": "A seleção avançou sem vencer nenhuma partida"
+          "pt": "A seleção avançou sem vencer nenhuma partida",
+          "de": "Sie kamen weiter, ohne ein einziges Spiel zu gewinnen"
         }
       },
       {
@@ -3068,7 +3342,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Se clasificaron mediante un sorteo aleatorio",
           "tr": "Kura çekimiyle tur atladılar",
           "ru": "Они прошли дальше после жеребьёвки",
-          "pt": "A seleção se classificou após um sorteio"
+          "pt": "A seleção se classificou após um sorteio",
+          "de": "Sie qualifizierten sich durch Losentscheid"
         }
       },
       {
@@ -3079,7 +3354,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Se clasificaron a pesar de perder dos partidos",
           "tr": "İki maç kaybetmelerine rağmen tur atladılar",
           "ru": "Они прошли дальше, несмотря на два поражения",
-          "pt": "A seleção se classificou mesmo após perder duas partidas"
+          "pt": "A seleção se classificou mesmo após perder duas partidas",
+          "de": "Sie qualifizierten sich trotz zweier Niederlagen"
         }
       }
     ],
@@ -3094,7 +3370,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La Era de los 1990",
       "tr": "1990'lar Dönemi",
       "ru": "Эпоха 1990-х",
-      "pt": "A década de 1990"
+      "pt": "A década de 1990",
+      "de": "Die 1990er-Jahre"
     },
     "prompt": {
       "en": "Who was the top scorer in Ligue 1 for five consecutive seasons (1988–1992)?",
@@ -3102,7 +3379,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién fue el máximo goleador de la Ligue 1 durante cinco temporadas consecutivas (1988-1992)?",
       "tr": "Beş sezon üst üste (1988-1992) Ligue 1'in gol kralı kimdi?",
       "ru": "Кто становился лучшим бомбардиром Лиги 1 пять сезонов подряд (1988–1992)?",
-      "pt": "Quem foi o artilheiro da Ligue 1 por cinco temporadas consecutivas (1988–1992)?"
+      "pt": "Quem foi o artilheiro da Ligue 1 por cinco temporadas consecutivas (1988–1992)?",
+      "de": "Wer war fünf Saisons in Folge (1988–1992) Torschützenkönig der Ligue 1?"
     },
     "options": [
       {
@@ -3113,7 +3391,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Jean-Pierre Papin",
           "tr": "Jean-Pierre Papin",
           "ru": "Жан-Пьер Папен",
-          "pt": "Jean-Pierre Papin"
+          "pt": "Jean-Pierre Papin",
+          "de": "Jean-Pierre Papin"
         }
       },
       {
@@ -3124,7 +3403,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Eric Cantona",
           "tr": "Eric Cantona",
           "ru": "Эрик Кантона",
-          "pt": "Eric Cantona"
+          "pt": "Eric Cantona",
+          "de": "Eric Cantona"
         }
       },
       {
@@ -3135,7 +3415,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "George Weah",
           "tr": "George Weah",
           "ru": "Джордж Веа",
-          "pt": "George Weah"
+          "pt": "George Weah",
+          "de": "George Weah"
         }
       },
       {
@@ -3146,7 +3427,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Franck Sauzée",
           "tr": "Franck Sauzée",
           "ru": "Фрэнк Созе",
-          "pt": "Franck Sauzée"
+          "pt": "Franck Sauzée",
+          "de": "Franck Sauzée"
         }
       }
     ],
@@ -3161,13 +3443,15 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Leyendas de la Bota de Oro",
       "tr": "Golden Boot Legends",
       "ru": "Легенды «Золотой бутсы»",
-      "pt": "Lendas da Chuteira de Ouro"
+      "pt": "Lendas da Chuteira de Ouro",
+      "de": "Legenden des Goldenen Schuhs"
     },
     "prompt": {
       "en": "Mario Kempes won the 1978 World Cup Golden Boot with 6 goals — all scored in the knockout rounds. He was the only player in Argentina's squad who played his club football outside the country at the time. Which European club did he represent?",
       "ka": "მარიო კემპესმა 1978 წლის მსოფლიო ჩემპიონატის „ოქროს ბუცი“ 6 გოლით მოიგო — ყველა მათგანი პლეი-ოფის რაუნდებში გაიტანა. ის იყო ერთადერთი მოთამაშე არგენტინის ნაკრებში, რომელიც იმ დროს ქვეყნის გარეთ თამაშობდა. რომელ ევროპულ კლუბს წარმოადგენდა ის?",
       "es": "Mario Kempes ganó la Bota de Oro de la Copa del Mundo de 1978 con 6 goles, todos marcados en las rondas eliminatorias. Fue el único jugador de la plantilla de Argentina que jugaba en el extranjero en ese momento. ¿A qué club europeo representó?",
       "pt": "Mario Kempes ganhou a Chuteira de Ouro da Copa do Mundo de 1978 com 6 gols, todos marcados no mata-mata. Ele era o único jogador da seleção argentina que atuava por um clube de fora do país. Qual clube europeu ele defendia?",
+      "de": "Mario Kempes gewann bei der WM 1978 mit 6 Toren den Goldenen Schuh – alle erzielte er in der K.-o.-Runde. Er war der einzige Spieler im argentinischen Kader, der damals bei einem ausländischen Verein spielte. Für welchen europäischen Verein lief er auf?",
       "tr": "Mario Kempes, 1978 Dünya Kupası Altın Ayakkabı'yı 6 golle kazandı - hepsi eleme turlarında atıldı. O zamanlar kulüp futbolunu ülke dışında oynayan Arjantin kadrosundaki tek oyuncuydu. Hangi Avrupa kulübünde oynuyordu?"
     },
     "options": [
@@ -3178,6 +3462,7 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "ka": "რეალ მადრიდი",
           "es": "Real Madrid",
           "pt": "Real Madrid",
+          "de": "Real Madrid",
           "tr": "Real Madrid"
         }
       },
@@ -3188,6 +3473,7 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "ka": "ვალენსია",
           "es": "Valencia",
           "pt": "Valencia",
+          "de": "Valencia",
           "tr": "Valencia"
         }
       },
@@ -3198,6 +3484,7 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "ka": "ბარსელონა",
           "es": "Barcelona",
           "pt": "Barcelona",
+          "de": "Barcelona",
           "tr": "Barcelona"
         }
       },
@@ -3208,6 +3495,7 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "ka": "ატლეტიკო მადრიდი",
           "es": "Atlético de Madrid",
           "pt": "Atlético de Madrid",
+          "de": "Atlético Madrid",
           "tr": "Atlético Madrid"
         }
       }
@@ -3223,7 +3511,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Catedrales de la Copa Mundial",
       "tr": "Dünya Kupası Katedralleri",
       "ru": "Легендарные стадионы чемпионатов мира",
-      "pt": "Estádios históricos da Copa do Mundo"
+      "pt": "Estádios históricos da Copa do Mundo",
+      "de": "WM-Kathedralen"
     },
     "prompt": {
       "en": "How many total stadiums are officially planned to host the 2026 World Cup across the United States, Mexico, and Canada?",
@@ -3231,7 +3520,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuántos estadios en total están planeados oficialmente para albergar la Copa Mundial de 2026 en Estados Unidos, México y Canadá?",
       "tr": "Amerika Birleşik Devletleri, Meksika ve Kanada'da 2026 Dünya Kupası'na ev sahipliği yapması planlanan toplam kaç stadyum var?",
       "ru": "Сколько стадионов официально планируется задействовать на чемпионате мира 2026 года в США, Мексике и Канаде?",
-      "pt": "Quantos estádios estão oficialmente previstos para receber a Copa do Mundo de 2026 nos Estados Unidos, no México e no Canadá?"
+      "pt": "Quantos estádios estão oficialmente previstos para receber a Copa do Mundo de 2026 nos Estados Unidos, no México e no Canadá?",
+      "de": "Wie viele Stadien sind für die WM 2026 in den USA, Mexiko und Kanada offiziell als Austragungsorte vorgesehen?"
     },
     "options": [
       {
@@ -3242,7 +3532,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "12",
           "tr": "12",
           "ru": "12",
-          "pt": "12"
+          "pt": "12",
+          "de": "12"
         }
       },
       {
@@ -3253,7 +3544,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "14",
           "tr": "14",
           "ru": "14",
-          "pt": "14"
+          "pt": "14",
+          "de": "14"
         }
       },
       {
@@ -3264,7 +3556,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "16",
           "tr": "16",
           "ru": "16",
-          "pt": "16"
+          "pt": "16",
+          "de": "16"
         }
       },
       {
@@ -3275,7 +3568,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "18",
           "tr": "18",
           "ru": "18",
-          "pt": "18"
+          "pt": "18",
+          "de": "18"
         }
       }
     ],
@@ -3290,7 +3584,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Sueño Mundialista Holandés",
       "tr": "Hollanda Dünya Kupası Hayali",
       "ru": "Мечта Нидерландов на чемпионатах мира",
-      "pt": "O sonho dos Países Baixos na Copa do Mundo"
+      "pt": "O sonho dos Países Baixos na Copa do Mundo",
+      "de": "Der WM-Traum der Niederlande"
     },
     "prompt": {
       "en": "Which referee gave a record 14 yellow cards in the 2010 World Cup final?",
@@ -3298,7 +3593,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué árbitro mostró un récord de 14 tarjetas amarillas en la final del Mundial de 2010?",
       "tr": "2010 Dünya Kupası finalinde rekor sayıda 14 sarı kart gösteren hakem kimdi?",
       "ru": "Какой судья показал рекордные 14 желтых карточек в финале ЧМ-2010?",
-      "pt": "Qual árbitro aplicou o recorde de 14 cartões amarelos na final da Copa do Mundo de 2010?"
+      "pt": "Qual árbitro aplicou o recorde de 14 cartões amarelos na final da Copa do Mundo de 2010?",
+      "de": "Welcher Schiedsrichter zeigte im WM-Finale 2010 die Rekordzahl von 14 gelben Karten?"
     },
     "options": [
       {
@@ -3309,7 +3605,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Massimo Busacca",
           "tr": "Massimo Busacca",
           "ru": "Массимо Бузакка",
-          "pt": "Massimo Busacca"
+          "pt": "Massimo Busacca",
+          "de": "Massimo Busacca"
         }
       },
       {
@@ -3320,7 +3617,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Howard Webb",
           "tr": "Howard Webb",
           "ru": "Говард Уэбб",
-          "pt": "Howard Webb"
+          "pt": "Howard Webb",
+          "de": "Howard Webb"
         }
       },
       {
@@ -3331,7 +3629,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Roberto Rosetti",
           "tr": "Roberto Rosetti",
           "ru": "Роберто Розетти",
-          "pt": "Roberto Rosetti"
+          "pt": "Roberto Rosetti",
+          "de": "Roberto Rosetti"
         }
       },
       {
@@ -3342,7 +3641,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ravshan Irmatov",
           "tr": "Ravshan Irmatov",
           "ru": "Равшан Ирматов",
-          "pt": "Ravshan Irmatov"
+          "pt": "Ravshan Irmatov",
+          "de": "Ravshan Irmatov"
         }
       }
     ],
@@ -3357,7 +3657,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Mundial Sudáfrica 2010",
       "tr": "Dünya Kupası Güney Afrika 2010",
       "ru": "ЧМ-2010 в ЮАР",
-      "pt": "Copa do Mundo: África do Sul 2010"
+      "pt": "Copa do Mundo: África do Sul 2010",
+      "de": "WM 2010 in Südafrika"
     },
     "prompt": {
       "en": "Who scored Japan's second free-kick goal against Denmark at the 2010 World Cup?",
@@ -3365,7 +3666,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el segundo gol de tiro libre de Japón contra Dinamarca en el Mundial de 2010?",
       "tr": "2010 Dünya Kupası'nda Japonya'nın Danimarka'ya attığı ikinci frikik golünü kim attı?",
       "ru": "Кто забил второй гол Японии со штрафного в матче против Дании на чемпионате мира 2010 года?",
-      "pt": "Quem marcou o segundo gol do Japão em cobrança de falta contra a Dinamarca na Copa do Mundo de 2010?"
+      "pt": "Quem marcou o segundo gol do Japão em cobrança de falta contra a Dinamarca na Copa do Mundo de 2010?",
+      "de": "Wer erzielte Japans zweites Freistoßtor gegen Dänemark bei der WM 2010?"
     },
     "options": [
       {
@@ -3376,7 +3678,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Shinji Okazaki",
           "tr": "Shinji Okazaki",
           "ru": "Синдзи Окадзаки",
-          "pt": "Shinji Okazaki"
+          "pt": "Shinji Okazaki",
+          "de": "Shinji Okazaki"
         }
       },
       {
@@ -3387,7 +3690,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Yasuhito Endo",
           "tr": "Yasuhito Endo",
           "ru": "Ясухито Эндо",
-          "pt": "Yasuhito Endo"
+          "pt": "Yasuhito Endo",
+          "de": "Yasuhito Endo"
         }
       },
       {
@@ -3398,7 +3702,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Shunsuke Nakamura",
           "tr": "Shunsuke Nakamura",
           "ru": "Сюнсукэ Накамура",
-          "pt": "Shunsuke Nakamura"
+          "pt": "Shunsuke Nakamura",
+          "de": "Shunsuke Nakamura"
         }
       },
       {
@@ -3409,7 +3714,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Makoto Hasebe",
           "tr": "Makoto Hasebe",
           "ru": "Макото Хасэбэ",
-          "pt": "Makoto Hasebe"
+          "pt": "Makoto Hasebe",
+          "de": "Makoto Hasebe"
         }
       }
     ],
@@ -3424,7 +3730,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Manchester United",
       "tr": "Manchester United",
       "ru": "Манчестер Юнайтед",
-      "pt": "Manchester United"
+      "pt": "Manchester United",
+      "de": "Manchester United"
     },
     "prompt": {
       "en": "Which goalkeeper held the record for the most clean sheets in Manchester United history before David de Gea broke it?",
@@ -3432,7 +3739,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué portero ostentaba el récord de más partidos imbatido en la historia del Manchester United antes de que David de Gea lo rompiera?",
       "tr": "David de Gea rekoru kırmadan önce Manchester United tarihinin en çok gol yemeyen kalecisi kimdi?",
       "ru": "Какой вратарь удерживал рекорд по числу сухих матчей в истории «Манчестер Юнайтед», пока его не побил Давид де Хеа?",
-      "pt": "Qual goleiro tinha o recorde de mais partidas sem sofrer gols na história do Manchester United antes de David de Gea superá-lo?"
+      "pt": "Qual goleiro tinha o recorde de mais partidas sem sofrer gols na história do Manchester United antes de David de Gea superá-lo?",
+      "de": "Welcher Torwart hielt vor David de Gea den Rekord für die meisten Spiele ohne Gegentor bei Manchester United?"
     },
     "options": [
       {
@@ -3443,7 +3751,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Peter Schmeichel",
           "tr": "Peter Schmeichel",
           "ru": "Петер Шмейхель",
-          "pt": "Peter Schmeichel"
+          "pt": "Peter Schmeichel",
+          "de": "Peter Schmeichel"
         }
       },
       {
@@ -3454,7 +3763,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Edwin van der Sar",
           "tr": "Edwin van der Sar",
           "ru": "Эдвин ван дер Сар",
-          "pt": "Edwin van der Sar"
+          "pt": "Edwin van der Sar",
+          "de": "Edwin van der Sar"
         }
       },
       {
@@ -3465,7 +3775,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Alex Stepney",
           "tr": "Alex Stepney",
           "ru": "Алекс Степни",
-          "pt": "Alex Stepney"
+          "pt": "Alex Stepney",
+          "de": "Alex Stepney"
         }
       },
       {
@@ -3476,7 +3787,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Fabien Barthez",
           "tr": "Fabien Barthez",
           "ru": "Фабьен Бартез",
-          "pt": "Fabien Barthez"
+          "pt": "Fabien Barthez",
+          "de": "Fabien Barthez"
         }
       }
     ],
@@ -3491,7 +3803,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El Sueño Mundialista de Ronaldo",
       "tr": "Ronaldo'nun Dünya Kupası Hayali",
       "ru": "Мечта Роналду о чемпионате мира",
-      "pt": "O sonho de Ronaldo na Copa do Mundo"
+      "pt": "O sonho de Ronaldo na Copa do Mundo",
+      "de": "Ronaldos WM-Traum"
     },
     "prompt": {
       "en": "Which teammate shared a room with Ronaldo when he fell ill before the 1998 World Cup final?",
@@ -3499,7 +3812,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué compañero de equipo compartió habitación con Ronaldo cuando se enfermó antes de la final del Mundial de 1998?",
       "tr": "1998 Dünya Kupası finalinden önce hastalanan Ronaldo ile aynı odayı paylaşan takım arkadaşı kimdi?",
       "ru": "С кем из партнеров по команде Роналдо делил номер, когда заболел перед финалом ЧМ-1998?",
-      "pt": "Qual companheiro de time dividiu o quarto com Ronaldo quando ele passou mal antes da final da Copa do Mundo de 1998?"
+      "pt": "Qual companheiro de time dividiu o quarto com Ronaldo quando ele passou mal antes da final da Copa do Mundo de 1998?",
+      "de": "Welcher Mitspieler teilte sich mit Ronaldo ein Zimmer, als dieser vor dem WM-Finale 1998 erkrankte?"
     },
     "options": [
       {
@@ -3510,7 +3824,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Cafú",
           "tr": "Cafu",
           "ru": "Кафу",
-          "pt": "Cafu"
+          "pt": "Cafu",
+          "de": "Cafu"
         }
       },
       {
@@ -3521,7 +3836,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Edmundo",
           "tr": "Edmundo",
           "ru": "Эдмундо",
-          "pt": "Edmundo"
+          "pt": "Edmundo",
+          "de": "Edmundo"
         }
       },
       {
@@ -3532,7 +3848,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Roberto Carlos",
           "tr": "Roberto Carlos",
           "ru": "Роберто Карлос",
-          "pt": "Roberto Carlos"
+          "pt": "Roberto Carlos",
+          "de": "Roberto Carlos"
         }
       },
       {
@@ -3543,7 +3860,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Rivaldo",
           "tr": "Rivaldo",
           "ru": "Ривалдо",
-          "pt": "Rivaldo"
+          "pt": "Rivaldo",
+          "de": "Rivaldo"
         }
       }
     ],
@@ -3558,7 +3876,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Who was awarded the \"Golden Ball\" as the best player of the 1994 FIFA World Cup?",
@@ -3566,7 +3885,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién fue galardonado con el \"Balón de Oro\" como mejor jugador de la Copa Mundial de la FIFA de 1994?",
       "tr": "1994 FIFA Dünya Kupası'nın en iyi oyuncusu seçilen \"Altın Top\" ödülünü kim kazandı?",
       "ru": "Кто получил «Золотой мяч» как лучший игрок чемпионата мира 1994 года?",
-      "pt": "Quem recebeu a \"Bola de Ouro\" como melhor jogador da Copa do Mundo FIFA de 1994?"
+      "pt": "Quem recebeu a \"Bola de Ouro\" como melhor jogador da Copa do Mundo FIFA de 1994?",
+      "de": "Wer erhielt bei der FIFA-Weltmeisterschaft 1994 den „Goldenen Ball“ als bester Spieler?"
     },
     "options": [
       {
@@ -3577,7 +3897,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Roberto Baggio",
           "tr": "Roberto Baggio",
           "ru": "Роберто Баджо",
-          "pt": "Roberto Baggio"
+          "pt": "Roberto Baggio",
+          "de": "Roberto Baggio"
         }
       },
       {
@@ -3588,7 +3909,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Romário",
           "tr": "Romário",
           "ru": "Ромарио",
-          "pt": "Romário"
+          "pt": "Romário",
+          "de": "Romário"
         }
       },
       {
@@ -3599,7 +3921,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Gheorghe Hagi",
           "tr": "Gheorghe Hagi",
           "ru": "Георге Хаджи",
-          "pt": "Gheorghe Hagi"
+          "pt": "Gheorghe Hagi",
+          "de": "Gheorghe Hagi"
         }
       },
       {
@@ -3610,7 +3933,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Thomas Brolin",
           "tr": "Thomas Brolin",
           "ru": "Томас Бролин",
-          "pt": "Thomas Brolin"
+          "pt": "Thomas Brolin",
+          "de": "Thomas Brolin"
         }
       }
     ],
@@ -3625,7 +3949,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Champions League",
       "tr": "Şampiyonlar Ligi",
       "ru": "Лига чемпионов",
-      "pt": "Champions League"
+      "pt": "Champions League",
+      "de": "Champions League"
     },
     "prompt": {
       "en": "How many times has a team won the UEFA Champions League on their home stadium (as of 2026)?",
@@ -3633,7 +3958,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Cuántas veces ha ganado un equipo la UEFA Champions League en su estadio (a partir de 2026)?",
       "tr": "Bir takım, kendi sahasında kaç kez UEFA Şampiyonlar Ligi'ni kazanmıştır (2026 itibarıyla)?",
       "ru": "Сколько раз команда выигрывала UEFA Champions League на своем домашнем стадионе (на 2026 год)?",
-      "pt": "Quantas vezes um time venceu a UEFA Champions League em seu próprio estádio (até 2026)?"
+      "pt": "Quantas vezes um time venceu a UEFA Champions League em seu próprio estádio (até 2026)?",
+      "de": "Wie oft hat eine Mannschaft die UEFA Champions League im eigenen Stadion gewonnen (Stand: 2026)?"
     },
     "options": [
       {
@@ -3644,7 +3970,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "2",
           "tr": "2",
           "ru": "2",
-          "pt": "2"
+          "pt": "2",
+          "de": "2"
         }
       },
       {
@@ -3655,7 +3982,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "4",
           "tr": "4",
           "ru": "4",
-          "pt": "4"
+          "pt": "4",
+          "de": "4"
         }
       },
       {
@@ -3666,7 +3994,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "6",
           "tr": "6",
           "ru": "6",
-          "pt": "6"
+          "pt": "6",
+          "de": "6"
         }
       },
       {
@@ -3677,7 +4006,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "8",
           "tr": "8",
           "ru": "8",
-          "pt": "8"
+          "pt": "8",
+          "de": "8"
         }
       }
     ],
@@ -3692,7 +4022,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "La Era de los 1990",
       "tr": "1990'lar Dönemi",
       "ru": "Эпоха 1990-х",
-      "pt": "A década de 1990"
+      "pt": "A década de 1990",
+      "de": "Die 1990er-Jahre"
     },
     "prompt": {
       "en": "Who scored both goals for Nigeria in the 1994 Africa Cup of Nations final?",
@@ -3700,7 +4031,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó ambos goles para Nigeria en la final de la Copa Africana de Naciones de 1994?",
       "tr": "1994 Afrika Uluslar Kupası finalinde Nijerya için iki golü kim attı?",
       "ru": "Кто забил оба гола сборной Нигерии в финале Кубка африканских наций 1994 года?",
-      "pt": "Quem marcou os dois gols da Nigéria na final da Copa Africana de Nações de 1994?"
+      "pt": "Quem marcou os dois gols da Nigéria na final da Copa Africana de Nações de 1994?",
+      "de": "Wer erzielte Nigerias beide Tore im Finale des Afrika-Cups 1994?"
     },
     "options": [
       {
@@ -3711,7 +4043,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Rashidi Yekini",
           "tr": "Rashidi Yekini",
           "ru": "Рашиди Йекини",
-          "pt": "Rashidi Yekini"
+          "pt": "Rashidi Yekini",
+          "de": "Rashidi Yekini"
         }
       },
       {
@@ -3722,7 +4055,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Daniel Amokachi",
           "tr": "Daniel Amokachi",
           "ru": "Даниэль Амокачи",
-          "pt": "Daniel Amokachi"
+          "pt": "Daniel Amokachi",
+          "de": "Daniel Amokachi"
         }
       },
       {
@@ -3733,7 +4067,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Emmanuel Amunike",
           "tr": "Emmanuel Amunike",
           "ru": "Эммануэль Амунике",
-          "pt": "Emmanuel Amunike"
+          "pt": "Emmanuel Amunike",
+          "de": "Emmanuel Amunike"
         }
       },
       {
@@ -3744,7 +4079,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Finidi George",
           "tr": "Finidi George",
           "ru": "Финиди Джордж",
-          "pt": "Finidi George"
+          "pt": "Finidi George",
+          "de": "Finidi George"
         }
       }
     ],
@@ -3759,7 +4095,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Capitanes del Mundial",
       "tr": "Dünya Kupası Kaptanları",
       "ru": "Капитаны чемпионатов мира",
-      "pt": "Capitães da Copa do Mundo"
+      "pt": "Capitães da Copa do Mundo",
+      "de": "Kapitäne der WM"
     },
     "prompt": {
       "en": "During the 1994 FIFA World Cup hosted in the United States, who uniquely served as the captain and starting goalkeeper for the host nation?",
@@ -3767,7 +4104,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Durante la Copa Mundial de la FIFA 1994, celebrada en Estados Unidos, ¿quién sirvió de manera única como capitán y portero titular de la nación anfitriona?",
       "tr": "1994 FIFA Dünya Kupası'nda ev sahibi Amerika Birleşik Devletleri'nin kaptanı ve as kalecisi olarak görev yapan kişi kimdi?",
       "ru": "Кто был капитаном и основным вратарем сборной США на ЧМ-1994?",
-      "pt": "Na Copa do Mundo FIFA de 1994, disputada nos Estados Unidos, quem foi ao mesmo tempo capitão e goleiro titular da seleção anfitriã?"
+      "pt": "Na Copa do Mundo FIFA de 1994, disputada nos Estados Unidos, quem foi ao mesmo tempo capitão e goleiro titular da seleção anfitriã?",
+      "de": "Wer war bei der FIFA-Weltmeisterschaft 1994 in den USA zugleich Kapitän und Stammtorwart des Gastgeberteams?"
     },
     "options": [
       {
@@ -3778,7 +4116,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Brad Friedel",
           "tr": "Brad Friedel",
           "ru": "Брэд Фридель",
-          "pt": "Brad Friedel"
+          "pt": "Brad Friedel",
+          "de": "Brad Friedel"
         }
       },
       {
@@ -3789,7 +4128,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Kasey Keller",
           "tr": "Kasey Keller",
           "ru": "Кейси Келлер",
-          "pt": "Kasey Keller"
+          "pt": "Kasey Keller",
+          "de": "Kasey Keller"
         }
       },
       {
@@ -3800,7 +4140,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Tony Meola",
           "tr": "Tony Meola",
           "ru": "Тони Меола",
-          "pt": "Tony Meola"
+          "pt": "Tony Meola",
+          "de": "Tony Meola"
         }
       },
       {
@@ -3811,7 +4152,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Tim Howard",
           "tr": "Tim Howard",
           "ru": "Тим Ховард",
-          "pt": "Tim Howard"
+          "pt": "Tim Howard",
+          "de": "Tim Howard"
         }
       }
     ],
@@ -3826,7 +4168,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "El legado de Francia en la Copa del Mundo",
       "tr": "Fransa'nın Dünya Kupası Mirası",
       "ru": "Наследие Франции на чемпионатах мира",
-      "pt": "O legado da França na Copa do Mundo"
+      "pt": "O legado da França na Copa do Mundo",
+      "de": "Frankreichs WM-Vermächtnis"
     },
     "prompt": {
       "en": "Who scored the 90th-minute goal for West Germany against France in the 1986 semi-final?",
@@ -3834,7 +4177,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Quién marcó el gol en el minuto 90 para Alemania Occidental contra Francia en la semifinal de 1986?",
       "tr": "1986 yarı finalinde Batı Almanya'nın Fransa'ya karşı oynadığı maçta 90. dakikada golü kim attı?",
       "ru": "Кто забил гол на 90-й минуте за ФРГ в ворота Франции в полуфинале 1986 года?",
-      "pt": "Quem marcou o gol da Alemanha Ocidental contra a França aos 90 minutos da semifinal de 1986?"
+      "pt": "Quem marcou o gol da Alemanha Ocidental contra a França aos 90 minutos da semifinal de 1986?",
+      "de": "Wer erzielte im Halbfinale 1986 in der 90. Minute das Tor für Westdeutschland gegen Frankreich?"
     },
     "options": [
       {
@@ -3845,7 +4189,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Karl-Heinz Rummenigge",
           "tr": "Karl-Heinz Rummenigge",
           "ru": "Карл-Хайнц Румменигге",
-          "pt": "Karl-Heinz Rummenigge"
+          "pt": "Karl-Heinz Rummenigge",
+          "de": "Karl-Heinz Rummenigge"
         }
       },
       {
@@ -3856,7 +4201,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Lothar Matthäus",
           "tr": "Lothar Matthäus",
           "ru": "Лотар Маттеус",
-          "pt": "Lothar Matthäus"
+          "pt": "Lothar Matthäus",
+          "de": "Lothar Matthäus"
         }
       },
       {
@@ -3867,7 +4213,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Rudi Völler",
           "tr": "Rudi Völler",
           "ru": "Руди Фёллер",
-          "pt": "Rudi Völler"
+          "pt": "Rudi Völler",
+          "de": "Rudi Völler"
         }
       },
       {
@@ -3878,7 +4225,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Andreas Brehme",
           "tr": "Andreas Brehme",
           "ru": "Андреас Бреме",
-          "pt": "Andreas Brehme"
+          "pt": "Andreas Brehme",
+          "de": "Andreas Brehme"
         }
       }
     ],
@@ -3893,7 +4241,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Copa Mundial",
       "tr": "Dünya Kupası",
       "ru": "Чемпионат мира",
-      "pt": "Copa do Mundo"
+      "pt": "Copa do Mundo",
+      "de": "WM"
     },
     "prompt": {
       "en": "Which African nation won the gold medal in men's football at the 1996 Olympic Games?",
@@ -3901,7 +4250,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "¿Qué nación africana ganó la medalla de oro en fútbol masculino en los Juegos Olímpicos de 1996?",
       "tr": "1996 Olimpiyat Oyunları'nda erkek futbolunda altın madalyayı hangi Afrika ülkesi kazandı?",
       "ru": "Какая африканская сборная выиграла золото в мужском футбольном турнире Олимпийских игр 1996 года?",
-      "pt": "Qual seleção africana conquistou a medalha de ouro no futebol masculino nos Jogos Olímpicos de 1996?"
+      "pt": "Qual seleção africana conquistou a medalha de ouro no futebol masculino nos Jogos Olímpicos de 1996?",
+      "de": "Welches afrikanische Land gewann bei den Olympischen Spielen 1996 die Goldmedaille im Männerfußball?"
     },
     "options": [
       {
@@ -3912,7 +4262,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Camerún",
           "tr": "Kamerun",
           "ru": "Камерун",
-          "pt": "Camarões"
+          "pt": "Camarões",
+          "de": "Kamerun"
         }
       },
       {
@@ -3923,7 +4274,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Senegal",
           "tr": "Senegal",
           "ru": "Сенегал",
-          "pt": "Senegal"
+          "pt": "Senegal",
+          "de": "Senegal"
         }
       },
       {
@@ -3934,7 +4286,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Ghana",
           "tr": "Gana",
           "ru": "Гана",
-          "pt": "Gana"
+          "pt": "Gana",
+          "de": "Ghana"
         }
       },
       {
@@ -3945,7 +4298,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Nigeria",
           "tr": "Nijerya",
           "ru": "Нигерия",
-          "pt": "Nigéria"
+          "pt": "Nigéria",
+          "de": "Nigeria"
         }
       }
     ],
@@ -3960,7 +4314,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "Real Madrid",
       "tr": "Real Madrid",
       "ru": "Реал Мадрид",
-      "pt": "Real Madrid"
+      "pt": "Real Madrid",
+      "de": "Real Madrid"
     },
     "prompt": {
       "en": "In 2001, Real Madrid broke the world transfer record to sign Zinedine Zidane from which club?",
@@ -3968,7 +4323,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
       "es": "En 2001, el Real Madrid batió el récord mundial de fichajes para contratar a Zinedine Zidane de qué club?",
       "tr": "2001'de Real Madrid, Zinedine Zidane'ı hangi kulüpten transfer ederek dünya rekorunu kırmıştı?",
       "ru": "В 2001 году «Реал Мадрид» побил мировой трансферный рекорд, купив Зинедина Зидана из какого клуба?",
-      "pt": "Em 2001, de qual clube o Real Madrid contratou Zinedine Zidane, quebrando o recorde mundial de transferência?"
+      "pt": "Em 2001, de qual clube o Real Madrid contratou Zinedine Zidane, quebrando o recorde mundial de transferência?",
+      "de": "Von welchem Verein verpflichtete Real Madrid 2001 Zinedine Zidane und stellte damit einen Weltrekord bei der Ablösesumme auf?"
     },
     "options": [
       {
@@ -3979,7 +4335,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Burdeos",
           "tr": "Bordeaux",
           "ru": "Бордо",
-          "pt": "Bordeaux"
+          "pt": "Bordeaux",
+          "de": "Bordeaux"
         }
       },
       {
@@ -3990,7 +4347,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "Juventus",
           "tr": "Juventus",
           "ru": "Ювентус",
-          "pt": "Juventus"
+          "pt": "Juventus",
+          "de": "Juventus"
         }
       },
       {
@@ -4001,7 +4359,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "AC Milan",
           "tr": "AC Milan",
           "ru": "Милан",
-          "pt": "AC Milan"
+          "pt": "AC Milan",
+          "de": "AC Mailand"
         }
       },
       {
@@ -4012,7 +4371,8 @@ export const SAMPLE_QUESTIONS: SampleQuestion[] = [
           "es": "AS Monaco",
           "tr": "AS Monaco",
           "ru": "Монако",
-          "pt": "AS Monaco"
+          "pt": "AS Monaco",
+          "de": "AS Monaco"
         }
       }
     ],

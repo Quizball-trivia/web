@@ -15,7 +15,7 @@ import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
 
-type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string; pt?: string };
+type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string; pt?: string; de?: string };
 interface ClubName { key: string; name: Localized; crest: string }
 interface PairResult { clubs: [ClubName, ClubName] | null; found: string | null; total: number | null; examples: string[] | null }
 /** Server-held run state (backend shared-player-daily.rules PublicRunState): never an accepted name of an open day. */

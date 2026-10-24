@@ -6,6 +6,11 @@
 @source "../app/[locale]/(hub)/(word-shell)/football-games/football-name-chain/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/football-games/football-odd-one-out/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/fussballspiele/fussball-codenames/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/fussballspiele/fussballer-wortkette/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/fussballspiele/nationen-rennen/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/fussballspiele/spieler-fuer-beide-vereine/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/fussballspiele/welche-aussage-ist-falsch/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-codenames/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbol-oyunlari/hangisi-yanlis/page.tsx";
@@ -29,6 +34,7 @@
 @source "../app/[locale]/(hub)/(word-shell)/layout.tsx";
 @source "../app/[locale]/(hub)/layout.tsx";
 @source "../app/layout.tsx";
+@source "../app/locale-asset-providers.de.tsx";
 @source "../app/locale-asset-providers.es.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
 @source "../app/locale-asset-providers.pt.tsx";

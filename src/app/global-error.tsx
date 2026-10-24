@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { partnerFromHost } from "@/features/partner/partnerHosts";
 import { isLoadFailure, reloadRestores } from "@/lib/recovery/loadFailure";
 
-type Language = "en" | "ka" | "es" | "tr" | "ru" | "pt";
+type Language = "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de";
 type Way = "reload" | "home" | "relaunch";
 
 // This screen replaces the root layout, so it has no providers, stylesheet or dictionaries to lean on.
@@ -63,11 +63,20 @@ const COPY: Record<Language, { title: string; loadFailed: string; crashed: strin
     reload: "Recarregar",
     back: "Voltar ao Quizball",
   },
+  de: {
+    title: "Etwas ist schiefgelaufen",
+    loadFailed: "Ein Teil der Seite wurde nicht geladen. Prüfe deine Verbindung und lade neu.",
+    crashed: "Auf der Seite ist ein Problem aufgetreten. Meist hilft es, sie neu zu laden.",
+    home: "Dieser Bildschirm konnte nicht geladen werden. Kehre zu Quizball zurück, um dein Match fortzusetzen.",
+    relaunch: "Dieser Bildschirm konnte nicht geladen werden. Lade neu und öffne das Spiel anschließend wieder über die Website, von der du gekommen bist.",
+    reload: "Neu laden",
+    back: "Zurück zu Quizball",
+  },
 };
 
 /** Kept local: this screen must not depend on the app's locale modules. */
 const documentLang = (language: Language): string => (language === "pt" ? "pt-BR" : language);
-const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru" || value === "pt";
+const isLanguage = (value: unknown): value is Language => value === "en" || value === "ka" || value === "es" || value === "tr" || value === "ru" || value === "pt" || value === "de";
 
 function readLanguage(documentLanguage: string): Language {
   const fromPath = window.location.pathname.split("/")[1];

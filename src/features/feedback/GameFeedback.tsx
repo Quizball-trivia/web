@@ -50,6 +50,13 @@ const COPY = {
     thanks: "Valeu! A gente lê todas as respostas.", stars: (n: number) => `${n} de 5 estrelas`,
     error: "Não foi possível enviar. Tente novamente.", sending: "Enviando…",
   },
+  de: {
+    title: (game: string) => `Wie war ${game}?`,
+    online: "Würdest du es online gegen einen zufälligen Gegner spielen, wie Ranked oder Fußball Tic Tac Toe?",
+    yes: "Ja", no: "Nein", comment: "Möchtest du uns etwas sagen? (optional)", send: "Senden", later: "Jetzt nicht", close: "Schließen",
+    thanks: "Danke! Wir lesen jede Antwort.", stars: (n: number) => `${n} von 5 Sternen`,
+    error: "Senden fehlgeschlagen. Bitte versuch es erneut.", sending: "Wird gesendet…",
+  },
 } as const;
 
 const copyFor = (locale: string) => COPY[(locale in COPY ? locale : "en") as keyof typeof COPY];

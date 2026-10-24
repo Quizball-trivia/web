@@ -254,7 +254,49 @@ const pt: Copy = {
   signInToday: "Entre na sua conta para jogar a grade de hoje. As grades anteriores ficam disponíveis para visitantes após o fim do dia.",
 };
 
-export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt };
+const de: Copy = {
+  title: "Fußball Tic Tac Toe",
+  subtitle: "Jeden Tag ein Raster. Neun Versuche für neun Felder.",
+  guesses: "Versuche",
+  time: "Zeit",
+  filled: "Gefüllt",
+  tapCell: "Tippe auf ein Feld und nenne einen Fußballer, der zu beiden Hinweisen passt.",
+  finish: "Hier beenden",
+  kickOff: "Starten",
+  kickOffFailed: "Rasterstart fehlgeschlagen. Versuch es erneut.",
+  movedElsewhere: "Das Raster wurde in einem anderen Tab geändert. Dieser Versuch zählt nicht. Versuch es erneut.",
+  movedElsewhereDone: "Das Raster wurde in einem anderen Tab beendet. Dieser Versuch zählt nicht.",
+  kickOffNote: "Die Felder bleiben verborgen, bis du startest. Dann beginnt die Zeit.",
+  finishConfirm: "Mit {n} verbleibenden Versuchen beenden?",
+  yes: "Ja, beenden",
+  no: "Weiterspielen",
+  ambiguous: "Gib den vollständigen Namen ein. Kein Versuch wurde verbraucht.",
+  wrong: "Passt nicht. Ein Versuch verbraucht.",
+  alreadyUsed: "Diesen Fußballer hast du schon verwendet. Ein Versuch verbraucht.",
+  correct: "Feld ausgefüllt!",
+  resultTitle: "{score} von 9",
+  resultPerfect: "Perfektes Raster",
+  resultTime: "in {time}",
+  rank: "Dein Rang heute: {rank}",
+  practice: "Übungsspiel: nicht in der Rangliste.",
+  share: "Teilen",
+  copied: "Kopiert",
+  shareText: "Quizball Fußball Tic Tac Toe #{n}\n{score}/9 · {time}\n{grid}\n{url}",
+  leaderboard: "Rangliste des Tages",
+  players: "{n} Spieler",
+  empty: "Noch niemand ist fertig. Sei der Erste.",
+  leaderboardFailed: "Rangliste konnte nicht geladen werden.",
+  guestNote: "Du spielst das Raster von gestern. Melde dich an, um das heutige Raster zu spielen und in der Rangliste zu erscheinen.",
+  signIn: "Anmelden",
+  loading: "Raster wird geladen…",
+  unavailable: "Das Tagesraster ist gerade nicht verfügbar.",
+  retry: "Erneut versuchen",
+  back: "Zurück",
+  comeBack: "Jeden Tag gibt es ein neues Raster.",
+  signInToday: "Melde dich an, um das heutige Raster zu spielen. Ältere Raster sind für Gäste nach Tagesende verfügbar.",
+};
+
+export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt, de };
 export type GridDailyCopy = Copy;
 
 export const fillDaily = (template: string, values: Record<string, string | number>): string =>

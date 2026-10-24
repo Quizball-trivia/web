@@ -51,11 +51,12 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
 
 /** The 410 page of a retired quiz, in the language of the address it was asked for. */
-const QUIZ_GONE: Record<'en' | 'ka' | 'ru' | 'pt', { title: string; message: string }> = {
+const QUIZ_GONE: Record<'en' | 'ka' | 'ru' | 'pt' | 'de', { title: string; message: string }> = {
   en: { title: 'Quiz no longer available', message: 'This quiz is no longer available.' },
   ka: { title: 'ქვიზი აღარ არის ხელმისაწვდომი', message: 'ეს ქვიზი აღარ არის ხელმისაწვდომი.' },
   ru: { title: 'Викторина больше недоступна', message: 'Эта викторина больше недоступна.' },
   pt: { title: 'Quiz indisponível', message: 'Este quiz não está mais disponível.' },
+  de: { title: 'Quiz nicht mehr verfügbar', message: 'Dieses Quiz ist nicht mehr verfügbar.' },
 };
 
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
@@ -259,9 +260,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // A games folder belongs to its own locales (/en|ka/football-games,
-  // /es/juegos-de-futbol, /tr/futbol-oyunlari, /pt/jogos-de-futebol). Other combinations answer 404
+  // /es/juegos-de-futbol, /tr/futbol-oyunlari, /pt/jogos-de-futebol, /de/fussballspiele). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru|pt)\/([a-z-]+)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru|pt|de)\/([a-z-]+)(?:\/|$)/);
   if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
@@ -271,8 +272,9 @@ export async function middleware(req: NextRequest) {
   // 404 page) while keeping redirects locale-aware.
   const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
     ?? pathname.match(/^\/(ru)\/futbolnaya-viktorina\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-    ?? pathname.match(/^\/(pt)\/quiz-de-futebol\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
-  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | 'pt' | undefined;
+    ?? pathname.match(/^\/(pt)\/quiz-de-futebol\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
+    ?? pathname.match(/^\/(de)\/fussball-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | 'pt' | 'de' | undefined;
   const quizSource = quizPath && quizLocale ? campaignSourceSlug(quizPath[2], quizLocale) : '';
   if (
     quizPath && quizLocale

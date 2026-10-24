@@ -10,7 +10,7 @@ import { markGridMatchLeftBehind } from '@/lib/realtime/socket-handlers';
 interface UseRealtimeFootballGridOptions {
   enabled: boolean;
   selfUserId: string | null;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   /** League pack to queue for; defaults to the full European mix. */
   theme?: string;
   autoStart?: boolean;

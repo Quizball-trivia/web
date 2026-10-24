@@ -35,7 +35,7 @@ export interface GamePageEntry {
 }
 
 /** Locales with a public game page body; the rest (tr today) get the hub only and English pages from the cards. */
-export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr", "ru", "pt"] as const satisfies readonly Locale[];
+export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr", "ru", "pt", "de"] as const satisfies readonly Locale[];
 export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
 export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
 
@@ -48,42 +48,42 @@ export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO
  * PT (docs/SEO-GAME-NAMING-PT-2026-10-21.md): Brazilian Portuguese search names, accents stripped.
  */
 const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
-  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox", ru: "futbolnye-krestiki-noliki", pt: "jogo-da-velha-de-futebol" },
-  auction: { es: "subasta", ru: "futbolnyy-auktsion", pt: "leilao-de-jogadores" },
-  friendly: { es: "partido-amistoso", ru: "viktorina-s-drugom", pt: "quiz-de-futebol-com-amigos" },
-  "true-or-false-football": { es: "verdadero-o-falso", ru: "pravda-ili-lozh", pt: "verdadeiro-ou-falso-futebol" },
-  "higher-or-lower": { es: "higher-or-lower-futbolero", ru: "higher-or-lower", pt: "higher-or-lower" },
-  "card-detective": { es: "cartas-de-jugadores", ru: "ugaday-po-kartochke", pt: "adivinhe-o-jogador-pela-carta" },
-  "guess-the-goal": { es: "adivina-el-gol", ru: "ugaday-gol", pt: "adivinhe-o-gol" },
-  "who-am-i": { es: "quien-soy", ru: "ugaday-futbolista-po-faktam", pt: "quem-sou-eu-futebol" },
-  "career-path": { es: "trayectoria-del-jugador", ru: "ugaday-futbolista-po-karere", pt: "adivinhe-o-jogador-pela-carreira" },
-  "football-timeline": { es: "linea-de-tiempo", ru: "chto-bylo-ranshe", pt: "o-que-aconteceu-primeiro" },
-  "football-logic": { es: "logica-futbolera", ru: "futbolnye-zagadki", pt: "charadas-de-futebol" },
-  "missing-xi": { es: "adivina-el-11", ru: "ugaday-sostav", pt: "adivinhe-a-escalacao" },
-  "pass-chain": { es: "conectando-jugadores", ru: "soedini-futbolistov", pt: "conectando-jogadores" },
+  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox", ru: "futbolnye-krestiki-noliki", pt: "jogo-da-velha-de-futebol", de: "fussball-tic-tac-toe" },
+  auction: { es: "subasta", ru: "futbolnyy-auktsion", pt: "leilao-de-jogadores", de: "fussball-auktion" },
+  friendly: { es: "partido-amistoso", ru: "viktorina-s-drugom", pt: "quiz-de-futebol-com-amigos", de: "fussball-quiz-mit-freunden" },
+  "true-or-false-football": { es: "verdadero-o-falso", ru: "pravda-ili-lozh", pt: "verdadeiro-ou-falso-futebol", de: "wahr-oder-falsch-fussball" },
+  "higher-or-lower": { es: "higher-or-lower-futbolero", ru: "higher-or-lower", pt: "higher-or-lower", de: "higher-or-lower" },
+  "card-detective": { es: "cartas-de-jugadores", ru: "ugaday-po-kartochke", pt: "adivinhe-o-jogador-pela-carta", de: "spielerkarte-erraten" },
+  "guess-the-goal": { es: "adivina-el-gol", ru: "ugaday-gol", pt: "adivinhe-o-gol", de: "tor-erraten" },
+  "who-am-i": { es: "quien-soy", ru: "ugaday-futbolista-po-faktam", pt: "quem-sou-eu-futebol", de: "wer-bin-ich-fussball" },
+  "career-path": { es: "trayectoria-del-jugador", ru: "ugaday-futbolista-po-karere", pt: "adivinhe-o-jogador-pela-carreira", de: "karrierestationen-erraten" },
+  "football-timeline": { es: "linea-de-tiempo", ru: "chto-bylo-ranshe", pt: "o-que-aconteceu-primeiro", de: "fussball-zeitstrahl" },
+  "football-logic": { es: "logica-futbolera", ru: "futbolnye-zagadki", pt: "charadas-de-futebol", de: "fussballer-bilderraetsel" },
+  "missing-xi": { es: "adivina-el-11", ru: "ugaday-sostav", pt: "adivinhe-a-escalacao", de: "aufstellung-erraten" },
+  "pass-chain": { es: "conectando-jugadores", ru: "soedini-futbolistov", pt: "conectando-jogadores", de: "fussballer-verbinden" },
   // en/tr renamed 2026-10-05 to what people search ("closest wins", "en yakın tahmin oyunu"); ka keeps the brand slug.
-  "stat-sniper": { es: "aproximado-futbolero", en: "closest-wins", tr: "en-yakin-tahmin-oyunu", ru: "ugaday-statistiku", pt: "quem-chega-mais-perto" },
-  ranked: { es: "quien-sabe-mas-de-futbol", ru: "viktorina-s-sopernikom", pt: "quem-sabe-mais-de-futebol" },
-  "free-kicks": { es: "tiros-libres", ru: "shtrafnye-udary", pt: "cobranca-de-falta" },
-  "road-to-goal": { es: "camino-al-gol", ru: "doroga-k-golu", pt: "rumo-ao-gol" },
-  "trivia-mines": { es: "minas-con-preguntas", ru: "minnoe-pole", pt: "minas-de-perguntas" },
-  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi", ru: "futbolnyy-saper", pt: "campo-minado-de-futebol" },
-  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu", ru: "ugaday-futbolista-po-podskazkam", pt: "adivinhe-o-jogador-pelas-dicas" },
-  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu", ru: "kto-bolshe-nazovet", pt: "quem-lembra-mais" },
-  "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu", ru: "na-kakoy-minute-gol", pt: "em-que-minuto-foi-o-gol" },
-  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki", ru: "futbolnaya-ruletka", pt: "roleta-de-futebol" },
+  "stat-sniper": { es: "aproximado-futbolero", en: "closest-wins", tr: "en-yakin-tahmin-oyunu", ru: "ugaday-statistiku", pt: "quem-chega-mais-perto", de: "schaetzfragen-fussball" },
+  ranked: { es: "quien-sabe-mas-de-futbol", ru: "viktorina-s-sopernikom", pt: "quem-sabe-mais-de-futebol", de: "fussball-quiz-duell" },
+  "free-kicks": { es: "tiros-libres", ru: "shtrafnye-udary", pt: "cobranca-de-falta", de: "freistoss-spiel" },
+  "road-to-goal": { es: "camino-al-gol", ru: "doroga-k-golu", pt: "rumo-ao-gol", de: "weg-zum-tor" },
+  "trivia-mines": { es: "minas-con-preguntas", ru: "minnoe-pole", pt: "minas-de-perguntas", de: "quiz-minenfeld" },
+  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi", ru: "futbolnyy-saper", pt: "campo-minado-de-futebol", de: "fussball-minesweeper" },
+  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu", ru: "ugaday-futbolista-po-podskazkam", pt: "adivinhe-o-jogador-pelas-dicas", de: "fussballer-erraten-mit-hinweisen" },
+  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu", ru: "kto-bolshe-nazovet", pt: "quem-lembra-mais", de: "nenne-alle" },
+  "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu", ru: "na-kakoy-minute-gol", pt: "em-que-minuto-foi-o-gol", de: "in-welcher-minute-fiel-das-tor" },
+  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki", ru: "futbolnaya-ruletka", pt: "roleta-de-futebol", de: "fussball-gluecksrad" },
   // Names follow what people search (2026-10-08): "played for both clubs", "jugador en común", "ortak futbolcu oyunu",
   // "football name chain", "son harfle futbolcu". KA follows EN.
-  "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu", ru: "igravshie-za-oba-kluba", pt: "jogador-em-comum" },
-  "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu", ru: "futbolisty-na-poslednyuyu-bukvu", pt: "jogo-da-ultima-letra" },
-  "money-drop": { ru: "monety-na-otvety", pt: "moedas-nas-respostas" },
-  countdown: { ru: "nazovi-futbolistov", pt: "fale-jogadores-de-futebol" },
-  imposter: { ru: "naydi-lishnego", pt: "encontre-o-intruso" },
+  "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu", ru: "igravshie-za-oba-kluba", pt: "jogador-em-comum", de: "spieler-fuer-beide-vereine" },
+  "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu", ru: "futbolisty-na-poslednyuyu-bukvu", pt: "jogo-da-ultima-letra", de: "fussballer-wortkette" },
+  "money-drop": { ru: "monety-na-otvety", pt: "moedas-nas-respostas", de: "muenzen-verteilen" },
+  countdown: { ru: "nazovi-futbolistov", pt: "fale-jogadores-de-futebol", de: "fussballer-aufzaehlen" },
+  imposter: { ru: "naydi-lishnego", pt: "encontre-o-intruso", de: "wer-passt-nicht-in-die-reihe" },
   // Google Suggest 2026-10-15: "adivina el top 10 de fútbol" (ar/es/mx), "futbol top 10" (tr); en/ka "football tenable"; ru "угадай топ-10".
-  "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10", pt: "acerte-o-top-10" },
-  "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki", pt: "corrida-das-selecoes" },
-  "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol" },
-  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira" },
+  "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10", pt: "acerte-o-top-10", de: "top-10-erraten" },
+  "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki", pt: "corrida-das-selecoes", de: "nationen-rennen" },
+  "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol", de: "fussball-codenames" },
+  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira", de: "welche-aussage-ist-falsch" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -103,7 +103,7 @@ const PREVIOUS_FOLDER: Partial<Record<Locale, { folder: string; dailyCollection:
   tr: { folder: "football-games", dailyCollection: "daily-challenges" },
 };
 
-const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna", ru: "Играть", pt: "Jogar agora" } as const;
+const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna", ru: "Играть", pt: "Jogar agora", de: "Jetzt spielen" } as const;
 
 function daily(
   type: keyof typeof DAILY_CHALLENGE_SLUGS,
@@ -122,6 +122,7 @@ function daily(
       tr: { ...copy.tr, cta: cta.tr },
       ru: { ...copy.ru, cta: cta.ru },
       pt: { ...copy.pt, cta: cta.pt },
+      de: { ...copy.de, cta: cta.de },
     },
   };
 }
@@ -145,6 +146,7 @@ function mode(
       tr: { ...copy.tr, cta: cta.tr },
       ru: { ...copy.ru, cta: cta.ru },
       pt: { ...copy.pt, cta: cta.pt },
+      de: { ...copy.de, cta: cta.de },
     },
   };
 }
@@ -199,6 +201,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Leia a primeira dica e digite sua resposta.", "Errou? A próxima dica é liberada e vale menos pontos.", "Adivinhe os cinco jogadores antes que o tempo acabe."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Wer bin ich? Fußballer erraten in 5 Hinweisen",
+      metaDescription: "Errate einen Fußballer anhand von fünf Hinweisen. Je weniger Hinweise du brauchst, desto mehr Punkte gibt es. Jeden Tag wartet eine neue Tages-Challenge.",
+      title: "Wer bin ich? Fußballer erraten in 5 Hinweisen",
+      intro: "Fünf Hinweise zu einem Fußballer. Nenne den Spieler so früh wie möglich: Je weniger Hinweise du brauchst, desto mehr Punkte bekommst du.",
+      howToPlay: ["Lies den ersten Hinweis und gib deine Antwort ein.", "Falsch? Der nächste Hinweis wird freigeschaltet und bringt weniger Punkte.", "Errate alle fünf Spieler, bevor die Zeit abläuft."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   daily("moneyDrop", {
     en: {
@@ -248,6 +258,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Você começa com um saldo de moedas. Distribua-as entre as respostas em que confia; as moedas na opção correta passam para a próxima pergunta.",
       howToPlay: ["Leia a pergunta e as quatro opções.", "Distribua suas moedas em uma ou mais respostas.", "Só ficam as moedas da resposta certa. Mantenha-as nas cinco perguntas."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
+    },
+    de: {
+      metaTitle: "Münzen verteilen: das Fußball-Quiz",
+      metaDescription: "Verteile Münzen auf vier Antworten und behalte die Münzen auf der richtigen Antwort. Fünf Fußballfragen warten in der Tages-Challenge auf dich.",
+      title: "Münzen verteilen: das Fußball-Quiz",
+      intro: "Du startest mit einem Münzvorrat. Verteile ihn auf die Antworten, denen du vertraust; Münzen auf der richtigen Antwort kommen in die nächste Frage.",
+      howToPlay: ["Lies die Frage und ihre vier Antwortmöglichkeiten.", "Verteile Münzen auf eine oder mehrere Antworten.", "Nur die Münzen auf der richtigen Antwort bleiben. Nimm sie durch fünf Fragen mit."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
     },
   }),
   daily("trueFalse", {
@@ -299,6 +317,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Leia a afirmação.", "Toque em Verdadeiro ou Falso antes que o tempo acabe.", "Cada acerto conta para sua pontuação diária."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Wahr oder falsch? Das Fußball-Quiz",
+      metaDescription: "Beantworte schnelle Fußballfragen in je 15 Sekunden. Wahr oder falsch? Jeden Tag gibt es eine neue Runde mit frischen Aussagen und Punkten für dich.",
+      title: "Wahr oder falsch? Das Fußball-Quiz",
+      intro: "Eine Aussage über Fußball, 15 Sekunden und zwei Schaltflächen. Vertraue deinem Instinkt und sammle richtige Antworten.",
+      howToPlay: ["Lies die Aussage.", "Tippe auf „Wahr“ oder „Falsch“, bevor die Zeit abläuft.", "Jede richtige Antwort zählt für deine Tageswertung."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   daily("countdown", {
     en: {
@@ -348,6 +374,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Uma categoria, o relógio correndo e um campo vazio. Digite todas as respostas válidas que conseguir antes que o tempo acabe.",
       howToPlay: ["Leia a categoria, por exemplo, a escalação do Manchester United na final de 2008.", "Digite as respostas uma por uma; cada acerto aparece na sua lista.", "Sua pontuação é o total de respostas válidas em todas as rodadas."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
+    },
+    de: {
+      metaTitle: "Fußballer aufzählen: Wie viele kennst du gegen die Uhr?",
+      metaDescription: "Zähle Fußballer gegen die Uhr auf: Tippe in jeder Kategorie so viele gültige Antworten wie möglich. Jeden Tag startet eine neue Runde mit Countdown.",
+      title: "Fußballer aufzählen: Wie viele kennst du gegen die Uhr?",
+      intro: "Eine Kategorie, eine tickende Uhr und ein leeres Feld. Tippe alle passenden Antworten ein, die dir einfallen, bevor die Zeit abläuft.",
+      howToPlay: ["Lies die Kategorie, zum Beispiel die Startelf von Manchester United im Finale 2008.", "Tippe die Antworten einzeln ein; jede richtige erscheint in deiner Liste.", "Deine Punktzahl entspricht der Zahl gültiger Antworten über alle Runden."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
     },
   }),
   daily("careerPath", {
@@ -399,6 +433,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Observe a sequência de clubes.", "Digite o nome do jogador que você acha que é.", "As respostas certas contam para sua pontuação diária."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Karrierestationen erraten: Welcher Fußballer ist das?",
+      metaDescription: "Errate den Fußballer anhand der Vereinswappen in chronologischer Reihenfolge. Ordne seine Stationen zu und starte täglich eine neue Tages-Challenge.",
+      title: "Karrierestationen erraten: Welcher Fußballer ist das?",
+      intro: "Eine Reihe von Vereinswappen, vom ältesten zum neuesten. Zu welchem Fußballer gehört diese Karriere? Tippe den Namen ein und finde es heraus.",
+      howToPlay: ["Sieh dir die Reihenfolge der Vereine an.", "Tippe den Spieler ein, an den du denkst.", "Richtige Antworten zählen für deine Tageswertung."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   daily("highLow", {
     en: {
@@ -448,6 +490,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Dois jogadores de futebol lado a lado e uma estatística. Escolha quem tem o valor mais alto e aumente sua sequência.",
       howToPlay: ["Leia a estatística que está sendo comparada.", "Escolha o jogador que você acha que tem o valor mais alto.", "Os acertos dão continuidade à rodada."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
+    },
+    de: {
+      metaTitle: "Higher or Lower Fußball: Marktwert, Tore und mehr",
+      metaDescription: "Zwei Fußballer, eine Statistik: Wer hat den höheren Marktwert, wer mehr Tore? Halte deine Serie am Laufen, jeden Tag mit einer neuen Higher-or-Lower-Challenge.",
+      title: "Higher or Lower Fußball: Marktwert, Tore und mehr",
+      intro: "Zwei Fußballer nebeneinander und eine Statistik. Entscheide, welcher Wert höher ist, und baue deine Serie aus.",
+      howToPlay: ["Lies die verglichene Statistik.", "Wähle den Spieler, dessen Wert deiner Meinung nach höher ist.", "Mit jeder richtigen Wahl geht die Runde weiter."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
     },
   }),
   daily("imposter", {
@@ -499,6 +549,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Leia a pergunta e a lista de opções.", "Toque em cada opção que você considera correta.", "Envie sua resposta; só a combinação exata pontua."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Wer passt nicht in die Reihe? Fußball-Quiz",
+      metaDescription: "Wer passt nicht in die Reihe? In der Antwortliste verstecken sich falsche Antworten: Wähle genau alle richtigen aus. Jeden Tag eine neue Fußball-Challenge.",
+      title: "Wer passt nicht in die Reihe? Fußball-Quiz",
+      intro: "Jede Option klingt plausibel, aber einige gehören nicht dazu. Wähle genau die passenden Antworten aus und keine weitere.",
+      howToPlay: ["Lies die Frage und die Antwortliste.", "Tippe auf jede Option, die deiner Meinung nach stimmt.", "Sende deine Auswahl ab; nur eine exakt passende Auswahl zählt."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   daily("statSniper", {
     en: {
@@ -548,6 +606,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Dez números reais do futebol, de valores de transferências ao público em finais de copa. Chegue o mais perto possível, sozinho no desafio diário ou contra amigos; quem mais se aproximar vence a rodada.",
       howToPlay: ["Leia a pergunta numérica: valor de transferência, valor de mercado, gols de um jogador ou público.", "Dê seu palpite: ajuste o número no desafio diário ou digite ao jogar com amigos.", "O palpite mais próximo marca mais pontos; acertar exatamente dá um bônus."],
       reward: "Ganhe moedas e XP no desafio diário e suba no ranking; com amigos, dispute o pódio.",
+    },
+    de: {
+      metaTitle: "Schätzfragen Fußball: Wer am nächsten dran ist, gewinnt",
+      metaDescription: "Schätzfragen Fußball: Errate echte Zahlen zu Ablösen, Marktwerten, Saisontoren und Zuschauerzahlen. Spiele täglich allein oder mit 2–6 Freunden online.",
+      title: "Schätzfragen Fußball: Wer am nächsten dran ist, gewinnt",
+      intro: "Zehn echte Fußballzahlen, von Ablösen bis zur Zuschauerzahl eines Pokalfinales. Schätze so genau wie möglich: allein in der Tages-Challenge oder gegen Freunde, bei denen die genaueste Schätzung die Runde holt.",
+      howToPlay: ["Lies die Zahlenfrage: Ablöse, Marktwert, Tore eines Spielers oder Zuschauerzahl.", "Gib deine Schätzung ab: Schiebe den Regler in der Tages-Challenge oder tippe sie beim Spiel mit Freunden ein.", "Die genaueste Schätzung bringt die meisten Punkte; eine exakte Antwort gibt extra Punkte."],
+      reward: "Sammle Münzen und XP in der Tages-Challenge und steige in der Rangliste auf; mit Freunden spielst du um den Spitzenplatz.",
     },
   }),
   daily("passChain", {
@@ -599,6 +665,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Digite um jogador que atuou no mesmo clube que o último da sequência.", "Continue passando até alguém da sequência ter atuado no mesmo clube que o alvo.", "Faça uma sequência do tamanho ideal, a menor possível, para conseguir a pontuação máxima."],
       reward: "Ganhe moedas e XP por cada sequência concluída.",
     },
+    de: {
+      metaTitle: "Fußballer verbinden: von Mitspieler zu Mitspieler",
+      metaDescription: "Verbinde zwei Fußballer über Mitspieler, die mit ihnen im selben Verein gespielt haben. Zwei Ketten pro Tag; je weniger Verbindungen, desto besser.",
+      title: "Fußballer verbinden: von Mitspieler zu Mitspieler",
+      intro: "Zwei Spieler, eine Kette. Verbinde sie über Mitspieler, die mit ihnen im selben Verein gespielt haben, bis du das Ziel erreichst.",
+      howToPlay: ["Tippe einen Spieler ein, der mit dem letzten Spieler der Kette im selben Verein war.", "Fahre fort, bis jemand in der Kette mit dem Zielspieler im selben Verein gespielt hat.", "Bilde für die volle Punktzahl die kürzestmögliche Kette."],
+      reward: "Sammle Münzen und XP für jede abgeschlossene Kette.",
+    },
   }),
   daily("missingXi", {
     en: {
@@ -648,6 +722,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Uma escalação histórica com os nomes escondidos. Preencha todas as camisas de memória.",
       howToPlay: ["Toque em uma camisa vazia no campo.", "Digite o jogador que começou ali; basta o sobrenome.", "Complete os onze antes que o tempo ou suas três tentativas acabem."],
       reward: "Ganhe moedas e XP por cada camisa que preencher.",
+    },
+    de: {
+      metaTitle: "Aufstellung erraten: legendäre Startelfs",
+      metaDescription: "Errate täglich drei legendäre Startelfs: Tippe auf ein Trikot, nenne den Spieler und vervollständige die Aufstellung, bevor die Zeit abläuft.",
+      title: "Aufstellung erraten: legendäre Startelfs",
+      intro: "Eine legendäre Aufstellung mit versteckten Namen. Fülle jedes Trikot aus dem Gedächtnis.",
+      howToPlay: ["Tippe auf ein leeres Trikot auf dem Spielfeld.", "Tippe den Spieler ein, der dort in der Startelf stand – der Nachname reicht.", "Nenne alle 11, bevor die Zeit abläuft oder deine drei Fehlversuche aufgebraucht sind."],
+      reward: "Sammle Münzen und XP für jedes Trikot, das du richtig benennst.",
     },
   }),
   daily("footballLogic", {
@@ -699,6 +781,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Observe as duas imagens.", "Descubra para qual jogador elas apontam.", "Digite o nome antes que o tempo acabe."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Fußballer-Bilderrätsel: 2 Bilder, 1 Spieler",
+      metaDescription: "Fußballer-Bilderrätsel: Zwei Bilder führen zu einem Spieler. Füge die visuellen Hinweise zusammen und errate in der Tages-Challenge den gesuchten Fußballer.",
+      title: "Fußballer-Bilderrätsel: 2 Bilder, 1 Spieler",
+      intro: "Zwei Bilder, ein versteckter Fußballer. Füge die Hinweise zusammen und tippe den Namen ein.",
+      howToPlay: ["Sieh dir beide Bilder an.", "Finde heraus, auf welchen Spieler sie hinweisen.", "Tippe den Namen ein, bevor die Zeit abläuft."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   daily("putInOrder", {
     en: {
@@ -748,6 +838,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Quatro acontecimentos do futebol fora de ordem. Arraste-os para a sequência correta antes que o tempo acabe.",
       howToPlay: ["Leia o que a rodada pede para ordenar, como valores de transferências.", "Arraste os itens para a ordem certa.", "Envie sua resposta; cada rodada totalmente correta vale pontos."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
+    },
+    de: {
+      metaTitle: "Fußball-Zeitstrahl: Was war zuerst?",
+      metaDescription: "Bringe Fußballereignisse, Transfers und Rekorde in die richtige Reihenfolge. Jeden Tag wartet eine neue Tages-Challenge im Fußball-Zeitstrahl auf dich.",
+      title: "Fußball-Zeitstrahl: Was war zuerst?",
+      intro: "Vier Fußball-Ereignisse in der falschen Reihenfolge. Ziehe sie vor Ablauf der Zeit in die richtige Abfolge.",
+      howToPlay: ["Lies, was die Runde ordnen soll, zum Beispiel Ablösesummen.", "Ziehe die Elemente in die richtige Reihenfolge.", "Sende deine Antwort ab; jede vollständig richtige Runde bringt Punkte."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
     },
   }),
   daily("cardDetective", {
@@ -799,6 +897,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Revele uma dica: nota, posição, clube ou seleção; cada uma tem um custo.", "Digite o nome do jogador assim que souber.", "Quanto mais moedas sobrarem, mais pontos você marca."],
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
+    de: {
+      metaTitle: "Spielerkarte erraten: Welcher Fußballer steckt dahinter?",
+      metaDescription: "Errate die Spielerkarte: Jeder Platz auf der Karte verbirgt einen Hinweis mit eigenem Münzpreis. Decke nur auf, was du brauchst. Zehn Karten täglich.",
+      title: "Spielerkarte erraten: Welcher Fußballer steckt dahinter?",
+      intro: "Eine Spielerkarte, auf der alle Felder gesperrt sind. Jeder Hinweis kostet Münzen: Decke so wenig wie möglich auf und errate dann den Spieler.",
+      howToPlay: ["Öffne einen Hinweis: Bewertung, Position, Verein oder Nation – jeder hat seinen Preis in Münzen.", "Tippe den Spieler ein, sobald du ihn erkennst.", "Je mehr Münzen du behältst, desto mehr Punkte bekommst du."],
+      reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
+    },
   }),
   mode("ranked", "/play", "match", {
     en: {
@@ -848,6 +954,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "O coração do QuizBall: um duelo ao vivo de perguntas sobre futebol contra um adversário, com posse de bola, pênaltis e uma classificação por divisões.",
       howToPlay: ["Entre na fila e encontre um adversário em segundos.", "Responda com rapidez e precisão para manter a posse de bola.", "Vença para subir de divisão e avançar no ranking."],
       reward: "Ganhe pontos de ranking, moedas e XP por partida.",
+    },
+    de: {
+      metaTitle: "Fußball-Quiz-Duell: 1 gegen 1 online",
+      metaDescription: "Fordere Gegner im Fußball-Quiz-Duell 1 gegen 1 online heraus. Halte den Ballbesitz, entscheide das Match im Elfmeterschießen und steige in der Rangliste auf.",
+      title: "Fußball-Quiz-Duell: 1 gegen 1 online",
+      intro: "Das Herzstück von QuizBall: ein Live-Duell mit Fußballfragen gegen einen echten Gegner – mit Ballbesitz, Elfmeterschießen und Ranked-Ligen.",
+      howToPlay: ["Stelle dich der Suche und finde in Sekunden einen Gegner.", "Antworte schneller und genauer, um den Ballbesitz zu halten.", "Gewinne das Match, steige in den Ligen auf und klettere in der Rangliste."],
+      reward: "Sammle Ranked-Punkte, Münzen und XP pro Match.",
     },
   }),
   mode("auction", "/auction", "auction", {
@@ -899,6 +1013,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Os jogadores aparecem um por um com dicas sobre quem são.", "Dê lances contra os outros técnicos; o maior lance contrata o jogador.", "Complete sua escalação dentro do orçamento.", "A equipe completa com a melhor avaliação vence."],
       reward: "As moedas e a classificação exigem uma conta; leilões como visitante servem para treinar.",
     },
+    de: {
+      metaTitle: "Fußball-Auktion: Ersteigere dein Traumteam",
+      metaDescription: "Spiele die Fußball-Auktion online, ersteigere Spieler und stelle dein Traumteam zusammen. Probiere das Quiz als Gast im Browser aus, ohne ein Konto anzulegen.",
+      title: "Fußball-Auktion: Ersteigere dein Traumteam",
+      intro: "Stelle dein Fußballteam bei einer Auktion zusammen. Gib Gebote ab, behalte dein verfügbares Budget im Blick und wähle deine Spieler. Lies vor dem Start die Rundenregeln. Du kannst auch ohne Konto als Gast spielen.",
+      howToPlay: ["Die Spieler erscheinen nacheinander mit Hinweisen zu ihrer Identität.", "Biete gegen die anderen Trainer; das höchste Gebot holt den Spieler.", "Stelle deine Aufstellung innerhalb des Budgets zusammen.", "Das stärkste vollständige Team gewinnt das Match."],
+      reward: "Münzen und Rang gibt es mit Konto; Auktionen als Gast dienen zum Üben.",
+    },
   }),
   mode("friendly", "/friend", "match", {
     en: {
@@ -948,6 +1070,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Jogue uma partida de perguntas de futebol com um amigo. Crie uma sala ou entre por um convite e responda cara a cara. Pontos de ranking e prêmios da Weekend League ficam nos modos competitivos.",
       howToPlay: ["Crie uma sala e compartilhe o link de convite, ou entre na sala de um amigo.", "Os dois jogadores respondem às mesmas perguntas de futebol contra o relógio.", "Respostas certas e mais rápidas valem mais pontos.", "Vence quem tiver a maior pontuação depois da última pergunta."],
       reward: "Partidas com amigos não dão pontos de ranking; jogue pela diversão e para se gabar.",
+    },
+    de: {
+      metaTitle: "Fußball-Quiz mit Freunden",
+      metaDescription: "Fordere Freunde zu einem Fußball-Quiz-Match heraus. Erstelle im Browser einen Raum oder tritt einem bei und spiel direkt ohne Registrierung los.",
+      title: "Fußball-Quiz mit Freunden",
+      intro: "Spiele ein Fußball-Quiz-Match mit einem Freund. Erstelle einen Raum oder tritt über eine Einladung bei und antworte im direkten Duell. Ranked-Punkte und Preise der Weekend League gibt es in den jeweiligen Wettbewerbsmodi.",
+      howToPlay: ["Erstelle einen Raum und teile den Einladungslink oder tritt dem Raum eines Freundes bei.", "Beide beantworten dieselben Fußballfragen gegen die Uhr.", "Schnellere richtige Antworten bringen mehr Punkte.", "Wer nach der letzten Frage mehr Punkte hat, gewinnt."],
+      reward: "Freundschafts-Matches bringen keine Ranked-Punkte – spiel um den Spaß und zum Angeben.",
     },
   }),
   mode("football-tic-tac-toe", "/tic-tac-toe", "mini-football-grid", {
@@ -999,6 +1129,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Escolha uma casa: a linha e a coluna indicam duas categorias, como clube e seleção.", "Diga o nome de um jogador que combine com as duas. Sobrenomes e pequenos erros de digitação são aceitos.", "Uma resposta certa ocupa a casa; três em linha vencem a partida.", "A melhor de três decide partidas equilibradas."],
       reward: "As recompensas em pontos de ranking exigem uma conta; partidas como visitante servem para treinar.",
     },
+    de: {
+      metaTitle: "Fußball Tic Tac Toe online",
+      metaDescription: "Spiele Fußball Tic Tac Toe online: Nenne Spieler, die zu beiden Kategorien passen, sichere Felder und verbinde drei in einer Reihe. Starte ohne Konto.",
+      title: "Fußball Tic Tac Toe online",
+      intro: "Miss dein Fußballwissen am Spielfeld. Wähle ein Feld, nenne einen Spieler, der zu beiden Kategorien passt, und verbinde drei in einer Reihe. Starte als Gast und wähle aus den verfügbaren Spieloptionen.",
+      howToPlay: ["Wähle ein Feld: Zeile und Spalte geben zwei Kategorien vor, etwa Verein und Nation.", "Nenne einen Spieler, der zu beiden passt. Nachnamen und kleine Schreibfehler werden akzeptiert.", "Mit einem richtigen Namen gehört das Feld dir; drei in einer Reihe gewinnen das Spiel.", "Bei knappen Matches entscheidet eine Best-of-three-Serie."],
+      reward: "Für Ranked-Punkte brauchst du ein Konto; Gast-Matches sind zum Üben da.",
+    },
   }),
   mode("free-kicks", "/free-kicks", "mini-final-third", {
     en: {
@@ -1048,6 +1186,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Cada resposta certa abre uma zona do gol. Depois, prepare-se e faça a cobrança por moedas.",
       howToPlay: ["Aposte moedas para começar uma rodada.", "Responda às perguntas para abrir zonas.", "Chute: mais zonas abertas dão melhores chances."],
       reward: "Ganhe moedas a cada cobrança convertida.",
+    },
+    de: {
+      metaTitle: "Freistoß-Spiel: Antworte richtig, dann schieß",
+      metaDescription: "Beantworte Fußballfragen, öffne so Schusszonen im Tor und tritt zum Freistoß an. Spiele QuizBall Freistöße und sammle Münzen für Treffer im Fußball-Quiz.",
+      title: "Freistoß-Spiel: Antworte richtig, dann schieß",
+      intro: "Jede richtige Antwort öffnet eine Zone im Tor. Dann trittst du zum Freistoß an und kannst Münzen sammeln.",
+      howToPlay: ["Wähle Münzen für die Runde.", "Beantworte Fragen, um Zonen zu öffnen.", "Schieß: Je mehr Zonen offen sind, desto besser deine Chance."],
+      reward: "Bei jedem verwandelten Freistoß erhältst du Münzen.",
     },
   }),
   mode("road-to-goal", "/road-to-goal", "mini-road-to-goal", {
@@ -1099,6 +1245,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Aposte moedas e dê a saída.", "Responda para avançar zona por zona.", "Retire suas moedas quando quiser ou marque o gol para alcançar o maior multiplicador."],
       reward: "Ganhe moedas a cada avanço.",
     },
+    de: {
+      metaTitle: "Weg zum Tor: Antworte und rück vor",
+      metaDescription: "Bewege den Ball mit jeder richtigen Antwort nach vorn, sichere deine Münzen oder geh bis zum Tor. Spiele Weg zum Tor und sammle Münzen in QuizBall.",
+      title: "Weg zum Tor: Antworte und rück vor",
+      intro: "Du startest in der eigenen Hälfte. Jede richtige Antwort bringt den Ball weiter nach vorn; mit jedem Schritt wächst der Münzvorrat. Sichere ihn oder geh bis zum Tor.",
+      howToPlay: ["Wähle Münzen und stoße an.", "Antworte, um dich Zone für Zone vorzuarbeiten.", "Sichere deine Münzen jederzeit oder triff für den höchsten Multiplikator."],
+      reward: "Mit jedem Schritt nach vorn kannst du Münzen sammeln.",
+    },
   }),
   mode("guess-the-goal", "/guess-the-goal", "mini-guess-the-goal", {
     en: {
@@ -1148,6 +1302,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Um gol famoso é reconstituído lance a lance em um quadro tático, com os nomes escondidos. Observe os passes e as corridas e escolha o gol antes que a finalização revele a resposta.",
       howToPlay: ["Acompanhe a jogada se formar no quadro.", "Escolha o gol entre quatro opções.", "Veja o lance real e responda à pergunta bônus.", "São cinco gols por dia."],
       reward: "Jogue de graça sem uma conta; entre para ganhar moedas e XP por cada gol que adivinhar de primeira.",
+    },
+    de: {
+      metaTitle: "Tor erraten: Erkennst du das berühmte Tor?",
+      metaDescription: "Errate das berühmte Tor auf dem Taktikboard: Verfolge Pässe und Laufwege, nenne das Tor und sieh den echten Clip. Fünf Tore täglich, kostenlos spielbar.",
+      title: "Tor erraten: Erkennst du das berühmte Tor?",
+      intro: "Ein berühmtes Tor wird Schritt für Schritt auf dem Taktikboard nachgespielt, die Namen bleiben verborgen. Verfolge Pässe und Laufwege und wähle das Tor, bevor der Abschluss es verrät.",
+      howToPlay: ["Sieh zu, wie der Spielzug auf dem Board entsteht.", "Wähle das Tor aus vier Möglichkeiten.", "Sieh den echten Clip und beantworte danach die Bonusfrage.", "Jeden Tag gibt es fünf Tore."],
+      reward: "Spiele ohne Konto kostenlos; melde dich an und sammle Münzen und XP für jedes Tor, das du beim ersten Versuch errätst.",
     },
   }),
   mode("football-minesweeper", "/buscaminas", "buscaminas", {
@@ -1199,6 +1361,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Leia a dica: uma temporada em um clube, o elenco de uma final, um local de nascimento…", "Toque nos jogadores que combinam. Cada acerto soma um ponto ao prêmio da rodada.", "Pise em uma mina e você perde os pontos da rodada. Guarde-os quando quiser.", "Encontre os 12 para fazer uma rodada perfeita e ganhar três pontos extras. Compartilhe suas 20 casas."],
       reward: "Jogue o tabuleiro de ontem sem uma conta; entre para jogar o de hoje, manter sua sequência e aparecer no ranking diário.",
     },
+    de: {
+      metaTitle: "Fußball-Minesweeper",
+      metaDescription: "Spiele täglich Fußball-Minesweeper: 20 Runden mit je 16 Spielern. Finde die 12 passenden Spieler, meide 4 Minen und meistere jeden Tag ein neues Feld.",
+      title: "Fußball-Minesweeper",
+      intro: "In jeder Runde siehst du 16 Fußballer und einen Hinweis. Zwölf passen dazu, vier sind Minen. Finde die richtigen Spieler, sichere deine Punkte, bevor du auf eine Mine trittst, und überstehe 20 immer schwierigere Runden.",
+      howToPlay: ["Lies den Hinweis: eine Vereinssaison, der Kader für ein Finale, ein Geburtsort …", "Tippe auf die passenden Spieler. Jeder Treffer bringt einen Punkt in die Runde.", "Bei einer Mine verlierst du die Punkte der Runde. Sichere sie jederzeit.", "Finde alle 12 für eine perfekte Runde und 3 Bonuspunkte. Teile deine 20 Felder."],
+      reward: "Spiele das Feld von gestern ohne Konto; melde dich für das heutige Feld an, halte deine Serie und steige in die tägliche Rangliste auf.",
+    },
   }),
   mode("football-clues", "/pistas", "pistas", {
     en: {
@@ -1248,6 +1418,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Um jogador de futebol escondido e dez dicas, da mais difícil à mais fácil. Revele uma por vez, digite o sobrenome quando souber e marque até dez pontos por jogador. São dez jogadores novos por dia.",
       howToPlay: ["A primeira dica é grátis: nacionalidade, posição, um fato pouco específico…", "Revele as dicas uma de cada vez. Cada dica aberta reduz os pontos disponíveis de dez para um.", "Digite o sobrenome; acentos não fazem diferença. Se errar, você tem mais uma tentativa e pode abrir no máximo mais três dicas.", "São dez jogadores por dia e cem pontos no máximo. Compartilhe suas dez casas."],
       reward: "Jogue dias anteriores sem uma conta; entre para ver as dicas de hoje, manter sua sequência e acessar o ranking diário.",
+    },
+    de: {
+      metaTitle: "Fußballer erraten mit 10 Hinweisen",
+      metaDescription: "Errate täglich zehn Fußballer mit je zehn Hinweisen. Hol dir 10 Punkte beim ersten Hinweis oder spiele online im 1-gegen-1 gegen einen Freund.",
+      title: "Fußballer erraten mit 10 Hinweisen",
+      intro: "Ein versteckter Fußballer und zehn Hinweise – vom schwierigsten bis zum einfachsten. Decke sie nacheinander auf, tippe den Nachnamen ein, sobald du ihn kennst, und hole bis zu 10 Punkte pro Spieler. Jeden Tag gibt es zehn neue Spieler.",
+      howToPlay: ["Der erste Hinweis ist gratis: Nationalität, Position, ein vager Fakt …", "Decke Hinweise einzeln auf. Jeder Hinweis senkt die erreichbare Punktzahl von 10 auf 1.", "Tippe den Nachnamen ein; Umlaute und Akzente sind egal. Bei einem Fehler hast du noch einen Versuch und kannst höchstens drei weitere Hinweise öffnen.", "Zehn Spieler pro Tag, höchstens 100 Punkte. Teile deine zehn Felder."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutigen Hinweise an, halte deine Serie und steige in die tägliche Rangliste auf.",
     },
   }),
   mode("guess-the-goal-minute", "/minuto", "minuto", {
@@ -1299,6 +1477,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Leia a ficha: a partida, o placar final, a fase e quem marcou.", "Digite o minuto em que você acha que saiu o gol. Acréscimos contam: 90+3 é o minuto 93.", "Minuto exato: três pontos. Até dois minutos de diferença: dois. Até cinco: um.", "São dez gols por dia, trinta pontos no máximo. Compartilhe suas dez casas ou desafie um amigo no 1v1."],
       reward: "Jogue dias anteriores sem uma conta; entre para ver os gols de hoje, manter sua sequência e acessar o ranking diário.",
     },
+    de: {
+      metaTitle: "In welcher Minute fiel das Tor? Torminute erraten",
+      metaDescription: "Errate die Torminute von zehn berühmten Toren aus WM, Champions League und Copa América. Die exakte Minute zählt 3 Punkte; spiele allein oder 1 gegen 1.",
+      title: "In welcher Minute fiel das Tor? Torminute erraten",
+      intro: "Ein berühmtes Tor, das Match und der Torschütze: Nenne die Minute. Jeden Tag gibt es zehn Tore aus WM-Finals, Champions-League-Abenden und Copa-América-Klassikern. Die exakte Minute zählt 3 Punkte, eine knappe Schätzung ebenfalls. Fordere einen Freund zum 1-gegen-1-Duell heraus – die genaueste Schätzung holt das Tor.",
+      howToPlay: ["Lies die Karte: Match, Endstand, Runde und Torschütze.", "Tippe die Minute ein, in der das Tor deiner Meinung nach fiel. Nachspielzeit zählt dazu: 90+3 ist Minute 93.", "Exakte Minute: 3 Punkte. Höchstens 2 Minuten daneben: 2. Höchstens 5: 1.", "Zehn Tore pro Tag, höchstens 30 Punkte. Teile deine zehn Felder oder fordere einen Freund zum 1 gegen 1 heraus."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutigen Tore an, halte deine Serie und steige in die tägliche Rangliste auf.",
+    },
   }),
   mode("last-answer-standing", "/ultimo", "ultimo", {
     en: {
@@ -1348,6 +1534,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Todo dia traz cinco categorias de futebol com uma lista fechada: uma seleção da Copa do Mundo, campeões da Libertadores ou artilheiros de um clube. Diga as respostas enquanto o tempo diminui a cada uma, de vinte para seis segundos. Três erros seguidos ou o fim do tempo encerra a categoria.",
       howToPlay: ["Leia a categoria: a lista é fechada, então cada resposta está certa ou errada.", "Diga as respostas uma após a outra. O relógio começa em vinte segundos e diminui a cada resposta, até chegar a seis.", "Três erros seguidos ou o fim do tempo encerra a categoria. Cada resposta vale um ponto.", "Acerte a lista toda para ganhar cinco pontos extras. Compartilhe suas cinco casas."],
       reward: "Jogue dias anteriores sem uma conta; entre para ver as categorias de hoje, manter sua sequência e acessar o ranking diário.",
+    },
+    de: {
+      metaTitle: "Nenne alle! Fußball-Listen gegen die Uhr",
+      metaDescription: "Spiele fünf Fußball-Kategorien mit Antwortlisten wie WM-Kadern oder Libertadores-Siegern. Nenne alle Antworten gegen die Uhr oder duelliere dich 1 gegen 1.",
+      title: "Nenne alle! Fußball-Listen gegen die Uhr",
+      intro: "Jeden Tag gibt es fünf Fußball-Kategorien mit einer festen Antwortliste: einen WM-Kader, die Sieger der Copa Libertadores oder die besten Torschützen eines Vereins. Nenne die Antworten nacheinander, während die Zeit pro Antwort von 20 auf 6 Sekunden sinkt. Drei Fehler in Folge oder ein Zeitablauf beenden die Kategorie.",
+      howToPlay: ["Lies die Kategorie: Die Liste ist festgelegt, jede Antwort ist also richtig oder falsch.", "Nenne die Antworten nacheinander. Die Uhr startet bei 20 Sekunden und zählt pro Antwort bis auf 6 herunter.", "Drei Fehler in Folge oder ein Zeitablauf beenden die Kategorie. Jede Antwort zählt 1 Punkt.", "Nenne die ganze Liste für 5 Bonuspunkte. Teile deine fünf Felder."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutigen Kategorien an, halte deine Serie und steige in die tägliche Rangliste auf.",
     },
   }),
   mode("played-for-both-clubs", "/ortak-futbolcu", "shared-player", {
@@ -1399,6 +1593,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Os escudos de dois clubes aparecem ao mesmo tempo.", "Digite qualquer jogador que tenha atuado pelos dois clubes. Basta o sobrenome, e pequenos erros de digitação são aceitos.", "Você tem vinte segundos por par. Uma resposta errada bloqueia você por um segundo, então chutar sem pensar não ajuda.", "Encontre um par e ganhe um ponto. Em caso de empate, quem respondeu mais rápido fica à frente. Compartilhe o resultado ou desafie amigos em uma sala."],
       reward: "Jogue dias anteriores sem uma conta; entre para ver os dez pares de hoje e acessar o ranking diário.",
     },
+    de: {
+      metaTitle: "Spieler, die für beide Vereine gespielt haben",
+      metaDescription: "Zwei Vereine erscheinen und du hast 20 Sekunden, um einen Spieler zu nennen, der für beide gespielt hat. Zehn Paare täglich oder online mit bis zu 5 Freunden.",
+      title: "Spieler, die für beide Vereine gespielt haben",
+      intro: "Zwei Vereine erscheinen auf dem Bildschirm: Arsenal und Barcelona, AC Mailand und Inter Mailand, Galatasaray und Fenerbahçe. Du hast 20 Sekunden, um einen Fußballer zu nennen, der für beide gespielt hat. Jeden Tag gibt es zehn Paare, einen Punkt pro Treffer und eine Rangliste für die Schnellsten.",
+      howToPlay: ["Die Wappen zweier Vereine erscheinen gleichzeitig.", "Nenne einen Fußballer, der für beide Vereine gespielt hat. Der Nachname reicht; kleine Schreibfehler werden verziehen.", "Du hast 20 Sekunden pro Paar. Eine falsche Antwort sperrt dich 1 Sekunde, wildes Raten hilft also nicht.", "Finde ein Paar für 1 Punkt. Bei Gleichstand steht der schnellere Spieler weiter vorn. Teile dein Ergebnis oder fordere Freunde in einem Raum heraus."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutigen zehn Paare und die tägliche Rangliste an.",
+    },
   }),
   mode("football-name-chain", "/son-harfle", "name-chain", {
     en: {
@@ -1448,6 +1650,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Nós damos o nome de um jogador; você responde com outro cujo nome começa com a última letra do anterior. Kane, depois Eto'o, Ozil e Lewandowski. Você tem dez segundos por nome e o relógio acelera conforme a sequência cresce. São três sequências por dia: quantos jogadores você consegue lembrar?",
       howToPlay: ["O jogo dá o nome de um jogador para começar e mostra a letra que você precisa usar.", "Digite um jogador cujo primeiro nome ou sobrenome comece com essa letra. Anthony Martial vale para A e para M.", "Você tem dez segundos por nome; a cada cinco nomes, o tempo diminui um segundo. Não vale repetir jogador.", "Quando o tempo acaba, a sequência termina e outra começa. São três por dia; sua pontuação é o total de jogadores que você lembrou."],
       reward: "Jogue dias anteriores sem uma conta; entre para ver as sequências de hoje e acessar o ranking diário.",
+    },
+    de: {
+      metaTitle: "Fußballer-Wortkette: letzter Buchstabe, nächster Name",
+      metaDescription: "Nenne einen Fußballer, dessen Name mit dem letzten Buchstaben des vorherigen beginnt. Zehn Sekunden pro Name, drei Ketten am Tag oder mit bis zu 5 Freunden.",
+      title: "Fußballer-Wortkette: letzter Buchstabe, nächster Name",
+      intro: "Wir nennen dir einen Fußballer; du nennst einen anderen, dessen Name mit dem letzten Buchstaben des vorherigen beginnt. Kane, dann Eto'o, Özil und Lewandowski. Du hast 10 Sekunden pro Name, und die Zeit wird mit wachsender Kette kürzer. Drei Ketten pro Tag: Wie viele Fußballer fallen dir ein?",
+      howToPlay: ["Das Spiel nennt einen Startspieler und zeigt dir den Buchstaben, den du brauchst.", "Tippe einen Fußballer ein, dessen Vor- oder Nachname mit diesem Buchstaben beginnt. Anthony Martial zählt für A und M.", "Du hast 10 Sekunden pro Name; alle fünf Namen wird die Zeit um 1 Sekunde kürzer. Kein Spieler darf doppelt vorkommen.", "Läuft die Zeit ab, endet die Kette und eine neue beginnt. Drei pro Tag; deine Punktzahl entspricht der Zahl deiner genannten Spieler."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutigen Ketten und die tägliche Rangliste an.",
     },
   }),
   mode("football-horserace", "/horserace", "football-horserace", {
@@ -1499,6 +1709,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["A corrida do dia usa um torneio e as mesmas quatro seleções para todos: escolha a sua; as outras três são rivais. Você precisa avançar cinco casas, e cada rival, três.", "Escolha uma estatística da lista ou digite uma: vitórias, pênaltis, jogos sem sofrer gols, cartões vermelhos, viradas e outras. Todas são recordes reais do torneio.", "A seleção que lidera a estatística avança uma casa, seja quem for que a escolheu. Em caso de empate, todas as seleções que dividem a liderança avançam.", "Chegue ao objetivo antes das rivais usando o menor número de escolhas possível. Acertar as cinco é uma corrida perfeita."],
       reward: "Jogue dias anteriores sem uma conta; entre para disputar a corrida de hoje e acessar o ranking diário.",
     },
+    de: {
+      metaTitle: "Nationen-Rennen: Wähle die Statistik",
+      metaDescription: "Wähle die Statistik, in der deine Nation führt, und zieh deine Flagge im Fußball-Rennen nach vorn. Spiele täglich oder mit 2 bis 4 Freunden.",
+      title: "Nationen-Rennen: Wähle die Statistik, zieh deine Flagge nach vorn",
+      intro: "Wähle eine Nation in einem Turnier: Dänemark bei der EM oder Marokko bei der WM. Drei gegnerische Nationen treten gegen dich an. Wähle eine Statistik, in der deine Nation vorn liegt, etwa die meisten Tore in einem Spiel oder die wenigsten Gegentore. Liegt deine Wahl richtig, rückt deine Flagge ein Feld vor. Sonst rückt die Nation vor, die tatsächlich führt.",
+      howToPlay: ["Das Tagesrennen nutzt ein Turnier und dieselben vier Nationen für alle. Wähle deine Nation; die anderen drei sind Gegner. Du brauchst fünf Felder, jeder Gegner drei.", "Wähle eine Statistik aus der Liste oder tippe eine ein: Siege, Elfmeter, Zu-null-Spiele, rote Karten, Comebacks und mehr. Alle Werte sind echte Turnierrekorde.", "Die Nation mit dem besten Wert rückt ein Feld vor – unabhängig davon, wer sie gewählt hat. Bei Gleichstand rücken alle führenden Nationen vor.", "Erreiche das Ziel vor den Gegnern und brauche dafür so wenige Wahlen wie möglich. Fünf richtige Wahlen ergeben ein perfektes Rennen."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für das heutige Rennen und die tägliche Rangliste an.",
+    },
   }),
   mode("football-codenames", "/codenames", "football-codenames", {
     en: {
@@ -1548,6 +1766,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Vinte cartas com imagens de futebol: caricaturas de craques, estádios famosos e memes do futebol. Seu olheiro dá uma dica e um número, como Ferguson · 2 ou Mão de Deus · 1, e você encontra as cartas indicadas. Oito cartas são do seu time e uma é o gol contra: vire essa carta e a partida acaba.",
       howToPlay: ["O tabuleiro do dia tem 20 cartas e é igual para todos: oito são suas, sete do rival, quatro neutras e uma é o gol contra. Só o olheiro sabe quais são quais.", "O olheiro controlado pelo jogo dá três dicas, uma por vez: uma palavra de futebol e um número, como Real Madrid · 3. O número indica quantas cartas do seu time ela aponta.", "Vire uma carta que você acha que combina. Se acertar, a dica continua; uma carta rival ou neutra encerra a dica e traz a próxima.", "Encontre as oito cartas antes que as dicas acabem. O gol contra encerra a partida na hora. Compartilhe seu tabuleiro e suba no ranking diário."],
       reward: "Jogue tabuleiros anteriores sem uma conta; entre para acessar o tabuleiro de hoje e o ranking diário.",
+    },
+    de: {
+      metaTitle: "Fußball-Codenames: Bilderkarten, ein Hinweis, zwei Teams",
+      metaDescription: "Fußball-Codenames: Deute 20 Bilderkarten mit einem Fußball-Hinweis und einer Zahl. Finde deine 8 Karten, meide das Eigentor und spiel täglich oder im Team.",
+      title: "Fußball-Codenames: Bilderkarten, ein Hinweis, zwei Teams",
+      intro: "20 Fußball-Bilderkarten: Karikaturen von Legenden, berühmte Stadien und Fußball-Memes. Dein Hinweisgeber nennt einen Fußballbegriff und eine Zahl, etwa „Ferguson · 2“ oder „Hand of God · 1“. Finde die Karten, auf die der Hinweis passt. Acht Karten gehören zu deinem Team, eine ist das Eigentor: Dreh sie um und das Match ist vorbei.",
+      howToPlay: ["Das Tagesfeld hat 20 Karten und ist für alle gleich: 8 gehören dir, 7 dem Gegner, 4 sind neutral und eine ist das Eigentor. Nur der Hinweisgeber kennt die Zuordnung.", "Der Bot-Hinweisgeber gibt dir drei Hinweise, einen nach dem anderen: ein Fußballwort und eine Zahl, etwa „Real Madrid · 3“. Die Zahl sagt, auf wie viele deiner Karten der Hinweis passt.", "Dreh eine Karte um, die deiner Meinung nach passt. Bei einem Treffer geht der Hinweis weiter; eine gegnerische oder neutrale Karte beendet ihn und der nächste Hinweis folgt.", "Finde alle 8 Karten, bevor die Hinweise aufgebraucht sind. Das Eigentor beendet das Match sofort. Teile dein Feld und steige in der täglichen Rangliste auf."],
+      reward: "Spiele frühere Felder ohne Konto; melde dich für das heutige Feld und die tägliche Rangliste an.",
     },
   }),
   mode("football-odd-one-out", "/dato-falso-futbolero", "dato-falso", {
@@ -1599,6 +1825,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Cada carta mostra um jogador e uma afirmação, como os clubes por que passou, as ligas em que jogou, as convocações para a Copa do Mundo, os números de camisa ou os títulos, com cinco opções.", "Quatro opções são verdadeiras e uma é falsa. Toque na que você acha falsa e confirme. Você tem trinta segundos por carta.", "Um acerto vale um ponto. Você tem dois curingas, uma vez cada por dia: Eliminar 2 deixa duas opções verdadeiras em cinza; Tudo ou nada vale mais dois se acertar e menos um se errar.", "São dez cartas por dia, iguais para todos. Termine para ver sua pontuação, compartilhar o resultado e subir no ranking diário."],
       reward: "Jogue cartas de dias anteriores sem uma conta; entre para acessar as cartas de hoje e o ranking diário.",
     },
+    de: {
+      metaTitle: "Welche Aussage ist falsch? Finde den falschen Fußball-Fakt",
+      metaDescription: "Welche Aussage ist falsch? Prüfe fünf Fakten zu einem Fußballer: Vier stimmen, einer ist erfunden. Spiele 10 Karten, nutze 2 Joker oder tritt Freunden entgegen.",
+      title: "Welche Aussage ist falsch? Finde den falschen Fußball-Fakt",
+      intro: "Ein Fußballer, eine Aussage und fünf Optionen: „spielte bei ALLEN diesen Vereinen“, „trug ALLE diese Rückennummern“. Vier Aussagen stimmen, eine ist falsch. Finde den Ausreißer, bevor die 30 Sekunden ablaufen.",
+      howToPlay: ["Jede Karte zeigt einen Fußballer und eine Aussage, etwa zu seinen Vereinen, Ligen, WM-Kadern, Rückennummern oder Titeln. Darunter stehen fünf Optionen.", "Vier Optionen stimmen, eine ist falsch. Tippe auf die falsche und bestätige deine Wahl. Du hast 30 Sekunden pro Karte.", "Eine richtige Antwort bringt 1 Punkt. Zwei Joker, je einmal pro Tag: „2 entfernen“ blendet zwei richtige Optionen aus; „Doppelt oder nichts“ bringt +2 bei richtig und −1 bei falsch.", "Zehn Karten pro Tag, für alle gleich. Beende das Spiel, sieh deinen Punktestand, teile dein Feld und steige in der täglichen Rangliste auf."],
+      reward: "Spiele Karten früherer Tage ohne Konto; melde dich für die heutigen Karten und die tägliche Rangliste an.",
+    },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {
     en: {
@@ -1648,6 +1882,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Uma lista de top 10 escondida por dia: artilheiros da Champions League, transferências mais caras, técnicos com mais títulos. Descubra quem está nela. Cada acerto sobe para sua posição na torre; três erros e a torre vence. Você consegue encontrar os dez?",
       howToPlay: ["Leia o título da lista de hoje: ele explica o que os dez nomes têm em comum.", "Digite um nome ou escolha uma sugestão. Se acertar, ele aparece na posição correspondente na torre, com seu valor.", "Um jogador real que não está na lista custa uma vida. Algo que já está na torre ou um nome desconhecido não custa nada. Você tem três vidas.", "Sua pontuação é quantos dos dez você encontrou. Compartilhe sua torre ou jogue com amigos: revezem na mesma torre, e cada posição vale seu número."],
       reward: "Jogue listas de dias anteriores sem uma conta; entre para acessar a lista de hoje e o ranking diário.",
+    },
+    de: {
+      metaTitle: "Top 10 erraten: das Fußball-Top-10-Quiz",
+      metaDescription: "Errate die Fußball-Top-10: Finde Spieler, Trainer, Vereine oder Länder, bevor der Turm dich schlägt. 3 Leben, Rangliste und Räume für 2 bis 6 Freunde.",
+      title: "Top 10 erraten: das Fußball-Top-10-Quiz",
+      intro: "Jeden Tag gibt es eine versteckte Top-10-Liste: die Torschützen der Champions League, die teuersten Transfers oder die Trainer mit den meisten Titeln. Nenne die Gesuchten. Jede richtige Antwort rückt auf ihren Platz im Turm; bei drei Fehlern gewinnt der Turm. Schaffst du alle zehn?",
+      howToPlay: ["Lies den Titel der heutigen Liste: Er verrät genau, was die zehn Einträge gemeinsam haben.", "Tippe einen Namen ein oder wähle einen Vorschlag. Bei einer richtigen Antwort erscheint er mit seinem Wert auf dem passenden Rang im Turm.", "Ein echter Spieler, der nicht auf der Liste steht, kostet ein Leben. Ein Name, der schon im Turm steht oder den wir nicht kennen, kostet nichts. Du hast 3 Leben.", "Deine Punktzahl entspricht der Zahl der gefundenen Einträge. Teile deinen Turm oder spiel mit Freunden: Ihr seid abwechselnd am selben Turm; jeder Platz zählt so viele Punkte wie seine Nummer."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für die heutige Liste und die tägliche Rangliste an.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {
@@ -1699,6 +1941,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Escolha um valor para a rodada; como visitante, você usa pontos de treino.", "Abra uma casa: se for segura, seu saldo aumenta; se houver um defensor, a rodada termina.", "Descubra onde está o perigo até três vezes respondendo a uma pergunta de futebol.", "Depois da primeira casa segura, você pode retirar suas moedas quando quiser."],
       reward: "Para jogar por moedas reais, é preciso ter uma conta; visitantes usam apenas pontos de treino.",
     },
+    de: {
+      metaTitle: "Quiz-Minenfeld: Fußballfragen mit versteckten Verteidigern",
+      metaDescription: "Öffne Felder, weiche vier Verteidigern aus und sammle Münzen. Beantworte Fußballfragen, um ihre Position zu finden. Übe als Gast; mit Konto sammelst du Münzen.",
+      title: "Quiz-Minenfeld: Fußballfragen mit versteckten Verteidigern",
+      intro: "25 Felder verbergen vier Verteidiger. Öffne sichere Felder, um deinen Münzvorrat zu vergrößern, beantworte Fußballfragen, um die Gefahr zu finden, und sichere deine Münzen, bevor du abgegrätscht wirst.",
+      howToPlay: ["Wähle die Münzzahl für die Runde; als Gast spielst du mit Übungspunkten.", "Öffne ein Feld: Ist es sicher, wächst dein Münzvorrat; ein Verteidiger beendet die Runde.", "Finde bis zu dreimal durch eine Fußballfrage heraus, wo Gefahr lauert.", "Nach deinem ersten sicheren Feld kannst du deine Münzen jederzeit sichern."],
+      reward: "Für Münzen brauchst du ein Konto; als Gast spielst du nur mit Übungspunkten.",
+    },
   }),
   mode("squad-spin", "/squad-spin", "mini-squad-spin", {
     en: {
@@ -1748,6 +1998,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Os rolos param em um clube, uma posição e uma seleção. Diga o nome de um jogador que combine com todos antes que o tempo acabe; cada acerto multiplica o saldo.",
       howToPlay: ["Escolha três, quatro ou cinco rolos: mais rolos, dicas mais específicas e multiplicador maior.", "Digite em quinze segundos o nome de um jogador que combine com todos os rolos.", "Retire suas moedas ou gire de novo antes de os próximos rolos aparecerem.", "Um erro encerra a sequência."],
       reward: "Para jogar por moedas reais, é preciso ter uma conta; visitantes usam apenas pontos de treino.",
+    },
+    de: {
+      metaTitle: "Fußball-Glücksrad: Dreh und nenne den passenden Spieler",
+      metaDescription: "Dreh an Verein, Position und Nation und nenne in 15 Sekunden einen passenden Fußballer. Übe als Gast oder sammle Münzen mit deinem Konto bei QuizBall.",
+      title: "Fußball-Glücksrad: Dreh und nenne den passenden Spieler",
+      intro: "Die Walzen zeigen einen Verein, eine Position und eine Nation. Nenne einen Spieler, auf den alles zutrifft, bevor die Zeit abläuft; jede richtige Antwort vervielfacht den Münzvorrat.",
+      howToPlay: ["Wähle 3, 4 oder 5 Walzen: mehr Walzen bedeuten genauere Hinweise und einen höheren Multiplikator.", "Tippe innerhalb von 15 Sekunden einen Spieler ein, auf den alle Walzen zutreffen.", "Sichere deine Münzen oder dreh weiter, bevor die nächsten Walzen erscheinen.", "Ein Fehler beendet die Serie."],
+      reward: "Für Münzen brauchst du ein Konto; als Gast spielst du nur mit Übungspunkten.",
     },
   }),
 ];

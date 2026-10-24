@@ -111,7 +111,7 @@ export function loadGridTypeaheadRoster(): Promise<PreparedPlayer[]> {
 export function searchGridPlayers(
   roster: PreparedPlayer[],
   query: string,
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt',
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de',
   limit = 6,
 ): GridTypeaheadPlayer[] {
   const queryWords = normalizeGridAnswerText(query).split(' ').filter(Boolean);

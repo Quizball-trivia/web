@@ -33,6 +33,11 @@ function isPortugueseLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'pt' || normalized?.startsWith('pt-') === true;
 }
 
+function isGermanLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'de' || normalized?.startsWith('de-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -63,6 +68,7 @@ export function inferLocaleFromSignals({
     if (isTurkishLanguageTag(tag)) return 'tr';
     if (isRussianLanguageTag(tag)) return 'ru';
     if (isPortugueseLanguageTag(tag)) return 'pt';
+    if (isGermanLanguageTag(tag)) return 'de';
   }
 
   return 'en';

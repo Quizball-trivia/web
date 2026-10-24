@@ -12,3 +12,12 @@ export const hasPortugueseCampaignHub = cache(async (): Promise<boolean> => {
     return false;
   }
 });
+
+/** The German hub (and the other hubs' de alternates) likewise exists once at least one quiz has a de edition. */
+export const hasGermanCampaignHub = cache(async (): Promise<boolean> => {
+  try {
+    return (await listCampaignQuizPages('de')).length > 0;
+  } catch {
+    return false;
+  }
+});

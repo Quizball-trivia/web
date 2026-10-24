@@ -1,6 +1,6 @@
 import type { AproximadoQuestion } from "./aproximado.rules";
 
-type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt";
+type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de";
 type Kind = AproximadoQuestion["kind"];
 
 const es = {
@@ -443,17 +443,91 @@ const pt: Copy = {
   finishedText: "Esta partida já terminou.",
 };
 
-const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt };
+const de: Copy = {
+  ...en,
+  brandA: "Schätzfragen",
+  brandB: "",
+  round: (n, total) => `Frage ${n}/${total}`,
+  kinds: { fee: "Ablöse", value: "Marktwert", goals: "Tore", attendance: "Zuschauer", height: "Größe", apps: "Spiele", age: "Alter" },
+  inputLabel: "Deine Zahl",
+  inputHint: "Wer näher dran ist, punktet. Genau: +1.",
+  invalid: "Gib eine Zahl ein.",
+  confirm: "Festlegen",
+  you: "Du",
+  answered: "Geantwortet",
+  thinking: "Denkt nach…",
+  away: "Getrennt",
+  withdrawn: "Ausgetreten",
+  idle: "Abwesend",
+  waiting: (n) => `Warte auf ${n} Spieler…`,
+  revealing: "Alle haben geantwortet! Auflösung…",
+  yourGuess: (v) => `Deine Antwort: ${v}`,
+  itWas: "Richtige Antwort:",
+  off: (v) => `${v} daneben`,
+  exact: "Volltreffer!",
+  noGuess: "Keine Antwort",
+  roundWinner: (name) => `${name} gewinnt die Runde`,
+  youWonRound: "Du gewinnst die Runde!",
+  roundTie: "Gleichstand an der Spitze",
+  nobody: "Niemand hat geantwortet",
+  introTitle: (n) => (n === 2 ? "1 gegen 1" : `${n} Spieler`),
+  introRules: (top) => [
+    "10 Fußballfragen mit Zahlen: Ablösen, Tore, Zuschauer…",
+    "Gib deine Zahl ein, bevor die Zeit abläuft. Deine Antwort sieht niemand, bis die Runde endet.",
+    top === 1 ? "Wer am nächsten dran ist, bekommt 1 Punkt. Genau: +1." : `Wer am nächsten dran ist, bekommt ${top} Punkte, der nächste ${top - 1}… Genau: +1.`,
+  ],
+  startsIn: (s) => `Start in ${s}`,
+  finalTitle: "Endergebnis",
+  youWon: "Du hast gewonnen!",
+  youPlace: (p) => `Du bist auf Platz ${p}`,
+  tieFirst: "Gleichstand auf Platz 1!",
+  colPoints: "Pkt.",
+  colWins: "Gewonnene Runden",
+  resultDetail: (wins, error) => `${wins} ${wins === 1 ? "Runde" : "Runden"} gewonnen · mittlere Abweichung ${error}%`,
+  colError: "Mittlere Abweichung",
+  backToRoom: "Zurück zum Raum",
+  exit: "Verlassen",
+  scoringPodium: "Podium (3-2-1)",
+  scoringClosest: "Nur die nächste Antwort",
+  colPlayer: "Spieler",
+  cancelledTitle: "Match abgebrochen",
+  cancelledText: "Es waren nicht genug Spieler zum Spielen übrig.",
+  hurry: "Noch 5 Sekunden!",
+  answeredOf: (a, b) => `${a} von ${b} haben geantwortet`,
+  willSend: (v) => `Deine Antwort: ${v}`,
+  sending: "Wird gesendet",
+  waitingClock: "Warte auf das Ende der Zeit…",
+  leave: "Match verlassen",
+  leaveConfirm: "Match verlassen? Du kannst nicht zurückkommen.",
+  leaveYes: "Verlassen",
+  leaveNo: "Weiterspielen",
+  offline: "Verbindung unterbrochen: Wiederverbindung läuft… Wenn die Frage noch offen ist, kannst du nach deiner Rückkehr antworten.",
+  errors: { stale_round: "Diese Frage ist vorbei.", excluded: "Das Match hat ohne dich begonnen.", not_active: "Das Match läuft nicht.", rate_limited: "Zu schnell. Warte einen Moment.", room_not_found: "Dieses Match gibt es nicht oder es ist bereits beendet.", not_in_match: "Du bist nicht in diesem Match.", not_open: "Diese Frage ist geschlossen.", already_answered: "Du hast diese Frage schon beantwortet.", withdrawn: "Du hast das Match bereits verlassen.", invalid: "Diese Zahl passt nicht zu dieser Frage.", default: "Senden fehlgeschlagen. Versuch es erneut." },
+  youLeftTitle: "Du hast das Match verlassen",
+  youLeftText: "Deine Antworten zählen, aber du landest hinter allen, die zu Ende gespielt haben.",
+  excludedTitle: "Das Match hat ohne dich begonnen",
+  excludedText: "Du hast nicht rechtzeitig bestätigt. Warte im Raum auf die nächste Runde.",
+  gateTitle: "Warte, bis alle beitreten…",
+  gateReady: "Bereit",
+  gateWaiting: "Tritt bei…",
+  connecting: "Verbinden…",
+  retry: "Erneut versuchen",
+  finishedTitle: "Match beendet",
+  finishedText: "Dieses Match ist bereits beendet.",
+};
+
+const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt, de };
 export const aproximadoCopy = (locale: string): Copy => COPY[(locale in COPY ? locale : "en") as Locale];
 export type AproximadoCopy = Copy;
 
-const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR" };
+const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR", de: "de-DE" };
 /** "85,5 M€", "74.500 espectadores": the number in the reader's locale with the question's unit. */
-/** es/en/pt pool units take a singular after exactly 1 ("1 gol"); ka and tr keep the singular after any number. */
+/** es/en/pt/de pool units take a singular after exactly 1 ("1 gol"); ka and tr keep the singular after any number. */
 const SINGULAR_UNIT: Record<string, string> = {
   goles: "gol", partidos: "partido", espectadores: "espectador", años: "año", socios: "socio",
   gols: "gol", partidas: "partida", anos: "ano", sócios: "sócio", torcedores: "torcedor", membros: "membro",
   goals: "goal", games: "game", spectators: "spectator", years: "year", fans: "fan", members: "member",
+  Tore: "Tor", Spiele: "Spiel", Jahre: "Jahr", Mitglieder: "Mitglied", Fans: "Fan",
 };
 
 export function formatValue(value: number, unit: string, precision: number, locale: string): string {

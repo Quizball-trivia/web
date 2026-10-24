@@ -17,7 +17,7 @@ const MEDAL_TINT = ['text-brand-gold', 'text-white/70', 'text-[#CD7F32]'] as con
 
 /** "2026-08-29" (the event's Saturday) as a short Georgia-time date label. */
 function intlLocale(locale: string): string {
-  return locale === 'ka' ? 'ka-GE' : locale === 'es' ? 'es-ES' : locale === 'pt' ? 'pt-BR' : locale === 'tr' ? 'tr-TR' : locale === 'ru' ? 'ru-RU' : 'en-GB';
+  return locale === 'ka' ? 'ka-GE' : locale === 'es' ? 'es-ES' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'ru' ? 'ru-RU' : 'en-GB';
 }
 
 function editionLabel(weekKey: string, locale: string, currentYear: number): string {
