@@ -90,6 +90,11 @@ describe("LanguageSwitcher", () => {
     ["/pt/quiz-de-futebol/quiz-do-arsenal", "pt", /english/i, "/en/football-quiz/arsenal"],
     ["/pt/quiz-de-futebol/quiz-da-selecao-espanhola", "pt", /русский/i, "/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii"],
     ["/pt/quiz-de-futebol/adivinhe-o-jogador", "pt", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/en/football-quiz/career-path", "en", /deutsch/i, "/de/fussball-quiz/karrierestationen-erraten"],
+    ["/de/fussball-quiz/arsenal-quiz", "de", /english/i, "/en/football-quiz/arsenal"],
+    ["/de/fussball-quiz/spanien-quiz", "de", /русский/i, "/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii"],
+    ["/de/fussball-quiz/fc-barcelona-quiz", "de", /português/i, "/pt/quiz-de-futebol/quiz-do-barcelona"],
+    ["/de/fussball-quiz/fussballer-erraten", "de", /türkçe/i, "/en/football-quiz/guess-the-player"],
   ] as const)("keeps localized destinations after deferred loading on %s", async (pathname, locale, language, destination) => {
     navigation.pathname = pathname;
     navigation.search = "preview=public-test&ref=campaign";

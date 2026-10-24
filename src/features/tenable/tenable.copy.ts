@@ -127,6 +127,27 @@ const copy = {
     listOf: (n: number, of: number) => `Lista ${n}/${of}`, listDone: "Lista completa!", listOut: "Todos foram eliminados", nextList: "Próxima lista chegando…",
     pointsStat: "Pontos", foundStat: "Acertos", slotsDetail: (n: number) => `${n} acertos`, lifeLost: (name: string) => `${name} perdeu uma vida`, outOfList: "Eliminado",
   },
+  de: {
+    brand: ["Top 10", "erraten"] as const,
+    title: "Top 10 erraten", tag: "Eine Top-10-Liste pro Tag",
+    lines: [
+      "Jeden Tag eine geheime Top-10-Liste. Nenne die Spieler darauf.",
+      "Jede richtige Antwort rückt auf dem Turm an ihren Platz. Eine Antwort, die schon auf dem Turm steht, kostet nichts.",
+      "Bei 3 falschen Antworten gewinnt der Turm. Schaffst du alle zehn?",
+    ],
+    roomLines: ["Nennt abwechselnd Antworten aus derselben geheimen Liste.", "Ein Platz zählt so viele Punkte wie seine Nummer: #10 = 10 Punkte.", "Bei falscher Antwort oder abgelaufener Zeit verlierst du ein Leben. 2 Leben pro Liste, 3 Listen."],
+    hidden: "Geheime Liste", asOf: (d: string) => `Stand: ${d}`, found: (n: number) => `${n}/10`,
+    placeholder: "Wer steht auf der Liste?", say: "Senden", giveUp: "Aufgeben",
+    ok: (name: string, rank: number) => `#${rank} ${name}`, wrong: (t: string) => `${t} steht nicht auf der Liste`, repeat: (t: string) => `${t} ist schon auf dem Turm`,
+    unknown: (t: string) => `Wir kennen „${t}“ nicht: Prüfe die Schreibweise`, repeatWrong: (t: string) => `${t}: schon versucht, kein Leben verloren`, opensTomorrow: "Der Rest der Liste wird morgen freigeschaltet, sobald die heutige Rangliste geschlossen ist.", corrected: "Diese Liste wurde nach deinem Spiel korrigiert. Daher werden ihre Antworten hier nicht angezeigt.", ambiguous: (t: string) => `„${t}“ passt zu mehreren Spielern: Gib den vollständigen Namen ein`, time: "Zeit abgelaufen",
+    missesTitle: "Nicht auf der Liste", livesLeft: (n: number) => `Verbleibende Leben: ${n}`,
+    endComplete: "Top 10 erraten! Alle zehn!", endLives: "Der Turm hat dich besiegt", endGaveUp: "Du hast aufgegeben",
+    score: (n: number) => `${n}/10`, missedTitle: "Nicht gefunden",
+    shareText: (n: number, found: number, tower: string) => `Top 10 erraten #${n}: ${found}/10\n${tower}`,
+    yourTurn: "Du bist dran", seatTurn: (name: string) => `${name} ist dran`, waiting: "Warte, bis du dran bist", sending: "Wird geprüft…", youOut: "Keine Leben mehr auf dieser Liste",
+    listOf: (n: number, of: number) => `Liste ${n}/${of}`, listDone: "Liste vollständig!", listOut: "Alle sind ausgeschieden", nextList: "Nächste Liste kommt…",
+    pointsStat: "Punkte", foundStat: "Gefunden", slotsDetail: (n: number) => `Gefunden: ${n}`, lifeLost: (name: string) => `${name} hat ein Leben verloren`, outOfList: "Ausgeschieden",
+  },
 } as const;
 
 export const tenableCopy = (locale: string) => copy[asWordLocale(locale)];

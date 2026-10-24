@@ -1,4 +1,4 @@
-export type CampaignQuizLocale = 'en' | 'ka' | 'es' | 'ru' | 'pt';
+export type CampaignQuizLocale = 'en' | 'ka' | 'es' | 'ru' | 'pt' | 'de';
 
 const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
   'guess-the-player': 'adivina-el-jugador',
@@ -82,10 +82,49 @@ const PORTUGUESE_PUBLIC_SLUGS: Record<string, string> = {
   spain: 'quiz-da-selecao-espanhola',
 };
 
+/**
+ * German public slugs (docs/SEO-GAME-NAMING-DE-2026-10-23.md §4): "<verein>-quiz" as German fans type it, national
+ * teams by the German country name, and "fussballer erraten" for the guess-the-player family. Lowercase ASCII
+ * (ß→ss, ä→ae, ö→oe, ü→ue). career-path reuses the career-path game slug, as pt does: that game has no page of its own
+ * and links here. The backend's Search Console mapping (campaign-quiz-search-console.service.ts) mirrors this table.
+ */
+const GERMAN_PUBLIC_SLUGS: Record<string, string> = {
+  'career-path': 'karrierestationen-erraten',
+  'guess-the-player': 'fussballer-erraten',
+  'club-badges': 'fussball-wappen-quiz',
+  'premier-league': 'premier-league-quiz',
+  'la-liga': 'la-liga-quiz',
+  arsenal: 'arsenal-quiz',
+  'aston-villa': 'aston-villa-quiz',
+  bournemouth: 'bournemouth-quiz',
+  brentford: 'brentford-quiz',
+  brighton: 'brighton-quiz',
+  chelsea: 'chelsea-quiz',
+  'coventry-city': 'coventry-city-quiz',
+  'crystal-palace': 'crystal-palace-quiz',
+  everton: 'everton-quiz',
+  fulham: 'fulham-quiz',
+  'hull-city': 'hull-city-quiz',
+  'ipswich-town': 'ipswich-town-quiz',
+  'leeds-united': 'leeds-united-quiz',
+  liverpool: 'liverpool-quiz',
+  'manchester-city': 'manchester-city-quiz',
+  'manchester-united': 'manchester-united-quiz',
+  'newcastle-united': 'newcastle-united-quiz',
+  'nottingham-forest': 'nottingham-forest-quiz',
+  sunderland: 'sunderland-quiz',
+  tottenham: 'tottenham-quiz',
+  'real-madrid': 'real-madrid-quiz',
+  barcelona: 'fc-barcelona-quiz',
+  argentina: 'argentinien-quiz',
+  spain: 'spanien-quiz',
+};
+
 const PUBLIC_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = {
   es: SPANISH_PUBLIC_SLUGS,
   ru: RUSSIAN_PUBLIC_SLUGS,
   pt: PORTUGUESE_PUBLIC_SLUGS,
+  de: GERMAN_PUBLIC_SLUGS,
 };
 
 const SOURCE_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = Object.fromEntries(
@@ -102,6 +141,7 @@ export const CAMPAIGN_HUB_FOLDER: Record<CampaignQuizLocale, string> = {
   es: 'quiz-de-futbol',
   ru: 'futbolnaya-viktorina',
   pt: 'quiz-de-futebol',
+  de: 'fussball-quiz',
 };
 
 /** hreflang per edition: the internal locale is `pt`, the Brazilian page is announced as pt-BR (HTML_LANG). */
@@ -111,6 +151,7 @@ export const CAMPAIGN_HREFLANG: Record<CampaignQuizLocale, string> = {
   es: 'es',
   ru: 'ru',
   pt: 'pt-BR',
+  de: 'de',
 };
 
 export function campaignHubPath(locale: CampaignQuizLocale): string {

@@ -104,4 +104,46 @@ describe('localized campaign quiz routes', () => {
     // Spanish and Portuguese folders differ by one letter: neither is read as the other.
     expect(swapCampaignLocalePath('/pt/quiz-de-futbol/adivina-el-jugador', 'en')).toBeNull();
   });
+
+  it('uses German search phrases (lowercase ASCII, umlauts spelled out) for every published page', () => {
+    expect(campaignHubPath('de')).toBe('/de/fussball-quiz');
+    expect(campaignQuizPath('career-path', 'de')).toBe('/de/fussball-quiz/karrierestationen-erraten');
+    expect(campaignQuizPath('guess-the-player', 'de')).toBe('/de/fussball-quiz/fussballer-erraten');
+    expect(campaignQuizPath('club-badges', 'de')).toBe('/de/fussball-quiz/fussball-wappen-quiz');
+    expect(campaignQuizPath('liverpool', 'de')).toBe('/de/fussball-quiz/liverpool-quiz');
+    expect(campaignQuizPath('real-madrid', 'de')).toBe('/de/fussball-quiz/real-madrid-quiz');
+    expect(campaignQuizPath('barcelona', 'de')).toBe('/de/fussball-quiz/fc-barcelona-quiz');
+    expect(campaignQuizPath('argentina', 'de')).toBe('/de/fussball-quiz/argentinien-quiz');
+    expect(campaignQuizPath('spain', 'de')).toBe('/de/fussball-quiz/spanien-quiz');
+    expect(campaignQuizPath('premier-league', 'de')).toBe('/de/fussball-quiz/premier-league-quiz');
+    expect(campaignQuizPath('la-liga', 'de')).toBe('/de/fussball-quiz/la-liga-quiz');
+
+    const germanSlugs = PUBLISHED_SOURCE_SLUGS.map((slug) => campaignPublicSlug(slug, 'de'));
+    expect(new Set(germanSlugs).size).toBe(PUBLISHED_SOURCE_SLUGS.length);
+    for (const [index, slug] of germanSlugs.entries()) {
+      expect(slug).not.toBe(PUBLISHED_SOURCE_SLUGS[index]);
+      expect(slug).toMatch(CAMPAIGN_SLUG_PATTERN);
+      expect(slug).toMatch(/^[a-z0-9-]+$/);
+      expect(slug.split('-').length).toBeGreaterThanOrEqual(2);
+      expect(slug.split('-').length).toBeLessThanOrEqual(5);
+      expect(campaignSourceSlug(slug, 'de')).toBe(PUBLISHED_SOURCE_SLUGS[index]);
+    }
+  });
+
+  it('switches between the German and the other editions', () => {
+    expect(swapCampaignLocalePath('/en/football-quiz/career-path', 'de'))
+      .toBe('/de/fussball-quiz/karrierestationen-erraten');
+    expect(swapCampaignLocalePath('/de/fussball-quiz/argentinien-quiz', 'es'))
+      .toBe('/es/quiz-de-futbol/seleccion-argentina');
+    expect(swapCampaignLocalePath('/de/fussball-quiz/manchester-united-quiz', 'ru'))
+      .toBe('/ru/futbolnaya-viktorina/viktorina-manchester-yunayted');
+    expect(swapCampaignLocalePath('/pt/quiz-de-futebol/quiz-do-barcelona', 'de'))
+      .toBe('/de/fussball-quiz/fc-barcelona-quiz');
+    expect(swapCampaignLocalePath('/de/fussball-quiz/fussball-wappen-quiz', 'pt'))
+      .toBe('/pt/quiz-de-futebol/adivinhe-o-time-pelo-escudo');
+    expect(swapCampaignLocalePath('/ru/futbolnaya-viktorina', 'de')).toBe('/de/fussball-quiz');
+    expect(swapCampaignLocalePath('/de/football-quiz/arsenal', 'en')).toBeNull();
+    expect(swapCampaignLocalePath('/de/fussballspiele/karrierestationen-erraten', 'en')).toBeNull();
+    expect(swapCampaignLocalePath('/en/fussball-quiz/liverpool-quiz', 'de')).toBeNull();
+  });
 });

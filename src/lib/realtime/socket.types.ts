@@ -826,7 +826,7 @@ export interface PublicAuctionFootballer {
   startingPrice: number;
   clues?: readonly string[];
   /** Same steps as `clues` per content locale; the client shows its own language. */
-  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt', readonly string[]>>;
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
@@ -938,7 +938,7 @@ export interface PublicAuctionPlayerRanking {
 export interface PublicAuctionMatchState {
   matchId: string;
   version: number;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   phase: AuctionMatchPhase;
   formation: AuctionFormationName;
   seats: PublicAuctionPlayer[];
@@ -953,12 +953,12 @@ export interface PublicAuctionMatchState {
 
 export interface AuctionStartAiMatchPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
 }
 
 export interface AuctionSearchStartPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
 }
 
 export type FootballGridDifficulty = 'easy' | 'normal' | 'hard';
@@ -1103,7 +1103,7 @@ export interface FootballGridOptionsPayload {
 }
 
 export interface FootballGridSearchStartPayload {
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   /** League pack to queue for; server defaults to 'european'. */
   theme?: string;
 }
@@ -1117,7 +1117,7 @@ export interface FootballGridVersionedCommandPayload {
 export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
   cellIndex: number;
   text: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   /** Pick-from-four: the footballer picked. */
   optionPlayerId?: string;
 }
@@ -1221,7 +1221,7 @@ export interface AuctionUiReadyPayload {
 
 export interface AuctionSearchStartedPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1232,7 +1232,7 @@ export interface AuctionSearchStartedPayload {
 
 export interface AuctionSearchStatusPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1262,7 +1262,7 @@ export interface AuctionMatchFoundPayload {
   /** joinDelayMs: ms after receipt when each bot pops into the lineup —
    *  bots arrive staggered like a real queue (absent = show immediately). */
   botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   formation: AuctionFormationName;
   /** Server clock used to compensate for local clock skew. Optional during a
    * rolling deploy; older backends only sent countdownEndsAt. */
@@ -1278,7 +1278,7 @@ export interface AuctionMatchFoundPayload {
 
 export interface AuctionMatchStartedPayload {
   matchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   state: PublicAuctionMatchState;
   serverNow?: string;
 }
@@ -1815,7 +1815,7 @@ export interface ClientToServerEvents {
     friendlyCategoryBId?: string | null;
     isPublic?: boolean;
   }) => void;
-  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' }) => void;
+  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' }) => void;
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;

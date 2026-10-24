@@ -112,4 +112,38 @@ describe('sitemap lastModified signals', () => {
     });
     await expect(sitemap()).rejects.toBeInstanceOf(CampaignQuizApiError);
   });
+
+  it('lists the de hub and a de quiz page only when the de catalog has its edition', async () => {
+    const pages = [
+      { slug: 'club-badges', locale_mode: 'en_only', updated_at: '2026-08-12T10:00:00.000Z' },
+      { slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' },
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === 'de' ? pages.slice(0, 1) : pages));
+
+    const entries = await sitemap();
+
+    expect(entries.find((entry) => entry.url === 'https://quizball.io/de/fussball-quiz')?.lastModified)
+      .toEqual(new Date('2026-08-12T10:00:00.000Z'));
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/de/fussball-quiz/fussball-wappen-quiz')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/de/fussball-quiz/liverpool-quiz')).toBe(false);
+  });
+
+  it('a backend without German pages (400 on locale=de) gives no de quiz entries instead of failing', async () => {
+    const pages = [{ slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' }];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'de') throw new CampaignQuizApiError(400);
+      return pages;
+    });
+
+    const entries = await sitemap();
+
+    expect(entries.some((entry) => entry.url.includes('/de/fussball-quiz'))).toBe(false);
+    expect(entries.some((entry) => entry.url.endsWith('/pt/quiz-de-futebol/quiz-do-liverpool'))).toBe(true);
+
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'de') throw new CampaignQuizApiError(503);
+      return pages;
+    });
+    await expect(sitemap()).rejects.toBeInstanceOf(CampaignQuizApiError);
+  });
 });

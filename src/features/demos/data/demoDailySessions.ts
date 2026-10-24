@@ -22,275 +22,320 @@ const EXTRA = {
   "Money Drop": {
     "es": "Money Drop",
     "pt": "Money Drop",
+    "de": "Münzen verteilen",
     "tr": "Money Drop"
   },
   "Answer correctly to protect your money": {
     "es": "Responde bien para proteger tu dinero",
     "pt": "Responda corretamente para proteger seu dinheiro",
+    "de": "Antworte richtig, um dein Guthaben zu schützen",
     "tr": "Paranı korumak için doğru cevapla"
   },
   "Football Logic": {
     "es": "Acertijos de fútbol",
     "pt": "Lógica do futebol",
+    "de": "Bilderrätsel",
     "tr": "Futbol Bilmeceleri"
   },
   "Decode the player from the two pictures": {
     "es": "Descifra al jugador a partir de las dos imágenes",
     "pt": "Descubra o jogador pelas duas imagens",
+    "de": "Errate den Spieler anhand der beiden Bilder",
     "tr": "İki resimden oyuncuyu çöz"
   },
   "Transfers": {
     "es": "Traspasos",
     "pt": "Transferências",
+    "de": "Transfers",
     "tr": "Transferler"
   },
   "Which player connects these two clubs with a world-record €222M transfer?": {
     "es": "¿Qué jugador une a estos dos clubes con un traspaso récord mundial de 222 M€?",
     "pt": "Qual jogador liga esses dois clubes com uma transferência recorde mundial de €222M?",
+    "de": "Welcher Spieler verbindet diese beiden Vereine mit einem Weltrekordtransfer über 222 Mio. €?",
     "tr": "Hangi oyuncu bu iki kulübü 222 M€'luk dünya rekoru transferle birbirine bağlar?"
   },
   "Neymar": {
     "es": "Neymar",
     "pt": "Neymar",
+    "de": "Neymar",
     "tr": "Neymar"
   },
   "Neymar moved from Barcelona to PSG for €222M in 2017 — still the world record.": {
     "es": "Neymar pasó del Barcelona al PSG por 222 M€ en 2017: sigue siendo el récord mundial.",
     "pt": "Neymar foi do Barcelona para o PSG por €222M em 2017 — ainda é o recorde mundial.",
+    "de": "Neymar wechselte 2017 für 222 Mio. € von Barcelona zu PSG – bis heute Weltrekord.",
     "tr": "Neymar 2017'de 222 M€'ya Barcelona'dan PSG'ye geçti — hâlâ dünya rekoru."
   },
   "Which striker famously moved between these two rivals on a free transfer in 2014?": {
     "es": "¿Qué delantero pasó entre estos dos rivales con un traspaso libre en 2014?",
     "pt": "Qual atacante ficou conhecido por se transferir entre esses dois rivais sem custos em 2014?",
+    "de": "Welcher Stürmer wechselte 2014 ablösefrei zwischen diesen beiden Rivalen?",
     "tr": "Hangi forvet 2014'te bu iki rakip arasında bedelsiz transferle geçti?"
   },
   "Robert Lewandowski": {
     "es": "Robert Lewandowski",
     "pt": "Robert Lewandowski",
+    "de": "Robert Lewandowski",
     "tr": "Robert Lewandowski"
   },
   "Lewandowski left Dortmund for Bayern on a free in 2014 and became a Bundesliga legend.": {
     "es": "Lewandowski dejó el Dortmund por el Bayern gratis en 2014 y se convirtió en leyenda de la Bundesliga.",
     "pt": "Lewandowski deixou o Dortmund e foi para o Bayern sem custos em 2014, tornando-se uma lenda da Bundesliga.",
+    "de": "Lewandowski wechselte 2014 ablösefrei von Dortmund zum FC Bayern und wurde zur Bundesliga-Legende.",
     "tr": "Lewandowski 2014'te Dortmund'dan Bayern'e bedelsiz geçti ve bir Bundesliga efsanesi oldu."
   },
   "Which winger made a then-world-record move between these clubs in 2013?": {
     "es": "¿Qué extremo protagonizó en 2013 un traspaso entonces récord mundial entre estos clubes?",
     "pt": "Qual ponta fez uma transferência recorde mundial entre esses clubes em 2013?",
+    "de": "Welcher Flügelspieler wechselte 2013 mit einem damaligen Weltrekordtransfer zwischen diesen Vereinen?",
     "tr": "Hangi kanat oyuncusu 2013'te bu kulüpler arasında o dönemin dünya rekoru transferini yaptı?"
   },
   "Gareth Bale": {
     "es": "Gareth Bale",
     "pt": "Gareth Bale",
+    "de": "Gareth Bale",
     "tr": "Gareth Bale"
   },
   "Bale joined Real Madrid from Tottenham for ~€100M in 2013 — a world record at the time.": {
     "es": "Bale fichó por el Real Madrid desde el Tottenham por unos 100 M€ en 2013, récord mundial entonces.",
     "pt": "Bale foi do Tottenham para o Real Madrid por ~€100M em 2013 — recorde mundial na época.",
+    "de": "Bale wechselte 2013 für rund 100 Mio. € von Tottenham zu Real Madrid – damals Weltrekord.",
     "tr": "Bale 2013'te Tottenham'dan ~100 M€'ya Real Madrid'e katıldı — o dönemde dünya rekoru."
   },
   "Which superstar moved between these clubs for a then-record £80M in 2009?": {
     "es": "¿Qué estrella pasó entre estos clubes por 80 M£, récord entonces, en 2009?",
     "pt": "Qual craque se transferiu entre esses clubes por um recorde de £80M em 2009?",
+    "de": "Welcher Star wechselte 2009 für damals rekordverdächtige 80 Mio. £ zwischen diesen Vereinen?",
     "tr": "Hangi süperstar 2009'da bu kulüpler arasında o dönemin rekoru 80 M£'a geçti?"
   },
   "Cristiano Ronaldo": {
     "es": "Cristiano Ronaldo",
     "pt": "Cristiano Ronaldo",
+    "de": "Cristiano Ronaldo",
     "tr": "Cristiano Ronaldo"
   },
   "Cristiano Ronaldo's 2009 move from United to Real Madrid was the world record for four years.": {
     "es": "El traspaso de Cristiano Ronaldo del United al Real Madrid en 2009 fue récord mundial durante cuatro años.",
     "pt": "A transferência de Cristiano Ronaldo do United para o Real Madrid em 2009 foi recorde mundial por quatro anos.",
+    "de": "Cristiano Ronaldos Wechsel 2009 von United zu Real Madrid war vier Jahre lang Weltrekord.",
     "tr": "Cristiano Ronaldo'nun 2009'da United'dan Real Madrid'e geçişi dört yıl boyunca dünya rekoruydu."
   },
   "Which striker left this London club for Barcelona in 2007?": {
     "es": "¿Qué delantero dejó este club londinense por el Barcelona en 2007?",
     "pt": "Qual atacante saiu deste clube de Londres para o Barcelona em 2007?",
+    "de": "Welcher Stürmer wechselte 2007 von diesem Londoner Verein zum FC Barcelona?",
     "tr": "Hangi forvet 2007'de bu Londra kulübünden Barcelona'ya gitti?"
   },
   "Thierry Henry": {
     "es": "Thierry Henry",
     "pt": "Thierry Henry",
+    "de": "Thierry Henry",
     "tr": "Thierry Henry"
   },
   "Arsenal's all-time top scorer joined Barcelona in 2007 and won the treble there in 2009.": {
     "es": "El máximo goleador histórico del Arsenal fichó por el Barcelona en 2007 y ganó el triplete en 2009.",
     "pt": "O maior artilheiro da história do Arsenal foi para o Barcelona em 2007 e conquistou a tríplice coroa em 2009.",
+    "de": "Arsenals Rekordtorschütze wechselte 2007 zum FC Barcelona und gewann dort 2009 das Triple.",
     "tr": "Arsenal'in tüm zamanların en golcü oyuncusu 2007'de Barcelona'ya katıldı ve 2009'da üçlemeyi kazandı."
   },
   "Which Georgian star moved between these clubs in January 2025?": {
     "es": "¿Qué estrella georgiana pasó entre estos clubes en enero de 2025?",
     "pt": "Qual craque georgiano se transferiu entre esses clubes em janeiro de 2025?",
+    "de": "Welcher georgische Star wechselte im Januar 2025 zwischen diesen Vereinen?",
     "tr": "Hangi Gürcü yıldız Ocak 2025'te bu kulüpler arasında geçti?"
   },
   "Khvicha Kvaratskhelia": {
     "es": "Khvicha Kvaratskhelia",
     "pt": "Khvicha Kvaratskhelia",
+    "de": "Khvicha Kvaratskhelia",
     "tr": "Khvicha Kvaratskhelia"
   },
   "Kvaradona swapped Naples for Paris in January 2025 and won the Champions League that spring.": {
     "es": "Kvaradona cambió Nápoles por París en enero de 2025 y ganó la Champions esa primavera.",
     "pt": "Kvaradona trocou Nápoles por Paris em janeiro de 2025 e conquistou a Champions League naquela primavera.",
+    "de": "Kvaradona wechselte im Januar 2025 von Neapel nach Paris und gewann im selben Frühjahr die Champions League.",
     "tr": "Kvaradona Ocak 2025'te Napoli'yi Paris'le değiştirdi ve o bahar Şampiyonlar Ligi'ni kazandı."
   },
   "Which midfielder returned between these clubs for a record £89M in 2016?": {
     "es": "¿Qué centrocampista regresó entre estos clubes por 89 M£, récord, en 2016?",
     "pt": "Qual meia voltou a se transferir entre esses clubes por um recorde de £89M em 2016?",
+    "de": "Welcher Mittelfeldspieler wechselte 2016 für die Rekordablöse von 89 Mio. £ zwischen diesen Vereinen zurück?",
     "tr": "Hangi orta saha 2016'da bu kulüpler arasında rekor 89 M£'a geri döndü?"
   },
   "Paul Pogba": {
     "es": "Paul Pogba",
     "pt": "Paul Pogba",
+    "de": "Paul Pogba",
     "tr": "Paul Pogba"
   },
   "Pogba left United for free in 2012 and returned from Juventus for a then-world-record £89M.": {
     "es": "Pogba dejó el United gratis en 2012 y volvió desde la Juventus por 89 M£, récord mundial entonces.",
     "pt": "Pogba saiu do United sem custos em 2012 e voltou da Juventus por £89M, então recorde mundial.",
+    "de": "Pogba verließ United 2012 ablösefrei und kehrte für damals weltrekordverdächtige 89 Mio. £ von Juventus zurück.",
     "tr": "Pogba 2012'de United'dan bedelsiz ayrıldı ve Juventus'tan o dönemin dünya rekoru 89 M£'a döndü."
   },
   "Which Brazilian striker moved between these clubs in 2002 after winning the World Cup?": {
     "es": "¿Qué delantero brasileño pasó entre estos clubes en 2002 tras ganar el Mundial?",
     "pt": "Qual atacante brasileiro se transferiu entre esses clubes em 2002 depois de ganhar a Copa do Mundo?",
+    "de": "Welcher brasilianische Stürmer wechselte 2002 nach dem WM-Sieg zwischen diesen Vereinen?",
     "tr": "Hangi Brezilyalı forvet 2002'de Dünya Kupası'nı kazandıktan sonra bu kulüpler arasında geçti?"
   },
   "Ronaldo Nazário": {
     "es": "Ronaldo Nazário",
     "pt": "Ronaldo Nazário",
+    "de": "Ronaldo Nazário",
     "tr": "Ronaldo Nazário"
   },
   "Fresh off his 2002 World Cup heroics, O Fenômeno joined the Galácticos from Inter.": {
     "es": "Recién coronado en el Mundial 2002, O Fenômeno llegó a los Galácticos desde el Inter.",
     "pt": "Depois de brilhar na Copa do Mundo de 2002, O Fenômeno saiu da Inter para integrar os Galácticos.",
+    "de": "Nach seinem WM-Triumph 2002 wechselte O Fenômeno von Inter zu den Galácticos.",
     "tr": "2002 Dünya Kupası kahramanlığının ardından O Fenômeno Inter'den Galácticos'a katıldı."
   },
   "Which French forward moved between these clubs in 2017 for €180M?": {
     "es": "¿Qué delantero francés pasó entre estos clubes en 2017 por 180 M€?",
     "pt": "Qual atacante francês se transferiu entre esses clubes por €180M em 2017?",
+    "de": "Welcher französische Stürmer wechselte 2017 für 180 Mio. € zwischen diesen Vereinen?",
     "tr": "Hangi Fransız forvet 2017'de 180 M€'ya bu kulüpler arasında geçti?"
   },
   "Kylian Mbappé": {
     "es": "Kylian Mbappé",
     "pt": "Kylian Mbappé",
+    "de": "Kylian Mbappé",
     "tr": "Kylian Mbappé"
   },
   "The teenage Mbappé left Monaco for PSG in the second-biggest transfer of all time.": {
     "es": "El adolescente Mbappé dejó el Mónaco por el PSG en el segundo traspaso más caro de la historia.",
     "pt": "Ainda adolescente, Mbappé saiu do Monaco para o PSG na segunda transferência mais cara da história.",
+    "de": "Der damals noch jugendliche Mbappé wechselte für die zweitteuerste Ablöse aller Zeiten von Monaco zu PSG.",
     "tr": "Genç Mbappé, tüm zamanların en pahalı ikinci transferiyle Monaco'dan PSG'ye geçti."
   },
   "Which defender rose through this club's academy and later captained the other?": {
     "es": "¿Qué defensa salió de la cantera de este club y después fue capitán del otro?",
     "pt": "Qual zagueiro foi formado na base deste clube e depois foi capitão do outro?",
+    "de": "Welcher Verteidiger kam aus der Jugend dieses Vereins und wurde später Kapitän des anderen?",
     "tr": "Hangi savunmacı bu kulübün akademisinden yetişti ve daha sonra diğerinin kaptanı oldu?"
   },
   "Sergio Ramos": {
     "es": "Sergio Ramos",
     "pt": "Sergio Ramos",
+    "de": "Sergio Ramos",
     "tr": "Sergio Ramos"
   },
   "Ramos left Sevilla for Real Madrid at 19 and captained them to four Champions League titles.": {
     "es": "Ramos dejó el Sevilla por el Real Madrid a los 19 y lo capitaneó a cuatro Champions.",
     "pt": "Aos 19 anos, Ramos saiu do Sevilla para o Real Madrid e, como capitão, conquistou quatro títulos da Champions League.",
+    "de": "Ramos wechselte mit 19 vom FC Sevilla zu Real Madrid und führte das Team als Kapitän zu vier Champions-League-Titeln.",
     "tr": "Ramos 19 yaşında Sevilla'dan Real Madrid'e geçti ve kaptan olarak dört Şampiyonlar Ligi kazandı."
   },
   "Missing XI": {
     "es": "Adivina el 11",
     "pt": "Escalação Misteriosa",
+    "de": "Aufstellung erraten",
     "tr": "İlk 11 Tahmin Etme"
   },
   "Tap a shirt and name the player who started there.": {
     "es": "Toca una camiseta y nombra al jugador que fue titular ahí.",
     "pt": "Toque em uma camisa e diga qual jogador foi titular naquela posição.",
+    "de": "Tippe auf ein Trikot und nenne den Spieler, der dort in der Startelf stand.",
     "tr": "Bir formaya dokun ve orada ilk 11'de başlayan oyuncuyu söyle."
   },
   "Closest Wins": {
     "es": "Aproximado futbolero",
     "pt": "Mais Perto Vence",
+    "de": "Schätzfragen",
     "tr": "En Yakın Tahmin"
   },
   "Slide to your best guess.": {
     "es": "Desliza hasta tu mejor estimación.",
     "pt": "Deslize até o seu melhor palpite.",
+    "de": "Stell den Regler auf deine beste Schätzung.",
     "tr": "En iyi tahminine kaydır."
   },
   "Pass Chain": {
     "es": "Conectando jugadores",
     "pt": "Passe em Cadeia",
+    "de": "Fußballer verbinden",
     "tr": "Futbolcu Bağlantı Zinciri"
   },
   "Link two players through shared clubs.": {
     "es": "Conecta a dos jugadores a través de clubes en común.",
     "pt": "Ligue dois jogadores por clubes em comum.",
+    "de": "Verbinde zwei Spieler über gemeinsame Vereine.",
     "tr": "İki oyuncuyu ortak kulüpler üzerinden bağla."
   },
   "FIFA Cards": {
     "es": "Cartas FIFA",
     "pt": "Cartas FIFA",
+    "de": "Spielerkarte erraten",
     "tr": "FIFA Kartları"
   },
   "Card Detective": {
     "es": "Adivina el jugador por su carta",
     "pt": "Detetive das Cartas",
+    "de": "Spielerkarte erraten",
     "tr": "Kart Dedektifi"
   },
   "A gold card, stats only — name the player.": {
     "es": "Una carta dorada, solo estadísticas: nombra al jugador.",
     "pt": "Uma carta dourada, só com estatísticas: adivinhe o jogador.",
+    "de": "Nur Werte auf einer Goldkarte – errate den Spieler.",
     "tr": "Altın bir kart, sadece istatistikler — oyuncuyu söyle."
   },
   "Everything hidden, 100 clue coins — name the player using the least information.": {
     "es": "Todo oculto, 100 monedas de pista: nombra al jugador con la menor información posible.",
     "pt": "Tudo escondido, 100 moedas de dicas — adivinhe o jogador usando o mínimo de informações.",
+    "de": "Alles verborgen, 100 Hinweis-Münzen – errate den Spieler mit so wenigen Infos wie möglich.",
     "tr": "Her şey gizli, 100 ipucu jetonu — oyuncuyu en az bilgiyle söyle."
   }
-} as const satisfies Record<string, { es: string; pt: string; tr: string }>;
+} as const satisfies Record<string, { es: string; pt: string; de: string; tr: string }>;
 /** Display labels that the mini-game data keeps in English only. */
 const MATCH_LABELS: Record<string, Record<L, string>> = {
-  "vs Manchester United — 2011 Champions League Final": { en: "vs Manchester United — 2011 Champions League Final", ka: "მანჩესტერ იუნაიტედთან — 2011 ჩემპიონთა ლიგის ფინალი", es: "vs Manchester United — Final de la Champions 2011", tr: "Manchester United'a karşı — 2011 Şampiyonlar Ligi Finali", ru: "против «Манчестер Юнайтед» — финал Лиги чемпионов 2011 года", pt: "vs Manchester United — Final da Champions League de 2011" },
-  "vs Juventus — 2017 Champions League Final": { en: "vs Juventus — 2017 Champions League Final", ka: "იუვენტუსთან — 2017 ჩემპიონთა ლიგის ფინალი", es: "vs Juventus — Final de la Champions 2017", tr: "Juventus'a karşı — 2017 Şampiyonlar Ligi Finali", ru: "против «Ювентуса» — финал Лиги чемпионов 2017 года", pt: "vs Juventus — Final da Champions League de 2017" },
-  "vs France — 2022 World Cup Final": { en: "vs France — 2022 World Cup Final", ka: "საფრანგეთთან — 2022 მსოფლიო ჩემპიონატის ფინალი", es: "vs Francia — Final del Mundial 2022", tr: "Fransa'ya karşı — 2022 Dünya Kupası Finali", ru: "против Франции — финал чемпионата мира 2022 года", pt: "vs França — Final da Copa do Mundo de 2022" },
+  "vs Manchester United — 2011 Champions League Final": { en: "vs Manchester United — 2011 Champions League Final", ka: "მანჩესტერ იუნაიტედთან — 2011 ჩემპიონთა ლიგის ფინალი", es: "vs Manchester United — Final de la Champions 2011", tr: "Manchester United'a karşı — 2011 Şampiyonlar Ligi Finali", ru: "против «Манчестер Юнайтед» — финал Лиги чемпионов 2011 года", pt: "vs Manchester United — Final da Champions League de 2011", de: "gegen Manchester United — Champions-League-Finale 2011" },
+  "vs Juventus — 2017 Champions League Final": { en: "vs Juventus — 2017 Champions League Final", ka: "იუვენტუსთან — 2017 ჩემპიონთა ლიგის ფინალი", es: "vs Juventus — Final de la Champions 2017", tr: "Juventus'a karşı — 2017 Şampiyonlar Ligi Finali", ru: "против «Ювентуса» — финал Лиги чемпионов 2017 года", pt: "vs Juventus — Final da Champions League de 2017", de: "gegen Juventus — Champions-League-Finale 2017" },
+  "vs France — 2022 World Cup Final": { en: "vs France — 2022 World Cup Final", ka: "საფრანგეთთან — 2022 მსოფლიო ჩემპიონატის ფინალი", es: "vs Francia — Final del Mundial 2022", tr: "Fransa'ya karşı — 2022 Dünya Kupası Finali", ru: "против Франции — финал чемпионата мира 2022 года", pt: "vs França — Final da Copa do Mundo de 2022", de: "gegen Frankreich — WM-Finale 2022" },
 };
 export const LEAGUE_LABELS: Record<string, Record<L, string>> = {
-  "Liga Portugal": { en: "Liga Portugal", ka: "პორტუგალიის ლიგა", es: "Liga Portugal", tr: "Portekiz Ligi", ru: "Лига Португалии", pt: "Liga Portugal" },
-  "Portuguese Liga ZON SAGRES": { en: "Portuguese Liga ZON SAGRES", ka: "პორტუგალიის ლიგა", es: "Liga portuguesa", tr: "Portekiz Ligi", ru: "Португальская лига ZON SAGRES", pt: "Liga Portuguesa ZON SAGRES" },
-  "Ligue 1 McDonald's": { en: "Ligue 1 McDonald's", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1", ru: "Лига 1 McDonald's", pt: "Ligue 1 McDonald's" },
-  "Major League Soccer": { en: "Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS", ru: "Главная футбольная лига США", pt: "Major League Soccer" },
-  "USA Major League Soccer": { en: "USA Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS", ru: "Главная футбольная лига США", pt: "Major League Soccer dos EUA" },
-  "Pro League": { en: "Pro League", ka: "პრო ლიგა", es: "Pro League", tr: "Pro Lig", ru: "Про-лига", pt: "Liga Profissional" },
-  "ROSHN Saudi League": { en: "ROSHN Saudi League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi", ru: "Саудовская лига ROSHN", pt: "Liga Saudita ROSHN" },
-  "Russian Premier League": { en: "Russian Premier League", ka: "რუსეთის პრემიერ ლიგა", es: "Liga Premier rusa", tr: "Rusya Premier Ligi", ru: "Российская Премьер-лига", pt: "Premier League Russa" },
-  "Serie A Enilive": { en: "Serie A Enilive", ka: "სერია A", es: "Serie A", tr: "Serie A", ru: "Серия А Enilive", pt: "Serie A Enilive" },
-  "Spain Primera Division": { en: "Spain Primera Division", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga", ru: "Первый дивизион Испании", pt: "LaLiga" },
-  "Turkish Süper Lig": { en: "Turkish Süper Lig", ka: "თურქეთის სუპერ ლიგა", es: "Süper Lig turca", tr: "Türkiye Süper Ligi", ru: "Турецкая Суперлига", pt: "Süper Lig Turca" },
-  "Premier League": { en: "Premier League", ka: "პრემიერ ლიგა", es: "Premier League", tr: "Premier Lig", ru: "Премьер-лига", pt: "Premier League" },
-  "Serie A": { en: "Serie A", ka: "სერია A", es: "Serie A", tr: "Serie A", ru: "Серия А", pt: "Serie A" },
-  "Ligue 1": { en: "Ligue 1", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1", ru: "Лига 1", pt: "Ligue 1" },
-  "LaLiga": { en: "LaLiga", ka: "ლა ლიგა", es: "LaLiga", tr: "LaLiga", ru: "Ла Лига", pt: "LaLiga" },
-  "Eredivisie": { en: "Eredivisie", ka: "ერედივიზიე", es: "Eredivisie", tr: "Eredivisie", ru: "Эредивизи", pt: "Eredivisie" },
-  "Primeira Liga": { en: "Primeira Liga", ka: "პრიმეირა ლიგა", es: "Primeira Liga", tr: "Primeira Liga", ru: "Примейра-лига", pt: "Primeira Liga" },
-  "Süper Lig": { en: "Süper Lig", ka: "სუპერ ლიგა", es: "Süper Lig", tr: "Süper Lig", ru: "Суперлига", pt: "Süper Lig" },
-  "Saudi Pro League": { en: "Saudi Pro League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi", ru: "Саудовская Про-лига", pt: "Liga Profissional Saudita" },
-  "MLS": { en: "MLS", ka: "MLS", es: "MLS", tr: "MLS", ru: "MLS", pt: "MLS" },
-  "English Premier League": { en: "English Premier League", ka: "ინგლისის პრემიერ ლიგა", es: "Premier League inglesa", tr: "İngiltere Premier Ligi", ru: "Английская Премьер-лига", pt: "Premier League Inglesa" },
-  "Italian Serie A": { en: "Italian Serie A", ka: "იტალიის სერია A", es: "Serie A italiana", tr: "İtalya Serie A", ru: "Итальянская Серия А", pt: "Serie A Italiana" },
-  "German 1. Bundesliga": { en: "German 1. Bundesliga", ka: "გერმანიის ბუნდესლიგა", es: "Bundesliga alemana", tr: "Almanya Bundesliga", ru: "Немецкая Бундеслига", pt: "Bundesliga Alemã" },
-  "Bundesliga": { en: "Bundesliga", ka: "ბუნდესლიგა", es: "Bundesliga", tr: "Bundesliga", ru: "Бундеслига", pt: "Bundesliga" },
-  "French Ligue 1": { en: "French Ligue 1", ka: "საფრანგეთის ლიგა 1", es: "Ligue 1 francesa", tr: "Fransa Ligue 1", ru: "Французская Лига 1", pt: "Ligue 1 Francesa" },
-  "La Liga": { en: "La Liga", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga", ru: "Ла Лига", pt: "LaLiga" },
-  "LALIGA EA SPORTS": { en: "LALIGA EA SPORTS", ka: "ლა ლიგა", es: "LALIGA EA SPORTS", tr: "LALIGA EA SPORTS", ru: "LALIGA EA SPORTS", pt: "LALIGA EA SPORTS" },
-  "Championship": { en: "Championship", ka: "ჩემპიონშიპი", es: "Championship", tr: "Championship", ru: "Чемпионшип", pt: "Championship" },
-  "Holland Eredivisie": { en: "Holland Eredivisie", ka: "ნიდერლანდების ერედივიზიე", es: "Eredivisie neerlandesa", tr: "Hollanda Eredivisie", ru: "Эредивизи Нидерландов", pt: "Eredivisie Holandesa" },
-  "Argentina Primera División": { en: "Argentina Primera División", ka: "არგენტინის პრიმერა დივიზიონი", es: "Primera División argentina", tr: "Arjantin Primera División", ru: "Примера Дивисьон Аргентины", pt: "Primeira Divisão Argentina" },
-  "Chinese Super League": { en: "Chinese Super League", ka: "ჩინეთის სუპერლიგა", es: "Superliga china", tr: "Çin Süper Ligi", ru: "Китайская Суперлига", pt: "Superliga Chinesa" },
-  "Japanese J. League Division 1": { en: "Japanese J. League Division 1", ka: "იაპონიის J-ლიგა", es: "J. League japonesa", tr: "Japonya J. Ligi", ru: "Первый дивизион J-лиги Японии", pt: "J. League Japonesa" },
+  "Liga Portugal": { en: "Liga Portugal", ka: "პორტუგალიის ლიგა", es: "Liga Portugal", tr: "Portekiz Ligi", ru: "Лига Португалии", pt: "Liga Portugal", de: "Liga Portugal" },
+  "Portuguese Liga ZON SAGRES": { en: "Portuguese Liga ZON SAGRES", ka: "პორტუგალიის ლიგა", es: "Liga portuguesa", tr: "Portekiz Ligi", ru: "Португальская лига ZON SAGRES", pt: "Liga Portuguesa ZON SAGRES", de: "Portugiesische Liga ZON SAGRES" },
+  "Ligue 1 McDonald's": { en: "Ligue 1 McDonald's", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1", ru: "Лига 1 McDonald's", pt: "Ligue 1 McDonald's", de: "Ligue 1 McDonald's" },
+  "Major League Soccer": { en: "Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS", ru: "Главная футбольная лига США", pt: "Major League Soccer", de: "Major League Soccer" },
+  "USA Major League Soccer": { en: "USA Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS", ru: "Главная футбольная лига США", pt: "Major League Soccer dos EUA", de: "Major League Soccer der USA" },
+  "Pro League": { en: "Pro League", ka: "პრო ლიგა", es: "Pro League", tr: "Pro Lig", ru: "Про-лига", pt: "Liga Profissional", de: "Pro League" },
+  "ROSHN Saudi League": { en: "ROSHN Saudi League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi", ru: "Саудовская лига ROSHN", pt: "Liga Saudita ROSHN", de: "ROSHN Saudi League" },
+  "Russian Premier League": { en: "Russian Premier League", ka: "რუსეთის პრემიერ ლიგა", es: "Liga Premier rusa", tr: "Rusya Premier Ligi", ru: "Российская Премьер-лига", pt: "Premier League Russa", de: "Russische Premier League" },
+  "Serie A Enilive": { en: "Serie A Enilive", ka: "სერია A", es: "Serie A", tr: "Serie A", ru: "Серия А Enilive", pt: "Serie A Enilive", de: "Serie A Enilive" },
+  "Spain Primera Division": { en: "Spain Primera Division", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga", ru: "Первый дивизион Испании", pt: "LaLiga", de: "Spanische Primera División" },
+  "Turkish Süper Lig": { en: "Turkish Süper Lig", ka: "თურქეთის სუპერ ლიგა", es: "Süper Lig turca", tr: "Türkiye Süper Ligi", ru: "Турецкая Суперлига", pt: "Süper Lig Turca", de: "Türkische Süper Lig" },
+  "Premier League": { en: "Premier League", ka: "პრემიერ ლიგა", es: "Premier League", tr: "Premier Lig", ru: "Премьер-лига", pt: "Premier League", de: "Premier League" },
+  "Serie A": { en: "Serie A", ka: "სერია A", es: "Serie A", tr: "Serie A", ru: "Серия А", pt: "Serie A", de: "Serie A" },
+  "Ligue 1": { en: "Ligue 1", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1", ru: "Лига 1", pt: "Ligue 1", de: "Ligue 1" },
+  "LaLiga": { en: "LaLiga", ka: "ლა ლიგა", es: "LaLiga", tr: "LaLiga", ru: "Ла Лига", pt: "LaLiga", de: "LaLiga" },
+  "Eredivisie": { en: "Eredivisie", ka: "ერედივიზიე", es: "Eredivisie", tr: "Eredivisie", ru: "Эредивизи", pt: "Eredivisie", de: "Eredivisie" },
+  "Primeira Liga": { en: "Primeira Liga", ka: "პრიმეირა ლიგა", es: "Primeira Liga", tr: "Primeira Liga", ru: "Примейра-лига", pt: "Primeira Liga", de: "Primeira Liga" },
+  "Süper Lig": { en: "Süper Lig", ka: "სუპერ ლიგა", es: "Süper Lig", tr: "Süper Lig", ru: "Суперлига", pt: "Süper Lig", de: "Süper Lig" },
+  "Saudi Pro League": { en: "Saudi Pro League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi", ru: "Саудовская Про-лига", pt: "Liga Profissional Saudita", de: "Saudi Pro League" },
+  "MLS": { en: "MLS", ka: "MLS", es: "MLS", tr: "MLS", ru: "MLS", pt: "MLS", de: "MLS" },
+  "English Premier League": { en: "English Premier League", ka: "ინგლისის პრემიერ ლიგა", es: "Premier League inglesa", tr: "İngiltere Premier Ligi", ru: "Английская Премьер-лига", pt: "Premier League Inglesa", de: "Englische Premier League" },
+  "Italian Serie A": { en: "Italian Serie A", ka: "იტალიის სერია A", es: "Serie A italiana", tr: "İtalya Serie A", ru: "Итальянская Серия А", pt: "Serie A Italiana", de: "Italienische Serie A" },
+  "German 1. Bundesliga": { en: "German 1. Bundesliga", ka: "გერმანიის ბუნდესლიგა", es: "Bundesliga alemana", tr: "Almanya Bundesliga", ru: "Немецкая Бундеслига", pt: "Bundesliga Alemã", de: "1. Bundesliga" },
+  "Bundesliga": { en: "Bundesliga", ka: "ბუნდესლიგა", es: "Bundesliga", tr: "Bundesliga", ru: "Бундеслига", pt: "Bundesliga", de: "Bundesliga" },
+  "French Ligue 1": { en: "French Ligue 1", ka: "საფრანგეთის ლიგა 1", es: "Ligue 1 francesa", tr: "Fransa Ligue 1", ru: "Французская Лига 1", pt: "Ligue 1 Francesa", de: "Französische Ligue 1" },
+  "La Liga": { en: "La Liga", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga", ru: "Ла Лига", pt: "LaLiga", de: "La Liga" },
+  "LALIGA EA SPORTS": { en: "LALIGA EA SPORTS", ka: "ლა ლიგა", es: "LALIGA EA SPORTS", tr: "LALIGA EA SPORTS", ru: "LALIGA EA SPORTS", pt: "LALIGA EA SPORTS", de: "LALIGA EA SPORTS" },
+  "Championship": { en: "Championship", ka: "ჩემპიონშიპი", es: "Championship", tr: "Championship", ru: "Чемпионшип", pt: "Championship", de: "Championship" },
+  "Holland Eredivisie": { en: "Holland Eredivisie", ka: "ნიდერლანდების ერედივიზიე", es: "Eredivisie neerlandesa", tr: "Hollanda Eredivisie", ru: "Эредивизи Нидерландов", pt: "Eredivisie Holandesa", de: "Niederländische Eredivisie" },
+  "Argentina Primera División": { en: "Argentina Primera División", ka: "არგენტინის პრიმერა დივიზიონი", es: "Primera División argentina", tr: "Arjantin Primera División", ru: "Примера Дивисьон Аргентины", pt: "Primeira Divisão Argentina", de: "Argentinische Primera División" },
+  "Chinese Super League": { en: "Chinese Super League", ka: "ჩინეთის სუპერლიგა", es: "Superliga china", tr: "Çin Süper Ligi", ru: "Китайская Суперлига", pt: "Superliga Chinesa", de: "Chinesische Super League" },
+  "Japanese J. League Division 1": { en: "Japanese J. League Division 1", ka: "იაპონიის J-ლიგა", es: "J. League japonesa", tr: "Japonya J. Ligi", ru: "Первый дивизион J-лиги Японии", pt: "J. League Japonesa", de: "Japanische J. League Division 1" },
 };
 const label = (table: Record<string, Record<L, string>>, locale: L, value: string) => table[value]?.[locale] ?? value;
 type ExtraKey = keyof typeof EXTRA;
-/** en/ka inline; es/tr from EXTRA. `en` must be a known key, so an English copy edit without its translations fails to compile. */
+/** en/ka inline; es/pt/de/tr from EXTRA. `en` must be a known key, so an English copy edit without its translations fails to compile. */
 const pick = (locale: L, en: ExtraKey, ka: string): string => {
   if (locale === "ka") return ka;
-  if (locale === "es" || locale === "pt" || locale === "tr") return EXTRA[en][locale];
+  if (locale === "es" || locale === "pt" || locale === "de" || locale === "tr") return EXTRA[en][locale];
   return en;
 };
 

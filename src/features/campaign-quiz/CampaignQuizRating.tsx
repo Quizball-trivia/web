@@ -26,6 +26,17 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
         rating: 'avaliação',
         ratings: 'avaliações',
       }
+    : locale === 'de'
+    ? {
+        saved: 'Danke — deine Bewertung wurde gespeichert.',
+        failed: 'Deine Bewertung konnte nicht gespeichert werden. Bitte versuche es erneut.',
+        heading: 'Wie bewertest du dieses Quiz?',
+        first: 'Sei der erste Spieler, der es bewertet.',
+        rate: 'Bewerten',
+        outOf: 'von 5',
+        rating: 'Bewertung',
+        ratings: 'Bewertungen',
+      }
     : locale === 'ru'
     ? {
         saved: 'Спасибо — твоя оценка сохранена.',
@@ -82,7 +93,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
-  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : 'en-GB';
+  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : 'en-GB';
   return (
     <section
       id="quiz-rating"

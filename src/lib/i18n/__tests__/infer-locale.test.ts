@@ -59,6 +59,11 @@ describe('inferLocaleFromSignals', () => {
     expect(inferLocaleFromSignals({ languages: ['pt-BR'], language: 'pt-BR' })).toBe('pt');
   });
 
+  it('uses German for German, Austrian and Swiss browser language tags', () => {
+    for (const tag of ['de', 'de-DE', 'de-AT', 'de-CH', 'de_CH', 'DE-de']) expect(inferLocaleFromSignals({ languages: [tag], language: tag })).toBe('de');
+    expect(inferLocaleFromSignals({ languages: ['de-DE', 'pt-BR'], language: 'de-DE' })).toBe('de');
+  });
+
   it('follows the browser order between the languages we offer', () => {
     expect(inferLocaleFromSignals({ languages: ['pt-BR', 'es'], language: 'pt-BR' })).toBe('pt');
     expect(inferLocaleFromSignals({ languages: ['en-US', 'ru', 'pt-BR'], language: 'en-US' })).toBe('ru');

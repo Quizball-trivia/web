@@ -11,7 +11,7 @@ import { poppins } from "@/features/wordgames/ui";
 import { cn } from "@/lib/utils";
 
 /** The board languages and how each is written in itself. */
-const LANGUAGE: Record<string, string> = { en: "English", es: "Español", tr: "Türkçe", ru: "Русский", pt: "Português", ka: "ქართული" };
+const LANGUAGE: Record<string, string> = { en: "English", es: "Español", tr: "Türkçe", ru: "Русский", pt: "Português", de: "Deutsch", ka: "ქართული" };
 
 /** Seconds per clue and per team's guessing that the host may pick (the server's TURN_TIMERS); null: no clock. */
 export const TURN_TIMERS = [null, 60, 90, 120] as const;

@@ -155,6 +155,29 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
       { q: "O que acontece se eu me cadastrar depois de uma partida?", a: "Você volta para a partida que estava jogando." },
     ],
   },
+  de: {
+    metaTitle: "Quizball — Fußballspiele und Fußballquiz",
+    metaDescription: "Spiele online Fußballquizze wie Fußball Tic Tac Toe, Fußball-Auktion und Freundschaftsspiele. Starte als Gast und mach dann bei Ranked und der Weekend League mit.",
+    h1: "Fußballspiele und Multiplayer-Quiz online",
+    intro: "Spiele Fußballquiz auf Quizball, dem offiziellen Spiel auf quizball.io. Probiere Fußball Tic Tac Toe oder die Fußball-Auktion im Browser aus oder lade Quizball für Android herunter. Erstelle ein Konto für Ranked und die Weekend League. Bei jedem Event siehst du Münzen im Spiel und seltene Kosmetikpakete als Belohnungen.",
+    accessLine: "Gastspiele erfordern kein Konto. Für Ranked und die Weekend League musst du dich anmelden.",
+    nav: { games: "Fußballspiele", quizzes: "Fußballquizze", signIn: "Anmelden" },
+    sections: { competitive: "Tritt an und erhalte Belohnungen im Spiel", daily: "Tages-Challenges", dailyHint: "Jeden Tag ein neues Set. Übe hier und spiele das echte in der App.", dailyAll: "Alle Tages-Challenges", whyAccount: "Warum ein Quizball-Konto erstellen?", quizzes: "Fußballquizze", faq: "Fragen" },
+    cards: { practice: "Übungsrunde", accountRequired: "Konto erforderlich", guest: "Als Gast spielen", playLabel: "Spielen", rankedTitle: "Ranked", rankedText: "Teste dein Fußballwissen gegen andere Spieler und steige im Rang auf. Konto erforderlich.", rankedCta: "Für Ranked anmelden", wlTitle: "Weekend League", wlText: "Nimm an Quizballs Wochenendwettbewerb teil und hol dir Münzen im Spiel und seltene Kosmetikgegenstände. Konto erforderlich; Qualifikationsbedingungen und Eventregeln gelten.", wlCta: "Details zur Weekend League", quizPage: "Quiz öffnen" },
+    whyAccount: [
+      "Mit Gastspielen kannst du Quizball sofort ausprobieren. Erstelle ein Konto, wenn du bei Ranked und der Weekend League antreten möchtest.",
+      "Steige im Rang auf und verfolge die Rangliste. Die Belohnungen der Weekend League sind Münzen im Spiel und seltene Kosmetikpakete, kein Bargeld, keine Geschenkkarten oder Gutscheine. Prüfe vor dem Einstieg den Zeitplan, die Teilnahmebedingungen und Belohnungen des aktuellen Events.",
+      "Gast-Übungsergebnisse bringen keine Ranked-Punkte, Münzen oder eine Qualifikation für die Weekend League.",
+    ],
+    about: { title: "Über die Spiele", text: "Quizball macht Fußballwissen online spielbar. Ordne in Fußball Tic Tac Toe Spieler Kategorien zu, triff deine Entscheidungen bei der Fußball-Auktion oder beantworte Fußballfragen in einem Freundschaftsspiel. Wähle dein Format und lies die Regeln auf der Spielseite. Entdecke außerdem Fußballquizze über Spieler, Vereine und Ligen und wechsle zu Wettbewerben mit Konto, wenn du bereit bist." },
+    quizLinks: { hub: "Alle Fußballquizze", guessPlayer: "Errate den Spieler", careerPath: "Karrierestationen-Quiz" },
+    faq: [
+      { q: "Kann ich ohne Konto spielen?", a: "Ja. Die Gastspiele hier kannst du ohne Registrierung spielen. Für Ranked und die Weekend League brauchst du ein Konto." },
+      { q: "Welche Belohnungen gibt es in der Weekend League?", a: "Die Weekend League bietet Münzen im Spiel und seltene Kosmetikpakete. Die Belohnungen hängen von Event und Ergebnis ab. Es gibt kein Bargeld, keine Geschenkkarten oder Gutscheine; die Belohnungen lassen sich nicht gegen Geld eintauschen. Prüfe die Teilnahmebedingungen und Belohnungen des aktuellen Events." },
+      { q: "Zählen Minispiel-Ergebnisse für Ranked?", a: "Ergebnisse aus Gast-Minispielen bringen keine Ranked-Punkte und qualifizieren dich nicht für die Weekend League. Für den Aufstieg bei Ranked gelten die Regeln des Wettbewerbsmodus." },
+      { q: "Was passiert, wenn ich mich nach einem Spiel registriere?", a: "Du kehrst zum Spiel zurück, das du gerade gespielt hast." },
+    ],
+  },
 };
 
 export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDescription: string; h1: string; intro: string; reset: string }> = {
@@ -164,4 +187,5 @@ export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDes
   tr: { metaTitle: "Günlük Futbol Görevleri — Her Gün Yeni Bir Set | QuizBall", metaDescription: "Quizball'un günlük futbol görevleri: Money Drop, Doğru mu Yanlış mı, Countdown, Higher or Lower Futbolcu, Köstebek ve Kart Dedektifi. Misafir olarak alıştır, gerçeğini uygulamada oyna.", h1: "Günlük futbol görevleri", intro: "Her gün her tür için yeni bir set. Burada misafir olarak alıştırma turu oyna; gerçek set, jetonlar ve seri için uygulamaya giriş yap.", reset: "Setler her gün 04:00'te, Gürcistan saatiyle (UTC gece yarısı) yenilenir." },
   ru: { metaTitle: "Ежедневные футбольные испытания — новый набор каждый день | QuizBall", metaDescription: "Ежедневные футбольные испытания Quizball: Money Drop, «Верно или неверно», Countdown, Higher or Lower, Imposter и Card Detective. Тренируйся как гость, а настоящее ежедневное испытание проходи в приложении.", h1: "Ежедневные футбольные испытания", intro: "Каждый день — новый набор футбольных головоломок. Попробуй тренировочный раунд каждого испытания здесь, без аккаунта; настоящий ежедневный набор, монеты и серии ждут тебя в приложении.", reset: "Ежедневные наборы обновляются в 04:00 по времени Грузии (в полночь UTC)." },
   pt: { metaTitle: "Jogos diários de futebol — novos desafios todos os dias | QuizBall", metaDescription: "Os desafios diários do Quizball: Moedas nas respostas, Verdadeiro ou falso do futebol, Fale jogadores de futebol contra o relógio, Higher or Lower do futebol: quem vale mais?, Encontre o intruso e Adivinhe o jogador pela carta. Treine como visitante; jogue o desafio diário oficial no app.", h1: "Jogos diários de futebol", intro: "Todos os dias, você encontra novos desafios de futebol. Experimente aqui uma rodada de treino de cada jogo sem criar uma conta. O desafio diário oficial, as moedas e sua sequência ficam no app.", reset: "Os desafios diários são renovados às 04:00 no horário da Geórgia (meia-noite UTC)." },
+  de: { metaTitle: "Tägliche Fußball-Rätsel — jeden Tag neue Challenges | QuizBall", metaDescription: "Quizballs tägliche Fußball-Rätsel: Münzen verteilen, Wahr oder falsch, Countdown, Higher or Lower, Wer passt nicht? und Spielerkarte erraten. Übe als Gast; spiele die echte Tages-Challenge in der App.", h1: "Tägliche Fußball-Rätsel", intro: "Jeden Tag neue Fußballrätsel. Probiere hier von jedem eine Übungsrunde ohne Konto aus; das echte Tages-Set, Münzen und Serien findest du in der App.", reset: "Die Tages-Sets werden um 04:00 Uhr georgischer Zeit (Mitternacht UTC) zurückgesetzt." },
 };

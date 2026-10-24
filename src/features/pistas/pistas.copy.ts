@@ -488,10 +488,91 @@ const pt: Copy = {
   },
 };
 
-const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt };
+const de: Copy = {
+  brandA: "Fußballer",
+  brandB: "erraten",
+  player: (n, total) => `Spieler ${n} / ${total}`,
+  pointsInPlay: "Punkte im Spiel",
+  score: "Deine Punkte",
+  revealClue: "Hinweis aufdecken",
+  clueLocked: "Gesperrter Hinweis",
+  inputLabel: "Gib den Nachnamen des Spielers ein",
+  inputPlaceholder: "Nachname…",
+  inputHint: "Nachname oder Spitzname · Akzente und Großschreibung sind egal",
+  guess: "Errate",
+  giveUp: "Gib auf",
+  wrong: "Falsch",
+  lastChance: (clues) => (clues > 0 ? `Letzte Chance: Du kannst noch ${clues === 1 ? "einen Hinweis" : `${clues} Hinweise`} aufdecken und hast 1 Versuch.` : "Letzte Chance: Du hast 1 Versuch."),
+  solved: (n) => `Richtig! +${n}`,
+  missed: "Diesmal nicht",
+  was: (name) => `Gesucht war ${name}`,
+  revealLater: "Die heutige Antwort erscheint morgen unter „Vergangene Tage“.",
+  next: "Nächster Spieler",
+  finish: "Ergebnis ansehen",
+  kinds: { confed: "Konföderation", position: "Position", foot: "Starker Fuß", decade: "Jahrzehnt", fact: "Hinweis" },
+  positions: { GK: "TW", DF: "ABW", MF: "MIT", FW: "ST" },
+  feet: { left: "Links", right: "Rechts" },
+  intro: {
+    lines: [
+      "Jeden Tag 10 Spieler, jeder mit 10 Hinweisen – vom schwierigsten bis zum einfachsten.",
+      "Errate den Spieler mit dem ersten Hinweis und erhalte 10 Punkte. Jeder weitere Hinweis kostet 1 Punkt.",
+      "Gib den Nachnamen ein (Akzente spielen keine Rolle). Bei einem Fehlversuch hast du noch 1 Versuch und kannst höchstens 3 weitere Hinweise aufdecken.",
+    ],
+    start: "Spiel",
+    resume: (n) => `Weiter · Spieler ${n}`,
+    past: "Vergangene Tage",
+    newBoard: "Jeden Tag um 00:00 Uhr (argentinischer Zeit) gibt es 10 neue Spieler.",
+    soon: "Die ersten Hinweise gibt es bald.",
+  },
+  end: {
+    score: "Punkte",
+    of: (max) => `von ${max}`,
+    solved: "Gelöst",
+    avgClues: "Hinweise pro richtiger Antwort",
+    streak: "Serie",
+    days: (n) => (n === 1 ? "1 Tag" : `${n} Tage`),
+    comeBack: "Morgen gibt es 10 neue Spieler.",
+    share: "Teilen",
+    whatsapp: "WhatsApp",
+    copy: "Kopieren",
+    copied: "Kopiert!",
+    past: "Vergangene Tage spielen",
+    more: "Weitere Spiele",
+    answers: "Antworten",
+    answersLater: "Die heutigen Antworten erscheinen morgen.",
+    clues: (n) => (n === 1 ? "1 Hinweis" : `${n} Hinweise`),
+  },
+  archive: { title: "Vergangene Tage", played: (s) => `${s.toLocaleString("de-DE")} Pkt.`, inProgress: "Läuft", notPlayed: "Nicht gespielt", today: "Heute", back: "Zurück" },
+  shareText: (n, score, grid, url) => `Fußballer erraten #${n} — ${score}/100\n${grid}\nSchaffst du mehr? ${url}`,
+  report: "Fehler bei einem Hinweis melden",
+  reported: "Danke! Wir prüfen das.",
+  exit: "Verlassen",
+  loading: "Hinweise werden geladen…",
+  loadError: "Die Hinweise konnten nicht geladen werden. Versuch es gleich noch einmal.",
+  retry: "Erneut versuchen",
+  actionError: "Verbindung unterbrochen. Versuch es noch einmal.",
+  restarted: "Dein Spiel hat sich geändert (auf einem anderen Gerät oder durch eine Korrektur). Wir haben es neu geladen.",
+  dayOver: "Der Tag ist in Argentinien vorbei: Neue Spieler sind da.",
+  guestYesterday: "Du spielst einen vergangenen Tag. Erstelle ein Konto, um den heutigen Tag zu spielen und in die Rangliste zu kommen.",
+  playToday: "Heute spielen",
+  maintenance: "Das Spiel wird gewartet. Komm bald wieder.",
+  sessionChanged: "Deine Sitzung hat sich geändert. Starte neu.",
+  board: {
+    title: "Heutige Rangliste",
+    players: (n) => (n === 1 ? "1 Spieler hat alle Hinweise gelöst" : `${n} Spieler haben alle Hinweise gelöst`),
+    empty: "Noch hat niemand die heutigen Hinweise gelöst. Sei der Erste!",
+    rank: (r) => `Heute: #${r}`,
+    join: "Erstelle ein Konto, um in die heutige Rangliste zu kommen",
+    joinButton: "Rangliste beitreten",
+    unranked: "Vergangene Tage zählen nicht für die Rangliste.",
+    guestPlay: "Du spielst als Gast: Dein Punktestand zählt nicht für die Rangliste.",
+  },
+};
+
+const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt, de };
 
 export const pistasCopy = (locale: string): Copy => COPY[locale] ?? en;
 
-/** Clue text in the page locale; ka/tr/ru/pt fall back to English, then Spanish. */
+/** Clue text in the page locale; ka/tr/ru/pt/de fall back to English, then Spanish. */
 export const textFor = (text: LocalizedText, locale: string): string =>
-  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : text.en) || text.en || text.es;
+  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : locale === "de" ? (text as LocalizedText & { de?: string }).de : text.en) || text.en || text.es;

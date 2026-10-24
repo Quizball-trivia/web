@@ -284,6 +284,9 @@ export function campaignMetadataTitle(
   if (locale === 'es') {
     return `${page.breadcrumb_label} — Juega gratis | QuizBall`;
   }
+  if (locale === 'de') {
+    return `${page.breadcrumb_label} — Kostenlos spielen | QuizBall`;
+  }
   // The Russian and Portuguese SEO titles are written for their own search ("Викторина по «Арсеналу»: …",
   // "Quiz do Arsenal: …"), so they are used as is.
   return page.seo_title;
@@ -319,7 +322,9 @@ export function getCampaignQuizContent(
           ? `${page.breadcrumb_label}: начинаем`
           : locale === 'pt'
             ? `${page.breadcrumb_label}: vamos começar`
-            : `Kick off the ${page.breadcrumb_label}`,
+            : locale === 'de'
+              ? `Starte das ${page.breadcrumb_label}`
+              : `Kick off the ${page.breadcrumb_label}`,
     aboutEyebrow: locale === 'ka'
       ? 'ისტორია კითხვების მიღმა'
       : locale === 'es'
@@ -328,7 +333,9 @@ export function getCampaignQuizContent(
           ? 'История за вопросами'
           : locale === 'pt'
             ? 'A história por trás das perguntas'
-            : 'The story behind the questions',
+            : locale === 'de'
+              ? 'Die Geschichte hinter den Fragen'
+              : 'The story behind the questions',
     aboutHeading: page.about_heading,
     aboutParagraphs: paragraphs,
     aboutBlocks: page.about_blocks,

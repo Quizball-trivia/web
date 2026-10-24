@@ -14,6 +14,7 @@ export interface SquadSpinReel {
   label_ka: string;
   label_ru?: string | null;
   label_pt?: string | null;
+  label_de?: string | null;
   asset_key: string | null;
 }
 export interface SquadSpinPlayer { id: string; name_en: string; name_ka: string | null; name_ru?: string | null; image_url: string | null }

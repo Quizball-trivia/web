@@ -357,6 +357,59 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     careerPathLink: "Adivinhe o jogador pela carreira",
     clubBadgesLink: "Quiz dos escudos de clubes de futebol",
   },
+  de: {
+    metaTitle: "Redaktionelle Methodik von QuizBall — So prüfen wir Fragen",
+    metaDescription:
+      "Erfahre, wie QuizBall Fußballquizfragen für kostenlose Quizze und das Mehrspieler-Spiel recherchiert, prüft, aktualisiert und korrigiert.",
+    backLabel: "Über QuizBall",
+    eyebrow: "Redaktionelle Standards",
+    title: "So prüft QuizBall Fußballquizfragen",
+    intro:
+      "Gute Fußballfragen sollten Wissen testen, nicht vage Formulierungen. So sorgen wir für klare, aktuelle und faire Fragen.",
+    updated: "Zuletzt aktualisiert: 30. August 2026",
+    sections: [
+      {
+        title: "1. Mit einer überprüfbaren Fußballtatsache beginnen",
+        body:
+          "Jede Frage beruht auf einer konkreten Tatsache über einen Spieler, einen Verein, einen Wettbewerb, ein Match oder einen Rekord. Wo möglich, bevorzugen wir offizielle Quellen von Wettbewerben und Vereinen, etablierte Statistikdatenbanken und seriöse Berichterstattung statt unbelegter Listen.",
+      },
+      {
+        title: "2. Antwort und Alternativen prüfen",
+        body:
+          "Wir prüfen die richtige Antwort, die Formulierung und alle Alternativen gemeinsam. Eine falsche Antwortoption sollte plausibel genug sein, um die Frage interessant zu machen, aber keine zweite vertretbare Antwort ermöglichen.",
+      },
+      {
+        title: "3. Bei veränderlichen Fakten Datum oder Saison angeben",
+        body:
+          "Transfers, Rekorde, Ranglisten und aktuelle Kader ändern sich. Fragen zu solchen Fakten sollten die passende Saison, den Wettbewerb oder das Datum nennen, damit die Antwort eindeutig bleibt.",
+      },
+      {
+        title: "4. Den Schwierigkeitsgrad ohne Tricks festlegen",
+        body:
+          "Der Schwierigkeitsgrad sollte vom nötigen Fußballwissen abhängen, nicht von verwirrender Grammatik oder versteckten Annahmen. Wir mischen zugängliche Fragen mit weniger bekannten Fakten und werten die Antwortdaten aus, sobald genügend Spieler geantwortet haben.",
+      },
+      {
+        title: "5. Öffentliche Quizze getrennt von Ranked-Matches halten",
+        body:
+          "Ein Quiz für Besucher über Suchmaschinen zu veröffentlichen, fügt seine Fragen nicht automatisch zu Ranked-Matches hinzu. Für öffentliche Quizseiten und den Wettbewerbsfragenpool gelten getrennte Verfügbarkeitskontrollen.",
+      },
+      {
+        title: "6. Wesentliche Fehler korrigieren und echte Änderungen festhalten",
+        body:
+          "Wenn wir einen wesentlichen Fehler finden, korrigieren oder entfernen wir die betroffene Frage. Aktualisierungshinweise für Seiten, einschließlich Sitemap-Daten, sollten sich nur nach einer relevanten Inhaltsänderung ändern – nicht automatisch bei jeder Anfrage.",
+      },
+    ],
+    correctionHeading: "Eine Frage entdeckt, die wir noch einmal prüfen sollten?",
+    correctionBody:
+      "Schick uns den Quiznamen, die Frage und die Quelle, die deiner Meinung nach eine Korrektur stützt. Wir prüfen die zugrunde liegende Tatsache und die Formulierung.",
+    correctionLink: "E-Mail an support@quizball.io",
+    exploreHeading: "Die Methodik in der Praxis",
+    exploreBody:
+      "Starte mit zwei besonders nützlichen Fußballquiz-Formaten von QuizBall oder entdecke alle kostenlosen Quizze.",
+    hubLink: "Alle Fußballquizze ansehen",
+    careerPathLink: "Quiz zum Karriereweg eines Fußballers",
+    clubBadgesLink: "Quiz zu Fußballvereinswappen",
+  },
 };
 
 export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
@@ -449,6 +502,21 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     hubLink: "Todos os quizzes de futebol",
     careerPathLink: "Adivinhe o jogador pela carreira",
     clubBadgesLink: "Quiz dos escudos de clubes",
+  },
+  de: {
+    eyebrow: "Fußballwissen, dem du vertrauen kannst",
+    title: "Klare Fragen, geprüfte Fakten und transparente Aktualisierungen",
+    body:
+      "QuizBall dokumentiert, wie Fragen recherchiert, geprüft und korrigiert werden. Öffentliche Suchquizze werden außerdem getrennt vom Fragenpool für Ranked-Matches verwaltet.",
+    methodologyLink: "Unsere redaktionelle Methodik lesen",
+    reportLink: "Den Fußball-Wissensindex 2026 lesen",
+    pressLink: "Presse- und Quellenmaterial",
+    exploreHeading: "QuizBall entdecken",
+    exploreBody:
+      "Entdecke alle kostenlosen Fußballquizze oder starte mit Karriereweg und Vereinswappen – zwei Formaten, die Fans besonders gern spielen.",
+    hubLink: "Alle Fußballquizze",
+    careerPathLink: "Karriereweg-Quiz",
+    clubBadgesLink: "Vereinswappen-Quiz",
   },
 };
 

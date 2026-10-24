@@ -364,4 +364,60 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
     ],
     rankedMeta: "Geralmente 12–18 perguntas · Cerca de 5 minutos · Pontos de Ranking em jogo",
   },
+  de: {
+    overviewEyebrow: "Das Spiel",
+    overviewTitle: "Fußballwissen im Matchformat",
+    modesEyebrow: "Spielmodi",
+    modesTitle: "So spielst du QuizBall",
+    modesIntro:
+      "Wärme dich mit einer Tages-Challenge auf, spiele mit einem Freund ohne Rangdruck oder starte ein kompetitives 1v1 und klettere in der Rangliste nach oben. Jeder Modus nutzt dein Fußballwissen anders.",
+    modes: [
+      {
+        id: "ranked",
+        title: "Ranked 1v1",
+        body:
+          "Spiele ein Live-Duell, erobere mit richtigen Antworten den Ball, schieße Tore und sammle RP, um in den QuizBall-Rängen aufzusteigen.",
+      },
+      {
+        id: "friendly",
+        title: "Freundschaftliches 1v1",
+        body:
+          "Erstelle einen privaten Raum oder tritt einem bei und spiele mit einem Freund nach eigenen Regeln. Dabei zählen keine Rangpunkte.",
+      },
+      {
+        id: "daily",
+        title: "Tages-Challenges",
+        body:
+          "Spiele eine wechselnde Auswahl kurzer Fußballspiele: Fußballer erraten, Wahr oder falsch, Karrierestationen, Higher or Lower und Münzen verteilen. Komm für neue Challenges zurück.",
+      },
+      {
+        id: "auction",
+        title: "Fußball-Auktion",
+        body:
+          "Nutze ein Budget von $350M, um auf unbekannte Fußballspieler zu bieten und einen Kader aus sieben Spielern zusammenzustellen. Preise, Überschuss und Teamchemie entscheiden über den Sieg.",
+      },
+    ],
+    rankedEyebrow: "Wettkampfmodus",
+    rankedTitle: "So funktioniert Ranked 1v1",
+    rankedIntro:
+      "In Ranked werden dieselben Fußballfragen zu einem kurzen Live-Match gegen einen anderen Spieler.",
+    rankedSteps: [
+      {
+        title: "Sperre eine Kategorie",
+        body:
+          "Drei zufällige Fußballkategorien erscheinen. Jeder Spieler sperrt eine; das Match wird mit der verbleibenden Kategorie gespielt.",
+      },
+      {
+        title: "Erobere den Ball",
+        body:
+          "Beide Spieler beantworten Live-Fragen. Richtige Antworten bringen den Ball nach vorn, leiten Angriffe ein und schaffen Torchancen.",
+      },
+      {
+        title: "Tore schießen und aufsteigen",
+        body:
+          "Die Tore entscheiden das Ergebnis. Nach dem Match aktualisieren Rangpunkte deine Stufe und deinen Platz in der Rangliste.",
+      },
+    ],
+    rankedMeta: "Meist 12–18 Fragen · etwa 5 Minuten · Rangpunkte zählen",
+  },
 };

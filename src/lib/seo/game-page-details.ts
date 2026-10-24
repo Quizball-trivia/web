@@ -44,6 +44,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Vencer rende RP e faz você subir de divisão, da Academia até as divisões principais; perder custa RP. Contas novas disputam três partidas de classificação antes de receber uma divisão. Suas partidas, seu aproveitamento e sua posição aparecem no ranking, e a competição do fim de semana usa os pontos de classificação conquistados no modo ranqueado.",
       "A partida de treino desta página é uma versão guiada desse mesmo fluxo: a mesma fase de veto, as mesmas rodadas de posse de bola e uma disputa de pênaltis contra o CoachBot, com dicas em cada etapa. Ela não dá recompensas nem é salva. O modo ranqueado exige uma conta.",
     ],
+    de: [
+      "Ranked ist der kompetitive Modus von Quizball: ein live gespieltes Fußballquiz-Match eins gegen eins gegen einen echten Gegner, bei dem du Ranked-Punkte (RP) sammelst. Aus dem Katalog werden drei Kategorien gezogen; jeder Spieler schließt eine aus, und gespielt wird in der übrig gebliebenen. Zwölf Fragen in zwei Halbzeiten, mit einer neuen Kategorie-Auswahl zur Pause.",
+      "Jede Frage ist ein Zweikampf um den Ballbesitz. Beide Spieler beantworten dieselbe Frage; die schnellere richtige Antwort bringt dich auf dem Platz nach vorn. Bring den Ball bis zur Torlinie des Gegners, um zum Schuss zu kommen. Geht der Ball am Torwart vorbei, zählt das als Tor. Steht es nach der regulären Spielzeit unentschieden, folgt das Elfmeterschießen: Über jeden Schuss entscheidet eine Frage.",
+      "Ein Sieg bringt RP und führt dich durch die Stufen bis in die höchsten Ligen; bei einer Niederlage verlierst du RP. Neue Spieler spielen zunächst drei Platzierungsspiele, bevor sie einer Stufe zugeordnet werden. Deine Matches, Siegquote und Rang findest du in der Rangliste. Der Wettbewerb am Wochenende bezieht seine Qualifikationspunkte aus Ranked-Spielen.",
+      "Das Trainings-Match auf dieser Seite führt dich durch genau diesen Ablauf: dieselbe Ausschlussphase, dieselben Ballbesitz-Runden und ein Elfmeterschießen gegen CoachBot, mit Hinweisen bei jedem Schritt. Es gibt keine Belohnung und wird nicht gespeichert. Für Ranked brauchst du ein Konto.",
+    ],
   },
   "football-tic-tac-toe": {
     en: [
@@ -75,6 +81,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Jogo da velha de futebol é disputado em uma grade de três por três. Cada linha e cada coluna tem uma categoria: um clube, uma seleção, uma liga, um troféu ou um técnico. Cada casa representa duas categorias ao mesmo tempo, e você a conquista ao dizer o nome de um jogador que se encaixe nas duas, como um brasileiro que jogou no Chelsea.",
       "As jogadas têm tempo limitado. Digite um nome; o jogo aceita sobrenomes, nomes completos, apelidos conhecidos e pequenos erros de digitação. Se ninguém conseguir preencher uma casa, você pode passar; se não houver mais nenhuma linha vencedora possível, dá empate. Partidas equilibradas são decididas em uma série melhor de três, para uma grade de sorte não definir o dia.",
       "A rodada de treino desta página é contra um bot e segue as mesmas regras. No app, jogadores conectados enfrentam adversários reais, mantêm seu histórico e ganham pontos do ranking; o treino como visitante não dá recompensas nem é salvo.",
+    ],
+    de: [
+      "Fußball Tic Tac Toe wird auf einem 3×3-Feld gespielt. Jede Zeile und jede Spalte steht für eine Kategorie: Verein, Nation, Liga, Trophäe oder Trainer. Jedes Feld verbindet also zwei Kategorien. Du bekommst es, indem du einen Spieler nennst, auf den beide zutreffen, zum Beispiel einen Deutschen, der für Chelsea gespielt hat.",
+      "Die Züge sind zeitlich begrenzt. Tippe einen Namen ein: Das Spiel akzeptiert Nachnamen, vollständige Namen, gängige Spitznamen und kleine Tippfehler. Wer ein Feld nicht ausfüllen kann, darf passen; gibt es keine mögliche Gewinnlinie mehr, endet die Partie unentschieden. Enge Partien werden als Best-of-three-Serie entschieden, damit nicht ein glückliches Feld den Tag bestimmt.",
+      "In der Übungsrunde auf dieser Seite spielst du nach denselben Regeln gegen einen Bot. Angemeldete Spieler treten in der App gegen echte Gegner an, behalten ihren Spielverlauf und sammeln Ranked-Punkte. Als Gast erhältst du für die Übung keine Belohnung; sie wird nicht gespeichert.",
     ],
   },
   auction: {
@@ -108,6 +119,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "O objetivo é montar uma escalação completa na formação escolhida. Se pagar demais no começo, outros técnicos podem levar os jogadores de que você vai precisar depois; se esperar muito, os melhores já terão saído. Quando todos os elencos estiverem completos, os times serão avaliados e o melhor vence a rodada.",
       "O leilão de treino desta página é contra bots, usa um orçamento virtual e não salva o resultado. No app, jogadores conectados dão lances contra técnicos reais, ganham moedas e sobem no ranking do leilão.",
     ],
+    de: [
+      "Fußball-Auktion ist ein Bietspiel für bis zu vier Trainer. Nacheinander erscheint jeweils ein Spieler, verborgen hinter Hinweisen zu seiner Karriere, Position und seinem Wert. Die Trainer bieten aus einem gemeinsamen Startbudget. Fällt der Hammer, bekommt der Spieler mit dem höchsten Gebot den Zuschlag; die Hinweise zeigen, wen du tatsächlich verpflichtet hast.",
+      "Ziel ist eine vollständige Aufstellung in der gewählten Formation. Bietest du früh zu viel, werden dir später die Spieler weggeschnappt, die du brauchst. Wartest du zu lange, sind die guten Spieler weg. Sobald alle Kader voll sind, werden die Mannschaften bewertet und die beste vollständige Mannschaft gewinnt die Runde.",
+      "Die Übungsauktion auf dieser Seite läuft gegen Bots, mit virtuellem Budget und ohne gespeichertes Ergebnis. In der App bieten angemeldete Spieler gegen echte Trainer, sammeln Münzen und steigen in der Auktionsrangliste auf.",
+    ],
   },
   "money-drop": {
     en: [
@@ -139,6 +155,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Moedas nas respostas começa com um saldo virtual e cinco perguntas de futebol. Cada pergunta tem quatro respostas possíveis, e você distribui suas moedas entre as respostas em que acredita. As moedas colocadas nas respostas erradas caem pelas escotilhas; as da resposta certa ficam com você.",
       "Confiança compensa: colocar tudo em uma resposta mantém o saldo inteiro se você acertar e faz você perder tudo se errar. Dividir protege suas moedas, mas reduz o que sobra. Cada ajuda pode eliminar duas respostas erradas, revelar uma dica ou pular uma pergunta, uma vez cada.",
       "Sua pontuação é o que restar depois da quinta queda. A rodada de treino usa um conjunto de perguntas de exemplo; no app, o jogo diário traz perguntas novas todo dia, dá moedas pelo saldo que você manteve e conta para sua sequência.",
+    ],
+    de: [
+      "Münzen verteilen startet mit einem virtuellen Münzguthaben und fünf Fußballfragen. Jede Frage hat vier Antwortmöglichkeiten. Verteile deine Münzen auf die Antworten, die du für richtig hältst. Münzen auf falschen Antworten fallen durch Falltüren; Münzen auf der richtigen Antwort bleiben bei dir.",
+      "Legst du alle Münzen auf eine Antwort, behältst du bei richtiger Antwort den ganzen Stapel und verlierst ihn bei einer falschen. Aufteilen schützt einen Teil, aber lässt dir insgesamt weniger. Mit Jokern kannst du je einmal zwei falsche Antworten entfernen, einen Hinweis aufdecken oder eine Frage überspringen.",
+      "Deine Punktzahl entspricht dem, was nach dem fünften Durchgang übrig ist. Die Übungsrunde nutzt einen Beispielsatz; in der App gibt es jeden Tag eine neue Tages-Challenge. Dafür erhältst du Münzen für den Betrag, der dir bleibt, und deine Ergebnisse zählen für deine Serie.",
     ],
   },
   "true-or-false-football": {
@@ -172,6 +193,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "As afirmações são escritas para parecer plausíveis nos dois sentidos, então o jogo recompensa conhecimento de verdade, não o chute. Cada resposta certa vale um ponto e mantém sua sequência; o desafio diário termina depois da última afirmação ou do primeiro erro, conforme as regras da rodada exibidas no início.",
       "A rodada de treino usa um exemplo fixo. No app, um novo conjunto de afirmações chega todo dia, respostas certas rendem moedas e seus resultados contam para a sequência diária.",
     ],
+    de: [
+      "Wahr oder falsch ist Quizballs schnellste Tages-Challenge. Eine Fußballaussage erscheint, von Transferfakten bis zu Torschützenrekorden, und du hast nur wenige Sekunden, um zu entscheiden, ob sie stimmt. Antworte, bevor die Zeit abläuft; eine verspätete Antwort zählt als Fehler.",
+      "Die Aussagen sind so formuliert, dass sie in beide Richtungen plausibel klingen. So zählt echtes Wissen mehr als Raten. Jede richtige Antwort bringt einen Punkt und hält deine Serie am Leben. Je nach den zu Beginn angezeigten Rundenregeln endet die Tages-Challenge nach der letzten Aussage oder nach deiner ersten falschen Antwort.",
+      "Die Übungsrunde hier nutzt eine feste Beispielsammlung. In der App erscheint jeden Tag eine neue Reihe von Aussagen. Richtige Antworten bringen Münzen, und deine Ergebnisse zählen für die Tages-Serie.",
+    ],
   },
   countdown: {
     en: [
@@ -203,6 +229,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Fale jogadores de futebol contra o relógio traz uma lista de futebol e um cronômetro em contagem regressiva. A lista pode pedir todos os clubes em que Zlatan Ibrahimović jogou ou os últimos dez vencedores da Bola de Ouro. Digite o máximo de respostas válidas que conseguir antes do tempo acabar; cada resposta aceita vale um ponto.",
       "Os nomes são reconhecidos com flexibilidade: sobrenomes, formas curtas conhecidas e pequenos erros de digitação são aceitos, e uma resposta que você já deu é simplesmente ignorada. A rodada termina quando o cronômetro chega a zero ou a lista fica completa.",
       "A rodada de treino usa listas de exemplo. No app, a versão diária troca as listas todos os dias, paga moedas por resposta encontrada e soma pontos à sua sequência.",
+    ],
+    de: [
+      "Countdown gibt dir eine Fußballliste und eine tickende Uhr. Auf der Liste stehen zum Beispiel alle Vereine, für die Zlatan Ibrahimović gespielt hat, oder die letzten zehn Gewinner des Ballon d'Or. Trage so viele gültige Antworten wie möglich ein, bevor die Zeit abläuft. Jede akzeptierte Antwort zählt einen Punkt.",
+      "Namen werden großzügig erkannt: Nachnamen, gängige Kurzformen und kleine Schreibfehler werden akzeptiert. Eine Antwort, die du schon genannt hast, wird einfach ignoriert. Die Runde endet, wenn die Zeit abläuft oder die Liste vollständig ist.",
+      "Die Übungsrunde nutzt Beispiellisten. In der App wechseln die Listen täglich. Für jede gefundene Antwort erhältst du Münzen, und deine Ergebnisse zählen für deine Serie.",
     ],
   },
   "higher-or-lower": {
@@ -236,6 +267,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Uma resposta certa mantém a sequência e mostra a próxima dupla; o primeiro erro encerra a rodada. As rodadas são curtas e os números vêm de registros verificados, então o jogo depende de conhecer o esporte, não de sorte.",
       "A rodada de treino usa duplas de exemplo. No app, o conjunto diário muda todos os dias, rodadas concluídas rendem moedas e os resultados contam para sua sequência.",
     ],
+    de: [
+      "Higher or Lower stellt dir zwei Spieler mit einer verborgenen Zahl gegenüber: Tore in einer Saison, Ablösesumme, Länderspiele, Alter oder Marktwert. Du siehst die Zahl des ersten Spielers und entscheidest, ob der Wert des zweiten höher oder niedriger ist.",
+      "Mit einer richtigen Antwort geht deine Serie weiter und das nächste Paar erscheint. Bei der ersten falschen Antwort endet die Runde. Die Runden sind kurz und die Zahlen stammen aus geprüften Aufzeichnungen. Hier zählt also Fußballwissen statt Glück.",
+      "Die Übungsrunde nutzt Beispielpaare. In der App wechselt die Tages-Challenge täglich. Für abgeschlossene Runden erhältst du Münzen, und deine Ergebnisse zählen für deine Serie.",
+    ],
   },
   imposter: {
     en: [
@@ -267,6 +303,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Encontre o intruso mostra um grupo de jogadores que têm algo em comum, como um clube em que jogaram ou um troféu que conquistaram, com um ou dois nomes que não pertencem ao grupo. Seu objetivo é identificar os intrusos e selecioná-los antes que o tempo acabe.",
       "Cada rodada informa um tema e quantos intrusos existem. Selecione exatamente esses jogadores: cada escolha certa conta, e cada escolha errada custa pontos. A rodada é contabilizada quando você confirma ou quando o tempo acaba.",
       "A rodada de treino usa grupos de exemplo. No app, os grupos mudam todos os dias, rodadas certas rendem moedas e seus resultados aumentam sua sequência diária.",
+    ],
+    de: [
+      "Wer passt nicht? zeigt dir eine Gruppe von Spielern, die etwas gemeinsam haben, etwa einen Verein, für den sie gespielt haben, oder eine gewonnene Trophäe. Ein oder zwei Spieler gehören nicht dazu. Finde sie und wähle sie aus, bevor die Zeit abläuft.",
+      "In jeder Runde werden ein Thema und die Anzahl der Außenseiter genannt. Wähle genau diese Spieler aus: Jede richtige Auswahl zählt, jede falsche kostet dich etwas. Gewertet wird, wenn du bestätigst oder die Zeit abläuft.",
+      "Die Übungsrunde nutzt Beispielgruppen. In der App wechseln die Gruppen täglich. Für richtige Runden erhältst du Münzen, und deine Ergebnisse bauen deine Tages-Serie auf.",
     ],
   },
   "card-detective": {
@@ -300,6 +341,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Você começa cada carta com um orçamento. Dicas baratas revelam pouco; as caras quase entregam a resposta, então a habilidade está em saber qual revelação permite adivinhar. Acerte o jogador e fique com o que não gastou; se o orçamento acabar, você perde a carta.",
       "Dez cartas formam um dia. A rodada de treino desta página usa um conjunto de exemplo; no app, o jogo diário troca as cartas todo dia, dá moedas pelo saldo que você manteve e conta para sua sequência.",
     ],
+    de: [
+      "Spielerkarte erraten zeigt dir eine Spielerkarte, auf der alle Felder gesperrt sind: Gesamtwertung, Position, Verein, Nation, Liga und Kartenedition. Jedes Feld verbirgt einen Hinweis, der Münzen kostet. Öffne die Hinweise, die du brauchst, und errate dann den Spieler.",
+      "Du startest mit einem Münzbudget für jede Karte. Günstige Hinweise verraten wenig, teure fast alles. Entscheidend ist, den einen Hinweis zu finden, mit dem du den Spieler erraten kannst. Bei richtiger Antwort behältst du deine übrigen Münzen; ist dein Budget aufgebraucht, ist die Karte verloren.",
+      "Pro Tag gibt es zehn Karten. Die Übungsrunde auf dieser Seite nutzt Beispielkarten; in der App wechseln die Karten täglich. Was von deinem Münzbudget übrig bleibt, wird dir gutgeschrieben; deine Ergebnisse zählen für deine Serie.",
+    ],
   },
   "guess-the-goal": {
     en: [
@@ -331,6 +377,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Adivinhe o gol recria um gol famoso em uma prancheta de técnico. Os círculos vermelhos são o time que ataca, e os azul-marinho são os defensores; você vê cada passe, corrida e drible na ordem, mas sem nomes. Entre o primeiro toque e a finalização, a jogada acaba revelando quem está envolvido.",
       "Escolha o gol entre quatro opções: autor, partida e ano. Depois da sua resposta, você vê o vídeo real; se acertar, ganha uma pergunta bônus sobre um detalhe da jogada, como quem deu a assistência.",
       "São cinco gols por dia. Sem uma conta, você joga de graça e mantém sua coleção neste dispositivo; jogadores conectados ganham moedas e XP na primeira vez que identificam cada gol.",
+    ],
+    de: [
+      "Tor erraten zeigt ein berühmtes Tor auf einer Taktiktafel. Rote Kreise markieren die angreifende Mannschaft, dunkelblaue die Verteidiger. Du siehst jeden Pass, Lauf und jedes Dribbling der Reihe nach, aber keine Namen. Irgendwann zwischen der Ballannahme und dem Abschluss gibt der Spielzug das Tor preis.",
+      "Wähle das Tor aus vier Möglichkeiten: Torschütze, Match und Jahr. Nach deiner Antwort siehst du den echten Clip. Ist deine Antwort richtig, folgt eine Bonusfrage zu einem Detail des Spielzugs, zum Beispiel dazu, wer die Vorlage gegeben hat.",
+      "Pro Tag gibt es fünf Tore. Ohne Konto spielst du kostenlos und behältst deine Sammlung auf diesem Gerät. Angemeldete Spieler erhalten beim ersten Erraten jedes Tors Münzen und XP.",
     ],
   },
   "football-clues": {
@@ -370,6 +421,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Dez jogadores novos chegam todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você joga os dias anteriores e vê todas as respostas; jogadores conectados recebem as dicas de hoje, uma tentativa ranqueada no ranking diário e acompanham sua sequência. No fim, você recebe dez quadrados coloridos para compartilhar.",
       "Você também pode jogar Adivinhe o jogador pelas dicas no 1v1 contra um amigo online: envie o link da sala, os dois veem as mesmas dicas ao mesmo tempo e quem digitar o sobrenome certo primeiro ganha os pontos. Se errar, seu adversário pode receber até três dicas extras para tentar acertar.",
     ],
+    de: [
+      "Fußballer erraten ist ein Spieler-Ratespiel mit einer Leiter aus Hinweisen. Jeden Tag gibt es zehn gesuchte Spieler. Zu jedem gehören zehn Hinweise, die zunächst vage sind – etwa der Kontinent, für den er spielt, seine Position oder sein starker Fuß – und dann immer eindeutiger werden: ein berühmtes Finale, ein Wechsel oder ein Rekord.",
+      "Du entscheidest, wie viele Hinweise du brauchst. Ein richtiger Nachname nach dem ersten Hinweis bringt zehn Punkte. Jeder weitere aufgedeckte Hinweis verringert die mögliche Punktzahl um eins, bis zum letzten Hinweis mit nur noch einem Punkt. Ein falscher Versuch beendet die Runde nicht: Du bekommst noch einen Versuch und kannst höchstens drei weitere Hinweise aufdecken.",
+      "Um Mitternacht in Argentinien kommen jeden Tag zehn neue Spieler dazu. Ohne Konto spielst du die vergangenen Tage und siehst alle Antworten. Angemeldete Spieler bekommen die heutigen Hinweise, einen Ranked-Lauf in der Tages-Rangliste und ihre Serie. Am Ende erhältst du zehn farbige Kästchen zum Teilen.",
+      "Du kannst Fußballer erraten online auch 1 gegen 1 mit einem Freund spielen: Schick ihm den Raum-Link. Ihr seht dieselben Hinweise zur selben Zeit. Wer zuerst den richtigen Nachnamen eingibt, bekommt die Punkte. Liegt deine Antwort daneben, erhält dein Gegner höchstens drei weitere Hinweise zum Erraten.",
+    ],
   },
   "guess-the-goal-minute": {
     en: [
@@ -407,6 +464,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "O minuto exato vale 3 pontos. Se errar por até dois minutos, você ainda ganha 2; por até cinco minutos, ganha 1; além disso, não marca pontos. Assim, um dia perfeito vale 30 pontos. Os acréscimos contam no minuto: um gol aos 90+3 é no minuto 93, e um gol aos 45+2 é no minuto 47.",
       "Cada minuto é conferido em dois registros independentes da partida antes de o gol entrar no jogo. Dez gols novos chegam todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você joga os dias anteriores; jogadores conectados recebem os gols de hoje, uma tentativa ranqueada no ranking diário e acompanham sua sequência. No fim, você recebe dez quadrados coloridos para compartilhar.",
       "Você também pode jogar no 1v1 contra um amigo online, como nas transmissões: envie o link da sala e os dois veem o mesmo gol ao mesmo tempo. Cada um digita um minuto sem ver a resposta do outro; depois, os dois palpites aparecem. O minuto exato vale 3 pontos; se ninguém acertar, o palpite mais próximo vale 1.",
+    ],
+    de: [
+      "In welcher Minute? ist das Spiel aus den Streams: Ein berühmtes Tor erscheint mit Match, Endstand, Spielphase und Torschütze auf dem Bildschirm. Du musst die Spielminute erraten. Jeden Tag gibt es zehn Tore aus WM-Finals und K.-o.-Spielen, Champions-League-Partien, der EM und der Copa América.",
+      "Für die genaue Minute gibt es 3 Punkte. Liegt deine Antwort höchstens zwei Minuten daneben, bekommst du 2 Punkte, bei höchstens fünf Minuten 1 Punkt. Weiter daneben gibt es keine Punkte. An einem perfekten Tag sind also 30 Punkte möglich. Die Nachspielzeit zählt mit: Aus 90+3 wird Minute 93, aus 45+2 wird Minute 47.",
+      "Jede Minute wird anhand von zwei unabhängigen Match-Berichten geprüft, bevor ein Tor ins Spiel kommt. Um Mitternacht in Argentinien erscheinen täglich zehn neue Tore. Ohne Konto spielst du die vergangenen Tage; angemeldete Spieler sehen die heutigen Tore, haben einen Ranked-Lauf in der Tages-Rangliste und bauen ihre Serie aus. Am Ende erhältst du zehn farbige Kästchen zum Teilen.",
+      "Du kannst das Spiel online auch 1 gegen 1 mit einem Freund spielen, wie in den Streams: Schick ihm den Raum-Link. Ihr seht dasselbe Tor zur selben Zeit. Jeder gibt eine Minute ein, ohne die Antwort des anderen zu sehen; anschließend werden beide Antworten aufgedeckt. Für die genaue Minute gibt es 3 Punkte, sonst bekommt die nähere Antwort 1 Punkt.",
     ],
   },
   "played-for-both-clubs": {
@@ -446,6 +509,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Novas duplas chegam todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você joga os dias anteriores e vê exemplos de respostas para cada dupla; jogadores conectados recebem as dez duplas de hoje e uma tentativa ranqueada no ranking diário, onde empates são decididos pela velocidade. As respostas de hoje ficam escondidas até o fim do dia.",
       "Fica ainda melhor com amigos. Abra uma sala, compartilhe o link e até seis pessoas podem disputar as mesmas duplas: no 1v1, a primeira resposta certa ganha o ponto; com três ou mais, a primeira pessoa marca 3, a segunda 2, e cada outra que acertar marca 1. Quem cria a sala escolhe a liga: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig ou uma seleção dos maiores clubes.",
     ],
+    de: [
+      "Spieler für beide Vereine ist das Fußballspiel aus den Videos: zwei Vereine, eine Frage. Wer hat für beide gespielt? Jeden Tag gibt es zehn Paare – von Rivalen, die sich nur selten Spieler teilen, bis zu Vereinen mit Dutzenden gemeinsamen Spielern.",
+      "Pro Paar hast du 20 Sekunden und brauchst nur einen Spieler. Gib den Nachnamen, den vollständigen Namen oder den bekannten Namen ein. Akzente spielen keine Rolle, kleine Tippfehler werden verziehen. Leihspieler zählen: War er dort Spieler der ersten Mannschaft, ist er eine gültige Antwort.",
+      "Jeden Tag um Mitternacht in Argentinien kommen neue Paare dazu. Ohne Konto spielst du die vergangenen Tage und siehst Beispielantworten zu jedem Paar. Angemeldete Spieler bekommen die heutigen zehn Paare und einen Ranked-Lauf in der Tages-Rangliste. Bei gleicher Punktzahl entscheidet die Geschwindigkeit. Die heutigen Antworten bleiben bis zum Tagesende verborgen.",
+      "Mit Freunden macht es noch mehr Spaß. Öffne einen Raum, teile den Link und lass bis zu sechs Spieler dieselben Paare spielen. Bei 1 gegen 1 bekommt die erste richtige Antwort den Punkt. Bei drei oder mehr Spielern gibt es für die erste richtige Antwort 3 Punkte, für die zweite 2 und für alle übrigen mit richtiger Antwort 1. Der Gastgeber wählt die Liga: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig oder eine Mischung aus den größten Vereinen.",
+    ],
   },
   "football-tenable": {
     en: [
@@ -483,6 +552,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Cada resposta certa sobe para sua posição no ranking e mostra o número, para você descobrir a ordem enquanto joga. Um jogador real que não está na lista custa uma das suas três vidas; um nome que já está na lista, que pode servir para várias pessoas ou que não conhecemos não custa nada. Enquanto você digita, aparecem sugestões de todos os jogadores que conhecemos, sem revelar a lista.",
       "Uma lista nova chega todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você pode jogar os dias anteriores; jogadores conectados recebem a lista de hoje e aparecem no ranking diário, ordenados pelo número de nomes encontrados entre os dez e, depois, pelas vidas restantes. As respostas que faltam ficam escondidas até o fim do dia.",
       "Com amigos, vira uma corrida pelas posições. Abra uma sala para 2 a 6 jogadores e se revezem em uma torre compartilhada: cada posição vale o número correspondente, então a décima vale dez pontos; uma resposta errada ou o tempo esgotado custa uma das duas vidas por lista. São três listas, e vence quem fizer mais pontos.",
+    ],
+    de: [
+      "Top 10 erraten ist das Top-10-Spiel: jeden Tag eine verborgene Liste, auf der du die gesuchten Namen finden musst. Die Listen drehen sich um Fußballrekorde: Torschützen der Champions League aller Zeiten, Einsätze in der Premier League, höchste Ablösesummen, WM-Torschützen, Trainer mit den meisten Titeln sowie die erfolgreichsten Vereine und Länder.",
+      "Jede richtige Antwort erscheint mit ihrer Zahl auf dem passenden Rang. So lernst du die Reihenfolge beim Spielen kennen. Ein echter Spieler, der nicht auf der Liste steht, kostet eines deiner drei Leben. Ein Name, der schon auf der Liste steht, auf mehrere Spieler zutrifft oder uns unbekannt ist, kostet nichts. Beim Tippen erscheinen Vorschläge aus allen Spielern, die wir kennen; sie verraten die Liste also nicht.",
+      "Jeden Tag um Mitternacht in Argentinien erscheint eine neue Liste. Ohne Konto kannst du die vergangenen Tage spielen; angemeldete Spieler bekommen die heutige Liste und die Tages-Rangliste. Gewertet wird danach, wie viele der zehn Namen du gefunden hast, dann nach den übrigen Leben. Fehlende Antworten des heutigen Tages bleiben verborgen, bis der Tag vorbei ist.",
+      "Mit Freunden wird es ein Wettlauf um die Plätze. Öffne einen Raum für 2 bis 6 Spieler und spielt abwechselnd auf derselben Rangliste. Jeder Platz zählt so viele Punkte wie seine Nummer; für den zehnten Platz gibt es also zehn Punkte. Eine falsche Antwort oder abgelaufene Zeit kostet eines deiner zwei Leben pro Liste. Es gibt drei Listen, und die höchste Gesamtpunktzahl gewinnt.",
     ],
   },
   "football-name-chain": {
@@ -522,6 +597,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Todo dia há três sequências, cada uma começando com um jogador conhecido diferente. Sua pontuação é o total de nomes nas três, e o cronômetro perde um segundo a cada cinco nomes, até chegar a seis segundos. Novas sequências chegam à meia-noite, no horário da Argentina; sem uma conta, você joga os dias anteriores, e jogadores conectados recebem as sequências de hoje e aparecem no ranking diário.",
       "Com amigos, vira uma disputa eliminatória. Abra uma sala para 2 a 6 jogadores e se revezem em uma sequência compartilhada: quem ficar sem tempo sai da rodada, a última pessoa restante ganha o ponto e vence o duelo quem chegar primeiro a 3 pontos.",
     ],
+    de: [
+      "Fußballer-Wortkette ist ein Wortkettenspiel mit Fußballspielern. Jeder Name muss mit dem letzten Buchstaben des vorherigen Namens beginnen. So bereitest du mit jeder Antwort die nächste vor: Eine Kette, die mit einem schwierigen Buchstaben endet, wird zur eigenen Falle.",
+      "Vorname oder Nachname zählen beide. Anthony Martial gilt also für A und M; der nächste Buchstabe ist der letzte Buchstabe des Namens, unter dem er bekannt ist. Akzente werden ignoriert: Özil beginnt mit O. Du hast 10 Sekunden pro Name. Eine falsche Antwort kostet nur die Zeit, die du dafür gebraucht hast. Kein Spieler darf innerhalb eines Tageslaufs zweimal vorkommen.",
+      "Jeden Tag gibt es drei Ketten, die jeweils mit einem anderen bekannten Spieler beginnen. Deine Punktzahl entspricht der Zahl der Namen in allen drei Ketten. Alle fünf Namen wird die Zeit um eine Sekunde kürzer, bis auf sechs Sekunden. Um Mitternacht in Argentinien kommen neue Ketten dazu. Ohne Konto spielst du die vergangenen Tage; angemeldete Spieler bekommen die heutigen Ketten und die Tages-Rangliste.",
+      "Mit Freunden wird daraus ein K.-o.-Spiel. Öffne einen Raum für 2 bis 6 Spieler und spielt abwechselnd an derselben Kette. Läuft deine Zeit ab, scheidest du aus der Runde aus. Wer zuletzt übrig bleibt, erhält den Punkt. Wer zuerst 3 Punkte erreicht, gewinnt.",
+    ],
   },
   "football-horserace": {
     en: [
@@ -559,6 +640,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "As estatísticas vêm de registros abertos de partidas internacionais: Copa do Mundo, Euro, Copa América, Copa Africana de Nações, Copa da Ásia, Copa Ouro, eliminatórias da Copa do Mundo e da Euro e Liga das Nações, desde os primeiros jogos entre seleções até hoje. Há 69 tipos de estatística em 10 torneios, de gols e vitórias a pênaltis sofridos, gols contra e jogador mais velho; cada uma pode ser consultada em todos os tempos ou em uma época recente. Depois de cada escolha, você vê o número de cada seleção e a partida correspondente.",
       "Uma corrida nova chega todos os dias à meia-noite, no horário da Argentina, com as seleções distribuídas para deixar a disputa equilibrada. Sem uma conta, você joga os dias anteriores; jogadores conectados recebem a corrida de hoje e aparecem no ranking diário, onde uma vitória com menos escolhas fica à frente.",
       "Com amigos, é uma corrida de verdade. Abra uma sala para 2 a 4 jogadores e escolha o torneio ou deixe que ele seja sorteado. Vocês escolhem suas seleções em turnos e, depois, todo mundo escolhe uma estatística em segredo ao mesmo tempo a cada rodada. As escolhas aparecem primeiro para quem respondeu mais rápido, e cada uma movimenta a seleção líder: a primeira a cruzar a linha vence.",
+    ],
+    de: [
+      "Nationen-Rennen ist das Statistikrennen aus den Fußball-Shorts, jetzt als tägliches Spiel. Jeder Spieler übernimmt eine Nation, und jede Auswahl bezieht sich auf echte Rekorde: Führt deine Nation diese Statistik an oder nicht? Die Nation mit dem Spitzenwert rückt vor; bei einer falschen Auswahl kommt ein Konkurrent voran.",
+      "Die Statistiken stammen aus offenen Aufzeichnungen zu allen Länderspielen: WM, EM, Copa América, Afrika-Cup, Asien-Cup, Gold Cup, WM- und EM-Qualifikation sowie Nations League, von den ersten Länderspielen bis heute. Es gibt 69 Statistikarten in 10 Wettbewerben, von Toren und Siegen bis zu verursachten Elfmetern, Eigentoren und dem ältesten Spieler. Jede Statistik lässt sich für alle Zeiten oder einen jüngeren Zeitraum ansehen. Nach jeder Auswahl siehst du die Zahl jeder Nation und das dazugehörige Match.",
+      "Jeden Tag um Mitternacht in Argentinien beginnt ein neues Rennen. Die Nationen werden so verteilt, dass es ausgeglichen ist. Ohne Konto spielst du die vergangenen Tage; angemeldete Spieler bekommen das heutige Rennen und die Tages-Rangliste. Ein Sieg mit weniger Auswahlen steht weiter oben.",
+      "Mit Freunden wird es zum echten Rennen. Öffne einen Raum für 2 bis 4 Spieler und wähle den Wettbewerb oder lass ihn zufällig bestimmen. Ihr wählt abwechselnd eure Nationen. In jeder Runde wählt dann jeder gleichzeitig und geheim eine Statistik aus. Die Antworten werden der Reihe nach gezeigt, und jede bringt die führende Nation voran. Die erste Flagge im Ziel gewinnt.",
     ],
   },
   "football-codenames": {
@@ -604,6 +691,13 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Com amigos, é um jogo em equipe. Abra uma sala para 2 a 8 pessoas e divida o grupo em dois times, Casa e Fora. Cada pessoa escolhe um lado como Scout, que vê de quem é cada carta, ou como quem adivinha; um time sem Scout recebe o Scout bot. Os Scouts digitam qualquer dica de futebol e um número, o time vira as cartas, e vence o primeiro a encontrar todas as suas — a menos que alguém vire o gol contra antes. Não há moedas nem RP em jogo.",
       "Há dois tabuleiros. Imagens é o do dia: 20 desenhos de futebol. Palavras são 25 palavras com um sentido no futebol e outro do dia a dia, como BANCO ou TRAVE, e o Olheiro liga essas palavras com uma só dica. Os tabuleiros de Palavras são de treino: um novo a cada vez, quantos você quiser. Numa sala, o anfitrião escolhe o tabuleiro e pode definir um tempo por vez de 60 segundos, 90 segundos ou 2 minutos; no fim da partida, todos veem a quais cartas cada dica se referia.",
     ],
+    de: [
+      "Fußball-Codenames ist das klassische Wort- und Teamspiel für Partys, gespielt mit Fußball-Bildkarten. Ein Spieler, der Scout, weiß, welche Karten zu welchem Team gehören, und gibt einen einzigen Fußball-Hinweis mit einer Zahl. Die anderen erraten, auf welche Karten der Hinweis zeigt. Jeder falsche Zug hilft dem gegnerischen Team oder beendet den Zug.",
+      "Die 20 Karten zeigen Fußballmotive: Karikaturen von Legenden, berühmte Stadien und Fußball-Memes. Ein Hinweis kann alles aus dem Fußball sein: ein Spieler, Verein, Trainer, ein Stadion, eine Nationalmannschaft oder ein berühmter Moment, zum Beispiel „Mourinho · 2“ oder „Hand of God · 1“. Auf jedem Spielfeld gibt es eine Eigentor-Karte. Wird sie aufgedeckt, endet das Spiel.",
+      "Jeden Tag um Mitternacht in Argentinien erscheint für alle dasselbe Spielfeld. Der Bot-Scout gibt drei Hinweise. Finde deine 8 Karten, bevor die Hinweise aufgebraucht sind. Eine falsche Karte beendet den Zug, die Eigentor-Karte den Lauf. Ohne Konto spielst du die vergangenen Tage; angemeldete Spieler bekommen das heutige Spielfeld und die Tages-Rangliste, in der mehr gefundene Karten weiter oben stehen. Teile dein Spielfeld nach dem Spiel.",
+      "Mit Freunden wird daraus ein Teamspiel. Öffne einen Raum für 2 bis 8 Spieler und teile euch in zwei Teams auf: Heim und Auswärts. Jeder Spieler wählt eine Seite und übernimmt die Rolle als Scout, der die Zuordnung der Karten sieht, oder als Rater. Ein Team ohne Scout bekommt einen Bot-Scout. Scouts geben einen beliebigen Fußball-Hinweis mit einer Zahl ein. Das Team deckt Karten auf. Das erste Team, das alle eigenen Karten findet, gewinnt – außer jemand deckt zuerst die Eigentor-Karte auf. Münzen und RP spielen hier keine Rolle.",
+      "Es gibt zwei Spielfelder. Bilder ist die Tages-Challenge mit 20 Fußballzeichnungen. Wörter enthält 25 Begriffe, die sowohl im Fußball als auch im Alltag eine Bedeutung haben, etwa FLANKE oder BANK. Der Scout verbindet sie mit einem einzigen Hinweis. Wörter-Spielfelder sind zum Üben: jedes Mal ein neues, so oft du willst. Im Raum wählt der Gastgeber das Spielfeld und stellt die Zugzeit auf 60 oder 90 Sekunden oder 2 Minuten. Am Ende sehen alle, welche Karten zu den einzelnen Hinweisen gehörten.",
+    ],
   },
   "football-odd-one-out": {
     en: [
@@ -641,6 +735,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "A afirmação muda a cada carta: jogou por TODOS estes clubes, jogou na liga de TODOS estes países, participou de TODAS estas Copas do Mundo, usou TODOS estes números de camisa, ganhou TODAS estas competições. Toque na opção que parece falsa e confirme. Você tem 30 segundos por carta, e uma resposta certa vale +1.",
       "Um novo conjunto de 10 cartas chega todos os dias à meia-noite, no horário da Argentina, igual para todo mundo. Dois curingas podem ser usados uma vez por dia cada: Remover 2 apaga duas opções verdadeiras, e Tudo ou nada faz a carta valer +2 se você acertar e −1 se errar. Sem uma conta, você joga os dias anteriores; jogadores conectados recebem as cartas de hoje e aparecem no ranking diário. Quando terminar, compartilhe sua grade de acertos e erros.",
       "Com amigos, é uma corrida para encontrar a mentira. Abra uma sala para 2 a 6 jogadores e todo mundo recebe a mesma carta ao mesmo tempo, com 20 segundos para responder. Acertar vale +1; você recebe os mesmos dois curingas uma vez por partida, e ninguém vê seu curinga até a carta ser revelada.",
+    ],
+    de: [
+      "Welche Aussage ist falsch? ist ein Finde-den-Falschen-Spiel über Fußballspieler. Jede Karte zeigt einen Spieler, eine Aussage über seine Karriere und fünf Möglichkeiten. Vier davon stimmen, eine ist falsch. Finde die falsche Antwort.",
+      "Die Aussage wechselt von Karte zu Karte: spielte für ALLE diese Vereine, in der Liga ALLER dieser Länder, bei ALLEN diesen Weltmeisterschaften, trug ALLE diese Rückennummern oder gewann ALLE diese Wettbewerbe. Tippe auf die Antwort, die du für falsch hältst, und bestätige sie. Du hast pro Karte 30 Sekunden. Eine richtige Antwort bringt +1 Punkt.",
+      "Jeden Tag um Mitternacht in Argentinien erscheint für alle dasselbe Set aus 10 Karten. Zwei Joker helfen dir jeweils einmal am Tag: „2 entfernen“ blendet zwei richtige Antworten aus, und „Doppelte Punkte“ bringt bei richtiger Antwort +2 und bei falscher −1. Ohne Konto spielst du die vergangenen Tage; angemeldete Spieler bekommen die heutigen Karten und die Tages-Rangliste. Teile nach dem Spiel dein Raster mit richtigen und falschen Antworten.",
+      "Mit Freunden wird es ein Wettlauf um die falsche Antwort. Öffne einen Raum für 2 bis 6 Spieler. Alle bekommen dieselbe Karte zur selben Zeit und haben 20 Sekunden zum Antworten. Eine richtige Antwort bringt +1 Punkt. Dieselben zwei Joker stehen dir einmal pro Match zur Verfügung. Niemand sieht deinen Joker, bis die Karte aufgedeckt wird.",
     ],
   },
   "last-answer-standing": {
@@ -680,6 +780,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Novas categorias chegam todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você joga os dias anteriores e vê todas as respostas; jogadores conectados recebem as categorias de hoje, uma tentativa ranqueada no ranking diário e acompanham sua sequência. No fim, você recebe cinco quadrados coloridos para compartilhar: amarelo para uma lista completa, verde para metade ou mais, azul para algumas respostas e preto para nenhuma.",
       "Você também pode jogar Quem lembra mais? no 1v1 contra um amigo online, como nas transmissões: envie o link da sala e se revezem nas respostas da mesma lista. Quem continuar na rodada vence a categoria, e ganha o duelo quem vencer primeiro 3 categorias.",
     ],
+    de: [
+      "Nenne alle! ist ein Listenspiel. Jeden Tag gibt es fünf Fußballkategorien mit einer festgelegten Liste: etwa einen WM-Kader, alle Sieger der Copa Libertadores oder die besten Torschützen eines Vereins. Nenne die Antworten nacheinander. Jede richtige Antwort zählt einen Punkt.",
+      "Die Uhr macht den Unterschied. Für deine erste Antwort hast du 20 Sekunden. Mit jeder Antwort, die du nennst, wird die nächste Frist kürzer – bis auf 6 Sekunden. Drei Fehler in Folge oder eine abgelaufene Zeit beenden die Kategorie. Nennst du die ganze Liste, erhältst du zusätzlich zu deinen Punkten einen Bonus von +5.",
+      "Jeden Tag um Mitternacht in Argentinien kommen neue Kategorien dazu. Ohne Konto spielst du die vergangenen Tage und siehst alle Antworten; angemeldete Spieler bekommen die heutigen Kategorien, einen Ranked-Lauf in der Tages-Rangliste und ihre Serie. Am Ende erhältst du fünf farbige Kästchen zum Teilen: Gelb für eine vollständige Liste, Grün für mindestens die Hälfte, Blau für einige Antworten und Schwarz für keine.",
+      "Du kannst Nenne alle! online auch 1 gegen 1 mit einem Freund spielen, wie in den Streams: Schick ihm den Raum-Link und nennt abwechselnd Antworten aus derselben Liste. Wer in der Kategorie zuletzt übrig bleibt, gewinnt sie. Wer zuerst 3 Kategorien gewinnt, entscheidet das Duell für sich.",
+    ],
   },
   "football-minesweeper": {
     en: [
@@ -718,6 +824,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Um tabuleiro novo chega todos os dias à meia-noite, no horário da Argentina. Sem uma conta, você joga o tabuleiro do dia anterior e vê todas as respostas depois de cada rodada; jogadores conectados recebem o tabuleiro de hoje, uma tentativa ranqueada no ranking diário e acompanham sua sequência. No fim, você recebe uma grade de vinte quadrados coloridos para compartilhar com amigos.",
       "Campo minado de futebol também pode ser jogado no 1v1 contra um amigo online, como nas transmissões: vocês se revezam escolhendo jogadores, e quem tocar em uma mina entrega os pontos da rodada ao adversário. Encontrem os 12 jogadores e os dois pontuam.",
     ],
+    de: [
+      "Fußball-Minesweeper verwandelt ein Fußballquiz in ein Minensuchfeld aus Spielern. Jede Runde hat einen Hinweis und sechzehn Porträtkarten. Zwölf Spieler passen zum Hinweis, vier sind Minen. Die Hinweise reichen von der Saison eines Vereins und dem Spieltagskader eines berühmten Finales bis zum Geburtsort eines Spielers oder der Weltmeisterschaft, bei der er getroffen hat.",
+      "Jeder richtige Zug bringt einen Punkt zum Rundenergebnis. Eine Mine beendet die Runde und löscht alle Punkte dieser Runde. Du entscheidest also, wann du die Punkte sicherst. Alle zwölf Spieler zu finden ist eine perfekte Runde und bringt fünfzehn Punkte. Ein kompletter Tag umfasst zwanzig Runden, die zunehmend schwieriger werden, mit höchstens dreihundert Punkten.",
+      "Jeden Tag erscheint um Mitternacht in Argentinien ein neues Spielfeld. Ohne Konto spielst du das Spielfeld vom Vortag und siehst nach jeder Runde alle Antworten; angemeldete Spieler bekommen das heutige Spielfeld, einen Ranked-Lauf in der Tages-Rangliste und ihre Serie. Am Ende erhältst du ein Raster aus zwanzig farbigen Kästchen zum Teilen mit Freunden.",
+      "Fußball-Minesweeper kannst du online auch 1 gegen 1 mit einem Freund spielen, wie in den Streams: Ihr wählt abwechselnd Spieler aus. Wer einen Außenseiter erwischt, gibt die Rundepunkte an den Gegner ab. Findet ihr alle 12, erhalten beide Punkte.",
+    ],
   },
   "trivia-mines": {
     en: [
@@ -749,6 +861,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Minas de perguntas é um campo minado de futebol. Vinte e cinco casas escondem quatro defensores. Você escolhe uma quantidade de moedas, abre as casas uma a uma e cada casa segura multiplica o saldo pelas probabilidades justas daquela escolha. Se encontrar um defensor, perde as moedas; se retirar antes, fica com o saldo.",
       "Você pode fazer até três buscas por rodada: acerte uma pergunta de futebol para marcar um defensor escondido. A busca reduz o risco das próximas escolhas, e os multiplicadores diminuem junto, então o retorno continua igual seja qual for sua estratégia. A casa fica com três por cento quando você retira o saldo.",
       "Nesta página, você joga com pontos de treino que não podem ser sacados nem convertidos. No app, jogadores conectados usam moedas reais da carteira, com valores entre cinco e quinhentas moedas e um limite máximo para o saldo.",
+    ],
+    de: [
+      "Quiz-Minenfeld ist ein Fußball-Minesweeper. Hinter 25 Feldern verbergen sich vier Verteidiger. Wähle eine Münzmenge und decke die Felder einzeln auf. Jedes sichere Feld vergrößert den Münzvorrat mit seinem Multiplikator. Triffst du einen Verteidiger, sind die Münzen weg. Sicherst du den Vorrat vorher, bleiben sie dir.",
+      "Du kannst pro Runde bis zu dreimal scouten: Beantworte eine Fußballfrage richtig, und ein versteckter Verteidiger wird markiert. So ist die Auswahl der nächsten Felder einfacher; zugleich sinken die Multiplikatoren. Damit bleibt der Gegenwert unabhängig davon gleich, wie du spielst. Beim Sichern behält das Spiel drei Prozent ein.",
+      "Auf dieser Seite spielst du mit Übungspunkten, die du weder abheben noch umtauschen kannst. In der App spielen angemeldete Spieler mit echten Münzen aus ihrem Guthaben. Pro Runde sind fünf bis fünfhundert Münzen möglich; der Münzvorrat ist begrenzt.",
     ],
   },
   "football-logic": {
@@ -782,6 +899,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Há três tipos de charada: uma transferência indicada por dois escudos, uma carreira que só combina com um jogador e um jogo de palavras em que as imagens formam um nome. Sobrenomes e pequenos erros de digitação são aceitos; se errar, a resposta aparece para você entender o truque antes da próxima.",
       "A rodada de treino usa um conjunto fixo de charadas. No app, cinco charadas novas chegam todos os dias, cada resposta certa rende moedas e o dia conta para sua sequência.",
     ],
+    de: [
+      "Bilderrätsel ist ein Bilderrätsel. Zwei Bilder erscheinen nebeneinander: ein Vereinswappen neben einem Wahrzeichen, eine Flagge neben einem Gegenstand oder ein Emoji-Paar. Zusammen deuten sie auf einen Spieler, einen Wechsel oder einen berühmten Moment hin. Lies die Bilder, gib deine Antwort ein und schon erscheint das nächste Rätsel.",
+      "Es gibt drei Arten von Rätseln: einen Wechsel, der durch zwei Wappen dargestellt wird; eine Karriere, auf die nur ein Spieler passt; und Wortspiele, bei denen die Bilder einen Namen ergeben. Nachnamen und kleine Tippfehler werden akzeptiert. Bei einer falschen Antwort siehst du die Lösung und kannst den Kniff vor dem nächsten Rätsel lernen.",
+      "Die Übungsrunde nutzt eine feste Rätselsammlung. In der App erscheinen jeden Tag fünf neue Rätsel. Jede richtige Antwort bringt Münzen, und der Tag zählt für deine Serie.",
+    ],
   },
   "missing-xi": {
     en: [
@@ -813,6 +935,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Adivinhe a escalação mostra uma escalação famosa como onze camisas em campo, na formação real, com todos os nomes escondidos. A partida é informada, como uma final da Champions League, e seu objetivo é dizer o nome de quem começou jogando em cada posição. Toque em uma camisa, digite o nome e siga.",
       "Cada escalação é conferida com o registro oficial da partida, então a formação e os onze titulares estão corretos. Os nomes são reconhecidos com flexibilidade nas grafias em inglês e georgiano. Você pode pular uma camisa de que não se lembra; ao pular, o rosto e o nome aparecem para o elenco ficar completo no fim.",
       "Três escalações formam um dia. A rodada de treino usa elencos de exemplo; no app, o jogo diário troca as escalações todos os dias, dá moedas por cada camisa identificada e conta para sua sequência.",
+    ],
+    de: [
+      "Aufstellung erraten zeigt eine berühmte Startelf mit elf Trikots auf dem Platz, in der echten Formation und ohne sichtbare Namen. Das Match wird genannt, zum Beispiel ein Champions-League-Finale. Deine Aufgabe ist, den Spieler auf jeder Position zu nennen. Tippe auf ein Trikot, gib den Namen ein und mach weiter.",
+      "Jede Aufstellung wird anhand des offiziellen Match-Berichts geprüft. Formation und elf Startspieler stimmen also genau. Namen werden in englischer und georgischer Schreibweise großzügig erkannt. Ein Trikot, an dessen Spieler du dich nicht erinnerst, kannst du überspringen. Dabei werden Gesicht und Name aufgedeckt, damit die Aufstellung am Ende vollständig ist.",
+      "Drei Aufstellungen ergeben einen Tag. Die Übungsrunde nutzt Beispielkader; in der App wechseln die Kader täglich. Für jedes benannte Trikot erhältst du Münzen, und deine Ergebnisse zählen für deine Serie.",
     ],
   },
   "pass-chain": {
@@ -846,6 +973,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Cada ligação é conferida em um mapa de carreiras verificado, então uma resposta só conta quando os dois jogadores realmente se cruzaram. Menos ligações valem mais: cada desafio tem um caminho mínimo conhecido, e o objetivo é igualá-lo ou superá-lo. Se travar, revele a sequência mais curta e continue.",
       "Dois desafios formam um dia: um de aquecimento e outro que exige uma conexão menos óbvia. A rodada de treino usa desafios de exemplo; no app, o jogo diário troca os desafios todos os dias, paga moedas por solução e conta para sua sequência.",
     ],
+    de: [
+      "Fußballer verbinden gibt dir zwei Spieler, die nie zusammenspielten, und fordert dich auf, sie zu verbinden. Nenne einen Spieler, der mit dem aktuellen Ende der Kette einen Verein, Trainer oder eine Kabine teilte. Stimmt die Verbindung, wächst die Kette um eins und der neue Spieler wird zum Ende. Erreiche das Ziel und löse das Rätsel.",
+      "Jede Verbindung wird mit einem geprüften Karriere-Netz abgeglichen. Eine Antwort zählt also nur, wenn sich die Karrieren der beiden Spieler wirklich überschnitten. Weniger Verbindungen bringen mehr Punkte. Für jedes Rätsel ist der kürzeste Weg bekannt. Ihn zu erreichen oder zu unterbieten ist das Ziel. Wenn du nicht weiterkommst, lass dir die kürzeste Kette zeigen und mach weiter.",
+      "Jeden Tag gibt es zwei Rätsel: ein Aufwärmspiel und eines mit einer weniger offensichtlichen Verbindung. Die Übungsrunde nutzt Beispielrätsel; in der App wechseln die Rätsel täglich. Für jedes gelöste Rätsel erhältst du Münzen, und deine Ergebnisse zählen für deine Serie.",
+    ],
   },
   "stat-sniper": {
     en: [
@@ -878,11 +1010,16 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "No modo individual, é um desafio diário: dez perguntas, um controle deslizante em uma faixa plausível e pontos pela proximidade. O valor exato vale 100 pontos; se ficar a um quarto da faixa de distância, não marca nada. Há também o ranking diário de precisão. Com amigos, de 2 a 6 jogadores digitam seus palpites ao mesmo tempo, e o mais próximo vence a rodada: no 1v1, quem chega mais perto pontua; com três ou mais, há um pódio, e acertar o valor exato rende bônus.",
       "A ideia é a mesma do preço justo e do desempate de quiz em que vence quem chega mais perto, aplicada ao futebol: adivinhe o valor da transferência, o valor de mercado ou o público de uma partida. Cada número vem de uma base de dados rastreável, e as salas com amigos usam seu próprio conjunto de perguntas, então ninguém consegue decorar as respostas do desafio diário.",
     ],
+    de: [
+      "Schätzfragen ist ein Fußball-Zahlenspiel. In jeder Frage geht es um einen echten Wert: eine Ablösesumme, den höchsten Marktwert eines Spielers, seine Ligatore in einer Saison, seine Spiele für einen Verein, seine Körpergröße oder die Zuschauerzahl bei einem großen Europapokalabend. Gib eine Zahl ein. Je näher sie am echten Wert liegt, desto besser.",
+      "Allein spielst du die Tages-Challenge: zehn Fragen, ein Schieberegler mit einem plausiblen Wertebereich und Punkte je nach Nähe. Der genaue Wert bringt 100 Punkte; ab einem Viertel des Bereichs Abstand gibt es keine Punkte. Dazu kommt die Rangliste für die Tagesgenauigkeit. Mit Freunden geben 2 bis 6 Spieler gleichzeitig ihre Schätzung ab. Die nächste Antwort gewinnt die Runde: Bei 1 gegen 1 zählt die nähere Schätzung. Ab drei Spielern gibt es ein Podium, und eine genaue Antwort bringt einen Bonus.",
+      "Das Prinzip kennst du vielleicht aus „The Price Is Right“ und der Stichfrage „Wer liegt am nächsten?“ im Kneipenquiz: Wie hoch war die Ablöse, wie hoch der Marktwert, wie viele Zuschauer waren da? Jede Zahl stammt aus einem nachvollziehbaren Datensatz. In Freundesräumen gibt es einen eigenen Fragenpool, damit niemand die Antworten aus der Tages-Challenge kennt.",
+    ],
   },
   "free-kicks": {
     en: [
       "Free Kicks is a coin game with a goal wall. You stake coins, and each attack starts with a football question. A correct answer opens another section of the goal and asks the next question; a wrong answer or a timeout locks answering, so you have to shoot with whatever is open.",
-      "When you shoot, you pick a zone; the keeper dives for one of the open zones and the pot pays out according to how many were open, so more correct answers mean a safer shot and a bigger multiplier. Miss and the stake is gone; score and you can cash out or take another attack with the pot on the line.",
+      "When you shoot, you pick a zone; the keeper dives for one of the open zones and the pot pays out according to how many were open, so more correct answers mean a safer shot but a smaller multiplier. Miss and the stake is gone; score and you can cash out or take another attack with the pot on the line.",
       "On this page you play with practice points that cannot be withdrawn. In the app, signed-in players stake real coins from their wallet, with the same fair odds and the house margin shown on every state.",
     ],
     ka: [
@@ -909,6 +1046,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Cobrança de falta é um jogo de moedas com uma barreira no gol. Você usa moedas e cada ataque começa com uma pergunta de futebol. Uma resposta certa abre mais uma parte do gol e traz a próxima pergunta; uma resposta errada ou o fim do tempo bloqueia novas respostas, então você precisa chutar com as partes que estiverem abertas.",
       "Na hora de chutar, você escolhe uma área; o goleiro salta para uma das áreas abertas e o saldo é pago de acordo com quantas estavam abertas. Assim, mais respostas certas deixam o chute mais seguro e aumentam o multiplicador. Se errar o gol, perde as moedas; se marcar, pode retirar o saldo ou partir para outro ataque com ele em jogo.",
       "Nesta página, você joga com pontos de treino que não podem ser sacados. No app, jogadores conectados usam moedas reais da carteira, com as mesmas probabilidades justas e a margem da casa visível em cada estado.",
+    ],
+    de: [
+      "Freistoß-Spiel ist ein Münzspiel mit einer Torwand. Du wählst eine Münzmenge, und jeder Angriff beginnt mit einer Fußballfrage. Bei richtiger Antwort wird ein weiterer Teil des Tors freigeschaltet und die nächste Frage gestellt. Bei einer falschen Antwort oder abgelaufener Zeit kannst du nicht mehr antworten und musst mit den offenen Zonen schießen.",
+      "Beim Schuss wählst du eine Zone. Der Torwart springt in eine der offenen Zonen. Der Münzvorrat vervielfacht sich je nachdem, wie viele Zonen offen waren. Je mehr richtige Antworten, desto mehr Zonen sind offen: Der Schuss wird sicherer, der Multiplikator aber kleiner. Triffst du nicht, sind die Münzen weg. Bei einem Tor kannst du die Münzen sichern oder für einen weiteren Angriff verwenden.",
+      "Auf dieser Seite spielst du nur mit Übungspunkten, die nicht abgehoben werden können. In der App spielen angemeldete Spieler mit echten Münzen aus ihrem Guthaben. Die Regeln und Quizballs Anteil werden in jeder Spielphase angezeigt.",
     ],
   },
   "road-to-goal": {
@@ -942,6 +1084,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Depois de cada zona, você decide: retirar o valor acumulado na escada ou continuar para a próxima pergunta com todo o saldo em jogo. Uma resposta errada ou o fim do tempo encerra a sequência e você perde as moedas usadas para entrar. Complete as onze zonas e receba o prêmio máximo da escada.",
       "Nesta página, você joga apenas com pontos de treino. No app, jogadores conectados usam moedas reais em valores fixos; a ordem das perguntas é definida antes do início da sequência, e depois é possível verificar o comprovante da rodada.",
     ],
+    de: [
+      "Weg zum Tor ist eine Leiter mit elf Zonen vom eigenen Strafraum bis zum gegnerischen Tor. Du wählst eine feste Münzmenge und beantwortest in jeder Zone innerhalb von fünfzehn Sekunden eine Fußballfrage. Mit jeder richtigen Antwort kommst du eine Zone weiter und der Multiplikator steigt. Je näher du dem Tor kommst, desto schwieriger werden die Fragen.",
+      "Nach jeder Zone entscheidest du: Sichere die Münzen, die du bis dahin auf der Leiter gesammelt hast, oder beantworte die nächste Frage und spiele mit dem ganzen Münzvorrat weiter. Eine falsche Antwort oder abgelaufene Zeit beendet den Lauf und die Münzen sind weg. Schaffst du alle elf Zonen, erhältst du den höchsten Wert der Leiter.",
+      "Auf dieser Seite spielst du nur mit Übungspunkten. In der App spielen angemeldete Spieler mit festen Münzmengen. Die Reihenfolge der Fragen steht fest, bevor der Lauf beginnt, und der Nachweis der Runde lässt sich anschließend prüfen.",
+    ],
   },
   "squad-spin": {
     en: [
@@ -973,6 +1120,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Roleta de futebol é uma sequência de giros. Cada giro para três rolos em um clube, uma posição e uma seleção, e você tem quinze segundos para dizer o nome de um jogador que combine com os três, como um atacante brasileiro que jogou no Chelsea. Sequências com quatro ou cinco rolos acrescentam uma liga, um técnico ou um troféu e pagam mais por giro.",
       "Uma resposta certa multiplica o saldo; depois, você escolhe retirar ou girar de novo antes de ver os próximos rolos, então não dá para espiar antes. Uma resposta errada ou o fim do tempo encerra a sequência e você perde as moedas usadas para entrar. Toda combinação tem pelo menos uma resposta verificada, e os nomes são aceitos nas grafias em inglês e georgiano, com tolerância a erros de digitação.",
       "Nesta página, você joga apenas com pontos de treino. No app, jogadores conectados usam moedas reais, os multiplicadores vêm da precisão medida em cada nível de dificuldade, e as sequências têm limite de dez giros e quarenta vezes o valor usado para entrar.",
+    ],
+    de: [
+      "Fußball-Glücksrad besteht aus mehreren Drehungen. Bei jeder Drehung landen drei Walzen auf einem Verein, einer Position und einer Nation. Du hast fünfzehn Sekunden, um einen Spieler zu nennen, auf den alles zutrifft, zum Beispiel einen deutschen Stürmer, der für Chelsea gespielt hat. Läufe mit vier oder fünf Walzen ergänzen eine Liga, einen Trainer oder eine Trophäe und bringen mehr Münzen pro Drehung.",
+      "Eine richtige Antwort vervielfacht den Münzvorrat. Danach entscheidest du, ob du die Münzen sicherst oder noch einmal drehst. Die nächsten Walzen werden erst anschließend gezeigt, du kannst also nicht vorher nachsehen. Eine falsche Antwort oder abgelaufene Zeit beendet den Lauf, und die Münzen sind weg. Für jede Kombination gibt es mindestens eine geprüfte Antwort. Namen werden mit englischer und georgischer Schreibweise sowie kleinen Tippfehlern erkannt.",
+      "Auf dieser Seite spielst du nur mit Übungspunkten. In der App spielen angemeldete Spieler mit echten Münzen. Die Multiplikatoren beruhen auf der gemessenen Trefferquote der jeweiligen Schwierigkeitsstufe. Ein Lauf ist auf zehn Drehungen und das Vierzigfache der gewählten Münzmenge begrenzt.",
     ],
   },
 };

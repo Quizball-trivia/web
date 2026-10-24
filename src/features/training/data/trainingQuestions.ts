@@ -163,7 +163,7 @@ export const TRAINING_PENALTY_QUESTIONS: GameQuestion[] = [
 ];
 
 // ─── Localization ────────────────────────────────────────────────
-// The training questions are hardcoded (no backend), so their es/ka/pt variants
+// The training questions are hardcoded (no backend), so their es/ka/pt/de variants
 // live here too and are swapped in at render time via localizeTrainingQuestion.
 
 interface QuestionL10n {
@@ -211,6 +211,26 @@ const L10N: Record<string, Record<string, QuestionL10n>> = {
     "train-pen-4": { prompt: "Qual país venceu a final da Copa do Mundo de 2022 nos pênaltis?", options: ["França", "Brasil", "Argentina", "Croácia"] },
     "train-pen-5": { prompt: "Qual cor de cartão expulsa um jogador de campo?", options: ["Amarelo", "Vermelho", "Azul", "Verde"] },
     "train-pen-6": { prompt: "Quantos jogadores um time de futebol coloca em campo no início da partida?", options: ["9", "10", "11", "12"] },
+  },
+  de: {
+    "train-1": { prompt: "Welches Land hat die meisten FIFA-Weltmeisterschaften gewonnen?", options: ["Deutschland", "Brasilien", "Argentinien", "Italien"] },
+    "train-2": { prompt: "Wer hält den Rekord für die meisten Tore in einem Kalenderjahr (91 Tore im Jahr 2012)?", options: ["Cristiano Ronaldo", "Lionel Messi", "Gerd Müller", "Robert Lewandowski"] },
+    "train-3": { prompt: "Welcher Verein hat die meisten Titel in der UEFA Champions League gewonnen?", options: ["AC Mailand", "Barcelona", "Real Madrid", "Liverpool"] },
+    "train-4": { prompt: "In welchem Jahr startete die Premier League offiziell und löste die alte First Division ab?", options: ["1988", "1990", "1992", "1996"] },
+    "train-5": { prompt: "Welcher Spieler erzielte bei der WM 1986 das „Hand-Gottes-Tor“?", options: ["Pelé", "Diego Maradona", "Zinedine Zidane", "Johan Cruyff"] },
+    "train-6": { prompt: "Wie viele Auswechslungen sind pro Mannschaft in einem regulären FIFA-Spiel seit 2022 höchstens erlaubt?", options: ["3", "4", "5", "6"] },
+    "train-7": { prompt: "Welches Land gewann die FIFA-Weltmeisterschaft 2022 in Katar?", options: ["Frankreich", "Argentinien", "Brasilien", "Kroatien"] },
+    "train-8": { prompt: "Wer ist dieser Spieler?", options: ["Harry Kane", "Jamie Vardy", "Wayne Rooney", "Alan Shearer"] },
+    "train-9": { prompt: "Wie weit ist der Elfmeterpunkt von der Torlinie entfernt?", options: ["9 Meter", "10 Meter", "11 Meter", "13 Meter"] },
+    "train-10": { prompt: "Welcher Trainer hat die meisten Premier-League-Titel gewonnen?", options: ["Arsène Wenger", "José Mourinho", "Sir Alex Ferguson", "Pep Guardiola"] },
+    "train-11": { prompt: "Welches afrikanische Land erreichte 1990 als erstes das WM-Viertelfinale?", options: ["Nigeria", "Kamerun", "Ghana", "Senegal"] },
+    "train-12": { prompt: "Welcher Spieler hat die meisten Tore in der Geschichte der Champions League erzielt?", options: ["Lionel Messi", "Cristiano Ronaldo", "Robert Lewandowski", "Raúl"] },
+    "train-pen-1": { prompt: "Aus welcher Entfernung in Metern wird ein Elfmeter geschossen?", options: ["9", "11", "13", "15"] },
+    "train-pen-2": { prompt: "Welcher dieser Spieler ist ein legendärer italienischer Torwart?", options: ["Gianluigi Buffon", "Paolo Maldini", "Andrea Pirlo", "Francesco Totti"] },
+    "train-pen-3": { prompt: "Wie nennt man es, wenn ein Spieler in einem Match drei Tore erzielt?", options: ["Ein Doppelpack", "Ein Hattrick", "Ein Viererpack", "Ein Triple"] },
+    "train-pen-4": { prompt: "Welches Land gewann das WM-Finale 2022 im Elfmeterschießen?", options: ["Frankreich", "Brasilien", "Argentinien", "Kroatien"] },
+    "train-pen-5": { prompt: "Welche Kartenfarbe führt zum Platzverweis?", options: ["Gelb", "Rot", "Blau", "Grün"] },
+    "train-pen-6": { prompt: "Wie viele Spieler hat eine Fußballmannschaft beim Anpfiff auf dem Platz?", options: ["9", "10", "11", "12"] },
   },
   ka: {
     "train-1": { prompt: "რომელ ქვეყანას აქვს მოგებული ყველაზე მეტი FIFA-ს მსოფლიო თასი?", options: ["გერმანია", "ბრაზილია", "არგენტინა", "იტალია"] },
