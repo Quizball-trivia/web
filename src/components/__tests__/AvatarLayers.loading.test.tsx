@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { AvatarLayers } from '../AvatarLayers';
+import { getAvatarPart } from '@/lib/avatars/parts';
 
 describe('AvatarLayers thumbnails', () => {
   const customization = { jersey: 'jersey_green' };
@@ -21,10 +22,12 @@ describe('AvatarLayers thumbnails', () => {
 
   it('preserves dedicated CDN resolvers and un-sized preview consumers', () => {
     const { container, rerender } = render(<AvatarLayers customization={customization} imageSizes="26px" assetResolver={(path) => `https://assets.example.test${path}`} />);
-    expect(container.querySelector('img')).toHaveAttribute('src', 'https://assets.example.test/assets/store/jersey_green.webp?v=2');
+    const asset = getAvatarPart('jersey_green')!.asset;
+    expect(asset).toMatch(/\/assets\/store\/jersey_green\.webp\?v=[a-f0-9]{16}$/);
+    expect(container.querySelector('img')).toHaveAttribute('src', `https://assets.example.test${asset}`);
     expect(container.querySelector('img')).not.toHaveAttribute('srcset');
     rerender(<AvatarLayers customization={customization} />);
-    expect(container.querySelector('img')).toHaveAttribute('src', '/assets/store/jersey_green.webp?v=2');
+    expect(container.querySelector('img')).toHaveAttribute('src', asset);
     expect(container.querySelector('img')).not.toHaveAttribute('srcset');
   });
 
