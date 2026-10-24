@@ -6,13 +6,13 @@ import { ANSWER_MAX_LENGTH, fetchSuggestions, type EntityKind, type Suggestion }
 
 const DEBOUNCE_MS = 150;
 const MIN_QUERY = 2;
-/** Suggestions depend only on (kind, release, text): kept for the page's life, bounded; failures are never kept. */
+/** Suggestions depend only on (kind, release, text, language): kept for the page's life, bounded; failures are never kept. */
 const cache = new Map<string, Suggestion[]>();
 const CACHE_MAX = 300;
 /** The server reads only an answer with a letter or a digit in it (symbols alone are refused, not judged). */
 const sendable = (text: string) => /[\p{L}\p{N}]/u.test(text.slice(0, ANSWER_MAX_LENGTH));
 
-export type SuggestLookup = (kind: EntityKind, release: string, q: string) => Promise<Suggestion[]>;
+export type SuggestLookup = (kind: EntityKind, release: string, q: string, locale?: string) => Promise<Suggestion[]>;
 
 /**
  * The typed-answer look of the other games (blue pill input, green pill button) with name suggestions above it. Picking
@@ -20,8 +20,8 @@ export type SuggestLookup = (kind: EntityKind, release: string, q: string) => Pr
  * suggestion, or the text as typed when none is highlighted. Results belong to the text and the list (kind, release)
  * they were fetched for: a change of either drops them (and the highlight) at once, so Enter can never send an older pick.
  */
-export function SuggestBox({ kind, release, placeholder, say, disabled, note, className, lookup = fetchSuggestions, onSubmit }: {
-  kind: EntityKind | undefined; release: string | undefined; placeholder: string; say: string; disabled?: boolean; note?: string | null; className?: string;
+export function SuggestBox({ kind, release, locale, placeholder, say, disabled, note, className, lookup = fetchSuggestions, onSubmit }: {
+  kind: EntityKind | undefined; release: string | undefined; locale?: string; placeholder: string; say: string; disabled?: boolean; note?: string | null; className?: string;
   lookup?: SuggestLookup;
   /** Resolves to false when the answer was not applied: it is put back in the box unless something new was typed. */
   onSubmit: (text: string, pick: string | null) => void | Promise<boolean>;
@@ -38,7 +38,7 @@ export function SuggestBox({ kind, release, placeholder, say, disabled, note, cl
   useEffect(() => { if (!disabled && !document.querySelector("[data-sheet-asks]")) input.current?.focus({ preventScroll: true }); }, [disabled]);
 
   const q = draft.trim();
-  const key = `${kind}|${release}|${q.toLowerCase()}`;
+  const key = `${kind}|${release}|${locale ?? ""}|${q.toLowerCase()}`;
   useEffect(() => {
     if (!kind || !release || q.length < MIN_QUERY) return;
     let alive = true;
@@ -46,14 +46,14 @@ export function SuggestBox({ kind, release, placeholder, say, disabled, note, cl
     const hit = cache.get(key);
     if (hit) { const id = window.setTimeout(() => show(hit), 0); return () => { alive = false; window.clearTimeout(id); }; }
     const id = window.setTimeout(() => {
-      void lookup(kind, release, q).then((items) => {
+      void lookup(kind, release, q, locale).then((items) => {
         cache.set(key, items);
         if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value!);
         show(items);
       }, () => show([]));
     }, DEBOUNCE_MS);
     return () => { alive = false; window.clearTimeout(id); };
-  }, [key, q, kind, release, lookup]);
+  }, [key, q, kind, release, locale, lookup]);
 
   const shown = open && q.length >= MIN_QUERY && result?.key === key ? result.items : [];
   // A highlight belongs to the results it was made on: a new list (another kind or release) drops it with them.

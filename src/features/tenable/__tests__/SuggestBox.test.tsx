@@ -52,6 +52,19 @@ describe("SuggestBox", () => {
     expect(onSubmit).toHaveBeenCalledWith("Milo", null);
   });
 
+  it("asks in the page's language, and keeps each language's names apart", async () => {
+    const lookup = vi.fn(async (_k: string, _r: string, _q: string, locale?: string) => [{ eid: "c1", label: locale === "de" ? "Vardo München" : "Vardo Munich", qualifier: null }]);
+    const props = { kind: "club" as const, release: "rel-c", placeholder: "Who is on the list?", say: "Send", lookup, onSubmit: vi.fn() };
+    const { rerender } = render(<SuggestBox locale="de" {...props} />);
+    const input = screen.getByRole("combobox");
+    await type(input, "Vardo");
+    expect(await screen.findByRole("option", { name: /Vardo München/ })).toBeTruthy();
+    expect(lookup).toHaveBeenLastCalledWith("club", "rel-c", "Vardo", "de");
+    rerender(<SuggestBox locale="en" {...props} />);
+    expect(await screen.findByRole("option", { name: /Vardo Munich/ })).toBeTruthy();
+    expect(lookup).toHaveBeenLastCalledWith("club", "rel-c", "Vardo", "en");
+  });
+
   it("Enter that confirms an input-method composition sends nothing", async () => {
     const { input, onSubmit } = box();
     await type(input, "Milo");
