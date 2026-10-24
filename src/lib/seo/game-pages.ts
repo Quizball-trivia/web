@@ -1829,7 +1829,7 @@ export const GAME_PAGES: GamePageEntry[] = [
       metaTitle: "Welche Aussage ist falsch? Finde den falschen Fußball-Fakt",
       metaDescription: "Welche Aussage ist falsch? Prüfe fünf Fakten zu einem Fußballer: Vier stimmen, einer ist erfunden. Spiele 10 Karten, nutze 2 Joker oder tritt Freunden entgegen.",
       title: "Welche Aussage ist falsch? Finde den falschen Fußball-Fakt",
-      intro: "Ein Fußballer, eine Aussage und fünf Optionen: „spielte bei ALLEN diesen Vereinen“, „trug ALL diese Rückennummern“. Vier Aussagen stimmen, eine ist falsch. Finde den Ausreißer, bevor die 30 Sekunden ablaufen.",
+      intro: "Ein Fußballer, eine Aussage und fünf Optionen: „spielte bei ALLEN diesen Vereinen“, „trug ALLE diese Rückennummern“. Vier Aussagen stimmen, eine ist falsch. Finde den Ausreißer, bevor die 30 Sekunden ablaufen.",
       howToPlay: ["Jede Karte zeigt einen Fußballer und eine Aussage, etwa zu seinen Vereinen, Ligen, WM-Kadern, Rückennummern oder Titeln. Darunter stehen fünf Optionen.", "Vier Optionen stimmen, eine ist falsch. Tippe auf die falsche und bestätige deine Wahl. Du hast 30 Sekunden pro Karte.", "Eine richtige Antwort bringt 1 Punkt. Zwei Joker, je einmal pro Tag: „2 entfernen“ blendet zwei richtige Optionen aus; „Doppelt oder nichts“ bringt +2 bei richtig und −1 bei falsch.", "Zehn Karten pro Tag, für alle gleich. Beende das Spiel, sieh deinen Punktestand, teile dein Feld und steige in der täglichen Rangliste auf."],
       reward: "Spiele Karten früherer Tage ohne Konto; melde dich für die heutigen Karten und die tägliche Rangliste an.",
     },

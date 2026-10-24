@@ -165,7 +165,7 @@ const copy = {
     pointsStat: "Pontos", rightStat: "Acertos", rightDetail: (n: number) => `Acertos: ${n}`, nextCard: "Próxima carta…", lastCard: "Última carta!",
   },
   de: {
-    brand: ["Fußball", "Welche Aussage ist falsch?"] as const,
+    brand: ["Welche Aussage", "ist falsch?"] as const,
     title: "Welche Aussage ist falsch?", tag: "10 Karten pro Tag",
     lines: [
       "Auf jeder Karte siehst du einen Spieler und fünf Fakten. Vier stimmen, einer ist falsch.",
