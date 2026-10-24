@@ -492,9 +492,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Ganhe moedas e XP todos os dias que jogar.",
     },
     de: {
-      metaTitle: "Higher or Lower Fußball: Wer hat den höheren Marktwert?",
-      metaDescription: "Zwei Fußballer, ein Wert: Wer hat den höheren Marktwert? Halte deine Serie am Laufen und spiele jeden Tag die Tages-Challenge zu Higher or Lower.",
-      title: "Higher or Lower Fußball: Wer hat den höheren Marktwert?",
+      metaTitle: "Higher or Lower Fußball: Marktwert, Tore und mehr",
+      metaDescription: "Zwei Fußballer, eine Statistik: Wer hat den höheren Marktwert, wer mehr Tore? Halte deine Serie am Laufen, jeden Tag mit einer neuen Higher-or-Lower-Challenge.",
+      title: "Higher or Lower Fußball: Marktwert, Tore und mehr",
       intro: "Zwei Fußballer nebeneinander und eine Statistik. Entscheide, welcher Wert höher ist, und baue deine Serie aus.",
       howToPlay: ["Lies die verglichene Statistik.", "Wähle den Spieler, dessen Wert deiner Meinung nach höher ist.", "Mit jeder richtigen Wahl geht die Runde weiter."],
       reward: "Sammle Münzen und XP an jedem Tag, an dem du spielst.",
@@ -551,7 +551,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
     de: {
       metaTitle: "Wer passt nicht in die Reihe? Fußball-Quiz",
-      metaDescription: "Wer passt nicht in die Reihe? Erkenne falsche Fußball-Aussagen in einer Liste aus richtigen Antworten. Täglich wartet eine neue Tages-Challenge auf dich.",
+      metaDescription: "Wer passt nicht in die Reihe? In der Antwortliste verstecken sich falsche Antworten: Wähle genau alle richtigen aus. Jeden Tag eine neue Fußball-Challenge.",
       title: "Wer passt nicht in die Reihe? Fußball-Quiz",
       intro: "Jede Option klingt plausibel, aber einige gehören nicht dazu. Wähle genau die passenden Antworten aus und keine weitere.",
       howToPlay: ["Lies die Frage und die Antwortliste.", "Tippe auf jede Option, die deiner Meinung nach stimmt.", "Sende deine Auswahl ab; nur eine exakt passende Auswahl zählt."],

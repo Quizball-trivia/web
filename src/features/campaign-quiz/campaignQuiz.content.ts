@@ -323,7 +323,7 @@ export function getCampaignQuizContent(
           : locale === 'pt'
             ? `${page.breadcrumb_label}: vamos começar`
             : locale === 'de'
-              ? `Starte das ${page.breadcrumb_label}`
+              ? `${page.breadcrumb_label}: Los geht’s`
               : `Kick off the ${page.breadcrumb_label}`,
     aboutEyebrow: locale === 'ka'
       ? 'ისტორია კითხვების მიღმა'

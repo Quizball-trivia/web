@@ -1002,6 +1002,7 @@ export interface FootballGridCriterionView {
   labelTr?: string | null;
   labelRu?: string | null;
   labelPt?: string | null;
+  labelDe?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }

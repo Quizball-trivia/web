@@ -23,6 +23,8 @@ function shortPersonName(name: string): string {
   return Array.from(surname).length >= 10 ? surname : `${Array.from(parts[0])[0]}. ${surname}`;
 }
 
+const GERMAN_LEAGUE_TITLES: Record<string, string> = { 'bundesliga-title': 'Bundesliga', 'la-liga-title': 'La Liga', 'ligue-1-title': 'Ligue 1', 'serie-a-title': 'Serie A' };
+
 export function criterionPresentation(criterion: FootballGridCriterionView, locale: Locale): { title: string; eyebrow?: string } {
   const label = criterionLabel(criterion, locale);
   if (criterion.family === 'country' && criterion.labelEn === 'United States') {
@@ -47,8 +49,10 @@ export function criterionPresentation(criterion: FootballGridCriterionView, loca
       'premier-league-title': { en: 'Premier League', ka: 'პრემიერ ლიგა', es: 'Premier League', tr: 'Premier Lig', ru: 'Премьер-лига', pt: 'Premier League', de: 'Premier League' },
     };
     const titleKey = Object.keys(titles).find((key) => criterion.key === `trophy:${key}` || criterion.assetKey === key);
+    // German labels are compounds ("La-Liga-Sieger"); the header shows the competition as written.
+    const germanLeague = locale === 'de' ? GERMAN_LEAGUE_TITLES[criterion.key.replace(/^trophy:/, '')] : undefined;
     return {
-      title: titleKey ? titles[titleKey][locale] : label.replace(/ winner$| გამარჯვებული$| Şampiyonu$/i, '').replace(/^(?:Campeón|Campeão|Sieger)\s+(?:(?:de la|del|da|do|de|der|des)\s+)?/i, ''),
+      title: titleKey ? titles[titleKey][locale] : germanLeague ?? label.replace(/ winner$| გამარჯვებული$| Şampiyonu$|-Sieger$/i, '').replace(/^(?:Campeón|Campeão|Sieger)\s+(?:(?:de la|del|da|do|de|der|des)\s+)?/i, ''),
       eyebrow: copy(locale, { en: 'Winner', ka: 'მფლობელი', es: 'Ganador', tr: 'Kazanan', ru: 'Победитель', pt: 'Vencedor', de: 'Sieger' }),
     };
   }
