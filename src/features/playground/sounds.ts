@@ -8,6 +8,10 @@ import type { GameId, PlayMode } from "./types";
 export interface SoundEvent { moment: string; sound: string | null; where: string }
 
 export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>>> = {
+  conexiones: {
+    solo: [{ moment: "Any daily moment", sound: null, where: "prototype: no sounds yet" }],
+    duel: [{ moment: "Any duel moment", sound: null, where: "prototype: no sounds yet" }],
+  },
   datofalso: {
     solo: [
       { moment: "Your pick was the fake", sound: "correctRanked", where: "datoFalso.sounds.ts useRevealSound" },

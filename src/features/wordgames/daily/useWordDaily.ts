@@ -29,6 +29,15 @@ const OFFLINE_RETRY_MS = 5_000;
 /** The server keeps an answer valid this long past its deadline; after it, the clock has decided. */
 const GRACE_MS = 1_500;
 
+/** Whether a response may replace the run on screen: another run, or a newer version of this one. A same-version reply
+ * never takes back a day-close disclosure (a last guess answered after the midnight read would hide the answers again). */
+export function replacesShown<State extends WordRunStateBase>(current: WordRun<State> | null, next: WordRun<State>): boolean {
+  if (!current || current.run.id !== next.run.id) return true;
+  if (next.run.version !== current.run.version) return next.run.version > current.run.version;
+  const disclosed = (r: WordRun<State>) => (r.state as { disclosed?: boolean }).disclosed === true;
+  return !disclosed(current) || disclosed(next);
+}
+
 /**
  * One word-game daily on screen: which board, the player's server-held run of it, the server's clock, and one server
  * call at a time. A run is only ever shown for the player and board it belongs to; only a newer version of it replaces
@@ -145,8 +154,7 @@ export function useWordDaily<State extends WordRunStateBase, Result extends stri
 
   /** The one gate every response passes: only a newer version of this run (or another run) replaces what is shown. */
   const accept = (next: WordRun<State>): boolean => {
-    const current = runRef.current;
-    if (current && current.run.id === next.run.id && next.run.version < current.run.version) return false;
+    if (!replacesShown(runRef.current, next)) return false;
     // Every response is late by its trip, so the one that puts the server furthest ahead is the best sample.
     const sample = { serverMs: Date.parse(next.state.serverNow), perfMs: performance.now() };
     if (!clockSyncedRef.current || sample.serverMs > serverNow()) {
