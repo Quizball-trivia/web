@@ -126,6 +126,16 @@ const DATO_FALSO_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   de: { ...NAME_CHAIN_PAGE.de, label: "Jeden Tag 10 neue Karten · kein Konto nötig", start: "Jetzt spielen", note: "Ein Fußballer, fünf Fakten, einer davon ist falsch. Als Gast spielst du frühere Tage; mit Konto siehst du die Karten von heute und die Rangliste." },
 };
 
+const CONEXIONES_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...NAME_CHAIN_PAGE.en, label: "A new board every day · no account needed", start: "Play now", note: "16 footballers, 4 hidden links. As a guest you play past boards; with an account, today's board and the leaderboard." },
+  ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე ახალი დაფა · ანგარიშის გარეშე", start: "თამაში", note: "16 ფეხბურთელი, 4 დამალული კავშირი. სტუმრად წინა დაფებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს." },
+  es: { ...NAME_CHAIN_PAGE.es, label: "Un tablero nuevo cada día · sin cuenta", start: "Jugar ahora", note: "16 futbolistas, 4 conexiones ocultas. Sin cuenta jugás los tableros anteriores; con cuenta, el tablero de hoy y el ranking." },
+  tr: { ...NAME_CHAIN_PAGE.tr, label: "Her gün yeni bir tahta · hesap gerekmez", start: "Oyna", note: "16 futbolcu, 4 gizli bağlantı. Misafir olarak önceki tahtaları oynarsın; hesapla bugünün tahtasını ve sıralamayı." },
+  ru: { ...NAME_CHAIN_PAGE.ru, label: "Новое поле каждый день · аккаунт не нужен", start: "Играть сейчас", note: "16 футболистов, 4 скрытые связи. Гость играет за прошлые поля, а с аккаунтом доступны сегодняшнее поле и рейтинг." },
+  pt: { ...NAME_CHAIN_PAGE.pt, label: "Um tabuleiro novo todo dia · sem precisar de conta", start: "Jogue agora", note: "16 jogadores, 4 conexões escondidas. Como visitante, você joga os tabuleiros anteriores; com uma conta, acessa o tabuleiro de hoje e o ranking." },
+  de: { ...NAME_CHAIN_PAGE.de, label: "Jeden Tag ein neues Brett · kein Konto nötig", start: "Jetzt spielen", note: "16 Spieler, 4 versteckte Verbindungen. Als Gast spielst du frühere Bretter; mit Konto spielst du das heutige Brett und siehst die Rangliste." },
+};
+
 const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
   ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
@@ -146,7 +156,7 @@ const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   de: { ...ULTIMO_PAGE.de, label: "Jeden Tag eine neue Top 10 · frühere Tage gratis, kein Konto nötig", note: "Eine versteckte Liste, 3 Leben. Als Gast spielst du frühere Tage; mit Konto siehst du die heutige Liste und die Rangliste." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "conexiones-futboleras": CONEXIONES_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -217,7 +227,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso" || game.modeId === "conexiones"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

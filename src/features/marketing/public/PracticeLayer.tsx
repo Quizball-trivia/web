@@ -19,7 +19,7 @@ export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "áƒ
  * container) with their own exit control; focus moves in and back out.
  */
 /** The coin sneak peeks leave through their own header back control; the layer keeps Escape but draws no exit pill. */
-export const OWN_EXIT_ENGINES = new Set(["buscaminas", "guess-the-goal", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "tenable", "football-horserace", "football-codenames", "dato-falso-futbolero", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
+export const OWN_EXIT_ENGINES = new Set(["buscaminas", "guess-the-goal", "pistas", "ultimo", "minuto", "shared-player", "name-chain", "tenable", "football-horserace", "football-codenames", "dato-falso-futbolero", "conexiones-futboleras", "daily-statSniper", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
 /** The modal that owns the keyboard: a dialog a game opened on top of the layer (portaled elsewhere), else the layer. */

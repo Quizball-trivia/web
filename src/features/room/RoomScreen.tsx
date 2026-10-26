@@ -10,6 +10,8 @@ import { useAproximadoRoom, type RoomCommand } from "@/features/aproximado/useRo
 import { codenamesScreens } from "@/features/codenames/CodenamesRoomScreens";
 import type { CodenamesServerCommand } from "@/features/codenames/codenames.server";
 import { datoFalsoScreens } from "@/features/dato-falso/DatoFalsoRoom";
+import { conexionesScreens } from "@/features/conexiones/ConexionesRoom";
+import type { CxCommand } from "@/features/conexiones/conexiones.server";
 import type { DfCommand } from "@/features/dato-falso/datoFalso.view";
 import { footballRaceScreens } from "@/features/football-race/FootballRaceRoom";
 import type { FootballRaceCommand } from "@/features/football-race/race.server";
@@ -44,6 +46,7 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "football_race") return <RoomGameShell room={room as Connection<FootballRaceCommand>} screens={footballRaceScreens} />;
   if (game === "codenames") return <RoomGameShell room={room as Connection<CodenamesServerCommand>} screens={codenamesScreens} />;
   if (game === "dato_falso") return <RoomGameShell room={room as Connection<DfCommand>} screens={datoFalsoScreens} />;
+  if (game === "conexiones") return <RoomGameShell room={room as Connection<CxCommand>} screens={conexionesScreens} />;
   return <Outdated />;
 }
 

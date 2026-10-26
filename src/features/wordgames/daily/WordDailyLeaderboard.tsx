@@ -15,10 +15,12 @@ const toEntry = (row: WordBoardRow, myId: string | undefined): LeaderboardEntry 
 });
 
 /** The day's top scores in the shared leaderboard rows. `refreshKey` refetches after the viewer finishes a ranked run. */
-export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, limit = 10, placement = "page", className, pointsLabel }: {
+export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, limit = 10, placement = "page", className, pointsLabel, pointsHint }: {
   game: WordDailyGame; locale: string; load: (day: string, locale: string) => Promise<WordBoard>; day?: string; refreshKey?: number; limit?: number; placement?: "page" | "end"; className?: string;
   /** The score column's heading (default: points). */
   pointsLabel?: string;
+  /** One line under the rows saying how the score column is counted. */
+  pointsHint?: string;
 }) {
   const c = wordDailyCopy(locale).board;
   // Follows the Argentine day while the page stays open, unless a specific day is asked for.
@@ -59,6 +61,7 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
       ) : (
         <WordDailyLeaderboardRows entries={meOutside ? [...entries, meOutside] : entries} currentUserId={myId} pointsLabel={pointsLabel ?? wordDailyCopy(locale).points} compact />
       )}
+      {pointsHint && entries.length > 0 && <p className="mt-2 text-xs text-white/60">{pointsHint}</p>}
       {authStatus !== "authenticated" && authStatus !== "loading" && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-blue px-4 py-3">
           <p className="text-sm font-semibold text-white/90">{c.join}</p>

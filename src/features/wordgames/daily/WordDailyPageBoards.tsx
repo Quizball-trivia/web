@@ -7,6 +7,9 @@ import { codenamesCopy } from "@/features/codenames/codenames.copy";
 import { codenamesDailyGame, loadCodenamesBoard } from "@/features/codenames/codenames.daily";
 import { datoFalsoDailyApi } from "@/features/dato-falso/datoFalso.daily";
 import { datoFalsoDailyGame } from "@/features/dato-falso/datoFalso.game";
+import { conexionesCopy } from "@/features/conexiones/conexiones.copy";
+import { conexionesDailyApi } from "@/features/conexiones/conexiones.daily";
+import { conexionesDailyGame } from "@/features/conexiones/conexiones.game";
 
 // Ranking modules must not import playable engines or animation UI.
 const sharedApi = createWordDailyApi<WordRunStateBase, string, unknown>("/api/v1/shared-player");
@@ -16,6 +19,7 @@ const loadChain = (day: string, locale: string) => chainApi.leaderboard(day, loc
 const tenableApi = createWordDailyApi<WordRunStateBase, string, unknown>("/api/v1/tenable");
 const loadTenable = (day: string, locale: string) => tenableApi.leaderboard(day, locale);
 const loadDatoFalso = (day: string, locale: string) => datoFalsoDailyApi.leaderboard(day, locale);
+const loadConexiones = (day: string, locale: string) => conexionesDailyApi.leaderboard(day, locale);
 
 export function SharedPlayerDailyBoard({ locale, className }: { locale: string; className?: string }) {
   return <WordDailyLeaderboard game={sharedPlayerDailyGame(locale)} locale={locale} load={loadShared} className={className} />;
@@ -31,4 +35,7 @@ export function CodenamesDailyBoard({ locale, className }: { locale: string; cla
 }
 export function DatoFalsoDailyBoard({ locale, className }: { locale: string; className?: string }) {
   return <WordDailyLeaderboard game={datoFalsoDailyGame(locale)} locale={locale} load={loadDatoFalso} className={className} />;
+}
+export function ConexionesDailyBoard({ locale, className }: { locale: string; className?: string }) {
+  return <WordDailyLeaderboard game={conexionesDailyGame(locale)} locale={locale} load={loadConexiones} pointsLabel={conexionesCopy(locale).pointsStat} pointsHint={conexionesCopy(locale).pointsHint} className={className} />;
 }

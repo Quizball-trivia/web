@@ -16,12 +16,12 @@ const freshManifest = renderWordStyleSources(closure.files);
 if (read("src/styles/word-landing-sources.css") !== freshManifest) throw new Error("Stale word style manifest; regenerate with scripts/generate-word-landing-sources.mjs --write.");
 
 const wordSlugs = new Map([
-  ["football-games", ["football-name-chain", "played-for-both-clubs", "football-horserace", "football-codenames", "football-odd-one-out"]],
-  ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun", "carrera-de-caballos-futbolera", "codenames-futbolero", "dato-falso-futbolero"]],
-  ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu", "futbol-at-yarisi", "futbol-codenames", "hangisi-yanlis"]],
-  ["futbolnye-igry", ["futbolisty-na-poslednyuyu-bukvu", "igravshie-za-oba-kluba", "futbolnye-skachki", "kodovye-imena-futbol", "lozhnyj-fakt"]],
-  ["jogos-de-futebol", ["jogo-da-ultima-letra", "jogador-em-comum", "corrida-das-selecoes", "codenames-futebol", "qual-e-a-mentira"]],
-  ["fussballspiele", ["fussballer-wortkette", "spieler-fuer-beide-vereine", "nationen-rennen", "fussball-codenames", "welche-aussage-ist-falsch"]],
+  ["football-games", ["football-name-chain", "played-for-both-clubs", "football-horserace", "football-codenames", "football-odd-one-out", "football-connections"]],
+  ["juegos-de-futbol", ["cadena-de-futbolistas", "jugador-en-comun", "carrera-de-caballos-futbolera", "codenames-futbolero", "dato-falso-futbolero", "conexiones-futboleras"]],
+  ["futbol-oyunlari", ["son-harfle-futbolcu", "ortak-futbolcu-oyunu", "futbol-at-yarisi", "futbol-codenames", "hangisi-yanlis", "futbol-connections"]],
+  ["futbolnye-igry", ["futbolisty-na-poslednyuyu-bukvu", "igravshie-za-oba-kluba", "futbolnye-skachki", "kodovye-imena-futbol", "lozhnyj-fakt", "futbolnye-svyazi"]],
+  ["jogos-de-futebol", ["jogo-da-ultima-letra", "jogador-em-comum", "corrida-das-selecoes", "codenames-futebol", "qual-e-a-mentira", "conexoes-do-futebol"]],
+  ["fussballspiele", ["fussballer-wortkette", "spieler-fuer-beide-vereine", "nationen-rennen", "fussball-codenames", "welche-aussage-ist-falsch", "fussball-connections"]],
 ]);
 const fixedEntries = new Set([...wordSlugs].flatMap(([folder, slugs]) => slugs.map((slug) => `src/app/[locale]/(hub)/(word-shell)/${folder}/${slug}/page.tsx`)));
 const appDirectory = path.join(root, "src/app");

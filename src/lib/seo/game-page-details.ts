@@ -743,6 +743,50 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Mit Freunden wird es ein Wettlauf um die falsche Antwort. Öffne einen Raum für 2 bis 6 Spieler. Alle bekommen dieselbe Karte zur selben Zeit und haben 20 Sekunden zum Antworten. Eine richtige Antwort bringt +1 Punkt. Dieselben zwei Joker stehen dir einmal pro Match zur Verfügung. Niemand sieht deinen Joker, bis die Karte aufgedeckt wird.",
     ],
   },
+  "football-connections": {
+    en: [
+      "Football Connections is a grouping game about footballers. Every board shows 16 players hiding four groups of four, and each group shares one link. Your job is to find all four groups before you run out of mistakes.",
+      "Pick four players and press Submit. If they share a link, the group locks in. A wrong guess costs a mistake, and if three of your four are right you are told “One away…”. Four mistakes end the board, while a four you already tried costs nothing. Watch for traps: some players seem to fit more than one group.",
+      "A new board arrives every day, the same for everyone. Without an account you play the previous boards; signed-in players get today's board and the daily leaderboard, ranked by groups found, then fewest mistakes, then time. When you finish, share your grid. Any past board can be replayed.",
+      "With a friend it is a 1v1 over five boards. You take turns, and each turn is one try: a hit or a miss. When three groups are out, the player on turn names the last link from four options for a point. Nothing is at stake: no coins and no RP.",
+    ],
+    ka: [
+      "ფეხბურთული კავშირები ფეხბურთელების დაჯგუფების თამაშია. ყოველ დაფაზე 16 მოთამაშეა, რომლებიც ოთხ ჯგუფს მალავენ ოთხ-ოთხი მოთამაშით, და ყოველ ჯგუფს ერთი საერთო კავშირი აქვს. შენი ამოცანაა, სანამ შეცდომები არ გამოგელევა, ოთხივე ჯგუფი იპოვო.",
+      "აირჩიე ოთხი მოთამაშე და დააჭირე „გაგზავნას“. თუ მათ საერთო კავშირი აქვთ, ჯგუფი ფიქსირდება. არასწორი ვარიანტი შეცდომაა, ხოლო თუ შენი ოთხიდან სამი სწორია, დაინახავ „ერთი აკლია!“. ოთხი შეცდომა დაფას ამთავრებს, უკვე ნაცადი ოთხეულის გამეორება კი არაფერი ღირს. ფრთხილად ხაფანგებთან: ზოგი მოთამაშე თითქოს რამდენიმე ჯგუფში ჯდება.",
+      "ყოველდღე ახალი დაფა ჩნდება, ყველასთვის ერთი და იგივე. ანგარიშის გარეშე წინა დაფებს თამაშობ; ანგარიშით — დღევანდელ დაფას და დღის რეიტინგს, სადაც ჯერ ნაპოვნი ჯგუფები ითვლება, მერე ყველაზე ცოტა შეცდომა, მერე დრო. დასრულების შემდეგ გააზიარე შენი ბადე. ნებისმიერი წინა დაფის ხელახლა თამაში შეიძლება.",
+      "მეგობართან ეს 1-1-ია ხუთ დაფაზე. რიგრიგობით თამაშობთ და ყოველ სვლაზე ერთი მცდელობაა: მოხვედრა ან აცდენა. როცა სამი ჯგუფი უკვე გახსნილია, ვისაც სვლა აქვს, ბოლო კავშირს ოთხი ვარიანტიდან ასახელებს და სწორ პასუხზე ქულას იღებს. სასწორზე არაფერი დევს: არც ქოინები, არც RP.",
+    ],
+    es: [
+      "Conexiones futboleras es un juego de agrupar futbolistas. Cada tablero muestra 16 jugadores que esconden cuatro grupos de cuatro, y cada grupo comparte una conexión. Tu trabajo es encontrar los cuatro grupos antes de quedarte sin errores.",
+      "Elegí cuatro jugadores y tocá Enviar. Si comparten una conexión, el grupo queda fijo. Un intento fallido cuenta como un error, y si tres de tus cuatro son correctos te avisa «¡Te faltó uno!». Con cuatro errores se termina el tablero, y repetir un cuarteto que ya probaste no cuesta nada. Ojo con las trampas: hay jugadores que parecen entrar en más de un grupo.",
+      "Cada día llega un tablero nuevo, el mismo para todos. Sin cuenta jugás los tableros anteriores; con tu cuenta jugás el tablero de hoy y entrás al ranking del día, que ordena por grupos encontrados, después por menos errores y después por tiempo. Al terminar, compartí tu grilla. Cualquier tablero anterior se puede rejugar.",
+      "Con un amigo es un 1v1 en cinco tableros. Juegan por turnos y cada turno es un intento: acierto o fallo. Cuando ya salieron tres grupos, a quien le toca elige la última conexión entre cuatro opciones y gana un punto si acierta. No hay nada en juego: ni monedas ni RP.",
+    ],
+    tr: [
+      "Futbol Connections, futbolcuları gruplama oyunudur. Her tahta, dörderli dört grubu saklayan 16 oyuncuyu gösterir ve her grubun ortak bir bağlantısı vardır. Görevin, hataların bitmeden dört grubu da bulmak.",
+      "Dört oyuncu seç ve Gönder'e bas. Ortak bir bağlantıları varsa grup yerine kilitlenir. Yanlış bir deneme hata sayılır; dördünün üçü doğruysa “Bir eksik!” uyarısını alırsın. Dört hata tahtayı bitirir, daha önce denediğin bir dörtlü ise hata sayılmaz. Tuzaklara dikkat: bazı oyuncular birden fazla gruba uyuyor gibi görünür.",
+      "Her gün herkes için aynı yeni bir tahta gelir. Hesapsız önceki tahtaları oynarsın; hesapla bugünün tahtasını oynar ve günün sıralamasına girersin. Sıralama önce bulunan gruplara, sonra en az hataya, sonra süreye göre yapılır. Bitirince ızgaranı paylaş. Geçmiş tahtaların hepsi tekrar oynanabilir.",
+      "Bir arkadaşınla beş tahtalık bir 1v1 olur. Sırayla oynarsınız ve her tur tek bir denemedir: ya tutar ya tutmaz. Üç grup çıktığında sırası gelen oyuncu son bağlantıyı dört seçenek arasından seçer ve doğruysa bir puan alır. Riske giren bir şey yok: ne coin ne de RP.",
+    ],
+    ru: [
+      "Футбольные связи — игра на группировку футболистов. На каждом поле 16 игроков, которые скрывают четыре группы по четыре, и у каждой группы есть своя связь. Твоя задача — найти все четыре группы, пока не закончились ошибки.",
+      "Выбери четырёх игроков и нажми «Отправить». Если у них есть общая связь, группа закрепляется. Неверная попытка — это ошибка, а если правильны три из четырёх, ты увидишь «Почти! Одного не хватает». Четыре ошибки заканчивают поле, а уже пробованная четвёрка ничего не стоит. Остерегайся ловушек: некоторые игроки, кажется, подходят сразу к нескольким группам.",
+      "Каждый день появляется новое поле, одинаковое для всех. Без аккаунта можно играть за прошлые дни; после входа доступны сегодняшнее поле и ежедневный рейтинг: сначала считаются найденные группы, затем меньшее число ошибок, затем время. В конце поделись сеткой. Любое прошлое поле можно переиграть.",
+      "С другом это игра 1 на 1 на пяти полях. Вы ходите по очереди, и на ходу даётся одна попытка: попал или нет. Когда открыты три группы, игрок, чей ход, выбирает последнюю связь из четырёх вариантов и получает за это очко. На кону ничего нет: ни монет, ни RP.",
+    ],
+    pt: [
+      "Conexões do futebol é um jogo de agrupar jogadores. Cada tabuleiro mostra 16 jogadores que escondem quatro grupos de quatro, e cada grupo tem uma conexão em comum. Seu objetivo é encontrar os quatro grupos antes de acabarem os erros.",
+      "Escolha quatro jogadores e toque em Enviar. Se eles tiverem uma conexão em comum, o grupo fica travado. Uma tentativa errada conta como um erro, e se três dos seus quatro estiverem certos aparece “Faltou um!”. Quatro erros encerram o tabuleiro, e repetir um quarteto que você já tentou não custa nada. Cuidado com as armadilhas: alguns jogadores parecem servir para mais de um grupo.",
+      "Um novo tabuleiro chega todos os dias, igual para todo mundo. Sem uma conta, você joga os tabuleiros anteriores; jogadores conectados recebem o tabuleiro de hoje e entram no ranking diário, que considera primeiro os grupos encontrados, depois os erros e depois o tempo. Quando terminar, compartilhe sua grade. Qualquer tabuleiro anterior pode ser jogado de novo.",
+      "Com um amigo, é um 1v1 em cinco tabuleiros. Vocês se alternam, e cada vez é uma tentativa: acertando ou errando. Quando três grupos já saíram, quem está na vez escolhe a última conexão entre quatro opções e ganha um ponto se acertar. Não há nada em jogo: nem moedas nem RP.",
+    ],
+    de: [
+      "Fußball Connections ist ein Gruppierungsspiel über Fußballer. Jedes Brett zeigt 16 Spieler, die vier Gruppen mit je vier Spielern verstecken, und jede Gruppe hat eine gemeinsame Verbindung. Finde alle vier Gruppen, bevor deine Fehler aufgebraucht sind.",
+      "Wähle vier Spieler und tippe auf Abschicken. Haben sie eine gemeinsame Verbindung, rastet die Gruppe ein. Ein falscher Versuch kostet einen Fehler, und stimmen drei von vier, erscheint „Einer fehlt!“. Vier Fehler beenden das Brett, ein Vierer, den du schon versucht hast, kostet nichts. Vorsicht vor Fallen: Manche Spieler scheinen in mehr als eine Gruppe zu passen.",
+      "Jeden Tag erscheint für alle dasselbe neue Brett. Ohne Konto spielst du die früheren Bretter; angemeldete Spieler bekommen das heutige Brett und die Tages-Rangliste, die zuerst die gefundenen Gruppen zählt, dann die wenigsten Fehler, dann die Zeit. Teile nach dem Spiel dein Raster. Jedes frühere Brett kannst du noch einmal spielen.",
+      "Mit einem Freund wird es ein 1-gegen-1 über fünf Bretter. Ihr seid abwechselnd dran, und jeder Zug ist ein Versuch: Treffer oder Fehlschlag. Sind drei Gruppen gefunden, nennt der Spieler am Zug die letzte Verbindung aus vier Optionen und bekommt dafür einen Punkt. Es steht nichts auf dem Spiel: weder Münzen noch RP.",
+    ],
+  },
   "last-answer-standing": {
     en: [
       "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",

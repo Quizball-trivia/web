@@ -40,10 +40,13 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
     // App routes read the stored language, not the SEO page's URL: keep the room in the language the player is reading.
     <Link href={`/friend/room/new?room=${game.roomGame}`} prefetch={false} onClick={() => storage.set(STORAGE_KEYS.LOCALE, locale)} data-word-friends={game.roomGame}
       className={cn("flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-blue text-sm font-black uppercase tracking-wide text-white hover:bg-brand-blue/90", className)} style={poppins}>
-      <Users className="size-4" aria-hidden />{c.friends.replace("2–6", `2–${choicePlayable({ gameMode: "room_game", roomGame: game.roomGame })}`)}
+      <Users className="size-4" aria-hidden />{friendsLabel(c.friends, choicePlayable({ gameMode: "room_game", roomGame: game.roomGame }))}
     </Link>
   );
 }
+
+/** "Play with friends (2–6)" with the game's own seats: "(1v1)" for a two-seat game. */
+const friendsLabel = (label: string, seats: number) => label.replace("2–6", seats === 2 ? "1v1" : `2–${seats}`);
 
 export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends, picker }: {
   /** `number` null and no `onArchive`: a game without days (a practice board). */

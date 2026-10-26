@@ -27,6 +27,7 @@ const NameChainDaily = dynamic(() => import("@/features/name-chain/NameChainDail
 const FootballRaceDaily = dynamic(() => import("@/features/football-race/FootballRaceDaily").then((m) => m.FootballRaceDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const CodenamesDaily = dynamic(() => import("@/features/codenames/CodenamesDaily").then((m) => m.CodenamesDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DatoFalsoDaily = dynamic(() => import("@/features/dato-falso/DatoFalsoDaily").then((m) => m.DatoFalsoDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const ConexionesDaily = dynamic(() => import("@/features/conexiones/ConexionesDaily").then((m) => m.ConexionesDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const StatSniperPublicPlay = dynamic(() => import("./StatSniperPublicPlay").then((m) => m.StatSniperPublicPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
@@ -178,6 +179,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
             <CodenamesDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "dato-falso-futbolero" ? (
             <DatoFalsoDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : demoSlug === "conexiones-futboleras" ? (
+            <ConexionesDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : dailyType === "statSniper" ? (
             <StatSniperPublicPlay locale={locale as Locale} modeId={modeId} pagePath={pagePath} playPath={playPath} onExit={exit} onEvent={onEngineEvent} onLeaveToRealGame={recordExit} onMember={() => { recordExit(); playInApp(); }} />
           ) : dailyType ? (
