@@ -45,6 +45,7 @@ export function ConexionesDuelView({ locale, state, me, seats, selected, msLeft,
   const rivalTry = last && last.seat !== me && last.ids && (last.kind === "oneAway" || last.kind === "wrong") ? last.ids : [];
   const lastRemaining = state.phase === "name" ? state.order : [];
   const missesLeft = DUEL_MISSES - state.misses;
+  const revealedLink = state.phase === "reveal" && last && (last.kind === "named" || last.kind === "misnamed") ? board.groups.find((x) => x.id === last.groupId)?.link : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -62,6 +63,8 @@ export function ConexionesDuelView({ locale, state, me, seats, selected, msLeft,
           {state.phase === "name" ? (myTurn ? c.nameTitle : c.rivalNaming(seats[rival].name)) : state.phase === "turn" ? (myTurn ? c.yourTurn : c.rivalTurn(seats[rival].name)) : c.boardDone}
         </p>
         {notice && <p role="alert" className="mt-0.5 text-xs font-bold text-brand-yellow" data-cx-refused>{notice}</p>}
+        {/* The result sheet has no button in a room (it moves on by itself), so focus stays on the board: read it out here. */}
+        {state.phase === "reveal" && <span className="sr-only" data-cx-reveal-said>{[revealedLink && textIn(revealedLink, locale), `${c.you} ${state.scores[me]}`, `${seats[rival].name} ${state.scores[rival]}`].filter(Boolean).join(". ")}</span>}
         {last && !notice && (
           <p className="mt-0.5 line-clamp-2 text-xs font-semibold text-white/65">
             {lastLine(c, last, who(last.seat), last.seat === me)}

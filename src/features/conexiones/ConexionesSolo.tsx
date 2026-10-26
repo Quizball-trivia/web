@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { conexionesCopy } from "./conexiones.copy";
 import { conexionesDailyGame } from "./conexiones.game";
 import { SOLO_MISTAKES, shareGrid, soloFound, type CxBoard, type CxSoloOutcome, type CxSoloState } from "./conexiones.logic";
-import { ConexionesGrid, MistakeDots, SolvedBand, TIER_BG } from "./ConexionesBoard";
+import { ConexionesGrid, MistakeDots, SolvedBand, TIER_BG, usePrefersReducedMotion } from "./ConexionesBoard";
 
 export const clock = (ms: number) => {
   const s = Math.max(0, Math.round(ms / 1000));
@@ -19,12 +19,13 @@ export const clock = (ms: number) => {
 
 export function Notice({ outcome, locale }: { outcome: CxSoloOutcome | "timeout" | null; locale: string }) {
   const c = conexionesCopy(locale);
+  const still = usePrefersReducedMotion();
   const text = outcome === "right" ? c.right : outcome === "oneAway" ? c.oneAway : outcome === "wrong" ? c.wrong : outcome === "repeat" ? c.repeat : null;
   return (
     <div className="flex h-9 items-center justify-center" aria-live="polite">
       <AnimatePresence mode="wait">
         {text && (
-          <motion.span key={`${outcome}`} initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
+          <motion.span key={`${outcome}`} initial={still ? false : { y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={still ? { duration: 0 } : undefined}
             className={cn("rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide", outcome === "right" ? "bg-brand-green text-black" : outcome === "oneAway" ? "bg-brand-yellow text-black" : "bg-white/15 text-white")}
             style={poppins} data-cx-notice={outcome}>
             {text}
