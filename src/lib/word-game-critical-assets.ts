@@ -22,6 +22,13 @@ const WORD_GAME_PATHS = new Set([
   "/es/juegos-de-futbol/dato-falso-futbolero",
   "/ka/football-games/football-odd-one-out",
   "/tr/futbol-oyunlari/hangisi-yanlis",
+  "/en/football-games/football-connections",
+  "/es/juegos-de-futbol/conexiones-futboleras",
+  "/ka/football-games/football-connections",
+  "/tr/futbol-oyunlari/futbol-connections",
+  "/ru/futbolnye-igry/futbolnye-svyazi",
+  "/pt/jogos-de-futebol/conexoes-do-futebol",
+  "/de/fussballspiele/fussball-connections",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {

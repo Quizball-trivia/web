@@ -157,7 +157,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     : isDuelLobby
       ? t("friend.readyCopyDuel")
     : settings?.gameMode === "room_game"
-      ? t(choicePlayable(settings) === 4 ? "friend.readyCopyRoomGameUpTo4" : choicePlayable(settings) === 8 ? "friend.readyCopyRoomGameUpTo8" : "friend.readyCopyRoomGame")
+      ? t(choicePlayable(settings) === 2 ? "friend.readyCopyDuel" : choicePlayable(settings) === 4 ? "friend.readyCopyRoomGameUpTo4" : choicePlayable(settings) === 8 ? "friend.readyCopyRoomGameUpTo8" : "friend.readyCopyRoomGame")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode

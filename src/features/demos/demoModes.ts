@@ -16,6 +16,21 @@ export interface DemoModeCard {
 // continued as a separate feature. The /demos/match route (DemoTraining)
 // stays wired so it can still be reached directly.
 const HIDDEN_DEMO_MODES: DemoModeCard[] = [
+  // Retired 2026-10-26 per owner: Conexiones futboleras is the real game; /demos/lab-connections-race still opens.
+  {
+    slug: "lab-connections-race",
+    title: { en: "Connections Race", ka: "კავშირების რბოლა", es: "Carrera de Conexiones", tr: "Bağlantılar Yarışı", ru: "Connections Race", pt: "Corrida de Conexões", de: "Gruppenjagd", },
+    description: {
+      en: "16 players hide four secret groups — find them before your rival.",
+      ka: "16 ფეხბურთელში ოთხი ფარული ჯგუფია — იპოვე მეტოქეზე ადრე.",
+      es: "16 jugadores ocultan cuatro grupos secretos — encuéntralos antes que tu rival.",
+      tr: "16 oyuncu dört gizli grubu saklıyor — rakibinden önce bul.",
+      ru: "16 игроков скрывают четыре секретные группы — найди их быстрее соперника.",
+      pt: "16 jogadores escondem quatro grupos secretos — encontre-os antes do rival.",
+      de: "16 Spieler verbergen vier geheime Gruppen — finde sie vor deinem Gegner.",
+    },
+    group: "featured",
+  },
   // The live Guess the Goal runs on its own public page (guest session) and /guess-the-goal, not through the demo hub.
   {
     slug: "guess-the-goal",
@@ -141,6 +156,20 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
       ru: "20 карточек с картинками и одна футбольная подсказка от Скаута. Найди свои 8 и не открой Автогол. Новое поле каждый день.",
       pt: "20 cartas com imagens e uma dica de futebol do Scout. Encontre as suas 8 e fuja do gol contra. Um novo tabuleiro por dia.",
       de: "20 Bildkarten, ein Fußball-Hinweis vom Scout. Finde deine 8 und meide das Eigentor. Jeden Tag ein neues Spielfeld.",
+    },
+    group: "daily",
+  },
+  {
+    slug: "conexiones-futboleras",
+    title: { en: "Football Connections", ka: "ფეხბურთული კავშირები", es: "Conexiones futboleras", tr: "Futbol Connections", ru: "Футбольные связи", pt: "Conexões do futebol", de: "Fußball Connections" },
+    description: {
+      en: "16 footballers, 4 hidden links. Find the groups of four: one board a day, or a 1v1 with a friend.",
+      ka: "16 ფეხბურთელი, 4 დამალული კავშირი. იპოვე ოთხეულები: ყოველდღე ახალი დაფა, ან 1-1-ზე მეგობართან.",
+      es: "16 futbolistas, 4 conexiones ocultas. Encontrá los grupos de cuatro: un tablero por día o un 1v1 con un amigo.",
+      tr: "16 futbolcu, 4 gizli bağlantı. Dörtlü grupları bul: her gün bir tahta ya da bir arkadaşınla 1v1.",
+      ru: "16 футболистов, 4 скрытые связи. Найди четвёрки: одно поле в день или 1 на 1 с другом.",
+      pt: "16 jogadores, 4 conexões escondidas. Encontre os grupos de quatro: um tabuleiro por dia ou um 1v1 com um amigo.",
+      de: "16 Spieler, 4 versteckte Verbindungen. Finde die Vierergruppen: ein Brett pro Tag oder 1-gegen-1 mit Freunden.",
     },
     group: "daily",
   },
@@ -635,20 +664,6 @@ export const LAB_DEMO_MODES: DemoModeCard[] = [
       ru: "Распределяй игроков по категориям на поле — побеждает тот, кто первым соберет линию.",
       pt: "Coloque cada jogador numa casa por categoria — vence quem completar uma linha primeiro.",
       de: "Ordne jeden Spieler einem Kategorienfeld zu — wer zuerst eine Reihe füllt, gewinnt.",
-    },
-    group: "featured",
-  },
-  {
-    slug: "lab-connections-race",
-    title: { en: "Connections Race", ka: "კავშირების რბოლა", es: "Carrera de Conexiones", tr: "Bağlantılar Yarışı", ru: "Connections Race", pt: "Corrida de Conexões", de: "Gruppenjagd", },
-    description: {
-      en: "16 players hide four secret groups — find them before your rival.",
-      ka: "16 ფეხბურთელში ოთხი ფარული ჯგუფია — იპოვე მეტოქეზე ადრე.",
-      es: "16 jugadores ocultan cuatro grupos secretos — encuéntralos antes que tu rival.",
-      tr: "16 oyuncu dört gizli grubu saklıyor — rakibinden önce bul.",
-      ru: "16 игроков скрывают четыре секретные группы — найди их быстрее соперника.",
-      pt: "16 jogadores escondem quatro grupos secretos — encontre-os antes do rival.",
-      de: "16 Spieler verbergen vier geheime Gruppen — finde sie vor deinem Gegner.",
     },
     group: "featured",
   },

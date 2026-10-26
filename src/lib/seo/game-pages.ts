@@ -84,6 +84,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki", pt: "corrida-das-selecoes", de: "nationen-rennen" },
   "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol", de: "fussball-codenames" },
   "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira", de: "welche-aussage-ist-falsch" },
+  "football-connections": { es: "conexiones-futboleras", tr: "futbol-connections", ru: "futbolnye-svyazi", pt: "conexoes-do-futebol", de: "fussball-connections" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -1832,6 +1833,64 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Ein Fußballer, eine Aussage und fünf Optionen: „spielte bei ALLEN diesen Vereinen“, „trug ALLE diese Rückennummern“. Vier Aussagen stimmen, eine ist falsch. Finde den Ausreißer, bevor die 30 Sekunden ablaufen.",
       howToPlay: ["Jede Karte zeigt einen Fußballer und eine Aussage, etwa zu seinen Vereinen, Ligen, WM-Kadern, Rückennummern oder Titeln. Darunter stehen fünf Optionen.", "Vier Optionen stimmen, eine ist falsch. Tippe auf die falsche und bestätige deine Wahl. Du hast 30 Sekunden pro Karte.", "Eine richtige Antwort bringt 1 Punkt. Zwei Joker, je einmal pro Tag: „2 entfernen“ blendet zwei richtige Optionen aus; „Doppelt oder nichts“ bringt +2 bei richtig und −1 bei falsch.", "Zehn Karten pro Tag, für alle gleich. Beende das Spiel, sieh deinen Punktestand, teile dein Feld und steige in der täglichen Rangliste auf."],
       reward: "Spiele Karten früherer Tage ohne Konto; melde dich für die heutigen Karten und die tägliche Rangliste an.",
+    },
+  }),
+  mode("football-connections", "/conexiones-futboleras", "conexiones-futboleras", {
+    en: {
+      metaTitle: "Football Connections — Find the Hidden Groups | QuizBall",
+      metaDescription: "Football Connections: 16 footballers hide 4 groups of 4. Find the link in each group before 4 mistakes. A new board every day, or a 1v1 with a friend.",
+      title: "Football Connections",
+      intro: "Sixteen footballers, four hidden groups of four, and each group shares one link. Work out what connects them, pick the four and submit. Watch the traps: some players seem to fit two groups.",
+      howToPlay: ["Each board has 16 footballers hiding 4 groups of 4. Pick 4 players that share a link and press Submit.", "A right group locks in. A wrong guess costs a mistake, and if three of your four are right you are told “One away…”. Four mistakes end the board. A four you already tried costs nothing.", "Everyone gets the same board each day. The leaderboard ranks groups found first, then fewest mistakes, then time. Share your grid when you finish, and replay past boards whenever you like.", "With a friend, play a 1v1 over 5 boards. You take turns, one try per turn, hit or miss. When three groups are out, the player on turn names the last link from 4 options for a point. No coins or RP are at stake."],
+      reward: "Play past days without an account; sign in for today's board and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ფეხბურთული კავშირები — იპოვე დამალული ჯგუფები | QuizBall",
+      metaDescription: "ფეხბურთული კავშირები: 16 ფეხბურთელი მალავს 4 ჯგუფს, თითოში 4 მოთამაშით. იპოვე ჯგუფების კავშირი 4 შეცდომამდე. ყოველდღე ახალი დაფა ან 1-1-ზე მეგობართან.",
+      title: "ფეხბურთული კავშირები",
+      intro: "თექვსმეტი ფეხბურთელი, ოთხი დამალული ჯგუფი ოთხ-ოთხი მოთამაშით და ყოველ ჯგუფს ერთი საერთო კავშირი აქვს. გაარკვიე, რა აკავშირებს მათ, აირჩიე ოთხი და გააგზავნე. ფრთხილად ხაფანგებთან: ზოგი მოთამაშე თითქოს ორ ჯგუფში ჯდება.",
+      howToPlay: ["ყოველ დაფაზე 16 ფეხბურთელია, რომლებიც 4 ჯგუფს მალავენ, თითოში 4 მოთამაშით. აირჩიე 4 მოთამაშე, რომელთაც საერთო კავშირი აქვთ, და დააჭირე „გაგზავნას“.", "სწორი ჯგუფი ფიქსირდება. არასწორი ვარიანტი შეცდომაა, ხოლო თუ შენი ოთხიდან სამი სწორია, დაინახავ „ერთი აკლია!“. ოთხი შეცდომა დაფას ამთავრებს. უკვე ნაცადი ოთხეულის გამეორება არაფერი ღირს.", "დღის დაფა ყველასთვის ერთი და იგივეა. რეიტინგში ჯერ ნაპოვნი ჯგუფები ითვლება, მერე ყველაზე ცოტა შეცდომა, მერე დრო. დასრულების შემდეგ გააზიარე ბადე; წინა დაფები ყოველთვის შეგიძლია ხელახლა ითამაშო.", "მეგობართან ითამაშებ 1-1-ს 5 დაფაზე, რიგრიგობით: ყოველ სვლაზე ერთი მცდელობაა, მოხვედრა ან აცდენა. როცა სამი ჯგუფი უკვე გახსნილია, ვისაც სვლა აქვს, ბოლო კავშირს 4 ვარიანტიდან ასახელებს და სწორ პასუხზე ქულას იღებს. ქოინები და RP სასწორზე არ დევს."],
+      reward: "წინა დაფები ანგარიშის გარეშე ითამაშე; დღევანდელი დაფისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Conexiones futboleras — Encontrá los grupos ocultos | QuizBall",
+      metaDescription: "Conexiones futboleras: 16 futbolistas esconden 4 grupos de 4. Encontrá la conexión de cada uno antes de 4 errores. Un tablero nuevo por día, o un 1v1 con un amigo.",
+      title: "Conexiones futboleras",
+      intro: "Dieciséis futbolistas, cuatro grupos ocultos de cuatro, y cada grupo comparte una conexión. Descubrí qué los une, elegí a los cuatro y enviá. Ojo con las trampas: hay jugadores que parecen entrar en dos grupos.",
+      howToPlay: ["Cada tablero tiene 16 futbolistas que esconden 4 grupos de 4. Elegí 4 jugadores que compartan una conexión y tocá Enviar.", "Si acertás, el grupo queda fijo. Un intento fallido cuenta como un error, y si tres de tus cuatro son correctos te avisa «¡Te faltó uno!». Con cuatro errores se termina el tablero. Repetir un cuarteto que ya probaste no cuesta nada.", "El tablero del día es el mismo para todos. El ranking ordena primero por grupos encontrados, después por menos errores y después por tiempo. Al terminar, compartí tu grilla, y los tableros anteriores los podés rejugar cuando quieras.", "Con un amigo jugás un 1v1 en 5 tableros. Se juega por turnos, con un intento por turno, acierto o fallo. Cuando ya salieron 3 grupos, a quien le toca elige la última conexión entre 4 opciones y gana un punto si acierta. No hay monedas ni RP en juego."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, el tablero de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol Connections — Gizli Grupları Bul | QuizBall",
+      metaDescription: "Futbol Connections: 16 futbolcu dörderli 4 grubu saklar. 4 hata yapmadan her grubun bağlantısını bul. Her gün yeni bir tahta ya da bir arkadaşınla 1v1.",
+      title: "Futbol Connections",
+      intro: "On altı futbolcu, dörderli dört gizli grup ve her grubun ortak bir bağlantısı var. Onları neyin birleştirdiğini bul, dördünü seç ve gönder. Tuzaklara dikkat: bazı futbolcular iki gruba da uyuyor gibi görünür.",
+      howToPlay: ["Her tahtada dörderli 4 grubu saklayan 16 futbolcu vardır. Ortak bir bağlantıyı paylaşan 4 futbolcuyu seç ve Gönder'e bas.", "Doğru grup yerine kilitlenir. Yanlış bir deneme hata sayılır; dördünün üçü doğruysa “Bir eksik!” uyarısını alırsın. Dört hata tahtayı bitirir. Daha önce denediğin bir dörtlü hata sayılmaz.", "Günün tahtası herkes için aynıdır. Sıralama önce bulunan gruplara, sonra en az hataya, sonra süreye göre yapılır. Bitirince ızgaranı paylaş; önceki tahtaları istediğin zaman tekrar oynayabilirsin.", "Bir arkadaşınla 5 tahtalık bir 1v1 oynarsın. Sırayla oynanır, her turda tek bir deneme vardır: ya tutar ya tutmaz. 3 grup çıktığında sırası gelen oyuncu son bağlantıyı 4 seçenek arasından seçer ve doğruysa 1 puan alır. Coin ya da RP riske girmez."],
+      reward: "Önceki günleri hesapsız oyna; bugünün tahtası ve günün sıralaması için giriş yap.",
+    },
+    ru: {
+      metaTitle: "Футбольные связи: найди скрытые группы футболистов | QuizBall",
+      metaDescription: "Футбольные связи: 16 футболистов скрывают 4 группы по 4. Найди связь каждой группы, пока не набрал 4 ошибки. Новое поле каждый день или 1 на 1 с другом.",
+      title: "Футбольные связи: найди скрытые группы",
+      intro: "Шестнадцать футболистов, четыре скрытые группы по четыре, и у каждой группы своя связь. Пойми, что их объединяет, выбери четверых и отправь. Остерегайся ловушек: некоторые игроки, кажется, подходят сразу к двум группам.",
+      howToPlay: ["На каждом поле 16 футболистов, которые скрывают 4 группы по 4. Выбери 4 игроков с общей связью и нажми «Отправить».", "Верная группа закрепляется. Неверная попытка — это ошибка, а если правильны три из четырёх, ты увидишь «Почти! Одного не хватает». Четыре ошибки заканчивают поле. Уже пробованная четвёрка ничего не стоит.", "Поле дня одинаковое для всех. В рейтинге сначала считаются найденные группы, затем меньшее число ошибок, затем время. В конце поделись сеткой, а прошлые поля можно переиграть когда угодно.", "С другом можно сыграть 1 на 1 на пяти полях. Ходы делаются по очереди, на ходу одна попытка: попал или нет. Когда открыты три группы, игрок, чей ход, выбирает последнюю связь из четырёх вариантов и получает за это очко. Монеты и RP не ставятся."],
+      reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшнее поле и попасть в ежедневный рейтинг.",
+    },
+    pt: {
+      metaTitle: "Conexões do futebol: ache os grupos escondidos",
+      metaDescription: "Conexões do futebol: 16 jogadores escondem 4 grupos de 4. Descubra a conexão de cada grupo antes de 4 erros. Tabuleiro novo por dia ou 1v1 com um amigo.",
+      title: "Conexões do futebol",
+      intro: "Dezesseis jogadores, quatro grupos escondidos de quatro, e cada grupo tem uma conexão em comum. Descubra o que os liga, escolha os quatro e envie. Cuidado com as armadilhas: alguns jogadores parecem servir para dois grupos.",
+      howToPlay: ["Cada tabuleiro tem 16 jogadores que escondem 4 grupos de 4. Escolha 4 jogadores que tenham uma conexão em comum e toque em Enviar.", "Um grupo certo fica travado. Uma tentativa errada conta como um erro, e se três dos seus quatro estiverem certos aparece “Faltou um!”. Quatro erros encerram o tabuleiro. Repetir um quarteto que você já tentou não custa nada.", "O tabuleiro do dia é igual para todos. O ranking considera primeiro os grupos encontrados, depois os erros e depois o tempo. Ao terminar, compartilhe sua grade; os tabuleiros anteriores podem ser jogados de novo quando você quiser.", "Com um amigo, você joga um 1v1 em 5 tabuleiros. As jogadas são alternadas, com uma tentativa por vez, acertando ou errando. Quando três grupos já saíram, quem está na vez escolhe a última conexão entre 4 opções e ganha um ponto se acertar. Não há moedas nem RP em jogo."],
+      reward: "Jogue tabuleiros anteriores sem uma conta; entre para acessar o tabuleiro de hoje e o ranking diário.",
+    },
+    de: {
+      metaTitle: "Fußball Connections: Finde die versteckten Gruppen",
+      metaDescription: "Fußball Connections: 16 Spieler verstecken 4 Vierergruppen. Finde die Verbindung jeder Gruppe, bevor du 4 Fehler machst. Täglich ein neues Brett oder 1-gegen-1.",
+      title: "Fußball Connections: Finde die versteckten Gruppen",
+      intro: "16 Fußballer, vier versteckte Vierergruppen, und jede Gruppe hat eine gemeinsame Verbindung. Finde heraus, was sie verbindet, wähle die vier Spieler aus und schicke sie ab. Vorsicht vor Fallen: Manche Spieler scheinen in zwei Gruppen zu passen.",
+      howToPlay: ["Jedes Brett zeigt 16 Fußballer, die 4 Gruppen mit je 4 Spielern verstecken. Wähle 4 Spieler mit einer gemeinsamen Verbindung und tippe auf Abschicken.", "Eine richtige Gruppe rastet ein. Ein falscher Versuch kostet einen Fehler, und stimmen drei von vier, erscheint „Einer fehlt!“. Vier Fehler beenden das Brett. Ein Vierer, den du schon versucht hast, kostet nichts.", "Das Tagesbrett ist für alle gleich. Die Rangliste zählt zuerst die gefundenen Gruppen, dann die wenigsten Fehler, dann die Zeit. Teile am Ende dein Raster; frühere Bretter kannst du jederzeit noch einmal spielen.", "Mit einem Freund spielst du ein 1-gegen-1 über 5 Bretter. Ihr seid abwechselnd dran, pro Zug gibt es einen Versuch, Treffer oder Fehlschlag. Sind drei Gruppen gefunden, nennt der Spieler am Zug die letzte Verbindung aus 4 Optionen und bekommt dafür einen Punkt. Es stehen weder Münzen noch RP auf dem Spiel."],
+      reward: "Spiele frühere Bretter ohne Konto; melde dich für das heutige Brett und die tägliche Rangliste an.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {

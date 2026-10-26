@@ -24,6 +24,7 @@ const LOCAL_MODE_IMAGES = new Map([
   ["football-codenames", "football-codenames"],
   ["dato-falso", "dato-falso"],
   ["dato-falso-futbolero", "dato-falso"],
+  ["conexiones-futboleras", "conexiones"],
   ["daily-clues", "daily-clues"],
   // Owner 2026-09-15: Card Detective gets the same illustrated treatment as the other dailies (Codex-generated).
   ["daily-cardDetective", "daily-cardDetective"],

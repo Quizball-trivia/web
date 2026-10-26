@@ -4,16 +4,19 @@ import { publicGameDynamicParams, publicGameMetadata, publicGameStaticParams } f
 import * as enChain from "@/app/[locale]/(hub)/(word-shell)/football-games/football-name-chain/page";
 import * as enRace from "@/app/[locale]/(hub)/(word-shell)/football-games/football-horserace/page";
 import * as enCodenames from "@/app/[locale]/(hub)/(word-shell)/football-games/football-codenames/page";
+import * as enConnections from "@/app/[locale]/(hub)/(word-shell)/football-games/football-connections/page";
 import * as enOddOneOut from "@/app/[locale]/(hub)/(word-shell)/football-games/football-odd-one-out/page";
 import * as enShared from "@/app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page";
 import * as esChain from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page";
 import * as esRace from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/carrera-de-caballos-futbolera/page";
 import * as esCodenames from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/codenames-futbolero/page";
+import * as esConexiones from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/conexiones-futboleras/page";
 import * as esDatoFalso from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/dato-falso-futbolero/page";
 import * as esShared from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page";
 import * as trChain from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page";
 import * as trRace from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-at-yarisi/page";
 import * as trCodenames from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-codenames/page";
+import * as trConnections from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-connections/page";
 import * as trHangisi from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/hangisi-yanlis/page";
 import * as trShared from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
 import { findPublishedGame } from "@/lib/seo/public-games";
@@ -39,14 +42,18 @@ const routes = [
   { folder: "football-games", slug: "football-odd-one-out", module: enOddOneOut },
   { folder: "juegos-de-futbol", slug: "dato-falso-futbolero", module: esDatoFalso },
   { folder: "futbol-oyunlari", slug: "hangisi-yanlis", module: trHangisi },
+  { folder: "football-games", slug: "football-connections", module: enConnections },
+  { folder: "juegos-de-futbol", slug: "conexiones-futboleras", module: esConexiones },
+  { folder: "futbol-oyunlari", slug: "futbol-connections", module: trConnections },
 ];
 const modeOf: Record<string, string> = {
   "football-name-chain": "nameChain", "cadena-de-futbolistas": "nameChain", "son-harfle-futbolcu": "nameChain",
   "football-horserace": "footballRace", "carrera-de-caballos-futbolera": "footballRace", "futbol-at-yarisi": "footballRace",
   "football-codenames": "codenames", "codenames-futbolero": "codenames", "futbol-codenames": "codenames",
   "football-odd-one-out": "datoFalso", "dato-falso-futbolero": "datoFalso", "hangisi-yanlis": "datoFalso",
+  "football-connections": "conexiones", "conexiones-futboleras": "conexiones", "futbol-connections": "conexiones",
 };
-const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", codenames: "football-codenames", datoFalso: "dato-falso-futbolero", sharedPlayer: "shared-player" };
+const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", codenames: "football-codenames", datoFalso: "dato-falso-futbolero", conexiones: "conexiones-futboleras", sharedPlayer: "shared-player" };
 const key = ({ locale, slug }: { locale: string; slug: string }) => `${locale}/${slug}`;
 
 describe("fixed word landing route parity", () => {
@@ -61,7 +68,7 @@ describe("fixed word landing route parity", () => {
     expect(fixed.every((params) => !dynamic.some((other) => key(other) === key(params)))).toBe(true);
   });
 
-  it("enumerates exactly twenty word landings (Football Horserace, Football Codenames and Football Odd One Out included) with unchanged metadata and rendering props", async () => {
+  it("enumerates exactly twenty-four word landings (Football Horserace, Football Codenames, Football Odd One Out and Football Connections included) with unchanged metadata and rendering props", async () => {
     let count = 0;
     for (const route of routes) {
       expect(route.module.dynamicParams).toBe(false);
@@ -80,7 +87,7 @@ describe("fixed word landing route parity", () => {
         expect(await element.props.params).toEqual({ locale, slug: route.slug });
       }
     }
-    expect(count).toBe(20);
+    expect(count).toBe(24);
   });
 
   it("keeps wrong-folder locales unavailable", async () => {
