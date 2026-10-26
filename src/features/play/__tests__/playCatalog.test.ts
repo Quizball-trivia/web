@@ -45,8 +45,9 @@ describe("playOrderFrom", () => {
   });
 
   it("stops marking a game as new three weeks after its release", () => {
-    expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["tenable", "shared-player", "name-chain", "football-horserace", "dato-falso-futbolero"]);
-    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual([]);
+    expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["conexiones-futboleras", "tenable", "shared-player", "name-chain", "football-horserace", "football-codenames", "dato-falso-futbolero"]);
+    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual(["conexiones-futboleras"]);
+    expect(playOrderFrom(null, new Date("2026-11-17T12:00:00Z")).newSlugs).toEqual([]);
   });
 });
 
