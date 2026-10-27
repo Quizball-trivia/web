@@ -21,6 +21,9 @@ export function normalizeAnswer(value: string): string {
   return value
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
+    // Apostrophes join ("Eto'o" -> "etoo") so apostrophe-less spellings
+    // match; mirrors the server matcher (quizball-backend#621).
+    .replace(/['\u2018\u2019\u02BC`]/g, "")
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
