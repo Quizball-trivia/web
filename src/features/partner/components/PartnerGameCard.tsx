@@ -9,9 +9,6 @@ import type { PartnerGameTile } from "../api/partnerApi.types";
 import { partnerCopy, type PartnerLocale } from "../partnerCopy";
 import { PARTNER_GAME_DEMO_SLUG, partnerGamePath, partnerGameTitle } from "../partnerGames";
 
-// Wide partner frames show four cards per row (the scroller's gap is 1rem from md up).
-const PARTNER_CARD_WIDTH = cn(CARD_WIDTH, "lg:w-[calc((100%_-_3rem)/4)]");
-
 export type PartnerTileState = "playable" | "done" | "coming_soon";
 
 export function partnerTileState(tile: PartnerGameTile): PartnerTileState {
@@ -25,7 +22,8 @@ export function formatPartnerPoints(points: number, locale: PartnerLocale): stri
   return new Intl.NumberFormat(locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB").format(points);
 }
 
-export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile; locale: PartnerLocale; index: number }) {
+export function PartnerGameCard({ tile, locale, index, fill = false }: { tile: PartnerGameTile; locale: PartnerLocale; index: number; fill?: boolean }) {
+  const width = fill ? "w-full" : CARD_WIDTH;
   const copy = partnerCopy(locale);
   const state = partnerTileState(tile);
   const title = partnerGameTitle(tile.gameId, locale);
@@ -66,9 +64,12 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
           <p className="mt-auto flex items-center gap-1 pt-2 font-poppins text-[10px] text-brand-yellow">
             <Clock3 className="size-3" aria-hidden /> {copy.comeBackTomorrow}
           </p>
-        ) : tile.maxScore !== null ? (
-          <p className="mt-auto pt-2 font-poppins text-[10px] text-white/60">{copy.upToPoints(formatPartnerPoints(tile.maxScore, locale))}</p>
-        ) : null}
+        ) : (
+          // The line stays without a cap so every card in a row keeps the same height.
+          <p className="mt-auto pt-2 font-poppins text-[10px] text-white/60">
+            {tile.maxScore !== null ? copy.upToPoints(formatPartnerPoints(tile.maxScore, locale)) : "\u00a0"}
+          </p>
+        )}
       </div>
     </>
   );
@@ -80,7 +81,7 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
         data-game-id={tile.gameId}
         data-state={state}
         aria-label={`${title}: ${statusLabel}`}
-        className={cn(PARTNER_CARD_WIDTH, "relative flex flex-col overflow-hidden rounded-xl bg-brand-blue/50")}
+        className={cn(width, "relative flex flex-col overflow-hidden rounded-xl bg-brand-blue/50")}
       >
         {body}
       </div>
@@ -95,7 +96,7 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
       data-state={state}
       aria-label={`${title}: ${statusLabel}`}
       className={cn(
-        PARTNER_CARD_WIDTH,
+        width,
         "group relative flex animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-xl bg-brand-blue duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
       )}
       style={{ animationDelay: `${Math.min(index * 30, 300)}ms`, animationFillMode: "backwards" }}

@@ -8,6 +8,8 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/partner/freecroco",
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
+const viewport = vi.hoisted(() => ({ desktop: false }));
+vi.mock("@/hooks/useIsDesktop", () => ({ useIsDesktop: () => viewport.desktop }));
 
 import { PartnerProviders } from "../PartnerProviders";
 import { LAUNCH_DEADLINE_MS, PartnerSessionProvider, usePartnerSession } from "../PartnerSessionProvider";
@@ -121,6 +123,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  viewport.desktop = false;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -800,18 +803,6 @@ describe("partner session", () => {
     }
   });
 
-  it("posts quizball:close from the back button", async () => {
-    stubApi({ redeem: () => ({ status: 200, body: SESSION }), games: () => ({ status: 200, body: GAMES }) });
-    renderShell();
-    await screen.findByTestId("partner-ranked-card");
-
-    fireEvent.click(screen.getByRole("button", { name: "Back to Freecroco" }));
-    expect(postedMessages().at(-1)).toEqual({
-      message: { source: "quizball", version: 1, type: "quizball:close" },
-      origin: "https://freecroco.com",
-    });
-  });
-
   it("does not post anything when the page is not framed", async () => {
     vi.spyOn(window, "parent", "get").mockReturnValue(window);
     const ownPostMessage = vi.spyOn(window, "postMessage");
@@ -835,13 +826,11 @@ describe("partner home", () => {
     expect(within(ranked).getByText(/^Resets in \d+h \d+m$/)).toBeInTheDocument();
 
     const cards = screen.getAllByTestId("partner-game-card");
-    // pick-em is set to 0 plays today, so it is off for the day.
-    expect(cards.map((card) => card.dataset.gameId)).toEqual(["quiz-board", "true-false", "countdown", "guess-the-goal"]);
-    expect(cards.map((card) => card.dataset.state)).toEqual(["coming_soon", "done", "playable", "playable"]);
+    // pick-em is set to 0 plays today, so it is off for the day; quiz-board is not open yet.
+    expect(cards.map((card) => card.dataset.gameId)).toEqual(["true-false", "countdown", "guess-the-goal"]);
+    expect(cards.map((card) => card.dataset.state)).toEqual(["done", "playable", "playable"]);
 
-    const [quizBoard, trueFalse, countdown, guessTheGoal] = cards;
-    expect(quizBoard.tagName).toBe("DIV");
-    expect(within(quizBoard).getByText("Coming soon")).toBeInTheDocument();
+    const [trueFalse, countdown, guessTheGoal] = cards;
     expect(trueFalse.tagName).toBe("DIV");
     expect(within(trueFalse).getByText("Come back tomorrow")).toBeInTheDocument();
     expect(countdown).toHaveAttribute("href", "/partner/freecroco/play/countdown");
@@ -849,6 +838,22 @@ describe("partner home", () => {
     expect(within(countdown).queryByText(/Up to/)).not.toBeInTheDocument();
     expect(within(guessTheGoal).getByText("1 play left")).toBeInTheDocument();
     expect(within(guessTheGoal).getByText("Up to 140 pts")).toBeInTheDocument();
+  });
+
+  it("puts ranked first in one grid with every open game on a wide frame", async () => {
+    viewport.desktop = true;
+    stubApi({ redeem: () => ({ status: 200, body: SESSION }), games: () => ({ status: 200, body: GAMES }) });
+    renderShell();
+
+    const ranked = await screen.findByTestId("partner-ranked-card");
+    const grid = screen.getByRole("region", { name: "More games" });
+    expect(grid.firstElementChild?.nextElementSibling).toBe(ranked);
+    expect(within(grid).getAllByTestId("partner-game-card").map((card) => card.dataset.gameId)).toEqual([
+      "true-false",
+      "countdown",
+      "guess-the-goal",
+    ]);
+    expect(screen.queryByRole("button", { name: "Scroll right" })).not.toBeInTheDocument();
   });
 
   it("shows ranked as done when today's plays are used up", async () => {
