@@ -25,7 +25,7 @@ describe("partner mock API", () => {
     expect(games.partnerDay).toBe("2026-10-05");
     expect(games.resetsAt).toBe("2026-10-05T20:00:00.000Z");
     expect(games.games.map((game) => game.gameId)).toEqual([
-      "ranked", "guess-the-goal", "true-false", "countdown", "pick-em", "career-path",
+      "ranked", "fake-fact", "true-false", "countdown", "pick-em", "career-path",
       "higher-lower", "card-detective", "road-to-goal", "trivia-mines", "quiz-board",
     ]);
     expect(games.games[0]).toMatchObject({ gameId: "ranked", playsLimit: 10, playsLeft: 7 });
