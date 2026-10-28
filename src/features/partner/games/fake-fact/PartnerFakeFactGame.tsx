@@ -14,6 +14,10 @@ import { useFakeFactCopy } from "./fakeFactPartnerCopy";
 
 type Phase = "loading" | "intro" | "play" | "error";
 
+const STEP_RANK: Record<FakeFactState["step"], number> = { card1: 0, between: 1, card2: 2, done: 3 };
+/** How far a play has got: a play only moves forward, so a lower rank is an older response. */
+const progress = (state: FakeFactState) => state.results.length * 10 + STEP_RANK[state.step];
+
 function newNonce(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID().replaceAll("-", "")
@@ -52,8 +56,15 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   const [error, setError] = useState<string | null>(null);
   const nonceRef = useRef<string | null>(null);
   const reportedRef = useRef(false);
+  const playRef = useRef<FakeFactState | null>(null);
+  // Today's latest ended play: shown when a start finds no plays left (the sweeper settled it while we were away).
+  const lastRef = useRef<FakeFactState | null>(null);
 
   const adopt = useCallback((state: FakeFactState) => {
+    const shown = playRef.current;
+    // A slow response from before a newer one (e.g. an expiry read overtaken by opening the bonus) is dropped.
+    if (shown && shown.playId === state.playId && progress(state) < progress(shown)) return;
+    playRef.current = state;
     setOffset(Date.parse(state.serverNow) - Date.now());
     setPlay(state);
     setPhase("play");
@@ -69,7 +80,8 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
 
   const reload = useCallback(async () => {
     try {
-      const { play: open } = await api.get<{ play: FakeFactState | null }>("current");
+      const { play: open, last } = await api.get<{ play: FakeFactState | null; last?: FakeFactState | null }>("current");
+      lastRef.current = last ?? null;
       if (open) adopt(open);
       else setPhase("intro");
     } catch {
@@ -118,6 +130,10 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
       adopt(await api.post<FakeFactState>("start", { client_nonce: nonceRef.current }));
     } catch (err) {
       if (err instanceof PartnerApiError && err.status < 500) nonceRef.current = null;
+      if (err instanceof PartnerApiError && err.code === "quota_exhausted" && lastRef.current) {
+        adopt(lastRef.current);
+        return;
+      }
       setError(err instanceof PartnerApiError && err.code === "quota_exhausted" ? copy.noPlaysLeft : copy.somethingWrong);
     } finally {
       setBusy(false);
@@ -234,6 +250,15 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
           <div className="flex-1" />
           <div className="sticky bottom-0 mt-5 bg-surface-page/95 pb-1 pt-2">
             {error && <p className="mb-2 font-poppins text-xs text-brand-red-soft">{error}</p>}
+            {seconds === 0 && misses >= 6 && (
+              <button
+                type="button"
+                onClick={() => setExpiryMisses({ deadline: deadline ?? null, n: 0 })}
+                className="mb-2 h-10 w-full rounded-full bg-white/10 font-poppins text-sm font-semibold text-white hover:bg-white/20"
+              >
+                {copy.tryAgain}
+              </button>
+            )}
             <GreenButton
               disabled={!selected || busy || seconds === 0}
               onClick={() => selected && void send("answer", { card: cardIndex, option: Number(selected) })}

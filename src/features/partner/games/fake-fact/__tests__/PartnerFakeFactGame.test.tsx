@@ -118,3 +118,45 @@ describe("PartnerFakeFactGame expiry", () => {
     expect(reads).toBe(2);
   }, 12_000);
 });
+
+describe("PartnerFakeFactGame recovery", () => {
+  it("shows today's last result when a start finds no plays left (the sweeper ended it first)", async () => {
+    const { PartnerApiError } = await import("../../../api/partnerApiClient");
+    const last = base({ step: "done", card: null, deadline: null, score: 100, results: [settled("a", 2, 100)], finished: { playId: "play-1", score: 100, sent: true } });
+    const api = {
+      get: vi.fn(async () => ({ play: null, last })),
+      post: vi.fn(async () => {
+        throw new PartnerApiError(409, "quota_exhausted", "No plays left");
+      }),
+    };
+    render(
+      <LocaleProvider initialLocale="en">
+        <PartnerFakeFactGame gameId="fake-fact" api={api as never} onFinished={vi.fn()} onExit={vi.fn()} />
+      </LocaleProvider>,
+    );
+    fireEvent.click(await screen.findByTestId("ff-start"));
+    expect(await screen.findByText("Right! +100")).toBeInTheDocument();
+  });
+
+  it("drops a slow response older than what is on screen", async () => {
+    let releaseRead: (value: FakeFactState) => void = () => {};
+    // The bonus window is about to close, so the screen's expiry read starts; it answers only after the bonus opened.
+    const between = base({ step: "between", card: null, score: 100, results: [settled("a", 2, 100)], deadline: new Date(Date.now() + 200).toISOString() });
+    const bonus = base({ step: "card2", card: card("b"), score: 100, results: [settled("a", 2, 100)] });
+    const api = {
+      get: vi.fn(async (path: string) => (path === "current" ? { play: between } : new Promise<FakeFactState>((r) => { releaseRead = r; }))),
+      post: vi.fn(async () => bonus),
+    };
+    render(
+      <LocaleProvider initialLocale="en">
+        <PartnerFakeFactGame gameId="fake-fact" api={api as never} onFinished={vi.fn()} onExit={vi.fn()} />
+      </LocaleProvider>,
+    );
+    await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2), { timeout: 4_000 });
+    fireEvent.click(screen.getByRole("button", { name: /Bonus card/ }));
+    expect(await screen.findByText("Club b0")).toBeInTheDocument();
+    releaseRead(between);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByText("Club b0")).toBeInTheDocument();
+  }, 10_000);
+});
