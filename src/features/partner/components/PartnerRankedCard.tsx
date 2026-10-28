@@ -77,7 +77,7 @@ export function PartnerRankedCard({
 
   if (variant === "tile") {
     return (
-      <section {...sectionProps} className="col-span-2 row-span-2 flex flex-col overflow-hidden rounded-xl bg-brand-blue">
+      <section {...sectionProps} className="col-span-2 row-span-2 flex min-h-[360px] flex-col overflow-hidden rounded-xl bg-brand-blue">
         <div className="relative min-h-0 flex-1 overflow-hidden">
           <div className="absolute inset-0">
             <DemoModeArt slug={PARTNER_GAME_DEMO_SLUG.ranked} className={cn("size-full", dimmed && "opacity-40")} />

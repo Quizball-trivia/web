@@ -8,6 +8,7 @@ import { localCard } from "@/features/dato-falso/datoFalso.daily";
 import { DfClaim, DfOptions, DfVerdict } from "@/features/dato-falso/DatoFalsoCard";
 import { GreenButton, TopBar, poppins } from "@/features/wordgames/ui";
 import { PartnerApiError } from "../../api/partnerApiClient";
+import { serverOffset } from "../quiz-board/quizBoardApi";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import type { FakeFactState } from "./fakeFactPartner.types";
 import { useFakeFactCopy } from "./fakeFactPartnerCopy";
@@ -60,12 +61,16 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   // Today's latest ended play: shown when a start finds no plays left (the sweeper settled it while we were away).
   const lastRef = useRef<FakeFactState | null>(null);
 
-  const adopt = useCallback((state: FakeFactState) => {
+  const offsetRef = useRef<number | null>(null);
+
+  /** `sentAt`: when the request left, so a slow response never makes the countdown show time the server has not got. */
+  const adopt = useCallback((state: FakeFactState, sentAt: number) => {
+    offsetRef.current = serverOffset(offsetRef.current, state.serverNow, sentAt, Date.now());
     const shown = playRef.current;
     // A slow response from before a newer one (e.g. an expiry read overtaken by opening the bonus) is dropped.
     if (shown && shown.playId === state.playId && progress(state) < progress(shown)) return;
     playRef.current = state;
-    setOffset(Date.parse(state.serverNow) - Date.now());
+    setOffset(offsetRef.current);
     setPlay(state);
     setPhase("play");
   }, []);
@@ -79,10 +84,11 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   }, [onExit, onFinished, play]);
 
   const reload = useCallback(async () => {
+    const sentAt = Date.now();
     try {
       const { play: open, last } = await api.get<{ play: FakeFactState | null; last?: FakeFactState | null }>("current");
       lastRef.current = last ?? null;
-      if (open) adopt(open);
+      if (open) adopt(open, sentAt);
       else setPhase("intro");
     } catch {
       setPhase("error");
@@ -96,8 +102,9 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   /** After a refused or lost request the play itself is the truth. */
   const reconcile = useCallback(
     async (playId: string): Promise<boolean> => {
+      const sentAt = Date.now();
       try {
-        adopt(await api.get<FakeFactState>(`plays/${playId}`));
+        adopt(await api.get<FakeFactState>(`plays/${playId}`), sentAt);
         return true;
       } catch {
         setError(copy.somethingWrong);
@@ -111,8 +118,9 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
     if (!play || busy) return;
     setBusy(true);
     setError(null);
+    const sentAt = Date.now();
     try {
-      adopt(await api.post<FakeFactState>(`plays/${play.playId}/${path}`, body));
+      adopt(await api.post<FakeFactState>(`plays/${play.playId}/${path}`, body), sentAt);
     } catch (err) {
       if (err instanceof PartnerApiError && err.status < 500 && err.code === "invalid_request") setError(copy.somethingWrong);
       else await reconcile(play.playId);
@@ -126,12 +134,13 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
     setBusy(true);
     setError(null);
     if (!nonceRef.current) nonceRef.current = newNonce();
+    const sentAt = Date.now();
     try {
-      adopt(await api.post<FakeFactState>("start", { client_nonce: nonceRef.current }));
+      adopt(await api.post<FakeFactState>("start", { client_nonce: nonceRef.current }), sentAt);
     } catch (err) {
       if (err instanceof PartnerApiError && err.status < 500) nonceRef.current = null;
       if (err instanceof PartnerApiError && err.code === "quota_exhausted" && lastRef.current) {
-        adopt(lastRef.current);
+        adopt(lastRef.current, sentAt);
         return;
       }
       setError(err instanceof PartnerApiError && err.code === "quota_exhausted" ? copy.noPlaysLeft : copy.somethingWrong);
