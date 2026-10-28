@@ -11,7 +11,7 @@ const MOCK_SESSION_MS = 10 * 60 * 1000;
 /** Default rule version order (§3), with a mix of states so every tile variant renders. */
 const SEEDED_GAMES: Array<Omit<PartnerGameTile, "playsLeft">> = [
   { gameId: "ranked", playsLimit: 10, playsUsed: 3, maxScore: 500, available: true, inProgress: false, lastResult: null },
-  { gameId: "guess-the-goal", playsLimit: 1, playsUsed: 0, maxScore: 140, available: true, inProgress: false, lastResult: null },
+  { gameId: "fake-fact", playsLimit: 1, playsUsed: 0, maxScore: 140, available: true, inProgress: false, lastResult: null },
   { gameId: "true-false", playsLimit: 1, playsUsed: 1, maxScore: 200, available: true, inProgress: false, lastResult: null },
   { gameId: "countdown", playsLimit: 1, playsUsed: 0, maxScore: null, available: true, inProgress: false, lastResult: null },
   { gameId: "pick-em", playsLimit: 1, playsUsed: 0, maxScore: 500, available: true, inProgress: false, lastResult: null },

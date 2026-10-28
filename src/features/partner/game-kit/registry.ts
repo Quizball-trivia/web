@@ -1,6 +1,7 @@
 import type { PartnerGameRegistry } from "./PartnerGameHost";
 import { PartnerCardDetectiveGame } from "../games/card-detective/PartnerCardDetectiveGame";
 import { CareerPathPartner, CountdownPartner, HigherLowerPartner, PickEmPartner, TrueFalsePartner } from "../games/dailies";
+import { PartnerFakeFactGame } from "../games/fake-fact/PartnerFakeFactGame";
 import { PartnerGuessTheGoalGame } from "../games/guess-the-goal/PartnerGuessTheGoalGame";
 import { QuizBoardPartner } from "../games/quiz-board/QuizBoardPartner";
 import { PartnerRankedScreen } from "../games/ranked/PartnerRankedScreen";
@@ -20,4 +21,5 @@ export const partnerGameRegistry: PartnerGameRegistry = {
   "quiz-board": QuizBoardPartner,
   "road-to-goal": RoadToGoalPartner,
   "trivia-mines": TriviaMinesPartner,
+  "fake-fact": PartnerFakeFactGame,
 };
