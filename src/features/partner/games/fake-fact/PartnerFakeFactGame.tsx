@@ -16,8 +16,9 @@ import { useFakeFactCopy } from "./fakeFactPartnerCopy";
 type Phase = "loading" | "intro" | "play" | "error";
 
 const STEP_RANK: Record<FakeFactState["step"], number> = { card1: 0, between: 1, card2: 2, done: 3 };
-/** How far a play has got: a play only moves forward, so a lower rank is an older response. */
-const progress = (state: FakeFactState) => state.results.length * 10 + STEP_RANK[state.step];
+/** How far a play has got: a play only moves forward, so a lower rank is an older response. An ended play is final
+ *  (a cancelled one carries no results). */
+const progress = (state: FakeFactState) => (state.finished ? 1_000 : state.results.length * 10 + STEP_RANK[state.step]);
 
 function newNonce(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -101,14 +102,15 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
 
   /** After a refused or lost request the play itself is the truth. */
   const reconcile = useCallback(
-    async (playId: string): Promise<boolean> => {
+    async (playId: string): Promise<FakeFactState | null> => {
       const sentAt = Date.now();
       try {
-        adopt(await api.get<FakeFactState>(`plays/${playId}`), sentAt);
-        return true;
+        const state = await api.get<FakeFactState>(`plays/${playId}`);
+        adopt(state, sentAt);
+        return state;
       } catch {
         setError(copy.somethingWrong);
-        return false;
+        return null;
       }
     },
     [adopt, api, copy.somethingWrong],
@@ -159,7 +161,9 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   useEffect(() => {
     if (!playId || !deadline || seconds !== 0 || misses >= 6) return;
     const id = window.setTimeout(async () => {
-      if (!(await reconcile(playId))) setExpiryMisses({ deadline, n: misses + 1 });
+      const state = await reconcile(playId);
+      // Failed, or answered before the server's own deadline passed (the card is still open): ask again.
+      if (!state || (!state.finished && state.deadline === deadline)) setExpiryMisses({ deadline, n: misses + 1 });
     }, 1_300 * (misses + 1));
     return () => window.clearTimeout(id);
   }, [deadline, misses, playId, reconcile, seconds]);

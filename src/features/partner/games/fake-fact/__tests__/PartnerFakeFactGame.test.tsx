@@ -160,3 +160,41 @@ describe("PartnerFakeFactGame recovery", () => {
     expect(screen.getByText("Club b0")).toBeInTheDocument();
   }, 10_000);
 });
+
+describe("PartnerFakeFactGame edge cases", () => {
+  it("asks again when the read at 0 still finds the card open (the server's deadline had not passed yet)", async () => {
+    const open = base({ deadline: new Date(Date.now() + 200).toISOString() });
+    const ended = base({ step: "done", card: null, deadline: null, results: [{ ...settled("a", 0, 0), pick: null, timedOut: true }], finished: { playId: "play-1", score: 0, sent: true } });
+    let reads = 0;
+    const api = {
+      get: vi.fn(async (path: string) => {
+        if (path === "current") return { play: open };
+        reads += 1;
+        return reads === 1 ? open : ended;
+      }),
+      post: vi.fn(),
+    };
+    render(
+      <LocaleProvider initialLocale="en">
+        <PartnerFakeFactGame gameId="fake-fact" api={api as never} onFinished={vi.fn()} onExit={vi.fn()} />
+      </LocaleProvider>,
+    );
+    expect(await screen.findByText("Time's up. The fake was Club a2", undefined, { timeout: 8_000 })).toBeInTheDocument();
+    expect(reads).toBe(2);
+  }, 12_000);
+
+  it("takes a cancelled play even though it carries no results", async () => {
+    const between = base({ step: "between", card: null, score: 100, results: [settled("a", 2, 100)] });
+    const cancelled = base({ step: "done", card: null, deadline: null, finished: { playId: "play-1", score: 0, sent: false } });
+    const onExit = vi.fn();
+    const api = { get: vi.fn(async () => ({ play: between })), post: vi.fn(async () => cancelled) };
+    render(
+      <LocaleProvider initialLocale="en">
+        <PartnerFakeFactGame gameId="fake-fact" api={api as never} onFinished={vi.fn()} onExit={onExit} />
+      </LocaleProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /Bonus card/ }));
+    fireEvent.click(await screen.findByText("See result"));
+    expect(onExit).toHaveBeenCalled();
+  });
+});
