@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowDown, Check, X, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -222,8 +222,13 @@ function RevealCard({ seat, cards, width, startMs, mirror = false }: { seat: Rev
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [loadout, count, startMs]);
   const last = landed > 0 ? cards[landed - 1] : null;
-  const bursts: SlotBurst[] = last ? [{ slot: landed - 1, key: landed, type: CARD_BY_ID[last].type }] : [];
-  const reaction: FutReaction | null = last ? reactionFor(landed === cards.length ? 'complete' : CARD_BY_ID[last].type, landed, startMs) : null;
+  const lastType = last ? CARD_BY_ID[last].type : null;
+  // Stable between clock ticks, so the card's figure keeps its animation loop running instead of restarting it.
+  const bursts = useMemo<SlotBurst[]>(() => (lastType ? [{ slot: landed - 1, key: landed, type: lastType }] : []), [landed, lastType]);
+  const reaction = useMemo<FutReaction | null>(
+    () => (lastType ? reactionFor(landed === count ? 'complete' : lastType, landed, startMs) : null),
+    [landed, lastType, count, startMs],
+  );
   return (
     <FutCard
       seat={seat}
