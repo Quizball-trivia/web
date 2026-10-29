@@ -85,6 +85,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol", de: "fussball-codenames" },
   "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira", de: "welche-aussage-ist-falsch" },
   "football-connections": { es: "conexiones-futboleras", tr: "futbol-connections", ru: "futbolnye-svyazi", pt: "conexoes-do-futebol", de: "fussball-connections" },
+  // Owner brief 2026-10-28: every name keeps the word for darts. KA follows EN.
+  "football-darts-501": { es: "dardos-futboleros-501", tr: "futbol-dart-oyunu", ru: "futbolnyy-darts-501", pt: "dardos-com-jogadores-de-futebol", de: "fussball-darts-501" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -1891,6 +1893,64 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "16 Fußballer, vier versteckte Vierergruppen, und jede Gruppe hat eine gemeinsame Verbindung. Finde heraus, was sie verbindet, wähle die vier Spieler aus und schicke sie ab. Vorsicht vor Fallen: Manche Spieler scheinen in zwei Gruppen zu passen.",
       howToPlay: ["Jedes Brett zeigt 16 Fußballer, die 4 Gruppen mit je 4 Spielern verstecken. Wähle 4 Spieler mit einer gemeinsamen Verbindung und tippe auf Abschicken.", "Eine richtige Gruppe rastet ein. Ein falscher Versuch kostet einen Fehler, und stimmen drei von vier, erscheint „Einer fehlt!“. Vier Fehler beenden das Brett. Ein Vierer, den du schon versucht hast, kostet nichts.", "Das Tagesbrett ist für alle gleich. Die Rangliste zählt zuerst die gefundenen Gruppen, dann die wenigsten Fehler, dann die Zeit. Teile am Ende dein Raster; frühere Bretter kannst du jederzeit noch einmal spielen.", "Mit einem Freund spielst du ein 1-gegen-1 über 5 Bretter. Ihr seid abwechselnd dran, pro Zug gibt es einen Versuch, Treffer oder Fehlschlag. Sind drei Gruppen gefunden, nennt der Spieler am Zug die letzte Verbindung aus 4 Optionen und bekommt dafür einen Punkt. Es stehen weder Münzen noch RP auf dem Spiel."],
       reward: "Spiele frühere Bretter ohne Konto; melde dich für das heutige Brett und die tägliche Rangliste an.",
+    },
+  }),
+  mode("football-darts-501", "/football-darts-501", "football-darts-501", {
+    en: {
+      metaTitle: "Football Darts 501 — Darts Game with Footballers | QuizBall",
+      metaDescription: "Football Darts 501: start on 501, name footballers from the category and their numbers come off. Check out between 0 and −10. One leg a day, or rooms of 2–6.",
+      title: "Football Darts 501",
+      intro: "Darts with footballers. You start on 501, and every dart is a footballer from today's category: his number in it comes off your score. Land anywhere from 0 to −10 to check out, in as few darts as you can.",
+      howToPlay: ["You start on 501. Name a footballer from the category: he is your dart, and his number (appearances, goals or whatever the category counts) comes off your score.", "Check out by landing anywhere from 0 to −10. A number over 180 scores nothing, and going below −10 is a bust: the dart is used and your score stays. A name that is not in the category also uses a dart and scores nothing.", "You get 10 darts. A name you already threw, or one we cannot find, costs nothing: check the spelling and go again. The daily leaderboard ranks fewer darts first, then closer to 0.", "With friends, open a room for 2 to 6 players. You take turns, each on your own 501. Once someone checks out the round is finished, and the player closest to 0 wins the leg. It is best of 3 legs."],
+      reward: "Play past days without an account; sign in for today's game and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "საფეხბურთო დარტსი 501 — დარტსი ფეხბურთელებით | QuizBall",
+      metaDescription: "საფეხბურთო დარტსი 501: დაიწყე 501-დან და დაასახელე კატეგორიის ფეხბურთელები, მათი რიცხვები გაკლდება. დაასრულე 0-დან −10-მდე. ყოველდღე ერთი ლეგი ან 2–6 მოთამაშის ოთახი.",
+      title: "საფეხბურთო დარტსი 501",
+      intro: "დარტსი ფეხბურთელებით. იწყებ 501-დან და ყოველი ისარი დღევანდელი კატეგორიის ფეხბურთელია: კატეგორიაში მისი რიცხვი შენს ქულას აკლდება. დაასრულე 0-დან −10-მდე რაც შეიძლება ცოტა ისრით.",
+      howToPlay: ["იწყებ 501-დან. დაასახელე კატეგორიის ფეხბურთელი: ის შენი ისარია და მისი რიცხვი (მატჩები, გოლები ან რასაც კატეგორია ითვლის) ქულას აკლდება.", "დასრულება 0-დან −10-მდე ნებისმიერ ქულაზე შეგიძლია. 180-ზე მეტი რიცხვი ქულას არ გაძლევს, −10-ზე ქვემოთ ჩასვლა ბასტია: ისარი იხარჯება, ქულა კი იგივე რჩება. კატეგორიაში არარსებული სახელიც ისარს ხარჯავს და ქულას არ გაძლევს.", "გაქვს 10 ისარი. უკვე გაგზავნილი სახელი ან სახელი, რომელიც ვერ ვიპოვეთ, არაფერი ღირს: გადაამოწმე მართლწერა და ისევ სცადე. დღის რეიტინგში ჯერ ნაკლები ისარი ითვლება, მერე 0-თან სიახლოვე.", "მეგობრებთან ერთად გახსენი ოთახი 2-დან 6 მოთამაშემდე. რიგრიგობით ისვრით, თითოეული საკუთარ 501-ზე. როცა ვინმე დაასრულებს, რაუნდი სრულდება და ლეგს ის იგებს, ვინც 0-თან ყველაზე ახლოსაა. თამაში 3 ლეგიდან საუკეთესოა."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელი თამაშისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Dardos futboleros 501 — Dardos con futbolistas | QuizBall",
+      metaDescription: "Dardos futboleros 501: empezá en 501 y nombrá futbolistas de la categoría; su número se resta. Cerrá entre 0 y −10. Una partida por día o salas de 2 a 6.",
+      title: "Dardos futboleros 501",
+      intro: "Dardos con futbolistas. Empezás en 501 y cada dardo es un futbolista de la categoría del día: su número en ella se resta de tu puntaje. Quedate entre 0 y −10 para cerrar, con la menor cantidad de dardos posible.",
+      howToPlay: ["Empezás en 501. Nombrá a un futbolista de la categoría: es tu dardo, y su número (partidos, goles o lo que cuente la categoría) se resta de tu puntaje.", "Cerrás si quedás entre 0 y −10. Un número de más de 180 no suma, y si te pasás de −10 el dardo se gasta y tu puntaje queda igual. Un nombre que no está en la categoría también gasta un dardo y no suma.", "Tenés 10 dardos. Un nombre que ya tiraste, o uno que no encontramos, no cuesta nada: revisá la ortografía y volvé a tirar. El ranking del día ordena primero por menos dardos y después por cercanía a 0.", "Con amigos, abrí una sala de 2 a 6 jugadores. Tiran por turnos, cada uno sobre su propio 501. Cuando alguien cierra, se termina la ronda y gana la manga quien está más cerca de 0. Se juega al mejor de 3 mangas."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, el juego de hoy y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol Dart Oyunu 501 — Futbolcularla Dart | QuizBall",
+      metaDescription: "Futbol Dart Oyunu 501: 501'den başla, kategoriden futbolcular söyle; sayıları puanından düşer. 0 ile −10 arasında bitir. Günde bir leg ya da 2–6 kişilik odalar.",
+      title: "Futbol Dart Oyunu 501",
+      intro: "Futbolcularla dart. 501'den başlarsın ve her ok, günün kategorisinden bir futbolcudur: kategorideki sayısı puanından düşer. 0 ile −10 arasına inerek, olabildiğince az okla bitir.",
+      howToPlay: ["501'den başlarsın. Kategoriden bir futbolcu söyle: o senin okundur ve sayısı (maç, gol ya da kategorinin saydığı şey) puanından düşer.", "0 ile −10 arasında bir yere inersen bitirmiş olursun. 180'in üstündeki sayı puan getirmez, −10'un altına inmek bust'tır: ok harcanır ama puanın aynı kalır. Kategoride olmayan bir isim de bir ok harcar ve puan getirmez.", "10 okun var. Daha önce attığın ya da bulamadığımız bir isim hiçbir şeye mal olmaz: yazımı kontrol edip tekrar at. Günün sıralamasında önce daha az ok, sonra 0'a yakınlık gelir.", "Arkadaşlarınla 2 ile 6 oyunculu bir oda aç. Sırayla, herkes kendi 501'ine atar. Biri bitirince tur tamamlanır ve 0'a en yakın olan leg'i alır. Maç 3 leg'in en iyisidir."],
+      reward: "Önceki günleri hesapsız oyna; bugünün oyunu ve günün sıralaması için giriş yap.",
+    },
+    ru: {
+      metaTitle: "Футбольный дартс 501: дартс с футболистами | QuizBall",
+      metaDescription: "Футбольный дартс 501: начни с 501 и называй футболистов из категории, их числа вычитаются. Закрой от 0 до −10. Один лег в день или комнаты на 2–6 игроков.",
+      title: "Футбольный дартс 501",
+      intro: "Дартс с футболистами. Ты начинаешь с 501, и каждый дротик — футболист из категории дня: его число в ней вычитается из твоих очков. Закрой от 0 до −10 как можно меньшим числом дротиков.",
+      howToPlay: ["Ты начинаешь с 501. Назови футболиста из категории: он и есть твой дротик, а его число (матчи, голы или то, что считает категория) вычитается из очков.", "Закрыть можно в любой точке от 0 до −10. Число больше 180 не даёт очков, а уход ниже −10 — перебор: дротик потрачен, очки прежние. Имя, которого нет в категории, тоже тратит дротик и очков не даёт.", "У тебя 10 дротиков. Уже названное имя или имя, которое мы не нашли, ничего не стоит: проверь написание и бросай снова. В рейтинге дня сначала меньше дротиков, затем ближе к 0.", "С друзьями открой комнату на 2–6 игроков. Бросаете по очереди, каждый на своём 501. Когда кто-то закрыл, круг доигрывается, и лег берёт тот, кто ближе к 0. Играют до 2 побед из 3."],
+      reward: "Играй в прошлые дни без аккаунта; войди, чтобы пройти сегодняшнюю игру и попасть в ежедневный рейтинг.",
+    },
+    pt: {
+      metaTitle: "Dardos de futebol 501: dardos com jogadores de futebol",
+      metaDescription: "Dardos de futebol 501: comece no 501 e cite jogadores da categoria; o número deles sai da pontuação. Feche entre 0 e −10. Uma partida por dia ou salas de 2 a 6.",
+      title: "Dardos de futebol 501",
+      intro: "Dardos com jogadores de futebol. Você começa no 501, e cada dardo é um jogador da categoria do dia: o número dele nela sai da sua pontuação. Fique entre 0 e −10 para fechar, com o menor número de dardos possível.",
+      howToPlay: ["Você começa no 501. Cite um jogador da categoria: ele é o seu dardo, e o número dele (jogos, gols ou o que a categoria contar) sai da sua pontuação.", "Você fecha ao parar entre 0 e −10. Um número acima de 180 não pontua, e passar de −10 é estouro: o dardo é gasto e a pontuação continua a mesma. Um nome que não está na categoria também gasta o dardo e não pontua.", "São 10 dardos. Um nome que você já lançou, ou que não encontramos, não custa nada: confira a grafia e jogue de novo. O ranking do dia põe primeiro quem usou menos dardos, depois quem ficou mais perto de 0.", "Com amigos, abra uma sala para 2 a 6 jogadores. Cada um joga na sua vez, no seu próprio 501. Quando alguém fecha, a rodada termina e leva o leg quem estiver mais perto de 0. O jogo é melhor de 3 legs."],
+      reward: "Jogue dias anteriores sem uma conta; entre para acessar o jogo de hoje e o ranking diário.",
+    },
+    de: {
+      metaTitle: "Fußball-Darts 501: Darts mit Fußballern",
+      metaDescription: "Fußball-Darts 501: Starte bei 501 und nenne Spieler aus der Kategorie, ihre Zahlen werden abgezogen. Checke zwischen 0 und −10 aus. Ein Leg pro Tag oder Räume für 2–6.",
+      title: "Fußball-Darts 501",
+      intro: "Darts mit Fußballern. Du startest bei 501, und jeder Pfeil ist ein Spieler aus der Kategorie des Tages: seine Zahl darin wird von deinem Punktestand abgezogen. Lande zwischen 0 und −10, um mit möglichst wenigen Pfeilen auszuchecken.",
+      howToPlay: ["Du startest bei 501. Nenne einen Spieler aus der Kategorie: Er ist dein Pfeil, und seine Zahl (Spiele, Tore oder was die Kategorie zählt) wird von deinem Punktestand abgezogen.", "Ausgecheckt hast du, wenn du zwischen 0 und −10 landest. Eine Zahl über 180 zählt nichts, und unter −10 zu rutschen ist ein Bust: Der Pfeil ist verbraucht, dein Punktestand bleibt. Auch ein Name, der nicht in der Kategorie ist, verbraucht einen Pfeil und zählt nichts.", "Du hast 10 Pfeile. Ein Name, den du schon geworfen hast, oder einer, den wir nicht finden, kostet nichts: Prüfe die Schreibweise und wirf noch einmal. Die Tagesrangliste zählt zuerst die wenigsten Pfeile, dann die Nähe zu 0.", "Mit Freunden öffnest du einen Raum für 2 bis 6 Spieler. Ihr werft abwechselnd, jeder auf seine eigenen 501. Checkt jemand aus, wird die Runde zu Ende gespielt, und wer am nächsten an 0 ist, gewinnt das Leg. Gespielt wird Best of 3."],
+      reward: "Spiele frühere Tage ohne Konto; melde dich für das heutige Spiel und die tägliche Rangliste an.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {

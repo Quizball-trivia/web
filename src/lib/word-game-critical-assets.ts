@@ -29,6 +29,13 @@ const WORD_GAME_PATHS = new Set([
   "/ru/futbolnye-igry/futbolnye-svyazi",
   "/pt/jogos-de-futebol/conexoes-do-futebol",
   "/de/fussballspiele/fussball-connections",
+  "/en/football-games/football-darts-501",
+  "/es/juegos-de-futbol/dardos-futboleros-501",
+  "/ka/football-games/football-darts-501",
+  "/tr/futbol-oyunlari/futbol-dart-oyunu",
+  "/ru/futbolnye-igry/futbolnyy-darts-501",
+  "/pt/jogos-de-futebol/dardos-com-jogadores-de-futebol",
+  "/de/fussballspiele/fussball-darts-501",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {

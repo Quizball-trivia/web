@@ -10,6 +10,9 @@ import { datoFalsoDailyGame } from "@/features/dato-falso/datoFalso.game";
 import { conexionesCopy } from "@/features/conexiones/conexiones.copy";
 import { conexionesDailyApi } from "@/features/conexiones/conexiones.daily";
 import { conexionesDailyGame } from "@/features/conexiones/conexiones.game";
+import { darts501DailyApi } from "@/features/darts501/d501.api";
+import { d501Copy } from "@/features/darts501/d501.copy";
+import { d501DailyGame } from "@/features/darts501/d501.game";
 
 // Ranking modules must not import playable engines or animation UI.
 const sharedApi = createWordDailyApi<WordRunStateBase, string, unknown>("/api/v1/shared-player");
@@ -20,6 +23,7 @@ const tenableApi = createWordDailyApi<WordRunStateBase, string, unknown>("/api/v
 const loadTenable = (day: string, locale: string) => tenableApi.leaderboard(day, locale);
 const loadDatoFalso = (day: string, locale: string) => datoFalsoDailyApi.leaderboard(day, locale);
 const loadConexiones = (day: string, locale: string) => conexionesDailyApi.leaderboard(day, locale);
+const loadDarts501 = (day: string, locale: string) => darts501DailyApi.leaderboard(day, locale);
 
 export function SharedPlayerDailyBoard({ locale, className }: { locale: string; className?: string }) {
   return <WordDailyLeaderboard game={sharedPlayerDailyGame(locale)} locale={locale} load={loadShared} className={className} />;
@@ -38,4 +42,8 @@ export function DatoFalsoDailyBoard({ locale, className }: { locale: string; cla
 }
 export function ConexionesDailyBoard({ locale, className }: { locale: string; className?: string }) {
   return <WordDailyLeaderboard game={conexionesDailyGame(locale)} locale={locale} load={loadConexiones} pointsLabel={conexionesCopy(locale).pointsStat} pointsHint={conexionesCopy(locale).pointsHint} className={className} />;
+}
+export function Darts501DailyBoard({ locale, className }: { locale: string; className?: string }) {
+  const c = d501Copy(locale);
+  return <WordDailyLeaderboard game={d501DailyGame(locale)} locale={locale} load={loadDarts501} pointsLabel={c.boardLabel} pointsHint={c.boardHint} formatPoints={(row) => c.boardPoints(row.checkedOut ?? false, row.darts ?? 0, row.remaining ?? 0)} className={className} />;
 }
