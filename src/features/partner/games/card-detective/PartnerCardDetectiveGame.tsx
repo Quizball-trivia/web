@@ -10,6 +10,7 @@ import { useResultSplash } from "@/features/daily/components/useResultSplash";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { useMiniT } from "@/features/mini-games/lib/i18n";
 import { PartnerApiError } from "../../api/partnerApiClient";
+import { PartnerGameIntro } from "../../game-kit/PartnerGameIntro";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import type { CdPlayState } from "./cardDetectivePartner.types";
 import { useCardDetectiveCopy } from "./cardDetectivePartnerCopy";
@@ -247,29 +248,18 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
 
   if (phase === "intro") {
     return (
-      <div className="mx-auto mt-4 flex max-w-md flex-col gap-4">
-        <div className="rounded-2xl bg-white/[0.06] p-5">
-          <h1 className="font-poppins text-xl font-semibold uppercase text-white">{copy.title}</h1>
-          <ul className="mt-3 space-y-1.5 font-poppins text-sm text-white/75">
-            {copy.rules.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </div>
-        {error && <p className="font-poppins text-sm text-brand-red-soft">{error}</p>}
-        <button
-          type="button"
-          onClick={start}
-          disabled={busy}
-          data-testid="cd-start"
-          className="h-12 rounded-full bg-brand-yellow font-poppins text-base font-semibold uppercase text-black transition-opacity disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="mx-auto size-5 animate-spin" aria-hidden /> : copy.start}
-        </button>
-        <button type="button" onClick={onExit} className="h-10 font-poppins text-sm text-white/60 underline-offset-2 hover:underline">
-          {copy.back}
-        </button>
-      </div>
+      <PartnerGameIntro
+        gameId="card-detective"
+        title={copy.title}
+        rules={copy.rules}
+        startLabel={copy.start}
+        backLabel={copy.back}
+        busy={busy}
+        error={error}
+        onStart={start}
+        onBack={onExit}
+        startTestId="cd-start"
+      />
     );
   }
 
