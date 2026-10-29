@@ -16,7 +16,7 @@ import { DartFeedback, DartLog, Dartboard, useCountTo } from "./D501Board";
 import { CategoryCard } from "./D501Solo";
 import { d501Copy } from "./d501.copy";
 import { checkoutWindow } from "./d501.rules";
-import type { D501Command, D501Seat, D501View } from "./d501.view";
+import { d501Places, type D501Command, type D501Seat, type D501View } from "./d501.view";
 
 export type D501RoomLink = Pick<RoomConnection<D501Command>, "send" | "nowMs" | "inFlight" | "retained" | "connected" | "resendRetained" | "leave">;
 
@@ -63,7 +63,8 @@ export function D501Board({ view, snapshot, room, locale, error, lookup }: { vie
   const c = wordSharedCopy(locale);
   const t = d501Copy(locale);
   const roomCopy = aproximadoCopy(locale);
-  const seatRows = useMemo(() => view.seats.map((s) => ({ seat: s.seat, status: s.status, score: s.legsWon })), [view.seats]);
+  // A benched seat throws no more and ranks with the seats that left (as the server's standings do).
+  const seatRows = useMemo(() => view.seats.map((s) => ({ seat: s.seat, status: s.benched ? "withdrawn" as const : s.status, score: s.legsWon })), [view.seats]);
   const seats = useMemo(() => wordSeats(snapshot, seatRows), [snapshot, seatRows]);
   const me = view.mySeat;
   const duel = view.format === "duel";
@@ -90,7 +91,7 @@ export function D501Board({ view, snapshot, room, locale, error, lookup }: { vie
       {view.seats.map((info) => {
         const seat = seatOf(info.seat);
         if (!seat) return null;
-        const name = info.status === "away" ? `${nameOf(info.seat)} · ${c.away}` : info.status === "withdrawn" ? `${nameOf(info.seat)} · ${c.left}` : nameOf(info.seat);
+        const name = info.benched ? `${nameOf(info.seat)} · ${t.benched}` : info.status === "away" ? `${nameOf(info.seat)} · ${c.away}` : info.status === "withdrawn" ? `${nameOf(info.seat)} · ${c.left}` : nameOf(info.seat);
         return <Row locale={locale} key={info.seat} seat={seat} info={info} me={info.seat === me} active={view.phase === "turn" && view.turn === info.seat} maxDarts={view.maxDarts} legsToWin={legsToWin} name={name} />;
       })}
     </ol>
@@ -161,10 +162,16 @@ export function D501Board({ view, snapshot, room, locale, error, lookup }: { vie
   );
 
   if (!duel) {
+    const places = d501Places(view.seats);
+    const rankOf = (seat: number) => places.get(seat) ?? view.seats.length;
     const standings = toPartyStandings({
       seats, mySeat: me, answered: (seat) => view.phase !== "turn" || view.turn !== seat, labels: { away: c.away, left: c.left },
       hold: holding ? gains : null, gains: view.phase === "legEnd" && !holding ? gains : null,
-    });
+    }).map((row) => {
+      const seat = Number(row.userId.replace("seat-", ""));
+      const rank = rankOf(seat);
+      return { ...row, rank, isLeader: row.isLeader && rank === 1, statusLabel: view.seats[seat]?.benched ? t.benched : row.statusLabel };
+    }).sort((a, b) => a.rank - b.rank);
     return (
       <>
         {top}

@@ -99,3 +99,13 @@ export const d501RoomRules: RoomClientRules<D501Command> = {
 };
 
 export const dartsThrown = (darts: readonly Dart[], seat?: number) => darts.filter((d) => (seat === undefined || d.by === seat) && d.verdict !== "repeat" && d.verdict !== "unknown" && d.verdict !== "uncovered" && d.verdict !== "ambiguous").length;
+
+/**
+ * Each seat's place in a room, as the server ranks them: legs won, then less left over the legs; seats that left or were
+ * benched come after everyone still playing.
+ */
+export function d501Places(seats: readonly D501Seat[]): Map<number, number> {
+  const out = (s: D501Seat) => s.status === "withdrawn" || Boolean(s.benched);
+  const live = seats.filter((s) => !out(s));
+  return new Map(seats.map((s) => [s.seat, out(s) ? live.length + 1 : 1 + live.filter((o) => o.legsWon > s.legsWon || (o.legsWon === s.legsWon && o.leftTotal < s.leftTotal)).length]));
+}

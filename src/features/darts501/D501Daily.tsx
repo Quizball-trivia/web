@@ -23,7 +23,12 @@ export function D501Daily({ locale, onExit, onEvent, initialDay, onDay }: {
   const game = d501DailyGame(locale);
   const c = d501Copy(locale);
   const d = wordDailyCopy(locale);
-  const daily = useWordDaily<D501ServerRun, never>({ api: darts501DailyApi, calendar: D501_CALENDAR, locale, initialDay, onDay, onEvent });
+  // A throw the server did not take (another tab had moved the run on): say so; the box keeps the text to throw again.
+  const [unsaved, setUnsaved] = useState<string | null>(null);
+  const daily = useWordDaily<D501ServerRun, never>({
+    api: darts501DailyApi, calendar: D501_CALENDAR, locale, initialDay, onDay, onEvent,
+    onAnswerNotSaved: (missed) => { if (!missed.lost || missed.fresh.run.version === missed.sentOn.run.version) setUnsaved(`${missed.fresh.run.id}:${missed.fresh.run.version}`); },
+  });
   const { state, day } = daily;
   const solo = useMemo(() => (state ? toSoloState(state) : null), [state]);
   // The end sheet stays on the play screen until the player asks for the result (the last dart's moment).
@@ -34,9 +39,11 @@ export function D501Daily({ locale, onExit, onEvent, initialDay, onDay }: {
   const number = day ? puzzleNumber(D501_CALENDAR, day) : 0;
   const formatPoints = (row: WordBoardRow) => c.boardPoints(row.checkedOut ?? false, row.darts ?? 0, row.remaining ?? 0);
 
+  const runNow = daily.run ? `${daily.run.run.id}:${daily.run.run.version}` : null;
   const play = solo && day ? (
-    <D501PlayView locale={locale} number={number} state={solo} pending={daily.pending !== null} notice={daily.notice ? d.notices[daily.notice] : null}
-      onSay={(text, pick) => daily.answer(text, pick ? { pick } : undefined).then((run) => run !== null)}
+    <D501PlayView locale={locale} number={number} state={solo} pending={daily.pending !== null}
+      notice={daily.notice ? d.notices[daily.notice] : unsaved !== null && unsaved === runNow ? c.staleThrow : null}
+      onSay={(text, pick) => { setUnsaved(null); return daily.answer(text, pick ? { pick } : undefined).then((run) => run !== null); }}
       onGiveUp={() => { void daily.pass(); }}
       onResult={() => { setResultFor(runKey); daily.setView("end"); }}
       onExit={onExit ?? (() => daily.setView("intro"))} />

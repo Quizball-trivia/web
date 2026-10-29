@@ -17,9 +17,9 @@ function Route() {
   const onEvent = useCallback((event: "start" | "complete" | "replay", detail?: EngineEventDetail) => {
     session.current ??= { id: createRealtimeCommandId(), startedAt: Date.now() };
     const s = session.current;
-    if (event === "start") { s.startedAt = Date.now(); trackGameStart({ modeId: "football-darts-501", access, sessionId: s.id, sessionKind: "full_game", surface: "app" }); }
-    if (event === "complete") trackGameComplete({ modeId: "football-darts-501", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
-    if (event === "replay") { trackGameReplay({ modeId: "football-darts-501", previousSessionId: s.id }); session.current = { id: createRealtimeCommandId(), startedAt: Date.now() }; }
+    if (event === "start") { s.startedAt = Date.now(); trackGameStart({ modeId: "darts501", access, sessionId: s.id, sessionKind: "full_game", surface: "app" }); }
+    if (event === "complete") trackGameComplete({ modeId: "darts501", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
+    if (event === "replay") { trackGameReplay({ modeId: "darts501", previousSessionId: s.id }); session.current = { id: createRealtimeCommandId(), startedAt: Date.now() }; }
   }, [access]);
   // An older day chosen from the archive is kept in the address, so a reload opens it again; the newest day has none.
   const onDay = useCallback((chosen: string, newest: boolean) => {

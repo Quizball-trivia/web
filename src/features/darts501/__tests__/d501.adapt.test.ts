@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toSoloState } from "../d501.adapt";
+import { d501Places } from "../d501.view";
 import type { D501ServerRun } from "../d501.api";
 
 // Invented footballers only: the repository is public.
@@ -27,5 +28,20 @@ describe("toSoloState", () => {
     expect(today.finishesCount).toBe(3);
     const closed = toSoloState(run({ done: true, end: "gaveUp", finishes: { count: 1, shown: [{ name: "Ceto Darrin", value: 60 }] } }));
     expect(closed.finishes).toEqual([{ name: "Ceto Darrin", stat: 60 }]);
+  });
+});
+
+describe("d501Places", () => {
+  const seat = (n: number, legsWon: number, leftTotal: number, extra: Partial<import("../d501.view").D501Seat> = {}) =>
+    ({ seat: n, status: "in" as const, remaining: 501, dartsUsed: 0, legsWon, leftTotal, ...extra });
+  it("breaks equal legs by less left, as the server does", () => {
+    const places = d501Places([seat(0, 1, 120), seat(1, 1, 40), seat(2, 0, 10)]);
+    expect([places.get(1), places.get(0), places.get(2)]).toEqual([1, 2, 3]);
+  });
+  it("puts benched and departed seats after everyone still playing", () => {
+    const places = d501Places([seat(0, 2, 0, { benched: true }), seat(1, 0, 400), seat(2, 1, 0, { status: "withdrawn" })]);
+    expect(places.get(1)).toBe(1);
+    expect(places.get(0)).toBe(2);
+    expect(places.get(2)).toBe(2);
   });
 });

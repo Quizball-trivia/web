@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { wordDailyCopy } from "@/features/wordgames/copy";
 import { DailyEnd } from "@/features/wordgames/daily/WordDailyShell";
-import { GreenButton, TopBar, poppins } from "@/features/wordgames/ui";
+import { TopBar, poppins } from "@/features/wordgames/ui";
 import { SuggestBox, type SuggestLookup } from "@/features/tenable/SuggestBox";
 import { DartFeedback, DartLog, Dartboard, ScorePanel, dartEmoji } from "./D501Board";
 import { d501Copy } from "./d501.copy";
@@ -52,12 +52,24 @@ export function D501PlayView({ locale, number, state, pending, notice, lookup, o
         </>
       )}
       {done && (
-        <div data-d501-end className="sticky bottom-0 mt-3 rounded-3xl bg-brand-blue px-5 pb-4 pt-3 text-white shadow-2xl shadow-black/40">
+        <div data-d501-end role="status" className="sticky bottom-0 mt-3 rounded-3xl bg-brand-blue px-5 pb-4 pt-3 text-white shadow-2xl shadow-black/40">
           <p className="text-xl font-black leading-tight" style={poppins}>{endLine(locale, state)}</p>
-          <GreenButton className="mt-3" onClick={onResult}>{d.seeResult}</GreenButton>
+          <ResultButton onClick={onResult}>{d.seeResult}</ResultButton>
         </div>
       )}
     </div>
+  );
+}
+
+/** The run just ended and the answer box is gone: focus moves here, so keyboard and screen-reader players are not left on the page body. */
+function ResultButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+  return (
+    <button ref={ref} type="button" onClick={onClick} style={poppins}
+      className="mt-3 h-14 w-full rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+      {children}
+    </button>
   );
 }
 
@@ -98,7 +110,7 @@ export function D501EndView({ locale, number, state, guestOnPastBoard, leaderboa
           </ul>
         </div>
       )}
-      {!out && !state.finishes && state.finishesCount != null && (
+      {!out && (!state.finishes || state.finishes.length === 0) && state.finishesCount != null && (
         <div className="mt-4 rounded-2xl bg-white/[0.05] px-4 py-3">
           <p className="text-sm font-bold">{c.finishesCount(state.finishesCount, state.remaining)}</p>
           {state.finishesCount > 0 && <p className="mt-0.5 text-xs text-white/60">{c.finishesLater}</p>}
