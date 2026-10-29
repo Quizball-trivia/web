@@ -9,18 +9,21 @@ import type { WordDailyGame } from "./wordDaily.games";
 import type { WordBoard, WordBoardRow } from "./wordDaily.api";
 import { latestDay, puzzleNumber, releaseDay } from "./wordDaily.logic";
 
-const toEntry = (row: WordBoardRow, myId: string | undefined): LeaderboardEntry => ({
+const toEntry = (row: WordBoardRow, myId: string | undefined, formatPoints?: (row: WordBoardRow) => string): LeaderboardEntry => ({
   id: row.userId, rank: row.rank, username: row.username, avatar: row.avatarUrl || row.userId, avatarCustomization: row.avatarCustomization,
   country: row.country, tier: row.tier ?? "", rankPoints: row.score, isCurrentUser: row.userId === myId, trend: "same", trendValue: 0,
+  ...(formatPoints ? { pointsText: formatPoints(row) } : {}),
 });
 
 /** The day's top scores in the shared leaderboard rows. `refreshKey` refetches after the viewer finishes a ranked run. */
-export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, limit = 10, placement = "page", className, pointsLabel, pointsHint }: {
+export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, limit = 10, placement = "page", className, pointsLabel, pointsHint, formatPoints }: {
   game: WordDailyGame; locale: string; load: (day: string, locale: string) => Promise<WordBoard>; day?: string; refreshKey?: number; limit?: number; placement?: "page" | "end"; className?: string;
   /** The score column's heading (default: points). */
   pointsLabel?: string;
   /** One line under the rows saying how the score column is counted. */
   pointsHint?: string;
+  /** The score column's text for a row, when the score is a ranking key rather than a count. */
+  formatPoints?: (row: WordBoardRow) => string;
 }) {
   const c = wordDailyCopy(locale).board;
   // Follows the Argentine day while the page stays open, unless a specific day is asked for.
@@ -46,8 +49,8 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
   // Rows fetched for another day are never shown under this day's heading.
   const board = loaded && loaded.day === boardDay ? loaded.board : undefined;
   if (board === null || !boardDay) return null;
-  const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];
-  const meOutside = board?.me && !entries.some((entry) => entry.isCurrentUser) ? toEntry(board.me, myId) : null;
+  const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId, formatPoints)) ?? [];
+  const meOutside = board?.me && !entries.some((entry) => entry.isCurrentUser) ? toEntry(board.me, myId, formatPoints) : null;
   return (
     <section aria-label={c.title} className={className}>
       <div className="mb-3 flex items-baseline justify-between gap-2">

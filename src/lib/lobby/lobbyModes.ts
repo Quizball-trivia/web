@@ -29,7 +29,7 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   room_game: { capacity: 8, playable: 8, guestAllowed: true, hostStart: { min: 2, max: 8 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso", "conexiones"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso", "conexiones", "darts501"];
 
 /** Seats of a room game without its own cap (the room mode holds eight; only Football Codenames uses them). */
 const ROOM_GAME_DEFAULT_SEATS = 6;
@@ -53,6 +53,7 @@ export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey
   codenames: { tab: "friend.roomTabCodenames", title: "friend.roomCodenames", description: "friend.roomCodenamesDescription" },
   dato_falso: { tab: "friend.roomTabDatoFalso", title: "friend.roomDatoFalso", description: "friend.roomDatoFalsoDescription" },
   conexiones: { tab: "friend.roomTabConexiones", title: "friend.roomConexiones", description: "friend.roomConexionesDescription" },
+  darts501: { tab: "friend.roomTabDarts501", title: "friend.roomDarts501", description: "friend.roomDarts501Description" },
 };
 
 /** Labels of a room game, or null for one this build does not know (a lobby set up by a newer client). */

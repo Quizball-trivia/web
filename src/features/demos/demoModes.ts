@@ -31,6 +31,21 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     },
     group: "featured",
   },
+  // Retired 2026-10-28: Football Darts 501 is the real game; /demos/lab-stat-501 still opens.
+  {
+    slug: "lab-stat-501",
+    title: { en: "Stat 501", ka: "სტატ 501", es: "Estadística 501", tr: "İstatistik 501", ru: "Stat 501", pt: "Estatísticas 501", de: "Statistik 501", },
+    description: {
+      en: "Darts with footballers — count down from 501 using real career stats.",
+      ka: "დარტსი ფეხბურთელებით — ჩამოდი 501-დან რეალური სტატისტიკით.",
+      es: "Dardos con futbolistas: cuenta atrás desde 501 usando estadísticas reales de su carrera.",
+      tr: "Futbolcularla dart — gerçek kariyer istatistikleriyle 501'den geriye say.",
+      ru: "Дартс с футболистами — обнули 501 очко, используя реальную статистику их карьеры.",
+      pt: "Dardos com jogadores de futebol — conte de 501 até zero usando estatísticas reais da carreira.",
+      de: "Darts mit Fußballspielern — zähle mit echten Karrierestatistiken von 501 herunter.",
+    },
+    group: "featured",
+  },
   // The live Guess the Goal runs on its own public page (guest session) and /guess-the-goal, not through the demo hub.
   {
     slug: "guess-the-goal",
@@ -170,6 +185,20 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
       ru: "16 футболистов, 4 скрытые связи. Найди четвёрки: одно поле в день или 1 на 1 с другом.",
       pt: "16 jogadores, 4 conexões escondidas. Encontre os grupos de quatro: um tabuleiro por dia ou um 1v1 com um amigo.",
       de: "16 Spieler, 4 versteckte Verbindungen. Finde die Vierergruppen: ein Brett pro Tag oder 1-gegen-1 mit Freunden.",
+    },
+    group: "daily",
+  },
+  {
+    slug: "football-darts-501",
+    title: { en: "Football Darts 501", ka: "საფეხბურთო დარტსი 501", es: "Dardos futboleros 501", tr: "Futbol Dart Oyunu 501", ru: "Футбольный дартс 501", pt: "Dardos de futebol 501", de: "Fußball-Darts 501" },
+    description: {
+      en: "Darts with footballers: start on 501, name a player and his number comes off. Check out between 0 and −10. One leg a day, or rooms of 2–6 with friends.",
+      ka: "დარტსი ფეხბურთელებით: იწყებ 501-დან, ასახელებ ფეხბურთელს და მისი რიცხვი გაკლდება. დაასრულე 0-დან −10-მდე. ყოველდღე ერთი ლეგი ან 2–6 მეგობრის ოთახი.",
+      es: "Dardos con futbolistas: empezás en 501, nombrás a un jugador y su número se resta. Cerrá entre 0 y −10. Una partida por día o salas de 2 a 6 con amigos.",
+      tr: "Futbolcularla dart: 501'den başla, bir futbolcu söyle, sayısı puanından düşsün. 0 ile −10 arasında bitir. Günde bir leg ya da 2–6 arkadaşla odalar.",
+      ru: "Дартс с футболистами: начинаешь с 501, называешь игрока, и его число вычитается. Закрой от 0 до −10. Один лег в день или комнаты на 2–6 друзей.",
+      pt: "Dardos com jogadores de futebol: comece no 501, cite um jogador e o número dele sai da pontuação. Feche entre 0 e −10. Uma partida por dia ou salas de 2 a 6 amigos.",
+      de: "Darts mit Fußballern: Starte bei 501, nenne einen Spieler und seine Zahl wird abgezogen. Checke zwischen 0 und −10 aus. Ein Leg pro Tag oder Räume für 2–6 Freunde.",
     },
     group: "daily",
   },
@@ -664,20 +693,6 @@ export const LAB_DEMO_MODES: DemoModeCard[] = [
       ru: "Распределяй игроков по категориям на поле — побеждает тот, кто первым соберет линию.",
       pt: "Coloque cada jogador numa casa por categoria — vence quem completar uma linha primeiro.",
       de: "Ordne jeden Spieler einem Kategorienfeld zu — wer zuerst eine Reihe füllt, gewinnt.",
-    },
-    group: "featured",
-  },
-  {
-    slug: "lab-stat-501",
-    title: { en: "Stat 501", ka: "სტატ 501", es: "Estadística 501", tr: "İstatistik 501", ru: "Stat 501", pt: "Estatísticas 501", de: "Statistik 501", },
-    description: {
-      en: "Darts with footballers — count down from 501 using real career stats.",
-      ka: "დარტსი ფეხბურთელებით — ჩამოდი 501-დან რეალური სტატისტიკით.",
-      es: "Dardos con futbolistas: cuenta atrás desde 501 usando estadísticas reales de su carrera.",
-      tr: "Futbolcularla dart — gerçek kariyer istatistikleriyle 501'den geriye say.",
-      ru: "Дартс с футболистами — обнули 501 очко, используя реальную статистику их карьеры.",
-      pt: "Dardos com jogadores de futebol — conte de 501 até zero usando estatísticas reais da carreira.",
-      de: "Darts mit Fußballspielern — zähle mit echten Karrierestatistiken von 501 herunter.",
     },
     group: "featured",
   },
