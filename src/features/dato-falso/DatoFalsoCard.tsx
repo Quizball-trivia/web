@@ -109,7 +109,8 @@ function OptionTile({ option, number, copy, gone, selected, mine, state, pickers
             </motion.span>
           )}
         </span>
-        <span className={cn("min-w-0 flex-1 text-[15px] font-bold leading-tight text-white @xl:mt-2 @xl:flex-none @xl:text-sm", gone && "line-through decoration-white/50")}>
+        {/* Long names (Боруссия Мёнхенгладбах, ნიდერლანდები) wrap inside the tile instead of running out of it. */}
+        <span className={cn("min-w-0 flex-1 text-[15px] font-bold leading-tight text-white [overflow-wrap:anywhere] hyphens-auto @xl:mt-2 @xl:w-full @xl:flex-none @xl:text-[13px] @4xl:text-sm", gone && "line-through decoration-white/50")}>
           {option.label}
         </span>
         {(mine && revealed) || pickers.length > 0 ? (
