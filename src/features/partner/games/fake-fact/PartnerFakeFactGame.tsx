@@ -197,7 +197,7 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
         startLabel={copy.start}
         backLabel={copy.back}
         busy={busy}
-        error={error && <p className="font-poppins text-sm text-brand-red-soft">{error}</p>}
+        error={error}
         onStart={start}
         onBack={onExit}
         startTestId="ff-start"

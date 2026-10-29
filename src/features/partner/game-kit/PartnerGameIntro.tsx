@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { motion } from "motion/react";
 import { ArrowLeft, Loader2, Play } from "lucide-react";
 import { DemoModeArt } from "@/features/demos/DemoModeArt";
@@ -37,7 +36,8 @@ export function PartnerGameIntro({
   startLabel: string;
   backLabel: string;
   busy?: boolean;
-  error?: ReactNode;
+  /** Why the last start failed, shown on a dark panel (red on the blue card is unreadable). */
+  error?: string | null;
   onStart: () => void;
   onBack: () => void;
   testId?: string;
@@ -60,7 +60,8 @@ export function PartnerGameIntro({
         animate={{ opacity: 1, y: 0 }}
         className="overflow-hidden rounded-2xl bg-brand-blue lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
       >
-        <div className="relative aspect-video w-full overflow-hidden lg:aspect-auto lg:h-full lg:min-h-[320px]">
+        {/* Capped on short phones so Start stays near the top of the screen. */}
+        <div className="relative aspect-video max-h-[32dvh] w-full overflow-hidden lg:aspect-auto lg:h-full lg:max-h-none lg:min-h-[320px]">
           <DemoModeArt slug={PARTNER_GAME_DEMO_SLUG[gameId]} className="absolute inset-0 size-full" />
         </div>
         <div className="flex flex-col gap-2 p-4 lg:justify-center lg:gap-3 lg:p-8">
@@ -76,7 +77,11 @@ export function PartnerGameIntro({
             </ul>
           )}
           {note && <p className="font-poppins text-xs text-white/50">{note}</p>}
-          {error}
+          {error && (
+            <p role="alert" className="rounded-lg bg-black/40 px-3 py-2 font-poppins text-sm font-semibold text-white">
+              {error}
+            </p>
+          )}
           <button
             type="button"
             onClick={onStart}

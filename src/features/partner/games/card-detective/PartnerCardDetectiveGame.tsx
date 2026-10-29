@@ -255,7 +255,7 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
         startLabel={copy.start}
         backLabel={copy.back}
         busy={busy}
-        error={error && <p className="font-poppins text-sm text-brand-red-soft">{error}</p>}
+        error={error}
         onStart={start}
         onBack={onExit}
         startTestId="cd-start"

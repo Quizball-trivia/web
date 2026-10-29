@@ -71,7 +71,7 @@ export function TriviaMinesPartner({ api, onFinished, onExit }: PartnerGameScree
             startLabel={labels.play}
             backLabel={partnerCopy(lang).backToGames}
             busy={busy}
-            error={error && <p className="font-poppins text-sm text-brand-red-soft">{error}</p>}
+            error={error}
             onStart={start}
             onBack={onExit}
             startTestId="trivia-mines-play"
