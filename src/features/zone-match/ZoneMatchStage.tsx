@@ -38,6 +38,7 @@ import {
   type CardEvent,
   type MatchState,
   type Mcq,
+  type NumericDuel,
   unusedCategories,
 } from './zoneMatch.machine';
 import { CardClash, useDesktop } from './ZoneMatchCards';
@@ -70,7 +71,7 @@ const HUD_FADE = 'linear-gradient(to bottom, rgba(5,11,18,0.88) 0%, rgba(5,11,18
 /** Space between the HUD and the result title. */
 const RESULT_TITLE_GAP = 6;
 /** The floating step card over the 3D view: dark, a little see-through, blurred behind the card only. */
-const STEP_CARD_BG = 'rgba(10,19,28,0.86)';
+export const STEP_CARD_BG = 'rgba(10,19,28,0.86)';
 /** Desktop: the space kept between the card's edge and each player. */
 const SPLIT_GAP = 24;
 /** Phone: the band above the card kept for the players (the card's contents shrink rather than cover them). */
@@ -218,7 +219,7 @@ export function ZoneMatchStage({
   const panelKey = `${state.duelNo}-${
     state.battleStep === 'reveal' ? 'cards' : state.battleStep === 'mcqReveal' ? 'mcq' : state.battleStep
   }`;
-  const numericDark = state.numeric !== null && sabotageOn(state, 'player').includes('floodlight-failure') && now < state.numeric.startedAt + FLOODLIGHT_MS;
+  const numericDark = numericLightsOut(state, now);
 
   // Full-screen 3D underneath; each step (category, cards, question, tiebreak) opens as an overlay over it with the hand
   // at its foot, and goes once the answers have been shown, so the result plays out on the clear scene with its title.
@@ -370,34 +371,7 @@ export function ZoneMatchStage({
                       )}
                       {handPhase === 'live' && <LiveCardChips state={state} onPlay={onLiveCard} />}
                       {state.battleStep === 'numeric' && state.numeric && (
-                        <div className="relative flex flex-col gap-2">
-                          <div className="flex flex-col gap-2">
-                            <p className="text-center text-xs uppercase tracking-[0.14em] text-brand-yellow" style={poppins}>
-                              Both right! Closest guess wins the duel
-                            </p>
-                            <div
-                              className="flex items-center justify-center rounded-[20px] bg-surface-page px-4 py-2.5 text-center text-white"
-                              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, lineHeight: 1.3, fontSize: 'clamp(15px, 1.9vw, 22px)' }}
-                            >
-                              {getI18nText(state.numeric.question.prompt, locale)}
-                            </div>
-                          </div>
-                          <NumericPad
-                            key={state.numeric.key}
-                            precision={state.numeric.question.precision}
-                            unit={getI18nText(state.numeric.question.unit, locale)}
-                            locked={state.numeric.guesses.player.value !== null}
-                            disabled={numericDark}
-                            compact
-                            onSubmit={onGuess}
-                          />
-                          {/* Short screens: the pad needs the room; the reveal says who locked in. */}
-                          <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
-                            <LockChip label="You" locked={state.numeric.guesses.player.value !== null} pendingLabel="Typing…" />
-                            <LockChip label={opponent.name} locked={state.numeric.guesses.opponent.value !== null} pendingLabel="Thinking…" />
-                          </div>
-                          {numericDark && <Blackout />}
-                        </div>
+                        <NumericPanel numeric={state.numeric} dark={numericDark} opponentName={opponent.name} onGuess={onGuess} />
                       )}
                     </motion.div>
                   </AnimatePresence>
@@ -665,7 +639,7 @@ function MiniGlyph({ id }: { id: CardId }) {
 }
 
 /** The cards working on this question, popping in as they are played (live cards and 50/50s included). */
-function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: number; opponentName: string }) {
+export function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: number; opponentName: string }) {
   const inQuestion = ['mcq', 'mcqReveal', 'numeric', 'numericReveal'].includes(state.battleStep);
   if (!inQuestion) return null;
   const active = activeCards(state);
@@ -712,6 +686,46 @@ function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: num
   );
 }
 
+/** Floodlight Failure on the player's number question: the pad is dark for its first seconds. */
+export function numericLightsOut(state: MatchState, now: number): boolean {
+  return state.numeric !== null && sabotageOn(state, 'player').includes('floodlight-failure') && now < state.numeric.startedAt + FLOODLIGHT_MS;
+}
+
+/** The number tiebreak: the prompt and the pad (dark under Floodlight Failure), and who has locked in. */
+export function NumericPanel({ numeric, dark, opponentName, onGuess }: { numeric: NumericDuel; dark: boolean; opponentName: string; onGuess: (value: number) => void }) {
+  const { locale } = useLocale();
+  return (
+    <div className="relative flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
+        <p className="text-center text-xs uppercase tracking-[0.14em] text-brand-yellow" style={poppins}>
+          Both right! Closest guess wins the duel
+        </p>
+        <div
+          className="flex items-center justify-center rounded-[20px] bg-surface-page px-4 py-2.5 text-center text-white"
+          style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, lineHeight: 1.3, fontSize: 'clamp(15px, 1.9vw, 22px)' }}
+        >
+          {getI18nText(numeric.question.prompt, locale)}
+        </div>
+      </div>
+      <NumericPad
+        key={numeric.key}
+        precision={numeric.question.precision}
+        unit={getI18nText(numeric.question.unit, locale)}
+        locked={numeric.guesses.player.value !== null}
+        disabled={dark}
+        compact
+        onSubmit={onGuess}
+      />
+      {/* Short screens: the pad needs the room; the reveal says who locked in. */}
+      <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
+        <LockChip label="You" locked={numeric.guesses.player.value !== null} pendingLabel="Typing…" />
+        <LockChip label={opponentName} locked={numeric.guesses.opponent.value !== null} pendingLabel="Thinking…" />
+      </div>
+      {dark && <Blackout />}
+    </div>
+  );
+}
+
 function Blackout() {
   return (
     <motion.div
@@ -729,7 +743,7 @@ function Blackout() {
  * PossessionQuestionPanel fed through an adapter: the cards' option effects (50/50 removals, Muddy Pitch's reshuffle,
  * Second Ball's spent miss) become a view of the question, and taps map back to the real option index.
  */
-function McqPanel({
+export function McqPanel({
   state,
   mcq,
   now,

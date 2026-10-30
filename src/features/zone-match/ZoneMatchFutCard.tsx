@@ -12,13 +12,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { animate, motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
-import { celebratePose, crouchPose, divePose, idlePose, keeperSetPose, stepOverPose, strikePose, type FullBodyPose } from './zoneMatch.fullBody';
+import { celebratePose, crouchPose, divePose, idlePose, keeperSetPose, stepOverPose, strikePose } from './zoneMatch.fullBody';
 import type { AvatarCustomization } from '@/types/game';
 import { tierFromRp } from '@/utils/rankedTier';
 import { getTierAccent, getTierFrameSrc } from '@/utils/tierVisuals';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, DECK_SIZE, type CardId, type CardType } from './zoneMatch.cards';
 import { CARD_TYPE_THEME, PlaystyleBadge } from './ZoneMatchCardFace';
+import { BallArt, CARD_REACTION_S, CardReactionFx, REACTION_BALL_R, cardMotion, type ReactionFrame } from './ZoneMatchFutReactions';
+import { FULL_H, FULL_W } from './zoneMatch.fullBody';
 
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -50,30 +52,43 @@ export interface SlotBurst {
   type: CardType;
 }
 
-/** What the card's avatar does when a playstyle lands: boost kicks, defense dives, tactical dribbles, sabotage
- * crouches, and a jump-spin with confetti when the loadout completes. */
+/**
+ * What the card does when a playstyle lands: that card's own reaction (ZoneMatchFutReactions), then — when it was
+ * the last one — a jump-spin with confetti for the full loadout. Without a card, the type's general move.
+ */
 export interface FutReaction {
   kind: CardType | 'complete';
   key: number;
-  /** Which way a defense dive goes. */
+  /** Which way a dive goes. */
   seed: number;
+  card?: CardId;
+  /** The loadout is full: the celebration follows the card's reaction. */
+  complete?: boolean;
 }
 
-export function reactionFor(type: CardType | 'complete', key: number, seed = 0): FutReaction {
-  return { kind: type, key, seed };
+export function reactionFor(type: CardType | 'complete', key: number, seed = 0, card?: CardId, complete = false): FutReaction {
+  return { kind: type, key, seed, card, complete };
 }
+
+/** When the full-loadout celebration starts, and how long a reaction lasts in all (s). */
+const celebrationAt = (r: FutReaction) => (r.card ? CARD_REACTION_S[r.card] : 0);
+const reactionLength = (r: FutReaction) => (r.card ? CARD_REACTION_S[r.card] + (r.complete ? REACTION_S.complete : 0) : REACTION_S[r.kind]);
 
 const CONFETTI_COLORS = ['#FFE500', '#1CB0F6', '#FF4B4B', '#58CC02', '#FFFFFF', '#FF9600'];
 /** How long each reaction plays (s). */
-const REACTION_S: Record<FutReaction['kind'], number> = { boost: 1.5, defense: 1.6, tactical: 1.4, sabotage: 1.3, complete: 2.2 };
+const REACTION_S: Record<FutReaction['kind'], number> = { boost: 1.5, defense: 1.6, tactical: 1.4, sabotage: 1.3, complete: 1.7 };
 
 /**
  * One frame of a card reaction: the legs' pose and the whole figure's lift / tilt / spin (lift in % of the figure's
  * height, kept small enough that the head never leaves the card).
  */
-function reactionFrame(reaction: FutReaction | null, t: number, now: number): { body: FullBodyPose; lift: number; tilt: number; spin: number; shift: number } {
-  const still = { lift: 0, tilt: 0, spin: 0, shift: 0 };
-  if (!reaction || t >= REACTION_S[reaction.kind]) return { body: idlePose(now), ...still };
+function reactionFrame(reaction: FutReaction | null, t: number, now: number): ReactionFrame {
+  const still = { lift: 0, tilt: 0, spin: 0, shift: 0, blur: 0, fade: 1 };
+  if (!reaction || t >= reactionLength(reaction)) return { body: idlePose(now), ...still };
+  if (reaction.card) {
+    if (t < celebrationAt(reaction)) return cardMotion(reaction.card, t, now, reaction.seed);
+    return { ...reactionFrame({ ...reaction, card: undefined, kind: 'complete' }, t - celebrationAt(reaction), now) };
+  }
   const fade = 1 - Math.max(0, (t - REACTION_S[reaction.kind] + 0.25) / 0.25);
   switch (reaction.kind) {
     case 'boost':
@@ -85,7 +100,7 @@ function reactionFrame(reaction: FutReaction | null, t: number, now: number): { 
       const k = Math.min(1, t / 0.7);
       const back = Math.max(0, (t - 1.1) / 0.45);
       const out = Math.min(1, k) * (1 - Math.min(1, back));
-      return { body: t < 0.25 ? keeperSetPose(now) : divePose(k), lift: 7 * Math.sin(Math.PI * Math.min(1, t / 0.8)) * (1 - Math.min(1, back)), tilt: 62 * dir * out, spin: 0, shift: 12 * dir * out };
+      return { body: t < 0.25 ? keeperSetPose(now) : divePose(k), lift: 7 * Math.sin(Math.PI * Math.min(1, t / 0.8)) * (1 - Math.min(1, back)), tilt: 62 * dir * out, spin: 0, shift: 12 * dir * out, blur: 0, fade: 1 };
     }
     case 'tactical':
       // Two step-overs.
@@ -97,7 +112,7 @@ function reactionFrame(reaction: FutReaction | null, t: number, now: number): { 
     case 'complete': {
       // Two jumps with the knees up, a spin on the first.
       const c = (t % 0.85) / 0.85;
-      return { body: celebratePose(t), lift: 9 * Math.sin(Math.PI * Math.min(1, Math.max(0, (c - 0.2) / 0.65))), tilt: 0, spin: t < 0.85 ? 360 * Math.min(1, t / 0.85) : 0, shift: 0 };
+      return { body: celebratePose(t), lift: 9 * Math.sin(Math.PI * Math.min(1, Math.max(0, (c - 0.25) / 0.55))), tilt: 0, spin: t < 0.85 ? 360 * Math.min(1, t / 0.85) : 0, shift: 0, blur: 0, fade: 1 };
     }
   }
 }
@@ -109,6 +124,9 @@ function reactionFrame(reaction: FutReaction | null, t: number, now: number): { 
 function CardCutout({ customization, reaction, mirror, seed }: { customization: AvatarCustomization | null; reaction: FutReaction | null; mirror: boolean; seed: number }) {
   const [els, setEls] = useState<FullBodyEls | null>(null);
   const figure = useRef<HTMLDivElement>(null);
+  const ball = useRef<HTMLDivElement>(null);
+  const ballSpin = useRef<HTMLDivElement>(null);
+  const ring = useRef<HTMLDivElement>(null);
   const started = useRef<{ key: number; at: number }>({ key: -1, at: 0 });
   useEffect(() => {
     if (!els) return;
@@ -127,7 +145,24 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
       const t = reaction ? now - started.current.at : Infinity;
       const f = reactionFrame(reaction, t, now);
       applyFullBodyPose(els, f.body);
-      if (figure.current) figure.current.style.transform = `translate(${f.shift.toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg)`;
+      if (figure.current) {
+        figure.current.style.transform = `translate(${f.shift.toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg)`;
+        figure.current.style.filter = f.blur > 0.05 ? `blur(${f.blur.toFixed(1)}px)` : '';
+        figure.current.style.opacity = f.fade < 0.999 ? f.fade.toFixed(2) : '';
+      }
+      // A ball the move plays with, in the figure's own frame (so it sits exactly on the boot).
+      if (ball.current && ballSpin.current && ring.current) {
+        const b = f.ball;
+        ball.current.style.display = b ? '' : 'none';
+        if (b) {
+          ball.current.style.left = `${(((b.x - REACTION_BALL_R) / FULL_W) * 100).toFixed(2)}%`;
+          ball.current.style.top = `${(((b.y - REACTION_BALL_R) / FULL_H) * 100).toFixed(2)}%`;
+          ball.current.style.opacity = b.opacity.toFixed(2);
+          ballSpin.current.style.transform = `rotate(${b.rot.toFixed(0)}deg)`;
+          ring.current.style.opacity = b.ring > 0 ? (1 - b.ring).toFixed(2) : '0';
+          ring.current.style.transform = `scale(${(1 + b.ring * 1.6).toFixed(2)})`;
+        }
+      }
     };
     raf = requestAnimationFrame(loop);
     return () => {
@@ -138,11 +173,18 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
   return (
     <div className="absolute inset-0">
       <div ref={figure} className="absolute inset-x-0 bottom-0 flex h-[88%] justify-center" style={{ transformOrigin: '50% 98%' }}>
-        <div style={{ height: '100%', transform: mirror ? 'scaleX(-1)' : undefined }}>
+        <div className="relative" style={{ height: '100%', transform: mirror ? 'scaleX(-1)' : undefined }}>
           <AvatarFullBody customization={customization} seed={seed} onEls={setEls} style={{ height: '100%' }} />
+          <div ref={ball} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
+            {/* The touch killing the ball's pace: a soft ring. */}
+            <div ref={ring} className="absolute inset-[-30%] rounded-full border-2 border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={{ opacity: 0 }} />
+            <div ref={ballSpin} className="size-full">
+              <BallArt />
+            </div>
+          </div>
         </div>
       </div>
-      {reaction?.kind === 'complete' && (
+      {(reaction?.kind === 'complete' || reaction?.complete) && (
         <div key={`confetti-${reaction.key}`} className="pointer-events-none absolute inset-0">
           {Array.from({ length: 16 }, (_, i) => {
             const angle = -Math.PI / 2 + (i / 15 - 0.5) * 2.6;
@@ -153,7 +195,7 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
                 style={{ left: '50%', top: '30%', width: 6, height: 10, borderRadius: 2, background: CONFETTI_COLORS[i % CONFETTI_COLORS.length] }}
                 initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
                 animate={{ x: Math.cos(angle) * 80, y: [0, Math.sin(angle) * 70, Math.sin(angle) * 40 + 90], opacity: [1, 1, 0], rotate: 540 }}
-                transition={{ duration: 1.6, ease: 'easeOut' }}
+                transition={{ duration: 1.6, ease: 'easeOut', delay: reaction.card ? CARD_REACTION_S[reaction.card] : 0 }}
               />
             );
           })}
@@ -302,10 +344,12 @@ export function FutCard({
         <div className="absolute" style={{ left: s(0.27), top: s(0.13), width: s(0.66), height: Math.round(height * 0.6), transform: 'translateZ(14px)' }}>
           <CardCutout customization={seat.avatarCustomization} reaction={reaction} mirror={mirror} seed={mirror ? 3 : 0} />
         </div>
+        {/* The landing card's own effect on the card. */}
+        {reaction?.card && <CardReactionFx key={reaction.key} card={reaction.card} customization={seat.avatarCustomization} frameMask={frameMask} mirror={mirror} />}
 
-        {/* RP and tier, top left. */}
-        <div className="absolute flex flex-col items-center leading-none" style={{ left: s(0.08), top: s(0.12), color: CARD_TEXT, textShadow: CARD_TEXT_SHADOW, ...poppins }}>
-          <span className="font-black tracking-tight" style={{ fontSize: s(rp >= 1000 ? 0.12 : 0.15) }}>{rp}</span>
+        {/* RP and tier, top left: below the frame's sloping shoulder, so the number sits fully inside the card. */}
+        <div className="absolute flex flex-col items-center leading-none" style={{ left: s(0.1), top: s(0.17), color: CARD_TEXT, textShadow: CARD_TEXT_SHADOW, ...poppins }}>
+          <span className="font-black tracking-tight" style={{ fontSize: s(rp >= 10000 ? 0.085 : rp >= 1000 ? 0.1 : 0.125) }}>{rp}</span>
           <span className="font-extrabold opacity-90" style={{ fontSize: s(0.055) }}>RP</span>
           <span className="mt-1 h-0.5 w-full rounded-full" style={{ background: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.4)' }} />
           {/* On a dark chip: some frames are near white at the top. */}

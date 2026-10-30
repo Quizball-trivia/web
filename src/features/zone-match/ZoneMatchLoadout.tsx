@@ -151,8 +151,8 @@ export function DeckPicker({
     ]);
     for (const [key, born] of burstBorn.current) if (bornAt - born >= BURST_KEEP_MS) burstBorn.current.delete(key);
     setShineKey((k) => k + 1);
-    const last = CARD_BY_ID[ids[ids.length - 1]].type;
-    setReaction(reactionFor(current.length === DECK_SIZE ? 'complete' : last, now, now));
+    const lastId = ids[ids.length - 1];
+    setReaction(reactionFor(CARD_BY_ID[lastId].type, now, now, lastId, current.length === DECK_SIZE));
   }, []);
 
   // Picks that did not fly in (auto-pick, reduced motion): land them in place.

@@ -23,12 +23,16 @@ import { otherZoneSide, type BattleOutcome, type Possession, type ZoneSide } fro
 import { NO_CARDS, hasResult, type ScriptCards } from './zoneMatch3d.fx';
 import {
   STAND,
+  backpedalPose,
   celebratePose,
   divePose,
+  groundPoints,
   idlePose,
   jockeyPose,
   keeperSetPose,
+  mixPose,
   runPose,
+  runStep,
   slidePose,
   sprawlPose,
   strikePose,
@@ -69,6 +73,8 @@ export interface DirectorInput {
   seed: number;
   /** Cards that shape the outcome animation. */
   cards: ScriptCards;
+  /** Snap everyone to the duel spots when this input starts (the dev animation lab's replay). */
+  cut?: boolean;
 }
 
 type ClipName = string;
@@ -160,7 +166,7 @@ const SPLIT_CLEAR = 0.25;
 const SPLIT_EDGE = 0.95;
 /** A card this wide (share of the half-width) or wider still leaves the figures this much room to fit into. */
 const SPLIT_MIN_ROOM = 0.12;
-const CELEBRATIONS = ['celebrate_siu', 'celebrate_sky', 'celebrate_samba', 'celebrate', 'celebrate_fold'];
+export const CELEBRATIONS = ['celebrate_siu', 'celebrate_sky', 'celebrate_samba', 'celebrate', 'celebrate_fold'];
 /** Strike clips are sampled faster than authored; boot meets ball at clip time 0.8 (as in Road to Goal). */
 const STRIKE_RATE = 0.8 / 0.45;
 /** Sky shot: each player this far either side of the duel's ball, a step towards the camera. */
@@ -947,12 +953,14 @@ export function clipPose(out: CutoutPose, clip: string, time: number, yaw: numbe
   out.spin = 0;
   out.blur = 0;
   if (clip === 'dribble' || clip === 'run') {
-    // Alternating strides; a small hop on each footfall.
+    // Alternating strides; the hips bob on the boots by themselves (runPose keeps a boot on the ground).
     const k = Math.min(1, speed / 9);
     Object.assign(out.body, runPose(time * 1.2, 0.4 + k));
-    out.y = 0.08 * Math.abs(Math.sin(time * Math.PI * 2.4)) * (0.4 + k);
     lean(out, fx, fz, 0.05 + 0.06 * k);
     out.blur = THREE.MathUtils.clamp((speed - 9) / 8, 0, 0.6);
+  } else if (clip === 'backpedal') {
+    // Facing the play while moving away from it.
+    Object.assign(out.body, backpedalPose(time * 1.3));
   } else if (clip === 'jockey') {
     Object.assign(out.body, jockeyPose(time, phase));
   } else if (clip === 'keeper_idle') {
@@ -961,10 +969,14 @@ export function clipPose(out: CutoutPose, clip: string, time: number, yaw: numbe
     // Plant, wind up, through the ball, follow through.
     Object.assign(out.body, strikePose(time));
   } else if (clip.startsWith('celebrate')) {
-    // Jumps with the knees up, a spin on the first.
-    Object.assign(out.body, celebratePose(time));
-    const c = (time % 0.85) / 0.85;
-    out.y = time < 2.6 ? 0.9 * Math.sin(Math.PI * THREE.MathUtils.clamp((c - 0.2) / 0.65, 0, 1)) : 0;
+    // Three jumps with the knees up (a spin on the first), the lift in step with the legs' time in the air; then
+    // standing, weight shifting.
+    if (time < CELEBRATE_S) {
+      Object.assign(out.body, celebratePose(time));
+      out.y = 0.9 * Math.sin(Math.PI * THREE.MathUtils.clamp((((time % 0.85) / 0.85) - 0.25) / 0.55, 0, 1));
+    } else {
+      Object.assign(out.body, idlePose(now, phase));
+    }
     out.spin = time < 0.9 ? Math.PI * 2 * THREE.MathUtils.smoothstep(time, 0, 0.9) : 0;
     out.party = now - time;
   } else {
@@ -990,6 +1002,49 @@ interface Actor {
   catchPoint: THREE.Vector3;
   pose: CutoutPose;
   clip: string;
+  /** The legs last shown, and where an eased change (clip switch, a scripted move starting or ending) began. */
+  shown: FullBodyPose | null;
+  easeFrom: FullBodyPose | null;
+  easeAt: number;
+}
+
+/** One celebration: three jumps (celebratePose loops every 0.85 s). */
+const CELEBRATE_S = 0.85 * 3;
+const POSE_EASE_S = 0.18;
+
+/** Clips that share a motion (switching between them needs no ease). */
+function clipFamily(clip: string): string {
+  if (clip === 'run' || clip === 'dribble') return 'run';
+  if (clip.startsWith('strike')) return 'strike';
+  if (clip.startsWith('celebrate')) return 'celebrate';
+  if (clip === 'backpedal' || clip === 'jockey' || clip === 'keeper_idle') return clip;
+  return 'idle';
+}
+
+/**
+ * Clip seconds per second for a run or a backpedal at ground speed `v` (world units / s): the stride turns over so a
+ * planted boot keeps still on the pitch (capped, so a sprint doesn't blur its legs).
+ */
+function strideRate(v: number, backpedal: boolean): number {
+  const step = runStep(backpedal ? 0.05 : Math.min(1, 0.4 + Math.min(1, v / 9))) * (CUTOUT_H / FULL_H);
+  const cycles = Math.min(6, v / (2 * step));
+  return cycles / (backpedal ? 1.3 : 1.2);
+}
+
+/**
+ * A tilted cut-out never goes into the pitch: lifts it until its lowest knee or stud (after the lean) is on the
+ * grass. `contact`: also lower it onto the grass (a slide on the ground), not only lift it.
+ */
+export function groundCutout(p: CutoutPose, contact = false, tilt = Math.atan2(p.up.x, p.up.y)) {
+  // The art turns about its base (the middle of the soles' line) by its lean on screen (`tilt`, clockwise positive).
+  const unit = CUTOUT_H / FULL_H;
+  let lowest = Infinity;
+  for (const [x, y] of groundPoints(p.body)) {
+    const across = (x - FULL_W / 2) * p.face * p.sx * unit;
+    const up = (FULL_GROUND * FULL_H - y) * p.sy * unit;
+    lowest = Math.min(lowest, up * Math.cos(tilt) - across * Math.sin(tilt));
+  }
+  p.y = contact ? -lowest : Math.max(p.y, -lowest);
 }
 
 /** The keeper's dive meets the ball at this point of its clock (as GoalkeeperMotion's KEEPER_CONTACT_S). */
@@ -1033,6 +1088,7 @@ export class DuelDirector {
   /** Effects ask for full frame rate until this time (seconds, performance clock). */
   private busyUntil = 0;
   private rush = 0;
+  private lastNow = 0;
 
   constructor() {
     const make = (side: ZoneSide, phase: number): Actor => ({
@@ -1049,6 +1105,9 @@ export class DuelDirector {
       catchPoint: new THREE.Vector3(),
       pose: blankPose(),
       clip: 'outfield_idle',
+      shown: null,
+      easeFrom: null,
+      easeAt: 0,
     });
     this.actors = { player: make('player', 0), opponent: make('opponent', 1.7) };
   }
@@ -1097,6 +1156,7 @@ export class DuelDirector {
    */
   update(input: DirectorInput, now: number, rawDt: number, camera: THREE.PerspectiveCamera, aspect: number, split = 0, both = false) {
     const dt = Math.min(Math.max(rawDt, 1e-4), 0.1);
+    this.lastNow = now;
     const duel = duelSpots(input.possession);
 
     // A new outcome starts its script; leaving a goal cuts straight to the kick-off positions.
@@ -1105,7 +1165,7 @@ export class DuelDirector {
       this.scriptKey = input.key;
       this.script = input.mode === 'outcome' && input.from && input.outcome ? buildScript(input.from, input.outcome, input.seed, input.cards) : null;
       this.scriptStart = now;
-      if (wasGoal && !this.script) this.needsCut = true;
+      if ((wasGoal && !this.script) || input.cut) this.needsCut = true;
       for (const a of Object.values(this.actors)) a.capture = { x: a.x, z: a.z, yaw: a.yaw };
     }
     if (input.mode === 'bullet' && this.lastMode !== 'bullet') this.bulletStart = now;
@@ -1149,6 +1209,8 @@ export class DuelDirector {
         this.settle(a, spots, input.possession.attacker, dt, now, splitFit !== null);
       }
       a.speed = Math.hypot(a.x - prevX, a.z - prevZ) / dt;
+      this.easeLegs(a, now);
+      groundCutout(a.pose, a.proc === 'tackle' && tackle !== null && side !== tackle.runner, this.screenTilt(a.pose, camera, aspect));
     }
 
     // Ball.
@@ -1214,8 +1276,36 @@ export class DuelDirector {
     this.snapCamera = true;
   }
 
+  /** The cut-out's lean as drawn: the angle on screen of its up direction (clockwise from vertical). */
+  private screenTilt(p: CutoutPose, camera: THREE.Camera, aspect: number): number {
+    _v.set(p.x, p.y, p.z).project(camera);
+    _v2.set(p.x + p.up.x, p.y + p.up.y, p.z + p.up.z).project(camera);
+    const dx = (_v2.x - _v.x) * aspect;
+    const dy = _v2.y - _v.y;
+    return dx === 0 && dy === 0 ? 0 : Math.atan2(dx, dy);
+  }
+
+  /** From now, ease the legs over from the ones last shown (a clip switch, a dive or tackle starting or ending). */
+  private startEase(a: Actor, now: number) {
+    if (!a.shown) return;
+    a.easeFrom = { ...a.shown };
+    a.easeAt = now;
+  }
+
+  /** Applies a running ease (startEase) to the legs about to be shown. */
+  private easeLegs(a: Actor, now: number) {
+    const body = a.pose.body;
+    if (a.easeFrom) {
+      const k = smooth((now - a.easeAt) / POSE_EASE_S);
+      if (k >= 1) a.easeFrom = null;
+      else mixPose(a.easeFrom, body, k, body);
+    }
+    a.shown = { ...body };
+  }
+
   /** Pose the cut-out from a clip, bouncing back up if it was down. */
   private pose(a: Actor, clip: string, time: number, now: number) {
+    if (clipFamily(clip) !== clipFamily(a.clip)) this.startEase(a, now);
     a.clip = clip;
     clipPose(a.pose, clip, time, a.yaw, now, a.phase, a.speed);
     a.pose.x = a.x;
@@ -1234,6 +1324,7 @@ export class DuelDirector {
   /** Leave a scripted pose (dive, tackle, hold): bounce back up from it. */
   private exitProc(a: Actor, now: number) {
     if (a.proc === 'none') return;
+    this.startEase(a, now);
     a.recover = { start: now, up: a.pose.up.clone(), y: a.pose.y };
     a.pose.blur = 0;
     a.proc = 'none';
@@ -1269,7 +1360,7 @@ export class DuelDirector {
     a.yaw = yaw;
     a.speed = moved / dt;
     if (f.clip === 'run') {
-      a.runClock += dt * (0.75 + 0.07 * Math.min(moved / dt, 20));
+      a.runClock += dt * strideRate(moved / dt, false);
       this.pose(a, 'run', a.runClock, now);
     } else {
       this.pose(a, f.clip, f.time ?? now + a.phase, now);
@@ -1278,6 +1369,7 @@ export class DuelDirector {
 
   /** Keeper: crouch, then spring and stretch towards the ball (or the wrong corner), land and lie there. */
   private applyKeeper(a: Actor, f: KeeperFrame) {
+    if (a.proc !== 'keeper') this.startEase(a, this.lastNow);
     a.proc = 'keeper';
     a.recover = null;
     a.x = f.x;
@@ -1305,8 +1397,9 @@ export class DuelDirector {
     p.sy = 1;
     p.sx = 1;
     // Crouched, pushing off, then both legs stretched out behind.
-    Object.assign(p.body, reach > 0 ? divePose(reach) : keeperSetPose(f.time, a.phase));
-    if (load > 0 && reach === 0) p.body.bodyY += 20 * load;
+    // The set stance sinks (planted) before the spring, then hands over to the dive without a pop.
+    const set = keeperSetPose(f.time, a.phase, load);
+    Object.assign(p.body, reach > 0 ? mixPose(set, divePose(reach), smooth(reach / 0.35)) : set);
     p.spin = 0;
     p.blur = reach * (1 - reach) * 1.6;
     // Hands at the top corner of the figure, on the side it dives to.
@@ -1322,6 +1415,8 @@ export class DuelDirector {
     const r0 = at(spec.canon.runner);
     const d0 = at(spec.canon.defender);
     const e = Math.min(elapsed, 1.1);
+    if (runner.proc !== 'tackle') this.startEase(runner, this.lastNow);
+    if (defender.proc !== 'tackle') this.startEase(defender, this.lastNow);
     runner.proc = 'tackle';
     defender.proc = 'tackle';
     runner.recover = null;
@@ -1393,14 +1488,17 @@ export class DuelDirector {
     if (dist > 0.35 || chasing) {
       const speed = hurry ? THREE.MathUtils.clamp(dist * 5, 8, 18) : THREE.MathUtils.clamp(dist * 2.4, 3.5, 10.5);
       const step = Math.min(dist, speed * dt);
+      // A defender dropping back keeps facing the play and backpedals instead of turning its back.
+      const heading = Math.atan2(dx, dz);
+      const backpedal = role === 'defender' && !hurry && !spots.keeper && idle.yaw !== undefined && Math.cos(heading - idle.yaw) < -0.2;
       if (dist > 1e-4) {
         a.x += (dx / dist) * step;
         a.z += (dz / dist) * step;
-        a.yaw = angleDamp(a.yaw, Math.atan2(dx, dz), 10, dt);
+        a.yaw = angleDamp(a.yaw, backpedal && idle.yaw !== undefined ? idle.yaw : heading, 10, dt);
       }
       a.speed = step / dt;
-      a.runClock += dt * (0.75 + 0.07 * Math.min(step / dt, 20));
-      if (step / dt > 0.8) this.pose(a, 'run', a.runClock, now);
+      a.runClock += dt * strideRate(step / dt, backpedal);
+      if (step / dt > 0.8) this.pose(a, backpedal ? 'backpedal' : 'run', a.runClock, now);
       else this.pose(a, idle.clip, now + a.phase, now);
     } else {
       a.x = THREE.MathUtils.damp(a.x, tx, 6, dt);

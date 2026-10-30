@@ -20,6 +20,7 @@ import { DuelDirector, type DirectorInput } from './zoneMatch3d.director';
 import { CutoutDriver, type CutoutRegistry } from './ZoneMatch3DCutouts';
 import type { CardFx } from './zoneMatch3d.fx';
 import { CardEffectsEngine } from './zoneMatch3d.effects';
+import { REAL_CLOCK, type SceneClock } from './zoneMatch3d.clock';
 
 /**
  * Screen px covered by overlays on each edge of the full-screen view: the HUD on top, the question sheet and the hand
@@ -53,6 +54,8 @@ export interface ZoneMatch3DSceneProps {
   /** False while the view is scrolled away: nothing renders. */
   visible: RefObject<boolean>;
   onFailure: () => void;
+  /** Real time unless given (the dev animation lab's slow motion). */
+  clock?: SceneClock;
 }
 
 /** WebGL / three failures fall back to the 2D ball strip instead of crashing the match screen. */
@@ -517,11 +520,11 @@ const MIN_OPEN_PX = 140;
  * director's framing lands centred in the open area and the rest of the scene still fills the screen behind the
  * overlays. The area eases when a sheet slides, so the camera glides instead of jumping.
  */
-function DirectorLoop({ director, input, insets }: { director: DuelDirector; input: RefObject<DirectorInput>; insets: ZoneMatch3DSceneProps['insets'] }) {
+function DirectorLoop({ director, input, insets, clock }: { director: DuelDirector; input: RefObject<DirectorInput>; insets: ZoneMatch3DSceneProps['insets']; clock: SceneClock }) {
   const area = useRef<SceneInsets | null>(null);
   useFrame((state, delta) => {
     const camera = state.camera as THREE.PerspectiveCamera;
-    const now = performance.now() / 1000;
+    const now = clock.now();
     const width = Math.max(1, state.size.width);
     const height = Math.max(1, state.size.height);
     const target = insets.current;
@@ -556,7 +559,7 @@ function DirectorLoop({ director, input, insets }: { director: DuelDirector; inp
     }
     // The card's reach as a share of the open area's half-width (the director spreads the players past it).
     const split = a.split ? Math.min(0.8, a.split / (openW / 2)) : 0;
-    director.update(input.current, now, delta, camera, aspect, split, target.both ?? false);
+    director.update(input.current, now, delta * clock.rate(), camera, aspect, split, target.both ?? false);
   }, -1);
   return null;
 }
@@ -596,16 +599,16 @@ function FrameDriver({ director, visible, onFrameloop }: { director: DuelDirecto
 }
 
 /** The playstyle cards in the scene (zoneMatch3d.effects), after the director has placed everyone. */
-function CardEffects({ director, engine, fx, overlays }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; overlays: ZoneMatch3DSceneProps['overlays'] }) {
+function CardEffects({ director, engine, fx, overlays, clock }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; overlays: ZoneMatch3DSceneProps['overlays']; clock: SceneClock }) {
   useFrame(({ scene }, delta) => {
-    const now = performance.now() / 1000;
-    engine.update(fx.current, now, Math.min(delta, 0.1), scene, overlays.speed.current);
+    const now = clock.now();
+    engine.update(fx.current, now, Math.min(delta * clock.rate(), 0.1), scene, overlays.speed.current);
     if (engine.busy) director.keepBusy(now + 0.15);
   });
   return <primitive object={engine.root} />;
 }
 
-function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visible, onFailure }: ZoneMatch3DSceneProps) {
+function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visible, onFailure, clock = REAL_CLOCK }: ZoneMatch3DSceneProps) {
   const director = useMemo(() => new DuelDirector(), []);
   const engine = useMemo(() => new CardEffectsEngine(director), [director]);
   useEffect(() => () => engine.dispose(), [engine]);
@@ -633,10 +636,10 @@ function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visibl
         <Suspense fallback={null}>
           <Ball director={director} />
         </Suspense>
-        <CardEffects director={director} engine={engine} fx={fx} overlays={overlays} />
+        <CardEffects director={director} engine={engine} fx={fx} overlays={overlays} clock={clock} />
         <Markers director={director} plates={plates} insets={insets} />
-        <CutoutDriver director={director} engine={engine} fx={fx} registry={cutouts} />
-        <DirectorLoop director={director} input={input} insets={insets} />
+        <CutoutDriver director={director} engine={engine} fx={fx} registry={cutouts} clock={clock} />
+        <DirectorLoop director={director} input={input} insets={insets} clock={clock} />
         <FrameDriver director={director} visible={visible} onFrameloop={setFrameloop} />
       </Canvas>
     </CanvasFailureBoundary>

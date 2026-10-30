@@ -12,6 +12,7 @@
 import { useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import type { SceneClock } from './zoneMatch3d.clock';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
 import type { AvatarCustomization } from '@/types/game';
 import type { ZoneSide } from './zoneMatch.rules';
@@ -288,17 +289,17 @@ function layoutFigure(els: CutoutEls, pose: CutoutPose, look: Look, camera: THRE
 const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from && Date.now() < fx.dark.until;
 
 /** Inside the Canvas: places every cut-out after the director and the effects have run. */
-export function CutoutDriver({ director, engine, fx, registry: reg }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; registry: CutoutRegistry }) {
+export function CutoutDriver({ director, engine, fx, registry: reg, clock }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; registry: CutoutRegistry; clock: SceneClock }) {
   const ghostPose = useMemo(() => blankPose(), []);
   const hopPose = useMemo(() => blankPose(), []);
   const fogLevel = useRef(0);
   // When each side last started / stopped wearing gloves (the put-on and toss-away beats).
   const gloveState = useRef<Record<ZoneSide, { wearing: boolean; since: number }>>({ player: { wearing: false, since: -10 }, opponent: { wearing: false, since: -10 } });
   useFrame(({ camera, size }, delta) => {
-    const now = performance.now() / 1000;
+    const now = clock.now();
     const f = fx.current;
     const sfx = director.scriptFx;
-    fogLevel.current = THREE.MathUtils.damp(fogLevel.current, f.fog ? 1 : 0, 1.8, Math.min(delta, 0.1));
+    fogLevel.current = THREE.MathUtils.damp(fogLevel.current, f.fog ? 1 : 0, 1.8, Math.min(delta * clock.rate(), 0.1));
     const dark = isDark(f);
     const reduced = engine.extras.reduced;
     for (const side of SIDES) {

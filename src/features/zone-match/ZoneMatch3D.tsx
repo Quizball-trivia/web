@@ -20,6 +20,7 @@ import { cardFx, type CardFx } from './zoneMatch3d.fx';
 import type { Mark } from './zoneMatch.reason';
 import { CutoutLayer, createCutoutRegistry } from './ZoneMatch3DCutouts';
 import { useWebGL } from './zoneMatch3d.webgl';
+import type { SceneClock } from './zoneMatch3d.clock';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
 
 // Raw colours live in style objects: the brand-colour audit forbids hex Tailwind classes.
@@ -174,11 +175,35 @@ export function ZoneMatch3D({
   /** Shown when WebGL is unavailable or the scene fails. */
   fallback: ReactNode;
 }) {
+  const fx = useMemo(() => cardFx(state, moment), [state, moment]);
+  const input = useMemo(() => directorInput(state, fx), [state, fx]);
+  // The sky shot labels each ball itself: the nameplates step out of its sky.
+  return <ZoneMatch3DView input={input} fx={fx} player={player} opponent={opponent} insets={insets} fallback={fallback} plates={state.battleStep !== 'numericReveal'} />;
+}
+
+/** The 3D view from the director's input and the card effects directly (the match above; the dev animation lab). */
+export function ZoneMatch3DView({
+  input,
+  fx,
+  player,
+  opponent,
+  insets,
+  fallback,
+  plates: showPlates = true,
+  clock,
+}: {
+  input: DirectorInput;
+  fx: CardFx;
+  player: ZoneMatch3DSeat;
+  opponent: ZoneMatch3DSeat;
+  insets: SceneInsets;
+  fallback: ReactNode;
+  plates?: boolean;
+  clock?: SceneClock;
+}) {
   const webgl = useWebGL();
   const [failed, setFailed] = useState(false);
   const onFailure = useCallback(() => setFailed(true), []);
-  const fx = useMemo(() => cardFx(state, moment), [state, moment]);
-  const input = useMemo(() => directorInput(state, fx), [state, fx]);
   const inputRef = useRef<DirectorInput>(input);
   const fxRef = useRef<CardFx>(fx);
   useLayoutEffect(() => {
@@ -226,7 +251,7 @@ export function ZoneMatch3D({
       aria-hidden
     >
       {webgl && (
-        <ZoneMatch3DScene input={inputRef} fx={fxRef} cutouts={cutouts} plates={plates} overlays={overlays} insets={insetsRef} visible={visibleRef} onFailure={onFailure} />
+        <ZoneMatch3DScene input={inputRef} fx={fxRef} cutouts={cutouts} plates={plates} overlays={overlays} insets={insetsRef} visible={visibleRef} onFailure={onFailure} clock={clock} />
       )}
       {/* Speed lines for a sprint or a break; the scene sets their opacity. */}
       <div
@@ -240,10 +265,9 @@ export function ZoneMatch3D({
       />
       {fx.moment?.card === 'muddy-pitch' && <MudSplat key={fx.moment.id} />}
       {webgl && <CutoutLayer registry={cutouts} customizations={customizations} />}
-      {/* The sky shot labels each ball itself: the nameplates step out of its sky. */}
-      <div className="transition-opacity duration-300" style={{ opacity: state.battleStep === 'numericReveal' ? 0 : 1 }}>
-        <Nameplate side="player" seat={player} plateRef={playerPlate} mark={fx.reason?.marks.player ?? null} markKey={`m-${state.duelNo}`} booked={fx.booked.includes('player')} />
-        <Nameplate side="opponent" seat={opponent} plateRef={opponentPlate} mark={fx.reason?.marks.opponent ?? null} markKey={`m-${state.duelNo}`} booked={fx.booked.includes('opponent')} />
+      <div className="transition-opacity duration-300" style={{ opacity: showPlates ? 1 : 0 }}>
+        <Nameplate side="player" seat={player} plateRef={playerPlate} mark={fx.reason?.marks.player ?? null} markKey={`m-${fx.duelNo}`} booked={fx.booked.includes('player')} />
+        <Nameplate side="opponent" seat={opponent} plateRef={opponentPlate} mark={fx.reason?.marks.opponent ?? null} markKey={`m-${fx.duelNo}`} booked={fx.booked.includes('opponent')} />
       </div>
       {/* A soft vignette; the reason line and the result title are the match screen's overlays. */}
       <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.45)]" />

@@ -1,7 +1,8 @@
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { pitchColumn, resolveBattle, type AttackZone, type Possession, type ZoneSide } from '../zoneMatch.rules';
 import { GOAL_X, columnAt, duelSpots, keeperLocalToWorld, netPocket } from '../zoneMatch3d.layout';
-import { blankPose, buildScript, clipPose } from '../zoneMatch3d.director';
+import { DuelDirector, blankPose, buildScript, clipPose, groundCutout, type DirectorInput } from '../zoneMatch3d.director';
 import { NO_CARDS } from '../zoneMatch3d.fx';
 import { GLOVES_SAVE_NOTE } from '../zoneMatch.machine';
 
@@ -47,9 +48,11 @@ describe('cut-out poses', () => {
   it('stands upright and leans into a run, striding', () => {
     const idle = clipPose(blankPose(), 'outfield_idle', 0, Math.PI / 2, 0, 0);
     expect(idle.up.y).toBeCloseTo(1);
-    const run = clipPose(blankPose(), 'run', 0.2, Math.PI / 2, 0, 0, 8);
+    // 0.42 s into the cycle (× 1.2): half a stride, one leg furthest forward and the other furthest back.
+    const run = clipPose(blankPose(), 'run', 0.42, Math.PI / 2, 0, 0, 8);
     expect(run.up.x).toBeGreaterThan(0.05);
-    expect(run.y).toBeGreaterThan(0);
+    // The hips bob in the art, over a boot on the ground — the cut-out itself stays on the pitch.
+    expect(run.y).toBe(0);
     // The legs stride.
     expect(Math.abs(run.body.hipL - run.body.hipR)).toBeGreaterThan(20);
     expect(run.face).toBe(1);
@@ -57,10 +60,11 @@ describe('cut-out poses', () => {
   });
 
   it('jumps and spins to celebrate', () => {
-    const party = clipPose(blankPose(), 'celebrate_siu', 0.3, 0, 10, 0);
+    // Mid-air in the first jump (the lift follows the legs' time off the ground).
+    const party = clipPose(blankPose(), 'celebrate_siu', 0.45, 0, 10, 0);
     expect(party.y).toBeGreaterThan(0.5);
     expect(party.spin).toBeGreaterThan(0);
-    expect(party.party).toBeCloseTo(9.7);
+    expect(party.party).toBeCloseTo(9.55);
   });
 });
 
@@ -136,5 +140,57 @@ describe('steals in 3D', () => {
     const spot = resolveBattle(from, 'opponent');
     expect(columnAt(duelSpots(clean.next).ball.x)).toBe(0);
     expect(columnAt(duelSpots(spot.next).ball.x)).toBe(1);
+  });
+});
+
+describe('cut-outs on the pitch', () => {
+  it('lifts a tilted figure so no knee or stud goes into the grass, and lays a slide onto it', () => {
+    const p = blankPose();
+    // Leaning well over towards +x (a dive or a tackle), standing legs.
+    p.up.set(Math.sin(1.2), Math.cos(1.2), 0);
+    groundCutout(p);
+    expect(p.y).toBeGreaterThan(0);
+    const upright = blankPose();
+    groundCutout(upright);
+    expect(upright.y).toBeCloseTo(0, 1);
+    const floating = blankPose();
+    floating.y = 2;
+    groundCutout(floating, true);
+    expect(floating.y).toBeCloseTo(0, 1);
+  });
+});
+
+describe('director: legs never freeze', () => {
+  it('plays a goal through the celebration and back to standing, the legs following every clip', () => {
+    const director = new DuelDirector();
+    const camera = new THREE.PerspectiveCamera(36, 16 / 9, 0.1, 140);
+    const from: Possession = { attacker: 'player', zone: 'opponent' };
+    const outcome = resolveBattle(from, 'player');
+    const idle: DirectorInput = { mode: 'idle', possession: from, from: null, outcome: null, key: 'idle', seed: 3, cards: NO_CARDS };
+    const goal: DirectorInput = { mode: 'outcome', possession: outcome.next, from, outcome, key: 'goal', seed: 3, cards: NO_CARDS };
+    let now = 10;
+    const step = (input: DirectorInput, seconds: number, each?: () => void) => {
+      for (let i = 0; i < seconds * 60; i += 1) {
+        now += 1 / 60;
+        director.update(input, now, 1 / 60, camera, 16 / 9);
+        each?.();
+      }
+    };
+    step(idle, 1.5);
+    const knees: number[] = [];
+    step(goal, 8, () => knees.push(director.poseOf('player').body.kneeR));
+    // The shooter's knee moves through the shot and the celebration (no value held for a whole second)…
+    let held = 0;
+    let longest = 0;
+    for (let i = 1; i < knees.length; i += 1) {
+      held = Math.abs(knees[i] - knees[i - 1]) < 1e-6 ? held + 1 : 0;
+      longest = Math.max(longest, held);
+    }
+    expect(longest).toBeLessThan(60 * 3);
+    // …and nothing is left half-eased: after a further idle stretch the legs are the stance's.
+    step(idle, 3);
+    const body = director.poseOf('player').body;
+    expect(Math.abs(body.kneeR - body.kneeL)).toBeLessThan(25);
+    expect(body.kneeR).toBeLessThan(40);
   });
 });
