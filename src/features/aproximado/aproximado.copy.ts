@@ -530,8 +530,13 @@ const SINGULAR_UNIT: Record<string, string> = {
   Tore: "Tor", Spiele: "Spiel", Jahre: "Jahr", Mitglieder: "Mitglied", Fans: "Fan",
 };
 
+/** The Intl locale numbers are written in for an app locale ("es" → "es-AR"). */
+export function intlNumberLocale(locale: string): string {
+  return NUMBER_LOCALE[(locale in NUMBER_LOCALE ? locale : "en") as Locale];
+}
+
 export function formatValue(value: number, unit: string, precision: number, locale: string): string {
-  const n = new Intl.NumberFormat(NUMBER_LOCALE[(locale in NUMBER_LOCALE ? locale : "en") as Locale], { maximumFractionDigits: precision, minimumFractionDigits: 0 }).format(value);
+  const n = new Intl.NumberFormat(intlNumberLocale(locale), { maximumFractionDigits: precision, minimumFractionDigits: 0 }).format(value);
   const shown = Number(value.toFixed(precision)) === 1 && SINGULAR_UNIT[unit] ? SINGULAR_UNIT[unit] : unit;
   return shown ? `${n} ${shown}` : n;
 }
