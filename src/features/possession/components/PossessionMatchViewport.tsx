@@ -44,13 +44,6 @@ export interface PossessionViewportModel {
    * Null when no scroll is needed.
    */
   autoScrollKey?: string | null;
-  /**
-   * Replaces the "race to 100" goal meter for modes without a points race (the
-   * zone-match prototype draws its pitch zones here). Omitted = GoalProgressBar.
-   */
-  renderMeter?: (orientation: 'horizontal' | 'vertical') => ReactNode;
-  /** Zone match prototype: leave the pitch (and its meter) out entirely. Defaults to true. */
-  showPitch?: boolean;
 }
 
 interface PossessionMatchViewportProps {
@@ -166,7 +159,7 @@ function PenaltySplash({
 
 export function PossessionMatchViewport({ model, children, onPenaltySplashComplete }: PossessionMatchViewportProps) {
   const { t } = useLocale();
-  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey, renderMeter, showPitch = true } = model;
+  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
   const {
     containerRef: desktopPitchRef,
@@ -191,13 +184,11 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
 
   return (
     <>
-      {showMainUI && showPitch && (
+      {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
           <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
             {hud.kind !== 'penalty' && (
-              renderMeter
-                ? renderMeter('vertical')
-                : <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
             )}
           </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
@@ -231,8 +222,6 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
               <PossessionHUD {...hud.props} />
             )}
 
-            {/* Opting out (showPitch false) unmounts the pitch: hidden, its motion loops and shot timers would keep running. */}
-            {showPitch && (
             <div ref={mobilePitchRef} className="lg:hidden relative">
               <PitchVisualization {...pitchProps} orientation="landscape" hideBall={celebrationOwnsBall} />
               {/* Connection ping pill — anchored to the bottom-left corner of
@@ -256,13 +245,10 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
                 <PenaltySplash model={penaltySplash} onComplete={onPenaltySplashComplete} />
               </AnimatePresence>
             </div>
-            )}
 
-            {hud.kind !== 'penalty' && showPitch && (
+            {hud.kind !== 'penalty' && (
               <div className="lg:hidden">
-                {renderMeter
-                  ? renderMeter('horizontal')
-                  : <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />}
+                <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
               </div>
             )}
 

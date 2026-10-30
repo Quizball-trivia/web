@@ -74,7 +74,7 @@ export interface BanCategoryViewProps {
   onBanCategory: (categoryId: string) => void;
 }
 
-export function PlayerHeader({
+function PlayerHeader({
   info,
   tierColor,
   align,
@@ -139,46 +139,6 @@ export function PlayerHeader({
   );
 }
 
-/** "Opponent disconnected" countdown laid over a draft screen while it is paused. */
-export function DraftPauseOverlay({ paused, pauseSeconds }: { paused: boolean; pauseSeconds: number | null }) {
-  const { t } = useLocale();
-  return (
-    <AnimatePresence>
-      {paused && pauseSeconds != null && pauseSeconds > 0 && (
-        <motion.div
-          key="draft-disconnect-pause"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="absolute inset-0 z-40 flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
-        >
-          <motion.div
-            initial={{ y: -12, scale: 0.96, opacity: 0 }}
-            animate={{ y: 0, scale: 1, opacity: 1 }}
-            exit={{ y: -12, scale: 0.96, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
-          >
-            <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
-              {t('possession.matchPaused')}
-            </div>
-            <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
-              {t('possession.opponentDisconnected')}
-            </div>
-            <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-              {t('possession.waitingForReconnect')}
-            </div>
-            <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
-              {pauseSeconds}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 /**
  * Pure presentational ban-category view. Accepts all data via props so it can
  * be rendered both in a live match (via `RankedCategoryBlockingScreen`) and in
@@ -209,7 +169,39 @@ export function BanCategoryView({
 
   return (
     <div className="relative min-h-dvh flex flex-col bg-surface-page">
-      <DraftPauseOverlay paused={paused} pauseSeconds={pauseSeconds} />
+      <AnimatePresence>
+        {paused && pauseSeconds != null && pauseSeconds > 0 && (
+          <motion.div
+            key="draft-disconnect-pause"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
+          >
+            <motion.div
+              initial={{ y: -12, scale: 0.96, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: -12, scale: 0.96, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
+            >
+              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
+                {t('possession.matchPaused')}
+              </div>
+              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
+                {t('possession.opponentDisconnected')}
+              </div>
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
+                {t('possession.waitingForReconnect')}
+              </div>
+              <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
+                {pauseSeconds}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Header ── */}
       <div className="relative z-10 w-full">
