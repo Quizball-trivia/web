@@ -29,3 +29,16 @@ describe("LeaderboardTable name wrapping", () => {
     expect(screen.getByText("Youth Prospect").className).not.toContain("truncate");
   });
 });
+
+describe("LeaderboardTable points column", () => {
+  it("shows the number when a game gives no text (every existing board)", () => {
+    render(<LeaderboardTable entries={[entry]} compact />);
+    expect(screen.getByText((1200).toLocaleString())).toBeTruthy();
+  });
+
+  it("shows a game's own text instead (Football Darts 501: ✓ darts / left)", () => {
+    render(<LeaderboardTable entries={[{ ...entry, pointsText: "✓ 4" }]} compact />);
+    expect(screen.getByText("✓ 4")).toBeTruthy();
+    expect(screen.queryByText((1200).toLocaleString())).toBeNull();
+  });
+});

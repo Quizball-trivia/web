@@ -9,6 +9,8 @@ export interface LeaderboardEntry {
   country?: string | null;
   tier: string;
   rankPoints: number;
+  /** Shown instead of the number when the game's score is not a plain count (Football Darts 501: "3 darts", "61 left"). */
+  pointsText?: string;
   isCurrentUser: boolean;
   trend: 'up' | 'down' | 'same';
   trendValue: number;

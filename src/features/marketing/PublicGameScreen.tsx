@@ -136,6 +136,16 @@ const CONEXIONES_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   de: { ...NAME_CHAIN_PAGE.de, label: "Jeden Tag ein neues Brett · kein Konto nötig", start: "Jetzt spielen", note: "16 Spieler, 4 versteckte Verbindungen. Als Gast spielst du frühere Bretter; mit Konto spielst du das heutige Brett und siehst die Rangliste." },
 };
 
+const DARTS501_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...NAME_CHAIN_PAGE.en, label: "One leg a day · no account needed", start: "Play now", note: "Start on 501: each dart is a footballer from the category and his number comes off. Check out between 0 and −10. As a guest you play past days; with an account, today's game and the leaderboard." },
+  ka: { ...NAME_CHAIN_PAGE.ka, label: "ერთი ლეგი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "დაიწყე 501-დან: ყოველი ისარი კატეგორიის ფეხბურთელია და მისი რიცხვი გაკლდება. დაასრულე 0-დან −10-მდე. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელ თამაშს და რეიტინგს." },
+  es: { ...NAME_CHAIN_PAGE.es, label: "Una partida por día · sin cuenta", start: "Jugar ahora", note: "Empezás en 501: cada dardo es un futbolista de la categoría y su número se resta. Cerrá entre 0 y −10. Sin cuenta jugás los días anteriores; con cuenta, el juego de hoy y el ranking." },
+  tr: { ...NAME_CHAIN_PAGE.tr, label: "Günde bir leg · hesap gerekmez", start: "Oyna", note: "501'den başla: her ok kategoriden bir futbolcu, sayısı puanından düşer. 0 ile −10 arasında bitir. Misafir olarak önceki günleri oynarsın; hesapla bugünün oyununu ve sıralamayı." },
+  ru: { ...NAME_CHAIN_PAGE.ru, label: "Один лег в день · аккаунт не нужен", start: "Играть сейчас", note: "Начинаешь с 501: каждый дротик — футболист из категории, его число вычитается. Закрой от 0 до −10. Гость играет за прошлые дни, а с аккаунтом доступны сегодняшняя игра и рейтинг." },
+  pt: { ...NAME_CHAIN_PAGE.pt, label: "Uma partida por dia · sem precisar de conta", start: "Jogue agora", note: "Comece no 501: cada dardo é um jogador da categoria e o número dele sai da pontuação. Feche entre 0 e −10. Como visitante, você joga os dias anteriores; com uma conta, acessa o jogo de hoje e o ranking." },
+  de: { ...NAME_CHAIN_PAGE.de, label: "Jeden Tag ein Leg · kein Konto nötig", start: "Jetzt spielen", note: "Du startest bei 501: Jeder Pfeil ist ein Spieler aus der Kategorie, seine Zahl wird abgezogen. Checke zwischen 0 und −10 aus. Als Gast spielst du frühere Tage; mit Konto spielst du das heutige Spiel und siehst die Rangliste." },
+};
+
 const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
   ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
@@ -156,7 +166,7 @@ const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   de: { ...ULTIMO_PAGE.de, label: "Jeden Tag eine neue Top 10 · frühere Tage gratis, kein Konto nötig", note: "Eine versteckte Liste, 3 Leben. Als Gast spielst du frühere Tage; mit Konto siehst du die heutige Liste und die Rangliste." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "conexiones-futboleras": CONEXIONES_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "conexiones-futboleras": CONEXIONES_PAGE, "football-darts-501": DARTS501_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -227,7 +237,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso" || game.modeId === "conexiones"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso" || game.modeId === "conexiones" || game.modeId === "darts501"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

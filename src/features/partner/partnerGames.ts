@@ -16,6 +16,7 @@ export const PARTNER_GAME_DEMO_SLUG: Record<PartnerGameId, string> = {
   "road-to-goal": "mini-road-to-goal",
   "trivia-mines": "mini-trivia-mines",
   "quiz-board": "mini-quiz-board",
+  "fake-fact": "dato-falso-futbolero",
 };
 
 export function partnerGameTitle(gameId: PartnerGameId, locale: PartnerLocale): string {

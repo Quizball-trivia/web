@@ -19,7 +19,7 @@ export interface LobbySeenGame {
 
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
-export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones';
+export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones' | 'darts501';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
 export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**

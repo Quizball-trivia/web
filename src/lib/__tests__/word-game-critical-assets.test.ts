@@ -14,6 +14,7 @@ describe("word-game font discovery", () => {
     "/en/football-games/football-codenames", "/es/juegos-de-futbol/codenames-futbolero", "/ka/football-games/football-codenames",
     "/en/football-games/football-odd-one-out", "/es/juegos-de-futbol/dato-falso-futbolero", "/ka/football-games/football-odd-one-out",
     "/en/football-games/football-connections", "/es/juegos-de-futbol/conexiones-futboleras", "/ka/football-games/football-connections",
+    "/en/football-games/football-darts-501", "/es/juegos-de-futbol/dardos-futboleros-501", "/ka/football-games/football-darts-501",
   ])("preloads only the four Latin weights used above the fold on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(4);
@@ -26,7 +27,7 @@ describe("word-game font discovery", () => {
     expect(wordGameFontPreloads(url)).toEqual([]);
   });
 
-  it.each(["/tr/futbol-oyunlari/son-harfle-futbolcu", "/tr/futbol-oyunlari/ortak-futbolcu-oyunu/", "/tr/futbol-oyunlari/futbol-at-yarisi", "/tr/futbol-oyunlari/futbol-codenames", "/tr/futbol-oyunlari/hangisi-yanlis", "/tr/futbol-oyunlari/futbol-connections"])("also discovers Turkish glyphs early on %s", (url) => {
+  it.each(["/tr/futbol-oyunlari/son-harfle-futbolcu", "/tr/futbol-oyunlari/ortak-futbolcu-oyunu/", "/tr/futbol-oyunlari/futbol-at-yarisi", "/tr/futbol-oyunlari/futbol-codenames", "/tr/futbol-oyunlari/hangisi-yanlis", "/tr/futbol-oyunlari/futbol-connections", "/tr/futbol-oyunlari/futbol-dart-oyunu"])("also discovers Turkish glyphs early on %s", (url) => {
     const urls = wordGameFontPreloads(url);
     expect(urls).toHaveLength(8);
     expect(urls.filter((value) => value.includes("latin-ext"))).toHaveLength(4);

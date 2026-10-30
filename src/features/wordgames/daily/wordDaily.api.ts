@@ -10,6 +10,8 @@ export interface WordRun<State extends WordRunStateBase> { run: { id: string; ve
 export interface WordBoardRow {
   rank: number; userId: string; username: string; avatarUrl: string | null; avatarCustomization: LeaderboardEntry["avatarCustomization"];
   country: string | null; tier: string | null; score: number;
+  /** Football Darts 501's board: darts used, and whether (and where) the run checked out. */
+  darts?: number; checkedOut?: boolean; remaining?: number;
 }
 export interface WordBoard { day: string; players: number; top: WordBoardRow[]; me: WordBoardRow | null }
 

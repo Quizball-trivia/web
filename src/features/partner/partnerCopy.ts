@@ -15,7 +15,6 @@ export function toPartnerLocale(value: string | null | undefined): PartnerLocale
 }
 
 interface PartnerCopy {
-  backToFreecroco: string;
   language: string;
   rankedTitle: string;
   rankedSubtitle: string;
@@ -48,7 +47,6 @@ interface PartnerCopy {
 
 export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
   en: {
-    backToFreecroco: "Back to Freecroco",
     pointsLabel: "points earned",
     language: "Language",
     rankedTitle: "Ranked match",
@@ -92,7 +90,6 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     },
   },
   ka: {
-    backToFreecroco: "Freecroco-ზე დაბრუნება",
     pointsLabel: "მოპოვებული ქულა",
     language: "ენა",
     rankedTitle: "რეიტინგული მატჩი",
@@ -135,7 +132,6 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     },
   },
   ru: {
-    backToFreecroco: "Назад во Freecroco",
     pointsLabel: "Набрано очков",
     language: "Язык",
     rankedTitle: "Рейтинговый матч",

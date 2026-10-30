@@ -168,7 +168,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                         className={cn(compact ? "text-sm" : "text-sm sm:text-lg", "tabular-nums font-black text-white")}
                         style={poppins}
                       >
-                        {entry.rankPoints.toLocaleString()}
+                        {entry.pointsText ?? entry.rankPoints.toLocaleString()}
                       </span>
                     </div>
                   </div>

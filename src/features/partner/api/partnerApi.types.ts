@@ -12,6 +12,7 @@ export const PARTNER_GAME_IDS = [
   "road-to-goal",
   "trivia-mines",
   "quiz-board",
+  "fake-fact",
 ] as const;
 
 export type PartnerGameId = (typeof PARTNER_GAME_IDS)[number];
