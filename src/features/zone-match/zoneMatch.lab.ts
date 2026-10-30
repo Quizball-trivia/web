@@ -9,6 +9,7 @@ import type { GameQuestion } from '@/lib/domain';
 import type { SampleNumericQuestion } from '@/features/numeric-question/sampleNumericQuestions';
 import { GLOVES_SAVE_NOTE, IDLE, MCQ_MS, NUMERIC_MS, type MatchState } from './zoneMatch.machine';
 import { otherZoneSide, resolveBattle, type AttackZone, type BattleMods, type BattleOutcome, type Possession, type ZoneSide } from './zoneMatch.rules';
+import { keeperSave, kneeSlideMove, slideTackleMove, tackledMove, type ReactionFrame, type SaveKind } from './ZoneMatchFutReactions';
 import { CELEBRATIONS, buildScript, type DirectorMode } from './zoneMatch3d.director';
 import { NO_CARDS, type CardFx, type ResultCard, type ScriptCards } from './zoneMatch3d.fx';
 import {
@@ -17,14 +18,10 @@ import {
   backpedalPose,
   celebratePose,
   crouchPose,
-  divePose,
   idlePose,
   jockeyPose,
   keeperSetPose,
-  kneeSlidePose,
   runPose,
-  slidePose,
-  sprawlPose,
   stepOverPose,
   strikePose,
   type FullBodyPose,
@@ -68,7 +65,14 @@ export interface LabEntry {
   source: string;
   /** A 3D scene (with the attacker the lab's "attacking" toggle picks), or a body move. */
   scene?: (attacker: ZoneSide) => LabScene;
-  body?: { pose: (t: number) => FullBodyPose; loop: number; dribble?: { cycles: number; speed: number } };
+  body?: {
+    pose: (t: number) => FullBodyPose;
+    loop: number;
+    dribble?: { cycles: number; speed: number };
+    gloves?: boolean;
+    /** A whole move: the figure's tilt / lift / shift and a ball, not only the legs. */
+    frame?: (t: number) => ReactionFrame;
+  };
   /** The question sheet over the scene: the match state `t` ms into the run (the question opened at `openedAt`). */
   question?: { state: (t: number, openedAt: number) => MatchState; length: number };
 }
@@ -372,14 +376,27 @@ const BODY: LabEntry[] = [
   { id: 'body-dribble-sprint', group: 'body', label: 'Dribble · sprint', about: 'Flat out with the ball.', source: 'runPose(speed 1) + ball', body: { pose: (t) => runPose(t * 3.2, 1), loop: 2.5, dribble: { cycles: 3.2, speed: 1 } } },
   { id: 'body-backpedal', group: 'body', label: 'Jog back (defending)', about: 'Dropping back while still facing the attacker.', source: 'backpedalPose', body: { pose: (t) => backpedalPose(t * 2.6), loop: 6 / 2.6 } },
   { id: 'body-jockey', group: 'body', label: 'Jockey', about: 'The defender: low, wide, on the toes.', source: 'jockeyPose', body: { pose: (t) => jockeyPose(t), loop: (4 * Math.PI) / 5 } },
-  { id: 'body-keeper', group: 'body', label: 'Keeper set', about: 'Crouched, weight forward.', source: 'keeperSetPose', body: { pose: (t) => keeperSetPose(t), loop: (2 * Math.PI) / 1.8 } },
+  { id: 'body-keeper', group: 'body', label: 'Keeper set', about: 'Crouched, weight forward.', source: 'keeperSetPose', body: { gloves: true, pose: (t) => keeperSetPose(t), loop: (2 * Math.PI) / 1.8 } },
   { id: 'body-strike', group: 'body', label: 'Strike', about: 'Plant, wind-up, through the ball, follow-through.', source: 'strikePose', body: { pose: (t) => strikePose(t), loop: 2 } },
-  { id: 'body-dive', group: 'body', label: 'Keeper dive', about: 'Push off, both legs stretched.', source: 'divePose', body: { pose: inAndOut((k) => divePose(k), 0.9, 0.5, 0.5), loop: 1.9 } },
-  { id: 'body-slide', group: 'body', label: 'Slide tackle', about: 'Leading leg out, the other tucked.', source: 'slidePose', body: { pose: inAndOut((k) => slidePose(k), 0.6, 0.5, 0.5), loop: 1.6 } },
-  { id: 'body-sprawl', group: 'body', label: 'Sprawl (tackled)', about: 'Legs thrown up as the body tips over.', source: 'sprawlPose', body: { pose: inAndOut((k, t) => sprawlPose(k, t), 0.7, 0.5, 0.6), loop: 1.8 } },
+  ...(['stretch', 'leap', 'parry'] as SaveKind[]).map(
+    (kind): LabEntry => ({
+      id: `body-save-${kind}`,
+      group: 'body',
+      label: { stretch: 'Save · full-stretch dive', leap: 'Save · high catch', parry: 'Save · low parry' }[kind],
+      about: {
+        stretch: 'Set, spring sideways, fly nearly flat, catch it in the leading glove, land on the side.',
+        leap: 'Set, jump straight up with the knees tucked, catch it one-handed overhead.',
+        parry: 'A quick low dive at a hard shot; the glove beats it away.',
+      }[kind],
+      source: `keeperSave('${kind}')`,
+      body: { gloves: true, loop: 2.4, pose: (t) => keeperSave(kind, t, t, 1).body, frame: (t) => keeperSave(kind, t, t, 1) },
+    }),
+  ),
+  { id: 'body-slide', group: 'body', label: 'Slide tackle', about: 'A few strides in, down on the grass leaning back, the leading leg along it: the boot knocks the ball away, then up.', source: 'slideTackleMove (the 3D tackle: DuelDirector.runTackle)', body: { loop: 2.2, pose: (t) => slideTackleMove(t).body, frame: slideTackleMove } },
+  { id: 'body-sprawl', group: 'body', label: 'Tackled (falls)', about: 'Running, legs swept from under him: pitches forward, lands on his front, bounces, gets up.', source: 'tackledMove (the 3D tackle: DuelDirector.runTackle)', body: { loop: 2.3, pose: (t) => tackledMove(t).body, frame: tackledMove } },
   { id: 'body-celebrate', group: 'body', label: 'Celebration jump', about: 'Crouch, spring, knees up, land.', source: 'celebratePose', body: { pose: (t) => celebratePose(t), loop: 2.55 } },
-  { id: 'body-knee-slide', group: 'body', label: 'Knee slide', about: 'Kneeling, arms up.', source: 'kneeSlidePose', body: { pose: inAndOut(() => kneeSlidePose(), 0.5, 1, 0.5), loop: 2 } },
-  { id: 'body-crouch', group: 'body', label: 'Crouch (sabotaged)', about: 'Ducking under a sabotage card.', source: 'crouchPose', body: { pose: inAndOut((k) => crouchPose(k), 0.5, 0.6, 0.5), loop: 1.6 } },
+  { id: 'body-knee-slide', group: 'body', label: 'Knee slide', about: 'Sprint in, down on the knees, slide along the grass (turf flying, skid marks left), arms up, then up.', source: 'kneeSlideMove', body: { loop: 3.6, pose: (t) => kneeSlideMove(t).body, frame: kneeSlideMove } },
+  { id: 'body-crouch', group: 'body', label: 'Crouch', about: 'A building block, not a move of its own: Fog, Floodlight Failure, Shin Pads and 50/50 bend into it.', source: 'crouchPose', body: { pose: inAndOut((k) => crouchPose(k), 0.5, 0.6, 0.5), loop: 1.6 } },
   { id: 'body-step-over', group: 'body', label: 'Step-over', about: 'The right leg circles over the ball.', source: 'stepOverPose', body: { pose: (t) => stepOverPose(t % 1), loop: 2 } },
 ];
 

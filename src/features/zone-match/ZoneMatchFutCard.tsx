@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { animate, motion, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
+import { AvatarFullBody, KeeperGloves, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
 import { celebratePose, crouchPose, divePose, idlePose, keeperSetPose, mixPose, stepOverPose, strikePose } from './zoneMatch.fullBody';
 import type { AvatarCustomization } from '@/types/game';
 import { tierFromRp } from '@/utils/rankedTier';
@@ -30,7 +30,6 @@ import {
   BusArt,
   FLAG,
   FlagShape,
-  GLOVE_HANDS,
   GOLD_BOOTS,
   MATES,
   ScarfArt,
@@ -50,8 +49,6 @@ import {
   type ReactionFrame,
 } from './ZoneMatchFutReactions';
 import { CardArt } from './ZoneMatchCardFace';
-import { getSkinPart } from '@/lib/avatars/parts';
-import { resolveAvatarCustomization } from '@/lib/avatars';
 import { FULL_H, FULL_W } from './zoneMatch.fullBody';
 
 
@@ -185,40 +182,6 @@ const ART_IN_AREA = { left: 12.07, width: 75.85, top: 12, height: 88 };
 const areaX = (x: number) => ART_IN_AREA.left + (x / 496) * ART_IN_AREA.width;
 const areaY = (y: number) => ART_IN_AREA.top + (y / 840) * ART_IN_AREA.height;
 
-/** % of the upper body's box, from its art units. */
-const pctX = (x: number) => `${((x / 496) * 100).toFixed(2)}%`;
-const pctY = (y: number) => `${((y / 543) * 100).toFixed(2)}%`;
-
-/**
- * A keeper glove on one hand: the hand's own outline from the skin art (so it fits whatever the skin), a touch bigger
- * — blue, lime over the fingers, a white wrist strap.
- */
-function Glove({ hand, skinUrl }: { hand: 'L' | 'R'; skinUrl: string }) {
-  const g = GLOVE_HANDS[hand];
-  const [x0, y0, x1, y1] = g.box;
-  const rect = (r: readonly number[]) => ({ left: pctX(r[0]), top: pctY(r[1]), width: pctX(r[2] - r[0]), height: pctY(r[3] - r[1]) });
-  return (
-    <div
-      className="absolute inset-x-0 top-0"
-      style={{
-        aspectRatio: '496 / 543',
-        WebkitMaskImage: `url(${skinUrl})`,
-        maskImage: `url(${skinUrl})`,
-        WebkitMaskSize: '100% 100%',
-        maskSize: '100% 100%',
-        clipPath: `inset(${pctY(y0)} ${pctX(496 - x1)} ${pctY(543 - y1)} ${pctX(x0)})`,
-        transform: 'scale(1.07)',
-        transformOrigin: `${pctX(g.centre[0])} ${pctY(g.centre[1])}`,
-      }}
-    >
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #3B74FF, #1645FF 45%, #0E2FB0)' }} />
-      <div className="absolute rounded-[30%]" style={{ ...rect(g.fingers), background: 'linear-gradient(170deg, #8EE53F, #58CC02 60%, #3E9A00)' }} />
-      <div className="absolute" style={{ ...rect(g.strap), background: '#F4F6F8', boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.18)' }} />
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(40% 30% at 45% 30%, rgba(255,255,255,0.35), transparent 70%)' }} />
-    </div>
-  );
-}
-
 /** Gear that, taken off the loadout, gets thrown away (and the item it throws). */
 const THROWN: [keyof Gear, Discard][] = [
   ['yellowCard', 'yellow-card'],
@@ -265,7 +228,6 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
   const [busWheel, setBusWheel] = useState(0);
   // How far he's sat on the bus (eased, so he hops down for another card's reaction and back up after it).
   const seated = useRef(0);
-  const skinUrl = useMemo(() => getSkinPart(resolveAvatarCustomization(customization ?? {}).skin).asset, [customization]);
   // Taking a card off: what was worn gets thrown away (started here, drawn by the loop).
   const gearSeen = useRef<Gear | null>(null);
   const discards = useRef<{ item: Discard; at: number }[]>([]);
@@ -523,8 +485,7 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
             upperOverlay={
               <>
                 <div ref={gloves} className="pointer-events-none absolute inset-x-0 top-0" style={{ opacity: 0, aspectRatio: '496 / 543', transformOrigin: '50% 30%' }}>
-                  <Glove hand="L" skinUrl={skinUrl} />
-                  <Glove hand="R" skinUrl={skinUrl} />
+                  <KeeperGloves customization={customization} />
                 </div>
                 <svg className="pointer-events-none absolute inset-x-0 top-0 w-full overflow-visible" style={{ aspectRatio: '496 / 543' }} viewBox="0 0 496 543" aria-hidden>
                   <g ref={scarf} style={{ opacity: 0 }}>

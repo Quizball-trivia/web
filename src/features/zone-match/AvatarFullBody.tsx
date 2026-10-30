@@ -13,6 +13,7 @@
 import { useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { resolveAvatarCustomization } from '@/lib/avatars';
+import { getSkinPart } from '@/lib/avatars/parts';
 import type { AvatarCustomization } from '@/types/game';
 import { ANKLE_Y, FULL_H, FULL_W, HIP_X, HIP_Y, KNEE_Y, STAND, fullBodyColors, mixHex, shade, type FullBodyColors, type FullBodyPose } from './zoneMatch.fullBody';
 
@@ -122,6 +123,12 @@ export function shortsPaths(pose: FullBodyPose): { body: string; folds: string }
     leg('R', 51, HIP_Y - 16),
     waist([MID_X, CROTCH_Y]),
     leg('L', 51, HIP_Y - 16),
+    // The inner edge of each leg near the crotch: a leg swung far out (a slide, a high kick) pulls the seat with it
+    // instead of opening a gap between them.
+    leg('L', -48, CROTCH_Y + 6),
+    leg('R', -48, CROTCH_Y + 6),
+    leg('L', -44, CROTCH_Y + 22),
+    leg('R', -44, CROTCH_Y + 22),
   ]));
   const fold = (side: 'L' | 'R') => ring([leg(side, -50, CROTCH_Y), leg(side, -40, SHORTS_HEM + 4), leg(side, -32, SHORTS_HEM + 3)]);
   return { body: `${panel('L')} ${seat} ${panel('R')}`, folds: `${fold('L')} ${fold('R')}` };
@@ -225,6 +232,60 @@ function keepLegs(els: FullBodyEls, el: SVGGElement | null) {
   els.legs = el;
 }
 
+/**
+ * The gloves are the hands' own outline (the skin art, a touch bigger), so they fit any skin: each hand's box, the
+ * fingers (lime) and the wrist strap (white), in upper-body art units — measured on the skin art.
+ */
+export const GLOVE_HANDS = {
+  R: { box: [410, 110, 496, 232], fingers: [413, 143, 472, 214], strap: [436, 208, 490, 224], centre: [452, 172] },
+  L: { box: [8, 86, 102, 222], fingers: [48, 122, 102, 200], strap: [14, 198, 66, 214], centre: [58, 150] },
+} as const;
+
+/** % of the upper body's box, from its art units. */
+const pctX = (x: number) => `${((x / 496) * 100).toFixed(2)}%`;
+const pctY = (y: number) => `${((y / 543) * 100).toFixed(2)}%`;
+
+/**
+ * A keeper glove on one hand: the hand's own outline from the skin art (so it fits whatever the skin), a touch bigger
+ * — blue, lime over the fingers, a white wrist strap.
+ */
+function Glove({ hand, skinUrl }: { hand: 'L' | 'R'; skinUrl: string }) {
+  const g = GLOVE_HANDS[hand];
+  const [x0, y0, x1, y1] = g.box;
+  const rect = (r: readonly number[]) => ({ left: pctX(r[0]), top: pctY(r[1]), width: pctX(r[2] - r[0]), height: pctY(r[3] - r[1]) });
+  return (
+    <div
+      className="absolute inset-x-0 top-0"
+      style={{
+        aspectRatio: '496 / 543',
+        WebkitMaskImage: `url(${skinUrl})`,
+        maskImage: `url(${skinUrl})`,
+        WebkitMaskSize: '100% 100%',
+        maskSize: '100% 100%',
+        clipPath: `inset(${pctY(y0)} ${pctX(496 - x1)} ${pctY(543 - y1)} ${pctX(x0)})`,
+        transform: 'scale(1.07)',
+        transformOrigin: `${pctX(g.centre[0])} ${pctY(g.centre[1])}`,
+      }}
+    >
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #3B74FF, #1645FF 45%, #0E2FB0)' }} />
+      <div className="absolute rounded-[30%]" style={{ ...rect(g.fingers), background: 'linear-gradient(170deg, #8EE53F, #58CC02 60%, #3E9A00)' }} />
+      <div className="absolute" style={{ ...rect(g.strap), background: '#F4F6F8', boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.18)' }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(40% 30% at 45% 30%, rgba(255,255,255,0.35), transparent 70%)' }} />
+    </div>
+  );
+}
+
+/** Goalkeeper gloves on both hands of this avatar (fitted to its skin art), for an upper-body overlay. */
+export function KeeperGloves({ customization }: { customization: AvatarCustomization | null }) {
+  const skinUrl = useMemo(() => getSkinPart(resolveAvatarCustomization(customization ?? FALLBACK).skin).asset, [customization]);
+  return (
+    <>
+      <Glove hand="L" skinUrl={skinUrl} />
+      <Glove hand="R" skinUrl={skinUrl} />
+    </>
+  );
+}
+
 export function AvatarFullBody({
   customization,
   seed = 0,
@@ -237,6 +298,7 @@ export function AvatarFullBody({
   muddy = false,
   upperUnderlay,
   shinPads = false,
+  gloves = false,
 }: {
   customization: AvatarCustomization | null;
   /** Picks the boots. */
@@ -255,6 +317,8 @@ export function AvatarFullBody({
   muddy?: boolean;
   /** Shin Pads: a pad strapped on the front of each shin. */
   shinPads?: boolean;
+  /** Goalkeeper gloves on both hands. */
+  gloves?: boolean;
   /** Drawn behind the upper body and moving with it (a card held in the hand, gripped by the fingers). */
   upperUnderlay?: ReactNode;
 }) {
@@ -300,6 +364,11 @@ export function AvatarFullBody({
         <div className="relative" style={{ clipPath: hemClip(resolved.jersey) }}>
           <AvatarPreview customization={customization ?? FALLBACK} width="100%" />
         </div>
+        {gloves && (
+          <div className="pointer-events-none absolute inset-x-0 top-0" style={{ aspectRatio: '496 / 543' }}>
+            <KeeperGloves customization={customization} />
+          </div>
+        )}
         {upperOverlay}
       </div>
     </div>

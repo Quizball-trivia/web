@@ -34,7 +34,6 @@ import {
   runPose,
   runStep,
   slidePose,
-  sprawlPose,
   strikePose,
   FULL_GROUND,
   FULL_H,
@@ -1434,26 +1433,35 @@ export class DuelDirector {
     dp.face = d > 0 ? -1 : 1;
     const rise = smooth((e - 0.6) / 0.4);
     // Down on the grass, leaning back, the leading leg shot out at the ball; then up again.
-    lean(dp, d, 0, 0.5 * dash * (1 - rise));
-    Object.assign(dp.body, slidePose(dash * (1 - rise)));
+    // Leaning back tips the whole figure, so the leading leg is brought down by the same angle: it runs along the
+    // grass at the ball, not up in the air.
+    const sliding = dash * (1 - rise);
+    lean(dp, d, 0, 0.7 * sliding);
+    Object.assign(dp.body, slidePose(sliding));
+    dp.body.hipR -= 40 * sliding;
+    dp.body.hipL -= 40 * sliding;
     dp.body.bodyY = 210 * dash * (1 - rise);
     dp.sy = 1;
     dp.sx = 1;
     dp.spin = 0;
     dp.blur = dash * (1 - smooth((e - TACKLE_CONTACT) / 0.2)) * 0.9;
 
-    // Runner: caught mid-stride, tips over backwards and bounces once on the grass.
-    const fall = smooth((e - TACKLE_CONTACT) / 0.35);
+    // Runner: his legs are taken from under him as the ball goes: he pitches forward over the slide (a hop, the legs
+    // whipped up behind), lands on his front, skids on a little with one bounce, and stays down until the script ends.
+    const fall = smooth((e - TACKLE_CONTACT) / 0.42);
     const rp = runner.pose;
-    runner.x = r0.x + d * fall * 0.9;
+    runner.x = r0.x + d * (0.25 * smooth(e / TACKLE_CONTACT) + 1.1 * fall);
     runner.z = r0.z;
     rp.x = runner.x;
     rp.z = runner.z;
     rp.face = d > 0 ? 1 : -1;
-    const bounce = e > TACKLE_CONTACT + 0.35 ? Math.abs(Math.sin((e - TACKLE_CONTACT - 0.35) * 9)) * Math.exp(-(e - TACKLE_CONTACT - 0.35) * 6) : 0;
-    rp.y = 0.25 * Math.sin(fall * Math.PI) + 0.2 * bounce;
-    lean(rp, -d, 0, 1.4 * fall - 0.15 * bounce);
-    Object.assign(rp.body, sprawlPose(fall, e));
+    const down = e - TACKLE_CONTACT - 0.42;
+    const bounce = down > 0 ? Math.abs(Math.sin(down * 10)) * Math.exp(-down * 7) : 0;
+    rp.y = 0.32 * Math.sin(Math.PI * Math.min(1, fall * 1.05)) + 0.12 * bounce;
+    lean(rp, d, 0, 1.42 * fall - 0.1 * bounce);
+    // Before the contact still running; then swept: the legs fly up behind him and stay there as he lies.
+    const swept = { hipL: -38, kneeL: 72, ankleL: -20, hipR: -14, kneeR: 44, ankleR: -10, lean: 4, bodyX: 0, bodyY: 0 };
+    Object.assign(rp.body, mixPose(runPose(e * 1.6, 0.8), swept, smooth((e - TACKLE_CONTACT + 0.03) / 0.22)));
     rp.sy = 1;
     rp.sx = 1;
     rp.spin = 0;

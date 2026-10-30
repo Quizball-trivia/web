@@ -10,23 +10,28 @@
 import { memo } from 'react';
 import { motion } from 'motion/react';
 import type { AvatarCustomization } from '@/types/game';
-import { AvatarFullBody } from './AvatarFullBody';
+import { AvatarFullBody, GLOVE_HANDS } from './AvatarFullBody';
 import { CardArt } from './ZoneMatchCardFace';
 import type { CardId } from './zoneMatch.cards';
 import {
   FOOT,
   FULL_H,
+  FULL_W,
   GROUND_Y,
   STAND,
   bootPoint,
   footAt,
+  groundPoints,
+  runPose as runPoseFn,
   celebratePose,
   crouchPose,
   divePose,
   idlePose,
   keeperSetPose,
+  kneeSlidePose,
   mixPose,
   runPose,
+  slidePose,
   stepOverPose,
   strikePose,
   type FullBodyPose,
@@ -71,6 +76,18 @@ export interface ReactionFrame {
   shinPads?: { on: boolean; pop: number };
   /** Home Advantage: the scarf round his neck yet, and the pop as it goes on. */
   scarf?: { on: boolean; pop: number };
+  /** Marks on the grass (the lab's whole moves): skids the knees left, turf thrown up — art units on the pitch, the
+   * figure's travel included. */
+  grass?: {
+    skids: { x0: number; x1: number; y: number }[];
+    skidOpacity: number;
+    /** Bits thrown up: grass blades and soil crumbs. */
+    turf: { x: number; y: number; size: number; rot: number; opacity: number; kind: 'blade' | 'crumb' }[];
+    /** Dust where the knees hit the grass. */
+    puffs: { x: number; y: number; r: number; opacity: number }[];
+    /** Churned turf heaped where the slide stopped (0 none – 1 all). */
+    heap: number;
+  };
   /** Tiki-Taka: the two see-through team-mates (0–1 shown) and their legs. */
   mates?: { shown: number; poses: [FullBodyPose, FullBodyPose] };
   /** Goalkeeper Gloves: on his hands yet, and the pop as they go on (0–1). */
@@ -193,7 +210,7 @@ export function cardMotion(card: CardId, t: number, now: number, seed: number): 
       // Frozen mid-stride while the review runs, with a tiny jitter.
       return settle({ ...still(runPose(0.3, 0.6)), shift: 0.8 * Math.sign(Math.sin(t * 50)) * bell(t, 0.2, 1.4) });
     case 'goalkeeper-gloves': {
-      const frame = keeperDive(t, now, seed % 2 ? -1 : 1);
+      const frame = keeperSave(SAVE_KINDS[Math.abs(seed) % SAVE_KINDS.length], t, now, seed % 2 ? -1 : 1);
       return { ...settle(frame), ball: frame.ball, gloves: frame.gloves, scale: frame.scale };
     }
     case 'park-the-bus': {
@@ -548,59 +565,248 @@ export function discardBody(item: Discard, t: number, now: number): FullBodyPose
 
 /* ── Goalkeeper Gloves: the gloves on, a full-stretch save ──────────── */
 
+
 /**
- * The gloves are the hands' own outline (the skin art, a touch bigger), so they fit any skin: each hand's box, the
- * fingers (lime) and the wrist strap (white), in upper-body art units — measured on the skin art.
+ * The keeper's saves (Goalkeeper Gloves plays one at random; the lab plays each):
+ * - stretch: set and load, push off, full stretch nearly flat, the ball caught in the leading glove, down on the side;
+ * - leap: set, a spring straight up with the knees tucked, caught one-handed overhead at the top of the jump;
+ * - parry: a quick, low dive at a hard shot, the glove beats it away, he lands and bounces up.
  */
-export const GLOVE_HANDS = {
-  R: { box: [410, 110, 496, 232], fingers: [413, 143, 472, 214], strap: [436, 208, 490, 224], centre: [452, 172] },
-  L: { box: [8, 86, 102, 222], fingers: [48, 122, 102, 200], strap: [14, 198, 66, 214], centre: [58, 150] },
-} as const;
+export type SaveKind = 'stretch' | 'leap' | 'parry';
+export const SAVE_KINDS: SaveKind[] = ['stretch', 'leap', 'parry'];
 
-/** The dive: set and load, push off, full stretch (the leading glove meets the ball), land on the side, up again. */
-const GK = { gloves: 0.15, push: 0.4, catch: 0.9, land: 1.2, up: 1.75 };
+const GLOVES_ON = 0.15;
+const DIVES = {
+  stretch: { push: 0.4, catch: 0.9, land: 1.2, up: 1.75, angle: 80, air: 10 },
+  parry: { push: 0.3, catch: 0.62, land: 0.8, up: 1.45, angle: 84, air: 4 },
+};
+const LEAP = { push: 0.42, catch: 0.82, land: 1.18, up: 1.7, height: 24 };
 
-function keeperDive(t: number, now: number, dir: 1 | -1): ReactionFrame {
-  const flight = smooth((t - GK.push) / (GK.catch - GK.push));
-  const down = smooth((t - GK.up) / 0.5);
+const glovesFrame = (t: number) => ({ on: t >= GLOVES_ON, pop: t >= GLOVES_ON ? 1 - clamp01((t - GLOVES_ON) / 0.35) : 0 });
+
+export function keeperSave(kind: SaveKind, t: number, now: number, dir: 1 | -1): ReactionFrame {
+  return kind === 'leap' ? keeperLeap(t, now, dir) : keeperDive(kind, t, now, dir);
+}
+
+function keeperDive(kind: 'stretch' | 'parry', t: number, now: number, dir: 1 | -1): ReactionFrame {
+  const D = DIVES[kind];
+  const flight = smooth((t - D.push) / (D.catch - D.push));
+  const down = smooth((t - D.up) / 0.5);
   let body: FullBodyPose;
-  if (t < GK.push) {
+  if (t < D.push) {
     // Set, sinking onto the legs before the spring.
-    body = mixPose(idlePose(now), keeperSetPose(now, 0, bell(t, 0.05, GK.push + 0.1)), smooth(t / 0.25));
-  } else if (t < GK.up) {
-    // Pushing off into the stretch; the legs trail, a little scissored.
-    body = mixPose(keeperSetPose(now, 0, 0.6), divePose(flight), smooth((t - GK.push) / 0.2));
+    body = mixPose(idlePose(now), keeperSetPose(now, 0, bell(t, 0.05, D.push + 0.1)), smooth(t / 0.25));
+  } else if (t < D.up) {
+    // The push leg drives off, then both trail behind the body, a little scissored.
+    body = mixPose(keeperSetPose(now, 0, 0.6), divePose(flight), smooth((t - D.push) / 0.2));
     body = { ...body, hipL: body.hipL - 8 * flight, hipR: body.hipR + 6 * flight };
   } else {
     body = mixPose(divePose(1), keeperSetPose(now), down);
   }
-  // Nearly flat at full stretch, lifted off the ground, then down on the side with a small bounce, and back up.
   // The figure turns about its feet; a flat dive that way would leave the card. So the turn is paid back: the figure
   // is moved so its middle stays mid-card (across: 64 % of the box's width per sin θ; up: 50 % of its height per
   // 1 − cos θ), drops low once he lands, and shrinks a touch at full stretch.
   const out = flight * (1 - down);
-  const theta = (80 * out * Math.PI) / 180;
+  const theta = (D.angle * out * Math.PI) / 180;
   const scale = 1 - 0.16 * out;
-  const landed = smooth((t - GK.land) / 0.2) * (1 - down);
-  const air = Math.sin(Math.PI * clamp01((t - GK.push) / (GK.land - GK.push)));
-  const bounce = t > GK.land ? 2.5 * Math.sin(Math.PI * clamp01((t - GK.land) / 0.25)) : 0;
-  const tilt = dir * 80 * out;
+  const landed = smooth((t - D.land) / 0.2) * (1 - down);
+  const air = Math.sin(Math.PI * clamp01((t - D.push) / (D.land - D.push)));
+  const bounce = t > D.land ? 2.5 * Math.sin(Math.PI * clamp01((t - D.land) / 0.25)) : 0;
+  const tilt = dir * D.angle * out;
   // (He stands right of the card's middle: the extra travel goes only towards the side with room.)
   const shift = dir * -64 * Math.sin(theta) * scale + (dir < 0 ? -10 : -4) * out;
-  const lift = 50 * (1 - Math.cos(theta)) * scale * (1 - 0.75 * landed) + 10 * air + bounce;
+  const lift = 50 * (1 - Math.cos(theta)) * scale * (1 - 0.75 * landed) + D.air * air + bounce;
 
-  // The shot: in from where he dives, caught in the leading glove, held as he lands, let go as he gets up.
+  // The shot comes in at the leading glove: caught (stretch), or beaten away past the fingertips (parry).
   const hand = GLOVE_HANDS[dir > 0 ? 'R' : 'L'].centre;
   let ball: ReactionBall | undefined;
-  if (t >= GK.push - 0.1 && t < GK.up + 0.4) {
-    if (t < GK.catch) {
-      const u = clamp01((t - (GK.push - 0.1)) / (GK.catch - GK.push + 0.1));
-      ball = { x: hand[0] + dir * 60 * (1 - u), y: lerp(hand[1] - 430, hand[1] - 34, u), rot: 700 * u, ring: 0, opacity: smooth(u / 0.2) };
-    } else {
-      ball = { x: hand[0], y: hand[1] - 34, rot: 700, ring: t < GK.catch + 0.3 ? (t - GK.catch) / 0.3 : 0, opacity: smooth((GK.up + 0.4 - t) / 0.3) };
+  const from = D.push - 0.1;
+  if (t >= from && t < D.catch) {
+    const u = clamp01((t - from) / (D.catch - from));
+    const drop = kind === 'parry' ? 260 : 430;
+    ball = { x: hand[0] + dir * 60 * (1 - u), y: lerp(hand[1] - drop, hand[1] - 34, u), rot: 900 * u, ring: 0, opacity: smooth(u / 0.2) };
+  } else if (t >= D.catch && kind === 'stretch' && t < D.up + 0.4) {
+    ball = { x: hand[0], y: hand[1] - 34, rot: 900, ring: t < D.catch + 0.3 ? (t - D.catch) / 0.3 : 0, opacity: smooth((D.up + 0.4 - t) / 0.3) };
+  } else if (t >= D.catch && kind === 'parry' && t < D.catch + 0.7) {
+    // Off the glove, on past the fingertips (the body's "up" is the dive's direction) and spinning away.
+    const dt = t - D.catch;
+    ball = { x: hand[0] + dir * 120 * dt, y: hand[1] - 34 - 900 * dt, rot: 900 - 1600 * dt, ring: dt < 0.3 ? dt / 0.3 : 0, opacity: smooth((0.7 - dt) / 0.25) };
+  }
+  return { body, lift, tilt, spin: 0, shift, blur: 0, fade: 1, scale, ball, gloves: glovesFrame(t) };
+}
+
+/** The high catch: set, spring straight up with the knees tucked, the ball caught one-handed at the top, land soft. */
+function keeperLeap(t: number, now: number, dir: 1 | -1): ReactionFrame {
+  const L = LEAP;
+  const air = Math.sin(Math.PI * clamp01((t - L.push) / (L.land - L.push)));
+  const tuck = { ...STAND, hipL: 34, kneeL: 88, ankleL: 30, hipR: 42, kneeR: 96, ankleR: 34, lean: -6 };
+  let body: FullBodyPose;
+  if (t < L.push) body = mixPose(idlePose(now), keeperSetPose(now, 0, bell(t, 0.05, L.push + 0.08)), smooth(t / 0.25));
+  else if (t < L.land) body = mixPose(keeperSetPose(now, 0, 0.6), tuck, smooth((t - L.push) / 0.18));
+  else if (t < L.up) body = mixPose(crouchPose(0.55), keeperSetPose(now), smooth((t - L.land - 0.12) / 0.35));
+  else body = mixPose(keeperSetPose(now), idlePose(now), smooth((t - L.up) / 0.4));
+  const lift = L.height * air;
+  const tilt = dir * 10 * air;
+  // The ball in from high on his glove side, met at the top of the jump in the raised glove, held as he lands.
+  const hand = GLOVE_HANDS[dir > 0 ? 'R' : 'L'].centre;
+  const catchAt: [number, number] = [hand[0], hand[1] - 40];
+  const liftArt = (time: number) => ((L.height * Math.sin(Math.PI * clamp01((time - L.push) / (L.land - L.push)))) / 100) * FULL_H;
+  let ball: ReactionBall | undefined;
+  if (t >= L.push - 0.15 && t < L.catch) {
+    const u = clamp01((t - (L.push - 0.15)) / (L.catch - L.push + 0.15));
+    // On a straight line in the world (the figure is lifted beneath it).
+    const worldY = lerp(catchAt[1] - liftArt(L.catch) - 260, catchAt[1] - liftArt(L.catch), u);
+    ball = { x: catchAt[0] + dir * 220 * (1 - u), y: worldY + liftArt(t), rot: 800 * u, ring: 0, opacity: smooth(u / 0.2) };
+  } else if (t >= L.catch && t < L.up + 0.5) {
+    ball = { x: catchAt[0], y: catchAt[1], rot: 800, ring: t < L.catch + 0.3 ? (t - L.catch) / 0.3 : 0, opacity: smooth((L.up + 0.5 - t) / 0.3) };
+  }
+  return { body, lift, tilt, spin: 0, shift: 0, blur: 0, fade: 1, ball, gloves: glovesFrame(t) };
+}
+
+/* ── Tackles, seen on their own (the lab): the slide, and being taken down ─ */
+
+/** The pivot the figure turns about (its feet), in its art units. */
+const PIVOT: [number, number] = [FULL_W / 2, GROUND_Y];
+const rotateAbout = ([x, y]: [number, number], deg: number): [number, number] => {
+  const r = (deg * Math.PI) / 180;
+  const dx = x - PIVOT[0];
+  const dy = y - PIVOT[1];
+  return [PIVOT[0] + dx * Math.cos(r) - dy * Math.sin(r), PIVOT[1] + dx * Math.sin(r) + dy * Math.cos(r)];
+};
+/** The lift (% of the figure's height) that puts the lowest knee or stud of `body`, turned by `tilt`, on the grass. */
+function groundLift(body: FullBodyPose, tilt: number): number {
+  // His seat counts too: in a slide he sits on the grass.
+  const seat: [number, number] = [FULL_W / 2 + body.bodyX, 575 + body.bodyY];
+  // …and the tops of the boots (lying on their laces in a knee slide).
+  const uppers = (['L', 'R'] as const).flatMap((side) => [bootPoint(body, side, 70, -12), bootPoint(body, side, -30, -24), bootPoint(body, side, 20, -30)]);
+  const lowest = Math.max(...[...groundPoints(body), seat, ...uppers].map((p) => rotateAbout(p, tilt)[1]));
+  return ((lowest - GROUND_Y) / FULL_H) * 100;
+}
+/** A point on the pitch (art units, the figure unmoved) in the turned, lifted figure's own frame (where its ball is drawn). */
+function intoFigure([x, y]: [number, number], tilt: number, lift: number): [number, number] {
+  return rotateAbout([x, y + (lift / 100) * FULL_H], -tilt);
+}
+
+/**
+ * The slide tackle: a few strides in, down on the grass leaning back with the leading leg along it, the boot knocks
+ * the rolling ball away, then up again. Facing +x.
+ */
+export function slideTackleMove(t: number): ReactionFrame {
+  const S = { drop: 0.35, contact: 0.6, rise: 1.25, up: 1.7 };
+  const down = smooth((t - S.drop) / (S.contact - S.drop)) * (1 - smooth((t - S.rise) / (S.up - S.rise)));
+  const tilt = -40 * down;
+  const slide = slidePose(down);
+  // Leaning back turns the leading leg up by the same 40°: it is brought down so it runs flat along the grass.
+  const legs = { ...slide, hipR: slide.hipR - 50 * down, kneeR: 4, hipL: slide.hipL - 10 * down };
+  const body = t < S.drop ? runPoseFn(t * 2.4, 0.8) : mixPose(runPoseFn(t * 2.4, 0.8), legs, smooth((t - S.drop) / 0.12) * (t < S.rise ? 1 : down));
+  const lift = -groundLift(body, tilt) * (down > 0.02 ? 1 : 0);
+  // The ball rolls in towards his boot, which knocks it back the way it came and up.
+  const contactX = rotateAbout(bootPoint(mixPose(STAND, legs, 1), 'R', 84, 15), -40)[0];
+  let world: [number, number];
+  if (t < S.contact) world = [lerp(contactX + 260, contactX + BALL_R, clamp01(t / S.contact)), GROUND_Y - BALL_R];
+  else {
+    const dt = t - S.contact;
+    world = [contactX + BALL_R + 700 * dt, GROUND_Y - BALL_R - 500 * dt + 600 * dt * dt];
+  }
+  const [x, y] = intoFigure(world, tilt, lift);
+  const ball: ReactionBall = { x, y, rot: t * 700, ring: t >= S.contact && t < S.contact + 0.25 ? (t - S.contact) / 0.25 : 0, opacity: smooth((1.4 - t) / 0.2) };
+  return { body, lift, tilt, spin: 0, shift: 0, blur: 0, fade: 1, ball };
+}
+
+/** Taken down: running, the legs swept from under him, he pitches forward, lands on his front with a bounce, gets up. */
+export function tackledMove(t: number): ReactionFrame {
+  const T = { swept: 0.4, land: 0.85, up: 1.5, stand: 1.95 };
+  const fall = smooth((t - T.swept) / (T.land - T.swept)) * (1 - smooth((t - T.up) / (T.stand - T.up)));
+  const swept: FullBodyPose = { hipL: -38, kneeL: 72, ankleL: -20, hipR: -14, kneeR: 44, ankleR: -10, lean: 4, bodyX: 0, bodyY: 0 };
+  const running = runPoseFn(t * 2.4, 0.8);
+  const body = t < T.up ? mixPose(running, swept, smooth((t - T.swept + 0.03) / 0.2)) : mixPose(STAND, swept, fall);
+  const tilt = 80 * fall;
+  const bounceT = t - T.land;
+  const bounce = bounceT > 0 && t < T.up ? 3 * Math.abs(Math.sin(bounceT * 10)) * Math.exp(-bounceT * 7) : 0;
+  const hop = 10 * Math.sin(Math.PI * clamp01((t - T.swept) / (T.land - T.swept)));
+  const lift = -groundLift(body, tilt) + (t < T.land ? hop : 0) + bounce;
+  return { body, lift, tilt, spin: 0, shift: 0, blur: 0, fade: 1 };
+}
+
+/**
+ * The knee slide: a sprint in, down onto the knees, leaning back with the arms up, sliding on along the grass (turf
+ * flying up behind the knees, two skid marks left), a moment held, then up. `travel` art units → the frame's shift
+ * (a share of a box 1.32× the figure's width, as the player card's).
+ */
+const KS = { drop: 0.45, down: 0.62, stop: 1.45, rise: 2.0, up: 2.45, from: -420, touch: -150, to: 190 };
+const shiftOf = (travel: number) => (travel / FULL_W) * 100 / 1.32;
+const ksTravel = (t: number) => {
+  if (t < KS.down) return lerp(KS.from, KS.touch, t / KS.down);
+  // Slides on at the sprint's speed, slowing to a stop.
+  const u = clamp01((t - KS.down) / (KS.stop - KS.down));
+  return KS.touch + (KS.to - KS.touch) * (1 - (1 - u) ** 2.2);
+};
+function ksBody(t: number): { body: FullBodyPose; tilt: number; dip: number } {
+  const kneel = kneeSlidePose();
+  if (t < KS.drop) return { body: runPoseFn(t * 2.6, 1), tilt: 0, dip: 0 };
+  if (t < KS.rise) {
+    const k = smooth((t - KS.drop) / (KS.down - KS.drop));
+    // Leaning further back as he slides (chest out), a little sway, then upright again for the hold.
+    const slide = clamp01((t - KS.down) / (KS.stop - KS.down));
+    const back = -8 - 7 * Math.sin(Math.PI * slide) - 3 * smooth(slide);
+    const sway = 2 * Math.sin((t - KS.down) * 14) * (1 - slide) * (t > KS.down ? 1 : 0);
+    // The knees take the impact: a small bounce up off the grass at touchdown.
+    const dip = t > KS.down ? -1.8 * Math.sin(Math.PI * clamp01((t - KS.down) / 0.22)) : 0;
+    return { body: mixPose(runPoseFn(KS.drop * 2.6, 1), { ...kneel, lean: kneel.lean - 6 * Math.sin(Math.PI * slide) }, k), tilt: back * k + sway, dip };
+  }
+  const k = smooth((t - KS.rise) / (KS.up - KS.rise));
+  return { body: mixPose(kneel, STAND, k), tilt: -14 * (1 - k), dip: 0 };
+}
+/** Where his knees are on the pitch at `t` (art units, the travel included). */
+function ksKnees(t: number): [number, number][] {
+  const { body, tilt } = ksBody(t);
+  const lift = -groundLift(body, tilt);
+  return groundPoints(body)
+    .slice(0, 2)
+    .map((p) => {
+      const [x, y] = rotateAbout(p, tilt);
+      return [x + ksTravel(t), y - (lift / 100) * FULL_H] as [number, number];
+    });
+}
+
+export function kneeSlideMove(t: number): ReactionFrame {
+  const { body, tilt, dip } = ksBody(t);
+  const lift = -groundLift(body, tilt) - dip;
+  // The skids: from where the knees touched down to where they are (or stopped), fading once he is up.
+  const touch = ksKnees(KS.down);
+  const now = ksKnees(Math.min(t, KS.stop));
+  const skids = t < KS.down ? [] : touch.map(([x0], i) => ({ x0, x1: now[i][0], y: GROUND_Y + 2 + i * 16 }));
+  // Turf thrown back and up from the knees while they plough: grass blades and soil crumbs, fewer as he slows.
+  const turf: NonNullable<ReactionFrame['grass']>['turf'] = [];
+  for (let i = 0; i < 40; i += 1) {
+    const born = KS.down + i * 0.021;
+    const age = t - born;
+    const pace = 1 - clamp01((born - KS.down) / (KS.stop - KS.down));
+    if (age < 0 || age > 0.75 || born > KS.stop || ((i * 7) % 10) / 10 > pace + 0.15) continue;
+    const [kx] = ksKnees(born)[i % 2];
+    const spread = ((i * 37) % 11) / 11;
+    const blade = i % 3 !== 0;
+    turf.push({
+      x: kx - 20 - (60 + 200 * spread) * pace * age - 40 * age,
+      y: GROUND_Y - 4 - (200 + 220 * spread) * (0.5 + pace) * age + 900 * age * age,
+      size: blade ? 14 + (i % 4) * 4 : 5 + (i % 3) * 2,
+      rot: (blade ? 30 : 0) + age * (blade ? 900 : 300) * (i % 2 ? 1 : -1) + i * 40,
+      opacity: smooth((0.75 - age) / 0.25) * (GROUND_Y - 4 - (200 + 220 * spread) * (0.5 + pace) * age + 900 * age * age > GROUND_Y + 6 ? 0 : 1),
+      kind: blade ? 'blade' : 'crumb',
+    });
+  }
+  // A puff of dust as the knees hit, spreading and settling.
+  const puffs: NonNullable<ReactionFrame['grass']>['puffs'] = [];
+  const pa = t - KS.down;
+  if (pa >= 0 && pa < 0.9) {
+    for (let i = 0; i < 5; i += 1) {
+      const [kx] = touch[i % 2];
+      puffs.push({ x: kx - 30 + (i - 2) * 26 - 60 * pa, y: GROUND_Y - 10 - 40 * pa * (0.6 + i * 0.15), r: 16 + 70 * pa * (0.7 + (i % 3) * 0.2), opacity: 0.45 * (1 - pa / 0.9) });
     }
   }
-  return { body, lift, tilt, spin: 0, shift, blur: 0, fade: 1, scale, ball, gloves: { on: t >= GK.gloves, pop: t >= GK.gloves ? 1 - clamp01((t - GK.gloves) / 0.35) : 0 } };
+  const skidOpacity = t < KS.rise ? 1 : smooth((KS.up + 1.2 - t) / 1.2);
+  const heap = smooth((t - KS.stop + 0.3) / 0.3) * skidOpacity;
+  return { body, lift, tilt, spin: 0, shift: shiftOf(ksTravel(t)), blur: 0, fade: 1, grass: { skids, skidOpacity, turf, puffs, heap } };
 }
 
 /* ── Park the Bus: the team bus, and him sitting on its roof ─────────── */

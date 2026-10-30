@@ -12,6 +12,7 @@ import { Pause, Play, RotateCcw, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
+import { BallArt, REACTION_BALL_R, type ReactionFrame } from './ZoneMatchFutReactions';
 import { FULL_GROUND, FULL_H, FULL_W, footOf, runStep } from './zoneMatch.fullBody';
 import { CardFace } from './ZoneMatchCardFace';
 import { ZoneMatch3DView, type ZoneMatch3DSeat } from './ZoneMatch3D';
@@ -101,19 +102,89 @@ function Ball({ ballRef }: { ballRef: React.RefObject<SVGGElement | null> }) {
   );
 }
 
+/** A wobbly band (x0 → x1 around height y, `w` thick): ragged like torn turf (deterministic). */
+function raggedBand(x0: number, x1: number, y: number, w: number, seed: number): string {
+  const n = Math.max(2, Math.round(Math.abs(x1 - x0) / 14));
+  const at = (i: number, side: number) => {
+    const x = x0 + ((x1 - x0) * i) / n;
+    const wob = 0.35 * Math.sin(i * 2.3 + seed + side) + 0.2 * Math.sin(i * 5.1 + seed * 2 + side);
+    return `${x.toFixed(1)},${(y + side * (w / 2) * (1 + wob)).toFixed(1)}`;
+  };
+  const top = Array.from({ length: n + 1 }, (_, i) => at(i, -1));
+  const bottom = Array.from({ length: n + 1 }, (_, i) => at(n - i, 1));
+  return `M${top.join(' L')} L${bottom.join(' L')} Z`;
+}
+
+/** The knee slide's marks as SVG (art units): flattened grass, torn earth, a divot, a heap, blades, crumbs, dust. */
+function grassMarks(g: NonNullable<ReactionFrame['grass']>): string {
+  const o = g.skidOpacity;
+  const parts: string[] = [];
+  g.skids.forEach((k, i) => {
+    if (Math.abs(k.x1 - k.x0) < 2) return;
+    const lo = Math.min(k.x0, k.x1);
+    const hi = Math.max(k.x0, k.x1);
+    parts.push(`<path d="${raggedBand(lo, hi, k.y + 8, 30, i * 3)}" fill="#1F6B2D" opacity="${(0.8 * o).toFixed(2)}"/>`);
+    parts.push(`<path d="${raggedBand(lo + 6, hi, k.y + 9, 13, i * 3 + 1)}" fill="#5B3A1D" opacity="${(0.9 * o).toFixed(2)}"/>`);
+    parts.push(`<path d="${raggedBand(lo + 10, hi - 4, k.y + 7, 4, i * 3 + 2)}" fill="#7A5230" opacity="${(0.8 * o).toFixed(2)}"/>`);
+    // The divot where the knee landed.
+    parts.push(`<ellipse cx="${(k.x0 + 6).toFixed(1)}" cy="${(k.y + 9).toFixed(1)}" rx="16" ry="9" fill="#3E2611" opacity="${(0.9 * o).toFixed(2)}"/>`);
+    // Turf heaped up in front of where the knee stopped.
+    if (g.heap > 0.01) {
+      parts.push(`<path d="M${(hi - 4).toFixed(1)} ${(k.y + 6).toFixed(1)} q 10 -${(12 * g.heap).toFixed(1)} 22 -2 q 6 4 10 6 Z" fill="#2E7D35" opacity="${(o * g.heap).toFixed(2)}"/>`);
+      parts.push(`<circle cx="${(hi + 8).toFixed(1)}" cy="${(k.y + 4).toFixed(1)}" r="${(4 * g.heap).toFixed(1)}" fill="#5B3A1D" opacity="${(o * g.heap).toFixed(2)}"/>`);
+    }
+  });
+  for (const p of g.puffs) parts.push(`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="#D9CBB0" opacity="${p.opacity.toFixed(2)}"/>`);
+  for (const c of g.turf) {
+    parts.push(
+      c.kind === 'blade'
+        ? `<rect x="${(c.x - 2).toFixed(1)}" y="${(c.y - c.size / 2).toFixed(1)}" width="4" height="${c.size}" rx="2" fill="#3FA34D" opacity="${c.opacity.toFixed(2)}" transform="rotate(${c.rot.toFixed(0)} ${c.x.toFixed(1)} ${c.y.toFixed(1)})"/>`
+        : `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${(c.size / 2).toFixed(1)}" fill="#5B3A1D" opacity="${c.opacity.toFixed(2)}"/>`,
+    );
+  }
+  return parts.join('');
+}
+
 function BodyStage({ entry, clock, start, customization, left }: { entry: LabEntry; clock: LabClock; start: number; customization: AvatarCustomization | null; left: boolean }) {
   const [els, setEls] = useState<FullBodyEls | null>(null);
   const ballBox = useRef<HTMLDivElement>(null);
   const ballRef = useRef<SVGGElement>(null);
+  const figRef = useRef<HTMLDivElement>(null);
+  const grassRef = useRef<SVGGElement>(null);
+  const moveBall = useRef<HTMLDivElement>(null);
+  const moveBallSpin = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!els || !entry.body) return;
-    const { pose, loop, dribble } = entry.body;
+    const { pose, loop, dribble, frame } = entry.body;
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const t = (clock.now() - start) % loop;
-      const body = pose(t);
+      const f = frame?.(t);
+      const body = f ? f.body : pose(t);
       applyFullBodyPose(els, body);
+      if (figRef.current) {
+        // A whole move (a save): the figure tilts, lifts and travels as on the player card. (The card's shift is a
+        // share of a box 1.32× the figure's width.)
+        figRef.current.style.transform = f
+          ? `translate(${(f.shift * 1.32).toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) scale(${(f.scale ?? 1).toFixed(3)})`
+          : '';
+      }
+      // Marks the move leaves on the grass (knee slide): torn grooves, a divot, churned turf, flying bits, dust.
+      if (grassRef.current) {
+        const g = f?.grass;
+        grassRef.current.innerHTML = g ? grassMarks(g) : '';
+      }
+      if (moveBall.current && moveBallSpin.current) {
+        const b = f?.ball;
+        moveBall.current.style.display = b ? '' : 'none';
+        if (b) {
+          moveBall.current.style.left = `${(((b.x - REACTION_BALL_R) / FULL_W) * 100).toFixed(2)}%`;
+          moveBall.current.style.top = `${(((b.y - REACTION_BALL_R) / FULL_H) * 100).toFixed(2)}%`;
+          moveBall.current.style.opacity = b.opacity.toFixed(2);
+          moveBallSpin.current.style.transform = `rotate(${b.rot.toFixed(0)}deg)`;
+        }
+      }
       if (dribble && ballBox.current && ballRef.current) {
         // One touch a stride, when the front boot is furthest forward: the ball rolls on ahead, the player catches up.
         const u = t * dribble.cycles;
@@ -134,8 +205,36 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
   return (
     <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,#1d6b3a_0%,#0b2a17_70%)]">
       {/* Facing left: the whole figure (and its ball) mirrors, as the cut-out does on the pitch. */}
-      <div className="relative" style={{ height: '82%', aspectRatio: `${FULL_W} / ${FULL_H}`, transform: left ? 'scaleX(-1)' : undefined }}>
-        <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} />
+      <div className="relative" style={{ height: '70%', marginTop: '-6%', aspectRatio: `${FULL_W} / ${FULL_H}`, transform: left ? 'scaleX(-1)' : undefined }}>
+        {/* The grass he stands on (marks show on it): mowing stripes, a ragged edge of blades. */}
+        <div
+          className="pointer-events-none absolute inset-x-[-120%] bottom-[-14%]"
+          style={{
+            top: `${(FULL_GROUND * 100).toFixed(1)}%`,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.28) 100%), repeating-linear-gradient(90deg, #2F8F3F 0 90px, #28803A 90px 180px)',
+          }}
+        >
+          <svg className="absolute inset-x-0 top-[-7px] h-[9px] w-full" preserveAspectRatio="none" viewBox="0 0 120 9" aria-hidden>
+            <defs>
+              <pattern id="lab-blades" width="6" height="9" patternUnits="userSpaceOnUse">
+                <path d="M0 9 L1.5 2 L3 9 Z M3 9 L4.6 0 L6 9 Z" fill="#37A148" />
+                <path d="M1.5 9 L2.8 4 L4 9 Z" fill="#2A8A3B" />
+              </pattern>
+            </defs>
+            <rect width="120" height="9" fill="url(#lab-blades)" />
+          </svg>
+        </div>
+        <svg className="pointer-events-none absolute inset-0 size-full overflow-visible" viewBox={`0 0 ${FULL_W} ${FULL_H}`} aria-hidden>
+          <g ref={grassRef} />
+        </svg>
+        <div ref={figRef} className="relative size-full" style={{ transformOrigin: `50% ${(FULL_GROUND * 100).toFixed(1)}%` }}>
+          <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} gloves={entry.body?.gloves} />
+          <div ref={moveBall} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
+            <div ref={moveBallSpin} className="size-full">
+              <BallArt />
+            </div>
+          </div>
+        </div>
         {entry.body?.dribble && (
           <div
             ref={ballBox}
@@ -352,7 +451,7 @@ export function ZoneMatchAnimationLab() {
               </motion.div>
             )}
           </AnimatePresence>
-          <div className={cn('pointer-events-none absolute left-3 z-20 max-w-[70%] rounded-xl bg-black/55 px-3 py-2 backdrop-blur', entry.question ? 'top-3' : 'bottom-3')}>
+          <div className={cn('pointer-events-none absolute left-3 z-20 max-w-[70%] rounded-xl bg-black/55 px-3 py-2 backdrop-blur', entry.question || entry.body ? 'top-3' : 'bottom-3')}>
             <div className="text-sm font-bold">{entry.label}</div>
             <div className="text-xs text-white/75">{entry.about}</div>
             <div className="mt-1 font-mono text-[10px] text-white/45">{entry.source}</div>
