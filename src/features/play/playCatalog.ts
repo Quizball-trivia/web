@@ -38,6 +38,7 @@ export const PLAY_WITH_COINS_SLUGS = [
 
 /** The day each game reached production. A game with no date is never marked new. Add a line with every release. */
 export const PLAY_RELEASED_ON: Record<string, string> = {
+  "football-darts-501": "2026-10-30",
   "conexiones-futboleras": "2026-10-26",
   "football-codenames": "2026-10-22",
   "dato-falso-futbolero": "2026-10-19",
