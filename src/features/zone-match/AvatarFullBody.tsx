@@ -14,7 +14,11 @@ import { useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode 
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { resolveAvatarCustomization } from '@/lib/avatars';
 import type { AvatarCustomization } from '@/types/game';
-import { ANKLE_Y, FULL_H, FULL_W, HIP_X, HIP_Y, KNEE_Y, STAND, fullBodyColors, shade, type FullBodyColors, type FullBodyPose } from './zoneMatch.fullBody';
+import { ANKLE_Y, FULL_H, FULL_W, HIP_X, HIP_Y, KNEE_Y, STAND, fullBodyColors, mixHex, shade, type FullBodyColors, type FullBodyPose } from './zoneMatch.fullBody';
+
+const MUD = '#5B3A1D';
+/** Boots caked in mud (Muddy Pitch). */
+const MUD_BOOTS: Partial<FullBodyColors> = { boots: '#5B3A1D', bootShade: '#46290F', bootTrim: '#8A6236', sole: '#3B2511', laces: '#A9845A' };
 
 const UPPER_H = 543;
 /** The jersey's middle (it spans 140–350). */
@@ -169,7 +173,7 @@ function Boot({ x, c, tone }: { x: number; c: FullBodyColors; tone: (hex: string
   );
 }
 
-function Leg({ x, c, side, els }: { x: number; c: FullBodyColors; side: 'L' | 'R'; els: FullBodyEls }) {
+function Leg({ x, c, side, els, pad = false }: { x: number; c: FullBodyColors; side: 'L' | 'R'; els: FullBodyEls; pad?: boolean }) {
   const back = side === 'L';
   /** Outward, away from the other leg. */
   const o = back ? -1 : 1;
@@ -189,6 +193,14 @@ function Leg({ x, c, side, els }: { x: number; c: FullBodyColors; side: 'L' | 'R
         <rect x={x - 32} y={SOCK_TOP - 4} width={64} height={20} rx={6} fill={tone(c.socks)} />
         {sockStripe && <rect x={x - 32} y={SOCK_TOP + 3} width={64} height={6} fill={tone(c.sockBand)} />}
         <rect x={x - 31} y={SOCK_TOP + 14} width={62} height={4} rx={2} fill={tone(c.sockShade)} />
+        {pad && (
+          // Shin Pads: on the front of the shin (the toe side), from below the knee over the sock's cuff.
+          <g transform={`translate(${x + 6} ${KNEE_Y + 62})`} opacity={back ? 0.92 : 1}>
+            <path d="M-20 -48 Q0 -56 20 -48 L22 30 Q0 52 -22 30 Z" fill={tone('#F4F6F8')} stroke={tone('#1645FF')} strokeWidth={4.5} strokeLinejoin="round" />
+            <path d="M-14 -40 Q0 -46 14 -40 L15 -32 Q0 -38 -15 -32 Z" fill={tone('#C9D6FF')} />
+            <path d="M-9 -12 h18 v12 q0 12 -9 16 q-9 -4 -9 -16 Z" fill={tone('#58CC02')} stroke="#14213D" strokeWidth={2} />
+          </g>
+        )}
         <g ref={(el) => keepJoint(els, `ankle${side}`, el)}>
           {/* The sock's end turns with the foot (a round joint under the boot's collar): no sock edge pokes out of the
               boot at any ankle angle. Both boots point the way the face looks (the cut-out mirrors as a whole). */}
@@ -221,6 +233,10 @@ export function AvatarFullBody({
   className,
   style,
   upperOverlay,
+  bootColors,
+  muddy = false,
+  upperUnderlay,
+  shinPads = false,
 }: {
   customization: AvatarCustomization | null;
   /** Picks the boots. */
@@ -233,10 +249,30 @@ export function AvatarFullBody({
   style?: CSSProperties;
   /** Drawn over the upper body and moving with it (card glows on the arms and hands). */
   upperOverlay?: ReactNode;
+  /** A boot in other colours (Golden Boot: the golden boot on his left foot). */
+  bootColors?: Partial<Record<'L' | 'R', Partial<FullBodyColors>>>;
+  /** Muddy Pitch: mud-brown boots and mud on the socks. */
+  muddy?: boolean;
+  /** Shin Pads: a pad strapped on the front of each shin. */
+  shinPads?: boolean;
+  /** Drawn behind the upper body and moving with it (a card held in the hand, gripped by the fingers). */
+  upperUnderlay?: ReactNode;
 }) {
   // The same defaults AvatarPreview fills in (e.g. the default jersey), so the shorts match what is drawn.
   const resolved = useMemo(() => resolveAvatarCustomization(customization ?? FALLBACK), [customization]);
-  const colors = useMemo(() => fullBodyColors(resolved, seed), [resolved, seed]);
+  const colors = useMemo(() => {
+    const base = fullBodyColors(resolved, seed);
+    if (!muddy) return base;
+    return {
+      ...base,
+      ...MUD_BOOTS,
+      socks: mixHex(base.socks, MUD, 0.45),
+      sockShade: mixHex(base.sockShade, MUD, 0.55),
+      sockBand: mixHex(base.sockBand, MUD, 0.35),
+    };
+  }, [resolved, seed, muddy]);
+  const colorsL = useMemo(() => ({ ...colors, ...bootColors?.L }), [colors, bootColors?.L]);
+  const colorsR = useMemo(() => ({ ...colors, ...bootColors?.R }), [colors, bootColors?.R]);
   const [els] = useState<FullBodyEls>(() => ({ upper: null, legs: null, joints: {}, shorts: null, folds: null }));
   useLayoutEffect(() => {
     applyFullBodyPose(els, pose);
@@ -249,8 +285,8 @@ export function AvatarFullBody({
     <div className={className} style={{ position: 'relative', aspectRatio: `${FULL_W} / ${FULL_H}`, ...style }}>
       <svg className="absolute inset-0 size-full overflow-visible" viewBox={`0 0 ${FULL_W} ${FULL_H}`} aria-hidden>
         <g ref={(el) => keepLegs(els, el)}>
-          <Leg x={HIP_X.L} c={colors} side="L" els={els} />
-          <Leg x={HIP_X.R} c={colors} side="R" els={els} />
+          <Leg x={HIP_X.L} c={colorsL} side="L" els={els} pad={shinPads} />
+          <Leg x={HIP_X.R} c={colorsR} side="R" els={els} pad={shinPads} />
           <path ref={(el) => keepShorts(els, el, 'shorts')} fill={colors.shorts} />
           <path ref={(el) => keepShorts(els, el, 'folds')} fill={colors.shortsShade} />
         </g>
@@ -260,6 +296,7 @@ export function AvatarFullBody({
         className="absolute inset-x-0 top-0"
         style={{ transformOrigin: `50% ${((HIP_Y / UPPER_H) * 100).toFixed(1)}%` }}
       >
+        {upperUnderlay}
         <div className="relative" style={{ clipPath: hemClip(resolved.jersey) }}>
           <AvatarPreview customization={customization ?? FALLBACK} width="100%" />
         </div>

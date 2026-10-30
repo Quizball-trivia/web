@@ -9,17 +9,49 @@
  * little spin and a reaction from the player.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { animate, motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
-import { celebratePose, crouchPose, divePose, idlePose, keeperSetPose, stepOverPose, strikePose } from './zoneMatch.fullBody';
+import { celebratePose, crouchPose, divePose, idlePose, keeperSetPose, mixPose, stepOverPose, strikePose } from './zoneMatch.fullBody';
 import type { AvatarCustomization } from '@/types/game';
 import { tierFromRp } from '@/utils/rankedTier';
 import { getTierAccent, getTierFrameSrc } from '@/utils/tierVisuals';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, DECK_SIZE, type CardId, type CardType } from './zoneMatch.cards';
 import { CARD_TYPE_THEME, PlaystyleBadge } from './ZoneMatchCardFace';
-import { BallArt, CARD_REACTION_S, CardReactionFx, REACTION_BALL_R, cardMotion, type ReactionFrame } from './ZoneMatchFutReactions';
+import {
+  ARMBAND,
+  ArmbandArt,
+  BallArt,
+  CARD_REACTION_S,
+  CardReactionFx,
+  DISCARD_S,
+  BUS,
+  BusArt,
+  FLAG,
+  FlagShape,
+  GLOVE_HANDS,
+  GOLD_BOOTS,
+  MATES,
+  ScarfArt,
+  ShinPadShape,
+  HeldYellowCard,
+  PUDDLE,
+  REACTION_BALL_R,
+  SECOND_BALL_REST,
+  YELLOW,
+  YellowCardShape,
+  cardMotion,
+  discardBody,
+  discardSprite,
+  seatedPose,
+  type Discard,
+  type ReactionBall,
+  type ReactionFrame,
+} from './ZoneMatchFutReactions';
+import { CardArt } from './ZoneMatchCardFace';
+import { getSkinPart } from '@/lib/avatars/parts';
+import { resolveAvatarCustomization } from '@/lib/avatars';
 import { FULL_H, FULL_W } from './zoneMatch.fullBody';
 
 
@@ -121,12 +153,130 @@ function reactionFrame(reaction: FutReaction | null, t: number, now: number): Re
  * The avatar on the card, full body: idling (weight shifting), and reacting with its legs when a playstyle lands.
  * Posed in a requestAnimationFrame loop with SVG / CSS transforms only, ~30 fps, nothing while off screen.
  */
-function CardCutout({ customization, reaction, mirror, seed }: { customization: AvatarCustomization | null; reaction: FutReaction | null; mirror: boolean; seed: number }) {
+/** Gear the loadout puts on the player: the golden boot (left foot) and the captain's armband. */
+interface Gear {
+  goldBoot: boolean;
+  armband: boolean;
+  /** Second Ball: the two balls resting on the floor at his feet. */
+  balls: boolean;
+  /** Muddy Pitch: muddy boots and socks, a puddle under him. */
+  mud: boolean;
+  /** Fog: a low mist round his feet. */
+  fog: boolean;
+  /** Yellow Card: held up in his hand. */
+  yellowCard: boolean;
+  /** Offside Trap: the linesman's flag in his hand. */
+  flag: boolean;
+  /** Goalkeeper Gloves: on both hands. */
+  gloves: boolean;
+  /** Park the Bus: the bus parked behind him, him sat on its roof. */
+  bus: boolean;
+  /** Home Advantage: the club scarf round his neck. */
+  scarf: boolean;
+  /** Shin Pads: strapped on his shins. */
+  shinPads: boolean;
+}
+
+/**
+ * The figure's art box inside the card's cut-out area (the figure box is 88 % of the area's height, bottom-aligned,
+ * the art centred in it at 496 : 840): % across / down the area, from art units.
+ */
+const ART_IN_AREA = { left: 12.07, width: 75.85, top: 12, height: 88 };
+const areaX = (x: number) => ART_IN_AREA.left + (x / 496) * ART_IN_AREA.width;
+const areaY = (y: number) => ART_IN_AREA.top + (y / 840) * ART_IN_AREA.height;
+
+/** % of the upper body's box, from its art units. */
+const pctX = (x: number) => `${((x / 496) * 100).toFixed(2)}%`;
+const pctY = (y: number) => `${((y / 543) * 100).toFixed(2)}%`;
+
+/**
+ * A keeper glove on one hand: the hand's own outline from the skin art (so it fits whatever the skin), a touch bigger
+ * — blue, lime over the fingers, a white wrist strap.
+ */
+function Glove({ hand, skinUrl }: { hand: 'L' | 'R'; skinUrl: string }) {
+  const g = GLOVE_HANDS[hand];
+  const [x0, y0, x1, y1] = g.box;
+  const rect = (r: readonly number[]) => ({ left: pctX(r[0]), top: pctY(r[1]), width: pctX(r[2] - r[0]), height: pctY(r[3] - r[1]) });
+  return (
+    <div
+      className="absolute inset-x-0 top-0"
+      style={{
+        aspectRatio: '496 / 543',
+        WebkitMaskImage: `url(${skinUrl})`,
+        maskImage: `url(${skinUrl})`,
+        WebkitMaskSize: '100% 100%',
+        maskSize: '100% 100%',
+        clipPath: `inset(${pctY(y0)} ${pctX(496 - x1)} ${pctY(543 - y1)} ${pctX(x0)})`,
+        transform: 'scale(1.07)',
+        transformOrigin: `${pctX(g.centre[0])} ${pctY(g.centre[1])}`,
+      }}
+    >
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #3B74FF, #1645FF 45%, #0E2FB0)' }} />
+      <div className="absolute rounded-[30%]" style={{ ...rect(g.fingers), background: 'linear-gradient(170deg, #8EE53F, #58CC02 60%, #3E9A00)' }} />
+      <div className="absolute" style={{ ...rect(g.strap), background: '#F4F6F8', boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.18)' }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(40% 30% at 45% 30%, rgba(255,255,255,0.35), transparent 70%)' }} />
+    </div>
+  );
+}
+
+/** Gear that, taken off the loadout, gets thrown away (and the item it throws). */
+const THROWN: [keyof Gear, Discard][] = [
+  ['yellowCard', 'yellow-card'],
+  ['flag', 'offside-trap'],
+  ['goldBoot', 'golden-boot'],
+  ['shinPads', 'shin-pads'],
+];
+
+/** Places a ball element (figure art units → % of the figure's box). */
+function placeBall(el: HTMLElement, spin: HTMLElement | null, b: ReactionBall) {
+  el.style.left = `${(((b.x - REACTION_BALL_R) / FULL_W) * 100).toFixed(2)}%`;
+  el.style.top = `${(((b.y - REACTION_BALL_R) / FULL_H) * 100).toFixed(2)}%`;
+  el.style.opacity = b.opacity.toFixed(2);
+  if (spin) spin.style.transform = `rotate(${b.rot.toFixed(0)}deg)`;
+}
+const GOLD_LEFT = { L: GOLD_BOOTS };
+
+function CardCutout({ customization, reaction, mirror, seed, gear }: { customization: AvatarCustomization | null; reaction: FutReaction | null; mirror: boolean; seed: number; gear: Gear }) {
   const [els, setEls] = useState<FullBodyEls | null>(null);
   const figure = useRef<HTMLDivElement>(null);
   const ball = useRef<HTMLDivElement>(null);
   const ballSpin = useRef<HTMLDivElement>(null);
   const ring = useRef<HTMLDivElement>(null);
+  const trail = useRef<HTMLDivElement>(null);
+  const armband = useRef<SVGGElement>(null);
+  const ball2 = useRef<HTMLDivElement>(null);
+  const ball2Spin = useRef<HTMLDivElement>(null);
+  const restBalls = useRef<HTMLDivElement>(null);
+  const puddle = useRef<HTMLDivElement>(null);
+  const held = useRef<SVGGElement>(null);
+  const flag = useRef<SVGGElement>(null);
+  const gloves = useRef<HTMLDivElement>(null);
+  const scarf = useRef<SVGGElement>(null);
+  const mates = useRef<HTMLDivElement>(null);
+  const mateEls = useRef<(FullBodyEls | null)[]>([null, null]);
+  const setMateA = useCallback((e: FullBodyEls) => {
+    mateEls.current[0] = e;
+  }, []);
+  const setMateB = useCallback((e: FullBodyEls) => {
+    mateEls.current[1] = e;
+  }, []);
+  const bus = useRef<HTMLDivElement>(null);
+  const busWheelNow = useRef(0);
+  const [busWheel, setBusWheel] = useState(0);
+  // How far he's sat on the bus (eased, so he hops down for another card's reaction and back up after it).
+  const seated = useRef(0);
+  const skinUrl = useMemo(() => getSkinPart(resolveAvatarCustomization(customization ?? {}).skin).asset, [customization]);
+  // Taking a card off: what was worn gets thrown away (started here, drawn by the loop).
+  const gearSeen = useRef<Gear | null>(null);
+  const discards = useRef<{ item: Discard; at: number }[]>([]);
+  const discardEls = useRef<Partial<Record<Discard, HTMLDivElement | null>>>({});
+  const [muddy, setMuddy] = useState(false);
+  const [pads, setPads] = useState(false);
+  const padsNow = useRef(false);
+  const muddyNow = useRef(false);
+  // Golden Boot: the boots turn gold for a while (a re-render only when that changes).
+  const [goldBoots, setGoldBoots] = useState(false);
+  const goldNow = useRef(false);
   const started = useRef<{ key: number; at: number }>({ key: -1, at: 0 });
   useEffect(() => {
     if (!els) return;
@@ -143,10 +293,56 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
       const now = ms / 1000;
       if (reaction && started.current.key !== reaction.key) started.current = { key: reaction.key, at: now };
       const t = reaction ? now - started.current.at : Infinity;
-      const f = reactionFrame(reaction, t, now);
+      let f = reactionFrame(reaction, t, now);
+      // Gear taken off since the last frame: throw it away.
+      const before = gearSeen.current;
+      if (before) for (const [key, item] of THROWN) if (before[key] && !gear[key]) discards.current.push({ item, at: now });
+      gearSeen.current = gear;
+      discards.current = discards.current.filter((d) => now - d.at < DISCARD_S);
+      const throwing = discards.current[discards.current.length - 1];
+      // The throw moves him only when no card's own reaction is playing.
+      if (throwing && (!reaction || t >= reactionLength(reaction))) f = { ...f, body: discardBody(throwing.item, now - throwing.at, now) };
+      for (const [, item] of THROWN) {
+        const el = discardEls.current[item];
+        if (!el) continue;
+        const d = discards.current.find((x) => x.item === item);
+        el.style.display = d ? '' : 'none';
+        if (!d) continue;
+        const sprite = discardSprite(item, now - d.at);
+        el.style.left = `${((sprite.x / FULL_W) * 100).toFixed(2)}%`;
+        el.style.top = `${((sprite.y / FULL_H) * 100).toFixed(2)}%`;
+        el.style.opacity = sprite.opacity.toFixed(2);
+        el.style.transform = `translate(-50%, -50%) rotate(${sprite.rot.toFixed(0)}deg)`;
+      }
+      // Park the Bus: parked behind him while it's in the loadout, him sat on the roof — off it while another card
+      // reacts (he hops down and back up).
+      {
+        const own = f.bus;
+        const want = own ? own.seat : gear.bus && !(reaction && t < reactionLength(reaction)) ? 1 : 0;
+        if (!own) seated.current += Math.max(-1, Math.min(1, (want - seated.current) * 6)) * 0.033;
+        const sit = own ? own.seat : seated.current;
+        if (!own && sit > 0.001) {
+          f = {
+            ...f,
+            body: mixPose(f.body, seatedPose(now), sit),
+            lift: f.lift * (1 - sit) + sit * BUS.sitLift + 10 * Math.sin(Math.PI * sit) * (sit < 0.999 ? 1 : 0),
+            shift: f.shift * (1 - sit) + sit * BUS.sitShift,
+          };
+        }
+        if (bus.current) {
+          const busX = own ? own.x : 0;
+          bus.current.style.display = own || gear.bus ? '' : 'none';
+          bus.current.style.transform = `translateX(${((busX / 496) * 100).toFixed(2)}%)`;
+          const turn = own && busX < -1 ? Math.round(busX * 0.9) : 0;
+          if (Math.abs(turn - busWheelNow.current) > 15) {
+            busWheelNow.current = turn;
+            setBusWheel(turn);
+          }
+        }
+      }
       applyFullBodyPose(els, f.body);
       if (figure.current) {
-        figure.current.style.transform = `translate(${f.shift.toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg)`;
+        figure.current.style.transform = `translate(${f.shift.toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg) scale(${(f.scale ?? 1).toFixed(3)})`;
         figure.current.style.filter = f.blur > 0.05 ? `blur(${f.blur.toFixed(1)}px)` : '';
         figure.current.style.opacity = f.fade < 0.999 ? f.fade.toFixed(2) : '';
       }
@@ -159,9 +355,98 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
           ball.current.style.top = `${(((b.y - REACTION_BALL_R) / FULL_H) * 100).toFixed(2)}%`;
           ball.current.style.opacity = b.opacity.toFixed(2);
           ballSpin.current.style.transform = `rotate(${b.rot.toFixed(0)}deg)`;
+          ball.current.style.transform = b.scale && b.scale !== 1 ? `scale(${b.scale.toFixed(3)})` : '';
           ring.current.style.opacity = b.ring > 0 ? (1 - b.ring).toFixed(2) : '0';
           ring.current.style.transform = `scale(${(1 + b.ring * 1.6).toFixed(2)})`;
+          ballSpin.current.style.filter = b.gold ? 'sepia(1) saturate(6) hue-rotate(-12deg) brightness(1.15) drop-shadow(0 0 6px #FFC107)' : '';
         }
+        if (trail.current) {
+          const dots = Array.from(trail.current.children) as HTMLElement[];
+          dots.forEach((dot, i) => {
+            const at = b?.trail?.[i];
+            dot.style.display = at && b ? '' : 'none';
+            if (at && b) {
+              dot.style.left = `${(((at[0] - REACTION_BALL_R) / FULL_W) * 100).toFixed(2)}%`;
+              dot.style.top = `${(((at[1] - REACTION_BALL_R) / FULL_H) * 100).toFixed(2)}%`;
+              dot.style.opacity = ((b.opacity * (dots.length - i)) / (dots.length + 1)).toFixed(2);
+            }
+          });
+        }
+      }
+      if (ball2.current) {
+        ball2.current.style.display = f.ball2 ? '' : 'none';
+        if (f.ball2) placeBall(ball2.current, ball2Spin.current, f.ball2);
+      }
+      // Second Ball's pair lies on the floor while it's in the loadout (its own reaction moves them).
+      if (restBalls.current) restBalls.current.style.display = gear.balls && !f.hideRestBalls ? '' : 'none';
+      // Muddy Pitch: the puddle spreads in its reaction and stays while it's in the loadout; so does the mud on the kit.
+      if (puddle.current) {
+        const size = f.puddle ?? (gear.mud ? 1 : 0);
+        puddle.current.style.opacity = size > 0 ? '1' : '0';
+        puddle.current.style.transform = `scale(${size.toFixed(3)})`;
+      }
+      const padsOn = f.shinPads ? f.shinPads.on : gear.shinPads;
+      if (padsOn !== padsNow.current) {
+        padsNow.current = padsOn;
+        setPads(padsOn);
+      }
+      const mud = f.muddy ?? gear.mud;
+      if (mud !== muddyNow.current) {
+        muddyNow.current = mud;
+        setMuddy(mud);
+      }
+      // Yellow Card: held up in his hand while it's in the loadout (in its reaction, once it's caught).
+      if (held.current) {
+        const y = f.yellowCard;
+        held.current.style.opacity = (y ? y.held : gear.yellowCard) ? '1' : '0';
+        const scale = y ? 1 + 0.45 * y.pop * y.pop : 1;
+        held.current.setAttribute('transform', `translate(${YELLOW.x} ${YELLOW.y}) scale(${scale.toFixed(3)}) translate(${-YELLOW.x} ${-YELLOW.y})`);
+      }
+      // Home Advantage: the scarf round his neck while it's in the loadout.
+      if (scarf.current) {
+        const sc = f.scarf;
+        scarf.current.style.opacity = (sc ? sc.on : gear.scarf) ? '1' : '0';
+        const k = sc ? 1 + 0.35 * sc.pop * sc.pop : 1;
+        scarf.current.setAttribute('transform', `translate(235 245) scale(${k.toFixed(3)}) translate(-235 -245)`);
+      }
+      // Tiki-Taka: the team-mates.
+      if (mates.current) {
+        const m = f.mates;
+        mates.current.style.display = m && m.shown > 0.001 ? '' : 'none';
+        if (m) {
+          mates.current.style.opacity = (0.6 * m.shown).toFixed(2);
+          m.poses.forEach((pose, i) => {
+            const el = mateEls.current[i];
+            if (el) applyFullBodyPose(el, pose);
+          });
+        }
+      }
+      // Goalkeeper Gloves: on his hands while they're in the loadout (in their reaction, from the moment they go on).
+      if (gloves.current) {
+        const gl = f.gloves;
+        gloves.current.style.opacity = (gl ? gl.on : gear.gloves) ? '1' : '0';
+        gloves.current.style.transform = gl && gl.pop > 0 ? `scale(${(1 + 0.08 * gl.pop).toFixed(3)})` : '';
+      }
+      // Offside Trap: the flag in his hand while it's in the loadout, waved in its reaction, swaying gently otherwise.
+      if (flag.current) {
+        const fl = f.flag;
+        flag.current.style.opacity = (fl ? fl.held : gear.flag) ? '1' : '0';
+        const scale = fl ? 1 + 0.4 * fl.pop * fl.pop : 1;
+        const wave = fl ? fl.wave : 3 * Math.sin(now * 2.2);
+        flag.current.setAttribute('transform', `translate(${FLAG.gripX} ${FLAG.gripY}) rotate(${wave.toFixed(1)}) scale(${scale.toFixed(3)})`);
+      }
+      // Captain's Armband: worn while it's in the loadout; during its reaction, from the moment it's put on.
+      if (armband.current) {
+        const a = f.armband;
+        armband.current.style.opacity = (a ? a.fitted : gear.armband) ? '1' : '0';
+        const scale = a ? 1 + 0.5 * a.pop * a.pop : 1;
+        armband.current.setAttribute('transform', `translate(${ARMBAND.x} ${ARMBAND.y}) scale(${scale.toFixed(3)}) translate(${-ARMBAND.x} ${-ARMBAND.y})`);
+      }
+      // The golden boot: worn while it's in the loadout; during its reaction, from the moment it lands on his foot.
+      const gold = f.goldBoots ?? gear.goldBoot;
+      if (gold !== goldNow.current) {
+        goldNow.current = gold;
+        setGoldBoots(gold);
       }
     };
     raf = requestAnimationFrame(loop);
@@ -169,12 +454,156 @@ function CardCutout({ customization, reaction, mirror, seed }: { customization: 
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [els, reaction]);
+  }, [els, reaction, gear]);
   return (
     <div className="absolute inset-0">
+      {/* Park the Bus: the bus behind him (it doesn't move with him). */}
+      <div
+        ref={bus}
+        className="pointer-events-none absolute"
+        style={{
+          display: 'none',
+          left: `${areaX(BUS.x)}%`,
+          top: `${areaY(BUS.y)}%`,
+          width: `${(BUS.w / 496) * ART_IN_AREA.width}%`,
+          height: `${(BUS.h / 840) * ART_IN_AREA.height}%`,
+          transform: mirror ? 'scaleX(-1)' : undefined,
+        }}
+      >
+        <BusArt wheelTurn={busWheel} />
+      </div>
       <div ref={figure} className="absolute inset-x-0 bottom-0 flex h-[88%] justify-center" style={{ transformOrigin: '50% 98%' }}>
         <div className="relative" style={{ height: '100%', transform: mirror ? 'scaleX(-1)' : undefined }}>
-          <AvatarFullBody customization={customization} seed={seed} onEls={setEls} style={{ height: '100%' }} />
+          {/* Tiki-Taka's team-mates, further back (behind him): see-through copies, the right one facing him. */}
+          <div ref={mates} className="pointer-events-none absolute inset-0" style={{ display: 'none', filter: 'saturate(0.55) brightness(1.25) drop-shadow(0 0 3px #1CB0F6)' }}>
+            {(['a', 'b'] as const).map((key) => (
+              <div
+                key={key}
+                className="absolute"
+                style={{ left: `${(MATES[key].left / 496) * 100}%`, top: `${(MATES[key].top / 840) * 100}%`, width: `${MATES.scale * 100}%`, transform: key === 'b' ? 'scaleX(-1)' : undefined }}
+              >
+                <AvatarFullBody customization={customization} seed={seed} onEls={key === 'a' ? setMateA : setMateB} style={{ width: '100%' }} />
+              </div>
+            ))}
+          </div>
+          {/* Muddy Pitch's puddle, under his feet. */}
+          <div
+            ref={puddle}
+            className="absolute rounded-[50%]"
+            style={{
+              opacity: 0,
+              left: `${((PUDDLE.x - PUDDLE.w / 2) / FULL_W) * 100}%`,
+              top: `${((PUDDLE.y - PUDDLE.h / 2) / FULL_H) * 100}%`,
+              width: `${(PUDDLE.w / FULL_W) * 100}%`,
+              height: `${(PUDDLE.h / FULL_H) * 100}%`,
+              background: 'radial-gradient(ellipse at 40% 35%, rgba(170,120,70,0.95), #5B3A1D 55%, #3B2511 100%)',
+              boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.25), inset 8px 4px 0 rgba(255,255,255,0.12)',
+              transformOrigin: '50% 50%',
+            }}
+          />
+          <AvatarFullBody
+            customization={customization}
+            seed={seed}
+            onEls={setEls}
+            style={{ height: '100%' }}
+            bootColors={goldBoots ? GOLD_LEFT : undefined}
+            muddy={muddy}
+            shinPads={pads}
+            upperUnderlay={
+              // Held in his raised hand, behind the fingers (CardCutout's loop shows it).
+              <svg className="pointer-events-none absolute inset-x-0 top-0 w-full overflow-visible" style={{ aspectRatio: '496 / 543' }} viewBox="0 0 496 543" aria-hidden>
+                <g ref={held} style={{ opacity: 0 }}>
+                  <HeldYellowCard />
+                </g>
+                <g ref={flag} style={{ opacity: 0 }}>
+                  <FlagShape />
+                </g>
+              </svg>
+            }
+            upperOverlay={
+              <>
+                <div ref={gloves} className="pointer-events-none absolute inset-x-0 top-0" style={{ opacity: 0, aspectRatio: '496 / 543', transformOrigin: '50% 30%' }}>
+                  <Glove hand="L" skinUrl={skinUrl} />
+                  <Glove hand="R" skinUrl={skinUrl} />
+                </div>
+                <svg className="pointer-events-none absolute inset-x-0 top-0 w-full overflow-visible" style={{ aspectRatio: '496 / 543' }} viewBox="0 0 496 543" aria-hidden>
+                  <g ref={scarf} style={{ opacity: 0 }}>
+                    <ScarfArt />
+                  </g>
+                </svg>
+                {/* Worn on the arm, moving with the upper body (CardCutout's loop shows it). */}
+                <svg className="pointer-events-none absolute inset-x-0 top-0 w-full overflow-visible" style={{ aspectRatio: '496 / 543' }} viewBox="0 0 496 543" aria-hidden>
+                <g ref={armband} style={{ opacity: 0 }}>
+                  <ArmbandArt />
+                </g>
+              </svg>
+              </>
+            }
+          />
+          {/* A struck ball's glowing trail. */}
+          <div ref={trail} className="pointer-events-none absolute inset-0">
+            {[0, 1, 2, 3].map((i) => (
+              <span
+                key={i}
+                className="absolute block rounded-full"
+                style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100 * (1 - i * 0.15)}%`, aspectRatio: '1', background: 'radial-gradient(closest-side, rgba(255,226,90,0.9), rgba(255,170,0,0.35) 70%, transparent)' }}
+              />
+            ))}
+          </div>
+          {/* Fog: a low mist drifting round his feet. */}
+          {gear.fog && (
+            <div className="pointer-events-none absolute inset-x-[-10%] bottom-[-2%] h-[16%]">
+              {[0, 1].map((i) => (
+                <motion.span
+                  key={i}
+                  className="absolute block h-full w-[70%] rounded-full bg-white/70 blur-md"
+                  style={{ left: i ? '35%' : '0%' }}
+                  animate={{ x: i ? ['0%', '-18%', '0%'] : ['0%', '18%', '0%'], opacity: [0.55, 0.85, 0.55] }}
+                  transition={{ duration: 4 + i, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              ))}
+            </div>
+          )}
+          {/* Gear thrown away as its card comes off (figure art units; the loop flies it). */}
+          {THROWN.map(([, item]) => (
+            <div
+              key={item}
+              ref={(el) => {
+                discardEls.current[item] = el;
+              }}
+              className="pointer-events-none absolute"
+              style={{ display: 'none', width: `${((item === 'golden-boot' ? 120 : item === 'offside-trap' ? 110 : item === 'shin-pads' ? 110 : 64) / FULL_W) * 100}%`, aspectRatio: item === 'offside-trap' ? '0.75' : item === 'golden-boot' || item === 'shin-pads' ? '1' : '0.7' }}
+            >
+              {item === 'golden-boot' ? (
+                <CardArt id="golden-boot" />
+              ) : item === 'shin-pads' ? (
+                <svg viewBox="-60 -60 120 120" className="size-full overflow-visible" aria-hidden>
+                  <g transform="translate(-24 0) rotate(-12)">
+                    <ShinPadShape />
+                  </g>
+                  <g transform="translate(24 4) rotate(10)">
+                    <ShinPadShape />
+                  </g>
+                </svg>
+              ) : (
+                <svg viewBox={item === 'offside-trap' ? '-40 -180 120 220' : '-32 -46 64 92'} className="size-full overflow-visible" aria-hidden>
+                  {item === 'offside-trap' ? <FlagShape /> : <YellowCardShape />}
+                </svg>
+              )}
+            </div>
+          ))}
+          <div ref={restBalls} className="pointer-events-none absolute inset-0" style={{ display: 'none' }}>
+            {SECOND_BALL_REST.map(([x, y]) => (
+              <div key={x} className="absolute" style={{ left: `${((x - REACTION_BALL_R) / FULL_W) * 100}%`, top: `${((y - REACTION_BALL_R) / FULL_H) * 100}%`, width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
+                <BallArt />
+              </div>
+            ))}
+          </div>
+          <div ref={ball2} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
+            <div ref={ball2Spin} className="size-full">
+              <BallArt />
+            </div>
+          </div>
           <div ref={ball} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
             {/* The touch killing the ball's pace: a soft ring. */}
             <div ref={ring} className="absolute inset-[-30%] rounded-full border-2 border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={{ opacity: 0 }} />
@@ -246,6 +675,21 @@ export function FutCard({
   className?: string;
 }) {
   const height = Math.round(width * FRAME_ASPECT);
+  const hasGoldBoot = slots.includes('golden-boot');
+  const hasArmband = slots.includes('captains-armband');
+  const hasBalls = slots.includes('second-ball');
+  const hasMud = slots.includes('muddy-pitch');
+  const hasFog = slots.includes('fog');
+  const hasYellow = slots.includes('yellow-card');
+  const hasFlag = slots.includes('offside-trap');
+  const hasGloves = slots.includes('goalkeeper-gloves');
+  const hasBus = slots.includes('park-the-bus');
+  const hasScarf = slots.includes('home-advantage');
+  const hasPads = slots.includes('shin-pads');
+  const gear = useMemo(
+    () => ({ goldBoot: hasGoldBoot, armband: hasArmband, balls: hasBalls, mud: hasMud, fog: hasFog, yellowCard: hasYellow, flag: hasFlag, gloves: hasGloves, bus: hasBus, scarf: hasScarf, shinPads: hasPads }),
+    [hasGoldBoot, hasArmband, hasBalls, hasMud, hasFog, hasYellow, hasFlag, hasGloves, hasBus, hasScarf, hasPads],
+  );
   const { tier, frame, accent } = tierLook(seat.rankPoints);
   // The sheen and the shine sweep are cut to the frame art's own outline, and only lighten it (never recolour it).
   const frameMask = { WebkitMaskImage: `url(${frame})`, maskImage: `url(${frame})`, WebkitMaskSize: '100% 100%', maskSize: '100% 100%' };
@@ -342,7 +786,7 @@ export function FutCard({
         {/* The player: their own avatar art, as a paper cut-out that reacts to each landing. */}
         {/* Full body between the RP column and the edge, feet on the name plate; jumps stay inside the card. */}
         <div className="absolute" style={{ left: s(0.27), top: s(0.13), width: s(0.66), height: Math.round(height * 0.6), transform: 'translateZ(14px)' }}>
-          <CardCutout customization={seat.avatarCustomization} reaction={reaction} mirror={mirror} seed={mirror ? 3 : 0} />
+          <CardCutout customization={seat.avatarCustomization} reaction={reaction} mirror={mirror} seed={mirror ? 3 : 0} gear={gear} />
         </div>
         {/* The landing card's own effect on the card. */}
         {reaction?.card && <CardReactionFx key={reaction.key} card={reaction.card} customization={seat.avatarCustomization} frameMask={frameMask} mirror={mirror} />}

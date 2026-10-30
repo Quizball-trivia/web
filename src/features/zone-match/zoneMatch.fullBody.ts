@@ -137,6 +137,14 @@ export function shade(hex: string, amount = 0.14): string {
   return `#${f((n >> 16) & 255)}${f((n >> 8) & 255)}${f(n & 255)}`;
 }
 
+/** `a` blended towards `b` by k (0–1). */
+export function mixHex(a: string, b: string, k: number): string {
+  const n = (hex: string) => Number.parseInt(hex.slice(1), 16);
+  const [x, y] = [n(a), n(b)];
+  const ch = (shift: number) => Math.round(((x >> shift) & 255) + ((((y >> shift) & 255) - ((x >> shift) & 255)) * k)).toString(16).padStart(2, '0');
+  return `#${ch(16)}${ch(8)}${ch(0)}`;
+}
+
 export function fullBodyColors(customization: AvatarCustomization | null | undefined, seed = 0): FullBodyColors {
   const [skin, skinShade] = SKIN[customization?.skin ?? ''] ?? SKIN.skin_male_white;
   const [shorts, socks, sockBand] = KITS[customization?.jersey ?? ''] ?? [WHITE, WHITE, '#C9D1DA'];
