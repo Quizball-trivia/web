@@ -11,8 +11,9 @@
 import { Component, Suspense, memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RoadAdvertisingBoards } from '@/features/mini-games/components/RoadAdvertisingBoards';
-import { useMatchBallGeometry, useMatchBallTexture, usePitchTurf, useStadiumArtwork } from '@/features/mini-games/components/footballVisuals';
+import { Stadium3D } from '@/features/stadium/Stadium3D';
+import { findScene } from '@/features/stadium/crowd/scenes';
+import { useMatchBallGeometry, useMatchBallTexture, usePitchTurf } from '@/features/mini-games/components/footballVisuals';
 import { createRoadNet, deformRoadNet } from '@/features/mini-games/lib/roadNet';
 import type { ZoneSide } from './zoneMatch.rules';
 import { BALL_R, GOAL_X, PITCH_HALF_W, SIDE_COLOR, ZONE_LEN, columnX } from './zoneMatch3d.layout';
@@ -285,47 +286,52 @@ function Goal({ dir, director }: { dir: 1 | -1; director: DuelDirector }) {
 const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from && Date.now() < fx.dark.until;
 
 /**
- * Road to Goal's grandstand panorama, kept centred on what the camera sees, behind its LED boards. Home Advantage
- * tints the crowd and the boards in the owner's colour; Floodlight Failure darkens the stands.
+ * The stadium: 3D stands round the pitch (Stadium3D) whose crowd follows the match — a tifo at kick-off, a
+ * thunderclap while you're through on goal, a celebration when you score (quiet when they do), phone torches when the
+ * floodlights fail, a scarf wall for Home Advantage. The stand on the camera's side is left out (it would only block
+ * the touchline shots). Home Advantage also tints the boards on the far side in the owner's colour.
  */
-function Stadium({ fx }: { fx: RefObject<CardFx> }) {
-  const backdrop = useStadiumArtwork('/assets/demos/road-to-goal-stadium-panorama-v4.png', 80 / 24);
-  const root = useRef<THREE.Group>(null);
-  const crowd = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
+function Stadium({ fx, input, clock }: { fx: RefObject<CardFx>; input: RefObject<DirectorInput>; clock: SceneClock }) {
   const boards = useRef<THREE.MeshBasicMaterial>(null);
-  const tint = useMemo(() => ({ color: new THREE.Color('#ffffff'), target: new THREE.Color(), board: 0 }), []);
-  useFrame(({ camera }, delta) => {
+  const [sceneId, setSceneId] = useState(() => KICKOFF_TIFOS[Math.floor(Math.random() * KICKOFF_TIFOS.length)]);
+  const crowd = useRef({ started: -1, holdUntil: 0, celebration: '' });
+  const now = useMemo(() => () => clock.now(), [clock]);
+  // Floodlight Failure: the crowd goes dark (their phone torches stay bright).
+  const [lit] = useState(() => () => (isDark(fx.current) ? 0.22 : 1));
+  useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
-    if (root.current) root.current.position.x = camera.position.x * 0.85;
-    const home = fx.current.home;
-    const target = tint.target.set(home ? SIDE_COLOR[home] : '#ffffff');
-    if (home) target.lerp(WHITE, 0.12);
-    if (isDark(fx.current)) target.multiplyScalar(0.16);
-    tint.color.lerp(target, 1 - Math.exp(-5 * dt));
-    for (const material of crowd.current) material?.color.copy(tint.color);
+    const f = fx.current;
+    const home = f.home;
     if (boards.current) {
       if (home) boards.current.color.set(SIDE_COLOR[home]);
       boards.current.opacity = THREE.MathUtils.damp(boards.current.opacity, home ? 0.7 : 0, 5, dt);
     }
+    const t = clock.now();
+    const c = crowd.current;
+    if (c.started < 0) c.started = t;
+    const inp = input.current;
+    let want: string;
+    const goal = inp.mode === 'outcome' && inp.outcome?.kind === 'goal' ? inp.outcome.scorer : null;
+    if (goal === 'player') {
+      if (!c.celebration) c.celebration = GOAL_SCENES[Math.abs(inp.seed) % GOAL_SCENES.length];
+      c.holdUntil = t + 6;
+    } else if (goal === 'opponent') {
+      c.celebration = '';
+      c.holdUntil = 0;
+    }
+    if (t - c.started < 9) want = sceneId;
+    else if (isDark(f)) want = 'torches';
+    else if (c.celebration && t < c.holdUntil) want = c.celebration;
+    else if (goal === 'opponent') want = 'idle';
+    else if (home === 'player') want = 'ynwa-liverpool';
+    else if (inp.mode !== 'outcome' && inp.possession.attacker === 'player' && inp.possession.zone === 'opponent') want = 'thunderclap';
+    else want = 'idle';
+    if (!(c.celebration && t < c.holdUntil) && goal !== 'player') c.celebration = '';
+    if (want !== sceneId) setSceneId(want);
   });
   return (
     <>
-      <group ref={root}>
-        <mesh position={[0, 9.5, -PITCH_HALF_W - 14]}>
-          <planeGeometry args={[80, 24]} />
-          <meshBasicMaterial ref={(m) => { crowd.current[0] = m; }} map={backdrop} toneMapped={false} fog={false} />
-        </mesh>
-      </group>
-      {/* The same crowd behind both goals, for the shots filmed down the pitch. */}
-      {[-1, 1].map((dir, i) => (
-        <mesh key={dir} position={[dir * (GOAL_X + 16), 9.5, 0]} rotation={[0, -dir * (Math.PI / 2), 0]}>
-          <planeGeometry args={[80, 24]} />
-          <meshBasicMaterial ref={(m) => { crowd.current[i + 1] = m; }} map={backdrop} toneMapped={false} fog={false} />
-        </mesh>
-      ))}
-      <group position={[-20, 0, -PITCH_HALF_W - 3.2 + 9.4]}>
-        <RoadAdvertisingBoards />
-      </group>
+      <Stadium3D scene={findScene(sceneId)} clock={now} brightness={lit} hideNear />
       <mesh position={[0, 0.62, -PITCH_HALF_W - 3.2 + 0.14]}>
         <planeGeometry args={[100, 0.92]} />
         <meshBasicMaterial ref={boards} transparent opacity={0} depthWrite={false} toneMapped={false} />
@@ -334,7 +340,10 @@ function Stadium({ fx }: { fx: RefObject<CardFx> }) {
   );
 }
 
-const WHITE = new THREE.Color('#ffffff');
+/** Kick-off tifos (one at random), and the crowd's goal celebrations (picked by the duel). */
+const KICKOFF_TIFOS = ['milan-devil', 'copenhagen-lion', 'celtic-lisbon', 'copenhagen-cannon', 'lens-giant-scarf', 'dortmund-binoculars'];
+const GOAL_SCENES = ['poznan-lech', 'confetti-final', 'scarf-twirl', 'flags-marseille', 'torches-wave'];
+
 const LIGHT_LEVELS = [0.32, 1.05, 2.6, 1.2, 1.6];
 
 /** Floodlit night; Floodlight Failure cuts the floodlights and leaves a single spot on its victim. */
@@ -627,7 +636,7 @@ function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visibl
         <fog attach="fog" args={['#07111d', 45, 90]} />
         <Lights director={director} fx={fx} />
         <Suspense fallback={null}>
-          <Stadium fx={fx} />
+          <Stadium fx={fx} input={input} clock={clock} />
         </Suspense>
         <Pitch />
         <Zones director={director} />

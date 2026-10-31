@@ -15,7 +15,23 @@ import { AvatarPreview } from '@/components/AvatarPreview';
 import { resolveAvatarCustomization } from '@/lib/avatars';
 import { getSkinPart } from '@/lib/avatars/parts';
 import type { AvatarCustomization } from '@/types/game';
-import { ANKLE_Y, FULL_H, FULL_W, HIP_X, HIP_Y, KNEE_Y, STAND, fullBodyColors, mixHex, shade, type FullBodyColors, type FullBodyPose } from './zoneMatch.fullBody';
+import {
+  ANKLE_Y,
+  ARM,
+  FULL_H,
+  FULL_W,
+  HIP_X,
+  HIP_Y,
+  KNEE_Y,
+  STAND,
+  armJoints,
+  fullBodyColors,
+  mixHex,
+  shade,
+  type FullBodyColors,
+  type FullBodyPose,
+  type HandShape,
+} from './zoneMatch.fullBody';
 
 const MUD = '#5B3A1D';
 /** Boots caked in mud (Muddy Pitch). */
@@ -39,10 +55,26 @@ const CROTCH_Y = HIP_Y + 46;
 const HEM: [number, number][] = [[100, 486], [70, 486], [60, 489], [50, 491], [40, 489], [30, 486], [0, 486]];
 const HEM_LIFT: Record<string, number> = { jersey_wl_retro_home: 26, jersey_wl_retro_away: 26, jersey_wl_retro_training: 33 };
 
-function hemClip(jersey: string | undefined): string {
+function hemClip(jersey: string | undefined, armsOff = false): string {
   const lift = (jersey && HEM_LIFT[jersey]) || 0;
   const y = (v: number) => `${(((v - lift) / UPPER_H) * 100).toFixed(2)}%`;
-  return `polygon(-50% -60%, 150% -60%, 150% ${y(HEM[0][1])}, ${HEM.map(([x, v]) => `${x}% ${y(v)}`).join(', ')}, -50% ${y(HEM[0][1])})`;
+  if (!armsOff) return `polygon(-50% -60%, 150% -60%, 150% ${y(HEM[0][1])}, ${HEM.map(([x, v]) => `${x}% ${y(v)}`).join(', ')}, -50% ${y(HEM[0][1])})`;
+  // Moving arms: the art's own raised arms are cut away — the head, the neck, the body and the sleeves stay (the
+  // outline below runs just outside them, between the hands and the head; measured on the skin and jersey art).
+  const px = (x: number) => `${((x / 496) * 100).toFixed(2)}%`;
+  const py = (v: number) => `${((v / UPPER_H) * 100).toFixed(2)}%`;
+  const right: [number, number][] = [[800, -300], [800, 108], [412, 108], [414, 326], [404, 342], [391, 357], [375, 371], [356, 386], [352, 400]];
+  const left: [number, number][] = [[140, 400], [124, 389], [89, 387], [72, 356], [62, 326], [66, 309], [80, 293], [100, 278], [106, 262], [106, 88], [-300, 88]];
+  const hemY = (xPct: number) => {
+    for (let i = 0; i < HEM.length - 1; i += 1) {
+      const [x0, y0] = HEM[i];
+      const [x1, y1] = HEM[i + 1];
+      if (xPct <= x0 && xPct >= x1) return y0 + ((y1 - y0) * (xPct - x0)) / (x1 - x0);
+    }
+    return HEM[0][1];
+  };
+  const hem = HEM.filter(([x]) => x < (352 / 496) * 100 && x > (140 / 496) * 100).map(([x, v]) => `${x}% ${y(v)}`);
+  return `polygon(${[[-300, -300] as [number, number], ...right].map(([x, v]) => `${px(x)} ${py(v)}`).join(', ')}, ${px(352)} ${y(hemY((352 / 496) * 100))}, ${hem.join(', ')}, ${px(140)} ${y(hemY((140 / 496) * 100))}, ${left.map(([x, v]) => `${px(x)} ${py(v)}`).join(', ')})`;
 }
 
 type Joint = 'hipL' | 'kneeL' | 'ankleL' | 'hipR' | 'kneeR' | 'ankleR';
@@ -52,6 +84,8 @@ export interface FullBodyEls {
   joints: Partial<Record<Joint, SVGGElement | null>>;
   shorts: SVGPathElement | null;
   folds: SVGPathElement | null;
+  /** Moving arms (celebrations): each arm's upper arm, forearm and hand, and the hand's shapes. */
+  arms: Partial<Record<'L' | 'R', { upper: SVGGElement | null; fore: SVGGElement | null; hand: SVGGElement | null; shapes: Partial<Record<HandShape, SVGGElement | null>> }>>;
 }
 
 const FALLBACK: AvatarCustomization = { skin: 'skin_male_white', jersey: 'jersey_green', hair: 'hair_boy_basic' };
@@ -136,6 +170,20 @@ export function shortsPaths(pose: FullBodyPose): { body: string; folds: string }
 
 /** Pose the figure (cheap: one CSS transform, a few SVG transforms and the shorts' outline). */
 export function applyFullBodyPose(els: FullBodyEls, pose: FullBodyPose) {
+  if (pose.arms) {
+    for (const side of ['L', 'R'] as const) {
+      const a = pose.arms[side];
+      const g = els.arms[side];
+      if (!g) continue;
+      const [sx, sy] = ARM.shoulder[side];
+      const { elbow, wrist } = armJoints(side, a);
+      g.upper?.setAttribute('transform', `translate(${sx} ${sy}) rotate(${(-a.upper).toFixed(1)})`);
+      g.fore?.setAttribute('transform', `translate(${elbow[0].toFixed(1)} ${elbow[1].toFixed(1)}) rotate(${(-a.fore).toFixed(1)})`);
+      // (The hand art is drawn small: scaled up to the art's chunky hands.)
+      g.hand?.setAttribute('transform', `translate(${wrist[0].toFixed(1)} ${wrist[1].toFixed(1)}) rotate(${(-a.hand).toFixed(1)}) scale(${side === 'R' ? -1.35 : 1.35} 1.35)`);
+      for (const [shape, el] of Object.entries(g.shapes)) el?.setAttribute('display', shape === a.shape ? 'inline' : 'none');
+    }
+  }
   if (els.upper) {
     els.upper.style.transform = `translate(${((pose.bodyX / FULL_W) * 100).toFixed(2)}%, ${((pose.bodyY / UPPER_H) * 100).toFixed(2)}%) rotate(${pose.lean.toFixed(1)}deg)`;
   }
@@ -286,6 +334,87 @@ export function KeeperGloves({ customization }: { customization: AvatarCustomiza
   );
 }
 
+const HAND_SHAPES: HandShape[] = ['open', 'flat', 'fist', 'point', 'thumb', 'shaka', 'heart', 'ok'];
+
+/**
+ * A hand, wrist at (0, 0), the fingers towards +y, the thumb on the +x side (the right hand is drawn mirrored):
+ * a palm, four fingers (out, or curled to a knuckle) and a thumb, posed per shape. Flat fills like the art.
+ */
+function HandShapeArt({ shape, skin, skinShade }: { shape: HandShape; skin: string; skinShade: string }) {
+  const finger = (x: number, len: number, key: string) => <rect key={key} x={x - 5.5} y={26} width={11} height={len + 8} rx={5.5} fill={skin} />;
+  const knuckle = (x: number, key: string) => <circle key={key} cx={x} cy={36} r={6.5} fill={skin} />;
+  const thumb = (angle: number, len: number) => (
+    <g transform={`translate(15 12) rotate(${-angle})`}>
+      <rect x={-6} y={-2} width={12} height={len} rx={6} fill={skin} />
+    </g>
+  );
+  const xs = [-14, -4.5, 5, 14];
+  const palm = <rect x={-20} y={-4} width={40} height={40} rx={13} fill={skin} />;
+  const crease = <path d="M-12 22 Q0 28 12 22" stroke={skinShade} strokeWidth={3} fill="none" strokeLinecap="round" />;
+  switch (shape) {
+    case 'open':
+      return <>{thumb(-60, 28)}{palm}{xs.map((x, i) => finger(x, [24, 30, 30, 26][i], `f${i}`))}{crease}</>;
+    case 'flat':
+      return <>{thumb(-12, 24)}{palm}{xs.map((x, i) => finger(x * 0.8, [24, 28, 28, 25][i], `f${i}`))}</>;
+    case 'fist':
+      return <>{palm}{xs.map((x, i) => knuckle(x, `k${i}`))}{thumb(-95, 22)}</>;
+    case 'point':
+      return <>{palm}{xs.slice(0, 3).map((x, i) => knuckle(x, `k${i}`))}{finger(14, 34, 'i')}{thumb(-95, 20)}</>;
+    case 'thumb':
+      return <>{palm}{xs.map((x, i) => knuckle(x, `k${i}`))}{thumb(0, 34)}</>;
+    case 'shaka':
+      return <>{thumb(-70, 28)}{palm}{xs.slice(1).map((x, i) => knuckle(x, `k${i}`))}{finger(-14, 26, 'p')}</>;
+    case 'heart':
+      // The fingers curve round towards the other hand: half a heart.
+      return (
+        <>
+          {palm}
+          <path d="M-14 30 C-20 64 6 80 22 62" stroke={skin} strokeWidth={22} fill="none" strokeLinecap="round" />
+          {thumb(-120, 26)}
+        </>
+      );
+    case 'ok':
+      return (
+        <>
+          {palm}
+          {xs.slice(0, 3).map((x, i) => finger(x - 2, [24, 28, 26][i], `f${i}`))}
+          <circle cx={18} cy={34} r={11} stroke={skin} strokeWidth={9} fill="none" />
+        </>
+      );
+  }
+}
+
+/** The moving arms: the upper arms behind the body (the sleeves cover their tops), the forearms and hands in front. */
+function MovingArms({ layer, colors, els }: { layer: 'back' | 'front'; colors: FullBodyColors; els: FullBodyEls }) {
+  const arm = (side: 'L' | 'R') => (els.arms[side] ??= { upper: null, fore: null, hand: null, shapes: {} });
+  return (
+    <svg className="pointer-events-none absolute inset-x-0 top-0 w-full overflow-visible" style={{ aspectRatio: '496 / 543' }} viewBox="0 0 496 543" aria-hidden>
+      {(['L', 'R'] as const).map((side) =>
+        layer === 'back' ? (
+          <g key={side} ref={(el) => void (arm(side).upper = el)}>
+            <rect x={-ARM.upperW / 2} y={-ARM.upperW / 2} width={ARM.upperW} height={ARM.upper + ARM.upperW} rx={ARM.upperW / 2} fill={colors.skin} />
+            <rect x={ARM.upperW / 2 - 12} y={0} width={9} height={ARM.upper} rx={4.5} fill={colors.skinShade} />
+          </g>
+        ) : (
+          <g key={side}>
+            <g ref={(el) => void (arm(side).fore = el)}>
+              <circle r={ARM.upperW / 2 - 1} fill={colors.skin} />
+              <rect x={-ARM.foreW / 2} y={0} width={ARM.foreW} height={ARM.fore + 8} rx={ARM.foreW / 2} fill={colors.skin} />
+            </g>
+            <g ref={(el) => void (arm(side).hand = el)}>
+              {HAND_SHAPES.map((shape) => (
+                <g key={shape} display="none" ref={(el) => void (arm(side).shapes[shape] = el)}>
+                  <HandShapeArt shape={shape} skin={colors.skin} skinShade={colors.skinShade} />
+                </g>
+              ))}
+            </g>
+          </g>
+        ),
+      )}
+    </svg>
+  );
+}
+
 export function AvatarFullBody({
   customization,
   seed = 0,
@@ -299,6 +428,7 @@ export function AvatarFullBody({
   upperUnderlay,
   shinPads = false,
   gloves = false,
+  movingArms = false,
 }: {
   customization: AvatarCustomization | null;
   /** Picks the boots. */
@@ -319,6 +449,8 @@ export function AvatarFullBody({
   shinPads?: boolean;
   /** Goalkeeper gloves on both hands. */
   gloves?: boolean;
+  /** Arms that move (posed through the pose's `arms`) instead of the art's raised ones. */
+  movingArms?: boolean;
   /** Drawn behind the upper body and moving with it (a card held in the hand, gripped by the fingers). */
   upperUnderlay?: ReactNode;
 }) {
@@ -337,7 +469,7 @@ export function AvatarFullBody({
   }, [resolved, seed, muddy]);
   const colorsL = useMemo(() => ({ ...colors, ...bootColors?.L }), [colors, bootColors?.L]);
   const colorsR = useMemo(() => ({ ...colors, ...bootColors?.R }), [colors, bootColors?.R]);
-  const [els] = useState<FullBodyEls>(() => ({ upper: null, legs: null, joints: {}, shorts: null, folds: null }));
+  const [els] = useState<FullBodyEls>(() => ({ upper: null, legs: null, joints: {}, shorts: null, folds: null, arms: {} }));
   useLayoutEffect(() => {
     applyFullBodyPose(els, pose);
   }, [els, pose]);
@@ -361,9 +493,11 @@ export function AvatarFullBody({
         style={{ transformOrigin: `50% ${((HIP_Y / UPPER_H) * 100).toFixed(1)}%` }}
       >
         {upperUnderlay}
-        <div className="relative" style={{ clipPath: hemClip(resolved.jersey) }}>
+        {movingArms && <MovingArms layer="back" colors={colors} els={els} />}
+        <div className="relative" style={{ clipPath: hemClip(resolved.jersey, movingArms) }}>
           <AvatarPreview customization={customization ?? FALLBACK} width="100%" />
         </div>
+        {movingArms && <MovingArms layer="front" colors={colors} els={els} />}
         {gloves && (
           <div className="pointer-events-none absolute inset-x-0 top-0" style={{ aspectRatio: '496 / 543' }}>
             <KeeperGloves customization={customization} />

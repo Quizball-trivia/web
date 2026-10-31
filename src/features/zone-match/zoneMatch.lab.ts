@@ -9,6 +9,7 @@ import type { GameQuestion } from '@/lib/domain';
 import type { SampleNumericQuestion } from '@/features/numeric-question/sampleNumericQuestions';
 import { GLOVES_SAVE_NOTE, IDLE, MCQ_MS, NUMERIC_MS, type MatchState } from './zoneMatch.machine';
 import { otherZoneSide, resolveBattle, type AttackZone, type BattleMods, type BattleOutcome, type Possession, type ZoneSide } from './zoneMatch.rules';
+import { CELEBRATION_LIST } from './zoneMatch.celebrations';
 import { keeperSave, kneeSlideMove, slideTackleMove, tackledMove, type ReactionFrame, type SaveKind } from './ZoneMatchFutReactions';
 import { CELEBRATIONS, buildScript, type DirectorMode } from './zoneMatch3d.director';
 import { NO_CARDS, type CardFx, type ResultCard, type ScriptCards } from './zoneMatch3d.fx';
@@ -27,7 +28,7 @@ import {
   type FullBodyPose,
 } from './zoneMatch.fullBody';
 
-export type LabGroup = 'duel' | 'outcome' | 'goal' | 'card' | 'question' | 'body';
+export type LabGroup = 'duel' | 'outcome' | 'goal' | 'card' | 'question' | 'body' | 'celebration';
 
 export const LAB_GROUPS: { id: LabGroup; label: string }[] = [
   { id: 'outcome', label: 'Outcomes' },
@@ -36,6 +37,7 @@ export const LAB_GROUPS: { id: LabGroup; label: string }[] = [
   { id: 'question', label: 'Questions' },
   { id: 'duel', label: 'Duel & tiebreak' },
   { id: 'body', label: 'Body moves' },
+  { id: 'celebration', label: 'Celebrations' },
 ];
 
 /** A 3D scene: what the director plays, the card effects on top, and how long one run lasts (seconds). */
@@ -72,6 +74,10 @@ export interface LabEntry {
     gloves?: boolean;
     /** A whole move: the figure's tilt / lift / shift and a ball, not only the legs. */
     frame?: (t: number) => ReactionFrame;
+    /** Moving arms and hands (celebrations) instead of the art's raised ones. */
+    arms?: boolean;
+    /** A caption over him ("SIUUU!"). */
+    caption?: (t: number) => { text: string; opacity: number; scale: number } | null;
   };
   /** The question sheet over the scene: the match state `t` ms into the run (the question opened at `openedAt`). */
   question?: { state: (t: number, openedAt: number) => MatchState; length: number };
@@ -400,6 +406,25 @@ const BODY: LabEntry[] = [
   { id: 'body-step-over', group: 'body', label: 'Step-over', about: 'The right leg circles over the ball.', source: 'stepOverPose', body: { pose: (t) => stepOverPose(t % 1), loop: 2 } },
 ];
 
-export const LAB_ENTRIES: LabEntry[] = [...OUTCOMES, ...GOALS, ...CARD_ENTRIES, ...QUESTIONS, ...DUEL, ...BODY];
+const CELEBRATIONS_LAB: LabEntry[] = CELEBRATION_LIST.map((c) => ({
+  id: `celebrate-${c.id}`,
+  group: 'celebration',
+  label: c.label,
+  about: c.about,
+  source: `zoneMatch.celebrations · ${c.id}`,
+  body: {
+    loop: c.length + 0.4,
+    arms: true,
+    pose: (t: number) => c.frame(Math.min(t, c.length)).body,
+    // The lab's shift is a share of 1.32× the figure's width (as the player card's): a celebration's is of the figure's.
+    frame: (t: number): ReactionFrame => {
+      const f = c.frame(Math.min(t, c.length));
+      return { body: f.body, lift: f.lift, tilt: f.tilt, spin: f.spin, shift: f.shift / 1.32, blur: 0, fade: 1 };
+    },
+    caption: (t: number) => c.frame(Math.min(t, c.length)).caption,
+  },
+}));
+
+export const LAB_ENTRIES: LabEntry[] = [...OUTCOMES, ...GOALS, ...CARD_ENTRIES, ...QUESTIONS, ...DUEL, ...BODY, ...CELEBRATIONS_LAB];
 
 export const cardName = (id: CardId) => CARD_BY_ID[id].name;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FULL_GROUND,
   FULL_H,
+  POSE_JOINTS,
   STAND,
   backpedalPose,
   celebratePose,
@@ -68,7 +69,7 @@ const frames = (fn: (t: number) => FullBodyPose, length: number, n = 240) => Arr
 const biggestStep = (poses: FullBodyPose[]) => {
   let step = 0;
   for (let i = 1; i < poses.length; i += 1) {
-    for (const key of Object.keys(STAND) as (keyof FullBodyPose)[]) step = Math.max(step, Math.abs(poses[i][key] - poses[i - 1][key]));
+    for (const key of POSE_JOINTS) step = Math.max(step, Math.abs(poses[i][key] - poses[i - 1][key]));
   }
   return step;
 };
@@ -129,14 +130,14 @@ describe('smooth motion', () => {
   });
 
   it('the strike starts and ends in the stance', () => {
-    for (const key of Object.keys(STAND) as (keyof FullBodyPose)[]) {
+    for (const key of POSE_JOINTS) {
       expect(strikePose(0)[key]).toBeCloseTo(STAND[key], 0);
       expect(strikePose(2)[key]).toBeCloseTo(STAND[key], 0);
     }
   });
 
   it('the celebration loops without a jump', () => {
-    for (const key of Object.keys(STAND) as (keyof FullBodyPose)[]) expect(celebratePose(0)[key]).toBeCloseTo(celebratePose(0.85 - 1e-6)[key], 1);
+    for (const key of POSE_JOINTS) expect(celebratePose(0)[key]).toBeCloseTo(celebratePose(0.85 - 1e-6)[key], 1);
   });
 });
 

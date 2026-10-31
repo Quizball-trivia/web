@@ -15,6 +15,25 @@ export const FULL_H = 840;
 /** Where the soles touch the ground, as a share of the frame's height. */
 export const FULL_GROUND = 830 / FULL_H;
 
+/** A hand's shape: which fingers are out (drawn by AvatarFullBody). */
+export type HandShape = 'open' | 'flat' | 'fist' | 'point' | 'thumb' | 'shaka' | 'heart' | 'ok';
+
+/**
+ * One arm, as screen directions in degrees (0 = straight down, 90 = towards +x, 180 = straight up, −90 = towards −x):
+ * the upper arm, the forearm and the hand (the fingers' direction), and the hand's shape.
+ */
+export interface ArmSegments {
+  upper: number;
+  fore: number;
+  hand: number;
+  shape: HandShape;
+}
+/** Both arms: L is on the viewer's left (−x), R on the right. */
+export interface ArmPose {
+  L: ArmSegments;
+  R: ArmSegments;
+}
+
 export interface FullBodyPose {
   hipL: number;
   kneeL: number;
@@ -25,6 +44,8 @@ export interface FullBodyPose {
   lean: number;
   bodyX: number;
   bodyY: number;
+  /** Moving arms (celebrations; drawn instead of the art's raised arms). Not mixed by mixPose. */
+  arms?: ArmPose;
 }
 
 export interface FullBodyColors {
@@ -163,6 +184,65 @@ export function fullBodyColors(customization: AvatarCustomization | null | undef
     sole,
     laces: isDark(boots) ? '#D9DDE3' : shade(boots, 0.35),
   };
+}
+
+/* ── arms ──────────────────────────────────────────────────────────── */
+
+/**
+ * The arm skeleton in the upper body's art units (496 × 543; measured on the skin art): the shoulder joints (inside the
+ * sleeves), the segment lengths, and how thick the arm is.
+ */
+export const ARM = { shoulder: { L: [150, 318] as [number, number], R: [345, 318] as [number, number] }, upper: 140, fore: 160, hand: 66, upperW: 54, foreW: 48 };
+
+const dir = (deg: number): [number, number] => [Math.sin((deg * Math.PI) / 180), Math.cos((deg * Math.PI) / 180)];
+const angleOf = (dx: number, dy: number) => (Math.atan2(dx, dy) * 180) / Math.PI;
+
+/** The arm's joints: elbow, wrist and fingertips (upper-body art units). */
+export function armJoints(side: 'L' | 'R', a: ArmSegments): { elbow: [number, number]; wrist: [number, number]; tip: [number, number] } {
+  const [sx, sy] = ARM.shoulder[side];
+  const u = dir(a.upper);
+  const f = dir(a.fore);
+  const h = dir(a.hand);
+  const elbow: [number, number] = [sx + ARM.upper * u[0], sy + ARM.upper * u[1]];
+  const wrist: [number, number] = [elbow[0] + ARM.fore * f[0], elbow[1] + ARM.fore * f[1]];
+  return { elbow, wrist, tip: [wrist[0] + ARM.hand * h[0], wrist[1] + ARM.hand * h[1]] };
+}
+
+/**
+ * The arm that puts its wrist at (x, y): two-bone IK. `elbowOut` bends the elbow away from the body (+1) or towards it
+ * (−1), seen from the arm's own side. Out of reach, the arm points straight at it.
+ */
+export function reachArm(side: 'L' | 'R', x: number, y: number, hand: number, shape: HandShape, elbowOut: 1 | -1 = 1): ArmSegments {
+  const [sx, sy] = ARM.shoulder[side];
+  const dx = x - sx;
+  const dy = y - sy;
+  const d = Math.min(Math.hypot(dx, dy), ARM.upper + ARM.fore - 0.5);
+  const toward = angleOf(dx, dy);
+  const atShoulder = (Math.acos(Math.min(1, Math.max(-1, (ARM.upper ** 2 + d ** 2 - ARM.fore ** 2) / (2 * ARM.upper * d)))) * 180) / Math.PI;
+  // Outward from the body is −x for L, +x for R.
+  const out = side === 'L' ? -1 : 1;
+  const upper = toward + out * elbowOut * atShoulder * Math.sign(Math.cos((toward * Math.PI) / 180) || 1);
+  const elbow: [number, number] = [sx + ARM.upper * dir(upper)[0], sy + ARM.upper * dir(upper)[1]];
+  const fore = angleOf(x - elbow[0], y - elbow[1]);
+  return { upper, fore, hand, shape };
+}
+
+/** The art's own arms: raised, elbows out and low, thumbs up (so the moving arms can start and end there). */
+export const ARMS_REST: ArmPose = {
+  L: { upper: -63, fore: 170, hand: 176, shape: 'thumb' },
+  R: { upper: 46, fore: 174, hand: 178, shape: 'thumb' },
+};
+
+/** Angles blended the short way round. */
+const mixAngle = (a: number, b: number, k: number) => a + ((((b - a + 540) % 360) - 180) * k);
+export function mixArms(a: ArmPose, b: ArmPose, k: number): ArmPose {
+  const seg = (x: ArmSegments, y: ArmSegments): ArmSegments => ({
+    upper: mixAngle(x.upper, y.upper, k),
+    fore: mixAngle(x.fore, y.fore, k),
+    hand: mixAngle(x.hand, y.hand, k),
+    shape: k < 0.5 ? x.shape : y.shape,
+  });
+  return { L: seg(a.L, b.L), R: seg(a.R, b.R) };
 }
 
 /* ── skeleton ────────────────────────────────────────────────────────── */
@@ -318,8 +398,12 @@ export const FOOT = { L: HIP_X.L - 12, R: HIP_X.R + 12 } as const;
 /** Standing, knees soft, both boots flat on the ground. */
 export const STAND: FullBodyPose = stance(FOOT.L, FOOT.R, 0, 7, 0);
 
+/** The pose's joint numbers (everything but the arms). */
+export type PoseJoint = Exclude<keyof FullBodyPose, 'arms'>;
+export const POSE_JOINTS: PoseJoint[] = ['hipL', 'kneeL', 'ankleL', 'hipR', 'kneeR', 'ankleR', 'lean', 'bodyX', 'bodyY'];
+
 export function mixPose(a: FullBodyPose, b: FullBodyPose, k: number, out: FullBodyPose = { ...STAND }): FullBodyPose {
-  for (const key of Object.keys(STAND) as (keyof FullBodyPose)[]) out[key] = a[key] + (b[key] - a[key]) * k;
+  for (const key of POSE_JOINTS) out[key] = a[key] + (b[key] - a[key]) * k;
   return out;
 }
 

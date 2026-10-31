@@ -151,11 +151,12 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
   const ballRef = useRef<SVGGElement>(null);
   const figRef = useRef<HTMLDivElement>(null);
   const grassRef = useRef<SVGGElement>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
   const moveBall = useRef<HTMLDivElement>(null);
   const moveBallSpin = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!els || !entry.body) return;
-    const { pose, loop, dribble, frame } = entry.body;
+    const { pose, loop, dribble, frame, caption } = entry.body;
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
@@ -167,8 +168,17 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
         // A whole move (a save): the figure tilts, lifts and travels as on the player card. (The card's shift is a
         // share of a box 1.32× the figure's width.)
         figRef.current.style.transform = f
-          ? `translate(${(f.shift * 1.32).toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) scale(${(f.scale ?? 1).toFixed(3)})`
+          ? `translate(${(f.shift * 1.32).toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg) scale(${(f.scale ?? 1).toFixed(3)})`
           : '';
+      }
+      if (captionRef.current) {
+        const c = caption?.(t);
+        captionRef.current.style.opacity = c ? c.opacity.toFixed(2) : '0';
+        if (c) {
+          captionRef.current.textContent = c.text;
+          // (Facing left the whole figure is mirrored: the words are mirrored back.)
+          captionRef.current.style.transform = `${left ? 'scaleX(-1) ' : ''}translateX(-50%) scale(${c.scale.toFixed(2)})`;
+        }
       }
       // Marks the move leaves on the grass (knee slide): torn grooves, a divot, churned turf, flying bits, dust.
       if (grassRef.current) {
@@ -201,7 +211,7 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [els, entry, clock, start]);
+  }, [els, entry, clock, start, left]);
   return (
     <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,#1d6b3a_0%,#0b2a17_70%)]">
       {/* Facing left: the whole figure (and its ball) mirrors, as the cut-out does on the pitch. */}
@@ -227,8 +237,13 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
         <svg className="pointer-events-none absolute inset-0 size-full overflow-visible" viewBox={`0 0 ${FULL_W} ${FULL_H}`} aria-hidden>
           <g ref={grassRef} />
         </svg>
+        <div
+          ref={captionRef}
+          className="pointer-events-none absolute left-1/2 top-[-13%] z-10 whitespace-nowrap font-black text-brand-yellow"
+          style={{ opacity: 0, fontSize: 'clamp(28px, 7vh, 64px)', textShadow: '0 3px 0 #14213D, 0 0 18px rgba(0,0,0,0.5)', transform: left ? 'scaleX(-1) translateX(-50%)' : 'translateX(-50%)' }}
+        />
         <div ref={figRef} className="relative size-full" style={{ transformOrigin: `50% ${(FULL_GROUND * 100).toFixed(1)}%` }}>
-          <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} gloves={entry.body?.gloves} />
+          <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} gloves={entry.body?.gloves} movingArms={entry.body?.arms} />
           <div ref={moveBall} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
             <div ref={moveBallSpin} className="size-full">
               <BallArt />
