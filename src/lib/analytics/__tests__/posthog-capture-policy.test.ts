@@ -65,3 +65,29 @@ describe('PostHog capture policy', () => {
     expect(preparePostHogCapture({ uuid: 'e', event: '$pageview', properties: { $current_url: 'https://quizball.io/dev/gamesX' } })).not.toBeNull();
   });
 });
+
+describe('event diet: DB-duplicated gameplay events and retry-storm throttles', () => {
+  const ev = (event: string): CaptureResult => ({ uuid: `e-${event}`, event, properties: { $current_url: 'https://quizball.io/en/play' } });
+
+  it('drops gameplay events the production DB already records', () => {
+    for (const name of ['match_started', 'match_completed', 'game_start', 'game_complete',
+      'game_view', 'lobby_joined', 'matchmaking_started', 'quiz_question_answered',
+      'match_results_viewed', 'wl_banner_viewed']) {
+      expect(preparePostHogCapture(ev(name))).toBeNull();
+    }
+  });
+
+  it('keeps the PostHog-only surface: pageviews, errors, funnel and conversion events', () => {
+    for (const name of ['$pageview', 'api_error', 'auth_panel_shown', 'account_created',
+      'onboarding_step_completed', '$identify']) {
+      expect(preparePostHogCapture(ev(name))?.event).toBe(name);
+    }
+  });
+
+  it('throttles socket failure spam to one event per minute per name', () => {
+    expect(preparePostHogCapture(ev('socket_connection_failed'))?.event).toBe('socket_connection_failed');
+    expect(preparePostHogCapture(ev('socket_connection_failed'))).toBeNull();
+    expect(preparePostHogCapture(ev('socket_reconnected'))?.event).toBe('socket_reconnected');
+    expect(preparePostHogCapture(ev('socket_reconnected'))).toBeNull();
+  });
+});
