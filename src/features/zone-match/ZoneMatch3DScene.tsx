@@ -13,7 +13,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Stadium3D } from '@/features/stadium/Stadium3D';
 import { findScene } from '@/features/stadium/crowd/scenes';
-import { useMatchBallGeometry, useMatchBallTexture, usePitchTurf } from '@/features/mini-games/components/footballVisuals';
+import { usePitchTurf } from '@/features/mini-games/components/footballVisuals';
 import { createRoadNet, deformRoadNet } from '@/features/mini-games/lib/roadNet';
 import type { ZoneSide } from './zoneMatch.rules';
 import { BALL_R, GOAL_X, PITCH_HALF_W, SIDE_COLOR, ZONE_LEN, columnX } from './zoneMatch3d.layout';
@@ -22,6 +22,7 @@ import { CutoutDriver, type CutoutRegistry } from './ZoneMatch3DCutouts';
 import type { CardFx } from './zoneMatch3d.fx';
 import { CardEffectsEngine } from './zoneMatch3d.effects';
 import { REAL_CLOCK, type SceneClock } from './zoneMatch3d.clock';
+import { makeBallMaterial, useBallStyle } from './zoneMatch3d.balls';
 
 /**
  * Screen px covered by overlays on each edge of the full-screen view: the HUD on top, the question sheet and the hand
@@ -493,8 +494,11 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
 }
 
 function Ball({ director }: { director: DuelDirector }) {
-  const map = useMatchBallTexture();
-  const geometry = useMatchBallGeometry(BALL_R);
+  const style = useBallStyle();
+  const geometry = useMemo(() => new THREE.SphereGeometry(BALL_R, 48, 32), []);
+  const material = useMemo(() => makeBallMaterial(style), [style]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
   const shadow = useRef<THREE.Mesh>(null);
   useFrame(() => {
     const s = shadow.current;
@@ -511,9 +515,7 @@ function Ball({ director }: { director: DuelDirector }) {
         <circleGeometry args={[0.22, 24]} />
         <meshBasicMaterial color="#020805" transparent opacity={0.3} depthWrite={false} />
       </mesh>
-      <mesh ref={(m) => director.attachBall(m)} geometry={geometry} castShadow>
-        <meshStandardMaterial map={map} roughness={0.62} metalness={0.02} />
-      </mesh>
+      <mesh ref={(m) => director.attachBall(m)} geometry={geometry} material={material} castShadow />
     </>
   );
 }

@@ -47,6 +47,7 @@ import { CARD_TYPE_THEME, CardFace, CardGlyph } from './ZoneMatchCardFace';
 import { ZoneMatch3D } from './ZoneMatch3D';
 import { CategoryTile } from './ZoneMatchCategories';
 import { SkyShot } from './ZoneMatchSkyShot';
+import { FogWipe } from './ZoneMatchFogWipe';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -760,8 +761,9 @@ export function McqPanel({
 }) {
   const sabotage = sabotageOn(state, 'player');
   const dark = !revealed && sabotage.includes('floodlight-failure') && now < mcq.startedAt + FLOODLIGHT_MS;
-  const [fogClearedFor, setFogClearedFor] = useState<number | null>(null);
-  const fogged = !revealed && sabotage.includes('fog') && fogClearedFor !== mcq.key;
+  // Fog: the whole question misted over until wiped clear (ZoneMatchFogWipe).
+  const fogged = !revealed && sabotage.includes('fog');
+  const panelRef = useRef<HTMLDivElement>(null);
   const muddy = sabotage.includes('muddy-pitch');
   const [shuffle, setShuffle] = useState<{ key: number; order: number[]; at: number } | null>(null);
   useEffect(() => {
@@ -808,7 +810,7 @@ export function McqPanel({
   const cutScope = `cut-${mcq.key}`;
 
   return (
-    <div className="relative" data-fifty-cut={cutScope}>
+    <div ref={panelRef} className="relative" data-fifty-cut={cutScope}>
       {cutViews.length > 0 && <style>{fiftyCutStyle(cutScope, cutViews)}</style>}
       {mcq.offCategory && (
         <div className="mb-1.5 truncate text-center text-[10px] uppercase tracking-[0.06em] text-brand-orange" style={poppins}>
@@ -835,7 +837,7 @@ export function McqPanel({
             totalQuestions={MATCH_ROUNDS}
             counterLabel={`R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
             timeRemaining={timeLeft}
-            showOptions={!dark && !fogged}
+            showOptions={!dark}
             selectedAnswer={toView(mine)}
             answerStates={answerStates}
             opponentAnswer={mine !== null || revealed ? toView(theirs) : null}
@@ -852,16 +854,7 @@ export function McqPanel({
           Second Ball · one more try
         </div>
       )}
-      {fogged && (
-        <button
-          type="button"
-          onClick={() => setFogClearedFor(mcq.key)}
-          className="absolute inset-x-0 bottom-0 top-[45%] z-20 flex items-center justify-center rounded-[24px] bg-white/25 text-sm uppercase text-white backdrop-blur-md"
-          style={poppins}
-        >
-          🌫️ Fog · tap to clear
-        </button>
-      )}
+      <AnimatePresence>{fogged && <FogWipe key={`fog-${mcq.key}-${mcq.question.id}`} panelRef={panelRef} seed={mcq.key * 97 + 13} />}</AnimatePresence>
       <AnimatePresence>{splashing && <MudSplash key={shuffle?.at} />}</AnimatePresence>
       {dark && <Blackout />}
     </div>

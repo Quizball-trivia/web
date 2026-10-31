@@ -288,10 +288,27 @@ function layoutFigure(els: CutoutEls, pose: CutoutPose, look: Look, camera: THRE
 
 const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from && Date.now() < fx.dark.until;
 
+/** Park the Bus: the defender stepping across to stand behind his bus (`k` 0–1), facing the attacker. */
+function standBehindBus(out: CutoutPose, from: CutoutPose, spot: THREE.Vector3, k: number, dir: number): CutoutPose {
+  out.up.copy(from.up);
+  out.x = THREE.MathUtils.lerp(from.x, spot.x, k);
+  out.y = from.y;
+  out.z = THREE.MathUtils.lerp(from.z, spot.z, k);
+  out.sx = from.sx;
+  out.sy = from.sy;
+  out.spin = 0;
+  out.blur = from.blur;
+  out.party = 0;
+  out.face = dir > 0 ? -1 : 1;
+  Object.assign(out.body, from.body);
+  return out;
+}
+
 /** Inside the Canvas: places every cut-out after the director and the effects have run. */
 export function CutoutDriver({ director, engine, fx, registry: reg, clock }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; registry: CutoutRegistry; clock: SceneClock }) {
   const ghostPose = useMemo(() => blankPose(), []);
   const hopPose = useMemo(() => blankPose(), []);
+  const ridePoses = useMemo(() => ({ player: blankPose(), opponent: blankPose() }), []);
   const fogLevel = useRef(0);
   // When each side last started / stopped wearing gloves (the put-on and toss-away beats).
   const gloveState = useRef<Record<ZoneSide, { wearing: boolean; since: number }>>({ player: { wearing: false, since: -10 }, opponent: { wearing: false, since: -10 } });
@@ -305,7 +322,9 @@ export function CutoutDriver({ director, engine, fx, registry: reg, clock }: { d
     for (const side of SIDES) {
       const lit = !dark || f.dark?.victim === side;
       // A card firing: a quick fist-pump hop.
-      const pose = hopped(hopPose, director.poseOf(side), reduced ? 10 : now - engine.extras.activation[side]);
+      const hop = hopped(hopPose, director.poseOf(side), reduced ? 10 : now - engine.extras.activation[side]);
+      // Park the Bus: he stands behind his bus.
+      const pose = engine.extras.busRider === side ? standBehindBus(ridePoses[side], hop, engine.extras.busSeat, engine.extras.busStandK, director.spots.dir) : hop;
       // Gloves: on while in goal for a shot (or while Goalkeeper Gloves are on), off when it is over.
       const card = f.gloves[side] || sfx.gloves?.side === side;
       const wearing = card || director.keeper === side;

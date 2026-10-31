@@ -218,8 +218,11 @@ export interface ScriptFx {
   flag: { x: number; up: number } | null;
   /** Camera rush / speed lines, 0–1. */
   rush: number;
-  /** Park the Bus: the bus parked across the attack at (x, z) facing `dir`; `burst` 0–1 knocks it aside (Golden Boot). */
-  bus: { x: number; z: number; dir: number; burst: number } | null;
+  /**
+   * Park the Bus: the bus parked across the attack at (x, z) facing `dir`; `enter` 0–1 drives it in from its waiting
+   * spot on the far side; `burst` 0–1 knocks it aside (Golden Boot).
+   */
+  bus: { x: number; z: number; dir: number; burst: number; enter?: number } | null;
   /** Long Ball: its dotted trajectory, drawn from (x0, z0) to (x1, z1) peaking at `height`. */
   arc: { x0: number; z0: number; x1: number; z1: number; height: number; fade: number } | null;
 }
@@ -228,8 +231,8 @@ export const NO_FX: ScriptFx = { ghosts: [], trail: [], ballTrail: null, goldBoo
 const fx = (patch: Partial<ScriptFx>): ScriptFx => ({ ...NO_FX, ...patch });
 
 /** Park the Bus: the bus across the attack at `x` (pushed aside from `burstAt`, by a Golden Boot). */
-function busAt(x: number, z: number, dir: number, t: number, burstAt = Infinity): ScriptFx['bus'] {
-  return { x, z, dir, burst: Number.isFinite(burstAt) ? seg(t, burstAt, burstAt + 0.45) : 0 };
+function busAt(x: number, z: number, dir: number, t: number, burstAt = Infinity, enter = 1): ScriptFx['bus'] {
+  return { x, z, dir, burst: Number.isFinite(burstAt) ? seg(t, burstAt, burstAt + 0.45) : 0, enter };
 }
 
 const ramp = (t: number, t0: number, t1: number, fadeIn = 0.25, fadeOut = 0.35) => smooth(seg(t, t0, t0 + fadeIn)) * (1 - smooth(seg(t, t1 - fadeOut, t1)));
@@ -635,13 +638,16 @@ function looseBallScript(from: Possession): Script {
   };
 }
 
-/** Park the Bus: the attacker drives at the parked bus, the ball cannons back off it and the attacker resets. */
+/**
+ * Park the Bus: the attacker sets off; the defender drives the bus in across his path from the far side just as he gets
+ * there; he runs into it, the ball cannons back off it, and he resets.
+ */
 function blockedScript(from: Possession): Script {
   const A = from.attacker;
   const s0 = duelSpots(from);
   const d = s0.dir;
   const push = { x: s0.attacker.x + d * 1.0, z: s0.attacker.z };
-  const wallX = s0.attacker.x + d * 2.9;
+  const wallX = s0.attacker.x + d * 3.2;
   const hit = { x: wallX - d * 0.45, z: push.z };
   return {
     kind: 'blocked',
@@ -675,7 +681,7 @@ function blockedScript(from: Possession): Script {
       return { kind: 'feet', side: A };
     },
     lit: () => A,
-    fx: (t) => fx({ bus: busAt(wallX, push.z, d, t) }),
+    fx: (t) => fx({ bus: busAt(wallX, push.z, d, t, Infinity, smooth(seg(t, 0.05, 0.55))) }),
   };
 }
 

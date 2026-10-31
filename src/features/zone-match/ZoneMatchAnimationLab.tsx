@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
 import { BallArt, REACTION_BALL_R, type ReactionFrame } from './ZoneMatchFutReactions';
+import { BALL_STYLES, setBallStyle, useBallStyle } from './zoneMatch3d.balls';
 import { FULL_GROUND, FULL_H, FULL_W, footOf, runStep } from './zoneMatch.fullBody';
 import { CardFace } from './ZoneMatchCardFace';
 import { ZoneMatch3DView, type ZoneMatch3DSeat } from './ZoneMatch3D';
@@ -304,6 +305,7 @@ export function ZoneMatchAnimationLab() {
   const [paused, setPaused] = useState(false);
   const [loop, setLoop] = useState(true);
   const [run, setRun] = useState(0);
+  const ballStyle = useBallStyle();
   /** The run that is playing and when it started (lab clock); until then the run's first frame snaps to the spots. */
   const [started, setStarted] = useState<{ run: number; at: number; wall: number } | null>(null);
   const [popupDone, setPopupDone] = useState(-1);
@@ -504,6 +506,19 @@ export function ZoneMatchAnimationLab() {
             aria-label="Timeline"
           />
           <span ref={timeLabel} className="w-[104px] text-right font-mono text-xs text-white/70" />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] uppercase text-white/50">Ball</span>
+            {BALL_STYLES.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setBallStyle(b.id)}
+                className={cn('rounded-full px-2 py-1 text-[11px] font-bold', ballStyle === b.id ? 'bg-brand-yellow text-black' : 'bg-white/10')}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
           <div className="flex gap-1">
             {SPEEDS.map((s) => (
               <button
