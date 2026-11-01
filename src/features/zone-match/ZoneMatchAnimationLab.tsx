@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
 import { BallArt, REACTION_BALL_R, type ReactionFrame } from './ZoneMatchFutReactions';
-import { BALL_STYLES, setBallStyle, useBallStyle } from './zoneMatch3d.balls';
+import { BALL_STYLES, setBallStyle, useBallStyle, type BallStyle } from './zoneMatch3d.balls';
 import { FULL_GROUND, FULL_H, FULL_W, footOf, runStep } from './zoneMatch.fullBody';
 import { CardFace } from './ZoneMatchCardFace';
 import { ZoneMatch3DView, type ZoneMatch3DSeat } from './ZoneMatch3D';
@@ -508,16 +508,18 @@ export function ZoneMatchAnimationLab() {
           <span ref={timeLabel} className="w-[104px] text-right font-mono text-xs text-white/70" />
           <div className="flex items-center gap-1">
             <span className="text-[10px] uppercase text-white/50">Ball</span>
-            {BALL_STYLES.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setBallStyle(b.id)}
-                className={cn('rounded-full px-2 py-1 text-[11px] font-bold', ballStyle === b.id ? 'bg-brand-yellow text-black' : 'bg-white/10')}
-              >
-                {b.label}
-              </button>
-            ))}
+            <select
+              value={ballStyle}
+              onChange={(e) => setBallStyle(e.target.value as BallStyle)}
+              className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold text-white"
+              aria-label="Ball design"
+            >
+              {BALL_STYLES.map((b) => (
+                <option key={b.id} value={b.id} className="bg-neutral-900">
+                  {b.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex gap-1">
             {SPEEDS.map((s) => (
