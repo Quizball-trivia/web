@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { pitchColumn, resolveBattle, type AttackZone, type Possession, type ZoneSide } from '../zoneMatch.rules';
-import { GOAL_X, columnAt, duelSpots, keeperLocalToWorld, netPocket } from '../zoneMatch3d.layout';
+import { GOAL_X, columnAt, duelSpots, keeperLocalToWorld, netPocket, pocketRigSide } from '../zoneMatch3d.layout';
 import { DuelDirector, blankPose, buildScript, clipPose, groundCutout, type DirectorInput } from '../zoneMatch3d.director';
 import { NO_CARDS } from '../zoneMatch3d.fx';
 import { GLOVES_SAVE_NOTE } from '../zoneMatch.machine';
@@ -35,12 +35,16 @@ describe('duelSpots', () => {
 });
 
 describe('goal geometry', () => {
-  it('keeps the keeper-local +x side on the side of the net pocket', () => {
+  it('puts the keeper-local pocket side (pocketRigSide) on the side of the net pocket', () => {
     for (const side of SIDES) {
-      const w = keeperLocalToWorld(side, 1.8, 1.2, 0);
+      const w = keeperLocalToWorld(side, 1.8 * pocketRigSide(side), 1.2, 0);
       expect(Math.sign(w.z)).toBe(Math.sign(netPocket(side).z));
       expect(Math.sign(w.x)).toBe(Math.sign(netPocket(side).x));
     }
+  });
+
+  it('sends every goal into the far side of the net from the camera', () => {
+    for (const side of SIDES) expect(netPocket(side).z).toBeLessThan(0);
   });
 });
 

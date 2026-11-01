@@ -14,7 +14,6 @@ import * as THREE from 'three';
 import { Stadium3D } from '@/features/stadium/Stadium3D';
 import { findScene } from '@/features/stadium/crowd/scenes';
 import { usePitchTurf } from '@/features/mini-games/components/footballVisuals';
-import { createRoadNet, deformRoadNet } from '@/features/mini-games/lib/roadNet';
 import type { ZoneSide } from './zoneMatch.rules';
 import { BALL_R, GOAL_X, PITCH_HALF_W, SIDE_COLOR, ZONE_LEN, columnX } from './zoneMatch3d.layout';
 import { DuelDirector, type DirectorInput } from './zoneMatch3d.director';
@@ -23,6 +22,7 @@ import type { CardFx } from './zoneMatch3d.fx';
 import { CardEffectsEngine } from './zoneMatch3d.effects';
 import { REAL_CLOCK, type SceneClock } from './zoneMatch3d.clock';
 import { makeBallMaterial, useBallStyle } from './zoneMatch3d.balls';
+import { ClothGoal } from './ZoneMatchGoal3D';
 
 /**
  * Screen px covered by overlays on each edge of the full-screen view: the HUD on top, the question sheet and the hand
@@ -237,47 +237,6 @@ function Pitch() {
           <meshBasicMaterial color={LINE} transparent opacity={0.8} depthWrite={false} />
         </mesh>
       ))}
-    </group>
-  );
-}
-
-/** RoadGoal's goal frame and net (with its ripple), mounted on either goal line. */
-function Goal({ dir, director }: { dir: 1 | -1; director: DuelDirector }) {
-  const net = useMemo(() => createRoadNet(), []);
-  const lastAge = useRef<number | null>(null);
-  useEffect(() => () => net.geometry.dispose(), [net]);
-  useFrame(() => {
-    const age = director.netAge[dir];
-    const settled = age < 0 || age > 3;
-    if (settled && lastAge.current === -1) return;
-    deformRoadNet(net, settled ? -1 : age);
-    lastAge.current = settled ? -1 : age;
-  });
-  return (
-    <group position={[dir * GOAL_X, 0, 0]} rotation={[0, -dir * (Math.PI / 2), 0]}>
-      {[-4.25, 4.25].map((x) => (
-        <group key={x}>
-          <mesh position={[x, 1.6, 0]} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 3.2, 20]} />
-            <meshStandardMaterial color="#f7faf8" roughness={0.35} metalness={0.16} />
-          </mesh>
-          <mesh position={[x, 0.055, -0.9]}>
-            <boxGeometry args={[0.065, 0.065, 1.9]} />
-            <meshStandardMaterial color="#9caeb2" roughness={0.5} />
-          </mesh>
-          <mesh position={[x, 1.6, -1.8]}>
-            <cylinderGeometry args={[0.022, 0.022, 3.2, 10]} />
-            <meshStandardMaterial color="#83999d" roughness={0.5} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 3.2, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.07, 0.07, 8.5, 20]} />
-        <meshStandardMaterial color="#f7faf8" roughness={0.35} metalness={0.16} />
-      </mesh>
-      <lineSegments geometry={net.geometry}>
-        <lineBasicMaterial color="#dae8e5" transparent opacity={0.55} depthWrite={false} />
-      </lineSegments>
     </group>
   );
 }
@@ -642,8 +601,9 @@ function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visibl
         </Suspense>
         <Pitch />
         <Zones director={director} />
-        <Goal dir={-1} director={director} />
-        <Goal dir={1} director={director} />
+        {([-1, 1] as const).map((dir) => (
+          <ClothGoal key={dir} position={[dir * GOAL_X, 0, 0]} rotation={[0, -dir * (Math.PI / 2), 0]} ball={() => director.ballPosition()} rate={() => clock.rate()} />
+        ))}
         <Suspense fallback={null}>
           <Ball director={director} />
         </Suspense>

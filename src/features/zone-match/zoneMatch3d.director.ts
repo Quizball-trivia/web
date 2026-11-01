@@ -49,6 +49,7 @@ import {
   duelSpots,
   keeperLocalToWorld,
   netPocket,
+  pocketRigSide,
   yawToward,
   zoneIndex,
   type DuelSpots,
@@ -134,7 +135,6 @@ interface Script {
   ball(t: number): BallFrame;
   lit(t: number): ZoneSide;
   cam?(t: number): CamHint | null;
-  net?(t: number): number;
   tackle?: TackleSpec;
   /** Card effects on top (keeps running after `end`, while the outcome lasts). */
   fx?(t: number): ScriptFx;
@@ -366,6 +366,37 @@ interface ShotOpts {
 }
 
 /** A shot (or, from further out, a dribble then a long-range strike): goal, keeper save, parry or block. */
+/** How far a goal stretches the back of the net, and how long the net holds the ball before throwing it back. */
+const NET_GIVE = 1.2;
+const NET_HOLD = 0.34;
+/** The camera stays on the net this long after the ball hits it, before going to the scorer. */
+const NET_WATCH = 0.8;
+
+/**
+ * A goal's ball from the moment it meets the back of the net at `contact` (coming from `from`): it carries on into
+ * the net, stretching it out behind the goal (the cloth net is pushed by the ball itself, zoneMatch3d.net), the net
+ * throws it back out, and it drops into the goal, bouncing and rolling to a stop inside it.
+ */
+/** Close on the goal a shot is going into, from the pitch side, for the net taking the ball. */
+const netCam = (pocket: { x: number; z: number }, d: number): CamHint => ({ focus: { x: pocket.x - d * 2.2, z: pocket.z * 0.5 }, span: 6.5 });
+
+export function intoTheNet(out: THREE.Vector3, from: THREE.Vector3, contact: THREE.Vector3, after: number): THREE.Vector3 {
+  const hx = contact.x - from.x;
+  const hz = contact.z - from.z;
+  const len = Math.hypot(hx, hz) || 1;
+  const ux = hx / len;
+  const uz = hz / len;
+  if (after < NET_HOLD) {
+    const k = after / NET_HOLD;
+    const give = NET_GIVE * Math.sin(Math.PI * k) * Math.exp(-1.4 * k);
+    return out.set(contact.x + ux * give, contact.y - 1.5 * after * after, contact.z + uz * give);
+  }
+  const free = after - NET_HOLD;
+  const back = 0.8 * (1 - Math.exp(-2.5 * free));
+  const y = bounceHeight(contact.y - 1.5 * NET_HOLD * NET_HOLD, -1, free, BALL_R, 0.4);
+  return out.set(contact.x - ux * back, y, contact.z - uz * back);
+}
+
 function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block', seed: number, opts: ShotOpts = {}): Script {
   const lead = opts.lead ?? 0;
   const A = from.attacker;
@@ -380,8 +411,10 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
   const contactT = strikeT + STRIKE_CONTACT;
   const ball0 = new THREE.Vector3(ballX0, BALL_R, ballZ0);
   const wallX = ballX0 + d * 3.6;
+  // Keeper-local x: positive towards the net pocket's side (a beaten keeper dives the other way).
+  const side = pocketRigSide(A);
   const keeperTarget: [number, number] =
-    result === 'goal' ? (opts.throughGloves ? [1.55, 1.15] : [-1.8, 1.3]) : result === 'save' ? [1.5, 1.25] : [1.5, 0.95];
+    result === 'goal' ? (opts.throughGloves ? [1.55 * side, 1.15] : [-1.8 * side, 1.3]) : result === 'save' ? [1.5 * side, 1.25] : [1.5 * side, 0.95];
   const saveStyle: KeeperSaveStyle = result === 'save' ? 'catch' : 'parry';
   const contactLocal = new THREE.Vector3(keeperTarget[0], keeperTarget[1], 0.42);
   const pocket = netPocket(A);
@@ -474,8 +507,8 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
       }
       const after = t - arrival;
       if (result === 'goal') {
-        const e = 1 - Math.exp(-after * 3);
-        return { kind: 'at', x: target.x - d * 0.55 * e, y: bounceHeight(target.y, -0.4, after, BALL_R), z: target.z };
+        intoTheNet(tmp, ball0, target, after);
+        return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
       }
       if (result === 'save') return t < end ? { kind: 'catch', side: D } : { kind: 'settle' };
       if (result === 'block') {
@@ -491,7 +524,9 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
     },
     lit: (t) => (result === 'goal' || result === 'block' || t < arrival ? A : D),
     cam(t) {
-      if (result === 'goal' && t > arrival + 0.25) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (result === 'goal' && t > arrival + NET_WATCH) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      // In close on the net as the ball goes in, to see it take the ball.
+      if (result === 'goal' && keeper && !opts.lob && t > arrival - 0.2) return netCam(pocket, d);
       if (opts.sprint && t > 0.15 && t < runEnd) return { focus: { x: ballX0, z: ballZ0 }, span: 6 };
       // Long range or a lob: from behind the shooter, down the pitch as the ball flies into the net.
       if ((!keeper || opts.lob) && t > contactT + 0.1) {
@@ -499,7 +534,6 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
       }
       return null;
     },
-    net: (t) => (result === 'goal' ? t - arrival : -1),
     fx(t) {
       // The bus parked across the shot: the ball cannons off it, or a Golden Boot blasts it aside.
       const bus = opts.throughBus ? busAt(wallX, ballZ0, d, t, wallPass) : opts.wall ? busAt(wallX, ballZ0, d, t) : null;
@@ -842,17 +876,16 @@ function stealScoreScript(from: Possession, seed: number): Script {
         shotFlight(tmp, ball0, target, t - contactT, flight, d * 0.3);
         return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
       }
-      const after = t - arrival;
-      const e = 1 - Math.exp(-after * 3);
-      return { kind: 'at', x: target.x + d * 0.55 * e, y: bounceHeight(target.y, -0.4, after, BALL_R), z: target.z };
+      intoTheNet(tmp, ball0, target, t - arrival);
+      return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
     },
     lit: (t) => (t < tackleContact ? A : D),
     cam(t) {
-      if (t > arrival + 0.25) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (t > arrival + NET_WATCH) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (t > arrival - 0.2) return netCam(pocket, d);
       if (t > contactT - 0.1) return { focus: { x: (ball0.x + target.x) / 2, z: target.z * 0.5 }, span: Math.abs(target.x - ball0.x) + 4 };
       return null;
     },
-    net: (t) => t - arrival,
     fx: undefined,
   };
 }
@@ -1082,7 +1115,6 @@ export class DuelDirector {
   /** Outputs read by the scene each frame. */
   readonly focus = new THREE.Vector3();
   lit: { column: 0 | 1 | 2; side: ZoneSide } = { column: 1, side: 'player' };
-  netAge: Record<1 | -1, number> = { 1: -1, [-1]: -1 };
   /** The running outcome script's card effects. */
   scriptFx: ScriptFx = NO_FX;
   /** The side standing in goal right now (a shot is on), or null: the keeper puts gloves on for it. */
@@ -1231,14 +1263,9 @@ export class DuelDirector {
             : { kind: 'settle' };
     this.updateBall(ballFrame, input.possession.attacker, dt);
 
-    // Zone light, nets, camera.
+    // Zone light, camera (the nets follow the ball themselves).
     const litSide = active ? active.lit(t) : input.possession.attacker;
     this.lit = { column: columnAt(this.ball.x), side: litSide };
-    const age = script?.net ? script.net(t) : -1;
-    // The net that ripples: the scorer's target (a steal-and-score goes the other way).
-    const scorer = input.outcome?.kind === 'goal' ? input.outcome.scorer : input.from?.attacker;
-    const goalDir = script && scorer ? (scorer === 'player' ? 1 : -1) : 1;
-    this.netAge = goalDir > 0 ? { 1: age, [-1]: -1 } : { 1: -1, [-1]: age };
     this.scriptFx = script?.fx ? script.fx(t) : NO_FX;
     this.spots = input.mode === 'outcome' && input.from ? duelSpots(input.from) : duel;
     // In goal while a shot is coming (and through the save); the gloves come off once the result has played out.
