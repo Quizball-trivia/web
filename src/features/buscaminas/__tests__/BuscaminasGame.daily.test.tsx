@@ -108,5 +108,19 @@ describe("Buscaminas daily run and extended challenge", () => {
     render(<BuscaminasGame locale="en" initialDay="2026-09-28" />);
     expect(await screen.findByRole("button", { name: "Continue extended challenge · round 8" })).toBeInTheDocument();
     expect(screen.getByText("40")).toBeInTheDocument();
+    // Rounds 8-20 are still ahead.
+    expect(screen.getByText(/Extended challenge: 13 more rounds/)).toBeInTheDocument();
+  });
+
+  it("sums up a finished extended challenge with its own points and rounds", async () => {
+    const twenty = [...[15, 3, 15, 3, 4].map(result), ...Array.from({ length: 15 }, () => result(4))];
+    useAuthStore.setState({ status: "authenticated", user: { id: "user-a" } } as never);
+    localStorage.setItem("qb.buscaminas.v3.2026-09-28.user-a", JSON.stringify({
+      schema: 3, contentVersion: 7,
+      run: { run: { id: "run-1", version: 60 }, state: { day: "2026-09-28", round: 19, picked: [], found: 0, mine: null, settled: null, results: twenty, done: true, score: 100, dailyRounds: 5, dailyDone: true, dailyScore: 40, ranked: false } },
+    }));
+    render(<BuscaminasGame locale="en" initialDay="2026-09-28" />);
+    expect(await screen.findByText("Extended challenge: 60 pts over 15 rounds")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /extended challenge/i })).toBeNull();
   });
 });

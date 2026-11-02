@@ -19,7 +19,7 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { cn } from "@/lib/utils";
 import { gridDailyApi, type GridDailyBoard, type GridDailyRun } from "./gridDaily.api";
 import { fillDaily, GRID_DAILY_COPY } from "./gridDaily.copy";
-import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, refusalKey, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
+import { candidateDays, elapsedFromSpeed, formatClock, missLanded, puzzleNumber, refusalKey, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
 import { criterionLabel } from "@/features/football-grid/criterionLabel";
 import { localizedPlayerName } from "@/lib/football-grid/playerName";
 
@@ -94,9 +94,13 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const [movedElsewhere, setMovedElsewhere] = useState(false);
   const [refusal, setRefusal] = useState<Refusal | null>(null);
   /** The name typed was already refused for this square on this device: it was not sent, so nothing was spent. */
-  const [repeatTried, setRepeatTried] = useState(false);
-  /** Names refused per square in this load (see refusalKey): the same refusal never costs a second guess. */
-  const refusedKeys = useRef(new Set<string>());
+  const [repeatTried, setRepeatTried] = useState<false | "tried" | "maybe">(false);
+  /**
+   * Names that spent a guess on a square in this load without filling it (see refusalKey), and why: the same name
+   * never costs a second guess there. Only a "wrong" one can be reported (an already-used footballer is not a dispute).
+   */
+  /** Names each square refused ("wrong" / "used"), and "maybe": a guess whose answer was lost and that may have landed. */
+  const refusedKeys = useRef(new Map<string, "wrong" | "used" | "maybe">());
   /** data: null = the rankings could not be fetched (the player can ask again). */
   const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard | null } | null>(null);
   const [boardAttempt, setBoardAttempt] = useState(0);
@@ -118,7 +122,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     setFeedback(undefined);
     setRefusal(null);
     setRepeatTried(false);
-    refusedKeys.current = new Set();
+    refusedKeys.current = new Map();
     try {
       const { days } = await gridDailyApi.boards(locale);
       const candidates = candidateDays(days, member);
@@ -220,12 +224,26 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     const text = answer.trim();
     const cellIndex = selectedCell;
     setMovedElsewhere(false);
-    // Typed again for the same square (the tester lost two guesses to one disputed name): not sent, nothing spent,
-    // and the report is offered instead.
-    if (refusedKeys.current.has(refusalKey(cellIndex, text))) {
+    // Typed again for the same square (the tester lost two guesses to one disputed name): not sent, nothing spent.
+    // The sheet closes so the notice, and for a refused name the report, are in view rather than under its overlay.
+    const tried = refusedKeys.current.get(refusalKey(cellIndex, text));
+    // A lost guess that may have counted is only a warning: shown once, then the next send goes through, since it was
+    // never judged (another tab's miss looks exactly the same from here) and could be right.
+    if (tried === "maybe") {
+      refusedKeys.current.delete(refusalKey(cellIndex, text));
       setFeedback(undefined);
-      setRepeatTried(true);
-      setRefusal((current) => (current && current.cellIndex === cellIndex && refusalKey(cellIndex, current.text) === refusalKey(cellIndex, text) ? current : { cellIndex, text, status: "idle" }));
+      setRepeatTried("maybe");
+      setSelectedCell(null); // the notice sits under the answer sheet's overlay otherwise
+      return;
+    }
+    if (tried) {
+      setFeedback(undefined);
+      setRepeatTried("tried");
+      setSelectedCell(null);
+      setAnswer("");
+      if (tried === "wrong") {
+        setRefusal((current) => (current && current.cellIndex === cellIndex && refusalKey(cellIndex, current.text) === refusalKey(cellIndex, text) ? current : { cellIndex, text, status: "idle" }));
+      }
       return;
     }
     setRepeatTried(false);
@@ -237,8 +255,10 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
       if (!apply(result, mine)) return;
       setFeedback(result.outcome);
       if (result.outcome === "wrong") {
-        refusedKeys.current.add(refusalKey(cellIndex, text));
+        refusedKeys.current.set(refusalKey(cellIndex, text), "wrong");
         setRefusal({ cellIndex, text, status: "idle" });
+      } else if (result.outcome === "already_used") {
+        refusedKeys.current.set(refusalKey(cellIndex, text), "used");
       }
       if (result.outcome !== "ambiguous") { setSelectedCell(null); setAnswer(""); }
     } catch (error) {
@@ -247,6 +267,12 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
       const fresh = await resync(mine);
       // The screen quietly catching up would leave the player wondering where the guess went.
       if (stale && fresh && mine === generation.current) setMovedElsewhere(true);
+      // The answer was lost and a guess was spent with nothing else changing: it probably missed. The run does not
+      // record which name missed where, so warn before this name is sent again (it is not blocked: the spent guess
+      // could be another tab's).
+      if (!stale && fresh && mine === generation.current && missLanded(run.state, fresh.state, cellIndex)) {
+        refusedKeys.current.set(refusalKey(cellIndex, text), "maybe");
+      }
     } finally {
       pendingRef.current = false;
       setPending(false);
@@ -451,7 +477,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
           <>
             <p role="status" data-daily-feedback={movedElsewhere ? "moved" : repeatTried ? "repeat" : feedback ?? ""} className={cn("mt-3 min-h-5 text-center text-xs font-bold",
               movedElsewhere || repeatTried || feedback === "ambiguous" ? "text-brand-yellow" : feedback === "correct" ? "text-brand-green-light" : feedback ? "text-brand-red-soft" : "text-white/55")}>
-              {movedElsewhere ? copy.movedElsewhere : repeatTried ? copy.alreadyTried : feedbackLine ?? copy.tapCell}
+              {movedElsewhere ? copy.movedElsewhere : repeatTried === "maybe" ? copy.maybeTried : repeatTried ? copy.alreadyTried : feedbackLine ?? copy.tapCell}
             </p>
             {reportRow}
             <FootballGridTurnPanel
@@ -464,7 +490,7 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
               onSubmit={(event) => { void submit(event); }}
               onCancel={() => { setSelectedCell(null); setAnswer(""); setRepeatTried(false); }}
               pending={pending}
-              sheetNotice={repeatTried ? copy.alreadyTried : feedback === "ambiguous" ? copy.ambiguous : null}
+              sheetNotice={feedback === "ambiguous" ? copy.ambiguous : null}
             />
             {confirmFinish ? (
               <div role="dialog" aria-label={fillDaily(copy.finishConfirm, { n: run.state.guessesLeft })} className="mt-3 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center">

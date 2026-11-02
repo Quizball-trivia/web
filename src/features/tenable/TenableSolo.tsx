@@ -140,7 +140,8 @@ export function TenableEndView({ locale, number, state, guestOnPastBoard, leader
               {missedCount > 0 && <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-dashed border-white/50" aria-hidden />{c.legendMissed}</span>}
             </span>
           </div>
-          <TenableTower list={state.list} slots={state.slots} fresh={null} hiddenLabel={c.fullListTitle} asOfLabel={c.asOf} compact />
+          <TenableTower list={state.list} slots={state.slots} fresh={null} hiddenLabel={c.fullListTitle} asOfLabel={c.asOf} compact wrapNames
+            stateLabels={{ found: c.legendFound, missed: c.legendMissed }} />
         </div>
       )}
       {practice}

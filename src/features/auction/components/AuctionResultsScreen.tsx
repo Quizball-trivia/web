@@ -13,6 +13,7 @@ import {
   getSquadProfit,
   getAdjustedProfit,
   getFilledCount,
+  squadSizeOf,
   isTeamComplete,
   lastName,
   POSITION_ORDER,
@@ -151,6 +152,8 @@ export function AuctionResultsScreen({
       adjustedProfit: getAdjustedProfit(p),
       teamComplete: isTeamComplete(p.team),
       filledCount: getFilledCount(p.team),
+      // 7 in a live auction, 3 in the training auction — never a hard-coded total.
+      squadSize: squadSizeOf(p.team.formation),
     };
   });
 
@@ -425,7 +428,7 @@ export function AuctionResultsScreen({
                 <div className="mt-3 flex flex-wrap gap-2">
                   <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
-                    {t('auctionGame.playersFilled', { filled: player.filledCount })}
+                    {t('auctionGame.playersFilled', { filled: player.filledCount, total: player.squadSize })}
                   </span>
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.budgetAmount', { amount: formatMoney(player.budget) })}

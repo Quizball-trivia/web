@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PRACTICE_BANKROLL, usePracticeBankroll } from "@/features/coin-samples/practiceBankroll";
 import { sampleTriviaQuestions } from "@/features/coin-samples/questionBank";
 import { randomSeed, seededRandom } from "@/features/coin-samples/rng";
@@ -16,22 +16,19 @@ const MIN_STAKE = 5;
  */
 export function FreeKicksPractice({ onExit }: { onExit: () => void }) {
   const miniLocale = useMiniLocale();
-  const wallet = usePracticeBankroll(PRACTICE_BANKROLL);
-  const walletRef = useRef(wallet);
-  walletRef.current = wallet;
+  // peek/debit/credit/reset are stable callbacks over the bankroll's ref (the balance never goes through render).
+  const { peek, debit, credit, reset } = usePracticeBankroll(PRACTICE_BANKROLL);
   const [random] = useState(() => seededRandom(randomSeed()));
   const questions = useMemo(() => sampleTriviaQuestions(miniLocale), [miniLocale]);
   // Practice never dead-ends: below the smallest stake the bankroll refills.
   const onSettled = useCallback(() => {
-    if (walletRef.current.peek() < MIN_STAKE) walletRef.current.reset();
-  }, []);
+    if (peek() < MIN_STAKE) reset();
+  }, [peek, reset]);
   // The engine reads the wallet through a stable port so its state survives re-renders.
   const port = useMemo<CoinSampleMode["wallet"]>(() => ({
-    get coins() { return walletRef.current.peek(); },
-    debit: (amount: number) => walletRef.current.debit(amount),
-    credit: (amount: number) => walletRef.current.credit(amount),
-    reset: () => walletRef.current.reset(),
-  }), []);
+    get coins() { return peek(); },
+    debit, credit, reset,
+  }), [peek, debit, credit, reset]);
   // Stable across balance changes (the screen re-renders with this component and reads the getter).
   const sample = useMemo<CoinSampleMode>(
     () => ({ questions, wallet: port, random, onSettled, onExit, untimed: true }),

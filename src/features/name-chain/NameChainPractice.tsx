@@ -39,11 +39,10 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
     setFailed(false);
     try {
       const res = await step(body);
-      setState((s) => {
-        const next = applyPractice(s, body.op, res);
-        latest.current = next;
-        return next;
-      });
+      // One step in flight at a time, so latest.current is the state this step was built on; keep the updater pure.
+      const next = applyPractice(latest.current, body.op, res);
+      latest.current = next;
+      setState(next);
     } catch {
       // Nothing is lost: the chain lives here, so the same step can simply be tried again.
       setFailed(true);

@@ -44,6 +44,13 @@ describe("playOrderFrom", () => {
     expect(order.coins?.[0]).toBe("mini-squad-spin");
   });
 
+  it("keeps True or False last even when its numbers lead the row", () => {
+    const games = { "daily:trueFalse": { players_7d: 9999, players_3d: 9999 }, tenable: { players_7d: 10, players_3d: 5 } };
+    const order = playOrderFrom({ generated_at: null, games }, NOW);
+    expect(order.daily?.at(-1)).toBe("daily-trueFalse");
+    expect([...(order.daily ?? [])].sort()).toEqual([...DAILY_CHALLENGE_SLUGS].sort());
+  });
+
   it("never lists a retired game on the Play page", () => {
     const listed = new Set([...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS]);
     expect(RETIRED_PLAY_SLUGS.filter((slug) => listed.has(slug))).toEqual([]);

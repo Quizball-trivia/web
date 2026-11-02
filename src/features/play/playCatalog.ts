@@ -119,5 +119,13 @@ export function playOrderFrom(popularity: PlayPopularity | null, now: Date): Pla
   // A row with no counts of its own is not reordered by release dates alone.
   const ranked = (slugs: string[]) =>
     slugs.some((slug) => stats[slug]) ? rankPlayGames(slugs, stats, PLAY_RELEASED_ON, now).map((row) => row.slug) : null;
-  return { daily: ranked(DAILY_CHALLENGE_SLUGS), coins: ranked(PLAY_WITH_COINS_SLUGS), newSlugs };
+  const daily = ranked(DAILY_CHALLENGE_SLUGS);
+  return { daily: daily && pinLast(daily), coins: ranked(PLAY_WITH_COINS_SLUGS), newSlugs };
+}
+
+/** Warm-ups that stay at the end of their row whatever their numbers say. */
+export const PINNED_LAST_SLUGS = ["daily-trueFalse"];
+
+function pinLast(slugs: string[]): string[] {
+  return [...slugs.filter((slug) => !PINNED_LAST_SLUGS.includes(slug)), ...slugs.filter((slug) => PINNED_LAST_SLUGS.includes(slug))];
 }

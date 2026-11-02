@@ -43,6 +43,8 @@ describe("CardDetectiveDailyGame", () => {
     const review = document.querySelector("[data-card-detective-review]")!;
     expect(review.getAttribute("data-card-detective-review")).toBe("solved");
     expect(screen.getByText("No hints bought")).toBeTruthy();
+    // The review replaces the name input: keyboard focus lands on the way forward.
+    expect(document.activeElement).toBe(document.querySelector("[data-card-detective-next]"));
     expect(Number(document.querySelector("[data-card-detective-saved]")!.getAttribute("data-card-detective-saved"))).toBeGreaterThan(0);
     // No auto-advance: the review stays until the player moves on.
     await act(async () => { await new Promise((r) => setTimeout(r, 2_600)); });

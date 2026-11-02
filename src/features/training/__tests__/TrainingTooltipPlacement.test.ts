@@ -38,7 +38,12 @@ describe('TrainingTooltip placement', () => {
   });
 
   it('clamps the static slots inside the safe area', () => {
-    const cardH = 420;
+    // Tall enough that both edge slots overflow their preferred 96px offset.
+    const cardH = 520;
+    // top: preferred 36 + 96 = 132 would end at 652 > 608 → clamped up to 608 − 520.
+    expect(staticCardTop('top', SMALL_PHONE, cardH)).toBe(88);
+    // bottom: preferred 608 − 96 − 520 = −8 is above the safe top → clamped to 36.
+    expect(staticCardTop('bottom', SMALL_PHONE, cardH)).toBe(36);
     for (const position of ['top', 'center', 'bottom'] as const) {
       const top = staticCardTop(position, SMALL_PHONE, cardH);
       expect(top).toBeGreaterThanOrEqual(SMALL_PHONE.top);

@@ -243,10 +243,11 @@ export function StadiumBiddingScreen({
               />
             ) : (
               <div className="flex items-center justify-between gap-2 border-t border-white/15 pt-3" data-auction-anchor="starting-price">
-                {/* Origin line: the opening is a real past valuation, not
-                    necessarily the scouted season's — so it can't read as a
-                    contradiction of the card's value row. Which season it is
-                    stays hidden until the reveal (it would hint at a decline). */}
+                {/* Origin line: the opening is not necessarily the scouted
+                    season's value (it can be another valuation or a fallback
+                    estimate), so it can't read as a contradiction of the card's
+                    value row. Its real origin stays hidden until the reveal
+                    (it would hint at a decline). */}
                 <span className="flex min-w-0 flex-col">
                   <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
                     {t('auctionGame.startingPriceLabel')}

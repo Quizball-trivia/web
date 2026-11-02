@@ -379,7 +379,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : view === "end" && state ? (
           <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} totalRounds={content.rounds.length} onExtended={() => { setView("play"); scrollRef.current?.scrollTo?.({ top: 0 }); }} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
-          <Intro locale={locale} number={puzzleNumber(day)} shortRun={dailyRoundsFor(day) < content.rounds.length} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
+          <Intro locale={locale} number={puzzleNumber(day)} shortRun={(state ? dailyRoundsOf(state) : dailyRoundsFor(day)) < content.rounds.length} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
           <Board locale={locale} content={content} round={round} state={state} pending={pending} notice={notice} onPick={pick} onBank={bank} onNext={advance} onExit={onExit} />
         )}
@@ -614,7 +614,10 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
   const extendedLeft = !state.done && totalRounds > dailyTotal;
   const extendedStarted = state.round > dailyTotal || state.picked.length > 0 || Boolean(state.settled);
   const extendedPlayed = extendedRoundsPlayed(state);
-  const extendedSummary = state.done && extendedPlayed > 0 ? c.end.extendedScore(state.score, state.results.length) : null;
+  // The extended challenge's own points and rounds: the whole run minus the daily run.
+  const extendedSummary = state.done && extendedPlayed > 0 ? c.end.extendedScore(state.score - score, extendedPlayed) : null;
+  // Rounds still ahead, the one in progress included (15 before the extended challenge starts).
+  const extendedRemaining = totalRounds - Math.max(state.round, dailyTotal);
   const perfects = results.filter((r) => r.outcome === "perfect").length;
   const mines = results.filter((r) => r.outcome === "mine").length;
   const number = puzzleNumber(day);
@@ -696,7 +699,7 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
       {extendedLeft && (
         <div className="mt-4 rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 px-4 py-3">
           <p className="text-sm font-black uppercase" style={poppins}>{c.end.extendedTitle}</p>
-          <p className="mt-1 text-sm text-white/80">{c.end.extendedHint(totalRounds - dailyTotal)}</p>
+          <p className="mt-1 text-sm text-white/80">{c.end.extendedHint(extendedRemaining)}</p>
           <button type="button" onClick={onExtended} className="mt-3 h-11 w-full rounded-full bg-brand-yellow text-sm font-black uppercase tracking-wide text-black hover:bg-brand-yellow-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70" style={poppins}>
             {extendedStarted ? c.end.extendedResume(state.round + 1) : c.end.extendedStart}
           </button>

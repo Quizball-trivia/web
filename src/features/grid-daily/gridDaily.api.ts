@@ -60,7 +60,7 @@ export const gridDailyApi = {
    * back and the run is untouched. True when the server took the request (it answers 204 whether or not it kept it).
    */
   report: (input: { day: string; cellIndex: number; text: string }, locale: string) =>
-    call<null>("/report", "POST", { ...input, text: input.text.slice(0, 160) }, locale).then(() => true, () => false),
+    call<null>("/report", "POST", { ...input, text: input.text.slice(0, 60) }, locale).then(() => true, () => false),
   /** Shows the squares and starts the clock. */
   kickOff: (input: { runId: string; version: number }, locale: string) => call<GridDailyRun>("/kickoff", "POST", input, locale),
   finish: (input: { runId: string; version: number }, locale: string) => call<GridDailyRun>("/finish", "POST", input, locale),

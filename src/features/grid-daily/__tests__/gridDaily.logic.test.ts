@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, refusalKey, shareGrid, CONTENT_START } from "../gridDaily.logic";
+import { candidateDays, elapsedFromSpeed, formatClock, missLanded, puzzleNumber, refusalKey, shareGrid, CONTENT_START } from "../gridDaily.logic";
 
 describe("daily grid logic", () => {
   const days = { "2026-10-08": 1, "2026-10-09": 2, "2026-10-10": 3 };
@@ -32,5 +32,16 @@ describe("daily grid logic", () => {
     expect(refusalKey(0, "N'Golo Kanté")).toBe(refusalKey(0, "ngolo kante"));
     expect(refusalKey(0, "Júlio Baptista")).not.toBe(refusalKey(1, "Júlio Baptista"));
     expect(refusalKey(0, "Júlio Baptista")).not.toBe(refusalKey(0, "Júlio César"));
+  });
+
+  it("tells a lost guess that missed from one that filled the square or never landed", () => {
+    const before = { guessesLeft: 7, cells: [null, null, null] };
+    expect(missLanded(before, { guessesLeft: 6, cells: [null, null, null] }, 0)).toBe(true);
+    expect(missLanded(before, { guessesLeft: 6, cells: [{}, null, null] }, 0)).toBe(false); // it filled the square
+    expect(missLanded(before, { guessesLeft: 7, cells: [null, null, null] }, 0)).toBe(false); // never counted
+    expect(missLanded(before, { guessesLeft: 5, cells: [null, null, null] }, 0)).toBe(false); // another tab spent one too
+    // Another tab filled a different square while this guess was lost: the spent guess may be that one, so this
+    // name was never judged and must stay retryable.
+    expect(missLanded(before, { guessesLeft: 6, cells: [null, {}, null] }, 0)).toBe(false);
   });
 });

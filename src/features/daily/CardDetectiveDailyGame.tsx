@@ -238,6 +238,8 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete, practice =
                       <button
                         type="button"
                         data-card-detective-next
+                        // The review replaces the name input: keep keyboard focus on the way forward.
+                        autoFocus
                         onClick={nextCard}
                         className="mt-3 inline-flex h-11 w-full items-center justify-center gap-1 rounded-full bg-brand-green text-sm font-black uppercase tracking-wide text-black hover:brightness-110"
                       >
