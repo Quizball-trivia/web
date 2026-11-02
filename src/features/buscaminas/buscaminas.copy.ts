@@ -22,6 +22,8 @@ const es = {
   tooManyRuns: "Llegaste al máximo de partidas de hoy como invitado. Creá tu cuenta para seguir jugando y entrar al ranking.",
   intro: {
     title: (n: number) => `Buscaminas futbolero #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 rondas que se ponen cada vez más difíciles.",
     lines: [
       "5 rondas rápidas por día, unos 2 minutos. Después, si querés más, el desafío extendido.",
       "Cada ronda tiene 16 jugadores: 12 cumplen la consigna y 4 son minas.",
@@ -111,6 +113,8 @@ const en: Copy = {
   tooManyRuns: "You've reached today's guest limit. Create an account to keep playing and get ranked.",
   intro: {
     title: (n) => `Football Minesweeper #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 rounds that get harder as you go.",
     lines: [
       "5 quick rounds a day, about 2 minutes. Want more? The extended challenge is waiting after.",
       "Each round shows 16 players: 12 fit the clue and 4 are mines.",
@@ -198,6 +202,8 @@ const ka: Copy = {
   tooManyRuns: "სტუმრად დღევანდელი თამაშების ლიმიტს მიაღწიე. შექმენი ანგარიში, რომ გააგრძელო და რეიტინგში მოხვდე.",
   intro: {
     title: (n) => `საფეხბურთო მაღაროები #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 რაუნდი, რომლებიც თანდათან რთულდება.",
     lines: [
       "დღეში 5 სწრაფი რაუნდი, დაახლოებით 2 წუთი. მეტი გინდა? შემდეგ გაფართოებული გამოწვევა გელოდება.",
       "ყოველ რაუნდში 16 მოთამაშეა: 12 პირობას აკმაყოფილებს, 4 მაღაროა.",
@@ -285,6 +291,8 @@ const tr: Copy = {
   tooManyRuns: "Bugünkü misafir sınırına ulaştın. Oynamaya devam etmek ve sıralamaya girmek için hesap oluştur.",
   intro: {
     title: (n) => `Futbol Mayın Tarlası #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "Giderek zorlaşan 20 tur.",
     lines: [
       "Günde 5 hızlı tur, yaklaşık 2 dakika. Daha fazlasını mı istiyorsun? Ardından uzatma meydan okuması seni bekliyor.",
       "Her turda 16 oyuncu var: 12'si ipucuna uyar, 4'ü mayın.",
@@ -372,6 +380,8 @@ const ru: Copy = {
   tooManyRuns: "Ты достиг дневного лимита для гостей. Создай аккаунт, чтобы продолжить играть и попасть в рейтинг.",
   intro: {
     title: (n) => `Футбольный сапёр #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 раундов, и каждый сложнее предыдущего.",
     lines: [
       "5 быстрых раундов в день — около 2 минут. Хочешь ещё? Потом можно пройти расширенный челлендж.",
       "В каждом раунде 16 игроков: 12 подходят под подсказку, а 4 — мины.",
@@ -459,6 +469,8 @@ const pt: Copy = {
   tooManyRuns: "Você atingiu o limite de partidas de hoje como convidado. Crie uma conta para continuar jogando e entrar no ranking.",
   intro: {
     title: (n) => `Campo Minado do Futebol #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 rodadas que ficam cada vez mais difíceis.",
     lines: [
       "5 rodadas rápidas por dia, cerca de 2 minutos. Quer mais? Depois vem o desafio estendido.",
       "Cada rodada tem 16 jogadores: 12 se encaixam na dica e 4 são minas.",
@@ -546,6 +558,8 @@ const de: Copy = {
   tooManyRuns: "Du hast heute als Gast das Spiellimit erreicht. Erstelle ein Konto, um weiterzuspielen und in die Rangliste zu kommen.",
   intro: {
     title: (n) => `Fußball-Minesweeper #${n}`,
+    /** First intro line on a day before the short daily run (all 20 rounds ranked). */
+    longRun: "20 Runden, die immer schwieriger werden.",
     lines: [
       "5 schnelle Runden am Tag, etwa 2 Minuten. Lust auf mehr? Danach wartet die Extra-Herausforderung.",
       "Jede Runde zeigt 16 Spieler: 12 passen zum Hinweis, 4 sind Minen.",

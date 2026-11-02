@@ -38,7 +38,11 @@ export function CodenamesPicturePractice({ locale, days, today, playedDay, onExi
   /** Boards dealt in this sitting (and the daily just played): a new board is a different one while any is left. */
   const seen = useRef(new Set<string>(playedDay ? [playedDay] : []));
   const session = useRef<{ id: string; startedAt: number } | null>(null);
-  useEffect(() => () => { request.current += 1; }, []);
+  // Dealt once on mount; "New board" deals again (a change of `days` while practising does not replace the board).
+  const dealtOnce = useRef(false);
+  // Unmounting drops any answer still on its way. Under Strict Mode the mount effects replay after this cleanup, so it
+  // also re-arms the first deal; otherwise the replayed effect would skip it and practice would wait forever.
+  useEffect(() => () => { request.current += 1; dealtOnce.current = false; }, []);
 
   const fetchBoard = useCallback(() => {
     const n = ++request.current;
@@ -58,8 +62,6 @@ export function CodenamesPicturePractice({ locale, days, today, playedDay, onExi
       if (n === request.current) setFailed(error?.status === 404 ? "unavailable" : "error");
     });
   }, [days, today, locale, surface]);
-  // Dealt once on mount; "New board" deals again (a change of `days` while practising does not replace the board).
-  const dealtOnce = useRef(false);
   useEffect(() => {
     if (dealtOnce.current) return;
     dealtOnce.current = true;

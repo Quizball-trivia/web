@@ -286,7 +286,8 @@ export function SquadSpinLive({ backHref = "/play", client, sample, onPractice }
               {stake > balance ? t("triviaMines.notEnough") : t("triviaMines.stakeAndPlay", { stake: String(stake) })}
             </button>
             {onPractice && !sample && (
-              <button type="button" onClick={onPractice} className="w-full rounded-[16px] border-2 border-white/30 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15" style={poppins}>
+              // Locked while a paid start is in flight (or a live round may still resume): leaving now would hide that round.
+              <button type="button" onClick={() => { if (!busy && resumed) onPractice(); }} disabled={busy || !resumed} className="w-full rounded-[16px] border-2 border-white/30 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15 disabled:opacity-50" style={poppins}>
                 <span className="block text-sm font-black uppercase tracking-wide">{t("squadSpin.practiceCta")}</span>
                 <span className="block text-[10px] font-bold text-white/70">{t("squadSpin.practiceHint")}</span>
               </button>

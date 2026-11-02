@@ -282,6 +282,8 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
     answerS: number;
   } | null>(null);
   const liveBusyRef = useRef(false);
+  /** A paid start awaiting the server (state, so the bet screen can lock the practice exit). */
+  const [startingLive, setStartingLive] = useState(false);
   // Bumped by every applied mutation; an in-flight GET current whose sequence
   // is stale must not overwrite the newer state it lost the race to.
   const liveSeqRef = useRef(0);
@@ -686,6 +688,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
     if (live) {
       if (liveBusyRef.current || !resumed || !wallet) return;
       liveBusyRef.current = true;
+      setStartingLive(true);
       setLiveError(null);
       startCrowd();
       // Reuse the nonce across retries: if the first attempt debited but the
@@ -713,6 +716,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
         })
         .finally(() => {
           liveBusyRef.current = false;
+          setStartingLive(false);
         });
       return;
     }
@@ -1211,25 +1215,6 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                   >
                     {t('Stake {n} & attack', { n: stake })}
                   </button>
-                  {live && onPractice && (
-                    <button
-                      type="button"
-                      onClick={onPractice}
-                      className="w-full rounded-2xl border-2 border-white/25 bg-white/10 px-3 py-2 font-poppins text-white transition-colors hover:bg-white/15"
-                    >
-                      <span className="block text-sm font-black uppercase tracking-wide">{tApp('miniGames.freeKicksPracticeCta')}</span>
-                      <span className="block text-[10px] font-bold text-white/70">{tApp('miniGames.freeKicksPracticeHint')}</span>
-                    </button>
-                  )}
-                  {untimed && sample?.onExit && (
-                    <button
-                      type="button"
-                      onClick={sample.onExit}
-                      className="w-full rounded-2xl border-2 border-brand-yellow/60 px-3 py-2.5 font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow transition-colors hover:bg-brand-yellow/10"
-                    >
-                      {tApp('miniGames.freeKicksPlayReal')}
-                    </button>
-                  )}
                 </>
               ) : (
                 live ? (
@@ -1245,6 +1230,28 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                   {t('Top up (demo)')}
                 </button>
                 )
+              )}
+              {/* Free practice stays reachable whatever the wallet says (empty, loading or unreadable), but never while a
+                  paid start is in flight or a staked round may still be resuming: leaving then would hide that round. */}
+              {live && onPractice && (
+                <button
+                  type="button"
+                  onClick={() => { if (!startingLive && resumed) onPractice(); }}
+                  disabled={startingLive || !resumed}
+                  className="w-full rounded-2xl border-2 border-white/25 bg-white/10 px-3 py-2 font-poppins text-white transition-colors hover:bg-white/15 disabled:opacity-50"
+                >
+                  <span className="block text-sm font-black uppercase tracking-wide">{tApp('miniGames.freeKicksPracticeCta')}</span>
+                  <span className="block text-[10px] font-bold text-white/70">{tApp('miniGames.freeKicksPracticeHint')}</span>
+                </button>
+              )}
+              {untimed && sample?.onExit && (
+                <button
+                  type="button"
+                  onClick={sample.onExit}
+                  className="w-full rounded-2xl border-2 border-brand-yellow/60 px-3 py-2.5 font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow transition-colors hover:bg-brand-yellow/10"
+                >
+                  {tApp('miniGames.freeKicksPlayReal')}
+                </button>
               )}
             </motion.div>
           )}

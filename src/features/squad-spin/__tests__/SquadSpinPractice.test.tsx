@@ -11,6 +11,8 @@ const liveApi = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/repositories/squadSpin.repo", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/repositories/squadSpin.repo")>()), squadSpinApi: liveApi }));
 
+vi.mock("@/lib/queries/store.queries", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/queries/store.queries")>()), useStoreWallet: () => ({ data: { coins: 1000 } }) }));
+
 const { SquadSpinPractice } = await import("../SquadSpinPractice");
 const { SquadSpinLive } = await import("../SquadSpinLive");
 const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
@@ -35,5 +37,19 @@ describe("Squad Spin relaxed practice", () => {
     fireEvent.click(await screen.findByText("Relaxed practice"));
     expect(onPractice).toHaveBeenCalledTimes(1);
     expect(liveApi.start).not.toHaveBeenCalled();
+  });
+
+  it("locks the practice exit while a paid start is waiting on the server", async () => {
+    const onPractice = vi.fn();
+    liveApi.start.mockImplementationOnce(() => new Promise(() => {}));
+    render(<SquadSpinLive onPractice={onPractice} />, { wrapper });
+    const practice = (await screen.findByText("Relaxed practice")).closest("button") as HTMLButtonElement;
+    const stakeButton = screen.getByText(/Stake 100/i).closest("button") as HTMLButtonElement;
+    await waitFor(() => expect(stakeButton.disabled).toBe(false));
+    await act(async () => { fireEvent.click(stakeButton); });
+    expect(liveApi.start).toHaveBeenCalledTimes(1);
+    expect(practice.disabled).toBe(true);
+    fireEvent.click(practice);
+    expect(onPractice).not.toHaveBeenCalled();
   });
 });

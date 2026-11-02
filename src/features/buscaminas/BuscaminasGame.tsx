@@ -14,7 +14,7 @@ import { findPublicGameByModeId, relatedPublishedGames } from "@/lib/seo/public-
 import { PublicCardGrid } from "@/features/marketing/public/PublicCards";
 import type { Locale } from "@/lib/i18n/locale";
 import {
-  DAILY_MAX_SCORE, DAILY_ROUNDS, TARGETS_PER_ROUND, addDays, dailyResults, dailyScoreOf, defaultDayFor, extendedRoundsPlayed, isDailyDone, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
+  TARGETS_PER_ROUND, addDays, dailyMaxScore, dailyResults, dailyRoundsFor, dailyRoundsOf, dailyScoreOf, defaultDayFor, extendedRoundsPlayed, isDailyDone, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
   type BuscaminasCard, type BuscaminasDay, type BuscaminasRound, type RoundResult,
 } from "./buscaminas.logic";
 import { clearRun, finishedScores, inProgressDays, loadRun, saveRun, streakFrom } from "./buscaminas.storage";
@@ -347,7 +347,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const bank = () => { if (run && round) void act("bank", () => buscaminasApi.bank(run, locale), round); };
   const advance = () => {
     if (!run) return;
-    void act("next", () => buscaminasApi.next(run, locale), null).then(() => scrollRef.current?.scrollTo({ top: 0 }));
+    void act("next", () => buscaminasApi.next(run, locale), null).then(() => scrollRef.current?.scrollTo?.({ top: 0 }));
   };
   const openDay = (target: string) => {
     trackArchiveOpen({ puzzleId: target, daysBack: days.indexOf(target) });
@@ -377,9 +377,9 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : view === "archive" ? (
           <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state && isDailyDone(state) ? "end" : "intro")} onOpen={openDay} />
         ) : view === "end" && state ? (
-          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} totalRounds={content.rounds.length} onExtended={() => { setView("play"); scrollRef.current?.scrollTo({ top: 0 }); }} onArchive={() => setView("archive")} onExit={onExit} />
+          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} totalRounds={content.rounds.length} onExtended={() => { setView("play"); scrollRef.current?.scrollTo?.({ top: 0 }); }} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
-          <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
+          <Intro locale={locale} number={puzzleNumber(day)} shortRun={dailyRoundsFor(day) < content.rounds.length} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
           <Board locale={locale} content={content} round={round} state={state} pending={pending} notice={notice} onPick={pick} onBank={bank} onNext={advance} onExit={onExit} />
         )}
@@ -405,7 +405,7 @@ function Brand({ locale, className }: { locale: Locale; className?: string }) {
   );
 }
 
-function Intro({ locale, number, state, busy, notice, guestOnPastBoard, guestOnYesterday, onStart, onArchive, onExit }: { locale: Locale; number: number; state: BuscaminasRunState | null; busy: boolean; notice: string | null; guestOnPastBoard: boolean; guestOnYesterday: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
+function Intro({ locale, number, shortRun, state, busy, notice, guestOnPastBoard, guestOnYesterday, onStart, onArchive, onExit }: { locale: Locale; number: number; shortRun: boolean; state: BuscaminasRunState | null; busy: boolean; notice: string | null; guestOnPastBoard: boolean; guestOnYesterday: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
   const c = buscaminasCopy(locale);
   const inProgress = Boolean(state && (state.round > 0 || state.picked.length > 0 || state.results.length > 0));
   return (
@@ -432,7 +432,7 @@ function Intro({ locale, number, state, busy, notice, guestOnPastBoard, guestOnY
           />
         </div>
         <ul className="mt-6 space-y-2.5">
-          {c.intro.lines.map((line) => (
+          {(shortRun ? c.intro.lines : [c.intro.longRun, ...c.intro.lines.slice(1)]).map((line) => (
             <li key={line} className="flex gap-2.5 text-[15px] leading-snug text-white/85"><span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-yellow" />{line}</li>
           ))}
         </ul>
@@ -459,7 +459,7 @@ function Board({ locale, content, round, state, pending, notice, onPick, onBank,
   const reveal = settled?.reveal;
   const total = content.rounds.length;
   // The daily run, then (opt-in) the extended challenge: each phase has its own counter and progress bar.
-  const dailyTotal = Math.min(DAILY_ROUNDS, total);
+  const dailyTotal = Math.min(dailyRoundsOf(state), total);
   const extended = state.round >= dailyTotal;
   const phaseStart = extended ? dailyTotal : 0;
   const phaseEnd = extended ? total : dailyTotal;
@@ -609,7 +609,8 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
   // The result is the daily run's: its score, squares and share. The extended challenge is offered (or summed up) below.
   const results: RoundResult[] = dailyResults(state);
   const score = dailyScoreOf(state);
-  const dailyTotal = Math.min(DAILY_ROUNDS, totalRounds);
+  // Days before the short daily run rank the whole board: no extended part, score out of 300.
+  const dailyTotal = Math.min(dailyRoundsOf(state), totalRounds);
   const extendedLeft = !state.done && totalRounds > dailyTotal;
   const extendedStarted = state.round > dailyTotal || state.picked.length > 0 || Boolean(state.settled);
   const extendedPlayed = extendedRoundsPlayed(state);
@@ -661,9 +662,9 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
       )}
       <div className="mt-2 rounded-3xl bg-brand-blue p-5 text-center">
         <Brand locale={locale} className="text-lg" />
-        <p className="text-xs font-bold text-white/70" style={poppins}>#{number} · {c.end.daily}</p>
+        <p className="text-xs font-bold text-white/70" style={poppins}>#{number}{dailyTotal < totalRounds ? ` · ${c.end.daily}` : ""}</p>
         <p className="mt-4 text-6xl font-black tabular-nums" style={poppins}>{score}</p>
-        <p className="text-xs font-bold uppercase tracking-wide text-white/70">{c.end.score} · {c.end.of(DAILY_MAX_SCORE)}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-white/70">{c.end.score} · {c.end.of(dailyMaxScore(dailyTotal))}</p>
         {state.ranked && state.rank ? (
           <p className="mx-auto mt-3 w-fit rounded-full bg-brand-yellow px-4 py-1 text-sm font-black text-black" style={poppins}>{c.board.rank(state.rank)}</p>
         ) : (

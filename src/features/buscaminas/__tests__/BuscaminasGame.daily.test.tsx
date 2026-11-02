@@ -64,6 +64,40 @@ describe("Buscaminas daily run and extended challenge", () => {
     expect(await screen.findByText("Extended challenge · Round 6 / 20")).toBeInTheDocument();
   });
 
+  it("a day before the short daily run plays on past round 5 and ends after 20, out of 300, with no extended card", async () => {
+    const five = [15, 3, 15, 3, 4].map(result);
+    api.start.mockResolvedValue({
+      run: { id: "run-1", version: 20 },
+      state: { day: "2026-10-30", round: 4, picked: ["r4c0"], found: 4, mine: null, settled: { ...result(4), reveal: null }, results: five.slice(0, 4), done: false, score: 40, dailyRounds: 20, dailyDone: false, dailyScore: 40, ranked: false },
+    });
+    api.next.mockResolvedValueOnce({
+      run: { id: "run-1", version: 21 },
+      state: { day: "2026-10-30", round: 5, picked: [], found: 0, mine: null, settled: null, results: five, done: false, score: 40, dailyRounds: 20, dailyDone: false, dailyScore: 40, ranked: false },
+    });
+    render(<BuscaminasGame locale="en" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Play" }));
+    expect(await screen.findByText("Round 5 / 20")).toBeInTheDocument();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Next round" })); });
+    expect(await screen.findByText("Round 6 / 20")).toBeInTheDocument();
+    expect(analytics.trackRunComplete).not.toHaveBeenCalled();
+
+    const twenty = Array.from({ length: 20 }, () => result(15));
+    api.next.mockResolvedValueOnce({
+      run: { id: "run-1", version: 22 },
+      state: { day: "2026-10-30", round: 19, picked: [], found: 0, mine: null, settled: null, results: twenty, done: true, score: 300, dailyRounds: 20, dailyDone: true, dailyScore: 300, ranked: false },
+    });
+    // Jump to the finished run: the result is the whole board's.
+    api.tap.mockResolvedValueOnce({
+      run: { id: "run-1", version: 22 },
+      state: { day: "2026-10-30", round: 5, picked: [], found: 0, mine: null, settled: { ...result(15), reveal: null }, results: five, done: false, score: 55, dailyRounds: 20, dailyDone: false, dailyScore: 55, ranked: false },
+    });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: /Jugador 5-0/ })); });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Next round" })); });
+    expect(await screen.findByText(/of 300/)).toBeInTheDocument();
+    expect(screen.queryByText(/Extended challenge/)).toBeNull();
+    expect(analytics.trackRunComplete).toHaveBeenCalledWith(expect.objectContaining({ phase: "daily", score: 300 }));
+  });
+
   it("reopens a run that is in its extended rounds on the daily result, with a resume button", async () => {
     const five = [15, 3, 15, 3, 4].map(result);
     useAuthStore.setState({ status: "authenticated", user: { id: "user-a" } } as never);
