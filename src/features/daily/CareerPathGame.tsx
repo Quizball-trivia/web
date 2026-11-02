@@ -6,7 +6,8 @@ import { DailyAnswerInput } from "./components/DailyAnswerInput";
 import type { CareerPathSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import { useLocale } from "@/contexts/LocaleContext";
 import { CareerChip } from "@/features/weekend-league/gauntlet/RoundViews";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyGameStage } from "./components/DailyGameStage";
@@ -21,6 +22,16 @@ const poppins = {
   letterSpacing: '0',
   lineHeight: 1,
 } as const;
+
+/** One resolved career, kept for the results review. */
+export interface CareerPathReviewItem {
+  id: string;
+  clubs: string[];
+  displayAnswer: string;
+  correct: boolean;
+  /** What the player typed ("" on a timeout). */
+  given: string;
+}
 
 interface CareerPathGameProps {
   session: CareerPathSession;
@@ -41,7 +52,9 @@ export function CareerPathGame({
   const [correctCount, setCorrectCount] = useState(0);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [review, setReview] = useState<CareerPathReviewItem[]>([]);
   const { splashProps, fire } = useResultSplash();
+  const { t } = useLocale();
 
   const currentQuestion = session.questions[currentQuestionIndex];
   // English names for crest lookup (the generated API type lags the backend field;
@@ -70,6 +83,10 @@ export function CareerPathGame({
     if (isCorrect) {
       setCorrectCount((previous) => previous + 1);
     }
+    setReview((previous) => [
+      ...previous,
+      { id: currentQuestion.id, clubs: currentQuestion.clubs, displayAnswer: currentQuestion.displayAnswer, correct: isCorrect, given: answer.trim() },
+    ]);
 
     // Submit button sits on the right → splash flies in from the right.
     fire(isCorrect ? "correct" : "wrong", "right");
@@ -95,17 +112,7 @@ export function CareerPathGame({
     return () => window.clearInterval(timer);
   }, [currentQuestion, resolved, submitAnswer]);
 
-  useEffect(() => {
-    if (!resolved) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      advance();
-    }, 1400);
-
-    return () => window.clearTimeout(timeout);
-  }, [advance, resolved]);
+  // No auto-advance: the revealed player stays on screen until the player taps Next.
 
   if (!currentQuestion) {
     return null;
@@ -135,6 +142,18 @@ export function CareerPathGame({
           revealedAnswer={resolved ? currentQuestion.displayAnswer : null}
           score={correctCount}
         />
+        {resolved && (
+          <button
+            type="button"
+            autoFocus
+            onClick={advance}
+            className="font-poppins mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-[20px] bg-brand-blue uppercase text-white outline-none transition-colors hover:bg-brand-blue/90 focus-visible:ring-2 focus-visible:ring-white/70"
+            style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}
+          >
+            {currentQuestionIndex >= session.questions.length - 1 ? t("dailyGames.viewResults") : t("careerPath.next")}
+            <ArrowRight className="size-4" aria-hidden />
+          </button>
+        )}
       </DailyGameStage>
 
       <QuitGameDialog
@@ -151,8 +170,37 @@ export function CareerPathGame({
         title={session.title}
         correct={correctCount}
         total={session.questionCount}
+        details={review.length > 0 ? <CareerPathReview items={review} /> : undefined}
         onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
+    </div>
+  );
+}
+
+/** Results review: every career of the day with its clubs and the player, so a miss can be absorbed. */
+export function CareerPathReview({ items }: { items: CareerPathReviewItem[] }) {
+  const { t } = useLocale();
+  return (
+    <div>
+      <p className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/60">{t("careerPath.reviewTitle")}</p>
+      <ol className="mt-2 max-h-[40vh] space-y-2 overflow-y-auto pr-1">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-start gap-2.5 rounded-[14px] bg-black/18 px-3 py-2.5">
+            {item.correct
+              ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brand-green-light" aria-label={t("dailyChallenge.correct")} />
+              : <XCircle className="mt-0.5 size-4 shrink-0 text-brand-red-soft" aria-hidden />}
+            <div className="min-w-0">
+              <p className="font-poppins text-sm font-bold text-white">{item.displayAnswer}</p>
+              <p className="font-poppins text-[11px] font-medium leading-snug text-white/60">{item.clubs.join(" → ")}</p>
+              {!item.correct && (
+                <p className="mt-0.5 font-poppins text-[11px] font-medium text-brand-red-soft/90">
+                  {t("careerPath.youAnswered", { answer: item.given || t("careerPath.noAnswer") })}
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

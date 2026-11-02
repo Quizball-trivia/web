@@ -2,14 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackEvent } from "@/lib/posthog";
-import {
-  trackRoadToGoalCardClicked,
-  trackRoadToGoalCardViewed,
-} from "@/features/mini-games/analytics/roadToGoal.analytics";
-import { isRoadToGoalEnabled } from "@/lib/features/roadToGoal";
 
 /** The mini-games roster, shared by the (currently hidden) hub page and the
  *  Daily Challenges page so the two can never drift apart visually. */
@@ -22,14 +16,7 @@ export const MINI_GAMES = [
     iconSrc: "/assets/free-kicks-card-icon.png?v=2",
     live: true,
   },
-  {
-    key: "road-to-goal",
-    href: isRoadToGoalEnabled ? "/road-to-goal" : "/demos/mini-road-to-goal?from=/mini-games",
-    titleKey: "play.roadToGoalTitle",
-    descKey: "play.roadToGoalSubtitle",
-    iconSrc: "/assets/road-to-goal-card-icon.png?v=2",
-    live: isRoadToGoalEnabled,
-  },
+  // Road to Goal left the roster in the 2026-11 game review; /road-to-goal still opens directly.
   {
     key: "guess-the-goal",
     href: "/guess-the-goal",
@@ -44,16 +31,6 @@ export type MiniGameEntry = (typeof MINI_GAMES)[number];
 
 export function MiniGameCard({ game, index }: { game: MiniGameEntry; index: number }) {
   const { t } = useLocale();
-  const roadToGoalDestination = game.live ? "live" : "demo";
-
-  useEffect(() => {
-    if (game.key !== "road-to-goal") return;
-    trackRoadToGoalCardViewed({
-      destination: roadToGoalDestination,
-      enabled: game.live,
-    });
-  }, [game.key, game.live, roadToGoalDestination]);
-
   return (
     <div
       className="relative flex h-full animate-in fade-in slide-in-from-bottom-2 duration-300"
@@ -61,15 +38,7 @@ export function MiniGameCard({ game, index }: { game: MiniGameEntry; index: numb
     >
       <Link
         href={game.href}
-        onClick={() => {
-          trackEvent("mini_game_card_clicked", { game: game.key });
-          if (game.key === "road-to-goal") {
-            trackRoadToGoalCardClicked({
-              destination: roadToGoalDestination,
-              enabled: game.live,
-            });
-          }
-        }}
+        onClick={() => trackEvent("mini_game_card_clicked", { game: game.key })}
         className="relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 text-center text-black transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:min-h-[268px] md:rounded-[20px] md:p-6"
         style={{ backgroundColor: "#FF9600" }}
       >

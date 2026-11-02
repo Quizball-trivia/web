@@ -38,7 +38,8 @@ import type { AuctionGameState } from './types';
 const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '2-2-2';
 // Mirrors the server's 3s showdown minimum (legacy-backend fallback only).
 const FALLBACK_SHOWDOWN_HOLD_MS = 3_000;
-const FALLBACK_COUNTDOWN_MS = 5_000;
+// Mirrors the server's AUCTION_PREMATCH_COUNTDOWN_MS (5s → 3s).
+const FALLBACK_COUNTDOWN_MS = 3_000;
 
 type AuctionPreMatchStage = 'lineup' | 'showdown' | 'countdown' | 'done';
 

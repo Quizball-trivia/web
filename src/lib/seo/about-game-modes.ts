@@ -58,7 +58,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Football auction",
         body:
-          "Use a $350M budget to bid on mystery footballers and build a seven-player squad. Smart prices, profit and squad chemistry decide the winner.",
+          "Use a €350M budget to bid on mystery footballers and build a seven-player squad. Smart prices, profit and squad chemistry decide the winner.",
       },
     ],
     rankedEyebrow: "Competitive mode",
@@ -114,7 +114,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "საფეხბურთო აუქციონი",
         body:
-          "$350M ბიუჯეტით ივაჭრე უცნობ ფეხბურთელებზე და შექმენი შვიდკაციანი გუნდი. გამარჯვებულს ჭკვიანი ფასები, მოგება და გუნდის ქიმია განსაზღვრავს.",
+          "€350M ბიუჯეტით ივაჭრე უცნობ ფეხბურთელებზე და შექმენი შვიდკაციანი გუნდი. გამარჯვებულს ჭკვიანი ფასები, მოგება და გუნდის ქიმია განსაზღვრავს.",
       },
     ],
     rankedEyebrow: "შეჯიბრებითი რეჟიმი",
@@ -170,7 +170,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Subasta futbolera",
         body:
-          "Usa un presupuesto de $350M para pujar por futbolistas misteriosos y crear una plantilla de siete jugadores. El precio, el beneficio y la química deciden al ganador.",
+          "Usa un presupuesto de €350M para pujar por futbolistas misteriosos y crear una plantilla de siete jugadores. El precio, el beneficio y la química deciden al ganador.",
       },
     ],
     rankedEyebrow: "Modo competitivo",
@@ -226,7 +226,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Futbol açık artırması",
         body:
-          "350M$ bütçeyle gizemli futbolculara teklif ver ve yedi oyunculuk bir kadro kur. Akıllı fiyatlar, kâr ve kadro uyumu kazananı belirler.",
+          "350M€ bütçeyle gizemli futbolculara teklif ver ve yedi oyunculuk bir kadro kur. Akıllı fiyatlar, kâr ve kadro uyumu kazananı belirler.",
       },
     ],
     rankedEyebrow: "Rekabetçi mod",
@@ -282,7 +282,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Футбольный аукцион",
         body:
-          "Используй бюджет в $350M, чтобы побороться за неизвестных футболистов и собрать состав из семи игроков. Победителя определят выгодные цены, прибыль и сыгранность состава.",
+          "Используй бюджет в €350M, чтобы побороться за неизвестных футболистов и собрать состав из семи игроков. Победителя определят выгодные цены, прибыль и сыгранность состава.",
       },
     ],
     rankedEyebrow: "Соревновательный режим",
@@ -338,7 +338,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Leilão de jogadores",
         body:
-          "Use um orçamento de $350M para dar lances por jogadores misteriosos e montar um time com sete jogadores. Preços inteligentes, lucro e entrosamento do time definem quem vence.",
+          "Use um orçamento de €350M para dar lances por jogadores misteriosos e montar um time com sete jogadores. Preços inteligentes, lucro e entrosamento do time definem quem vence.",
       },
     ],
     rankedEyebrow: "Modo competitivo",
@@ -394,7 +394,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
         id: "auction",
         title: "Fußball-Auktion",
         body:
-          "Nutze ein Budget von $350M, um auf unbekannte Fußballspieler zu bieten und einen Kader aus sieben Spielern zusammenzustellen. Preise, Überschuss und Teamchemie entscheiden über den Sieg.",
+          "Nutze ein Budget von €350M, um auf unbekannte Fußballspieler zu bieten und einen Kader aus sieben Spielern zusammenzustellen. Preise, Überschuss und Teamchemie entscheiden über den Sieg.",
       },
     ],
     rankedEyebrow: "Wettkampfmodus",

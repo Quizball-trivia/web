@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TrueFalseBoard } from "@/features/daily/TrueFalseGame";
-import { shuffleArray } from "@/lib/utils";
+import { TrueFalseBoard, trueFalseOptions } from "@/features/daily/TrueFalseGame";
 import { partnerCopy } from "../../partnerCopy";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import { PartnerDailyShell, PartnerPointsRow, type PartnerDailyBoardContext } from "./PartnerDailyShell";
@@ -22,7 +21,7 @@ function Board({ play, item, controller, fire }: PartnerDailyBoardContext<TrueFa
   const reveal = play.reveal as TrueFalseReveal | null;
   const [picked, setPicked] = useState<boolean | null>(null);
   const options = useMemo(
-    () => shuffleArray([{ value: true, label: item.trueLabel }, { value: false, label: item.falseLabel }]),
+    () => trueFalseOptions(item.trueLabel, item.falseLabel),
     [item.trueLabel, item.falseLabel],
   );
 

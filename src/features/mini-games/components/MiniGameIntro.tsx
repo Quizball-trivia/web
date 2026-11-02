@@ -20,12 +20,23 @@ export interface MiniGameIntroConfig {
   steps: string[];
 }
 
+/** Optional free practice run offered next to Start (never touches the wallet). */
+export interface MiniGameIntroPractice {
+  label: string;
+  hint: string;
+  /** Label for the real-coins button when practice is the primary choice. */
+  startLabel?: string;
+  /** New players: practice becomes the yellow primary button, Start the secondary one. */
+  primary?: boolean;
+  onStart: () => void;
+}
+
 /**
  * Full-screen intro for a coin mini game: glyph, title, tagline, chips, numbered
  * rules, one yellow Start. Same composition as the FIFA Universe mode intros.
  * `resume` lets a page skip the intro when the player already has a live round.
  */
-export function MiniGameIntro({ config, backHref = "/play", resume, children }: { config: MiniGameIntroConfig; backHref?: string; resume?: () => Promise<boolean>; children: ReactNode }) {
+export function MiniGameIntro({ config, backHref = "/play", resume, practice, children }: { config: MiniGameIntroConfig; backHref?: string; resume?: () => Promise<boolean>; practice?: MiniGameIntroPractice; children: ReactNode }) {
   const { t } = useLocale();
   const router = useRouter();
   const [started, setStarted] = useState(false);
@@ -72,15 +83,41 @@ export function MiniGameIntro({ config, backHref = "/play", resume, children }: 
             ))}
           </ol>
         </motion.div>
+        {practice?.primary && (
+          <button
+            type="button"
+            onClick={() => { practice.onStart(); setStarted(true); }}
+            disabled={checking}
+            className="mt-5 w-full rounded-[20px] bg-brand-yellow px-4 py-3 text-black transition-all hover:brightness-105 active:translate-y-[2px] disabled:opacity-60"
+            style={poppins}
+          >
+            <span className="block text-lg font-black uppercase tracking-wide">{practice.label}</span>
+            <span className="block text-[11px] font-bold text-black/70">{practice.hint}</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => { trackMiniGameIntroStarted(config.slug, false); setStarted(true); }}
           disabled={checking}
-          className="mt-5 h-14 w-full rounded-[20px] bg-brand-yellow text-lg font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[2px] disabled:opacity-60"
+          className={practice?.primary
+            ? "mt-3 h-12 w-full rounded-[20px] border-2 border-white/30 bg-white/10 text-base font-black uppercase tracking-wide text-white transition-all hover:bg-white/15 active:translate-y-[2px] disabled:opacity-60"
+            : "mt-5 h-14 w-full rounded-[20px] bg-brand-yellow text-lg font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[2px] disabled:opacity-60"}
           style={poppins}
         >
-          {t("miniGames.start")}
+          {practice?.primary ? practice.startLabel ?? t("miniGames.start") : t("miniGames.start")}
         </button>
+        {practice && !practice.primary && (
+          <button
+            type="button"
+            onClick={() => { practice.onStart(); setStarted(true); }}
+            disabled={checking}
+            className="mt-3 w-full rounded-[20px] border-2 border-white/30 bg-white/10 px-4 py-2.5 text-white transition-all hover:bg-white/15 active:translate-y-[2px] disabled:opacity-60"
+            style={poppins}
+          >
+            <span className="block text-sm font-black uppercase tracking-wide">{practice.label}</span>
+            <span className="block text-[10px] font-bold text-white/70">{practice.hint}</span>
+          </button>
+        )}
       </div>
     </div>
   );

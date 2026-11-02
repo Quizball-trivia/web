@@ -115,8 +115,13 @@ export interface SquadSpinSampleClient {
   stats(): Promise<{ playing_now: number; recent_wins: never[]; top_runs: never[] }>;
 }
 
-export function createSquadSpinSample(input: { combos: SampleSquadSpinCombo[]; wallet: SampleWalletPort; seed: number; onSettled?: (r: { stake: number; payout: number; status: "cashed" | "lost" }) => void; now?: () => number }): SquadSpinSampleClient {
+export function createSquadSpinSample(input: {
+  combos: SampleSquadSpinCombo[]; wallet: SampleWalletPort; seed: number; onSettled?: (r: { stake: number; payout: number; status: "cashed" | "lost" }) => void; now?: () => number;
+  /** Relaxed practice: no answer clock, so a spin is never lost to time. Only a wrong name ends the run. */
+  untimed?: boolean;
+}): SquadSpinSampleClient {
   const now = input.now ?? (() => Date.now());
+  const untimed = input.untimed ?? false;
   let round: Round | null = null; let last: Round | null = null; let counter = 0;
   const reelView = (r: SampleSquadSpinCombo["reels"][number]) => ({ family: r.family, id: r.id, key: r.key, label_en: r.label_en, label_ka: r.label_ka, label_ru: r.label_ru ?? null, label_pt: r.label_pt ?? null, label_de: r.label_de ?? null, asset_key: r.asset_key });
   const toState = (r: Round): SquadSpinState => ({
@@ -141,7 +146,7 @@ export function createSquadSpinSample(input: { combos: SampleSquadSpinCombo[]; w
     r.dealtAt = now(); r.deadlineAt = r.dealtAt + QUESTION_WINDOW_MS; r.phase = "question"; r.decisionDeadlineAt = null; r.version += 1;
   };
   const resolveExpiry = (r: Round) => {
-    if (r.phase === "question" && now() > r.deadlineAt) { r.lostCombo = r.combo; settle(r, "lost"); }
+    if (r.phase === "question" && !untimed && now() > r.deadlineAt) { r.lostCombo = r.combo; settle(r, "lost"); }
     else if (r.phase === "decision" && r.decisionDeadlineAt && now() > r.decisionDeadlineAt) settle(r, "cashed");
   };
   const requireRound = (roundId: string, version: number): Round => {
@@ -169,7 +174,7 @@ export function createSquadSpinSample(input: { combos: SampleSquadSpinCombo[]; w
       const r = requireRound(roundId, expectedVersion);
       if (r.phase !== "question" || !r.combo) throw new SampleError("No spin is pending", 409);
       const combo = r.combo;
-      const late = now() > r.deadlineAt;
+      const late = !untimed && now() > r.deadlineAt;
       const playerId = late ? null : resolveSampleAnswer(text, combo.aliases, combo.answers);
       if (!playerId) {
         r.lostCombo = combo; settle(r, "lost");

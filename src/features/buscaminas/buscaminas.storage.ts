@@ -1,4 +1,5 @@
 import type { BuscaminasRun } from "@/lib/repositories/buscaminas.repo";
+import { dailyScoreOf, isDailyDone } from "./buscaminas.logic";
 
 const SCHEMA = 3;
 /** Runs are signed for one player: a guest run and each account's run live under their own key. */
@@ -50,7 +51,7 @@ export function clearRun(day: string, owner: string): void {
   }
 }
 
-/** Finished-day scores on this device, for the archive list and the streak. */
+/** Finished daily-run scores on this device, for the archive list and the streak (the extended rounds are optional). */
 /** `versions` (published index) drops results from before a content correction without opening each day. */
 export function finishedScores(days: readonly string[], owner: string, versions?: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = {};
@@ -60,7 +61,7 @@ export function finishedScores(days: readonly string[], owner: string, versions?
       if (!raw) continue;
       const saved = JSON.parse(raw) as Saved;
       if (versions?.[day] !== undefined && saved.contentVersion !== versions[day]) continue;
-      if (isRun(saved.run) && saved.run.state.done) out[day] = saved.run.state.score;
+      if (isRun(saved.run) && isDailyDone(saved.run.state)) out[day] = dailyScoreOf(saved.run.state);
     } catch {
       // Ignore a corrupt entry.
     }
@@ -68,7 +69,7 @@ export function finishedScores(days: readonly string[], owner: string, versions?
   return out;
 }
 
-/** Days with a started run that has not reached the result screen yet. */
+/** Days with a started daily run that has not reached the result screen yet. */
 export function inProgressDays(days: readonly string[], owner: string, versions?: Record<string, number>): Set<string> {
   const out = new Set<string>();
   for (const day of days) {
@@ -77,7 +78,7 @@ export function inProgressDays(days: readonly string[], owner: string, versions?
       if (!raw) continue;
       const saved = JSON.parse(raw) as Saved;
       if (versions?.[day] !== undefined && saved.contentVersion !== versions[day]) continue;
-      if (isRun(saved.run) && !saved.run.state.done) out.add(day);
+      if (isRun(saved.run) && !isDailyDone(saved.run.state)) out.add(day);
     } catch {
       // Ignore a corrupt entry.
     }

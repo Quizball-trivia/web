@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { Crosshair, Minus, Plus } from "lucide-react";
+import { Crosshair, Minus, Play, Plus, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { Locale } from "@/lib/i18n/locale";
@@ -11,6 +11,7 @@ import { DailyChallengeHeader } from "@/features/daily/components/DailyChallenge
 import { DailyChallengeCompleteModal } from "@/features/daily/components/DailyChallengeCompleteModal";
 import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
+import { PersonalBestNote } from "@/features/daily/components/PersonalBestNote";
 import { StatSniperLeaderboard } from "@/features/daily/StatSniperLeaderboard";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperQuestion, StatSniperSession } from "@/lib/domain/dailyChallenge";
@@ -22,6 +23,12 @@ export function sniperPoints(guess: number, q: StatSniperQuestion): number {
   if (guess === q.value) return 100;
   const closeness = Math.abs(guess - q.value) / (q.max - q.min);
   return Math.max(0, Math.round(100 * (1 - closeness * 4)));
+}
+
+/** How far off a guess was, as a share of the slider range — the number the points are computed from. */
+export function sniperOffPercent(guess: number, q: StatSniperQuestion): number {
+  const span = q.max - q.min;
+  return span > 0 ? Math.round((Math.abs(guess - q.value) / span) * 1000) / 10 : 0;
 }
 
 const midpoint = (q: StatSniperQuestion) => Math.round((q.min + q.max) / 2 / q.step) * q.step;
@@ -63,7 +70,9 @@ export function StatSniperGame({
   const [phase, setPhase] = useState<"guessing" | "reveal">("guessing");
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [total, setTotal] = useState(0);
-  const [last, setLast] = useState<{ points: number; diff: number } | null>(null);
+  const [last, setLast] = useState<{ points: number; diff: number; guess: number; offPercent: number } | null>(null);
+  // Explicit start: nothing ticks until the player has read the rules and tapped Start.
+  const [started, setStarted] = useState(false);
   const [showQuit, setShowQuit] = useState(false);
   const [done, setDone] = useState(false);
   const [boardKey, setBoardKey] = useState(0);
@@ -79,7 +88,7 @@ export function StatSniperGame({
     const current = guessRef.current;
     const points = sniperPoints(current, q);
     playSfx(points >= 60 ? "dailyCorrect" : "wrongAnswer");
-    setLast({ points, diff: Math.abs(current - q.value) });
+    setLast({ points, diff: Math.abs(current - q.value), guess: current, offPercent: sniperOffPercent(current, q) });
     setTotal((s) => s + points);
     setPhase("reveal");
   }, [phase, q]);
@@ -87,7 +96,7 @@ export function StatSniperGame({
   useEffect(() => { lockInRef.current = lockIn; }, [lockIn]);
 
   useEffect(() => {
-    if (phase !== "guessing" || done) return;
+    if (!started || phase !== "guessing" || done) return;
     const id = window.setInterval(() => {
       setTimeLeft((s) => {
         if (s <= 1) {
@@ -99,7 +108,7 @@ export function StatSniperGame({
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [phase, done, index]);
+  }, [started, phase, done, index]);
 
   const [saving, setSaving] = useState(false);
   const advance = () => {
@@ -142,6 +151,36 @@ export function StatSniperGame({
                 className="px-0 pt-0"
               />
             </div>
+            {!started ? (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-center text-white backdrop-blur-sm" data-testid="stat-sniper-start">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-cyan" style={poppins}>{t("statSniper.startHeading")}</p>
+                <p className="mt-1 text-xl font-black" style={poppins}>{session.title}</p>
+                <p className="mt-0.5 text-xs font-semibold text-white/55" style={poppins}>
+                  {t("statSniper.startMeta", { count: String(questions.length), seconds: String(session.secondsPerQuestion) })}
+                </p>
+                <p className="mt-4 text-sm font-semibold leading-snug text-white/85" style={poppins}>{t("statSniper.startRule")}</p>
+                <p className="mt-2 text-xs font-medium leading-snug text-white/65" style={poppins}>{t("statSniper.scoringRule")}</p>
+                {session.personalBest !== undefined && (
+                  <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-yellow/15 px-3 py-1.5 text-xs font-bold text-brand-yellow" style={poppins}>
+                    <Target className="size-3.5" aria-hidden />
+                    {session.personalBest === null
+                      ? t("dailyGames.personalBestFirstPill")
+                      : t("dailyGames.personalBestBeat", { value: `${session.personalBest}%` })}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() => setStarted(true)}
+                  className="font-poppins mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[20px] bg-brand-green uppercase text-white outline-none transition-colors hover:bg-brand-green-deep focus-visible:ring-2 focus-visible:ring-white/70"
+                  style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)" }}
+                >
+                  <Play className="size-4 fill-current" aria-hidden /> {t("statSniper.start")}
+                </button>
+                <p className="mt-2 text-[11px] font-medium text-white/45" style={poppins}>{t("statSniper.timerNote")}</p>
+              </motion.div>
+            ) : (
+            <>
             <div className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-4 text-center text-white backdrop-blur-sm" style={{ ...poppins, fontWeight: 700, fontSize: "clamp(15px, 1.9vw, 22px)" }}>
               <p className="leading-snug">{q.prompt}</p>
             </div>
@@ -182,15 +221,29 @@ export function StatSniperGame({
               </>
             ) : (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
-                <p className="text-lg font-black text-white" style={poppins}>{t("statSniper.answer", { value: q.value.toLocaleString(numberLocale), unit: q.unit })}</p>
+                {/* You · Answer · Off by (share of the range) → points: the scoring made explicit. */}
+                <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1" style={poppins}>
+                  {last && <span className="text-sm font-bold text-white/70">{t("statSniper.yourGuess", { value: last.guess.toLocaleString(numberLocale) })}</span>}
+                  <span className="text-lg font-black text-white">{t("statSniper.answer", { value: q.value.toLocaleString(numberLocale), unit: q.unit })}</span>
+                </div>
                 {last && (
-                  <div className="mt-2 flex items-center justify-center gap-3 text-sm font-bold" style={poppins}>
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm font-bold" style={poppins}>
+                    {last.points < 100 && (
+                      <>
+                        <span className="text-white/65">
+                          {t("statSniper.offBy", { diff: last.diff.toLocaleString(numberLocale), pct: last.offPercent.toLocaleString(numberLocale) })}
+                        </span>
+                        <span aria-hidden className="text-white/35">→</span>
+                      </>
+                    )}
                     <span className={cn("rounded-full px-3 py-1", last.points >= 100 ? "bg-brand-yellow/15 text-brand-yellow" : last.points >= 60 ? "bg-brand-green/15 text-brand-green-light" : last.points > 0 ? "bg-brand-orange/15 text-brand-orange" : "bg-brand-red-soft/15 text-brand-red-soft")}>
-                      {last.points >= 100 ? <span className="inline-flex items-center gap-1"><Crosshair className="size-3.5" />{t("statSniper.bullseye")}</span> : t("statSniper.points", { points: String(last.points) })}
+                      {last.points >= 100
+                        ? <span className="inline-flex items-center gap-1"><Crosshair className="size-3.5" />{t("statSniper.bullseye")} · {t("statSniper.pointsEarned", { points: "100" })}</span>
+                        : t("statSniper.pointsEarned", { points: String(last.points) })}
                     </span>
-                    {last.points < 100 && <span className="text-white/55">{t("statSniper.off", { diff: last.diff.toLocaleString(numberLocale) })}</span>}
                   </div>
                 )}
+                <p className="mt-2 text-[11px] font-medium text-white/45" style={poppins}>{t("statSniper.scoringShort")}</p>
                 <button
                   type="button"
                   onClick={advance}
@@ -200,6 +253,8 @@ export function StatSniperGame({
                   {index + 1 >= questions.length ? t("passChain.seeResults") : t("common.next")}
                 </button>
               </motion.div>
+            )}
+            </>
             )}
           </div>
 
@@ -214,6 +269,12 @@ export function StatSniperGame({
         title={t("play.statSniperTitle")}
         correct={accuracy}
         total={100}
+        challengeType={session.challengeType}
+        scoreLabel={t("statSniper.avgAccuracy")}
+        scoreValue={`${accuracy}%`}
+        details={session.personalBest !== undefined
+          ? <PersonalBestNote score={accuracy} previous={session.personalBest} format={(value) => `${value}%`} />
+          : undefined}
         friendAction={(
           <PlayRoomWithFriendsButton locale={locale as Locale} tone="white" showHint
             onNavigate={(href) => { setBoardKey((k) => k + 1); onComplete(accuracy, href); }} />

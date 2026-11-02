@@ -22,6 +22,8 @@ export interface FreeKicksQuestion {
   prompt: I18nText;
   options: Array<{ id: string; text: I18nText }>;
   deadline_at: string;
+  /** Visible answer timer once the options show; scales with question length. Absent on older servers (10s). */
+  time_limit_ms?: number;
 }
 
 export interface FreeKicksState {

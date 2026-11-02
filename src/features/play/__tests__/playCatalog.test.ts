@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DAILY_CHALLENGE_SLUGS, PLAY_WITH_COINS_SLUGS, parsePlayPopularity, playOrderFrom, playPopularityKey } from "../playCatalog";
+import { DAILY_CHALLENGE_SLUGS, PLAY_WITH_COINS_SLUGS, RETIRED_PLAY_SLUGS, parsePlayPopularity, playOrderFrom, playPopularityKey } from "../playCatalog";
 import { createPlayOrderLoader } from "../playOrderLoader";
 
 const NOW = new Date("2026-10-11T12:00:00Z");
@@ -17,7 +17,7 @@ describe("playPopularityKey", () => {
 describe("playOrderFrom", () => {
   it("keeps the hand-made order when there are no numbers, and still marks new games", () => {
     for (const empty of [null, { generated_at: null, games: {} }]) {
-      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, coins: null, newSlugs: ["minuto", "shared-player", "name-chain", "buscaminas", "pistas", "ultimo"] });
+      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, coins: null, newSlugs: ["minuto", "shared-player", "name-chain", "buscaminas", "pistas"] });
     }
   });
 
@@ -44,10 +44,22 @@ describe("playOrderFrom", () => {
     expect(order.coins?.[0]).toBe("mini-squad-spin");
   });
 
+  it("keeps True or False last even when its numbers lead the row", () => {
+    const games = { "daily:trueFalse": { players_7d: 9999, players_3d: 9999 }, tenable: { players_7d: 10, players_3d: 5 } };
+    const order = playOrderFrom({ generated_at: null, games }, NOW);
+    expect(order.daily?.at(-1)).toBe("daily-trueFalse");
+    expect([...(order.daily ?? [])].sort()).toEqual([...DAILY_CHALLENGE_SLUGS].sort());
+  });
+
+  it("never lists a retired game on the Play page", () => {
+    const listed = new Set([...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS]);
+    expect(RETIRED_PLAY_SLUGS.filter((slug) => listed.has(slug))).toEqual([]);
+  });
+
   it("stops marking a game as new three weeks after its release", () => {
     expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["conexiones-futboleras", "tenable", "shared-player", "name-chain", "football-horserace", "football-codenames", "dato-falso-futbolero"]);
-    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual(["football-darts-501", "conexiones-futboleras"]);
-    expect(playOrderFrom(null, new Date("2026-11-17T12:00:00Z")).newSlugs).toEqual(["football-darts-501"]);
+    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual(["conexiones-futboleras"]);
+    expect(playOrderFrom(null, new Date("2026-11-17T12:00:00Z")).newSlugs).toEqual([]);
     expect(playOrderFrom(null, new Date("2026-11-21T12:00:00Z")).newSlugs).toEqual([]);
   });
 });

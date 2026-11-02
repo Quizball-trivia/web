@@ -65,6 +65,8 @@ interface DailyChallengeCompleteModalProps {
   challengeType?: string;
   /** A game's own next step shown under the score (Stat Sniper: play the same game with friends). */
   friendAction?: ReactNode;
+  /** Opt-in, game-specific breakdown under the score (Pass Chain routes, Career Path review, personal bests). */
+  details?: ReactNode;
 }
 
 export function DailyChallengeCompleteModal({
@@ -78,6 +80,7 @@ export function DailyChallengeCompleteModal({
   scoreValue,
   challengeType,
   friendAction,
+  details,
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
@@ -85,7 +88,7 @@ export function DailyChallengeCompleteModal({
   // screen, so this modal finishes immediately instead of stacking on it.
   if (practice) return <PracticeAutoDone onDone={onDone} />;
 
-  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType, friendAction };
+  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType, friendAction, details };
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
@@ -343,6 +346,7 @@ export function DailyChallengeCompleteModalContent({
   scoreValue,
   challengeType,
   friendAction,
+  details,
   weekendLeagueCta,
   comebackCta,
 }: OpenModalProps & {
@@ -409,6 +413,8 @@ export function DailyChallengeCompleteModalContent({
             </p>
           )}
         </div>
+
+        {details && <div className="mt-4 text-left">{details}</div>}
 
         <p className="mt-4 font-poppins text-sm font-semibold text-white">
           {t("dailyGames.completionGreat")}

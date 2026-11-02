@@ -43,6 +43,31 @@ export function formatClock(ms: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+/**
+ * How this device remembers a name refused for a square, so typing it again there is caught before it costs another
+ * guess: case, accents, apostrophes and spacing do not make it a new name ("Júlio Baptista" = "julio  baptista").
+ */
+export function refusalKey(cellIndex: number, text: string): string {
+  const folded = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("und")
+    .replace(/[’'`´.]/g, "").replace(/[-_,]+/g, " ").replace(/\s+/g, " ").trim();
+  return `${cellIndex}:${folded}`;
+}
+
+/**
+ * A guess whose answer never arrived, judged from the run before it and the server's run after it: exactly one guess
+ * was spent, the square is still empty and no other square changed, so it was refused (wrong, or a footballer already
+ * used). If anything else moved (another tab filled a square), the spent guess may not be this one: nothing is
+ * concluded, so a name that was never judged is never blocked.
+ */
+export function missLanded(
+  before: { guessesLeft: number; cells: ReadonlyArray<unknown | null> },
+  after: { guessesLeft: number; cells: ReadonlyArray<unknown | null> },
+  cellIndex: number,
+): boolean {
+  const othersUnchanged = before.cells.length === after.cells.length && before.cells.every((cell, i) => !cell === !after.cells[i]);
+  return after.guessesLeft === before.guessesLeft - 1 && !before.cells[cellIndex] && !after.cells[cellIndex] && othersUnchanged;
+}
+
 /** Three rows of squares in board order: one line per row fits a chat message. */
 export function shareGrid(cells: ReadonlyArray<unknown | null>): string {
   return [0, 1, 2].map((row) => cells.slice(row * 3, row * 3 + 3).map((cell) => (cell ? "🟩" : "⬛")).join("")).join("\n");
