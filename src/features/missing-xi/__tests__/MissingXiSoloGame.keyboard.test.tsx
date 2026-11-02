@@ -67,10 +67,23 @@ describe("MissingXiSoloGame keyboard flow", () => {
     expect(screen.getByRole("button", { name: "CB", pressed: true })).toBeInTheDocument();
   });
 
+  it("moves between formation lines from the answer field and stops at the pitch's end", async () => {
+    const user = userEvent.setup();
+    render(<MissingXiSoloGame session={session} onBack={() => {}} onComplete={() => {}} practice />);
+    await user.click(screen.getByRole("button", { name: "LB" }));
+    await user.keyboard("{ArrowUp}");
+    // The line ahead (midfield), not the next shirt along the back line (LCB).
+    expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "missingXi.whoStarted:CM");
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+    // Attack is the last line: a further ↑ keeps the selection rather than wrapping to the keeper.
+    expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "missingXi.whoStarted:LW");
+  });
+
   it("switches shirts with arrow keys and backs out with Escape", async () => {
     const user = userEvent.setup();
     render(<MissingXiSoloGame session={session} onBack={() => {}} onComplete={() => {}} practice />);
 
+    // ↑ from RB goes to the line ahead, to the shirt most in line with it (right CM), not along the back line.
     await user.click(screen.getByRole("button", { name: "RB" }));
     await user.keyboard("{ArrowUp}");
     expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "missingXi.whoStarted:CM");
@@ -78,9 +91,9 @@ describe("MissingXiSoloGame keyboard flow", () => {
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    const lcm = screen.getAllByRole("button", { name: "CM" })[0];
-    expect(lcm).toHaveFocus();
-    await user.keyboard("{ArrowRight}");
+    const rcm = screen.getAllByRole("button", { name: "CM" })[1];
+    expect(rcm).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
     expect(screen.getByRole("button", { name: "DM" })).toHaveFocus();
   });
 });

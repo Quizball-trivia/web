@@ -141,11 +141,11 @@ export function MissingXiSoloGame({
       shirtRefs.current.get(selectedSlot.id)?.focus();
       return;
     }
-    // ↑ walks up the pitch (back line → attack), ↓ back down; ←/→ stay with the caret.
+    // ↑ moves to the formation line ahead (towards attack), ↓ to the line behind; ←/→ stay with the caret.
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
     event.preventDefault();
-    // Arrow keys stop at the ends of the pitch; only the post-answer "next empty shirt" wraps round.
-    const nextId = nextOpenSlotId(squad.slots, isOpenSlot, selectedSlot.id, event.key === "ArrowUp" ? 1 : -1, false);
+    // Same moves as on the pitch: they stop at its ends (only the post-answer "next empty shirt" wraps round).
+    const nextId = slotInDirection(squad.slots, isOpenSlot, selectedSlot.id, event.key === "ArrowUp" ? "up" : "down");
     if (nextId) setSelected(nextId);
   };
 
