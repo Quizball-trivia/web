@@ -11,7 +11,7 @@ export type EntityKind = "player" | "manager" | "club" | "nation";
 /** Server-held run state (backend tenable-daily.rules PublicRunState). */
 export interface TenableServerRun extends WordRunStateBase {
   list: { title: Localized; note: Localized | null; asOf: string | null; kind: EntityKind; release: string };
-  /** Names and figures only of slots this run found, or of every slot once the day is over. */
+  /** Names and figures only of slots this run found, or of every slot once the run is over. */
   slots: Array<{ rank: number; name: string | null; figure: { value: number; unit: FigureUnit } | null; found: boolean }>;
   lives: number;
   maxLives: number;
@@ -25,6 +25,8 @@ export interface TenableReview { day: string; list: Localized; slots: Array<{ ra
 export const tenableDailyApi = createWordDailyApi<TenableServerRun, never, TenableReview>("/api/v1/tenable");
 
 const tenableCall = createDailyGameCall("/api/v1/tenable");
+/** The practice towers: closed days with approachable lists, easiest first (backend tenable-daily.rules practiceDays). Day ids only. */
+export const fetchTenablePractice = (locale: string) => tenableCall<{ days: string[] }>("/practice", "GET", undefined, locale, { identity: "none" });
 /** The after-game card, from the solo daily or a room match. */
 export const sendTenableFeedback = (mode: "solo" | "room", answer: GameFeedbackAnswer, locale: string) =>
   tenableCall<null>("/feedback", "POST", {

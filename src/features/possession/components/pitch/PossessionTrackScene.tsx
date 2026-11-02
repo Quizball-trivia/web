@@ -41,6 +41,7 @@ interface PossessionTrackSceneProps {
   barBattleVariant?: 'ranked_sim' | 'friendly_possession';
   /** Infinite fill/boundary opacity pulses; landing passes false (Blink repaints the whole svg per pulse frame). */
   ambientPulses?: boolean;
+  zoneTrack?: { column: 0 | 1 | 2; attacker: 'player' | 'opponent' };
 }
 
 export function PossessionTrackScene({
@@ -67,12 +68,17 @@ export function PossessionTrackScene({
   barBattle,
   barBattleVariant,
   ambientPulses = true,
+  zoneTrack,
 }: PossessionTrackSceneProps) {
   const playerPulse = ambientPulses ? playerAvatarPulse : 1;
   const opponentPulse = ambientPulses ? opponentAvatarPulse : 1;
 
   return (
     <g>
+      {zoneTrack ? (
+        <ZoneTrackBands {...zoneTrack} mirrored={mirrored} isPortrait={isPortrait} />
+      ) : (
+        <>
       {/* Main possession bar container */}
       <rect x="15" y="70" width="470" height="90" fill="rgba(0,0,0,0.2)" rx="6" />
 
@@ -104,6 +110,8 @@ export function PossessionTrackScene({
         animate={ambientPulses ? { opacity: [0.08, 0.15, 0.08] } : undefined}
         transition={ambientPulses ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 } : undefined}
       />
+        </>
+      )}
 
       {/* Bar battle animation sits UNDER avatars. If bars overlap in
           tight edge cases, the player art remains on top and readable. */}
@@ -216,6 +224,77 @@ export function PossessionTrackScene({
           transition={ambientPulses ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
         />
       </motion.g>
+    </g>
+  );
+}
+
+const ZONE_TRACK = { left: 15, width: 470, top: 70, height: 90 } as const;
+const ZONE_LABELS = ['Your side', 'Centre', 'Their side'] as const;
+
+/**
+ * Zone match: the track split into three zones — the player's side, the centre, the opponent's side (flipped with the
+ * pitch at half time) — with the ball's zone lit in the attacker's colour, gliding when the ball moves.
+ */
+function ZoneTrackBands({
+  column,
+  attacker,
+  mirrored,
+  isPortrait,
+}: {
+  column: 0 | 1 | 2;
+  attacker: 'player' | 'opponent';
+  mirrored: boolean;
+  isPortrait: boolean;
+}) {
+  const zoneWidth = ZONE_TRACK.width / 3;
+  const xOf = (zone: number) => ZONE_TRACK.left + (mirrored ? 2 - zone : zone) * zoneWidth;
+  const colour = attacker === 'player' ? '#1CB0F6' : '#FF4B4B';
+  return (
+    <g>
+      <rect x={ZONE_TRACK.left} y={ZONE_TRACK.top} width={ZONE_TRACK.width} height={ZONE_TRACK.height} fill="rgba(0,0,0,0.12)" rx="10" />
+      <motion.rect
+        y={ZONE_TRACK.top + 3}
+        width={zoneWidth - 6}
+        height={ZONE_TRACK.height - 6}
+        rx="8"
+        fill={colour}
+        fillOpacity={0.22}
+        stroke={colour}
+        strokeOpacity={0.75}
+        strokeWidth={2}
+        initial={false}
+        animate={{ x: xOf(column) + 3 }}
+        transition={{ type: 'spring', stiffness: 140, damping: 20 }}
+      />
+      {[1, 2].map((edge) => (
+        <line
+          key={edge}
+          x1={ZONE_TRACK.left + edge * zoneWidth}
+          x2={ZONE_TRACK.left + edge * zoneWidth}
+          y1={ZONE_TRACK.top + 10}
+          y2={ZONE_TRACK.top + ZONE_TRACK.height - 10}
+          stroke="rgba(255,255,255,0.28)"
+          strokeWidth={1.5}
+          strokeDasharray="4 5"
+        />
+      ))}
+      {/* Labels read sideways on the rotated portrait pitch, so they only show on the landscape one. */}
+      {!isPortrait &&
+        ZONE_LABELS.map((label, zone) => (
+          <text
+            key={label}
+            x={xOf(zone) + zoneWidth / 2}
+            y={ZONE_TRACK.top + ZONE_TRACK.height - 8}
+            textAnchor="middle"
+            fontSize="9"
+            fontWeight="700"
+            letterSpacing="0.8"
+            fill={zone === column ? '#FFFFFF' : 'rgba(255,255,255,0.55)'}
+            style={{ textTransform: 'uppercase', fontFamily: "'Poppins', sans-serif" }}
+          >
+            {label}
+          </text>
+        ))}
     </g>
   );
 }

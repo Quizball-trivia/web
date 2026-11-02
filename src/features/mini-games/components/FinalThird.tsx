@@ -47,6 +47,7 @@ import {
 } from '@/lib/repositories/freeKicks.repo';
 import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.analytics';
 import { createRealtimeCommandId } from '@/lib/realtime/command-id';
+import { answerSecondsForQuestion, liveAnswerSeconds } from '../lib/freeKicksTiming';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -67,7 +68,8 @@ const FinalThirdPitch3D = dynamic(
   },
 );
 const START_BALANCE = 100;
-/** Ranked MCQ timing: 10s to answer once the options appear. */
+/** Ranked MCQ timing: 10s to answer a short question once the options appear.
+ *  Long questions get extra reading time (lib/freeKicksTiming, server-authoritative live). */
 const QUESTION_S = 10;
 /** Ranked-style reading pause: the prompt shows alone before the options and the clock appear. */
 const READ_MS = 3000;
@@ -215,14 +217,23 @@ export interface CoinSampleMode {
   onSettled?: (result: { stake: number; payout: number; status: "cashed" | "lost" }) => void;
   /** The sneak peek's way out: the header back control leaves the sample instead of navigating. */
   onExit?: () => void;
+  /** Relaxed practice: no answer clock at all (a question waits until it is answered). */
+  untimed?: boolean;
 }
 
-export function FinalThird({ backHref, live = false, sample }: { backHref?: string; live?: boolean; sample?: CoinSampleMode } = {}) {
+export function FinalThird({ backHref, live = false, sample, onPractice }: {
+  backHref?: string;
+  live?: boolean;
+  sample?: CoinSampleMode;
+  /** Live bet screen only: opens the untimed practice run (practice coins, never the wallet). */
+  onPractice?: () => void;
+} = {}) {
   const t = useMiniT();
   const miniLocale = useMiniLocale();
   const { t: tApp } = useLocale();
   const trivia = useMemo(() => sample?.questions ?? getTrivia(miniLocale), [miniLocale, sample]);
   const { splashProps, fire } = useResultSplash();
+  const untimed = Boolean(sample?.untimed);
 
   const [balance, setBalance] = useState(START_BALANCE);
   const [beat, setBeat] = useState<Beat>('bet');
@@ -267,8 +278,12 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
     answer: number;
     deadlineLocalMs: number;
     windowS: number;
+    /** Visible answer seconds for this question (server time_limit_ms; 10s from older servers). */
+    answerS: number;
   } | null>(null);
   const liveBusyRef = useRef(false);
+  /** A paid start awaiting the server (state, so the bet screen can lock the practice exit). */
+  const [startingLive, setStartingLive] = useState(false);
   // Bumped by every applied mutation; an in-flight GET current whose sequence
   // is stale must not overwrite the newer state it lost the race to.
   const liveSeqRef = useRef(0);
@@ -311,6 +326,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
     const skewMs = Date.parse(state.server_now) - Date.now();
     const deadlineLocalMs = Date.parse(state.question.deadline_at) - skewMs - 300;
     const windowS = Math.max(0.5, (deadlineLocalMs - Date.now()) / 1000);
+    const answerS = liveAnswerSeconds(state.question.time_limit_ms);
     setLiveQuestion({
       id: state.question.question_id,
       q: (state.question.prompt as unknown as Record<string, string | undefined>)[miniLocale] ?? state.question.prompt.en,
@@ -318,9 +334,10 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
       optionIds: state.question.options.map((option) => option.id),
       answer: -1,
       deadlineLocalMs,
-      windowS: Math.min(QUESTION_S, windowS),
+      windowS: Math.min(answerS, windowS),
+      answerS,
     });
-    setQLeft(Math.min(QUESTION_S, windowS));
+    setQLeft(Math.min(answerS, windowS));
     setReading(true);
   };
 
@@ -505,12 +522,16 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
   }, [beat, reading, questionKey]);
 
   useEffect(() => {
-    if (beat !== 'question' || reading) return;
+    if (beat !== 'question' || reading || untimed) return;
     const started = Date.now();
-    // One clock for the label, the bar and the timeout: QUESTION_S from the reveal,
+    // Long questions get extra reading time: the server's per-question limit live,
+    // the same length formula for practice/demo questions.
+    const shown = trivia[qIndex % trivia.length];
+    const answerS = live && liveQuestion ? liveQuestion.answerS : answerSecondsForQuestion(shown.q, shown.options);
+    // One clock for the label, the bar and the timeout: answerS from the reveal,
     // never later than the server deadline (which also holds the network grace).
     const deadlineMs = Math.min(
-      started + QUESTION_S * 1000,
+      started + answerS * 1000,
       live && liveQuestion ? liveQuestion.deadlineLocalMs : Number.POSITIVE_INFINITY
     );
     const windowS = Math.max(0.5, (deadlineMs - started) / 1000);
@@ -667,6 +688,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
     if (live) {
       if (liveBusyRef.current || !resumed || !wallet) return;
       liveBusyRef.current = true;
+      setStartingLive(true);
       setLiveError(null);
       startCrowd();
       // Reuse the nonce across retries: if the first attempt debited but the
@@ -694,6 +716,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
         })
         .finally(() => {
           liveBusyRef.current = false;
+          setStartingLive(false);
         });
       return;
     }
@@ -1027,7 +1050,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
         <div className="min-w-0">
       {/* Live stadium strip: player count + rotating last win. Cosmetic; the sneak peek shows its practice chip instead. */}
       {sample && (
-        <div className="mt-1 px-1 py-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp('coinSample.practiceChip')}</div>
+        <div className="mt-1 px-1 py-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp(untimed ? 'miniGames.freeKicksPracticeChip' : 'coinSample.practiceChip')}</div>
       )}
       {!sample && <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
         <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
@@ -1208,6 +1231,28 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
                 </button>
                 )
               )}
+              {/* Free practice stays reachable whatever the wallet says (empty, loading or unreadable), but never while a
+                  paid start is in flight or a staked round may still be resuming: leaving then would hide that round. */}
+              {live && onPractice && (
+                <button
+                  type="button"
+                  onClick={() => { if (!startingLive && resumed) onPractice(); }}
+                  disabled={startingLive || !resumed}
+                  className="w-full rounded-2xl border-2 border-white/25 bg-white/10 px-3 py-2 font-poppins text-white transition-colors hover:bg-white/15 disabled:opacity-50"
+                >
+                  <span className="block text-sm font-black uppercase tracking-wide">{tApp('miniGames.freeKicksPracticeCta')}</span>
+                  <span className="block text-[10px] font-bold text-white/70">{tApp('miniGames.freeKicksPracticeHint')}</span>
+                </button>
+              )}
+              {untimed && sample?.onExit && (
+                <button
+                  type="button"
+                  onClick={sample.onExit}
+                  className="w-full rounded-2xl border-2 border-brand-yellow/60 px-3 py-2.5 font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow transition-colors hover:bg-brand-yellow/10"
+                >
+                  {tApp('miniGames.freeKicksPlayReal')}
+                </button>
+              )}
             </motion.div>
           )}
 
@@ -1266,18 +1311,18 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
             <motion.div key={`q-${live && liveQuestion ? liveQuestion.id : qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-3">
               <div className="mb-1.5 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
                 <span>{t('Attack {n}', { n: attack + 1 })}</span>
-                <span className={qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
-                  {reading ? t('Read the question…') : selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Opening the goal…')}
+                <span className={!untimed && qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
+                  {reading ? t('Read the question…') : selected !== null ? t('Opening the goal…') : untimed ? tApp('miniGames.freeKicksNoTimer') : t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) })}
                 </span>
               </div>
               <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/15">
                 <div
                   key={live && liveQuestion ? liveQuestion.id : qIndex}
-                  className={`h-full origin-left rounded-full ${qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
+                  className={`h-full origin-left rounded-full ${!untimed && qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
                   style={{
                     transform: 'scaleX(1)',
                     // Longhands only: mixing the `animation` shorthand with animationPlayState trips React's style reconciliation.
-                    animationName: reading ? 'none' : 'ft-q-timer',
+                    animationName: reading || untimed ? 'none' : 'ft-q-timer',
                     animationDuration: `${timerWindowS}s`,
                     animationTimingFunction: 'linear',
                     animationFillMode: 'forwards',

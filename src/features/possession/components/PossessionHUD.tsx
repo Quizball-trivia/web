@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Zap, X } from 'lucide-react';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
@@ -21,6 +21,10 @@ interface PossessionHUDProps {
   opponentGoals: number;
   playerPoints?: number;
   opponentPoints?: number;
+  /** Replaces the points under each score (e.g. attacks left in the zone-match prototype). */
+  renderPoints?: (side: 'player' | 'opponent') => ReactNode;
+  /** Replaces the half label over the clock, on every screen size (e.g. the round in the zone-match prototype). */
+  centerLabel?: string;
   playerName: string;
   opponentName: string;
   playerAvatarUrl: string;
@@ -48,6 +52,8 @@ export function PossessionHUD({
   opponentGoals,
   playerPoints = 0,
   opponentPoints = 0,
+  renderPoints,
+  centerLabel,
   playerName,
   opponentName,
   playerAvatarCustomization = null,
@@ -103,19 +109,31 @@ export function PossessionHUD({
               </div>
               <SpeedStreakBadge active={speedStreakMine} side="player" />
             </div>
-            <div className="hidden sm:block">
-              <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
-            </div>
-            <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {playerPoints} {t('possession.pointsLabel')}
-            </div>
+            {renderPoints ? (
+              renderPoints('player')
+            ) : (
+              <>
+                <div className="hidden sm:block">
+                  <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
+                </div>
+                <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
+                  {playerPoints} {t('possession.pointsLabel')}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         <div className="flex min-w-[52px] shrink-0 flex-col items-center justify-center sm:min-w-[104px]">
-          <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-white/45 sm:block">
-            {half === 1 ? t('possession.firstHalf') : t('possession.secondHalf')}
-          </div>
+          {centerLabel ? (
+            <div className="mb-1 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.08em] text-white/70 sm:text-[10px] sm:tracking-[0.18em]">
+              {centerLabel}
+            </div>
+          ) : (
+            <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-white/45 sm:block">
+              {half === 1 ? t('possession.firstHalf') : t('possession.secondHalf')}
+            </div>
+          )}
           <div
             className="flex h-9 min-w-[52px] items-center justify-center rounded-[16px] bg-brand-blue px-2 text-white tabular-nums sm:h-[44px] sm:min-w-[78px] sm:px-4"
             style={{ ...poppins, fontSize: 'clamp(16px, 2vw, 24px)' }}
@@ -140,16 +158,22 @@ export function PossessionHUD({
                 </motion.span>
               </div>
             </div>
-            <div className="hidden sm:block">
-              <AnimatedPointsCounter
-                value={opponentPoints}
-                align="right"
-                accentClassName="text-brand-red-soft"
-              />
-            </div>
-            <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {opponentPoints} {t('possession.pointsLabel')}
-            </div>
+            {renderPoints ? (
+              renderPoints('opponent')
+            ) : (
+              <>
+                <div className="hidden sm:block">
+                  <AnimatedPointsCounter
+                    value={opponentPoints}
+                    align="right"
+                    accentClassName="text-brand-red-soft"
+                  />
+                </div>
+                <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
+                  {opponentPoints} {t('possession.pointsLabel')}
+                </div>
+              </>
+            )}
           </div>
           <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" flipped rankPoints={opponentRankPoints} />
         </div>

@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { wordDailyCopy } from "@/features/wordgames/copy";
 import { DailyEnd } from "@/features/wordgames/daily/WordDailyShell";
-import { Chips, GreenButton, RefusedReports, TopBar, poppins } from "@/features/wordgames/ui";
+import { GreenButton, RefusedReports, TopBar, poppins } from "@/features/wordgames/ui";
 import { wordSharedCopy } from "@/features/wordgames/copy";
 import { SuggestBox, type SuggestLookup } from "./SuggestBox";
 import { tenableCopy } from "./tenable.copy";
@@ -92,15 +92,19 @@ export function TenablePlayView({ locale, number, state, pending, notice, lookup
   );
 }
 
-export function TenableEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, onArchive, onExit, onReport }: {
+export function TenableEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, practice, onArchive, onExit, onReport }: {
   locale: string; number: number; state: TenableSoloState; guestOnPastBoard: boolean; leaderboard: ReactNode; friends?: ReactNode;
+  /** A way into a low-stakes practice tower, under the revealed list. */
+  practice?: ReactNode;
   onArchive: () => void; onExit?: () => void;
   /** "I was right" for an answer the list refused; offered once the day is over (the server refuses earlier). */
   onReport?: (text: string) => Promise<boolean>;
 }) {
   const c = tenableCopy(locale);
   const found = state.score ?? foundCount(state.slots);
-  const missed = state.slots.filter((s) => s.missed && s.name).map((s) => `#${s.rank} ${s.name}`);
+  // Every unfound slot comes back named once the run is over: the whole tower is the lesson.
+  const revealed = state.slots.length > 0 && state.slots.every((s) => s.name !== null);
+  const missedCount = state.slots.filter((s) => s.missed).length;
   // The list was corrected after this run finished: the server sends none of either version's content.
   const corrected = state.slots.length === 0;
   return (
@@ -127,12 +131,20 @@ export function TenableEndView({ locale, number, state, guestOnPastBoard, leader
       {onReport && !corrected && state.disclosed && state.misses.length > 0 && (
         <RefusedReports className="mt-4" texts={state.misses} line={(t) => c.wrong(t)} label={wordSharedCopy(locale).iWasRight} thanks={wordSharedCopy(locale).reported} onReport={onReport} />
       )}
-      {missed.length > 0 && (
-        <div className="mt-4">
-          <p className="text-xs font-black uppercase tracking-wide text-white/55">{c.missedTitle}</p>
-          <Chips className="mt-2" names={missed} />
+      {!corrected && revealed && (
+        <div className="mt-4" data-tenable-full-list>
+          <div className="mb-2 flex items-center justify-between gap-2 px-1">
+            <p className="text-xs font-black uppercase tracking-wide text-white/55">{missedCount > 0 ? `${c.missedTitle}: ${missedCount}` : c.fullListTitle}</p>
+            <span className="flex items-center gap-3 text-[11px] font-bold text-white/60">
+              <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm bg-brand-green" aria-hidden />{c.legendFound}</span>
+              {missedCount > 0 && <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-dashed border-white/50" aria-hidden />{c.legendMissed}</span>}
+            </span>
+          </div>
+          <TenableTower list={state.list} slots={state.slots} fresh={null} hiddenLabel={c.fullListTitle} asOfLabel={c.asOf} compact wrapNames
+            stateLabels={{ found: c.legendFound, missed: c.legendMissed }} />
         </div>
       )}
+      {practice}
     </DailyEnd>
   );
 }

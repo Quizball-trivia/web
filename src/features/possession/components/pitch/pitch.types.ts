@@ -70,6 +70,11 @@ export interface PitchVisualizationProps {
   ambientPulses?: boolean;
   /** Align the possession boundary to the stadium art's true center line. */
   centerPossessionTrack?: boolean;
+  /**
+   * Zone match prototype: draw three zones (the player's side, the centre, the opponent's side) in place of the
+   * points bar, with the ball's zone lit in the attacker's colour. Unset everywhere else.
+   */
+  zoneTrack?: { column: 0 | 1 | 2; attacker: 'player' | 'opponent' };
   /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */
   simpleShotAnimation?: boolean;
   /** Optional shot avatar size override for compact demos where the production marker reads too small. */

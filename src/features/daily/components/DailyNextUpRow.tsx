@@ -13,16 +13,13 @@ import { dailyChallengePlayPath } from "@/lib/domain/dailyChallengeSlugs";
 /** Curated pool the "up next" row draws from, in preference order. */
 const NEXT_UP_SLUGS = [
   "daily-moneyDrop",
-  "daily-trueFalse",
   "daily-countdown",
-  "daily-clues",
   "daily-careerPath",
-  "daily-imposter",
-  "daily-highLow",
-  "daily-footballLogic",
+  "daily-passChain",
+  "daily-cardDetective",
   "mini-guess-the-goal",
   "mini-final-third",
-  "mini-road-to-goal",
+  "daily-trueFalse",
 ];
 
 const MODE_BY_SLUG = new Map(ALL_DEMO_MODES.map((mode) => [mode.slug, mode]));
@@ -31,7 +28,6 @@ function hrefFor(mode: DemoModeCard): string {
   if (mode.dailyType) return dailyChallengePlayPath(mode.dailyType);
   const real: Record<string, string> = {
     "mini-final-third": "/free-kicks",
-    "mini-road-to-goal": "/road-to-goal",
     "mini-guess-the-goal": "/guess-the-goal",
   };
   return real[mode.slug] ?? `/demos/${mode.slug}?from=/play`;

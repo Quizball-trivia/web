@@ -1,9 +1,11 @@
-import { ROUNDS_PER_DAY, MAX_SCORE, type RoundOutcome, type RoundResult } from "./buscaminas.logic";
+import { DAILY_MAX_SCORE, DAILY_ROUNDS, MAX_SCORE, ROUNDS_PER_DAY, type RoundOutcome, type RoundResult } from "./buscaminas.logic";
 
 export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de";
 const LETTER: Record<RoundOutcome, string> = { perfect: "p", banked: "b", mine: "m" };
 const OUTCOME: Record<string, RoundOutcome> = { p: "perfect", b: "banked", m: "mine" };
-const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{20})-(es|en|ka|tr|ru|pt|de)$/;
+/** A daily run shares its 5 squares; links shared before the daily run existed carry all 20. */
+const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{5}|[pbm]{20})-(es|en|ka|tr|ru|pt|de)$/;
+const MAX_FOR: Record<number, number> = { [DAILY_ROUNDS]: DAILY_MAX_SCORE, [ROUNDS_PER_DAY]: MAX_SCORE };
 
 export interface ShareResult {
   number: number;
@@ -12,7 +14,7 @@ export interface ShareResult {
   locale: ShareLocale;
 }
 
-/** Compact, unsigned result code for share links; purely cosmetic (it drives a preview image, nothing else). */
+/** Compact, unsigned result code for share links (the daily run's rounds); purely cosmetic (it drives a preview image, nothing else). */
 export function encodeShare(number: number, results: readonly RoundResult[], locale: string): string {
   const score = results.reduce((sum, r) => sum + r.points, 0);
   const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en";
@@ -25,7 +27,8 @@ export function decodeShare(code: string | null | undefined): ShareResult | null
   if (!match) return null;
   const number = Number(match[1]);
   const score = Number(match[2]);
-  if (number < 1 || score > MAX_SCORE || match[3].length !== ROUNDS_PER_DAY) return null;
+  const max = MAX_FOR[match[3].length];
+  if (number < 1 || max === undefined || score > max) return null;
   return { number, score, outcomes: [...match[3]].map((c) => OUTCOME[c]), locale: match[4] as ShareLocale };
 }
 
