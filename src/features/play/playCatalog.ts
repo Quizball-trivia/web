@@ -3,7 +3,6 @@ import { rankPlayGames, isNewPlayGame, type PlayGameStats } from "./playRanking"
 // The hand-made order: what the Play page shows when there are no numbers to order by, and how ties fall.
 // Every slug resolves against ALL_DEMO_MODES; unknown slugs are simply skipped, so a rename can't crash the page.
 export const DAILY_CHALLENGE_SLUGS = [
-  "football-darts-501",
   "conexiones-futboleras",
   "tenable",
   "minuto",
@@ -14,26 +13,38 @@ export const DAILY_CHALLENGE_SLUGS = [
   "dato-falso-futbolero",
   "buscaminas",
   "pistas",
-  "ultimo",
   "daily-moneyDrop",
   "daily-countdown",
-  "daily-trueFalse",
-  "daily-clues",
-  "daily-imposter",
   "daily-careerPath",
-  "daily-highLow",
-  "daily-footballLogic",
   "daily-cardDetective",
   "lab-missing-xi",
   "daily-passChain",
   "mini-guess-the-goal",
   "daily-statSniper",
+  // A quick warm-up rather than a headline game: it stays last.
+  "daily-trueFalse",
 ];
 export const PLAY_WITH_COINS_SLUGS = [
-  "mini-trivia-mines",
   "mini-final-third",
-  "mini-road-to-goal",
   "mini-squad-spin",
+];
+
+/**
+ * Off the Play page per the 2026-11 game review; every route still opens directly (links, shares, rooms, partners).
+ * - Cut: Road to Goal and Trivia Mines (chance outweighs knowledge), Higher or Lower (all-or-nothing rounds).
+ * - Folded into a stronger game: Who Am I? (Football Clues), solo Last Answer Standing (Countdown; the friend
+ *   room stays), Imposter (Odd One Out), Football Logic.
+ * - Football Darts 501: hidden until it loads reliably.
+ */
+export const RETIRED_PLAY_SLUGS = [
+  "mini-road-to-goal",
+  "mini-trivia-mines",
+  "daily-highLow",
+  "daily-clues",
+  "ultimo",
+  "daily-imposter",
+  "daily-footballLogic",
+  "football-darts-501",
 ];
 
 /** The day each game reached production. A game with no date is never marked new. Add a line with every release. */
