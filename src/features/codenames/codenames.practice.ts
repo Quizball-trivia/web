@@ -1,5 +1,7 @@
 import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
-import { newSolo, type CardKind, type CodenamesSoloState } from "./codenames.view";
+import { isClosedDay } from "@/features/wordgames/daily/wordDaily.logic";
+import { codenamesDailyApi, pickLabel, type CodenamesReview } from "./codenames.daily";
+import { BOARD_SIZE, newSolo, type CardKind, type CodenamesSoloState } from "./codenames.view";
 
 /** A solo word board as the server deals it (backend codenames.words): unranked, played and judged on the device. */
 export interface PracticeBoard {
@@ -25,3 +27,27 @@ export function loadPractice(locale: string): Promise<PracticeBoard> {
 export function practiceState(board: PracticeBoard): CodenamesSoloState {
   return { ...newSolo("practice", board.cards.map((c) => ({ id: c.id, word: c.word, kind: c.kind })), board.clues), ranked: false };
 }
+
+// ── Picture practice ──────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A closed day to practise pictures on, at random: never today's board (the server only serves closed days anyway),
+ * and none in `avoid` (the board just played, the ones practised already) while another is left. Null: no closed day.
+ */
+export function pickPracticeDay(days: readonly string[], today: string, avoid: ReadonlySet<string>, random: () => number = Math.random): string | null {
+  const closed = days.filter((d) => isClosedDay(d, today));
+  const fresh = closed.filter((d) => !avoid.has(d));
+  const pool = fresh.length > 0 ? fresh : closed;
+  return pool.length > 0 ? pool[Math.floor(random() * pool.length)] : null;
+}
+
+/** A closed daily board as a solo run in the reader's language: the daily's rules, never ranked, every reason at the end. */
+export function picturePracticeState(review: CodenamesReview, locale: string): CodenamesSoloState | null {
+  if (review.cards.length !== BOARD_SIZE || review.clues.length === 0) return null;
+  const clues = review.clues.map((c) => ({ word: pickLabel(c.word, locale), count: c.count, cards: c.cards.map((x) => ({ id: x.id, why: pickLabel(x.why, locale) })) }));
+  return { ...newSolo(review.day, review.cards.map((c) => ({ id: c.id, kind: c.kind })), clues), ranked: false, disclosed: true };
+}
+
+/** The whole board of a closed day, ready to practise on (null when the server's board cannot be played). */
+export const loadPicturePractice = (day: string, locale: string): Promise<CodenamesSoloState | null> =>
+  codenamesDailyApi.review(day, locale).then((review) => picturePracticeState(review, locale));

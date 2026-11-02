@@ -55,6 +55,12 @@ export const gridDailyApi = {
   start: (day: string, locale: string) => call<GridDailyRun>("/start", "POST", { day }, locale),
   guess: (input: { day: string; runId: string; version: number; cellIndex: number; text: string }, locale: string) =>
     call<GridDailyGuess>("/guess", "POST", input, locale),
+  /**
+   * "Think this is right?": a refused name the player says fits the square. Not a move: nothing is spent or given
+   * back and the run is untouched. True when the server took the request (it answers 204 whether or not it kept it).
+   */
+  report: (input: { day: string; cellIndex: number; text: string }, locale: string) =>
+    call<null>("/report", "POST", { ...input, text: input.text.slice(0, 160) }, locale).then(() => true, () => false),
   /** Shows the squares and starts the clock. */
   kickOff: (input: { runId: string; version: number }, locale: string) => call<GridDailyRun>("/kickoff", "POST", input, locale),
   finish: (input: { runId: string; version: number }, locale: string) => call<GridDailyRun>("/finish", "POST", input, locale),

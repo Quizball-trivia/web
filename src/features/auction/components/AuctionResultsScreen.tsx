@@ -18,7 +18,7 @@ import {
   POSITION_ORDER,
 } from '../data';
 
-/** Profit with an explicit sign, e.g. "+$70M" / "−$40M". */
+/** Profit with an explicit sign, e.g. "+€70M" / "−€40M". */
 const formatProfit = (n: number): string => `${n < 0 ? '−' : '+'}${formatMoney(Math.abs(n))}`;
 import { POS_COLORS, poppins, medalColor, MEDAL_COLORS } from '../constants/auction.constants';
 import { ChemistryBadge, ChemistryBreakdown } from './shared/ChemistryPanel';

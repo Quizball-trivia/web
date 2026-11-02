@@ -14,7 +14,7 @@ import { findPublicGameByModeId, relatedPublishedGames } from "@/lib/seo/public-
 import { PublicCardGrid } from "@/features/marketing/public/PublicCards";
 import type { Locale } from "@/lib/i18n/locale";
 import {
-  MAX_SCORE, TARGETS_PER_ROUND, addDays, defaultDayFor, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
+  DAILY_MAX_SCORE, DAILY_ROUNDS, TARGETS_PER_ROUND, addDays, dailyResults, dailyScoreOf, defaultDayFor, extendedRoundsPlayed, isDailyDone, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
   type BuscaminasCard, type BuscaminasDay, type BuscaminasRound, type RoundResult,
 } from "./buscaminas.logic";
 import { clearRun, finishedScores, inProgressDays, loadRun, saveRun, streakFrom } from "./buscaminas.storage";
@@ -133,7 +133,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         loadRetriedRef.current.delete(`${day}#${owner}`);
         setLoaded({ key: loadKey, data });
         setRun(saved);
-        setView(saved?.state.done ? "end" : "intro");
+        // A finished daily run reopens on its result; the extended challenge is resumed from there.
+        setView(saved && isDailyDone(saved.state) ? "end" : "intro");
       })
       .catch((error: { name?: string; status?: number }) => {
         if (error?.name === "AbortError") return;
@@ -167,6 +168,10 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const { soundEnabled } = useUserPreferences();
   const cue = useCallback((name: "correctRanked" | "wrongAnswer") => { if (soundEnabled) playSfx(name); }, [soundEnabled]);
 
+  /** Where a run picked up mid-session lands: its result once the daily run is over, unless the player is already in the extended rounds. */
+  const landingView = (s: BuscaminasRunState): View =>
+    s.done || (isDailyDone(s) && !(view === "play" && state && isDailyDone(state))) ? "end" : "play";
+
   const apply = (next: BuscaminasRun, r: BuscaminasRound | null) => {
     const settled = next.state.settled;
     if (settled && !state?.settled && r) {
@@ -176,10 +181,16 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     }
     setRun(next);
     // Only a run that finishes on this screen counts as a completion (not reopening one that was already done).
-    if (next.state.done && state && !state.done) {
-      onEvent?.("complete", { score: next.state.score });
-      trackRunComplete({ puzzleId: day, ranked: next.state.ranked, score: next.state.score, perfects: next.state.results.filter((x) => x.outcome === "perfect").length, mines: next.state.results.filter((x) => x.outcome === "mine").length, rank: next.state.rank ?? null });
+    // The daily run is the game; finishing the optional extended rounds is tracked on its own.
+    if (state && isDailyDone(next.state) && !isDailyDone(state)) {
+      const daily = dailyResults(next.state);
+      const dailyScore = dailyScoreOf(next.state);
+      onEvent?.("complete", { score: dailyScore });
+      trackRunComplete({ puzzleId: day, phase: "daily", ranked: next.state.ranked, score: dailyScore, perfects: daily.filter((x) => x.outcome === "perfect").length, mines: daily.filter((x) => x.outcome === "mine").length, rank: next.state.rank ?? null });
       if (next.state.ranked) setBoardRefresh((n) => n + 1);
+      setView("end");
+    } else if (next.state.done && state && !state.done) {
+      trackRunComplete({ puzzleId: day, phase: "extended", ranked: next.state.ranked, score: next.state.score, perfects: next.state.results.filter((x) => x.outcome === "perfect").length, mines: next.state.results.filter((x) => x.outcome === "mine").length, rank: next.state.rank ?? null });
       setView("end");
     }
   };
@@ -232,7 +243,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         } else if (found.seen === "moved") {
           // Progress made elsewhere: show it without counting it as this move.
           setRun(found.current);
-          setView(found.current.state.done ? "end" : "play");
+          setView(landingView(found.current.state));
           return;
         }
       }
@@ -273,14 +284,14 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (code === "stale_state" && run && newer && newer.run.version > run.run.version) {
         // Another tab moved this run on: continue from its newer copy.
         setRun(newer);
-        setView(newer.state.done ? "end" : "play");
+        setView(landingView(newer.state));
       } else if (code === "stale_state" && run) {
         // Every run is a server row: re-sync from it.
         try {
           const current = await buscaminasApi.start(requestDay, contentVersion, locale);
           if (!stillCurrent(requestOwner, requestDay)) return;
           setRun(current);
-          setView(current.state.done ? "end" : "play");
+          setView(landingView(current.state));
         } catch (resyncError) {
           if (!stillCurrent(requestOwner, requestDay)) return;
           setNotice(resyncError instanceof BuscaminasApiError && resyncError.status === 503 ? c.maintenance : c.actionError);
@@ -319,7 +330,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     if (run) {
       markStarted();
       trackRunStart({ puzzleId: requestedDay, contentVersion, ranked: run.state.ranked, resumed: true, round: run.state.round + 1 });
-      setView(run.state.done ? "end" : "play");
+      setView(isDailyDone(run.state) ? "end" : "play");
       return;
     }
     void act("start", async () => {
@@ -328,7 +339,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       if (!stillCurrent(requestOwner, requestedDay)) return null;
       markStarted();
       trackRunStart({ puzzleId: requestedDay, contentVersion, ranked: fresh.state.ranked, resumed: fresh.state.round > 0 || fresh.state.results.length > 0, round: fresh.state.round + 1 });
-      setView(fresh.state.done ? "end" : "play");
+      setView(isDailyDone(fresh.state) ? "end" : "play");
       return fresh;
     }, null);
   };
@@ -349,7 +360,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     if (target !== day) setNotice(null);
     setChosenDay(target);
     setLockedDay(null);
-    setView(target === day && state?.done ? "end" : "intro");
+    setView(target === day && state && isDailyDone(state) ? "end" : "intro");
   };
 
   return (
@@ -364,9 +375,9 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : !content ? (
           <Centered><p className="animate-pulse text-sm text-white/70">{c.loading}</p></Centered>
         ) : view === "archive" ? (
-          <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state?.done ? "end" : "intro")} onOpen={openDay} />
+          <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state && isDailyDone(state) ? "end" : "intro")} onOpen={openDay} />
         ) : view === "end" && state ? (
-          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
+          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} totalRounds={content.rounds.length} onExtended={() => { setView("play"); scrollRef.current?.scrollTo({ top: 0 }); }} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
           <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
@@ -447,6 +458,11 @@ function Board({ locale, content, round, state, pending, notice, onPick, onBank,
   const settled = state.settled;
   const reveal = settled?.reveal;
   const total = content.rounds.length;
+  // The daily run, then (opt-in) the extended challenge: each phase has its own counter and progress bar.
+  const dailyTotal = Math.min(DAILY_ROUNDS, total);
+  const extended = state.round >= dailyTotal;
+  const phaseStart = extended ? dailyTotal : 0;
+  const phaseEnd = extended ? total : dailyTotal;
   const [reported, setReported] = useState<string | null>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { if (settled) nextRef.current?.focus({ preventScroll: true }); }, [settled]);
@@ -467,9 +483,10 @@ function Board({ locale, content, round, state, pending, notice, onPick, onBank,
       </header>
 
       <div className="mt-3 flex items-center gap-3">
-      <p className="shrink-0 text-xs font-black uppercase tabular-nums text-white/80" style={poppins}>{c.round(state.round + 1, total)}</p>
+      <p className="shrink-0 text-xs font-black uppercase tabular-nums text-white/80" style={poppins}>{extended ? c.extendedRound(state.round + 1, total) : c.round(state.round + 1, dailyTotal)}</p>
       <ol className="flex flex-1 gap-1" aria-hidden>
-        {content.rounds.map((r, i) => {
+        {content.rounds.slice(phaseStart, phaseEnd).map((r, j) => {
+          const i = phaseStart + j;
           const result: RoundResult | null | undefined = i < state.results.length ? state.results[i] : i === state.round ? settled : undefined;
           return (
             <li key={r.id} className={cn("h-1.5 flex-1 rounded-full", result?.outcome === "perfect" ? "bg-brand-green-light" : result?.outcome === "banked" ? "bg-brand-yellow" : result?.outcome === "mine" ? "bg-brand-red-soft" : i === state.round ? "bg-white/60" : "bg-white/15")} />
@@ -519,7 +536,7 @@ function Board({ locale, content, round, state, pending, notice, onPick, onBank,
               {settled.outcome === "mine" ? c.mine(settled.found) : settled.outcome === "perfect" ? c.perfect(settled.points) : c.banked(settled.points)}
             </p>
             <button ref={nextRef} type="button" onClick={onNext} disabled={pending !== null} className="disabled:opacity-60 h-14 rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep" style={poppins}>
-              {state.results.length + 1 >= total ? c.finish : c.next}
+              {state.results.length + 1 >= phaseEnd ? c.finish : c.next}
             </button>
           </div>
         ) : (
@@ -586,11 +603,17 @@ function PlayerCard({ card, index, picked, mine, revealOk, revealMine, revealed,
   );
 }
 
-function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versions, boardRefresh, onArchive, onExit }: { locale: Locale; day: string; liveDay: string | null; guestOnYesterday: boolean; state: BuscaminasRunState; days: string[]; versions?: Record<string, number>; boardRefresh: number; onArchive: () => void; onExit?: () => void }) {
+function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versions, boardRefresh, totalRounds, onExtended, onArchive, onExit }: { locale: Locale; day: string; liveDay: string | null; guestOnYesterday: boolean; state: BuscaminasRunState; days: string[]; versions?: Record<string, number>; boardRefresh: number; totalRounds: number; onExtended: () => void; onArchive: () => void; onExit?: () => void }) {
   const rankedDay = day === liveDay;
   const c = buscaminasCopy(locale);
-  const results: RoundResult[] = state.results;
-  const score = state.score;
+  // The result is the daily run's: its score, squares and share. The extended challenge is offered (or summed up) below.
+  const results: RoundResult[] = dailyResults(state);
+  const score = dailyScoreOf(state);
+  const dailyTotal = Math.min(DAILY_ROUNDS, totalRounds);
+  const extendedLeft = !state.done && totalRounds > dailyTotal;
+  const extendedStarted = state.round > dailyTotal || state.picked.length > 0 || Boolean(state.settled);
+  const extendedPlayed = extendedRoundsPlayed(state);
+  const extendedSummary = state.done && extendedPlayed > 0 ? c.end.extendedScore(state.score, state.results.length) : null;
   const perfects = results.filter((r) => r.outcome === "perfect").length;
   const mines = results.filter((r) => r.outcome === "mine").length;
   const number = puzzleNumber(day);
@@ -602,7 +625,7 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
   const guest = useAuthStore((s) => s.status) !== "authenticated";
   const sharePath = `/r/${encodeShare(number, results, locale)}`;
   const shareUrl = typeof window === "undefined" ? sharePath : `${window.location.origin}${sharePath}`;
-  const text = c.shareText(number, score, grid, shareUrl);
+  const text = c.shareText(number, score, extendedSummary ? `${grid}\n${extendedSummary}` : grid, shareUrl);
   const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   const self = findPublicGameByModeId("buscaminas");
   const related = self ? relatedPublishedGames(self) : [];
@@ -638,9 +661,9 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
       )}
       <div className="mt-2 rounded-3xl bg-brand-blue p-5 text-center">
         <Brand locale={locale} className="text-lg" />
-        <p className="text-xs font-bold text-white/70" style={poppins}>#{number}</p>
+        <p className="text-xs font-bold text-white/70" style={poppins}>#{number} · {c.end.daily}</p>
         <p className="mt-4 text-6xl font-black tabular-nums" style={poppins}>{score}</p>
-        <p className="text-xs font-bold uppercase tracking-wide text-white/70">{c.end.score} · {c.end.of(MAX_SCORE)}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-white/70">{c.end.score} · {c.end.of(DAILY_MAX_SCORE)}</p>
         {state.ranked && state.rank ? (
           <p className="mx-auto mt-3 w-fit rounded-full bg-brand-yellow px-4 py-1 text-sm font-black text-black" style={poppins}>{c.board.rank(state.rank)}</p>
         ) : (
@@ -652,6 +675,7 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
           <Stat label={c.end.mines} value={String(mines)} />
           <Stat label={c.end.streak} value={c.end.days(streak)} />
         </dl>
+        {extendedSummary && <p className="mt-3 text-xs font-bold text-white/75">{extendedSummary}</p>}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -667,6 +691,16 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
           <Copy className="size-4" /> {copied ? c.end.copied : c.end.copy}
         </button>
       </div>
+
+      {extendedLeft && (
+        <div className="mt-4 rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 px-4 py-3">
+          <p className="text-sm font-black uppercase" style={poppins}>{c.end.extendedTitle}</p>
+          <p className="mt-1 text-sm text-white/80">{c.end.extendedHint(totalRounds - dailyTotal)}</p>
+          <button type="button" onClick={onExtended} className="mt-3 h-11 w-full rounded-full bg-brand-yellow text-sm font-black uppercase tracking-wide text-black hover:bg-brand-yellow-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70" style={poppins}>
+            {extendedStarted ? c.end.extendedResume(state.round + 1) : c.end.extendedStart}
+          </button>
+        </div>
+      )}
 
       {isToday && <p className="mt-3 text-center text-sm text-white/60">{c.end.comeBack}</p>}
       <PlayWithFriendButton game="buscaminas" locale={locale} className="mt-3" />
@@ -711,8 +745,8 @@ function Archive({ locale, days, lockedLiveDay, versions, today, current, curren
       )}
       <ul className="mt-4 flex flex-col gap-2">
         {days.map((d) => {
-          const score = d === current && currentState?.done ? currentState.score : scores[d];
-          const started = (d === current && currentState && !currentState.done) || unfinished.has(d);
+          const score = d === current && currentState && isDailyDone(currentState) ? dailyScoreOf(currentState) : scores[d];
+          const started = (d === current && currentState && !isDailyDone(currentState)) || unfinished.has(d);
           return (
             <li key={d}>
               <button type="button" onClick={() => onOpen(d)} className={cn("flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left hover:bg-white/10", d === current ? "border-brand-yellow bg-white/[0.08]" : "border-white/10 bg-white/[0.05]")}>

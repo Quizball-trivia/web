@@ -27,14 +27,21 @@ export interface CodenamesDailyState extends WordRunStateBase {
   found: number;
   total: number;
   misses: number;
-  /** The run is over and its day closed: the whole key, every clue, the cards each meant and why. */
+  /** The run is over: the whole key, every clue, the cards each meant and why (older servers waited for the day to close). */
   disclosed?: boolean;
 }
 type ServerState = Omit<CodenamesDailyState, "open" | "deadline" | "serverNow">;
 
+/** A closed day's whole board (backend codenames ReviewResponse): every card's kind, every clue with its cards and whys. */
+export interface CodenamesReview {
+  day: string;
+  cards: Array<{ id: string; kind: CardKind }>;
+  clues: Array<{ word: Label; count: number; cards: Array<{ id: string; why: Label }> }>;
+}
+
 const BASE = "/api/v1/codenames";
 export type CodenamesMove = "flip" | "stop";
-const base = createWordDailyApi<CodenamesDailyState, CodenamesMove, unknown>(BASE);
+const base = createWordDailyApi<CodenamesDailyState, CodenamesMove, CodenamesReview>(BASE);
 const request = createDailyGameCall(BASE);
 const clockless = <R extends { state: ServerState }>(r: R) => ({ ...r, state: { ...r.state, open: false, deadline: null, serverNow: new Date().toISOString() } });
 const withRun = (data: WordRun<CodenamesDailyState> | { run: null }) => ("state" in data ? clockless(data as unknown as { run: { id: string; version: number }; state: ServerState }) : data);
@@ -62,14 +69,15 @@ export const loadCodenamesBoard = (day: string, locale: string): Promise<WordBoa
   return { ...board, top: board.top.map(found), me: board.me && found(board.me) };
 });
 
-const pick = (label: Label, locale: string) => label[locale as keyof Label] ?? label.en;
+/** A server label in the reader's language (English where the language has none). */
+export const pickLabel = (label: Label, locale: string) => label[locale as keyof Label] ?? label.en;
 
 /** The server run in the screens' shape, in the reader's language. */
 export function toSoloState(s: CodenamesDailyState, locale: string): CodenamesSoloState {
   return {
     day: s.day,
     cards: s.cards.map((c) => ({ id: c.id, kind: c.kind })),
-    clues: s.clues.map((c) => ({ word: pick(c.word, locale), count: c.count, ...(c.cards ? { cards: c.cards.map((x) => ({ id: x.id, why: pick(x.why, locale) })) } : {}) })),
+    clues: s.clues.map((c) => ({ word: pickLabel(c.word, locale), count: c.count, ...(c.cards ? { cards: c.cards.map((x) => ({ id: x.id, why: pickLabel(x.why, locale) })) } : {}) })),
     totalClues: s.totalClues,
     total: s.total,
     clue: Math.min(s.clue, Math.max(0, s.clues.length - 1)),

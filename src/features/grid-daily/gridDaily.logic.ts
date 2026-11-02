@@ -43,6 +43,16 @@ export function formatClock(ms: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+/**
+ * How this device remembers a name refused for a square, so typing it again there is caught before it costs another
+ * guess: case, accents, apostrophes and spacing do not make it a new name ("Júlio Baptista" = "julio  baptista").
+ */
+export function refusalKey(cellIndex: number, text: string): string {
+  const folded = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("und")
+    .replace(/[’'`´.]/g, "").replace(/[-_,]+/g, " ").replace(/\s+/g, " ").trim();
+  return `${cellIndex}:${folded}`;
+}
+
 /** Three rows of squares in board order: one line per row fits a chat message. */
 export function shareGrid(cells: ReadonlyArray<unknown | null>): string {
   return [0, 1, 2].map((row) => cells.slice(row * 3, row * 3 + 3).map((cell) => (cell ? "🟩" : "⬛")).join("")).join("\n");

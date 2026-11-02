@@ -48,7 +48,7 @@ export function PlayRoomWithFriends({ game, locale, className }: { game: WordDai
 /** "Play with friends (2–6)" with the game's own seats: "(1v1)" for a two-seat game. */
 const friendsLabel = (label: string, seats: number) => label.replace("2–6", seats === 2 ? "1v1" : `2–${seats}`);
 
-export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends, picker }: {
+export function DailyIntro({ game, locale, number, status, busy, notice, guestOnPastBoard, guestLockedOut, onStart, onArchive, onExit, friends, picker, secondary }: {
   /** `number` null and no `onArchive`: a game without days (a practice board). */
   game: WordDailyGame; locale: string; number: number | null; status: "new" | "started" | "done"; busy: boolean; notice: WordDailyNotice | null;
   guestOnPastBoard: boolean; guestLockedOut: boolean; onStart: () => void; onArchive?: () => void; onExit?: () => void;
@@ -56,6 +56,8 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
   friends?: ReactNode;
   /** A choice between two versions of the game, under its name. */
   picker?: ReactNode;
+  /** A second way to play under the main button (e.g. an untimed, unranked practice). */
+  secondary?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   return (
@@ -83,6 +85,7 @@ export function DailyIntro({ game, locale, number, status, busy, notice, guestOn
       {notice && <p role="alert" className="mt-4 rounded-2xl bg-brand-red-soft/15 px-4 py-3 text-sm font-semibold text-brand-red-light">{c.notices[notice]}</p>}
       <div className="flex-1" />
       <GreenButton className="mt-6" disabled={busy} onClick={onStart}>{status === "done" ? c.seeResult : status === "started" ? c.resume : c.play}</GreenButton>
+      {secondary && <div className="mt-3">{secondary}</div>}
       {friends ?? <PlayRoomWithFriends game={game} locale={locale} className="mt-3" />}
       {onArchive && <button type="button" onClick={onArchive} className="mx-auto mt-3 min-h-9 text-sm font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">{c.archive}</button>}
     </div>
@@ -153,7 +156,7 @@ export function DailyEnd({ game, locale, day, shareText, guestOnPastBoard, ranke
 }
 
 /** The states every word-game daily shares around its play and end screens. */
-export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end, wide = false, picker }: {
+export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, play, end, wide = false, picker, secondary }: {
   game: WordDailyGame; locale: string;
   daily: {
     versions: Record<string, number> | null | undefined; authReady: boolean; day: string | null; days: string[]; today: string; view: "intro" | "play" | "end" | "archive";
@@ -170,6 +173,8 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
   wide?: boolean;
   /** A choice between two versions of the game on the intro (DailyIntro's `picker`). */
   picker?: ReactNode;
+  /** A second way to play on the intro (DailyIntro's `secondary`). */
+  secondary?: ReactNode;
 }) {
   const c = wordDailyCopy(locale);
   const { day } = daily;
@@ -202,7 +207,7 @@ export function WordDailyScreen({ game, locale, daily, status, onStart, onExit, 
   } else {
     body = (
       <DailyIntro game={game} locale={locale} number={puzzleNumber(game.calendar, day)} status={status} busy={daily.pending !== null} notice={daily.notice}
-        guestOnPastBoard={daily.guestOnPastBoard} guestLockedOut={daily.guestLockedOut} onStart={onStart} onArchive={() => daily.setView("archive")} onExit={onExit} picker={picker} />
+        guestOnPastBoard={daily.guestOnPastBoard} guestLockedOut={daily.guestLockedOut} onStart={onStart} onArchive={() => daily.setView("archive")} onExit={onExit} picker={picker} secondary={secondary} />
     );
   }
   return <Frame lang={locale} wide={wide && daily.view === "play" && play !== null}>{body}</Frame>;

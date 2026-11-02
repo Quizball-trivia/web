@@ -3,13 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuctionActions } from '../../../hooks/useAuctionGame';
 import { FORMATIONS } from '../../../data';
 import type { AuctionGameState, AuctionPlayer, AuctionRound } from '../../../types';
-import { RevealScreen } from '../RevealScreen';
+import { REVEAL_HOLD_MS, RevealScreen } from '../RevealScreen';
 
 vi.mock('@/contexts/LocaleContext', () => ({
   useLocale: () => ({
     locale: 'en',
     t: (key: string, params?: Record<string, unknown>) => {
       if (key === 'auctionGame.trueValue') return 'True Value';
+      if (key === 'auctionGame.valueInSeason') return `Value · ${String(params?.season)}`;
+      if (key === 'auctionGame.revealScoutValue') return `Scouting card · ${String(params?.season)}`;
+      if (key === 'auctionGame.revealStartingPrice') return `Starting price · ${String(params?.season)}`;
+      if (key === 'auctionGame.startingPriceLabel') return 'Starting price';
       if (key === 'auctionGame.soldFor') return 'Sold For';
       if (key === 'auctionGame.joinedYourSquad') return `${String(params?.name ?? 'Player')} joined your squad`;
       if (key === 'auctionGame.joinedSquad') return `${String(params?.name ?? 'Player')} joined ${String(params?.owner ?? 'opponent')}`;
@@ -147,10 +151,10 @@ describe('RevealScreen', () => {
 
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
-    // Reveal cascade holds the full picture until 6000ms,
+    // Reveal cascade holds the full picture until REVEAL_HOLD_MS (4.5s),
     // then acks the server-driven transition.
     act(() => {
-      vi.advanceTimersByTime(5999);
+      vi.advanceTimersByTime(REVEAL_HOLD_MS - 1);
     });
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
@@ -213,7 +217,7 @@ describe('RevealScreen', () => {
 
     // The reveal must restage from the moment the data landed, not ack at once.
     act(() => {
-      vi.advanceTimersByTime(5_999);
+      vi.advanceTimersByTime(REVEAL_HOLD_MS - 1);
     });
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
@@ -236,7 +240,7 @@ describe('RevealScreen', () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(6_000);
+      vi.advanceTimersByTime(REVEAL_HOLD_MS);
     });
     expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
 
@@ -254,7 +258,7 @@ describe('RevealScreen', () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(5_999);
+      vi.advanceTimersByTime(REVEAL_HOLD_MS - 1);
     });
     expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
 
@@ -262,5 +266,39 @@ describe('RevealScreen', () => {
       vi.advanceTimersByTime(1);
     });
     expect(testActions.confirmReveal).toHaveBeenCalledTimes(2);
+  });
+  it('labels every value on the lot with its season and one currency', () => {
+    const lot = state();
+    lot.currentRound!.footballer = {
+      ...lot.currentRound!.footballer,
+      value: 8_000_000,
+      startingPrice: 2_500_000,
+      startingPriceOrigin: { source: 'market_history', season: '2009/10' },
+      snapshots: [
+        { season: '2017/18', league: 'Ligue 1', age: 26, apps: 20, goals: 19, assists: 13, valueEur: 128_000_000 },
+        { season: '2025/26', league: 'Brasileirão', age: 34, apps: 12, goals: 3, valueEur: 8_000_000 },
+      ],
+    };
+    lot.currentRound!.startingPrice = 2_500_000;
+
+    render(<RevealScreen state={lot} actions={actions()} humanPlayerId="seat-human" />);
+    act(() => {
+      vi.advanceTimersByTime(1_600);
+    });
+
+    const trail = screen.getByTestId('auction-value-trail');
+    expect(trail).toHaveTextContent('Scouting card · 2017/18€128M');
+    expect(trail).toHaveTextContent('Starting price · 2009/10€2.5M');
+    expect(trail).toHaveTextContent('Value · 2025/26€8M');
+    expect(document.body.textContent).not.toContain('$');
+  });
+
+  it('falls back to a plain starting-price label when its origin is unknown', () => {
+    render(<RevealScreen state={state()} actions={actions()} humanPlayerId="seat-human" />);
+    act(() => {
+      vi.advanceTimersByTime(1_600);
+    });
+
+    expect(screen.getByTestId('auction-value-trail')).toHaveTextContent('Starting price€20M');
   });
 });

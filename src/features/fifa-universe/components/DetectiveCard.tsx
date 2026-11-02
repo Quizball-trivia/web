@@ -65,6 +65,7 @@ export function DetectiveCard({
   over,
   solved,
   onReveal,
+  priceUnit = 'coins',
 }: {
   card: DetectiveCardData;
   costs?: ClueCosts;
@@ -73,6 +74,8 @@ export function DetectiveCard({
   over: boolean;
   solved: boolean;
   onReveal: (k: ClueKey) => void;
+  /** What a lock's price is read as: the daily's per-card hint budget is points, never the account's coins. */
+  priceUnit?: 'coins' | 'points';
 }) {
   const t = useMiniT();
   const is = (k: ClueKey) => over || open.has(k);
@@ -80,7 +83,7 @@ export function DetectiveCard({
   const clueName = (k: ClueKey) => (k === 'rating' ? 'OVR' : k.length === 3 ? STAT_SHORT[k as StatKey] : t(k));
   const chip = (k: ClueKey, size: 'lg' | 'md' | 'sm' = 'md', hint?: string) => (
     <span className="flex flex-col items-center gap-0.5">
-      <LockChip cost={costs[k]} enabled={can(k)} size={size} onClick={() => onReveal(k)} label={t('Reveal {clue} for {n} coins', { clue: clueName(k), n: costs[k] })} />
+      <LockChip cost={costs[k]} enabled={can(k)} size={size} onClick={() => onReveal(k)} label={t(priceUnit === 'points' ? 'Reveal {clue} for {n} pts' : 'Reveal {clue} for {n} coins', { clue: clueName(k), n: costs[k] })} />
       {hint && <span className="font-poppins text-[8px] font-black uppercase tracking-wider text-fut-ink/55">{hint}</span>}
     </span>
   );

@@ -45,7 +45,7 @@ export interface TenableSoloState {
   last: { id: number; kind: TenableVerdict; text: string; rank: number | null } | null;
   ranked: boolean;
   rank?: number;
-  /** False on today's day: missed slots stay hidden until the day is over (it is still being ranked). */
+  /** True once the run is over: every slot is shown (missed ones flagged). False only while it is played, or on old data. */
   disclosed?: boolean;
   /** The server's score; counted from the slots when absent (the playground). */
   score?: number;

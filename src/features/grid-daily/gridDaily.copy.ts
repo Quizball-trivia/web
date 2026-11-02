@@ -40,6 +40,11 @@ const en = {
   back: "Back",
   comeBack: "A new grid arrives every day.",
   signInToday: "Sign in to play today’s grid. Older grids open to guests once a day is over.",
+  alreadyTried: "You already tried that name here. No guess was spent.",
+  reportPrompt: "Think “{name}” fits {square}?",
+  reportAction: "Report it",
+  reported: "Thanks — we’ll review it. Reporting never costs a guess.",
+  reportFailed: "Could not send the report. Try again.",
 };
 
 type Copy = Record<keyof typeof en, string>;
@@ -84,6 +89,11 @@ const ka: Copy = {
   back: "უკან",
   comeBack: "ახალი დაფა ყოველდღე მოდის.",
   signInToday: "დღევანდელი დაფის სათამაშოდ შედი ანგარიშში. სტუმრებისთვის დაფა დღის დასრულების შემდეგ იხსნება.",
+  alreadyTried: "ეს სახელი ამ უჯრაზე უკვე სცადე. ცდა არ დახარჯულა.",
+  reportPrompt: "ფიქრობ, რომ „{name}“ ერგება: {square}?",
+  reportAction: "შეგვატყობინე",
+  reported: "მადლობა, გადავამოწმებთ. შეტყობინება ცდას არ ხარჯავს.",
+  reportFailed: "შეტყობინება ვერ გაიგზავნა. სცადე თავიდან.",
 };
 
 const es: Copy = {
@@ -126,6 +136,11 @@ const es: Copy = {
   back: "Volver",
   comeBack: "Cada día llega una cuadrícula nueva.",
   signInToday: "Inicia sesión para jugar la cuadrícula de hoy. Las anteriores se abren a los invitados cuando termina el día.",
+  alreadyTried: "Ya probaste ese nombre aquí. No has gastado ningún intento.",
+  reportPrompt: "¿Crees que «{name}» encaja en {square}?",
+  reportAction: "Avisar",
+  reported: "Gracias, lo vamos a revisar. Avisar nunca gasta un intento.",
+  reportFailed: "No se pudo enviar el aviso. Inténtalo de nuevo.",
 };
 
 const tr: Copy = {
@@ -168,6 +183,11 @@ const tr: Copy = {
   back: "Geri",
   comeBack: "Her gün yeni bir tablo gelir.",
   signInToday: "Bugünün tablosunu oynamak için giriş yap. Eski tablolar gün bitince misafirlere açılır.",
+  alreadyTried: "Bu ismi burada zaten denedin. Tahmin hakkı gitmedi.",
+  reportPrompt: "Sence “{name}” {square} için uyuyor mu?",
+  reportAction: "Bildir",
+  reported: "Teşekkürler, inceleyeceğiz. Bildirmek tahmin hakkı harcamaz.",
+  reportFailed: "Bildirim gönderilemedi. Tekrar dene.",
 };
 
 const ru: Copy = {
@@ -210,6 +230,11 @@ const ru: Copy = {
   back: "Назад",
   comeBack: "Каждый день появляется новая сетка.",
   signInToday: "Войди, чтобы сыграть в сегодняшнюю сетку. Вчерашние сетки открываются для гостей после окончания дня.",
+  alreadyTried: "Ты уже пробовал это имя здесь. Попытка не потрачена.",
+  reportPrompt: "Думаешь, «{name}» подходит: {square}?",
+  reportAction: "Сообщить",
+  reported: "Спасибо, мы проверим. Сообщение не тратит попытку.",
+  reportFailed: "Не удалось отправить сообщение. Попробуй ещё раз.",
 };
 
 const pt: Copy = {
@@ -252,6 +277,11 @@ const pt: Copy = {
   back: "Voltar",
   comeBack: "Uma nova grade chega todos os dias.",
   signInToday: "Entre na sua conta para jogar a grade de hoje. As grades anteriores ficam disponíveis para visitantes após o fim do dia.",
+  alreadyTried: "Você já tentou esse nome aqui. Nenhuma tentativa foi gasta.",
+  reportPrompt: "Acha que “{name}” se encaixa em {square}?",
+  reportAction: "Informar",
+  reported: "Obrigado, vamos verificar. Informar nunca gasta uma tentativa.",
+  reportFailed: "Não foi possível enviar. Tente de novo.",
 };
 
 const de: Copy = {
@@ -294,6 +324,11 @@ const de: Copy = {
   back: "Zurück",
   comeBack: "Jeden Tag gibt es ein neues Raster.",
   signInToday: "Melde dich an, um das heutige Raster zu spielen. Ältere Raster sind für Gäste nach Tagesende verfügbar.",
+  alreadyTried: "Diesen Namen hast du hier schon versucht. Kein Versuch verbraucht.",
+  reportPrompt: "Passt „{name}“ deiner Meinung nach zu {square}?",
+  reportAction: "Melden",
+  reported: "Danke, wir prüfen das. Melden kostet nie einen Versuch.",
+  reportFailed: "Die Meldung konnte nicht gesendet werden. Versuch es erneut.",
 };
 
 export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt, de };

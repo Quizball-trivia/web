@@ -98,8 +98,12 @@ export function ConexionesEndView({ locale, number, board, state, guestOnPastBoa
         <ShareSquares state={state} />
         {state.groupsLater && <p className="mt-3 text-xs font-semibold text-white/80" data-cx-groups-later>{c.groupsLater}</p>}
       </div>
-      <div className="mt-4 grid grid-cols-4 gap-1.5">
-        {[...state.solved].sort((a, b) => a.tier - b.tier).map((s) => <SolvedBand key={s.groupId} solved={s} board={board} locale={locale} tone="tier" label={s.missed ? c.unsolved : undefined} />)}
+      {/* Every group with its link, once the attempt is over (won or lost): found ones and missed ones are labelled. */}
+      {state.solved.length > 0 && (
+        <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/60" data-cx-all-groups>{c.allGroups}</p>
+      )}
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
+        {[...state.solved].sort((a, b) => a.tier - b.tier).map((s) => <SolvedBand key={s.groupId} solved={s} board={board} locale={locale} tone="tier" label={s.missed ? c.unsolved : `✓ ${c.foundLabel}`} />)}
       </div>
     </DailyEnd>
   );

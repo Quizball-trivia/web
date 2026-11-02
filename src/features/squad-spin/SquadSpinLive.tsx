@@ -62,12 +62,14 @@ const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 
 /** Squad Spin, live: the reels and the answer set are held server-side; every answer, spin and cash-out is a request. */
-export function SquadSpinLive({ backHref = "/play", client, sample }: {
+export function SquadSpinLive({ backHref = "/play", client, sample, onPractice }: {
   backHref?: string;
   /** Round engine; defaults to the live API. The public sneak peek passes a client-side sample engine. */
   client?: Pick<typeof squadSpinApi, "start" | "current" | "latest" | "heartbeat" | "stats"> & Omit<typeof squadSpinApi, "start" | "current" | "latest" | "heartbeat" | "stats">;
   /** Sneak-peek mode: practice coins instead of the wallet, no heartbeat, no live activity or runs board. */
-  sample?: { coins: number; onPlayAgain?: () => void; onExit?: () => void };
+  sample?: { coins: number; onPlayAgain?: () => void; onExit?: () => void; relaxed?: boolean };
+  /** Live start card only: opens the relaxed practice (no timer, practice coins, never the wallet). */
+  onPractice?: () => void;
 }) {
   const api = useMemo(() => client ?? squadSpinApi, [client]);
   const { t, locale } = useLocale();
@@ -154,8 +156,9 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
   }, [api, applyState, refreshWallet]);
 
   // Countdown from the server deadline; at zero, one reconcile per spin (the server may still be inside its grace).
+  const relaxed = Boolean(sample?.relaxed);
   useEffect(() => {
-    if (state?.phase !== "question" || !state.spin) return;
+    if (state?.phase !== "question" || !state.spin || relaxed) return;
     const skew = new Date(state.server_now).getTime() - Date.now();
     const deadline = Math.min(new Date(state.spin.deadline_at).getTime() - skew, new Date(state.spin.dealt_at).getTime() - skew + QUESTION_S * 1000);
     let asked = false;
@@ -168,7 +171,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
     const id = window.setInterval(tick, 200);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.phase, spinKey]);
+  }, [state?.phase, spinKey, relaxed]);
 
   // A decision left open is banked by the server after its deadline; pick that up.
   useEffect(() => {
@@ -282,11 +285,17 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
             >
               {stake > balance ? t("triviaMines.notEnough") : t("triviaMines.stakeAndPlay", { stake: String(stake) })}
             </button>
+            {onPractice && !sample && (
+              <button type="button" onClick={onPractice} className="w-full rounded-[16px] border-2 border-white/30 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15" style={poppins}>
+                <span className="block text-sm font-black uppercase tracking-wide">{t("squadSpin.practiceCta")}</span>
+                <span className="block text-[10px] font-bold text-white/70">{t("squadSpin.practiceHint")}</span>
+              </button>
+            )}
           </motion.div>
         )}
 
         <div className="mb-1 flex items-center gap-3">
-          {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
+          {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{relaxed ? t("squadSpin.practiceChip") : t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
           <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString(locale === "de" ? "de-DE" : locale === "pt" ? "pt-BR" : undefined)}</span>
         </div>
 
@@ -326,16 +335,21 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
                   ))}
                 </div>
               )}
+              {state.spin && (
+                <p className="mt-2 text-center text-[10px] font-bold leading-snug text-white/60" style={poppins}>{t("squadSpin.clueScope")}</p>
+              )}
 
               {/* Timer + answer input */}
               {!settled && state.phase === "question" && state.spin && (
                 <div className="mt-3">
-                  <div className="h-2 overflow-hidden rounded-full bg-white/[0.08]">
-                    <div className="h-full rounded-full transition-[width] duration-200 ease-linear" style={{ width: `${timerPct}%`, background: left <= 3 ? "#FB3101" : "#FFE500" }} />
-                  </div>
+                  {!relaxed && (
+                    <div className="h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                      <div className="h-full rounded-full transition-[width] duration-200 ease-linear" style={{ width: `${timerPct}%`, background: left <= 3 ? "#FB3101" : "#FFE500" }} />
+                    </div>
+                  )}
                   <div className="mt-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/60" style={poppins}>
                     <span>{t("squadSpin.spinN", { n: String(state.spin.index) })} · ×{(state.spin.step_bp / 10000).toFixed(2)}</span>
-                    <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{secondsShort(Math.ceil(left), locale)}</span>
+                    {relaxed ? <span>{t("squadSpin.noTimer")}</span> : <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{secondsShort(Math.ceil(left), locale)}</span>}
                   </div>
                   <div className="relative mt-3">
                     <input

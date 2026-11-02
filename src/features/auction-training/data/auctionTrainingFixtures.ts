@@ -147,6 +147,7 @@ export function trainingLotFootballer(index: number, locale: Locale): Footballer
     positionGroup: lot.positionGroup,
     value: lot.snapshots[lot.snapshots.length - 1].valueEur,
     startingPrice: lot.snapshots[0].valueEur,
+    startingPriceOrigin: { source: 'scout_season', season: lot.snapshots[0].season },
     clues: [...SNAPSHOT_STAT_STEPS, ...hints],
     snapshots: lot.snapshots,
     nationality: lot.nationality,

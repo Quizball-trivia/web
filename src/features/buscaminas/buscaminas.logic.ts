@@ -2,7 +2,14 @@ export const ROUNDS_PER_DAY = 20;
 export const CARDS_PER_ROUND = 16;
 export const TARGETS_PER_ROUND = 12;
 export const PERFECT_BONUS = 3;
+/** The whole board, extended challenge included. */
 export const MAX_SCORE = ROUNDS_PER_DAY * (TARGETS_PER_ROUND + PERFECT_BONUS);
+/**
+ * The daily run: the board's first rounds, a couple of minutes, and the score the day's leaderboard ranks.
+ * The other rounds are an optional extended challenge that never changes it. Mirrors the backend's DAILY_ROUNDS.
+ */
+export const DAILY_ROUNDS = 5;
+export const DAILY_MAX_SCORE = DAILY_ROUNDS * (TARGETS_PER_ROUND + PERFECT_BONUS);
 
 /** The release calendar follows Buenos Aires: the launch audience is Argentine, so the new board lands at their midnight. */
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
@@ -40,9 +47,32 @@ export interface RoundResult {
   points: number;
 }
 
+/** The run fields the daily-run helpers read; `dailyDone`/`dailyScore` come from the server (older saved runs lack them). */
+interface DailyView {
+  round: number;
+  results: readonly RoundResult[];
+  settled: RoundResult | null;
+  done: boolean;
+  dailyDone?: boolean;
+  dailyScore?: number;
+}
+
+/** The daily run is over: its result is final (and ranked, for a member's live day); the extended rounds are opt-in from there. */
+export const isDailyDone = (s: DailyView): boolean => s.dailyDone ?? (s.done || s.results.length >= DAILY_ROUNDS);
+
+/** The daily run's rounds that have been played. */
+export const dailyResults = (s: DailyView): RoundResult[] => s.results.slice(0, DAILY_ROUNDS);
+
+/** Daily-run points, the current round's settled points included while it is a daily round. */
+export const dailyScoreOf = (s: DailyView): number =>
+  s.dailyScore ?? dailyResults(s).reduce((sum, r) => sum + r.points, 0) + (s.round < DAILY_ROUNDS ? (s.settled?.points ?? 0) : 0);
+
+/** Rounds the extended challenge played beyond the daily run (0 until the player opts in). */
+export const extendedRoundsPlayed = (s: DailyView): number => Math.max(0, s.results.length - DAILY_ROUNDS);
+
 export const outcomeEmoji: Record<RoundOutcome, string> = { perfect: "🟩", banked: "🟨", mine: "🟥" };
 
-/** Two rows of ten squares: fits a WhatsApp line on a phone. */
+/** Rows of up to ten squares: fits a WhatsApp line on a phone. */
 export function resultGrid(results: readonly RoundResult[]): string {
   const squares = results.map((r) => outcomeEmoji[r.outcome]);
   const rows: string[] = [];

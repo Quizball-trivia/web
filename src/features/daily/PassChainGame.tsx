@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowDown, Check, Shield, UserRoundCog } from "lucide-react";
+import { ArrowDown, Check, Route, Shield, Sparkles, UserRoundCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import { DailyGameStage } from "@/features/daily/components/DailyGameStage";
@@ -19,6 +19,8 @@ import type { PassChainLinkResult, PassChainPlayer, PassChainSession } from "@/l
 type LinkKind = "club" | "manager";
 type Link = { player: PassChainPlayer; viaClub: string; kind: LinkKind };
 type Locale = ReturnType<typeof useLocale>["locale"];
+/** A solved chain: how many links the player used and who they went through (start/target excluded). */
+type SolvedRoute = { links: number; via: string[] };
 type ResolveLink = (fromPlayerId: string, text: string, targetId: string, puzzleId: string, locale: Locale) => Promise<PassChainLinkResult>;
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -58,6 +60,7 @@ export function PassChainGame({
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerPuzzle);
   const [solvedCount, setSolvedCount] = useState(0);
+  const [solvedRoutes, setSolvedRoutes] = useState<Record<string, SolvedRoute>>({});
   const [showQuit, setShowQuit] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -151,6 +154,7 @@ export function PassChainGame({
         setEndClub(result.player.id === puzzle.target.id ? { label: result.viaClub, kind: viaKind } : result.targetClub ? { label: result.targetClub, kind: result.targetKind ?? "club" } : null);
         setState("solved");
         setSolvedCount((n) => n + 1);
+        setSolvedRoutes((routes) => ({ ...routes, [puzzle.id]: { links: nextChain.length + 1, via: nextChain.map((l) => l.player.name) } }));
       } else {
         setChain([...chain, { player: result.player, viaClub: result.viaClub, kind: result.viaKind ?? "club" }]);
       }
@@ -227,6 +231,12 @@ export function PassChainGame({
                   ? <span className="rounded-full bg-brand-yellow/15 px-2 py-1 text-brand-yellow">{t("passChain.perfect")}</span>
                   : <span>{t("passChain.par", { par: String(puzzle.par) })}</span>}
               </div>
+              {/* A longer route than needed: show one shortest route right away, as the improvement goal. */}
+              {links > puzzle.par && (
+                <p className="mt-2 text-[11px] font-semibold leading-snug text-white/55" style={poppins}>
+                  {t("passChain.shortestRoute", { route: shortestRouteNames(puzzle).map(surname).join(" → ") })}
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -267,6 +277,10 @@ export function PassChainGame({
         title={t("play.passChainTitle")}
         correct={solvedCount}
         total={puzzles.length}
+        challengeType={session.challengeType}
+        scoreLabel={t("passChain.resultLabel")}
+        scoreValue={passChainHeadline(puzzles, solvedRoutes, t)}
+        details={<PassChainRouteSummary puzzles={puzzles} solvedRoutes={solvedRoutes} />}
         onDone={(next) => onComplete(solvedCount, next)}
       />
     </>
@@ -274,6 +288,72 @@ export function PassChainGame({
 }
 
 type SolutionStep = PassChainSession["puzzles"][number]["solution"][number];
+type Translate = ReturnType<typeof useLocale>["t"];
+
+/** Route efficiency over the chains the player linked: their links against the shortest possible. */
+export function passChainRouteTotals(puzzles: PassChainSession["puzzles"], solvedRoutes: Record<string, SolvedRoute>) {
+  const solved = puzzles.filter((z) => solvedRoutes[z.id]);
+  const yourLinks = solved.reduce((sum, z) => sum + solvedRoutes[z.id].links, 0);
+  const shortestLinks = solved.reduce((sum, z) => sum + z.par, 0);
+  return { solved: solved.length, total: puzzles.length, yourLinks, shortestLinks, extra: Math.max(0, yourLinks - shortestLinks) };
+}
+
+function passChainHeadline(puzzles: PassChainSession["puzzles"], solvedRoutes: Record<string, SolvedRoute>, t: Translate): string {
+  const totals = passChainRouteTotals(puzzles, solvedRoutes);
+  return totals.solved > 0 ? t("passChain.links", { n: String(totals.yourLinks) }) : t("passChain.resultNone");
+}
+
+/** Results breakdown: efficiency against the shortest routes first, then each chain's route vs a shortest one.
+ *  The solved count is shown last and small: route length is the achievement. */
+function PassChainRouteSummary({ puzzles, solvedRoutes }: { puzzles: PassChainSession["puzzles"]; solvedRoutes: Record<string, SolvedRoute> }) {
+  const { t } = useLocale();
+  const totals = passChainRouteTotals(puzzles, solvedRoutes);
+  return (
+    <div data-testid="pass-chain-route-summary">
+      {totals.solved > 0 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+          <span className="font-poppins text-sm font-semibold text-white/80">{t("passChain.resultShortest", { n: String(totals.shortestLinks) })}</span>
+          {totals.extra === 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2.5 py-1 font-poppins text-xs font-bold text-brand-yellow">
+              <Sparkles className="size-3.5" aria-hidden /> {t("passChain.resultPerfect")}
+            </span>
+          ) : (
+            <span className="rounded-full bg-white/10 px-2.5 py-1 font-poppins text-xs font-bold text-white/80">{t("passChain.resultExtra", { n: String(totals.extra) })}</span>
+          )}
+        </div>
+      )}
+      <ol className="mt-3 space-y-2">
+        {puzzles.map((z, i) => {
+          const mine = solvedRoutes[z.id];
+          const ends = (via: string[]) => [z.start.name, ...via, z.target.name].map(surname).join(" → ");
+          return (
+            <li key={z.id} className="rounded-[14px] bg-black/18 px-3 py-2.5">
+              <p className="flex items-center gap-1.5 font-poppins text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                <Route className="size-3.5" aria-hidden /> {t("passChain.resultChain", { n: String(i + 1) })} · {surname(z.start.name)} → {surname(z.target.name)}
+              </p>
+              <p className={cn("mt-1 font-poppins text-xs font-bold", mine ? (mine.links <= z.par ? "text-brand-yellow" : "text-white") : "text-brand-red-soft")}>
+                {mine ? t("passChain.resultYou", { n: String(mine.links) }) : t("passChain.resultYouNone")}
+                {mine && <span className="block text-[11px] font-medium text-white/70">{ends(mine.via)}</span>}
+              </p>
+              <p className="mt-1 font-poppins text-xs font-bold text-white/70">
+                {t("passChain.resultBest", { n: String(z.par) })}
+                <span className="block text-[11px] font-medium text-white/55">{ends(solutionIntermediates(z).map((step) => step.player.name))}</span>
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-2 text-center font-poppins text-[11px] font-medium text-white/50">
+        {t("passChain.resultLinkedCount", { solved: String(totals.solved), total: String(totals.total) })}
+      </p>
+    </div>
+  );
+}
+
+/** Start, every intermediate of the stored shortest chain, and the target. */
+function shortestRouteNames(puzzle: PassChainSession["puzzles"][number]): string[] {
+  return [puzzle.start.name, ...solutionIntermediates(puzzle).map((step) => step.player.name), puzzle.target.name];
+}
 
 /** The stored path lists every hop including the target itself; the target already has its own card. */
 function solutionIntermediates(puzzle: PassChainSession["puzzles"][number]): SolutionStep[] {

@@ -19,13 +19,16 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { cn } from "@/lib/utils";
 import { gridDailyApi, type GridDailyBoard, type GridDailyRun } from "./gridDaily.api";
 import { fillDaily, GRID_DAILY_COPY } from "./gridDaily.copy";
-import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
+import { candidateDays, elapsedFromSpeed, formatClock, puzzleNumber, refusalKey, releaseDay, shareGrid, TOTAL_CELLS } from "./gridDaily.logic";
+import { criterionLabel } from "@/features/football-grid/criterionLabel";
 import { localizedPlayerName } from "@/lib/football-grid/playerName";
 
 const SELF = "daily-me";
 /** A run past the hour has no exact time on the board. */
 const rowTime = (speed: number): string => { const seconds = elapsedFromSpeed(speed); return seconds === null ? "60:00+" : formatClock(seconds * 1_000); };
 type Feedback = FootballGridCommandResultPayload["outcome"] | undefined;
+/** The last name a square refused, which the player may report as right ("Think this is right?"). */
+type Refusal = { cellIndex: number; text: string; status: "idle" | "sending" | "sent" | "failed" };
 type Load = { kind: "loading" } | { kind: "unavailable" } | { kind: "signin" } | { kind: "ready"; day: string; run: GridDailyRun };
 
 function boardState(run: GridDailyRun, locale: Locale): FootballGridState | null {
@@ -89,6 +92,11 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const [kickOffFailed, setKickOffFailed] = useState(false);
   /** The last guess was refused because the run had moved on elsewhere (another tab): nothing was spent. */
   const [movedElsewhere, setMovedElsewhere] = useState(false);
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
+  /** The name typed was already refused for this square on this device: it was not sent, so nothing was spent. */
+  const [repeatTried, setRepeatTried] = useState(false);
+  /** Names refused per square in this load (see refusalKey): the same refusal never costs a second guess. */
+  const refusedKeys = useRef(new Set<string>());
   /** data: null = the rankings could not be fetched (the player can ask again). */
   const [loadedBoard, setBoard] = useState<{ day: string; data: GridDailyBoard | null } | null>(null);
   const [boardAttempt, setBoardAttempt] = useState(0);
@@ -108,6 +116,9 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     setSelectedCell(null);
     setAnswer("");
     setFeedback(undefined);
+    setRefusal(null);
+    setRepeatTried(false);
+    refusedKeys.current = new Set();
     try {
       const { days } = await gridDailyApi.boards(locale);
       const candidates = candidateDays(days, member);
@@ -206,14 +217,29 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!run || !day || selectedCell === null || pendingRef.current || !answer.trim()) return;
+    const text = answer.trim();
+    const cellIndex = selectedCell;
+    setMovedElsewhere(false);
+    // Typed again for the same square (the tester lost two guesses to one disputed name): not sent, nothing spent,
+    // and the report is offered instead.
+    if (refusedKeys.current.has(refusalKey(cellIndex, text))) {
+      setFeedback(undefined);
+      setRepeatTried(true);
+      setRefusal((current) => (current && current.cellIndex === cellIndex && refusalKey(cellIndex, current.text) === refusalKey(cellIndex, text) ? current : { cellIndex, text, status: "idle" }));
+      return;
+    }
+    setRepeatTried(false);
     const mine = generation.current;
     pendingRef.current = true;
     setPending(true);
-    setMovedElsewhere(false);
     try {
-      const result = await gridDailyApi.guess({ day, runId: run.run.id, version: run.run.version, cellIndex: selectedCell, text: answer.trim() }, locale);
+      const result = await gridDailyApi.guess({ day, runId: run.run.id, version: run.run.version, cellIndex, text }, locale);
       if (!apply(result, mine)) return;
       setFeedback(result.outcome);
+      if (result.outcome === "wrong") {
+        refusedKeys.current.add(refusalKey(cellIndex, text));
+        setRefusal({ cellIndex, text, status: "idle" });
+      }
       if (result.outcome !== "ambiguous") { setSelectedCell(null); setAnswer(""); }
     } catch (error) {
       // Refused, or no answer at all (the guess may have landed): either way the server's run is the truth.
@@ -261,6 +287,16 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
       pendingRef.current = false;
       setPending(false);
     }
+  };
+
+  const report = async () => {
+    if (!day || !refusal || refusal.status === "sending" || refusal.status === "sent") return;
+    const mine = generation.current;
+    const sent = refusal;
+    setRefusal({ ...sent, status: "sending" });
+    const ok = await gridDailyApi.report({ day, cellIndex: sent.cellIndex, text: sent.text }, locale);
+    if (mine !== generation.current) return;
+    setRefusal((current) => (current && current.cellIndex === sent.cellIndex && current.text === sent.text ? { ...current, status: ok ? "sent" : "failed" } : current));
   };
 
   const share = async () => {
@@ -336,6 +372,27 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
     );
   }
 
+  const refusedRow = refusal ? state.board.rows[Math.floor(refusal.cellIndex / 3)] : null;
+  const refusedColumn = refusal ? state.board.columns[refusal.cellIndex % 3] : null;
+  const reportRow = refusal && refusedRow && refusedColumn ? (
+    <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center" data-daily-report={refusal.status}>
+      {refusal.status === "sent" ? (
+        <p role="status" className="text-xs font-bold text-brand-green-light">{copy.reported}</p>
+      ) : (
+        <>
+          <p className="text-xs font-semibold text-white/70">
+            {fillDaily(copy.reportPrompt, { name: refusal.text, square: `${criterionLabel(refusedRow, locale)} × ${criterionLabel(refusedColumn, locale)}` })}
+          </p>
+          <button type="button" onClick={() => void report()} disabled={refusal.status === "sending"} data-daily-action="report"
+            className="mt-1.5 inline-flex h-8 items-center gap-1.5 rounded-lg border-2 border-white/15 px-3 text-[11px] font-black uppercase tracking-wide text-white/80 transition-colors hover:bg-white/5 disabled:opacity-50">
+            {refusal.status === "sending" && <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />}
+            {copy.reportAction}
+          </button>
+          {refusal.status === "failed" && <p role="alert" className="mt-1 text-[11px] font-bold text-brand-red-soft">{copy.reportFailed}</p>}
+        </>
+      )}
+    </div>
+  ) : null;
   const feedbackLine = feedback === "correct" ? copy.correct : feedback === "wrong" ? copy.wrong
     : feedback === "ambiguous" ? copy.ambiguous : feedback === "already_used" ? copy.alreadyUsed : null;
   return (
@@ -386,26 +443,28 @@ export function GridDailyGame({ locale, initialDay, onExit }: { locale: Locale; 
 
         <div className="mt-4">
           <MatchBoard state={state} selfUserId={SELF} locale={locale} selectedCell={selectedCell}
-            onSelect={(cell) => { if (!pending) { setSelectedCell(cell); setAnswer(""); setFeedback(undefined); setMovedElsewhere(false); } }} />
+            onSelect={(cell) => { if (!pending) { setSelectedCell(cell); setAnswer(""); setFeedback(undefined); setMovedElsewhere(false); setRepeatTried(false); } }} />
         </div>
+        {done && reportRow}
 
         {!done && (
           <>
-            <p role="status" data-daily-feedback={movedElsewhere ? "moved" : feedback ?? ""} className={cn("mt-3 min-h-5 text-center text-xs font-bold",
-              movedElsewhere || feedback === "ambiguous" ? "text-brand-yellow" : feedback === "correct" ? "text-brand-green-light" : feedback ? "text-brand-red-soft" : "text-white/55")}>
-              {movedElsewhere ? copy.movedElsewhere : feedbackLine ?? copy.tapCell}
+            <p role="status" data-daily-feedback={movedElsewhere ? "moved" : repeatTried ? "repeat" : feedback ?? ""} className={cn("mt-3 min-h-5 text-center text-xs font-bold",
+              movedElsewhere || repeatTried || feedback === "ambiguous" ? "text-brand-yellow" : feedback === "correct" ? "text-brand-green-light" : feedback ? "text-brand-red-soft" : "text-white/55")}>
+              {movedElsewhere ? copy.movedElsewhere : repeatTried ? copy.alreadyTried : feedbackLine ?? copy.tapCell}
             </p>
+            {reportRow}
             <FootballGridTurnPanel
               state={state}
               locale={locale}
               isMyTurn
               selectedCell={selectedCell}
               answer={answer}
-              onAnswerChange={setAnswer}
+              onAnswerChange={(value) => { setAnswer(value); setRepeatTried(false); }}
               onSubmit={(event) => { void submit(event); }}
-              onCancel={() => { setSelectedCell(null); setAnswer(""); }}
+              onCancel={() => { setSelectedCell(null); setAnswer(""); setRepeatTried(false); }}
               pending={pending}
-              sheetNotice={feedback === "ambiguous" ? copy.ambiguous : null}
+              sheetNotice={repeatTried ? copy.alreadyTried : feedback === "ambiguous" ? copy.ambiguous : null}
             />
             {confirmFinish ? (
               <div role="dialog" aria-label={fillDaily(copy.finishConfirm, { n: run.state.guessesLeft })} className="mt-3 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center">

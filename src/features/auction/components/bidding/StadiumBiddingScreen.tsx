@@ -243,8 +243,17 @@ export function StadiumBiddingScreen({
               />
             ) : (
               <div className="flex items-center justify-between gap-2 border-t border-white/15 pt-3" data-auction-anchor="starting-price">
-                <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
-                  {t('auctionGame.startingPriceLabel')}
+                {/* Origin line: the opening is a real past valuation, not
+                    necessarily the scouted season's — so it can't read as a
+                    contradiction of the card's value row. Which season it is
+                    stays hidden until the reveal (it would hint at a decline). */}
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
+                    {t('auctionGame.startingPriceLabel')}
+                  </span>
+                  <span className="font-poppins text-[10px] font-semibold leading-tight text-white/60">
+                    {t('auctionGame.startingPriceHint')}
+                  </span>
                 </span>
                 <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
                   {formatMoney(round.startingPrice)}

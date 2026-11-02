@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -13,6 +13,7 @@ import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { footballGridAssetUrl } from "@/lib/football-grid/assets";
 import { optimizeSupabaseImage } from "@/lib/images/optimizeSupabaseImage";
 import type { MissingXiSession } from "@/lib/domain/dailyChallenge";
+import { ARROW_DIRECTIONS, nextOpenSlotId, slotInDirection } from "./missingXi.navigation";
 
 type XiSquad = MissingXiSession["squads"][number];
 type XiSlot = XiSquad["slots"][number];
@@ -62,6 +63,10 @@ export function MissingXiSoloGame({
   const [showQuit, setShowQuit] = useState(false);
   const [done, setDone] = useState(false);
   const advanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Keyboard flow: the answer field keeps focus across guesses, arrows walk the shirts.
+  const inputWrapRef = useRef<HTMLDivElement | null>(null);
+  const shirtRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [focusTick, setFocusTick] = useState(0);
 
   const squad = squads[index];
   const named = Object.keys(claimed).length;
@@ -110,6 +115,11 @@ export function MissingXiSoloGame({
     return () => clearInterval(id);
   }, [revealed, done, index]);
   useEffect(() => () => { if (advanceRef.current) clearTimeout(advanceRef.current); }, []);
+  // After every guess (and whenever the selected shirt changes) the cursor
+  // goes back into the answer field, so a run of names never needs the mouse.
+  useEffect(() => {
+    inputWrapRef.current?.querySelector("input")?.focus();
+  }, [focusTick, selected]);
 
   // Warm the 11 faces while the squad is being played so the reveal flip
   // shows photos, not loading gaps.
@@ -121,6 +131,31 @@ export function MissingXiSoloGame({
     }
   }, [squad]);
 
+  const isOpenSlot = (slot: XiSlot) => !claimed[slot.id];
+
+  const onAnswerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!squad || !selectedSlot) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setSelected(null);
+      shirtRefs.current.get(selectedSlot.id)?.focus();
+      return;
+    }
+    // ↑ walks up the pitch (back line → attack), ↓ back down; ←/→ stay with the caret.
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    const nextId = nextOpenSlotId(squad.slots, isOpenSlot, selectedSlot.id, event.key === "ArrowUp" ? 1 : -1);
+    if (nextId) setSelected(nextId);
+  };
+
+  const onShirtKeyDown = (event: KeyboardEvent<HTMLButtonElement>, slotId: string) => {
+    const direction = ARROW_DIRECTIONS[event.key];
+    if (!squad || !direction) return;
+    event.preventDefault();
+    const targetId = slotInDirection(squad.slots, isOpenSlot, slotId, direction);
+    if (targetId) shirtRefs.current.get(targetId)?.focus();
+  };
+
   const submit = () => {
     if (!squad || !selectedSlot || revealed || !answer.trim()) return;
     const ok = fuzzyMatchesAnswer(answer, selectedSlot.acceptedAnswers);
@@ -130,14 +165,16 @@ export function MissingXiSoloGame({
       setClaimed(next);
       setTotalNamed((n) => n + 1);
       setFeedback({ kind: "ok", text: `${selectedSlot.name} · ${selectedSlot.position}` });
-      setSelected(null);
       if (Object.keys(next).length === squad.slots.length) finishSquad(true);
+      // Straight on to the next empty shirt instead of back to "tap a shirt".
+      else setSelected(nextOpenSlotId(squad.slots, (slot) => !next[slot.id], selectedSlot.id));
     } else {
       const nextMisses = misses + 1;
       setMisses(nextMisses);
       setFeedback({ kind: "miss", text: t("missingXi.wrongGuess") });
       if (nextMisses >= MAX_MISSES) finishSquad(false);
     }
+    setFocusTick((n) => n + 1);
   };
 
   if (!squad) return null;
@@ -196,12 +233,18 @@ export function MissingXiSoloGame({
               return (
                 <button
                   key={slot.id}
+                  ref={(node) => {
+                    if (node) shirtRefs.current.set(slot.id, node);
+                    else shirtRefs.current.delete(slot.id);
+                  }}
                   type="button"
                   disabled={isClaimed || revealed}
                   onClick={() => { setSelected(slot.id); setFeedback(null); }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  onKeyDown={(event) => onShirtKeyDown(event, slot.id)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
                   style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-                  aria-label={`${slot.position} #${slot.number}`}
+                  aria-label={slot.number === null ? slot.position : `${slot.position} #${slot.number}`}
+                  aria-pressed={isSelected}
                 >
                   <motion.div
                     animate={
@@ -258,13 +301,16 @@ export function MissingXiSoloGame({
 
           {!revealed && (
             selectedSlot ? (
-              <DailyAnswerInput
-                value={answer}
-                onChange={setAnswer}
-                onSubmit={submit}
-                placeholder={t("missingXi.whoStarted", { position: selectedSlot.position, number: String(selectedSlot.number) })}
-                submitLabel={t("common.submit")}
-              />
+              <div ref={inputWrapRef} onKeyDown={onAnswerKeyDown}>
+                <DailyAnswerInput
+                  value={answer}
+                  onChange={setAnswer}
+                  onSubmit={submit}
+                  placeholder={t("missingXi.whoStarted", { position: selectedSlot.position, number: String(selectedSlot.number ?? "–") })}
+                  submitLabel={t("common.submit")}
+                />
+                <p className="mt-2 hidden text-center text-[11px] text-white/40 md:block" style={poppins}>{t("missingXi.keyboardHint")}</p>
+              </div>
             ) : (
               <p className="mt-4 text-center text-sm text-white/55" style={poppins}>{t("missingXi.tapShirt")}</p>
             )
@@ -284,6 +330,7 @@ export function MissingXiSoloGame({
           {revealed && named < squad.slots.length && (
             <button
               type="button"
+              autoFocus
               onClick={advance}
               className="font-poppins mt-4 h-14 w-full rounded-[20px] bg-brand-blue uppercase text-white outline-none transition-colors hover:bg-brand-blue/90"
               style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}
