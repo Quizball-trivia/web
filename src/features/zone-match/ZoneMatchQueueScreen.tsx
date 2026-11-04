@@ -33,11 +33,15 @@ export function ZoneMatchQueueScreen() {
   const [deck, setDeck] = useState<CardId[]>([]);
   const [search, setSearch] = useState<{ searchId: string; startedAt: number } | null>(null);
   const deckRef = useRef(deck);
-  deckRef.current = deck;
   const searchRef = useRef(search);
-  searchRef.current = search;
   const matchedRef = useRef(false);
   const startedRef = useRef(false);
+  useEffect(() => {
+    deckRef.current = deck;
+  }, [deck]);
+  useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
 
   useEffect(() => {
     const socket = getSocket();
