@@ -151,7 +151,12 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     !modeCaps.needsCategories ||
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
-  const readyCopy = isAuctionLobby
+  // A host alone in a zone-match room may start against the server bot (flag-gated; the server enforces it too).
+  const soloVsBot =
+    ZONE_BOT_ENABLED && settings?.gameMode === "room_game" && settings?.roomGame === "zone_match" && members.length === 1;
+  const readyCopy = soloVsBot
+    ? t("friend.readyCopyVsBot")
+    : isAuctionLobby
     ? t("friend.readyCopyAuction")
     : isFootballGridLobby
       ? t("friend.readyCopyFootballGrid")
@@ -165,9 +170,6 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
         ? t("friend.readyCopyParty")
         : t("friend.readyCopyClassic");
   const isHostStartableMode = Boolean(settings) && modeCaps.hostStart !== null;
-  // A host alone in a zone-match room may start against the server bot (flag-gated; the server enforces it too).
-  const soloVsBot =
-    ZONE_BOT_ENABLED && settings?.gameMode === "room_game" && settings?.roomGame === "zone_match" && members.length === 1;
   const canStartMatch =
     Boolean(
       isCurrentHost &&

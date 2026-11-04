@@ -9,6 +9,11 @@ import { describe, expect, it } from 'vitest';
  * holds the agreed hashes and is committed, identical, in both repos. A failure here means an engine file changed
  * without regenerating it: run `npx tsx scripts/zone-engine-parity.ts --web <this-repo> --write` in the backend repo
  * (it syncs the manifest into both) after copying the change across.
+ *
+ * Cross-repo note: each CI can only see its own repo, so the guarantee is indirect — the generator refuses to write
+ * one manifest without verifying the other repo's files (--write requires --web), and each repo's test pins its own
+ * files to its committed manifest. Drift therefore requires hand-editing a manifest past review. A direct
+ * cross-repository CI check needs an org-level checkout token and is left to the staging pipeline.
  */
 describe('zone-match engine parity', () => {
   it('the engine files match the committed manifest', () => {
