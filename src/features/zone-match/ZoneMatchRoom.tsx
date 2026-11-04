@@ -129,13 +129,14 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
       const raw = sessionStorage.getItem('zone-queue-deck');
       if (!raw) return;
       sessionStorage.removeItem('zone-queue-deck');
-      const cards = JSON.parse(raw) as CardId[];
-      if (Array.isArray(cards) && cards.length > 0) {
+      // The deck is bound to the match it was picked for: a stale leftover must not auto-submit in a later room.
+      const saved = JSON.parse(raw) as { matchId?: string; cards?: CardId[] };
+      if (saved.matchId === snapshot.matchId && Array.isArray(saved.cards) && saved.cards.length > 0) {
         queueDeckSent.current = true;
-        send({ type: 'loadout', cards: cards.slice(0, 3) });
+        send({ type: 'loadout', cards: saved.cards.slice(0, 3) });
       }
     } catch { /* an unreadable saved deck: the picker stands in */ }
-  }, [view.phase, view.loadoutIn.you, send]);
+  }, [view.phase, view.loadoutIn.you, send, snapshot.matchId]);
 
   if (view.phase === 'loadout') {
     const secondsLeft = Math.max(0, Math.ceil((view.deadline - now) / 1000));

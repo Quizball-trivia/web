@@ -26,6 +26,8 @@ export const PHONE_AUTH_ENABLED = true;
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
 /** Zone match (Ranked 2.0 beta): a host alone may start a practice match against the server bot. */
 export const ZONE_BOT_ENABLED = process.env.NEXT_PUBLIC_ZONE_BOT === "true" || process.env.NEXT_PUBLIC_ZONE_BOT === "1";
+/** Ranked 2.0 beta entry (the Play screen's Ranked card routes to the zone-match queue). */
+export const RANKED_V2_ENABLED = process.env.NEXT_PUBLIC_RANKED_V2 === "true" || process.env.NEXT_PUBLIC_RANKED_V2 === "1";
 const ALL_ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso", "conexiones", "darts501", "zone_match"];
 const ROOM_GAMES_DISABLED = (process.env.NEXT_PUBLIC_ROOM_GAMES_DISABLED ?? "").split(",").map((game) => game.trim());
 /** Room games (2–6 players) offered in friend rooms: all of them, minus NEXT_PUBLIC_ROOM_GAMES_DISABLED (as the backend's room.config.ts). */

@@ -54,7 +54,7 @@ export function ZoneMatchQueueScreen() {
         matchedRef.current = true;
         // The room's loadout phase submits this deck; an empty pick falls back to the room's own picker.
         try {
-          if (deckRef.current.length > 0) sessionStorage.setItem(ZONE_QUEUE_DECK_KEY, JSON.stringify(deckRef.current));
+          if (deckRef.current.length > 0) sessionStorage.setItem(ZONE_QUEUE_DECK_KEY, JSON.stringify({ matchId: payload.matchId, cards: deckRef.current }));
         } catch { /* storage may be unavailable; the room picker stands in */ }
         router.push(`/sala/${payload.matchId}`);
         return;
@@ -93,7 +93,7 @@ export function ZoneMatchQueueScreen() {
           seat={SELF}
           deck={deck}
           onDeckChange={setDeck}
-          loading={false}
+          loading={principal.kind === 'none'}
           onFindMatch={findMatch}
           steps={<LoadoutSteps ready={deck.length > 0} />}
           rules={<RuleChips />}
