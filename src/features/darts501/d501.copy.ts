@@ -102,8 +102,8 @@ const copy = {
     benched: "oyun dışı (3 tur süre doldu)",
     finishesTitle: "Şunlarla bitirebilirdin",
     shareText: (n: number, result: string, row: string) => `Futbol Dart Oyunu 501 #${n}: ${result}\n${row}`,
-    yourTurn: "Atış sırası sende", seatTurn: (name: string) => `Sıra ${name}'da`, waiting: "Sıranı bekle", sending: "Kontrol ediliyor…",
-    legOf: (n: number, of: number) => `Leg ${n}/${of}`, legWon: (name: string) => `Leg ${name}'ın`, legWonYou: "Leg'i aldın!", legNoCheckout: "Kimse bitiremedi: en düşük puan alır", legOut: "Kimsenin oku kalmadı",
+    yourTurn: "Atış sırası sende", seatTurn: (name: string) => `Sıra: ${name}`, waiting: "Sıranı bekle", sending: "Kontrol ediliyor…",
+    legOf: (n: number, of: number) => `Leg ${n}/${of}`, legWon: (name: string) => `Leg'i alan: ${name}`, legWonYou: "Leg'i aldın!", legNoCheckout: "Kimse bitiremedi: en düşük puan alır", legOut: "Kimsenin oku kalmadı",
     nextLeg: "Sıradaki leg geliyor…", legsStat: "Leg", legsDetail: (n: number) => `${n} leg`,
   },
   ka: {
@@ -138,7 +138,7 @@ const copy = {
     finishesTitle: "შეგეძლო დაგესრულებინა",
     shareText: (n: number, result: string, row: string) => `საფეხბურთო დარტსი 501 #${n}: ${result}\n${row}`,
     yourTurn: "შენი სროლაა", seatTurn: (name: string) => `ისვრის ${name}`, waiting: "დაელოდე შენს რიგს", sending: "მოწმდება…",
-    legOf: (n: number, of: number) => `ლეგი ${n}/${of}`, legWon: (name: string) => `ლეგი მოიგო ${name}-მ`, legWonYou: "ლეგი შენია!", legNoCheckout: "ვერავინ დაასრულა: იგებს ყველაზე დაბალი ქულა", legOut: "ისრები ყველას ამოეწურა",
+    legOf: (n: number, of: number) => `ლეგი ${n}/${of}`, legWon: (name: string) => `ლეგი მოიგო: ${name}`, legWonYou: "ლეგი შენია!", legNoCheckout: "ვერავინ დაასრულა: იგებს ყველაზე დაბალი ქულა", legOut: "ისრები ყველას ამოეწურა",
     nextLeg: "შემდეგი ლეგი იწყება…", legsStat: "ლეგები", legsDetail: (n: number) => `${n} ლეგი`,
   },
   ru: {

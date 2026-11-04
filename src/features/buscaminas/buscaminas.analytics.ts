@@ -18,8 +18,9 @@ export const trackReport = (p: { puzzleId: string; contentVersion: number; round
 export const trackRunStart = (p: { puzzleId: string; contentVersion: number; ranked: boolean; resumed: boolean; round: number }) =>
   trackEvent("buscaminas_run_start", { puzzle_id: p.puzzleId, content_version: p.contentVersion, ranked: p.ranked, resumed: p.resumed, round_number: p.round });
 
-export const trackRunComplete = (p: { puzzleId: string; ranked: boolean; score: number; perfects: number; mines: number; rank: number | null }) =>
-  trackEvent("buscaminas_run_complete", { puzzle_id: p.puzzleId, ranked: p.ranked, score: p.score, perfect_rounds: p.perfects, mines_hit: p.mines, rank: p.rank });
+/** `daily`: the 5-round daily run (the game's completion); `extended`: the optional rounds after it, played to the end. */
+export const trackRunComplete = (p: { puzzleId: string; phase: "daily" | "extended"; ranked: boolean; score: number; perfects: number; mines: number; rank: number | null }) =>
+  trackEvent("buscaminas_run_complete", { puzzle_id: p.puzzleId, run_phase: p.phase, ranked: p.ranked, score: p.score, perfect_rounds: p.perfects, mines_hit: p.mines, rank: p.rank });
 
 export const trackLeaderboardView = (p: { puzzleId: string; placement: "page" | "end"; players: number; hasMe: boolean }) =>
   trackEvent("buscaminas_leaderboard_view", { puzzle_id: p.puzzleId, placement: p.placement, players: p.players, has_own_row: p.hasMe });

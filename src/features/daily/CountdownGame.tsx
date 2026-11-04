@@ -6,8 +6,9 @@ import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
+import { PersonalBestNote } from "./components/PersonalBestNote";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { Check, Lightbulb, ArrowRight, Send } from "lucide-react";
+import { Check, Lightbulb, ArrowRight, Send, X } from "lucide-react";
 import type { CountdownSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { playSfx } from "@/lib/sounds/gameSounds";
@@ -205,6 +206,14 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
           title={session.title}
           correct={totalFound}
           total={totalAnswerSlots}
+          details={
+            <CountdownReview
+              questions={questions}
+              foundByRound={allRoundAnswers}
+              score={totalFound}
+              personalBest={session.personalBest}
+            />
+          }
           // Score = raw answers found; the backend pays the per-answer coin
           // reward (COINS_PER_SCORE_POINT.countdown), so no client multiplier.
           onDone={(nextPath) => onComplete(totalFound, nextPath)}
@@ -255,6 +264,75 @@ export function CountdownGame({ session, onBack, onComplete, practice = false }:
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
       />
+    </div>
+  );
+}
+
+/**
+ * The learning half of the result: every round's answers, the ones found and
+ * every one missed (the round is over, so nothing is given away), and how the
+ * score compares with the player's best on earlier days (members only).
+ */
+export function CountdownReview({
+  questions,
+  foundByRound,
+  score,
+  personalBest,
+}: {
+  questions: ReadonlyArray<{ id: string; prompt: string; answerGroups: ReadonlyArray<{ display: string }> }>;
+  foundByRound: ReadonlyArray<ReadonlyArray<string>>;
+  score: number;
+  /** Most answers found on an earlier day; null = first run on record; undefined = unknown (guests). */
+  personalBest?: number | null;
+}) {
+  const { t } = useLocale();
+  return (
+    <div className="space-y-3" data-testid="countdown-review">
+      <PersonalBestNote score={score} previous={personalBest} format={(value) => String(value)} />
+      <p className="font-poppins text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
+        {t("dailyGames.countdownReviewTitle")}
+      </p>
+      {questions.map((question, index) => {
+        const mine = new Set(foundByRound[index] ?? []);
+        const found = question.answerGroups.filter((group) => mine.has(group.display));
+        const missed = question.answerGroups.filter((group) => !mine.has(group.display));
+        return (
+          <section key={question.id} className="rounded-[16px] bg-black/18 px-4 py-3" data-testid="countdown-review-round">
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-poppins text-sm font-bold leading-snug text-white">{question.prompt}</p>
+              <span className="shrink-0 rounded-[7px] bg-brand-cyan/15 px-2 py-0.5 font-poppins text-[11px] font-black text-brand-cyan">
+                {t("dailyGames.countdownRoundFound", { found: found.length, total: question.answerGroups.length })}
+              </span>
+            </div>
+            {found.length > 0 && (
+              <>
+                <p className="mt-3 font-poppins text-[10px] font-black uppercase tracking-[0.18em] text-white/50">{t("dailyGames.answersFound")}</p>
+                <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                  {found.map((group, i) => (
+                    <li key={`${i}-${group.display}`} className="flex items-center gap-1 rounded-[8px] bg-brand-green/20 px-2 py-1 font-poppins text-xs font-bold text-white" data-countdown-answer="found">
+                      <Check className="size-3 text-brand-green-light" aria-hidden />{group.display}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {missed.length > 0 ? (
+              <>
+                <p className="mt-3 font-poppins text-[10px] font-black uppercase tracking-[0.18em] text-white/50">{t("dailyGames.countdownMissed")}</p>
+                <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                  {missed.map((group, i) => (
+                    <li key={`${i}-${group.display}`} className="flex items-center gap-1 rounded-[8px] border border-dashed border-white/25 px-2 py-1 font-poppins text-xs font-semibold text-white/70" data-countdown-answer="missed">
+                      <X className="size-3 text-white/40" aria-hidden />{group.display}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="mt-3 font-poppins text-xs font-semibold text-brand-green-light">{t("dailyGames.countdownAllFound")}</p>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

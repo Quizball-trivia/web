@@ -31,6 +31,18 @@ export function ClueBanner({ word, count, top, bottom, tone = "you" }: { word: s
   );
 }
 
+/**
+ * Keeps the clue on screen while the board scrolls under it (a 20- or 25-card board is taller than a phone). Bleeds to
+ * the frame's edges (its 1rem gutter) so cards never show beside it.
+ */
+export function StickyClue({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div data-codenames-sticky-clue className={cn("sticky top-0 z-20 -mx-4 bg-surface-page-alt/90 px-4 py-2 backdrop-blur-md lg:mx-0 lg:rounded-b-2xl lg:px-0", className)}>
+      {children}
+    </div>
+  );
+}
+
 export const soloCards = (state: CodenamesSoloState, reveal: boolean): BoardCard[] =>
   state.cards.map((c) => ({ id: c.id, word: c.word, kind: reveal ? c.kind : null, revealed: state.flips.find((f) => f.cardId === c.id)?.kind ?? null }));
 
@@ -68,7 +80,9 @@ export function CodenamesPlayView({ locale, number, state, pending, onFlip, onSt
         right={<span data-codenames-found className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-xs font-black uppercase text-white" style={poppins}>{c.found(soloFound(state), total)}</span>} />
       {number !== null && <p className="mt-3 text-xs font-black uppercase tracking-wide text-white/55" style={poppins}>#{number}</p>}
       {!done && (
-        <ClueBanner word={clue.word} count={clue.count} top={c.clueOf(state.clue + 1, state.totalClues ?? state.clues.length)} bottom={c.guessesLeft(state.guessesLeft)} />
+        <StickyClue className="mt-1">
+          <ClueBanner word={clue.word} count={clue.count} top={c.clueOf(state.clue + 1, state.totalClues ?? state.clues.length)} bottom={c.guessesLeft(state.guessesLeft)} />
+        </StickyClue>
       )}
       {notice}
       <div className="mt-2 min-h-6" aria-live="polite">
@@ -166,10 +180,12 @@ export function ClueRecap({ state, kinds }: { state: CodenamesSoloState; kinds: 
   );
 }
 
-export function CodenamesEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, onArchive, onExit, picker }: {
+export function CodenamesEndView({ locale, number, state, guestOnPastBoard, leaderboard, friends, onArchive, onExit, picker, onPractice }: {
   locale: string; number: number; state: CodenamesSoloState; guestOnPastBoard: boolean; leaderboard: ReactNode; friends?: ReactNode;
   /** The Pictures / Words switch: a finished daily opens on this screen, so the way to Words must be here too. */
   picker?: ReactNode;
+  /** Opens picture practice (an earlier board, unranked); absent while there is no closed board to practise on. */
+  onPractice?: () => void;
   onArchive: () => void; onExit?: () => void;
 }) {
   const c = codenamesCopy(locale);
@@ -185,6 +201,12 @@ export function CodenamesEndView({ locale, number, state, guestOnPastBoard, lead
         <p className="mt-2 text-6xl font-black tabular-nums" style={poppins}>{found}/{total}</p>
         <p className="mt-1 text-sm font-bold text-white/85">{state.endReason === "complete" ? c.endComplete : state.endReason === "owngoal" ? c.endOwnGoal : c.endClues}</p>
       </div>
+      {onPractice && (
+        <button type="button" data-codenames-practice onClick={onPractice}
+          className="mt-3 h-12 w-full rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/15" style={poppins}>
+          {c.picturePractice.cta}
+        </button>
+      )}
       <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/55">{c.history}</p>
       {state.disclosed === false && <p data-codenames-answers-later className="mt-2 text-sm font-semibold text-white/70">{c.answersLater}</p>}
       <div className="mt-2"><ClueRecap state={state} kinds={c.kinds} /></div>

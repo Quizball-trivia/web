@@ -283,11 +283,11 @@ const EXTRA = {
     "de": "Nur Werte auf einer Goldkarte – errate den Spieler.",
     "tr": "Altın bir kart, sadece istatistikler — oyuncuyu söyle."
   },
-  "Everything hidden, 100 clue coins — name the player using the least information.": {
-    "es": "Todo oculto, 100 monedas de pista: nombra al jugador con la menor información posible.",
-    "pt": "Tudo escondido, 100 moedas de dicas — adivinhe o jogador usando o mínimo de informações.",
-    "de": "Alles verborgen, 100 Hinweis-Münzen – errate den Spieler mit so wenigen Infos wie möglich.",
-    "tr": "Her şey gizli, 100 ipucu jetonu — oyuncuyu en az bilgiyle söyle."
+  "Everything hidden, a 100-point hint budget per card — name the player using the least information.": {
+    "es": "Todo oculto y 100 puntos de pistas por carta: nombra al jugador con la menor información posible.",
+    "pt": "Tudo escondido, 100 pontos para dicas em cada carta: descubra o jogador usando o mínimo de informações.",
+    "de": "Alles verborgen, 100 Hinweispunkte pro Karte: nenne den Spieler mit so wenigen Informationen wie möglich.",
+    "tr": "Her şey gizli, her kartta 100 puanlık ipucu bütçesi — en az bilgiyle oyuncuyu söyle."
   }
 } as const satisfies Record<string, { es: string; pt: string; de: string; tr: string }>;
 /** Display labels that the mini-game data keeps in English only. */
@@ -753,7 +753,7 @@ function cardDetectiveSession(locale: Locale): CardDetectiveSession {
   return {
     challengeType: "cardDetective",
     title: pick(locale, "Card Detective", "ბარათის დეტექტივი"),
-    description: pick(locale, "Everything hidden, 100 clue coins — name the player using the least information.", "ყველაფერი დამალულია, 100 მინიშნების ქოინი — გამოიცანი მოთამაშე მინიმალური ინფორმაციით."),
+    description: pick(locale, "Everything hidden, a 100-point hint budget per card — name the player using the least information.", "ყველაფერი დამალულია, ყოველ ბარათზე 100-ქულიანი მინიშნებების ბიუჯეტი — გამოიცანი მოთამაშე მინიმალური ინფორმაციით."),
     cardCount: base.cards.length,
     startCoins: 100,
     clueCosts: { rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 },

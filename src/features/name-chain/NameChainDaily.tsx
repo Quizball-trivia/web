@@ -10,10 +10,12 @@ import { createWordDailyApi, type WordRunStateBase } from "@/features/wordgames/
 import { isLiveDay, NAME_CHAIN_CALENDAR, puzzleNumber } from "@/features/wordgames/daily/wordDaily.logic";
 import { useServerNow, useWordDaily } from "@/features/wordgames/daily/useWordDaily";
 import { DailyEnd, WordDailyLeaderboard, WordDailyScreen } from "@/features/wordgames/daily/WordDailyShell";
-import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins, useRefused } from "@/features/wordgames/ui";
+import { AnswerBox, Chips, GreenButton, QuietButton, RefusedReports, TimeBar, TopBar, poppins, useRefused } from "@/features/wordgames/ui";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
-import { chainLetters } from "./chainLetter";
+import { Lettered } from "./Lettered";
+import { NameChainPractice } from "./NameChainPractice";
+import { nameChainPracticeCopy } from "./nameChainPractice.copy";
 
 type Verdict = "ok" | "unknown" | "letter" | "repeat";
 /** Server-held run state (backend name-chain-daily.rules PublicRunState). */
@@ -33,12 +35,6 @@ const loadCyrillicBoard = (day: string) => nameChainDailyApi.leaderboard(day, "r
 
 export { nameChainDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 
-/** A name with the letter the chain hangs on picked out. */
-function Lettered({ name, className }: { name: string; className?: string }) {
-  const { letters, at } = chainLetters(name);
-  return <span className={className} style={poppins}>{letters.map((ch, i) => <span key={i} className={i === at ? "text-brand-yellow" : undefined}>{ch}</span>)}</span>;
-}
-
 export function NameChainDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   locale: string; onExit?: () => void; onEvent?: (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => void; initialDay?: string | null; onDay?: (day: string, newest: boolean) => void;
 }) {
@@ -47,6 +43,9 @@ export function NameChainDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   const d = wordDailyCopy(locale);
   const g = nameChainCopy(locale);
   const gd = nameChainDailyCopy(locale);
+  const gp = nameChainPracticeCopy(locale);
+  // Relaxed practice: untimed and unranked, beside the daily (never instead of its run).
+  const [practicing, setPracticing] = useState(false);
   const [flash, setFlash] = useState<{ id: number; text: string } | null>(null);
   const refused = useRefused();
   const daily = useWordDaily<NameChainDailyState, Result>({
@@ -182,10 +181,19 @@ export function NameChainDaily({ locale, onExit, onEvent, initialDay, onDay }: {
           </li>
         ))}
       </ul>
+      <QuietButton className="mt-4" onClick={() => setPracticing(true)}>{gp.fromEnd}</QuietButton>
     </DailyEnd>
   ) : null;
 
-  return <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void start()} onExit={onExit} play={play} end={end} />;
+  if (practicing) return <NameChainPractice locale={locale} brand={game.brand} onBack={() => setPracticing(false)} />;
+  const practice = (
+    <button type="button" onClick={() => setPracticing(true)} data-name-chain-practice-open
+      className="w-full rounded-2xl border border-white/15 px-4 py-2.5 text-center hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+      <span className="block text-sm font-black uppercase tracking-wide text-white" style={poppins}>{gp.open}</span>
+      <span className="mt-0.5 block text-xs font-semibold text-white/60">{gp.hint}</span>
+    </button>
+  );
+  return <WordDailyScreen game={game} locale={locale} daily={daily} status={status} onStart={() => void start()} onExit={onExit} play={play} end={end} secondary={practice} />;
 }
 
 export { NameChainDailyBoard } from "@/features/wordgames/daily/WordDailyPageBoards";

@@ -9,6 +9,7 @@ import { DailyIntro, PlayRoomWithFriends, WordDailyLeaderboard, WordDailyScreen 
 import { Frame } from "@/features/wordgames/ui";
 import { BoardPicker } from "./BoardPicker";
 import { readBoard, setRoomPreset, writeBoard } from "./codenames.board";
+import { CodenamesPicturePractice } from "./CodenamesPicturePractice";
 import { CodenamesWordsPractice } from "./CodenamesWordsPractice";
 import type { BoardKind } from "./codenames.view";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
@@ -52,6 +53,8 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay, sur
   const [picked, setPicked] = useState<BoardKind | null>(null);
   const board = picked ?? stored;
   const [practicing, setPracticing] = useState(false);
+  /** Picture practice: an earlier daily board replayed on the device (opened from the daily's result). */
+  const [picturePractice, setPicturePractice] = useState(false);
   const pickBoard = (next: BoardKind) => { setPicked(next); writeBoard(next); };
   const picker = <BoardPicker locale={locale} value={board} onChange={pickBoard} />;
   const busy = daily.pending !== null;
@@ -98,10 +101,14 @@ export function CodenamesDaily({ locale, onExit, onEvent, initialDay, onDay, sur
   ) : null;
   const end = solo && state?.done && day ? (
     <CodenamesEndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard} onArchive={() => daily.setView("archive")} onExit={onExit}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} picker={picker} />
+      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadCodenamesBoard} pointsLabel={c.foundLabel} day={isLiveDay(CODENAMES_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />} picker={picker}
+      onPractice={daily.days.some((d) => d < daily.today) ? () => setPicturePractice(true) : undefined} />
   ) : null;
 
   if (practicing) return <CodenamesWordsPractice key={locale} locale={locale} surface={surface} onExit={() => setPracticing(false)} />;
+  if (picturePractice) {
+    return <CodenamesPicturePractice key={locale} locale={locale} surface={surface} days={daily.days} today={daily.today} playedDay={day} onExit={() => setPicturePractice(false)} />;
+  }
   // Words has its own screens: whatever the picture daily restores (a finished run, the archive) does not take over.
   if (board === "words") {
     return (

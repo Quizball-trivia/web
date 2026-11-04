@@ -837,6 +837,12 @@ export interface PublicAuctionFootballer {
    * answer to the price gamble until the reveal.
    */
   snapshots?: AuctionSeasonSnapshotPayload[];
+  /** Where startingPrice came from. Sent only once the player is revealed. */
+  startingPriceOrigin?: {
+    source: 'scout_season' | 'market_history' | 'estimate';
+    season: string | null;
+    valuationDate?: string | null;
+  };
 }
 
 export interface AuctionSeasonSnapshotPayload {

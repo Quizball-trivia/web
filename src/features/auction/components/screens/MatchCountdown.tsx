@@ -22,7 +22,8 @@ export const LINEUP_CARD_WIDTH = 80;
  */
 interface MatchCountdownProps {
   players: AuctionPlayer[];
-  /** Absolute client-clock time the countdown ends. Falls back to now+5s. */
+  /** Absolute client-clock time the countdown ends. Falls back to now+3s
+   *  (mirrors the server's AUCTION_PREMATCH_COUNTDOWN_MS). */
   endsAtMs?: number | null;
   onComplete: () => void;
 }
@@ -30,7 +31,7 @@ interface MatchCountdownProps {
 export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdownProps) {
   const { t } = useLocale();
   // Resolve the target once (so prop jitter doesn't restart the countdown).
-  const [targetMs] = useState(() => endsAtMs ?? Date.now() + 5_000);
+  const [targetMs] = useState(() => endsAtMs ?? Date.now() + 3_000);
   const [count, setCount] = useState(() => Math.max(0, Math.ceil((targetMs - Date.now()) / 1000)));
 
   useEffect(() => {

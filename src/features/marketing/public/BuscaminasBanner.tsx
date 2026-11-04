@@ -18,13 +18,13 @@ const TO_TRIVIA: Record<BuscaminasBannerLocale, { title: string; text: string }>
 };
 
 const COPY: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
-  es: { title: "¿Buscabas el buscaminas futbolero de jugadores?", text: "16 futbolistas, 12 cumplen la consigna y 4 son minas. 20 rondas, tablero nuevo cada día." },
-  en: { title: "Looking for the player version?", text: "Football Minesweeper: 16 players, 12 fit the clue and 4 are mines. 20 rounds, a new board every day." },
-  ka: { title: "ეძებ მოთამაშეების ვერსიას?", text: "საფეხბურთო მაღაროები: 16 მოთამაშე, 12 შეესაბამება, 4 მაღაროა. 20 რაუნდი, ყოველდღე ახალი დაფა." },
-  tr: { title: "Oyunculu versiyonu mu arıyorsun?", text: "Futbol Mayın Tarlası: 16 oyuncu, 12'si ipucuna uyar, 4'ü mayın. 20 tur, her gün yeni tahta." },
-  ru: { title: "Ищешь версию с игроками?", text: "Футбольный сапёр: 16 игроков, 12 подходят под подсказку, 4 — мины. 20 раундов, каждый день новое поле." },
-  pt: { title: "Procurando a versão com jogadores?", text: "Campo Minado do Futebol: 16 jogadores, 12 combinam com a dica e 4 são minas. 20 rodadas, um tabuleiro novo por dia." },
-  de: { title: "Suchst du die Version mit Spielern?", text: "Fußball-Minesweeper: 16 Spieler, 12 passen zum Hinweis und 4 sind Minen. 20 Runden, jeden Tag ein neues Spielfeld." },
+  es: { title: "¿Buscabas el buscaminas futbolero de jugadores?", text: "16 futbolistas, 12 cumplen la consigna y 4 son minas. 5 rondas rápidas, tablero nuevo cada día." },
+  en: { title: "Looking for the player version?", text: "Football Minesweeper: 16 players, 12 fit the clue and 4 are mines. 5 quick rounds, a new board every day." },
+  ka: { title: "ეძებ მოთამაშეების ვერსიას?", text: "საფეხბურთო მაღაროები: 16 მოთამაშე, 12 შეესაბამება, 4 მაღაროა. 5 სწრაფი რაუნდი, ყოველდღე ახალი დაფა." },
+  tr: { title: "Oyunculu versiyonu mu arıyorsun?", text: "Futbol Mayın Tarlası: 16 oyuncu, 12'si ipucuna uyar, 4'ü mayın. 5 hızlı tur, her gün yeni tahta." },
+  ru: { title: "Ищешь версию с игроками?", text: "Футбольный сапёр: 16 игроков, 12 подходят под подсказку, 4 — мины. 5 быстрых раундов, каждый день новое поле." },
+  pt: { title: "Procurando a versão com jogadores?", text: "Campo Minado do Futebol: 16 jogadores, 12 combinam com a dica e 4 são minas. 5 rodadas rápidas, um tabuleiro novo por dia." },
+  de: { title: "Suchst du die Version mit Spielern?", text: "Fußball-Minesweeper: 16 Spieler, 12 passen zum Hinweis und 4 sind Minen. 5 schnelle Runden, jeden Tag ein neues Spielfeld." },
 };
 
 /** Sends Trivia Mines visitors who searched for the player-card game to Buscaminas futbolero. */

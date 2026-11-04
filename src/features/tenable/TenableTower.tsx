@@ -13,7 +13,7 @@ const ROW_PX = 44;
  * The tower: ten slots, #1 on top. A found answer climbs from the foot of the tower into its slot; you are brand green,
  * everyone else brand blue (with the finder's face in rooms); slots revealed unfound at the end are dashed.
  */
-export function TenableTower({ list, slots, mySeat = 0, fresh, finder, hiddenLabel, asOfLabel, compact = false, dense = false }: {
+export function TenableTower({ list, slots, mySeat = 0, fresh, finder, hiddenLabel, asOfLabel, compact = false, dense = false, wrapNames = false, stateLabels }: {
   list: TenableList; slots: readonly TenableSlot[]; mySeat?: number;
   /** Rank that was just found: it climbs. */
   fresh: number | null;
@@ -22,6 +22,10 @@ export function TenableTower({ list, slots, mySeat = 0, fresh, finder, hiddenLab
   hiddenLabel: string; asOfLabel: (d: string) => string; compact?: boolean;
   /** Rooms on phones: shorter rows, so the tower and the answer box fit above the standings bar. */
   dense?: boolean;
+  /** The result: rows grow so a long name wraps in full instead of being cut off. */
+  wrapNames?: boolean;
+  /** Screen-reader words for a slot you found and a slot revealed unfound (the result; colour and outline alone say nothing). */
+  stateLabels?: { found: string; missed: string };
 }) {
   const reduced = useReducedMotion();
   return (
@@ -43,7 +47,7 @@ export function TenableTower({ list, slots, mySeat = 0, fresh, finder, hiddenLab
             <li key={slot.rank} data-tenable-slot={slot.rank} data-tenable-state={slot.missed ? "missed" : shown ? "found" : "hidden"}
               className={cn(
                 "relative flex items-center gap-2.5 rounded-2xl px-2 transition-colors",
-                dense ? "h-8 lg:h-9" : compact ? "h-9" : "h-11",
+                wrapNames ? (compact ? "min-h-9 py-1" : "min-h-11 py-1.5") : dense ? "h-8 lg:h-9" : compact ? "h-9" : "h-11",
                 !shown && "bg-white/[0.05]",
                 mine && "bg-brand-green/20 ring-1 ring-brand-green",
                 theirs && "bg-brand-blue/30 ring-1 ring-brand-blue",
@@ -53,11 +57,12 @@ export function TenableTower({ list, slots, mySeat = 0, fresh, finder, hiddenLab
                 mine ? "bg-brand-green text-black" : theirs ? "bg-brand-blue text-white" : "bg-white/10 text-white/60")} style={poppins}>
                 {slot.rank}
               </span>
+              {stateLabels && (mine || slot.missed) && <span className="sr-only">{slot.missed ? stateLabels.missed : stateLabels.found}: </span>}
               {shown ? (
                 <motion.span key={slot.name} className={cn("relative flex min-w-0 flex-1 items-center gap-2", climbing && "z-10")}
                   initial={climbing ? { y: (11 - slot.rank) * ROW_PX, scale: 1.08, opacity: 0.4 } : false}
                   animate={{ y: 0, scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 210, damping: 24 }}>
-                  <span className={cn("min-w-0 flex-1 truncate text-sm font-bold", slot.missed ? "text-white/60" : "text-white")}>{slot.name}</span>
+                  <span className={cn("min-w-0 flex-1 text-sm font-bold", wrapNames ? "break-words leading-snug" : "truncate", slot.missed ? "text-white/60" : "text-white")}>{slot.name}</span>
                   {slot.detail && <span className={cn("shrink-0 text-xs font-semibold tabular-nums", slot.missed ? "text-white/40" : "text-white/70")}>{slot.detail}</span>}
                   {face && <DuelAvatar customization={face} size="xs" className="shrink-0" />}
                 </motion.span>
