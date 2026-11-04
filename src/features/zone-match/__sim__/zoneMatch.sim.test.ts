@@ -15,6 +15,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
+import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNumericQuestions';
 import { describe, it } from 'vitest';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import { BLUFF_CARDS, CARDS, CARD_BY_ID, randomDeck, type CardId } from '../zoneMatch.cards';
@@ -49,6 +50,7 @@ const q = (id: string, n: number): GameQuestion => ({ id, prompt: 'Q', options: 
 const CONTENT: Content = {
   mcqByCategory: Object.fromEntries(CATEGORIES.map((c) => [c.id, Array.from({ length: 60 }, (_, n) => q(`${c.id}-q${n}`, n))])),
   fallbackMcqs: Array.from({ length: 60 }, (_, n) => q(`fb-q${n}`, n)),
+  numerics: SAMPLE_NUMERIC_QUESTIONS,
 };
 const categoryOf = (questionId: string) => questionId.split('-q')[0];
 

@@ -12,6 +12,7 @@
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { AttackZone, Possession } from './zoneMatch.rules';
 import { MOVEMENT_CARDS, RULES, SABOTAGE_CARDS } from './zoneMatch.playtest';
+import { rand } from './zoneMatch.random';
 
 export type CardType = 'boost' | 'sabotage' | 'defense' | 'tactical';
 /** blind: chosen before the question, revealed together · live: during the question · reaction: after the reveal. */
@@ -264,16 +265,21 @@ export function legalDeck(partial: readonly CardId[]): CardId[] {
 }
 
 /** A partial pick topped up at random until nothing else fits — what Auto-pick and the scripted opponent play with. */
-export function completeDeck(partial: readonly CardId[], random: () => number = Math.random): CardId[] {
+export function completeDeck(partial: readonly CardId[], random: () => number = rand): CardId[] {
   const deck = legalDeck(partial);
-  const pool = [...CARDS].sort(() => random() - 0.5);
+  // Fisher–Yates: the same draws give the same order on every runtime (a sort with a random comparator does not).
+  const pool = [...CARDS];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
   for (const card of pool) {
     if (!deck.includes(card.id) && deckBlocker(deck, card.id) === null) deck.push(card.id);
   }
   return deck;
 }
 
-export function randomDeck(random: () => number = Math.random): CardId[] {
+export function randomDeck(random: () => number = rand): CardId[] {
   return completeDeck([], random);
 }
 

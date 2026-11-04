@@ -7,7 +7,7 @@
 
 import type { GameQuestion } from '@/lib/domain';
 import { decideNumericDuel, type DuelGuess, type DuelReason, type DuelSide } from '@/features/numeric-question/numericDuel';
-import { SAMPLE_NUMERIC_QUESTIONS, type SampleNumericQuestion } from '@/features/numeric-question/sampleNumericQuestions';
+import { rand } from './zoneMatch.random';
 import { MATCH_ROUNDS, otherZoneSide, pitchLabel, resolveBattle, type BattleOutcome, type Possession } from './zoneMatch.rules';
 import {
   CARD_BY_ID,
@@ -25,6 +25,7 @@ import {
 } from './zoneMatch.cards';
 import { revealSchedule } from './zoneMatch.reveal';
 import { ENERGY_MAX, ENERGY_START, RULES } from './zoneMatch.playtest';
+import { answerPoints, nextShooter, resolveKick, shootoutWinner, type Kick } from './zoneMatch.shootout';
 
 // ── Timings ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,11 @@ export const CARD_PICK_MS = 8000;
 export const CARD_REVEAL_MS = 3500;
 export const HOME_PICK_MS = 6000;
 export const MCQ_MS = 12_000;
+/** Penalty shootout: the countdown, the points' bar battle, the kick (the 3D shot plays it), the final result. */
+export const SHOOTOUT_INTRO_MS = 3600;
+export const SHOOTOUT_BATTLE_MS = 4200;
+export const SHOOTOUT_KICK_MS = 3600;
+export const SHOOTOUT_DONE_MS = 3200;
 export const MCQ_REVEAL_MS = 2000;
 /** Long enough to read the result card (playtest: shorter results were easy to miss). */
 export const OUTCOME_MS = 3200;
@@ -78,7 +84,7 @@ export interface Category {
 
 export interface NumericDuel {
   key: number;
-  question: SampleNumericQuestion;
+  question: NumericItem;
   guesses: Record<DuelSide, DuelGuess>;
   startedAt: number;
   deadline: number;
@@ -131,7 +137,18 @@ export interface CardEvent {
 /** The outcome note of a shot stopped by Goalkeeper Gloves before any question. */
 export const GLOVES_SAVE_NOTE = 'Goalkeeper Gloves save!';
 
-export type Stage = 'idle' | 'showdown' | 'deckReveal' | 'categories' | 'lineup' | 'play' | 'fulltime';
+export type Stage = 'idle' | 'showdown' | 'deckReveal' | 'categories' | 'lineup' | 'play' | 'shootout' | 'fulltime';
+/** The penalty shootout's steps: the countdown, the question, the bar battle of the points, the kick, the result. */
+export type ShootoutStep = 'intro' | 'mcq' | 'battle' | 'kick' | 'done';
+export interface ShootoutState {
+  /** Who shot first (the side that kicked off the match). */
+  opener: DuelSide;
+  kicks: Kick[];
+  step: ShootoutStep;
+  winner: DuelSide | null;
+  /** The goal every penalty is taken at, picked at random: the one the player attacks ('right') or defends ('left'). */
+  goal: 'left' | 'right';
+}
 /** `category`: the attacker picks this attack's category (the first step of every round). */
 export type BattleStep = 'category' | 'cards' | 'reveal' | 'mcq' | 'mcqReveal' | 'numeric' | 'numericReveal' | 'outcome';
 /** When cards can be played: only before a round's first duel, or before every duel. */
@@ -198,13 +215,30 @@ export interface MatchState {
   /** The side can't play cards up to and including this duel number. */
   yellowThrough: PerSide<number>;
   homeCategoryId: string | null;
+  /** A drawn match's penalty shootout (null until there is one). */
+  shootout: ShootoutState | null;
   /** The latest cards to fire, oldest first (a short rolling window). */
   cardEvents: CardEvent[];
+}
+
+/** A number question for the tiebreak (the answer is `value`; it reaches a player only at the reveal). */
+export interface NumericItem {
+  id: string;
+  /** Text per language. */
+  prompt: Record<string, string>;
+  unit: Record<string, string>;
+  value: number;
+  /** Granularity of the answer, used to round scripted guesses. */
+  step: number;
+  /** Decimals a guess may carry. */
+  precision: number;
 }
 
 export interface Content {
   mcqByCategory: Record<string, GameQuestion[]>;
   fallbackMcqs: GameQuestion[];
+  /** The number questions for the tiebreak (the match takes unused ones first). */
+  numerics: NumericItem[];
 }
 
 export type Action =
@@ -222,9 +256,12 @@ export type Action =
   /** VAR Review or Shin Pads, against the card the other side just revealed. */
   | { type: 'PLAY_REACTION'; side: DuelSide; card: CardId; now: number }
   | { type: 'PLAY_LIVE'; side: DuelSide; card: CardId; content: Content; now: number }
-  | { type: 'CHOOSE_HOME_CATEGORY'; categoryId: string }
+  /** Home Advantage: its owner picks the duel's category during the reveal. */
+  | { type: 'CHOOSE_HOME_CATEGORY'; categoryId: string; side?: DuelSide }
   /** Dev Card Lab: one staged duel from `possession`, with these decks. */
-  | { type: 'LAB_DUEL'; categoryPool: Category[]; decks: PerSide<CardId[]>; possession: Possession; content: Content; now: number };
+  | { type: 'LAB_DUEL'; categoryPool: Category[]; decks: PerSide<CardId[]>; possession: Possession; content: Content; now: number }
+  /** Dev shootout lab: straight to penalties at a level score. */
+  | { type: 'LAB_SHOOTOUT'; categoryPool: Category[]; opener: DuelSide; now: number };
 
 export const IDLE: MatchState = {
   stage: 'idle',
@@ -265,16 +302,17 @@ export const IDLE: MatchState = {
   energy: both(0),
   yellowThrough: both(0),
   homeCategoryId: null,
+  shootout: null,
   cardEvents: [],
 };
 
-const coinFlip = (): DuelSide => (Math.random() < 0.5 ? 'player' : 'opponent');
+const coinFlip = (): DuelSide => (rand() < 0.5 ? 'player' : 'opponent');
 const plural = (side: DuelSide, verb: string) => (side === 'player' ? verb : `${verb}s`);
 
 function shuffled<T>(items: readonly T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
@@ -455,7 +493,7 @@ function spend(s: MatchState, side: DuelSide, card: CardId): Pick<MatchState, 'u
 // ── Categories ───────────────────────────────────────────────────────────────
 
 /** Deals each side CATEGORY_COUNT random categories — all ten different when the pool allows. */
-export function dealCategories(pool: readonly Category[], random: () => number = Math.random): PerSide<Category[]> {
+export function dealCategories(pool: readonly Category[], random: () => number = rand): PerSide<Category[]> {
   const deck = [...pool];
   for (let i = deck.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
@@ -500,7 +538,7 @@ function applyCategoryPick(s: MatchState, side: DuelSide, categoryId: string | n
   const open = unusedCategories(s, side);
   // Out of categories (only in staged duels): any of the side's own.
   const pool = open.length > 0 ? open : s.categories[side];
-  const category = categoryId ? pool.find((c) => c.id === categoryId) : pool[Math.floor(Math.random() * pool.length)];
+  const category = categoryId ? pool.find((c) => c.id === categoryId) : pool[Math.floor(rand() * pool.length)];
   if (!category && pool.length > 0) return s;
   const picked: MatchState = {
     ...s,
@@ -511,10 +549,10 @@ function applyCategoryPick(s: MatchState, side: DuelSide, categoryId: string | n
   return startDuel(picked, content, now, { duelInRound: 0 });
 }
 
-function newNumeric(s: MatchState, now: number): Pick<MatchState, 'numeric' | 'usedNumericIds'> {
-  const unused = SAMPLE_NUMERIC_QUESTIONS.filter((question) => !s.usedNumericIds.includes(question.id));
-  const pool = unused.length > 0 ? unused : SAMPLE_NUMERIC_QUESTIONS;
-  const question = pool[Math.floor(Math.random() * pool.length)];
+function newNumeric(s: MatchState, content: Content, now: number): Pick<MatchState, 'numeric' | 'usedNumericIds'> {
+  const unused = content.numerics.filter((question) => !s.usedNumericIds.includes(question.id));
+  const pool = unused.length > 0 ? unused : content.numerics;
+  const question = pool[Math.floor(rand() * pool.length)];
   return {
     numeric: {
       key: s.seq + 1,
@@ -551,7 +589,7 @@ function newMcq(s: MatchState, content: Content, now: number): Pick<MatchState, 
   const fromCategory = fresh(category ? content.mcqByCategory[category.id] ?? [] : []);
   const fallback = fresh(content.fallbackMcqs);
   const source = fromCategory.length > 0 ? fromCategory : fallback.length > 0 ? fallback : content.fallbackMcqs;
-  const question = source[Math.floor(Math.random() * source.length)];
+  const question = source[Math.floor(rand() * source.length)];
   return {
     mcq: {
       key: s.seq + 1,
@@ -568,6 +606,70 @@ function newMcq(s: MatchState, content: Content, now: number): Pick<MatchState, 
     },
     usedQuestionIds: [...s.usedQuestionIds, question.id],
   };
+}
+
+// ── Penalty shootout ─────────────────────────────────────────────────────────
+
+/** The next kick's question: from a random category of either side's, both answer it. */
+function shootoutQuestion(s: MatchState, content: Content, now: number): MatchState {
+  const pool = [...s.categories.player, ...s.categories.opponent];
+  const roundCategory = pool.length > 0 ? pool[Math.floor(rand() * pool.length)] : null;
+  const withCategory = { ...s, roundCategory, homeCategoryId: null };
+  const shooter = nextShooter(s.shootout!.kicks, s.shootout!.opener);
+  const mcq = newMcq(withCategory, content, now);
+  return schedule(
+    withCategory,
+    {
+      ...mcq,
+      battleStep: 'mcq',
+      // A new duel for the scene, so every kick's shot replays.
+      duelNo: s.duelNo + 1,
+      possession: { attacker: shooter, zone: 'opponent' },
+      played: both([]),
+      choice: both(null),
+      cancelled: both(false),
+      shootout: { ...s.shootout!, step: 'mcq' },
+    },
+    mcq.mcq!.deadline,
+  );
+}
+
+function advanceShootout(s: MatchState, content: Content, now: number): MatchState {
+  const so = s.shootout;
+  if (!so) return s;
+  switch (so.step) {
+    case 'intro':
+      return shootoutQuestion(s, content, now);
+    case 'mcq': {
+      // The answers become points (Ranked 1.0's), and the bar battle plays them out.
+      return schedule(s, { battleStep: 'mcqReveal', shootout: { ...so, step: 'battle' } }, now + SHOOTOUT_BATTLE_MS);
+    }
+    case 'battle': {
+      const mcq = s.mcq!;
+      const shooter = s.possession.attacker;
+      const pointsOf = (side: DuelSide) => answerPoints(mcq.answers[side] === mcq.question.correctIndex, mcq.answeredAt[side] === null ? null : mcq.answeredAt[side]! - mcq.startedAt, MCQ_MS);
+      const kick = resolveKick(shooter, { player: pointsOf('player'), opponent: pointsOf('opponent') });
+      const kicks = [...so.kicks, kick];
+      const keeper = otherZoneSide(shooter);
+      const outcome: BattleOutcome =
+        kick.result === 'goal'
+          ? { kind: 'goal', scorer: shooter, next: { attacker: keeper, zone: 'opponent' }, roundOver: true }
+          : kick.result === 'saved'
+            ? { kind: 'turnover', next: { attacker: keeper, zone: 'opponent' }, roundOver: true }
+            : { kind: 'bothWrong', next: { attacker: keeper, zone: 'opponent' }, roundOver: true };
+      const line = `${NAMES[shooter]}: ${kick.result === 'goal' ? 'scores the penalty' : kick.result === 'saved' ? 'penalty saved' : 'penalty missed'}`;
+      return schedule(
+        s,
+        { battleStep: 'outcome', outcome, outcomeFrom: s.possession, shootout: { ...so, kicks, step: 'kick', winner: shootoutWinner(kicks, so.opener) }, feed: log(s, line) },
+        now + SHOOTOUT_KICK_MS,
+      );
+    }
+    case 'kick':
+      if (so.winner) return schedule(s, { shootout: { ...so, step: 'done' }, feed: log(s, `${NAMES[so.winner]} ${plural(so.winner, 'win')} on penalties`) }, now + SHOOTOUT_DONE_MS);
+      return shootoutQuestion(s, content, now);
+    case 'done':
+      return schedule(s, { stage: 'fulltime', mcq: null }, null);
+  }
 }
 
 /** Starts the next duel: a card window when the mode allows one, otherwise straight to the question. */
@@ -624,17 +726,20 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
   // two at once cancel out and the round keeps its own category.
   const playerHome = active.player.includes('home-advantage');
   const opponentHome = active.opponent.includes('home-advantage');
-  if (!playerHome || opponentHome) next.homeCategoryId = null;
+  const homeOwner: DuelSide | null = playerHome === opponentHome ? null : playerHome ? 'player' : 'opponent';
+  if (!homeOwner) next.homeCategoryId = null;
   if (playerHome && opponentHome) {
     notes.push('Both played Home Advantage — they cancel out');
-  } else if (opponentHome) {
-    // From their own remaining categories (Home Advantage doesn't use one up).
-    const open = unusedCategories(s, 'opponent');
-    const pick = open[Math.floor(Math.random() * open.length)];
-    if (pick) {
-      next.homeCategoryId = pick.id;
-      notes.push(`Home Advantage: ${NAMES.opponent} chose ${pick.name}`);
+  } else if (homeOwner) {
+    // The owner picked one of their remaining categories during the reveal (Home Advantage doesn't use one up);
+    // when they didn't in time, one is picked for them.
+    const open = unusedCategories(s, homeOwner);
+    if (!open.some((c) => c.id === next.homeCategoryId)) {
+      const pick = open[Math.floor(rand() * open.length)];
+      next.homeCategoryId = pick?.id ?? null;
     }
+    const chosen = open.find((c) => c.id === next.homeCategoryId);
+    if (chosen) notes.push(`Home Advantage: ${NAMES[homeOwner]} chose ${chosen.name}`);
   }
   for (const side of ['player', 'opponent'] as const) {
     if (s.choice[side] && BLUFF_CARDS.includes(s.choice[side]!) && !s.cancelled[side]) notes.push(`${NAMES[side]}'s card was a ${CARD_BY_ID[s.choice[side]!].name}`);
@@ -787,6 +892,8 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
       return schedule(s, { stage: 'lineup' }, now + LINEUP_MS);
     case 'lineup':
       return startRound(s, now + OVERLAY_IN_MS, 0, { attacker: s.kickoff, zone: 'centre' }, [`${NAMES[s.kickoff]} ${plural(s.kickoff, 'kick')} off`]);
+    case 'shootout':
+      return advanceShootout(s, content, now);
     case 'play':
       switch (s.battleStep) {
         case 'category':
@@ -807,7 +914,7 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
               const kinds = fitting.length > 0 ? fitting : all;
               const own = next.deck[side].filter((id) => kinds.includes(id) && !next.used[side].includes(id));
               const fakes = own.length > 0 ? own : kinds;
-              const fake = fakes[Math.floor(Math.random() * fakes.length)];
+              const fake = fakes[Math.floor(rand() * fakes.length)];
               next.dummyShownAs = { ...next.dummyShownAs, [side]: fake };
               // The log shows the bluff until the VAR window has passed; the player knows their own.
               lines.push(side === 'player' ? `You played ${CARD_BY_ID[card].name} (shown as ${CARD_BY_ID[fake].name})` : `${NAMES[side]} played ${CARD_BY_ID[fake].name}`);
@@ -816,7 +923,7 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
             lines.push(`${NAMES[side]} played ${CARD_BY_ID[card].name}`);
           }
           if (!choice.player && !choice.opponent) return afterCards(next, content, now);
-          const homePick = choice.player === 'home-advantage';
+          const homePick = choice.player === 'home-advantage' || choice.opponent === 'home-advantage';
           return schedule(next, { battleStep: 'reveal', feed: log(next, ...lines) }, now + (homePick ? HOME_PICK_MS : CARD_REVEAL_MS));
         }
         case 'reveal':
@@ -840,7 +947,7 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
           const faster = at.player !== null && at.opponent !== null && at.player !== at.opponent ? (at.player < at.opponent ? 'player' : 'opponent') : null;
           const decision = decideDuel(s.possession, correct, activeCards(s), faster);
           if (decision.kind === 'numeric') {
-            const numeric = newNumeric(logged, now);
+            const numeric = newNumeric(logged, content, now);
             const firstTouches = activeCards(s);
             const cancelOut = firstTouches.player.includes('first-touch') && firstTouches.opponent.includes('first-touch');
             const cardEvents = cancelOut
@@ -861,7 +968,15 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
           // The ball changed hands (or went in): the next round is the other side's attack — after a steal-and-score
           // too, so both sides always get the same number of attacks.
           const round = s.round + 1;
-          if (round >= MATCH_ROUNDS) return schedule(s, { stage: 'fulltime', mcq: null, numeric: null, round: MATCH_ROUNDS }, null);
+          if (round >= MATCH_ROUNDS) {
+            if (s.score.player !== s.score.opponent) return schedule(s, { stage: 'fulltime', mcq: null, numeric: null, round: MATCH_ROUNDS }, null);
+            // Level at full time: penalties.
+            return schedule(
+              s,
+              { stage: 'shootout', mcq: null, numeric: null, round: MATCH_ROUNDS, shootout: { opener: s.kickoff, kicks: [], step: 'intro', winner: null, goal: rand() < 0.5 ? 'left' : 'right' }, feed: log(s, 'Level at full time — penalties') },
+              now + SHOOTOUT_INTRO_MS,
+            );
+          }
           return startRound(s, now + OVERLAY_IN_MS, round, s.possession);
         }
       }
@@ -896,6 +1011,12 @@ export function reducer(s: MatchState, action: Action): MatchState {
         action.now + SHOWDOWN_MS,
       );
     }
+    case 'LAB_SHOOTOUT':
+      return schedule(
+        { ...IDLE, categoryPool: action.categoryPool, categories: dealCategories(action.categoryPool), kickoff: action.opener, score: both(2), round: MATCH_ROUNDS },
+        { stage: 'shootout', shootout: { opener: action.opener, kicks: [], step: 'intro', winner: null, goal: rand() < 0.5 ? 'left' : 'right' }, feed: ['Level at full time — penalties'] },
+        action.now + SHOOTOUT_INTRO_MS,
+      );
     case 'RESET':
       return IDLE;
     case 'SET_WINDOW_MODE':
@@ -911,7 +1032,7 @@ export function reducer(s: MatchState, action: Action): MatchState {
     }
     case 'ANSWER': {
       const mcq = s.mcq;
-      if (s.stage !== 'play' || s.battleStep !== 'mcq' || !mcq || mcq.answers[action.side] !== null) return s;
+      if ((s.stage !== 'play' && s.stage !== 'shootout') || s.battleStep !== 'mcq' || !mcq || mcq.answers[action.side] !== null) return s;
       if (action.questionId !== undefined && action.questionId !== mcq.question.id) return s;
       // Time Wasting: their time ran out early.
       if (action.now > mcq.deadline - (mcq.squeeze?.[action.side] ?? 0)) return s;
@@ -1017,8 +1138,9 @@ export function reducer(s: MatchState, action: Action): MatchState {
       return startDuel(staged, action.content, action.now, { round: 0, duelInRound: 0, possession: action.possession });
     }
     case 'CHOOSE_HOME_CATEGORY': {
-      if (s.battleStep !== 'reveal' || s.choice.player !== 'home-advantage' || s.cancelled.player) return s;
-      if (!unusedCategories(s, 'player').some((category) => category.id === action.categoryId)) return s;
+      const side = action.side ?? 'player';
+      if (s.battleStep !== 'reveal' || s.choice[side] !== 'home-advantage' || s.cancelled[side]) return s;
+      if (!unusedCategories(s, side).some((category) => category.id === action.categoryId)) return s;
       return { ...s, homeCategoryId: action.categoryId };
     }
     default:

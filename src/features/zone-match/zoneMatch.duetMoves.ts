@@ -12,12 +12,17 @@ import {
   crouchPose,
   divePose,
   idlePose,
+  mixArms,
   mixPose,
+  reachArm,
   runPose,
   strikePose,
+  type ArmPose,
+  type ArmSegments,
   type FullBodyPose,
 } from './zoneMatch.fullBody';
-import { BALL_REST, SOLE_ON_BALL, keeperSave, type ReactionBall, type ReactionFrame } from './ZoneMatchFutReactions';
+import { BALL_REST, SOLE_ON_BALL, keeperSave, slideTackleMove, type ReactionBall, type ReactionFrame } from './ZoneMatchFutReactions';
+import { ARMS_DOWN, ARMS_MID, PREP, REST_OUT, chain, fromRest } from './zoneMatch.cardMoves';
 
 export type DuetMove =
   | 'kick-long'
@@ -52,7 +57,8 @@ export type DuetMove =
   | 'celebrate'
   | 'cheer'
   | 'chest-control'
-  | 'kick-two';
+  | 'kick-two'
+  | 'block-slide';
 
 /** Kick Long: when the boot meets the ball, and where the ball waits for it (art units, facing right). */
 const KICK_RATE = 1.05;
@@ -62,12 +68,18 @@ export const KICK_LONG_CONTACT = {
   ball: [bootPoint(strikePose(STRIKE_CONTACT), 'R', 84, 15)[0] + 38, GROUND_Y - 46] as [number, number],
 };
 
+/** Nutmegged: when the ball (handed over by the duet's prop at his front) rolls through him, and for how long. */
+export const NUTMEGGED_BALL = { from: 0.95, dur: 0.34, enterX: 430 };
+/** Arms as screen angles (0 down, 90 towards +x, 180 up). */
+const seg = (upper: number, fore: number, hand: number, shape: ArmSegments['shape']): ArmSegments => ({ upper, fore, hand, shape });
+const ARMS_DOWN_D: ArmPose = { L: seg(-12, -4, -2, 'open'), R: seg(12, 4, 2, 'open') };
+
 /** How long each move plays (s). */
 export const DUET_MOVE_S: Record<DuetMove, number> = {
   'kick-long': 1.3,
   shoot: 1.2,
   shuffle: 1.4,
-  'dive-beaten': 2.0,
+  'dive-beaten': 2.4,
   'step-back': 1.4,
   bonked: 1.6,
   throw: 1.0,
@@ -86,17 +98,18 @@ export const DUET_MOVE_S: Record<DuetMove, number> = {
   fooled: 2.0,
   chasing: 2.2,
   poke: 1.0,
-  nutmegged: 1.8,
+  nutmegged: 2.1,
   'sprint-at': 1.6,
   crowded: 1.8,
   groan: 1.6,
   'fake-shot': 1.8,
   deadpan: 2.0,
-  hesitate: 2.0,
+  hesitate: 2.3,
   celebrate: 1.7,
   cheer: 1.6,
   'chest-control': 2.6,
   'kick-two': 2.0,
+  'block-slide': 2.0,
 };
 
 /** Kick Two: one strike, a step, the second ball struck — when each meets the boot (same spot, art units). */
@@ -135,7 +148,8 @@ export function duetMoveFrame(move: DuetMove, t: number, now: number): ReactionF
   const f = rawFrame(move, t);
   return {
     ...f,
-    body: mixPose(idlePose(now), f.body, out),
+    // The arms ease back to his own as the move ends, via the hands at his waist (no cheering fists on the way).
+    body: { ...mixPose(idlePose(now), f.body, out), arms: f.body.arms && out > 0.01 ? { L: chain([[0, REST_OUT], [0.03, PREP], [0.4, ARMS_MID], [0.7, ARMS_DOWN], [1, f.body.arms]], out + 0.08).L, R: chain([[0, REST_OUT], [0.03, PREP], [0.4, ARMS_MID], [0.7, ARMS_DOWN], [1, f.body.arms]], out).R } : undefined },
     lift: f.lift * out,
     tilt: f.tilt * out,
     spin: f.spin * out,
@@ -158,10 +172,15 @@ function rawFrame(move: DuetMove, t: number): ReactionFrame {
       // Crouched and ready, side to side.
       return { ...still(crouchPose(0.3 * bell(t, 0, 1.3))), shift: 7 * Math.sin(t * Math.PI * 3) * bell(t, 0, 1.3) };
     case 'dive-beaten': {
-      // Springs up at it (the keeper's leap, no gloves, nothing caught): the ball is over his hands; lands, head down.
+      // Springs up and back at it (the keeper's leap, leaning towards the ball), the far arm at full stretch, the
+      // fingertips short; lands and slumps, head down.
       const leap = keeperSave('leap', t, 0, 1);
-      const sag = bell(t, 1.2, 1.95);
-      return { ...still(mixPose(leap.body, { ...crouchPose(0.2), lean: 16 }, sag)), lift: leap.lift, scale: leap.scale };
+      const sag = bell(t, 1.15, 1.95);
+      const air = bell(t, 0.25, 1.15);
+      const reach: ArmPose = { L: seg(-132, -138, -138, 'open'), R: seg(35, 20, 20, 'open') };
+      // Up to full stretch, then down (never back up into fists after the ball's gone).
+      const arms = t < 0.7 ? fromRest(reach, smooth((t - 0.15) / 0.4)) : mixArms(reach, ARMS_DOWN_D, smooth((t - 0.9) / 0.4));
+      return { ...still({ ...mixPose(leap.body, { ...crouchPose(0.25), lean: 22 }, sag), arms }), lift: Math.min(leap.lift, 6), tilt: -8 * air, scale: leap.scale };
     }
     case 'step-back': {
       // Taken aback: a step back, leaning away.
@@ -194,10 +213,13 @@ function rawFrame(move: DuetMove, t: number): ReactionFrame {
       return { ...still(mixPose(STAND, crouchPose(0.9), down)), tilt: -70 * down + 10 * roll, lift: -12 * down, shift: 8 * down, scale: 1 - 0.28 * down };
     }
     case 'impatient': {
-      // Taps a foot, checks the time (a lean), hops on the spot.
-      const tap = Math.max(0, Math.sin(t * 14)) * bell(t, 0, 1.4);
-      const body = { ...STAND, hipR: STAND.hipR + 14 * tap, kneeR: STAND.kneeR + 20 * tap };
-      return { ...still(mixPose(body, { ...crouchPose(0.1), lean: 10 }, bell(t, 1.3, 2.1))), lift: hopLift(t - 1.3, 0.35, 3) * (t > 1.3 ? 1 : 0) };
+      // Hands on hips, taps a foot, then throws his arms out: get on with it.
+      const tap = Math.max(0, Math.sin(t * 6.5)) * bell(t, 0, 1.4);
+      const body = { ...STAND, hipR: STAND.hipR + 28 * tap, kneeR: STAND.kneeR + 70 * tap, ankleR: STAND.ankleR - 80 * tap, bodyY: STAND.bodyY + 4 * tap };
+      const hips: ArmPose = { L: reachArm('L', 150, 520, -40, 'flat'), R: reachArm('R', 346, 520, 40, 'flat') };
+      const outArms: ArmPose = { L: seg(-35, -40, -40, 'open'), R: seg(35, 40, 40, 'open') };
+      const arms = t < 1.3 ? fromRest(hips, smooth(t / 0.3)) : mixArms(hips, outArms, bell(t, 1.3, 2.1));
+      return { ...still({ ...mixPose(body, { ...crouchPose(0.1), lean: 10 }, bell(t, 1.3, 2.1)), arms }), tilt: 4 * Math.sin(t * 16) * bell(t, 1.4, 2.0) };
     }
     case 'halted': {
       // Running in, then stopped dead (a skid, a lean back).
@@ -258,22 +280,54 @@ function rawFrame(move: DuetMove, t: number): ReactionFrame {
       // A little toe-poke along the grass.
       return { ...still(strikePose(t * 1.6)), shift: 3 * bell(t, 0.2, 0.7) };
     case 'nutmegged': {
-      // Feet planted wide, the ball through his legs, turns to look.
-      const wide: FullBodyPose = { ...crouchPose(0.35), hipL: -22, hipR: 22, kneeL: 18, kneeR: 18 };
-      const k = bell(t, 0, 1.2);
-      return { ...still(mixPose(STAND, wide, k)), spin: 180 * smooth((t - 0.6) / 0.3) * (1 - smooth((t - 1.3) / 0.3)), lift: 4 * bell(t, 0.55, 0.8) };
+      // Jockeying (low, arms out), biting across as the ball's dragged, legs planted wide as it comes; it rolls in
+      // under him, between his feet (behind his shins) and out the back; a snap turn to watch it go, palms up.
+      const wide: FullBodyPose = { ...crouchPose(0.35), hipL: -24, hipR: 24, kneeL: 20, kneeR: 20 };
+      const bite = bell(t, 0.4, 0.9);
+      const plant = smooth((t - 0.7) / 0.2) * (1 - smooth((t - 1.6) / 0.3));
+      const body = mixPose(mixPose(STAND, { ...crouchPose(0.3), lean: 10 }, bite), wide, plant);
+      const jockey: ArmPose = { L: seg(-40, -28, -28, 'open'), R: seg(40, 28, 28, 'open') };
+      const shrug: ArmPose = { L: seg(-25, -40, -40, 'open'), R: seg(25, 40, 40, 'open') };
+      const arms = t < 1.35 ? mixArms(ARMS_DOWN_D, jockey, smooth((t - 0.4) / 0.3)) : mixArms(jockey, shrug, bell(t, 1.35, 2.0));
+      // The ball (his frame): in from the front (the prop hands it over at x 430), through the gap, gone behind him.
+      let ball: ReactionBall | undefined;
+      const u = (t - NUTMEGGED_BALL.from) / NUTMEGGED_BALL.dur;
+      if (u >= 0 && u < 1) {
+        const x = 430 - 640 * u;
+        ball = { x, y: GROUND_Y - 46, rot: -u * 800, ring: 0, opacity: smooth((1 - u) / 0.25), behind: x < 400 };
+      }
+      // Twists round after it (he's drawn facing us, so the look is a lean and a step back the way it went).
+      const look = bell(t, 1.3, 2.0);
+      return { ...still({ ...body, lean: body.lean - 9 * look, arms }), ball, shift: -6 * bite - 4 * look, tilt: -3 * look };
     }
     case 'sprint-at':
       // Sprints at the other card and back.
       return { ...still(runPose(t * 3.4, 1)), shift: 18 * bell(t, 0, 1.4) };
     case 'crowded': {
       // Hurried: a stumble backwards, ball lost.
+      // Rushed: a flinch (arms up), his touch runs away, he reaches after it and sags.
       const k = bell(t, 0.2, 1.6);
-      return { ...still(mixPose(STAND, { ...crouchPose(0.3), lean: -14 }, k)), shift: -10 * k, tilt: -4 * Math.sin(t * 12) * k };
+      // The heavy touch: his right boot pokes it too far as he's rushed.
+      const touch = bell(t, 0.12, 0.42);
+      const flinch: ArmPose = { L: seg(-55, -160, -160, 'open'), R: seg(55, 160, 160, 'open') };
+      const reach: ArmPose = { L: seg(-20, -10, -10, 'open'), R: seg(55, 30, 30, 'open') };
+      const arms = t < 0.85 ? fromRest(flinch, smooth((t - 0.55) / 0.25)) : mixArms(flinch, reach, smooth((t - 0.85) / 0.3));
+      const base = mixPose(STAND, { ...crouchPose(0.3), lean: t < 0.6 ? -14 : 12 }, k);
+      return { ...still({ ...base, hipR: base.hipR + 34 * touch, kneeR: base.kneeR - 10 * touch, arms }), shift: 4 * k, tilt: -3 * Math.sin(t * 12) * k };
     }
-    case 'groan':
-      // Head back: not him again.
-      return { ...still(mixPose(STAND, { ...STAND, lean: -16 }, bell(t, 0.1, 1.4))), lift: -2 * bell(t, 0.1, 1.4) };
+    case 'groan': {
+      // Not him again: head back, then a slump, arms out low, palms up.
+      const k = bell(t, 0.1, 1.45);
+      const palms: ArmPose = { L: seg(-28, -60, -60, 'open'), R: seg(28, 60, 60, 'open') };
+      return { ...still({ ...mixPose(STAND, { ...crouchPose(0.16), lean: (t < 0.6 ? -14 : 18) + 6 * Math.sin(t * 18) * bell(t, 1.3, 1.7) }, k), arms: fromRest(palms, smooth(t / 0.3) * (1 - smooth((t - 1.3) / 0.3))) }), lift: -2 * k };
+    }
+    case 'block-slide': {
+      // Throws himself in front of the shot: a slide along the grass towards it (the slide tackle, no ball), then up.
+      const f = slideTackleMove(Math.min(t, 1.25) + Math.max(0, t - 1.25) * 0.55);
+      const arms: ArmPose = { L: seg(-60, -80, -80, 'flat'), R: seg(40, 60, 60, 'flat') };
+      const down = bell(t, 0.3, 1.5);
+      return { ...f, ball: undefined, body: { ...f.body, arms: fromRest(arms, down) }, shift: 40 * smooth((t - 0.3) / 0.6) * (1 - smooth((t - 1.45) / 0.4)), scale: 1 - 0.12 * down };
+    }
     case 'fake-shot': {
       // Winds up as if to shoot, stops, then a cheeky hop.
       const wind = bell(t, 0, 0.7);
@@ -285,9 +339,20 @@ function rawFrame(move: DuetMove, t: number): ReactionFrame {
       return still(STAND);
     case 'hesitate': {
       // Lines up a shot, stops, lines it up again: second thoughts.
-      const a = bell(t, 0.1, 0.7);
-      const b = bell(t, 0.9, 1.5);
-      return { ...still(mixPose(STAND, strikePose(0.3), Math.max(a, b))), tilt: -4 * b, shift: 3 * a };
+      // Leans over the ball, draws the leg back… freezes; again; backs off, shoulders down. Arms out for balance.
+      // Each backlift held at the top a beat (a plateau), then the foot comes down.
+      const hold = (t0: number, t1: number) => smooth((t - t0) / 0.2) * (1 - smooth((t - t1 + 0.15) / 0.15));
+      const a = hold(0.1, 0.8);
+      const b = 0.85 * hold(0.95, 1.5);
+      const back = smooth((t - 1.5) / 0.3);
+      const body = mixPose(mixPose(STAND, { ...STAND, hipR: -52, kneeR: 80, ankleR: -10, lean: -12 }, Math.max(a, b)), { ...crouchPose(0.15), lean: 14 }, back);
+      const balance: ArmPose = { L: seg(-30, -25, -25, 'open'), R: seg(28, 20, 20, 'open') };
+      // Between the two: a step back and a shake of the head.
+      const between = bell(t, 0.72, 1.0);
+      // Backs off a step after each attempt and for good at the end, his ball going with him.
+      const shift = -12 * smooth((t - 0.8) / 0.2) - 12 * smooth((t - 1.5) / 0.2) - 4 * back;
+      const ball: ReactionBall = { x: 360, y: GROUND_Y - 46, rot: 0, ring: 0, opacity: 1 - smooth((t - 1.85) / 0.12) };
+      return { ...still({ ...body, arms: fromRest(mixArms(balance, ARMS_DOWN_D, back), smooth(t / 0.25)) }), shift, tilt: 4 * Math.sin(t * 22) * between, ball };
     }
     case 'celebrate':
       return { ...still(celebratePose(t)), lift: hopLift(t, 0.5, 8) };

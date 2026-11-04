@@ -10,8 +10,9 @@
  */
 
 import type { CardId } from './zoneMatch.cards';
-import { CHEST_CONTROL_CATCH, KICK_LONG_CONTACT, KICK_TWO_CONTACT, type DuetMove } from './zoneMatch.duetMoves';
+import { CHEST_CONTROL_CATCH, KICK_LONG_CONTACT, KICK_TWO_CONTACT, NUTMEGGED_BALL, type DuetMove } from './zoneMatch.duetMoves';
 import { BICYCLE_KICK_STRIKE, FIRST_TOUCH_CATCH, GOLDEN_BOOT_STRIKE, SECOND_BALL_CATCH } from './ZoneMatchFutReactions';
+import { NUTMEG, NUTMEG_POKE_POINT, PRESS, PRESS_NICK_POINT, SCREAM_BALL, SCREAM_CONTACT_AT, SUPER } from './zoneMatch.cardMoves';
 
 /**
  * `ballFrom` / `ballUntil`: the card reaction's own ball shows only in that window (s into it) — a prop carries it
@@ -19,7 +20,7 @@ import { BICYCLE_KICK_STRIKE, FIRST_TOUCH_CATCH, GOLDEN_BOOT_STRIKE, SECOND_BALL
  */
 export type DuetActor = ({ card: CardId; ballFrom?: number; ballUntil?: number; ball2From?: number } | { move: DuetMove; goldBall?: boolean }) & { at: number };
 export type DuetAnchor = { on: 'owner' | 'rival' | 'mid'; x: number; y: number };
-export type DuetPropKind = 'ball' | 'gold-ball' | 'mud' | 'fog' | 'notes' | 'clang' | 'bolt' | 'icon';
+export type DuetPropKind = 'ball' | 'gold-ball' | 'mud' | 'fog' | 'notes' | 'clang' | 'bolt' | 'icon' | 'flash';
 
 export interface DuetProp {
   kind: DuetPropKind;
@@ -36,6 +37,8 @@ export interface DuetProp {
   /** Shown whole from the first frame to the last (no fade or pop): a ball handed on to the next prop or a card's
    * own ball at the same spot. */
   solid?: boolean;
+  /** Size (art units) instead of the kind's own. */
+  size?: number;
 }
 
 export interface Duet {
@@ -62,6 +65,9 @@ const FEET = 790;
 const SB_FLIGHT_R = 1.25;
 const SB_OWNER_AT = KICK_TWO_CONTACT.first + SB_FLIGHT_R - SECOND_BALL_CATCH.R.at;
 const SB_FLIGHT = { R: SB_FLIGHT_R, L: SB_OWNER_AT + SECOND_BALL_CATCH.L.at - KICK_TWO_CONTACT.second };
+/** Nutmeg: the poke's roll to their legs. Screamer: the rocket's flight to the top corner. */
+const NUTMEG_ROLL = 0.55;
+const SCREAM_FLIGHT = 0.6;
 /** Bicycle Kick: the volley's time in the air, from over his head to their chest. */
 const BK_FLIGHT = 0.6;
 /** Golden Boot: the shot's time in the air, to their chest. */
@@ -209,14 +215,13 @@ export const DUETS: Record<CardId, Duet> = {
     props: [],
   },
   nutmeg: {
-    line: 'Through their legs — and they turn to see it go.',
-    owner: { move: 'poke', at: 0 },
-    rival: { move: 'nutmegged', at: 0.3 },
-    props: [
-      { kind: 'ball', at: 0.3, dur: 0.6, from: O(FRONT_FOOT, FEET), to: R(250, FEET) },
-      { kind: 'ball', at: 0.9, dur: 0.45, from: R(250, FEET), to: R(-200, FEET) },
-    ],
+    line: 'He drags it left, then slips it through their legs — they turn to watch it go.',
+    owner: { card: 'nutmeg', at: 0, ballUntil: NUTMEG.poke },
+    rival: { move: 'nutmegged', at: NUTMEG.poke + NUTMEG_ROLL - NUTMEGGED_BALL.from },
+    props: [{ kind: 'ball', solid: true, at: NUTMEG.poke, dur: NUTMEG_ROLL, from: O(...NUTMEG_POKE_POINT), to: R(NUTMEGGED_BALL.enterX, FEET - 4) }],
   },
+
+
   'bicycle-kick': {
     line: 'Up and over — your bicycle kick flies across; they take it on the chest, kill it and put a boot on it.',
     owner: { card: 'bicycle-kick', at: 0, ballUntil: BICYCLE_KICK_STRIKE.at },
@@ -224,44 +229,56 @@ export const DUETS: Record<CardId, Duet> = {
     props: [{ kind: 'ball', solid: true, at: BICYCLE_KICK_STRIKE.at, dur: BK_FLIGHT, from: O(...BICYCLE_KICK_STRIKE.point), to: R(...CHEST_CONTROL_CATCH.point), arc: 70 }],
   },
   'high-press': {
-    line: 'You press them high — they panic and give the ball away.',
-    owner: { move: 'sprint-at', at: 0 },
+    line: 'You press them high — rushed, their touch runs away from them and you nick it.',
+    owner: { card: 'high-press', at: 0, ballFrom: PRESS.nick },
     rival: { move: 'crowded', at: 0.35 },
     props: [
-      { kind: 'ball', at: 0, dur: 0.7, from: R(FRONT_FOOT - 40, FEET) },
-      { kind: 'ball', at: 0.7, dur: 0.5, from: R(FRONT_FOOT - 40, FEET), to: O(FRONT_FOOT, FEET), arc: 60 },
+      { kind: 'ball', solid: true, at: 0, dur: 0.6, from: R(FRONT_FOOT - 30, FEET + 6) },
+      { kind: 'ball', solid: true, at: 0.6, dur: PRESS.nick - 0.6, from: R(FRONT_FOOT - 30, FEET + 6), to: O(...PRESS_NICK_POINT) },
     ],
   },
+
   'time-wasting': {
-    line: 'You go down holding nothing — the clock ticks, they can’t wait.',
-    owner: { move: 'fake-injury', at: 0 },
-    rival: { move: 'impatient', at: 0.4 },
-    props: [{ kind: 'icon', card: 'time-wasting', at: 0.35, dur: 2.0, from: R(248, -70) }],
+    line: 'You sit on the ball and check your watch — they can’t wait.',
+    owner: { card: 'time-wasting', at: 0 },
+    rival: { move: 'impatient', at: 0.5 },
+    props: [{ kind: 'icon', card: 'time-wasting', at: 0.45, dur: 2.0, from: R(40, -45), size: 230 }],
   },
+
   'super-sub': {
-    line: 'Your star is back on — not him again.',
-    owner: { card: 'substitution', at: 0 },
-    rival: { move: 'groan', at: 1.0 },
-    props: [{ kind: 'icon', card: 'super-sub', at: 0.95, dur: 0.9, from: O(248, 120) }],
+    line: 'Your star is back on — hands on heads over there.',
+    owner: { card: 'super-sub', at: 0 },
+    rival: { move: 'groan', at: SUPER.arrive },
+    props: [],
   },
+
   feint: {
-    line: 'A fake golden boot — you shape to shoot, they dive too early.',
-    owner: { move: 'fake-shot', at: 0 },
-    rival: { move: 'fooled', at: 0.35 },
-    props: [{ kind: 'icon', card: 'golden-boot', at: 0.05, dur: 1.0, from: O(248, 40) }],
+    line: 'You shape to shoot — they throw themselves at it — and you drag it back the other way.',
+    owner: { card: 'feint', at: 0 },
+    rival: { move: 'block-slide', at: 0.3 },
+    props: [{ kind: 'icon', card: 'golden-boot', at: 0.45, dur: 0.9, from: O(440, -10), size: 170 }],
   },
+
   screamer: {
-    line: 'A rocket from the halfway line — it flies past their dive.',
-    owner: { move: 'shoot', at: 0 },
-    rival: { move: 'dive-beaten', at: 0.4 },
-    props: [{ kind: 'gold-ball', solid: true, at: 0.6, dur: 0.6, from: O(FRONT_FOOT, FEET), to: R(120, -60), arc: 60 }],
+    line: 'The run-up, then a rocket from the halfway line — over the keeper’s fingertips into the top corner.',
+    owner: { card: 'screamer', at: 0, ballUntil: SCREAM_CONTACT_AT },
+    rival: { move: 'dive-beaten', at: SCREAM_CONTACT_AT + SCREAM_FLIGHT - 0.85 },
+    props: [
+      { kind: 'gold-ball', solid: true, at: SCREAM_CONTACT_AT, dur: SCREAM_FLIGHT, from: O(...SCREAM_BALL), to: R(46, -60), arc: 260 },
+      { kind: 'flash', at: SCREAM_CONTACT_AT + SCREAM_FLIGHT - 0.04, dur: 0.45, from: R(46, -60) },
+    ],
   },
+
+
   'poker-face': {
-    line: 'Fake gloves and a straight face — they don’t dare shoot.',
-    owner: { move: 'deadpan', at: 0 },
-    rival: { move: 'hesitate', at: 0.25 },
-    props: [{ kind: 'icon', card: 'goalkeeper-gloves', at: 0.15, dur: 1.4, from: O(248, 40) }],
+    line: 'Arms folded, not a flicker — they line it up twice and daren’t shoot.',
+    owner: { card: 'poker-face', at: 0 },
+    rival: { move: 'hesitate', at: 0 },
+    props: [
+      { kind: 'icon', card: 'goalkeeper-gloves', at: 0.15, dur: 1.2, from: O(440, -10), size: 170 },
+    ],
   },
+
 };
 
 /** How long a duet runs (s): both actors and every prop done. */

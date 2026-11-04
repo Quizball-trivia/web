@@ -48,6 +48,7 @@ import { ZoneMatch3D } from './ZoneMatch3D';
 import { CategoryTile } from './ZoneMatchCategories';
 import { SkyShot } from './ZoneMatchSkyShot';
 import { FogWipe } from './ZoneMatchFogWipe';
+import { HIDDEN_ANSWER } from './zoneMatch.view';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -765,6 +766,14 @@ export function McqPanel({
 }) {
   const sabotage = sabotageOn(state, 'player');
   const dark = !revealed && sabotage.includes('floodlight-failure') && now < mcq.startedAt + FLOODLIGHT_MS;
+  // Time Wasting: their clock runs out early, and answers after it are refused.
+  const myDeadline = mcq.deadline - (mcq.squeeze?.player ?? 0);
+  const expired = !revealed && now > myDeadline;
+  const shownLeft = timeLeft === null ? null : Math.min(timeLeft, Math.max(0, Math.ceil((myDeadline - now) / 1000)));
+  const nowRef = useRef(now);
+  useEffect(() => {
+    nowRef.current = now;
+  }, [now]);
   // Fog: the whole question misted over until wiped clear (ZoneMatchFogWipe).
   const fogged = !revealed && sabotage.includes('fog');
   const panelRef = useRef<HTMLDivElement>(null);
@@ -778,7 +787,7 @@ export function McqPanel({
         const j = Math.floor(Math.random() * (i + 1));
         [order[i], order[j]] = [order[j], order[i]];
       }
-      setShuffle({ key: mcq.key, order, at: Date.now() });
+      setShuffle({ key: mcq.key, order, at: nowRef.current });
     }, 2000 + Math.random() * 4000);
     return () => window.clearTimeout(id);
   }, [mcq.key, muddy, revealed]);
@@ -792,6 +801,8 @@ export function McqPanel({
   const visible = order.filter((i) => revealed || cutting || !mcq.hidden.player.includes(i));
   const toView = (index: number | null) => (index === null ? null : visible.indexOf(index) === -1 ? null : visible.indexOf(index));
   const { correctIndex } = mcq.question;
+  // Online, the right answer arrives with the reveal: until then a locked answer is only "yours".
+  const answerKnown = correctIndex !== HIDDEN_ANSWER;
   const viewQuestion = useMemo(
     () => ({ ...mcq.question, options: visible.map((i) => mcq.question.options[i]), correctIndex: visible.indexOf(correctIndex) }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -802,7 +813,7 @@ export function McqPanel({
   const theirs = mcq.answers.opponent;
   const states: AnswerState[] = visible.map((real) => {
     if (revealed) return real === correctIndex ? 'correct' : real === mine ? 'wrong' : 'disabled';
-    if (mine !== null) return real === mine ? (real === correctIndex ? 'correct' : 'wrong') : 'disabled';
+    if (mine !== null) return real === mine && answerKnown ? (real === correctIndex ? 'correct' : 'wrong') : real === mine ? 'default' : 'disabled';
     if (real === mcq.firstMiss.player) return 'wrong';
     return 'default';
   });
@@ -816,7 +827,7 @@ export function McqPanel({
   return (
     <div ref={panelRef} className="relative" data-fifty-cut={cutScope}>
       {cutViews.length > 0 && <style>{fiftyCutStyle(cutScope, cutViews)}</style>}
-      {mcq.offCategory && (
+      {mcq.offCategory && state.stage !== 'shootout' && (
         <div className="mb-1.5 truncate text-center text-[10px] uppercase tracking-[0.06em] text-brand-orange" style={poppins}>
           No {shortName(mcq.categoryName)} questions left · general question
         </div>
@@ -839,8 +850,8 @@ export function McqPanel({
             question={viewQuestion}
             qIndex={state.round}
             totalQuestions={MATCH_ROUNDS}
-            counterLabel={`R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
-            timeRemaining={timeLeft}
+            counterLabel={state.shootout ? `Penalty ${state.shootout.kicks.length + 1}` : `R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
+            timeRemaining={shownLeft}
             showOptions={!dark}
             selectedAnswer={toView(mine)}
             answerStates={answerStates}
@@ -848,7 +859,7 @@ export function McqPanel({
             onAnswer={(viewIndex) => {
               const real = visible[viewIndex];
               // Tagged with this question: the outgoing one stays tappable while a Substitution flips it away.
-              if (real !== undefined) onAnswer(real, mcq.question.id);
+              if (real !== undefined && !expired) onAnswer(real, mcq.question.id);
             }}
           />
         </motion.div>

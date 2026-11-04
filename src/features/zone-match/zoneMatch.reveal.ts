@@ -29,15 +29,15 @@ export const CARD_REACTION_S: Record<CardId, number> = {
   'home-advantage': 2.6,
   'dummy-run': 2.0,
   'tiki-taka': 2.9,
-  // The newer cards: a generic hop on their own card (their duet moves are in zoneMatch.duets).
-  nutmeg: 1.6,
+  // The newer cards (zoneMatch.cardMoves).
+  nutmeg: 2.6,
   'bicycle-kick': 2.6,
-  'high-press': 1.6,
-  'time-wasting': 1.6,
-  'super-sub': 1.6,
-  feint: 1.6,
-  'poker-face': 1.6,
-  screamer: 1.6,
+  'high-press': 2.6,
+  'time-wasting': 2.85,
+  'super-sub': 2.6,
+  feint: 2.2,
+  'poker-face': 2.2,
+  screamer: 2.4,
 };
 
 /** The phase curtain first, then a beat before the first card. */

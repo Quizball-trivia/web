@@ -41,6 +41,7 @@ import {
   type FullBodyPose,
 } from './zoneMatch.fullBody';
 import { CARD_REACTION_S } from './zoneMatch.reveal';
+import { feintMove, highPressMove, nutmegMove, pokerFaceMove, screamerMove, superSubMove, timeWastingMove } from './zoneMatch.cardMoves';
 
 /** A ball the avatar plays with, in the figure's own art units (it moves with the figure): centre, spin, and a soft
  * ring 0–1 as a touch kills its pace. */
@@ -54,6 +55,8 @@ export interface ReactionBall {
   opacity: number;
   /** A golden ball with a glowing trail (where it was a moment ago). */
   gold?: boolean;
+  /** Drawn behind him (sat on, or passing behind his standing leg). */
+  behind?: boolean;
   trail?: [number, number][];
 }
 
@@ -93,6 +96,12 @@ export interface ReactionFrame {
     /** Churned turf heaped where the slide stopped (0 none – 1 all). */
     heap: number;
   };
+  /**
+   * A see-through opponent on the card (the defender a Nutmeg goes through, the attacker Poker Face stares down):
+   * where he stands (art x of his middle, on the same grass), his size, pose, which way he faces (1: like the player,
+   * −1: at him) and his own turn / lean / hop. A duet has the real opponent instead, so it drops him.
+   */
+  ghost?: { x: number; scale: number; pose: FullBodyPose; opacity: number; facing: 1 | -1; spin?: number; tilt?: number; lift?: number; front?: boolean };
   /** Tiki-Taka: the two see-through team-mates (0–1 shown) and their legs. */
   mates?: { shown: number; poses: [FullBodyPose, FullBodyPose] };
   /** Goalkeeper Gloves: on his hands yet, and the pop as they go on (0–1). */
@@ -106,6 +115,8 @@ export interface ReactionFrame {
   /** The move has a direction (a turn, a fall, travel towards the other card): a mirrored card mirrors its tilt, shift
    * and spin too, not just the figure. */
   directional?: boolean;
+  /** He comes in from the side: clip him at the picture's edge, so he appears from behind the ratings, not over them. */
+  clipEdge?: boolean;
   /** % of the figure's height. */
   lift: number;
   tilt: number;
@@ -128,7 +139,7 @@ const bell = (t: number, t0: number, t1: number) => Math.sin(Math.PI * clamp01((
 const still = (body: FullBodyPose): ReactionFrame => ({ body, lift: 0, tilt: 0, spin: 0, shift: 0, blur: 0, fade: 1 });
 
 /** One frame of `card`'s reaction, `t` seconds in (`now`: the idle's clock, `seed`: which way a dive goes). */
-export function cardMotion(card: CardId, t: number, now: number, seed: number): ReactionFrame {
+export function cardMotion(card: CardId, t: number, now: number, seed: number, duet = false): ReactionFrame {
   const end = CARD_REACTION_S[card];
   // Every reaction eases back into the idle over its last quarter second.
   const out = smooth((end - t) / 0.25);
@@ -141,6 +152,11 @@ export function cardMotion(card: CardId, t: number, now: number, seed: number): 
     blur: frame.blur * out,
     fade: 1 - (1 - frame.fade) * out,
   });
+  // A move with its own extras (ball, arms, the see-through opponent) eases its body back the same way.
+  const settleMove = (frame: ReactionFrame): ReactionFrame => {
+    const settled = settle(frame);
+    return { ...frame, ...settled, body: { ...settled.body, arms: frame.body.arms } };
+  };
   switch (card) {
     case 'first-touch': {
       const frame = firstTouch(t, now);
@@ -253,8 +269,21 @@ export function cardMotion(card: CardId, t: number, now: number, seed: number): 
       const frame = tikiTaka(t, now);
       return { ...settle(frame), ball: frame.ball, mates: frame.mates };
     }
+    case 'nutmeg':
+      return settleMove(nutmegMove(t, now, duet));
+    case 'high-press':
+      return settleMove(highPressMove(t, now));
+    case 'time-wasting':
+      return settleMove(timeWastingMove(t, now));
+    case 'super-sub':
+      return settleMove(superSubMove(t, now));
+    case 'feint':
+      return settleMove(feintMove(t, now));
+    case 'poker-face':
+      return settleMove(pokerFaceMove(t, duet));
+    case 'screamer':
+      return settleMove(screamerMove(t, now));
     default:
-      // The newer cards: a celebratory hop (their duet moves are in zoneMatch.duets).
       return settle({ ...still(celebratePose(t)), lift: 6 * bell(t, 0.2, 0.9) });
   }
 }
@@ -1176,7 +1205,7 @@ const POP_TIMES = [0, 0.15, 0.25, 0.85, 1];
  * The effect `card` plays on the card (keyed by the reaction, so a new landing replays it). `frameMask` cuts the
  * full-card overlays (blackout, flash, fog) to the frame's outline.
  */
-function CardReactionFxInner({ card, customization, frameMask, mirror }: { card: CardId; customization: AvatarCustomization | null; frameMask: React.CSSProperties; mirror: boolean }) {
+function CardReactionFxInner({ card, customization, frameMask, mirror, duet = false }: { card: CardId; customization: AvatarCustomization | null; frameMask: React.CSSProperties; mirror: boolean; duet?: boolean }) {
   const len = CARD_REACTION_S[card];
   const overlay = (node: React.ReactNode) => (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" style={frameMask}>
@@ -1633,6 +1662,64 @@ function CardReactionFxInner({ card, customization, frameMask, mirror }: { card:
             </motion.span>
           </>
         );
+      case 'time-wasting':
+        // A stopwatch over his head, its hand crawling; it pops away as he gets up.
+        return (
+          <motion.div
+            className="absolute flex items-center justify-center rounded-full border-[3px] border-white bg-[#FF4B4B] font-black text-white shadow-[0_3px_0_rgba(0,0,0,0.25)]"
+            style={{ left: '62%', top: '4%', width: '17%', aspectRatio: '1', fontSize: '0.75em' }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 1.2, 1, 1, 0], opacity: [0, 1, 1, 1, 0], rotate: [0, -8, 8, -8, 0] }}
+            transition={{ duration: len - 1.0, times: [0, 0.12, 0.2, 0.85, 1], delay: 0.6 }}
+          >
+            <motion.span className="absolute left-1/2 top-[14%] block h-[36%] w-[8%] -translate-x-1/2 rounded-full bg-white" style={{ transformOrigin: '50% 100%' }} animate={{ rotate: [0, 360] }} transition={{ duration: 1.2, repeat: 2, ease: 'linear', delay: 0.6 }} />
+            <span className="absolute -top-[18%] left-1/2 block h-[16%] w-[26%] -translate-x-1/2 rounded-sm bg-white" />
+          </motion.div>
+        );
+      case 'super-sub':
+        // The fourth official's board goes up on the touchline as he runs on; stars burst where he lands.
+        return (
+          <>
+            <motion.div
+              className="absolute rounded-[10%] border-2 border-white/80 bg-[#101820] px-[3%] py-[2%] text-center font-black leading-none shadow-[0_3px_0_rgba(0,0,0,0.3)]"
+              style={{ left: '56%', top: '7%', width: '24%', fontSize: '0.7em' }}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: [30, 0, 0, -10], opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 1.4, times: [0, 0.2, 0.75, 1] }}
+            >
+              <span className="block text-[#58CC02]">▲ IN</span>
+              <span className="block text-[#FF4B4B]">▼ OUT</span>
+            </motion.div>
+            {Array.from({ length: 6 }, (_, i) => {
+              const a = (i / 6) * Math.PI * 2;
+              return (
+                <motion.span
+                  key={i}
+                  className="absolute block text-[#FFE500]"
+                  style={{ left: '60%', top: '64%', fontSize: '1.1em', textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0.6], x: [0, Math.cos(a) * 70], y: [0, Math.abs(Math.sin(a)) * 24 - 6] }}
+                  transition={{ duration: 0.7, delay: 0.92 }}
+                >
+                  ★
+                </motion.span>
+              );
+            })}
+          </>
+        );
+      case 'nutmeg':
+        // Through the legs: OLÉ!
+        return (
+          <motion.span
+            className="absolute font-black italic text-[#FFE500]"
+            style={{ left: '60%', top: '8%', fontSize: '1.05em', textShadow: '0 2px 0 rgba(0,0,0,0.35)' }}
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1.25, 1, 1] }}
+            transition={{ duration: 1.0, times: [0, 0.2, 0.7, 1], delay: duet ? 1.75 : 1.5 }}
+          >
+            OLÉ!
+          </motion.span>
+        );
       case 'tiki-taka':
         // The team-mates and the ball are drawn with the avatar (CardCutout): the passes meet their feet.
         return null;
@@ -1651,4 +1738,4 @@ function CardReactionFxInner({ card, customization, frameMask, mirror }: { card:
  * Memoised on what it shows: the keyframes are fresh arrays each render, which motion takes as a new animation and
  * restarts — so a card that re-renders mid-reaction (the loadout's own state changing) would cut its effect short.
  */
-export const CardReactionFx = memo(CardReactionFxInner, (a, b) => a.card === b.card && a.mirror === b.mirror && a.customization === b.customization);
+export const CardReactionFx = memo(CardReactionFxInner, (a, b) => a.card === b.card && a.mirror === b.mirror && a.customization === b.customization && a.duet === b.duet);

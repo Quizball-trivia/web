@@ -53,6 +53,10 @@ export interface ZoneMatch3DSceneProps {
   /** The players' cut-out DOM nodes (ZoneMatch3DCutouts). */
   cutouts: CutoutRegistry;
   plates: Record<ZoneSide, RefObject<HTMLDivElement | null>>;
+  /** Invisible markers kept on each player's body (score flights land there; the bar battle sits behind it). */
+  anchors?: Record<ZoneSide, RefObject<HTMLDivElement | null>>;
+  /** The scene's sides stand in for the other seats (a shootout taken at one goal): the rings swap colours. */
+  swapColors?: boolean;
   /** False while the view is scrolled away: nothing renders. */
   visible: RefObject<boolean>;
   onFailure: () => void;
@@ -390,8 +394,12 @@ function placePlate(plate: HTMLDivElement, p: PlatePlacement) {
   plate.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) translate(-50%, -100%)`;
 }
 
+function placeAnchor(anchor: HTMLDivElement, x: number, y: number) {
+  anchor.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+}
+
 /** A ring under each player in their side's colour (blue = you, red = them), and the HTML nameplates above. */
-function Markers({ director, plates, insets }: { director: DuelDirector; plates: ZoneMatch3DSceneProps['plates']; insets: ZoneMatch3DSceneProps['insets'] }) {
+function Markers({ director, plates, anchors, insets, swapColors = false }: { director: DuelDirector; plates: ZoneMatch3DSceneProps['plates']; anchors?: ZoneMatch3DSceneProps['anchors']; insets: ZoneMatch3DSceneProps['insets']; swapColors?: boolean }) {
   const rings = useRef<Partial<Record<ZoneSide, THREE.Mesh | null>>>({});
   const point = useMemo(() => new THREE.Vector3(), []);
   const placedRef = useRef<Record<ZoneSide, PlatePlacement>>({ player: { x: 0, y: 0, w: 0, h: 0, on: false }, opponent: { x: 0, y: 0, w: 0, h: 0, on: false } });
@@ -404,6 +412,12 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
       if (ring) {
         ring.visible = true;
         ring.position.set(pose.x, 0.02, pose.z);
+      }
+      // The body marker: the middle of the player, on screen.
+      const anchor = anchors?.[side].current;
+      if (anchor) {
+        point.set(pose.x, 1.35, pose.z).project(camera);
+        placeAnchor(anchor, ((point.x + 1) / 2) * size.width, ((1 - point.y) / 2) * size.height);
       }
       const p = placed[side];
       const plate = plates[side].current;
@@ -445,7 +459,7 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
       {SIDES.map((side) => (
         <mesh key={side} ref={(m) => { rings.current[side] = m; }} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={2}>
           <ringGeometry args={[0.72, 0.92, 48]} />
-          <meshBasicMaterial color={SIDE_COLOR[side]} transparent opacity={0.85} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color={SIDE_COLOR[swapColors ? (side === 'player' ? 'opponent' : 'player') : side]} transparent opacity={0.85} depthWrite={false} toneMapped={false} />
         </mesh>
       ))}
     </>
@@ -578,7 +592,7 @@ function CardEffects({ director, engine, fx, overlays, clock }: { director: Duel
   return <primitive object={engine.root} />;
 }
 
-function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visible, onFailure, clock = REAL_CLOCK }: ZoneMatch3DSceneProps) {
+function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, anchors, swapColors, overlays, visible, onFailure, clock = REAL_CLOCK }: ZoneMatch3DSceneProps) {
   const director = useMemo(() => new DuelDirector(), []);
   const engine = useMemo(() => new CardEffectsEngine(director), [director]);
   useEffect(() => () => engine.dispose(), [engine]);
@@ -608,7 +622,7 @@ function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visibl
           <Ball director={director} />
         </Suspense>
         <CardEffects director={director} engine={engine} fx={fx} overlays={overlays} clock={clock} />
-        <Markers director={director} plates={plates} insets={insets} />
+        <Markers director={director} plates={plates} anchors={anchors} insets={insets} swapColors={swapColors} />
         <CutoutDriver director={director} engine={engine} fx={fx} registry={cutouts} clock={clock} />
         <DirectorLoop director={director} input={input} insets={insets} clock={clock} />
         <FrameDriver director={director} visible={visible} onFrameloop={setFrameloop} />

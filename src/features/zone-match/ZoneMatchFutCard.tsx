@@ -102,6 +102,8 @@ export interface FutReaction {
   ball2From?: number;
   /** The duet move's ball is the golden one. */
   goldBall?: boolean;
+  /** Played in a duet: the real opponent is on the other card, so no see-through one on this. */
+  duet?: boolean;
 }
 
 export function reactionFor(type: CardType | 'complete', key: number, seed = 0, card?: CardId, complete = false): FutReaction {
@@ -129,10 +131,10 @@ function reactionFrame(reaction: FutReaction | null, t: number, now: number): Re
   }
   if (reaction.card) {
     if (t < celebrationAt(reaction)) {
-      const f = cardMotion(reaction.card, t, now, reaction.seed);
+      const f = cardMotion(reaction.card, t, now, reaction.seed, reaction.duet);
       const hidden = (reaction.ballFrom !== undefined && t < reaction.ballFrom) || (reaction.ballUntil !== undefined && t >= reaction.ballUntil);
       const hidden2 = reaction.ball2From !== undefined && t < reaction.ball2From;
-      return { ...f, ball: hidden ? undefined : f.ball, ball2: hidden2 ? undefined : f.ball2 };
+      return { ...f, ball: hidden ? undefined : f.ball, ball2: hidden2 ? undefined : f.ball2, ghost: reaction.duet ? undefined : f.ghost };
     }
     return { ...reactionFrame({ ...reaction, card: undefined, kind: 'complete' }, t - celebrationAt(reaction), now) };
   }
@@ -199,6 +201,10 @@ interface Gear {
 const ART_IN_AREA = { left: 12.07, width: 75.85, top: 12, height: 88 };
 const areaX = (x: number) => ART_IN_AREA.left + (x / 496) * ART_IN_AREA.width;
 const areaY = (y: number) => ART_IN_AREA.top + (y / 840) * ART_IN_AREA.height;
+/** Where the grass is in the art (the ghost's feet go there whatever his size). */
+const GROUND_IN_ART = 830;
+/** The see-through opponent's kit. */
+const GHOST_KIT = { skin: 'skin_male_white', jersey: 'jersey_red', hair: 'hair_boy_basic' } as AvatarCustomization;
 
 /** Gear that, taken off the loadout, gets thrown away (and the item it throws). */
 const THROWN: [keyof Gear, Discard][] = [
@@ -234,6 +240,10 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
   const gloves = useRef<HTMLDivElement>(null);
   const scarf = useRef<SVGGElement>(null);
   const mates = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const ghost = useRef<HTMLDivElement>(null);
+  const ghostFig = useRef<HTMLDivElement>(null);
+  const [ghostEls, setGhostEls] = useState<FullBodyEls | null>(null);
   const mateEls = useRef<(FullBodyEls | null)[]>([null, null]);
   const setMateA = useCallback((e: FullBodyEls) => {
     mateEls.current[0] = e;
@@ -321,6 +331,10 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
         }
       }
       applyFullBodyPose(els, f.body);
+      // Coming on from the side: behind the ratings column (raised above him), clipped at the card's edge.
+      if (root.current) {
+        root.current.style.clipPath = f.clipEdge ? (mirror ? 'inset(-100% -34% -100% -100%)' : 'inset(-100% -100% -100% -34%)') : '';
+      }
       if (figure.current) {
         // The figure inside is mirrored on the opponent's card; a directional move's turn and travel are mirrored too.
         const m = mirror && f.directional ? -1 : 1;
@@ -338,6 +352,7 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
           ball.current.style.opacity = b.opacity.toFixed(2);
           ballSpin.current.style.transform = `rotate(${b.rot.toFixed(0)}deg)`;
           ball.current.style.transform = b.scale && b.scale !== 1 ? `scale(${b.scale.toFixed(3)})` : '';
+          ball.current.style.zIndex = b.behind ? '-1' : '';
           ring.current.style.opacity = b.ring > 0 ? (1 - b.ring).toFixed(2) : '0';
           ring.current.style.transform = `scale(${(1 + b.ring * 1.6).toFixed(2)})`;
           ballSpin.current.style.filter = b.gold ? 'sepia(1) saturate(6) hue-rotate(-12deg) brightness(1.15) drop-shadow(0 0 6px #FFC107)' : '';
@@ -391,6 +406,26 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
         const k = sc ? 1 + 0.35 * sc.pop * sc.pop : 1;
         scarf.current.setAttribute('transform', `translate(235 245) scale(${k.toFixed(3)}) translate(-235 -245)`);
       }
+      // A see-through opponent (solo reactions only): placed on the grass outside his own moves, mirrored with the card.
+      if (ghost.current && ghostFig.current) {
+        const g = f.ghost;
+        ghost.current.style.display = g && g.opacity > 0.01 ? '' : 'none';
+        if (g) {
+          // Kept inside the card's edge whatever the move asks (art x ≈ 600 is the rim on the far side).
+          const inside = Math.min(g.x, 600 - (g.scale * FULL_W) / 2);
+          const x = mirror ? FULL_W - inside : inside;
+          const facing = mirror ? -g.facing : g.facing;
+          const w = g.scale * FULL_W;
+          ghost.current.style.left = `${areaX(x - w / 2).toFixed(2)}%`;
+          ghost.current.style.top = `${areaY(GROUND_IN_ART * (1 - g.scale)).toFixed(2)}%`;
+          ghost.current.style.width = `${((w / FULL_W) * ART_IN_AREA.width).toFixed(2)}%`;
+          ghost.current.style.opacity = ((g.front ? 0.8 : 0.62) * g.opacity).toFixed(2);
+          ghost.current.style.zIndex = g.front ? '2' : '';
+          ghost.current.style.filter = g.front ? 'saturate(0.9) brightness(0.95) drop-shadow(0 0 3px #FF4B4B)' : 'saturate(0.6) brightness(1.2) drop-shadow(0 0 3px #FF4B4B)';
+          ghostFig.current.style.transform = `translateY(${(-(g.lift ?? 0)).toFixed(1)}%) rotate(${((g.tilt ?? 0) * facing).toFixed(1)}deg) rotateY(${(g.spin ?? 0).toFixed(0)}deg) scaleX(${facing})`;
+          if (ghostEls) applyFullBodyPose(ghostEls, g.pose);
+        }
+      }
       // Tiki-Taka: the team-mates.
       if (mates.current) {
         const m = f.mates;
@@ -436,9 +471,9 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [els, reaction, gear, mirror]);
+  }, [els, reaction, gear, mirror, ghostEls]);
   return (
-    <div className="absolute inset-0">
+    <div ref={root} className="absolute inset-0">
       {/* Park the Bus: the bus behind him (it doesn't move with him). */}
       <div
         ref={bus}
@@ -454,8 +489,14 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
       >
         <BusArt wheelTurn={busWheel} />
       </div>
+      {/* A see-through opponent, behind him (a solo reaction's defender or attacker). */}
+      <div ref={ghost} className="pointer-events-none absolute" style={{ display: 'none', filter: 'saturate(0.6) brightness(1.2) drop-shadow(0 0 3px #FF4B4B)' }}>
+        <div ref={ghostFig} style={{ transformOrigin: '50% 98%' }}>
+          <AvatarFullBody customization={GHOST_KIT} seed={7} onEls={setGhostEls} style={{ width: '100%' }} movingArms="auto" />
+        </div>
+      </div>
       <div ref={figure} className="absolute inset-x-0 bottom-0 flex h-[88%] justify-center" style={{ transformOrigin: '50% 98%' }}>
-        <div className="relative" style={{ height: '100%', transform: mirror ? 'scaleX(-1)' : undefined }}>
+        <div className="relative" style={{ height: '100%', transform: mirror ? 'scaleX(-1)' : undefined, isolation: 'isolate' }}>
           {/* Tiki-Taka's team-mates, further back (behind him): see-through copies, the right one facing him. */}
           <div ref={mates} className="pointer-events-none absolute inset-0" style={{ display: 'none', filter: 'saturate(0.55) brightness(1.25) drop-shadow(0 0 3px #1CB0F6)' }}>
             {(['a', 'b'] as const).map((key) => (
@@ -772,10 +813,10 @@ export function FutCard({
           <CardCutout customization={seat.avatarCustomization} reaction={reaction} mirror={mirror} seed={mirror ? 3 : 0} gear={gear} />
         </div>
         {/* The landing card's own effect on the card. */}
-        {reaction?.card && <CardReactionFx key={reaction.key} card={reaction.card} customization={seat.avatarCustomization} frameMask={frameMask} mirror={mirror} />}
+        {reaction?.card && <CardReactionFx key={reaction.key} card={reaction.card} customization={seat.avatarCustomization} frameMask={frameMask} mirror={mirror} duet={!!reaction.duet} />}
 
         {/* RP and tier, top left: below the frame's sloping shoulder, so the number sits fully inside the card. */}
-        <div className="absolute flex flex-col items-center leading-none" style={{ left: s(0.1), top: s(0.17), color: CARD_TEXT, textShadow: CARD_TEXT_SHADOW, ...poppins }}>
+        <div className="absolute flex flex-col items-center leading-none" style={{ left: s(0.1), top: s(0.17), color: CARD_TEXT, textShadow: CARD_TEXT_SHADOW, transform: 'translateZ(20px)', ...poppins }}>
           <span className="font-black tracking-tight" style={{ fontSize: s(rp >= 10000 ? 0.085 : rp >= 1000 ? 0.1 : 0.125) }}>{rp}</span>
           <span className="font-extrabold opacity-90" style={{ fontSize: s(0.055) }}>RP</span>
           <span className="mt-1 h-0.5 w-full rounded-full" style={{ background: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.4)' }} />

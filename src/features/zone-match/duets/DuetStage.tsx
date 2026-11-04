@@ -20,9 +20,9 @@ const other = (side: DuelSide): DuelSide => (side === 'player' ? 'opponent' : 'p
 const AREA = { left: 0.27, top: 0.13, width: 0.66, height: 0.6 };
 const ART = { left: 0.1207, width: 0.7585, top: 0.12, height: 0.88 };
 
-function toReaction(actor: DuetActor, key: number): FutReaction {
+function toReaction(actor: DuetActor, key: number, duet: boolean): FutReaction {
   return 'card' in actor
-    ? { kind: CARD_BY_ID[actor.card].type, key, seed: key, card: actor.card, ballFrom: actor.ballFrom, ballUntil: actor.ballUntil, ball2From: actor.ball2From }
+    ? { kind: CARD_BY_ID[actor.card].type, key, seed: key, card: actor.card, ballFrom: actor.ballFrom, ballUntil: actor.ballUntil, ball2From: actor.ball2From, duet }
     : { kind: 'tactical', key, seed: key, move: actor.move, goldBall: actor.goldBall };
 }
 
@@ -60,7 +60,7 @@ export function DuetStage({
     const reset = window.setTimeout(() => setReactions({ player: null, opponent: null }), 0);
     const timers = parts.map(([side, actor], i) =>
       window.setTimeout(() => {
-        setReactions((r) => ({ ...r, [side]: toReaction(actor, playKey * 10 + i) }));
+        setReactions((r) => ({ ...r, [side]: toReaction(actor, playKey * 10 + i, !solo) }));
         if (side === owner) setLanded(`${card}:${owner}`);
       }, 20 + actor.at * 1000),
     );
@@ -86,10 +86,10 @@ export function DuetStage({
   return (
     <div className="relative" style={{ width: width * 2 + gap, height }}>
       <div className="absolute left-0 top-0">
-        <FutCard seat={seats.player} width={width} slots={slotsOf('player')} reaction={reactions.player} />
+        <FutCard key={`p-${card}`} seat={seats.player} width={width} slots={slotsOf('player')} reaction={reactions.player} />
       </div>
       <div className="absolute top-0" style={{ left: width + gap }}>
-        <FutCard seat={seats.opponent} width={width} slots={slotsOf('opponent')} reaction={reactions.opponent} mirror />
+        <FutCard key={`o-${card}`} seat={seats.opponent} width={width} slots={slotsOf('opponent')} reaction={reactions.opponent} mirror />
       </div>
       <div className="pointer-events-none absolute self-center text-3xl font-black italic text-white/25" style={{ left: width + gap / 2, top: height * 0.45, transform: 'translate(-50%, -50%)' }}>
         VS
@@ -121,8 +121,9 @@ const STEPS = 14;
 function Prop(props: { prop: DuetProp; point: (a: DuetAnchor) => [number, number]; scale: number }) {
   const [due, setDue] = useState(false);
   useEffect(() => {
-    // On the same clock as the avatars' parts (DuetStage starts those 20 ms in).
-    const id = window.setTimeout(() => setDue(true), 20 + props.prop.at * 1000);
+    // On the avatars' clock: their parts start 20 ms in and pick up their first frame a frame or two later, so a ball
+    // handed on from a card's own ball takes over just as that one goes.
+    const id = window.setTimeout(() => setDue(true), 60 + props.prop.at * 1000);
     return () => window.clearTimeout(id);
   }, [props.prop.at]);
   return due ? <PropFlight {...props} /> : null;
@@ -136,14 +137,28 @@ function PropFlight({ prop, point, scale }: { prop: DuetProp; point: (a: DuetAnc
   const travels = !!prop.to;
   const xs = us.map((u) => fx + (tx - fx) * u);
   const ys = us.map((u) => fy + (ty - fy) * u - 4 * arc * u * (1 - u));
-  const size = SIZE[prop.kind] * scale;
+  const size = (prop.size ?? SIZE[prop.kind]) * scale;
   // A thing that travels shows throughout and fades as it arrives; a pop grows, holds and fades.
   const peak = prop.kind === 'fog' ? 0.7 : 1;
   // A solid prop is whole from its first frame and gone on its last, so the next one takes over in place.
   const opacity = prop.solid ? us.map((u) => (u < 1 ? 1 : 0)) : (travels ? us.map((u) => (u < 0.06 ? u / 0.06 : u > 0.9 ? (1 - u) / 0.1 : 1)) : us.map((u) => (u < 0.12 ? u / 0.12 : u > 0.8 ? (1 - u) / 0.2 : 1))).map((o) => o * peak);
   const grow = prop.solid ? us.map(() => 1) : prop.kind === 'fog' ? us.map((u) => 0.5 + 1.2 * u) : travels ? us.map(() => 1) : us.map((u) => (u < 0.15 ? 0.3 + (u / 0.15) * 0.9 : u < 0.25 ? 1.2 - (u - 0.15) * 2 : 1));
   const spin = travels && (prop.kind === 'ball' || prop.kind === 'gold-ball' || prop.kind === 'mud') ? us.map((u) => u * 720) : us.map(() => 0);
+  // A rocket leaves a flame behind it: copies on the same path a moment later, smaller and fainter.
+  const echoes = prop.kind === 'gold-ball' && travels ? [0.04, 0.08, 0.12, 0.16] : [];
   return (
+    <>
+      {echoes.map((lag, i) => (
+        <motion.div
+          key={lag}
+          className="absolute left-0 top-0"
+          initial={{ opacity: 0, x: fx, y: fy }}
+          animate={{ x: xs, y: ys, opacity: opacity.map((o) => o * (0.55 - i * 0.12)) }}
+          transition={{ duration: prop.dur, ease: 'linear', delay: lag }}
+        >
+          <div className="rounded-full" style={{ width: size * (0.85 - i * 0.14), height: size * (0.85 - i * 0.14), marginLeft: (-size * (0.85 - i * 0.14)) / 2, marginTop: (-size * (0.85 - i * 0.14)) / 2, background: 'radial-gradient(closest-side, rgba(255,226,90,0.95), rgba(255,120,0,0.5) 70%, transparent)' }} />
+        </motion.div>
+      ))}
     <motion.div
       className="absolute left-0 top-0"
       initial={{ opacity: 0, x: fx, y: fy }}
@@ -154,11 +169,12 @@ function PropFlight({ prop, point, scale }: { prop: DuetProp; point: (a: DuetAnc
         <PropArt prop={prop} />
       </div>
     </motion.div>
+    </>
   );
 }
 
 /** Each prop's size (art units, as on the figure). */
-const SIZE: Record<DuetProp['kind'], number> = { ball: 92, 'gold-ball': 92, mud: 110, fog: 300, notes: 150, clang: 170, bolt: 120, icon: 200 };
+const SIZE: Record<DuetProp['kind'], number> = { ball: 92, 'gold-ball': 92, mud: 110, fog: 300, notes: 150, clang: 170, bolt: 120, icon: 150, flash: 260 };
 
 function PropArt({ prop }: { prop: DuetProp }) {
   switch (prop.kind) {
@@ -208,5 +224,13 @@ function PropArt({ prop }: { prop: DuetProp }) {
       return <Zap className="size-full text-brand-yellow drop-shadow-[0_0_8px_rgba(255,229,0,0.8)]" fill="currentColor" strokeWidth={1.5} />;
     case 'icon':
       return prop.card ? <CardArt id={prop.card} /> : null;
+    case 'flash':
+      // Where it goes in: a white burst and a ring.
+      return (
+        <div className="relative size-full">
+          <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,226,90,0.6) 35%, transparent 70%)' }} />
+          <div className="absolute inset-[15%] rounded-full border-4 border-white/90" />
+        </div>
+      );
   }
 }

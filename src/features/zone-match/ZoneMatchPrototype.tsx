@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { FastForward, FlaskConical, RefreshCw, Settings2 } from 'lucide-react';
+import { FastForward, FlaskConical, Goal, RefreshCw, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
@@ -61,6 +61,9 @@ import { LAB_TOUR, LabBar, LabPicker, labDuelAction, useLabDriver, type LabRun, 
 import { PhaseCurtain } from './ZoneMatchCurtain';
 import { CategoriesReveal } from './ZoneMatchCategories';
 import { ZoneMatchStage, type ZoneMatchSeat } from './ZoneMatchStage';
+import { ZoneMatchShootout } from './ZoneMatchShootout';
+import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNumericQuestions';
+import { shootoutGoals } from './zoneMatch.shootout';
 
 const MCQ_FETCH_LIMIT = 30;
 /** A category reaches the draft board only with this many playable ranked MCQs (a round can take several duels). */
@@ -281,7 +284,7 @@ export function ZoneMatchPrototype() {
       ...[...TRAINING_QUESTIONS, ...TRAINING_PENALTY_QUESTIONS].map((q) => localizeTrainingQuestion(q, locale)),
       ...getDemoGameQuestions(locale as Locale),
     ];
-    return { mcqByCategory, fallbackMcqs };
+    return { mcqByCategory, fallbackMcqs, numerics: SAMPLE_NUMERIC_QUESTIONS };
   }, [locale, questionQueries, matchCategories]);
   const contentRef = useRef(content);
   useEffect(() => {
@@ -442,6 +445,14 @@ export function ZoneMatchPrototype() {
     },
     [categoryPool],
   );
+  const startPenalties = useCallback(() => {
+    stopBgm(300);
+    setLab(null);
+    setLabPicker(null);
+    setSearch(null);
+    setScreen('match');
+    dispatch({ type: 'LAB_SHOOTOUT', categoryPool: categoryPool ?? FALLBACK_CATEGORIES, opener: Math.random() < 0.5 ? 'player' : 'opponent', now: Date.now() });
+  }, [categoryPool]);
   const exitLab = useCallback(() => {
     setLabPicker(null);
     toDeck();
@@ -530,6 +541,17 @@ export function ZoneMatchPrototype() {
         <CoinToss kickoff={state.kickoff} seats={{ player: playerSeat, opponent: opponentSeat }} timeLeft={timeLeft} />
       </ScreenFrame>
     );
+  } else if (state.stage === 'shootout') {
+    body = (
+      <ZoneMatchShootout
+        state={state}
+        now={now}
+        player={playerSeat}
+        opponent={opponentSeat}
+        onQuit={toDeck}
+        onAnswer={(index, questionId) => dispatch({ type: 'ANSWER', side: 'player', index, questionId, now: Date.now() })}
+      />
+    );
   } else if (state.stage === 'play') {
     body = (
       <ZoneMatchStage
@@ -568,6 +590,7 @@ export function ZoneMatchPrototype() {
         timersOff={timersOff}
         onTimersOff={writeTimersOff}
         onCardLab={() => setLabPicker({ card: lab?.card ?? null })}
+        onPenalties={startPenalties}
       />
       {screen === 'match' && !lab && <PhaseCurtain state={state} />}
       {lab && screen === 'match' && state.stage === 'play' && (
@@ -594,9 +617,9 @@ export function ZoneMatchPrototype() {
 
 /** Full-screen page frame on the live match background, for the card screens. */
 /** The showdown cards show the whole player: legs, shorts, socks and boots. */
-const showdownFullBody: RenderCharacter = (customization, width) => <AvatarFullBody customization={customization} style={{ width }} />;
+export const showdownFullBody: RenderCharacter = (customization, width) => <AvatarFullBody customization={customization} style={{ width }} />;
 
-function ScreenFrame({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+export function ScreenFrame({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-dvh bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat pb-12 text-white">
       <div className={cn('mx-auto w-full px-4 pt-6', wide ? 'max-w-5xl' : 'max-w-2xl')}>{children}</div>
@@ -614,23 +637,29 @@ function isPlayableMcq(question: GameQuestion): boolean {
 }
 
 /** The live results hero + match stats, as the training match uses them. */
-function FullTime({
+export function FullTime({
   state,
   player,
   opponent,
   onPlayAgain,
   onChangeDeck,
+  verdict,
 }: {
   state: MatchState;
   player: ZoneMatchSeat;
   opponent: ZoneMatchSeat;
   onPlayAgain: () => void;
   onChangeDeck: () => void;
+  /** The server's result, when it decided the match (a side that leaves loses whatever the score). */
+  verdict?: { winner: DuelSide | null; reason: 'score' | 'left' };
 }) {
   const { t } = useLocale();
   const { player: mine, opponent: theirs } = state.score;
-  const playerWon = mine > theirs;
-  const isDraw = mine === theirs;
+  // A drawn match was settled on penalties.
+  const pens = state.shootout?.winner ? shootoutGoals(state.shootout.kicks) : null;
+  const playerWon = verdict ? verdict.winner === 'player' : pens ? state.shootout!.winner === 'player' : mine > theirs;
+  const isDraw = verdict ? verdict.winner === null : !pens && mine === theirs;
+  const left = verdict?.reason === 'left';
   const results = (side: DuelSide) => state.answerLog[side];
   const correct = (side: DuelSide) => results(side).filter((r) => r === 'correct').length;
   const total = Math.max(1, results('player').length);
@@ -652,7 +681,7 @@ function FullTime({
           opponentId="zone-match-bot"
           playerScore={mine}
           opponentScore={theirs}
-          totalGamesLabel={t('results.matchComplete')}
+          totalGamesLabel={left ? (playerWon ? `${opponent.name} left the match` : 'You left the match') : pens ? `${playerWon ? 'Won' : 'Lost'} ${pens.player}–${pens.opponent} on penalties` : t('results.matchComplete')}
           preMatchRankedProfile={null}
           playerTier={tierFromRp(player.rankPoints ?? 0)}
           playerDisplayRp={player.rankPoints}
@@ -729,6 +758,7 @@ function DevPanel({
   onNewMatch,
   onSkip,
   onCardLab,
+  onPenalties,
   timersOff,
   onTimersOff,
 }: {
@@ -741,6 +771,8 @@ function DevPanel({
   /** Ends the current timed step now (playtesting); null when nothing is on a timer. */
   onSkip: (() => void) | null;
   onCardLab: () => void;
+  /** Straight to a penalty shootout at a level score. */
+  onPenalties: () => void;
   timersOff: boolean;
   onTimersOff: (off: boolean) => void;
 }) {
@@ -810,6 +842,17 @@ function DevPanel({
             className="mb-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-yellow px-3 py-2 text-[11px] font-black uppercase tracking-wide text-surface-page hover:bg-brand-yellow/90"
           >
             <FlaskConical className="size-3.5" /> Card Lab
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onPenalties();
+            }}
+            className="mb-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white hover:bg-white/20"
+            data-zm-penalties
+          >
+            <Goal className="size-3.5" /> Penalties
           </button>
           {onSkip && (
             <button
