@@ -1481,6 +1481,8 @@
     "readyCopyRoomGameUpTo4": "2-4 oyuncu. Herkes hazır olduğunda oda sahibi başlatabilir.",
     "readyCopyRoomGameUpTo8": "2–8 oyuncu. Herkes hazır olduğunda oda sahibi başlatabilir.",
     "startRoomGame": "Oyunu başlat",
+    "startVsBot": "Bota karşı oyna",
+    "readyCopyVsBot": "Hazır mısın? Bota karşı bir antrenman maçı başlat.",
     "roomTabSharedPlayer": "Ortak Futbolcu (2–6)",
     "roomSharedPlayer": "Ortak Futbolcu · 2-6 oyuncu",
     "roomSharedPlayerDescription": "İki kulüp gösterilir ve herkes ikisinde de oynamış bir futbolcuyu yazmak için yarışır. 2 kişide ilk doğru cevap puanı alır; 3 veya daha fazla kişide ne kadar hızlı cevaplarsan o kadar çok puan. Jeton ya da RP yok.",

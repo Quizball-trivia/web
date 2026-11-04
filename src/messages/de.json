@@ -1481,6 +1481,8 @@
     "readyCopyRoomGameUpTo4": "2 bis 4 Spieler. Sobald alle bereit sind, kann der Gastgeber starten.",
     "readyCopyRoomGameUpTo8": "2 bis 8 Spieler. Sobald alle bereit sind, kann der Gastgeber starten.",
     "startRoomGame": "Spiel starten",
+    "startVsBot": "Gegen den Bot spielen",
+    "readyCopyVsBot": "Bereit? Starte ein Übungsspiel gegen den Bot.",
     "roomTabSharedPlayer": "Spieler für beide Vereine (2–6)",
     "roomSharedPlayer": "Spieler für beide Vereine · 2 bis 6 Spieler",
     "roomSharedPlayerDescription": "Zwei Vereine werden angezeigt. Alle versuchen, einen Fußballer zu nennen, der für beide gespielt hat. Bei 2 Spielern bekommt die erste richtige Antwort den Punkt; ab 3 Spielern gilt: Je schneller du antwortest, desto mehr Punkte holst du. Keine Münzen oder RP im Spiel.",
