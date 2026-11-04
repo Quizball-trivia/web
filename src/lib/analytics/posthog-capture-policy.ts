@@ -30,11 +30,12 @@ function isFootballQuizUrl(value: unknown): boolean {
  * ~45% of client volume when the 2026-10-31 billing cap blinded everything.
  * PostHog keeps what only PostHog can see: pageviews, UTM/referrers, the
  * pre-signup funnel, client api_error, flags and session replay.
+ * game_start stays: it is the only web signal for daily and mini-game players
+ * (one event per game), and 27 saved active-player insights count it.
  */
 const DB_DUPLICATED_EVENTS = new Set([
   'match_started',
   'match_completed',
-  'game_start',
   'game_complete',
   'game_view',
   'lobby_joined',

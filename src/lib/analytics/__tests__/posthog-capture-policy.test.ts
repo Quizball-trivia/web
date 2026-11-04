@@ -70,7 +70,7 @@ describe('event diet: DB-duplicated gameplay events and retry-storm throttles', 
   const ev = (event: string): CaptureResult => ({ uuid: `e-${event}`, event, properties: { $current_url: 'https://quizball.io/en/play' } });
 
   it('drops gameplay events the production DB already records', () => {
-    for (const name of ['match_started', 'match_completed', 'game_start', 'game_complete',
+    for (const name of ['match_started', 'match_completed', 'game_complete',
       'game_view', 'lobby_joined', 'matchmaking_started', 'quiz_question_answered',
       'match_results_viewed', 'wl_banner_viewed']) {
       expect(preparePostHogCapture(ev(name))).toBeNull();
@@ -79,7 +79,7 @@ describe('event diet: DB-duplicated gameplay events and retry-storm throttles', 
 
   it('keeps the PostHog-only surface: pageviews, errors, funnel and conversion events', () => {
     for (const name of ['$pageview', 'api_error', 'auth_panel_shown', 'account_created',
-      'onboarding_step_completed', '$identify']) {
+      'onboarding_step_completed', '$identify', 'game_start']) {
       expect(preparePostHogCapture(ev(name))?.event).toBe(name);
     }
   });
