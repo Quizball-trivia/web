@@ -1499,6 +1499,8 @@
     "readyCopyRoomGameUpTo4": "2 to 4 players. When everyone is ready, the host can start.",
     "readyCopyRoomGameUpTo8": "2 to 8 players. When everyone is ready, the host can start.",
     "startRoomGame": "Start game",
+    "startVsBot": "Play vs bot",
+    "readyCopyVsBot": "Ready? Start a practice match against the bot.",
     "roomTabSharedPlayer": "Played for Both (2–6)",
     "roomSharedPlayer": "Played for Both · 2 to 6 players",
     "roomSharedPlayerDescription": "Two clubs appear and everyone races to name a footballer who played for both. With 2 players the first right answer takes the point; with 3 or more, the faster you answer the more you score. No coins or RP at stake.",

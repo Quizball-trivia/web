@@ -54,7 +54,9 @@ export function RoomGameShell<V, C>({ room, screens }: { room: RoomConnection<C>
   const copy = aproximadoCopy(locale);
   const { snapshot, error, fatal, clearError, resync } = room;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
-  const roomPath = snapshot?.lobbyId && lobby?.lobbyId === snapshot.lobbyId && lobby.inviteCode ? `/friend/room/${lobby.inviteCode}?source=rematch` : "/play/friend";
+  // A queue match has no joinable friend room: its way back is the Ranked 2.0 queue, not the friend hub.
+  const fallbackPath = snapshot?.game === "zone_match" ? "/ranked2" : "/play/friend";
+  const roomPath = snapshot?.lobbyId && lobby?.lobbyId === snapshot.lobbyId && lobby.inviteCode ? `/friend/room/${lobby.inviteCode}?source=rematch` : fallbackPath;
   const view = (snapshot?.view ?? null) as V | null;
   // Out of a live match (left it, or left out at the gate): the room screen shows the room, not a "preparing" hand-off.
   const setSittingOut = useFriendRoomHandoffStore((state) => state.setSittingOut);

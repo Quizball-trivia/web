@@ -7,7 +7,7 @@
  * moment it is for (the duel, the question, the round).
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
 import type { RoomClientRules } from '@/features/room/useRoomConnection';
 import type { RoomConnection, RoomGameScreens } from '@/features/wordgames/RoomGameShell';
@@ -120,6 +120,22 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const state = view.match;
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
   const send = room.send;
+
+  // A deck picked on the queue screen rides along in sessionStorage: submit it once and let the match start.
+  const queueDeckSent = useRef(false);
+  useEffect(() => {
+    if (view.phase !== 'loadout' || view.loadoutIn.you || queueDeckSent.current) return;
+    try {
+      const raw = sessionStorage.getItem('zone-queue-deck');
+      if (!raw) return;
+      sessionStorage.removeItem('zone-queue-deck');
+      const cards = JSON.parse(raw) as CardId[];
+      if (Array.isArray(cards) && cards.length > 0) {
+        queueDeckSent.current = true;
+        send({ type: 'loadout', cards: cards.slice(0, 3) });
+      }
+    } catch { /* an unreadable saved deck: the picker stands in */ }
+  }, [view.phase, view.loadoutIn.you, send]);
 
   if (view.phase === 'loadout') {
     const secondsLeft = Math.max(0, Math.ceil((view.deadline - now) / 1000));

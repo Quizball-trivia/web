@@ -1499,6 +1499,8 @@
     "readyCopyRoomGameUpTo4": "De 2 a 4 jogadores. Quando todos estiverem prontos, quem criou a sala pode iniciar.",
     "readyCopyRoomGameUpTo8": "De 2 a 8 jogadores. Quando todos estiverem prontos, quem criou a sala pode iniciar.",
     "startRoomGame": "Iniciar jogo",
+    "startVsBot": "Jogar contra o bot",
+    "readyCopyVsBot": "Pronto? Começa uma partida de treino contra o bot.",
     "roomTabSharedPlayer": "Jogou nos Dois (2–6)",
     "roomSharedPlayer": "Jogou nos Dois · 2 a 6 jogadores",
     "roomSharedPlayerDescription": "Dois clubes aparecem, e todos correm para dizer o nome de um jogador que atuou pelos dois. Com 2 jogadores, quem acertar primeiro ganha o ponto; com 3 ou mais, quanto mais rápido você responder, mais pontos ganha. Sem moedas nem RP em jogo.",
