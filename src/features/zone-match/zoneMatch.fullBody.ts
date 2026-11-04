@@ -16,7 +16,9 @@ export const FULL_H = 840;
 export const FULL_GROUND = 830 / FULL_H;
 
 /** A hand's shape: which fingers are out (drawn by AvatarFullBody). */
-export type HandShape = 'open' | 'flat' | 'fist' | 'point' | 'thumb' | 'shaka' | 'heart' | 'ok';
+/** Hand shapes for the moving arms; `glove` / `grip` are a goalkeeper's gloved hand, open and holding the ball; `flag` grips
+ * the offside flag. */
+export type HandShape = 'open' | 'flat' | 'fist' | 'point' | 'thumb' | 'shaka' | 'heart' | 'ok' | 'glove' | 'grip' | 'flag';
 
 /**
  * One arm, as screen directions in degrees (0 = straight down, 90 = towards +x, 180 = straight up, −90 = towards −x):
@@ -192,7 +194,7 @@ export function fullBodyColors(customization: AvatarCustomization | null | undef
  * The arm skeleton in the upper body's art units (496 × 543; measured on the skin art): the shoulder joints (inside the
  * sleeves), the segment lengths, and how thick the arm is.
  */
-export const ARM = { shoulder: { L: [150, 318] as [number, number], R: [345, 318] as [number, number] }, upper: 140, fore: 160, hand: 66, upperW: 54, foreW: 48 };
+export const ARM = { shoulder: { L: [148, 298] as [number, number], R: [347, 298] as [number, number] }, upper: 136, fore: 156, hand: 66, upperW: 54, foreW: 48 };
 
 const dir = (deg: number): [number, number] => [Math.sin((deg * Math.PI) / 180), Math.cos((deg * Math.PI) / 180)];
 const angleOf = (dx: number, dy: number) => (Math.atan2(dx, dy) * 180) / Math.PI;

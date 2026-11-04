@@ -38,6 +38,10 @@ import {
   FULL_GROUND,
   FULL_H,
   FULL_W,
+  ARMS_REST,
+  mixArms,
+  reachArm,
+  type ArmPose,
   type FullBodyPose,
 } from './zoneMatch.fullBody';
 import {
@@ -92,6 +96,8 @@ interface MoveFrame {
   alignKick?: { x: number; z: number };
   /** Ease towards the frame instead of jumping (bullet time). */
   glide?: boolean;
+  /** Moving arms instead of the art's own (holding something up). */
+  arms?: ArmPose;
 }
 interface KeeperFrame {
   kind: 'keeper';
@@ -214,8 +220,6 @@ export interface ScriptFx {
   goldBoots: { side: ZoneSide; glow: number } | null;
   /** Goalkeeper Gloves in use this outcome (the save, or beaten by a Golden Boot), and a flash at the touch. */
   gloves: { side: ZoneSide; flash: number; beaten: boolean } | null;
-  /** Offside Trap: the linesman's flag on the far touchline (up 0–1). */
-  flag: { x: number; up: number } | null;
   /** Camera rush / speed lines, 0–1. */
   rush: number;
   /**
@@ -227,7 +231,7 @@ export interface ScriptFx {
   arc: { x0: number; z0: number; x1: number; z1: number; height: number; fade: number } | null;
 }
 
-export const NO_FX: ScriptFx = { ghosts: [], trail: [], ballTrail: null, goldBoots: null, gloves: null, flag: null, rush: 0, bus: null, arc: null };
+export const NO_FX: ScriptFx = { ghosts: [], trail: [], ballTrail: null, goldBoots: null, gloves: null, rush: 0, bus: null, arc: null };
 const fx = (patch: Partial<ScriptFx>): ScriptFx => ({ ...NO_FX, ...patch });
 
 /** Park the Bus: the bus across the attack at `x` (pushed aside from `burstAt`, by a Golden Boot). */
@@ -474,10 +478,11 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
         if (!keeperActs || t < keeperT0 - 0.05) {
           return t < end ? { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: 'keeper_idle' } : { kind: 'settle' };
         }
-        if (t < Math.min(end, arrival + 1.3)) {
+        // The dive, the landing and getting up again (holding a caught ball) all run on the keeper's clock.
+        if (t < end) {
           return { kind: 'keeper', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, time: Math.max(0, t - keeperT0), target: keeperTarget, style: saveStyle };
         }
-        return t < end ? { kind: 'hold' } : { kind: 'settle' };
+        return { kind: 'settle' };
       }
       // Long range: the outfield defender is beaten, then turns to watch it fly in.
       const def = s0.defender;
@@ -790,7 +795,20 @@ function longBallScript(from: Possession, next: Possession, lands: boolean): Scr
   };
 }
 
-/** Offside Trap: the linesman's flag goes up, the attacker freezes, and the defender takes the ball. */
+/** The offside flag: raised from the hand over a beat, waved overhead, lowered at the end; the other arm points down. */
+const FLAG_UP: ArmPose = { L: reachArm('L', 112, 560, 0, 'point'), R: reachArm('R', 372, -40, 180, 'flag') };
+function flagArms(t: number): ArmPose {
+  const up = smooth(seg(t, 0.15, 0.5)) * (1 - smooth(seg(t, 1.8, 2.1)));
+  const pose = mixArms(ARMS_REST, FLAG_UP, up);
+  // Waved: the wrist rocks the pole side to side.
+  pose.R = { ...pose.R, hand: pose.R.hand + 14 * Math.sin(t * 13) * up, shape: up > 0.15 ? 'flag' : pose.R.shape };
+  return pose;
+}
+
+/**
+ * Offside Trap: the defender who set it raises the offside flag in their own hand (waving it), the attacker freezes,
+ * and the defender takes the ball.
+ */
 function offsideScript(from: Possession): Script {
   const A = from.attacker;
   const D = otherZoneSide(A);
@@ -810,7 +828,7 @@ function offsideScript(from: Possession): Script {
         // Frozen mid-stride while the flag stays up.
         return t < 2.1 ? { kind: 'hold' } : { kind: 'settle' };
       }
-      if (t < 1.1) return { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: s0.keeper ? 'keeper_idle' : 'jockey', time: t };
+      if (t < 2.1) return { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: s0.keeper ? 'keeper_idle' : 'jockey', time: t, arms: flagArms(t) };
       return { kind: 'settle' };
     },
     ball(t) {
@@ -823,7 +841,6 @@ function offsideScript(from: Possession): Script {
     },
     lit: (t) => (t < 0.6 ? A : D),
     cam: (t) => (t < 2.1 ? { focus: { x: stop.x + d * 1.2, z: -4 }, span: 9 } : null),
-    fx: (t) => fx({ flag: t < 2.4 ? { x: stop.x, up: ramp(t, 0.3, 2.4, 0.25, 0.3) } : null }),
   };
 }
 
@@ -1087,6 +1104,30 @@ export function groundCutout(p: CutoutPose, contact = false, tilt = Math.atan2(p
 
 /** The keeper's dive meets the ball at this point of its clock (as GoalkeeperMotion's KEEPER_CONTACT_S). */
 const KEEPER_CONTACT_S = 0.45 + 0.78 * 0.88;
+/** Up the figure's axis (from the soles, as a fraction of their height) to the gloves at full stretch, and to the chest. */
+const KEEPER_REACH = (FULL_GROUND * FULL_H + 60) / (FULL_GROUND * FULL_H);
+const KEEPER_CHEST = (FULL_GROUND * FULL_H - 400) / (FULL_GROUND * FULL_H);
+/** A dive's landing: lying on his side (radians from upright), lifted by half the body's thickness (world units). */
+const LYING = 1.45;
+const BODY_HALF = 0.34;
+/** How long after contact he lies there before getting up. */
+const KEEPER_DOWN_S = 1.0;
+/** The keeper's arms (upper-body art units): gloves out at the waist, palms to the ball; both thrown straight past the
+ * head; the ball gathered into the chest. */
+const KEEPER_ARMS_WIDE: ArmPose = { L: reachArm('L', 30, 290, 190, 'glove'), R: reachArm('R', 466, 290, 170, 'glove') };
+const KEEPER_ARMS_FLARE: ArmPose = { L: reachArm('L', 16, 120, 200, 'glove'), R: reachArm('R', 480, 120, 160, 'glove') };
+const KEEPER_ARMS_SET: ArmPose = { L: reachArm('L', 112, 452, 200, 'glove'), R: reachArm('R', 384, 452, 160, 'glove') };
+/** Gloves worn outside a dive: set and ready in goal (palms out at the waist), or carried by the sides elsewhere. */
+export const GLOVED_ARMS: Record<'ready' | 'down', ArmPose> = {
+  ready: KEEPER_ARMS_SET,
+  down: { L: reachArm('L', 122, 548, 8, 'glove'), R: reachArm('R', 374, 548, -8, 'glove') },
+};
+const KEEPER_ARMS_UP: ArmPose = (() => {
+  const L = reachArm('L', 214, -70, 180, 'glove');
+  const R = reachArm('R', 282, -70, 180, 'glove');
+  return { L: { ...L, hand: L.fore }, R: { ...R, hand: R.fore } };
+})();
+const KEEPER_ARMS_HOLD: ArmPose = { L: reachArm('L', 220, 392, 115, 'grip', -1), R: reachArm('R', 276, 392, 245, 'grip', -1) };
 const TACKLE_CONTACT = 0.34;
 /** An elastic 0→1, for bouncing back up. */
 const elastic = (t: number) => (t >= 1 ? 1 : 1 - Math.cos(t * Math.PI * 2.4) * Math.exp(-5 * t));
@@ -1114,6 +1155,8 @@ export class DuelDirector {
 
   /** Outputs read by the scene each frame. */
   readonly focus = new THREE.Vector3();
+  /** The camera's right, flat on the pitch: a flat figure can only lean across the screen, not towards the camera. */
+  private readonly camRight = new THREE.Vector3(1, 0, 0);
   lit: { column: 0 | 1 | 2; side: ZoneSide } = { column: 1, side: 'player' };
   /** The running outcome script's card effects. */
   scriptFx: ScriptFx = NO_FX;
@@ -1221,6 +1264,9 @@ export class DuelDirector {
     if (this.needsCut) this.cut(spots, input.possession.attacker, now);
 
     // Players.
+    this.camRight.set(1, 0, 0).applyQuaternion(camera.quaternion).setY(0);
+    if (this.camRight.lengthSq() < 1e-6) this.camRight.set(1, 0, 0);
+    this.camRight.normalize();
     const tackle = active?.tackle && t >= active.tackle.start && t < active.tackle.end ? active.tackle : null;
     if (tackle) this.runTackle(tackle, t - tackle.start);
     for (const side of ['player', 'opponent'] as const) {
@@ -1234,6 +1280,8 @@ export class DuelDirector {
           : { kind: 'settle' };
       const prevX = a.x;
       const prevZ = a.z;
+      // Moving arms are the keeper's (a held save keeps them); everyone else has the art's own.
+      if (frame.kind !== 'keeper' && !(frame.kind === 'hold' && a.proc === 'keeper')) a.pose.body.arms = undefined;
       if (frame.kind === 'tackle') {
         // Posed by runTackle.
       } else if (frame.kind === 'hold') {
@@ -1397,9 +1445,14 @@ export class DuelDirector {
     } else {
       this.pose(a, f.clip, f.time ?? now + a.phase, now);
     }
+    a.pose.body.arms = f.arms;
   }
 
-  /** Keeper: crouch, then spring and stretch towards the ball (or the wrong corner), land and lie there. */
+  /**
+   * Keeper: set, gloves out at the waist; spring and stretch, both gloves thrown past the head at the ball (or into the
+   * wrong corner), the body angled so the gloves arrive where the ball is; then down onto his side on the grass — a
+   * catch pulled into the chest, a parry or a beaten dive still stretched out.
+   */
   private applyKeeper(a: Actor, f: KeeperFrame) {
     if (a.proc !== 'keeper') this.startEase(a, this.lastNow);
     a.proc = 'keeper';
@@ -1417,25 +1470,50 @@ export class DuelDirector {
     const tx = f.x + lx * cos + lz * sin;
     const tz = f.z - lx * sin + lz * cos;
     const reach = smooth((f.time - 0.5) / (KEEPER_CONTACT_S - 0.5));
-    const land = smooth((f.time - KEEPER_CONTACT_S - 0.08) / 0.55);
+    const after = f.time - KEEPER_CONTACT_S;
+    const fall = smooth((after - 0.02) / 0.42);
+    const rise = smooth((after - KEEPER_DOWN_S) / 0.5);
+    const caught = f.style === 'catch';
+    const gather = caught ? smooth(after / 0.3) : 0;
     const load = Math.sin(Math.PI * smooth((f.time - 0.15) / 0.4)) * (1 - reach);
     if (Math.abs(Math.sin(f.yaw)) > 0.2) p.face = Math.sin(f.yaw) > 0 ? 1 : -1;
-    p.x = lerp(f.x, tx, 0.55 * reach);
-    p.z = lerp(f.z, tz, 0.55 * reach);
-    p.y = Math.max(0, (ly * 0.45) * reach * (1 - land) + Math.sin(reach * Math.PI) * 0.3);
-    // Lean towards the ball as the dive extends; nearly flat once landed.
-    const angle = reach * (1.05 + 0.4 * land);
-    lean(p, tx - f.x, tz - f.z, angle);
+
+    // The figure is flat: it leans across the screen, to the side the ball is on (leaning towards or away from the
+    // camera would stand it on its head). Tilted at least ~55° (lower balls flatter), so the gloves (KEEPER_REACH of
+    // the figure up its axis) are at the ball's height at contact, feet off the ground when the ball is high.
+    const dx = tx - f.x;
+    const dz = tz - f.z;
+    const side = dx * this.camRight.x + dz * this.camRight.z >= 0 ? 1 : -1;
+    const len = CUTOUT_H * CUTOUT_BASE * KEEPER_REACH;
+    const tilt = THREE.MathUtils.clamp(Math.acos(THREE.MathUtils.clamp(ly / len, -1, 1)), 0.95, 1.4);
+    const by = Math.max(0, ly - len * Math.cos(tilt));
+    // In flight towards the ball on an arc; after contact down to the grass, lying on his side (lifted by half the
+    // body's thickness, so it lies on the pitch, not through it); after a beat, back up on his feet.
+    const flight = smooth(reach);
+    const angle = (tilt * reach + (LYING - tilt) * fall) * (1 - rise);
+    p.x = lerp(f.x, tx, 0.45 * flight);
+    p.z = lerp(f.z, tz, 0.45 * flight);
+    p.y = lerp(by * flight + Math.sin(Math.PI * reach) * 0.35, 0, fall) + BODY_HALF * Math.sin(angle) * fall;
+    lean(p, this.camRight.x * side, this.camRight.z * side, angle);
     p.sy = 1;
     p.sx = 1;
-    // Crouched, pushing off, then both legs stretched out behind.
+    // Crouched, pushing off, then both legs stretched out behind; standing again as he gets up.
     // The set stance sinks (planted) before the spring, then hands over to the dive without a pop.
     const set = keeperSetPose(f.time, a.phase, load);
-    Object.assign(p.body, reach > 0 ? mixPose(set, divePose(reach), smooth(reach / 0.35)) : set);
+    const dive = reach > 0 ? mixPose(set, divePose(reach), smooth(reach / 0.35)) : set;
+    Object.assign(p.body, rise > 0 ? mixPose(dive, STAND, rise) : dive);
+    // The arms: from the art's own (thumbs up) to the set gloves, thrown up past the head, a catch gathered in (and
+    // kept to the chest once up); otherwise back to the art's own arms once he's up.
+    // (Out wide first, so the gloves don't sweep across his face on the way down from the thumbs-up.)
+    const ready = f.time < 0.15 ? mixArms(ARMS_REST, KEEPER_ARMS_WIDE, smooth(f.time / 0.15)) : mixArms(KEEPER_ARMS_WIDE, KEEPER_ARMS_SET, smooth((f.time - 0.15) / 0.2));
+    // Thrown up and out to the sides, then together past the head (not up across his face).
+    const thrown = reach < 0.35 ? mixArms(ready, KEEPER_ARMS_FLARE, smooth(reach / 0.35)) : mixArms(KEEPER_ARMS_FLARE, KEEPER_ARMS_UP, smooth((reach - 0.35) / 0.45));
+    if (caught) p.body.arms = gather > 0 ? mixArms(thrown, KEEPER_ARMS_HOLD, gather) : thrown;
+    else p.body.arms = rise >= 1 ? undefined : mixArms(thrown, ARMS_REST, rise);
     p.spin = 0;
     p.blur = reach * (1 - reach) * 1.6;
-    // Hands at the top corner of the figure, on the side it dives to.
-    a.catchPoint.set(p.x, p.y, p.z).addScaledVector(p.up, CUTOUT_H * CUTOUT_BASE * p.sy * 0.95);
+    // The ball sits between the gloves: past the head at full stretch, at the chest once gathered.
+    a.catchPoint.set(p.x, p.y, p.z).addScaledVector(p.up, CUTOUT_H * CUTOUT_BASE * p.sy * lerp(KEEPER_REACH, KEEPER_CHEST, gather));
   }
 
   /** The slide tackle: the defender dashes in low, the runner tips over backwards. */
@@ -1652,7 +1730,8 @@ export class DuelDirector {
     } else if (frame.kind === 'catch') {
       this.ballLoose = false;
       const a = this.actors[frame.side];
-      if (a) this.ball.copy(a.catchPoint);
+      // Into the gloves over a few frames (the flat figure's hands can be off the ball's line in depth).
+      if (a) this.ball.lerp(a.catchPoint, 1 - Math.exp(-30 * dt));
     } else {
       // Loose: free physics from the last frame's velocity.
       this.ballVel.y -= GRAVITY * dt;

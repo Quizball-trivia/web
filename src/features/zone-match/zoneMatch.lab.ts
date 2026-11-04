@@ -290,6 +290,7 @@ function mcqState(script: McqScript, t: number, openedAt: number): MatchState {
       categoryName: 'Demo',
       offCategory: false,
       answers: { player: at(script.you), opponent: at(script.rival) },
+      answeredAt: { player: null, opponent: null },
       firstMiss: { player: at(script.firstMiss), opponent: null },
       startedAt: openedAt,
       deadline: openedAt + MCQ_MS,

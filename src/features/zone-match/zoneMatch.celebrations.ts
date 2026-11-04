@@ -117,18 +117,15 @@ const siu: Celebration = {
 const shaka: Celebration = {
   id: 'shaka',
   label: 'Shaka (Ronaldinho)',
-  about: 'A bouncing little dance, both hands up giving the hang-loose shaka and shaking it.',
+  about: "A bouncing little dance with the avatar's own hang-loose hands up by the shoulders, shaken by a shimmy.",
   length: 3,
   frame(t) {
     const L = this.length;
     const bounce = Math.abs(Math.sin(t * 7));
-    const wag = Math.sin(t * 14);
-    const arms: ArmPose = {
-      L: { upper: -62, fore: 162 + 14 * wag, hand: 166 + 22 * wag, shape: 'shaka' },
-      R: { upper: 62, fore: -162 + 14 * wag, hand: -166 + 22 * wag, shape: 'shaka' },
-    };
-    const body = legs(t, L, { ...STAND, kneeL: STAND.kneeL + 16 * bounce, kneeR: STAND.kneeR + 16 * bounce, bodyY: STAND.bodyY + 12 * bounce, bodyX: 8 * Math.sin(t * 3.5), lean: 3 * Math.sin(t * 3.5) });
-    return frame({ ...body, arms: withArms(t, L, arms) }, { lift: 2 * bounce });
+    // The avatar's own arms as drawn — its hands already give the shaka — shaken by a quick shimmy of the shoulders.
+    const shimmy = Math.sin(t * 17) * Math.min(smooth(t / 0.3), smooth((L - t) / 0.3));
+    const body = legs(t, L, { ...STAND, kneeL: STAND.kneeL + 16 * bounce, kneeR: STAND.kneeR + 16 * bounce, bodyY: STAND.bodyY + 12 * bounce, bodyX: 8 * Math.sin(t * 3.5) + 5 * shimmy, lean: 3 * Math.sin(t * 3.5) + 4 * shimmy });
+    return frame(body, { lift: 2 * bounce });
   },
 };
 
@@ -194,9 +191,11 @@ const heart: Celebration = {
   frame(t) {
     const L = this.length;
     const breathe = Math.sin(t * 3);
+    // Wrists either side of the chest, fingers up: the two half hearts meet in the middle round a gap that shows the
+    // shirt through it (HandShapeArt 'heart').
     const arms: ArmPose = {
-      L: reachArm('L', 214, 352 + 3 * breathe, 150, 'heart'),
-      R: reachArm('R', 282, 352 + 3 * breathe, -150, 'heart'),
+      L: reachArm('L', 200, 398 + 3 * breathe, 180, 'heart'),
+      R: reachArm('R', 296, 398 + 3 * breathe, -180, 'heart'),
     };
     return frame({ ...legs(t, L, { ...STAND, lean: -3 }), arms: withArms(t, L, arms) }, { caption: { text: '♥', opacity: bell(t, 0.6, L - 0.3), scale: 1 + 0.12 * Math.sin(t * 9) } });
   },
@@ -287,12 +286,15 @@ const dab: Celebration = {
   frame(t) {
     const L = this.length;
     const hit = Math.max(bell(t, 0.35, 1.25), bell(t, 1.55, 2.5));
+    // Both arms aimed up and out the same way: the near one straight, the far one bent with its elbow up by the face
+    // and the forearm across the eyes, the hand out past the head.
     const pose: ArmPose = {
-      L: { upper: -138, fore: -138, hand: -140, shape: 'flat' },
-      R: reachArm('R', 168, 176, -120, 'fist', -1),
+      L: { upper: -142, fore: -142, hand: -142, shape: 'flat' },
+      R: { upper: -162, fore: -120, hand: -114, shape: 'fist' },
     };
     const ready: ArmPose = both(18, 30, 30, 'fist');
     const arms = mixArms(ready, pose, Math.min(1, hit * 1.6));
+    // Leaning into the dab: the body and head go down towards the bent elbow, the way the arms point.
     const body = { ...mixPose(STAND, { ...crouchPose(0.3), lean: -14 }, hit), arms: withArms(t, L, arms, 0.2) };
     return frame(body, { tilt: -6 * hit, lift: 2 * bell(t, 0.3, 0.5) + 2 * bell(t, 1.5, 1.7) });
   },

@@ -211,7 +211,7 @@ export function AuctionResultsScreen({
           >
             {humanWon ? (
               <Image
-                src="/assets/brand/world-cup-trophy.webp"
+                src="/assets/brand/ucl-trophy.webp"
                 alt=""
                 width={72}
                 height={72}

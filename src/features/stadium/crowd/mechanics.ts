@@ -476,6 +476,64 @@ export const thunderclap: Mechanic = {
   },
 };
 
+/* ----------------------------------------------------------- big chance */
+
+/**
+ * Through on goal: the crowd rises with it, without the thunderclap's frantic bounce. A few slow, big jumps with arms up
+ * (staggered a little by row, like a ripple through the stand), then the stand comes alive in a mix that shifts every
+ * few seconds and from block to block: flags waved on poles, scarves twirled overhead, arms up clapping, slow bouncing.
+ */
+export const bigChance: Mechanic = {
+  id: "bigChance",
+  label: "Big chance",
+  blurb: "Slow jumps with arms up, then flags, scarves, claps and bounces shifting round the stand.",
+  stillAt: 4,
+  loops: true,
+  create({ crowd, palette }) {
+    const JUMPS_FOR = 4.2;
+    const PHASE = 5;
+    return {
+      update(t, _dt, out) {
+        for (let i = 0; i < crowd.count; i++) {
+          const seed = crowd.seed[i];
+          // Rows rise a beat apart: a ripple, not a single snap.
+          const lag = (crowd.row[i] % 9) * 0.05 + (seed % 7) * 0.012;
+          const tt = t - lag;
+          if (tt < JUMPS_FOR) {
+            // ~0.85 jumps a second: up, a moment in the air, down.
+            const jump = Math.max(0, Math.sin(tt * Math.PI * 1.7));
+            out.oy[i] = -jump * jump * 0.75;
+            out.prop[i] = PROP_ARMS;
+            out.propA[i] = 0.55 + 0.45 * jump;
+            continue;
+          }
+          // After the jumps: each block of seats picks a behaviour, and it moves on every PHASE seconds.
+          const block = Math.floor(crowd.col[i] / 6) + Math.floor(crowd.row[i] / 5) * 3;
+          const role = (block + Math.floor((tt - JUMPS_FOR) / PHASE) + (seed % 3 === 0 ? 1 : 0)) % 4;
+          if (role === 0 && seed % 3 === 0) {
+            out.prop[i] = PROP_FLAG;
+            out.propA[i] = seed * 0.02 + tt * 0.9;
+            out.propColor[i] = (seed >> 2) % palette.length;
+          } else if (role === 1 && seed % 2 === 0) {
+            out.prop[i] = PROP_TWIRL;
+            out.propA[i] = tt * 5 + seed * 0.01;
+            out.propColor[i] = (seed >> 1) % 2;
+          } else if (role === 2) {
+            // Arms up, clapping on a steady beat.
+            const clap = 0.5 + 0.5 * Math.sin(tt * 2 * Math.PI * 1.1 + seed * 0.001);
+            out.prop[i] = PROP_ARMS;
+            out.propA[i] = 0.6 + 0.4 * clap;
+            out.oy[i] = -clap * 0.08;
+          } else {
+            // A slow, easy bounce.
+            out.oy[i] = -Math.abs(Math.sin(tt * 2.1 + seed * 0.002)) * 0.32;
+          }
+        }
+      },
+    };
+  },
+};
+
 /* -------------------------------------------------------------- poznan */
 
 export const poznan: Mechanic = {

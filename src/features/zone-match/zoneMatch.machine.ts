@@ -20,19 +20,22 @@ import {
   type ActiveCards,
   type CardId,
   type CardPhase,
+  BLUFF_CARDS,
+  BLUFF_FAKES,
 } from './zoneMatch.cards';
+import { revealSchedule } from './zoneMatch.reveal';
+import { ENERGY_MAX, ENERGY_START, RULES } from './zoneMatch.playtest';
 
 // ── Timings ──────────────────────────────────────────────────────────────────
 
 /** The live ShowdownScreen's own runtime. */
 export const SHOWDOWN_MS = 4500;
-/** After the VS screen, the showdown shows both decks so each player knows what the other can play. */
-/** Long enough to read the opponent's five cards; Ready ends it early. */
-export const DECK_REVEAL_MS = 12_000;
+/** After the VS screen, the showdown shows both decks so each player knows what the other can play: its length is the
+ *  reveal's schedule (zoneMatch.reveal — every card's reaction in turn, then time to read). */
 /** The phase curtains: how long one stays up. Timed steps start their clock after it. */
 export const PHASE_CURTAIN_MS = 2600;
-/** Both sides' five categories revealed (Ready ends it early). */
-export const CATEGORY_REVEAL_MS = 11_000;
+/** Both sides' five categories revealed: the curtain, the tiles landing, then a 5-second countdown to kick-off. */
+export const CATEGORY_REVEAL_MS = PHASE_CURTAIN_MS + 3200 + 5000;
 /** The attacker picks this attack's category. */
 export const CATEGORY_PICK_MS = 8000;
 /** Categories dealt to each side. */
@@ -41,8 +44,8 @@ export const NUMERIC_MS = 15_000;
 export const BOTH_IN_HOLD_MS = 600;
 /** The sky shot: kick, the climb (up to 2.3 s), the distances, the winner and the verdict. */
 export const NUMERIC_REVEAL_MS = 6000;
-/** Lineup board, then the live kickoff countdown for its last 3 s. */
-export const LINEUP_MS = 6000;
+/** The coin toss: up to 4 s to call it, the flip, the result, then a 3-second countdown to kick-off. */
+export const LINEUP_MS = 11_000;
 export const CARD_PICK_MS = 8000;
 export const CARD_REVEAL_MS = 3500;
 export const HOME_PICK_MS = 6000;
@@ -95,12 +98,16 @@ export interface Mcq {
   /** The category had no unused question left, so a general one stands in. */
   offCategory: boolean;
   answers: Record<DuelSide, number | null>;
+  /** When each side's answer went in (for who was faster). */
+  answeredAt: Record<DuelSide, number | null>;
   /** Wrong answers already used up by Second Ball. */
   firstMiss: Record<DuelSide, number | null>;
   startedAt: number;
   deadline: number;
   /** Options hidden by each side's 50/50. */
   hidden: Record<DuelSide, number[]>;
+  /** Time Wasting: ms taken off each side's answering time. */
+  squeeze?: Record<DuelSide, number>;
   /** When each side's 50/50 was played (the screen cuts the two answers out over a beat). */
   hiddenAt: Record<DuelSide, number | null>;
 }
@@ -186,6 +193,8 @@ export interface MatchState {
   dummyShownAs: PerSide<CardId | null>;
   gloves: PerSide<boolean>;
   tiki: PerSide<number>;
+  /** Rule variant (RULES.energy): each side's energy to pay for playstyles during the match. */
+  energy: PerSide<number>;
   /** The side can't play cards up to and including this duel number. */
   yellowThrough: PerSide<number>;
   homeCategoryId: string | null;
@@ -253,6 +262,7 @@ export const IDLE: MatchState = {
   dummyShownAs: both(null),
   gloves: both(false),
   tiki: both(0),
+  energy: both(0),
   yellowThrough: both(0),
   homeCategoryId: null,
   cardEvents: [],
@@ -298,14 +308,14 @@ function fire(
 /** Cards that take effect this duel: blind cards cancelled by VAR or Shin Pads, and Dummy Runs, have none. */
 export function activeCards(s: MatchState): ActiveCards {
   const live = (side: DuelSide) =>
-    s.played[side].filter((id, i) => !(i === 0 && s.cancelled[side] && CARD_BY_ID[id].phase === 'blind') && id !== 'dummy-run');
+    s.played[side].filter((id, i) => !(i === 0 && s.cancelled[side] && CARD_BY_ID[id].phase === 'blind') && !BLUFF_CARDS.includes(id));
   return { player: live('player'), opponent: live('opponent') };
 }
 
 /** The blind card `side` shows the other side at the reveal: a Dummy Run shows as its fake sabotage. */
 export function revealedCard(s: MatchState, side: DuelSide): CardId | null {
   const card = s.choice[side] ?? null;
-  return card === 'dummy-run' ? s.dummyShownAs[side] : card;
+  return card && BLUFF_CARDS.includes(card) ? s.dummyShownAs[side] : card;
 }
 
 /** Why `side` can't answer the other side's revealed card with `card` (VAR Review or Shin Pads), or null when it can. */
@@ -317,6 +327,10 @@ export function reactionBlocker(s: MatchState, side: DuelSide, card: CardId): st
   if (card === 'shin-pads' && CARD_BY_ID[seen].type !== 'sabotage') return 'Shin Pads only stop sabotage';
   return cardBlocker(s, side, card, 'reaction');
 }
+
+/** The attacker's cards that get past Goalkeeper Gloves. */
+const beatsGloves = (cards: CardId[]) =>
+  cards.includes('golden-boot') || cards.includes('nutmeg') || cards.includes('bicycle-kick');
 
 /** Each side attacks MATCH_ROUNDS / 2 times. */
 export const ATTACKS_EACH = MATCH_ROUNDS / 2;
@@ -350,9 +364,9 @@ export function attackNumber(round: number): number {
  */
 export function opponentPublicView(s: MatchState): { used: CardId[] } {
   const fake = s.dummyShownAs.opponent;
-  const bluffing = s.battleStep === 'reveal' && s.choice.opponent === 'dummy-run' && !s.cancelled.opponent && fake !== null;
+  const bluffing = s.battleStep === 'reveal' && !!s.choice.opponent && BLUFF_CARDS.includes(s.choice.opponent) && !s.cancelled.opponent && fake !== null;
   if (!bluffing) return { used: s.used.opponent };
-  return { used: [...s.used.opponent.filter((id) => id !== 'dummy-run'), fake] };
+  return { used: [...s.used.opponent.filter((id) => !BLUFF_CARDS.includes(id)), fake] };
 }
 
 export interface DuelStakes {
@@ -387,7 +401,7 @@ export function duelStakes(s: MatchState): DuelStakes {
     const winner = decision.kind === 'numeric' ? tiebreakWinner : decision.winner;
     return resolveBattle(s.possession, winner, movementMods(s.possession, winner, active, tiki, correct));
   };
-  const glovesWillSave = s.possession.zone === 'opponent' && gloves(defender) && !active[attacker].includes('golden-boot');
+  const glovesWillSave = s.possession.zone === 'opponent' && gloves(defender) && !beatsGloves(active[attacker]);
   if (s.battleStep === 'numeric' || s.battleStep === 'numericReveal') {
     const bothRight = { player: true, opponent: true };
     return { mode: 'numeric', win: settle(bothRight, 'player'), lose: settle(bothRight, 'opponent'), bothWrong: null, glovesWillSave };
@@ -410,7 +424,7 @@ export function sabotageOn(s: MatchState, side: DuelSide): CardId[] {
 export function cardBlocker(s: MatchState, side: DuelSide, card: CardId, phase: CardPhase): string | null {
   const def = CARD_BY_ID[card];
   if (!s.deck[side].includes(card)) return 'Not in your deck';
-  if (s.used[side].includes(card)) return 'Used this match';
+  if (RULES.energy ? s.energy[side] < def.energy : s.used[side].includes(card)) return RULES.energy ? 'Not enough energy' : 'Used this match';
   if (def.phase !== phase) {
     return def.phase === 'live' ? 'Live card — play it during the question' : def.phase === 'reaction' ? 'Reaction — after their card is revealed' : 'Blind card — before the question';
   }
@@ -421,11 +435,18 @@ export function cardBlocker(s: MatchState, side: DuelSide, card: CardId, phase: 
     return def.role === 'attack' ? 'Attack card — only on your ball' : def.role === 'defend' ? 'Defend card — only on their ball' : 'Only on your shot';
   }
   if (card === 'home-advantage' && unusedCategories(s, side).length === 0) return 'No categories left to pick';
+  if (card === 'screamer' && s.possession.zone !== 'centre') return 'Only from the centre';
+  if (card === 'bicycle-kick' && RULES.bicycle === 'comeback') {
+    const diff = s.score[side] - s.score[otherZoneSide(side)];
+    if (diff > 0) return "Only when you're level or behind";
+  }
+  if (card === 'super-sub' && !s.used[side].some((id) => id !== 'super-sub')) return 'Nothing used yet to bring back';
   return null;
 }
 
-function spend(s: MatchState, side: DuelSide, card: CardId): Pick<MatchState, 'used' | 'played'> {
+function spend(s: MatchState, side: DuelSide, card: CardId): Pick<MatchState, 'used' | 'played' | 'energy'> {
   return {
+    energy: RULES.energy ? { ...s.energy, [side]: s.energy[side] - CARD_BY_ID[card].energy } : s.energy,
     used: { ...s.used, [side]: [...s.used[side], card] },
     played: { ...s.played, [side]: [...s.played[side], card] },
   };
@@ -538,6 +559,7 @@ function newMcq(s: MatchState, content: Content, now: number): Pick<MatchState, 
       categoryName: category?.name ?? '',
       offCategory: fromCategory.length === 0,
       answers: both(null),
+      answeredAt: both(null),
       firstMiss: both(null),
       startedAt: now,
       deadline: now + MCQ_MS,
@@ -588,6 +610,15 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
     if (active[side].includes('yellow-card')) next.yellowThrough[other] = s.duelNo + 1;
     if (active[side].includes('goalkeeper-gloves')) next.gloves[side] = true;
     if (active[side].includes('tiki-taka')) next.tiki[side] = TIKI_TAKA_DUELS;
+    if (active[side].includes('super-sub')) {
+      // The last other playstyle used comes back to be played again.
+      const back = [...s.used[side]].reverse().find((id) => id !== 'super-sub');
+      if (back) {
+        const i = s.used[side].lastIndexOf(back);
+        next.used = { ...(next.used === s.used ? { ...s.used } : next.used), [side]: s.used[side].filter((_, k) => k !== i) };
+        notes.push(`Super Sub: ${CARD_BY_ID[back].name} is back`);
+      }
+    }
   }
   // A category override only stands while the Home Advantage that chose it is still in play (VAR can cancel it);
   // two at once cancel out and the round keeps its own category.
@@ -606,7 +637,7 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
     }
   }
   for (const side of ['player', 'opponent'] as const) {
-    if (s.choice[side] === 'dummy-run' && !s.cancelled[side]) notes.push(`${NAMES[side]}'s card was a Dummy Run`);
+    if (s.choice[side] && BLUFF_CARDS.includes(s.choice[side]!) && !s.cancelled[side]) notes.push(`${NAMES[side]}'s card was a ${CARD_BY_ID[s.choice[side]!].name}`);
   }
 
   let events = s.cardEvents;
@@ -623,7 +654,7 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
       const effect = standing[card];
       if (effect) events = fire(events, s.duelNo, side, card, effect, 'reveal');
     }
-    if (s.choice[side] === 'dummy-run' && !s.cancelled[side]) events = fire(events, s.duelNo, side, 'dummy-run', 'it was a bluff — no effect', 'reveal');
+    if (s.choice[side] && BLUFF_CARDS.includes(s.choice[side]!) && !s.cancelled[side]) events = fire(events, s.duelNo, side, s.choice[side]!, 'it was a bluff — no effect', 'reveal');
   }
   if (playerHome && opponentHome) {
     events = fire(events, s.duelNo, 'player', 'home-advantage', 'both played Home Advantage — they cancel out', 'reveal', 'home-advantage');
@@ -641,7 +672,7 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
   const attacker = s.possession.attacker;
   const defender = otherZoneSide(attacker);
   const shot = s.possession.zone === 'opponent';
-  if (shot && next.gloves[defender] && !active[attacker].includes('golden-boot')) {
+  if (shot && next.gloves[defender] && !beatsGloves(active[attacker])) {
     next.gloves[defender] = false;
     return applyBattle({ ...next, feed: log(next, ...notes) }, defender, null, now, GLOVES_SAVE_NOTE);
   }
@@ -656,6 +687,10 @@ function afterCards(s: MatchState, content: Content, now: number): MatchState {
 function applyBattle(s: MatchState, winner: DuelSide | null, correct: Record<DuelSide, boolean> | null, now: number, note?: string): MatchState {
   const attacker = s.possession.attacker;
   const attackerCorrect = correct ? correct[attacker] : null;
+  // Rule variant: a right answer earns energy.
+  if (RULES.energy && correct) {
+    s = { ...s, energy: { player: Math.min(ENERGY_MAX, s.energy.player + (correct.player ? 1 : 0)), opponent: Math.min(ENERGY_MAX, s.energy.opponent + (correct.opponent ? 1 : 0)) } };
+  }
   const active = activeCards(s);
   const mods = movementMods(s.possession, winner, active, { player: s.tiki.player > 0, opponent: s.tiki.opponent > 0 }, correct);
   const outcome = resolveBattle(s.possession, winner, mods);
@@ -745,7 +780,7 @@ function settlementEvents(
 function advance(s: MatchState, content: Content, now: number): MatchState {
   switch (s.stage) {
     case 'showdown':
-      return schedule(s, { stage: 'deckReveal', feed: log(s, 'Decks revealed') }, now + DECK_REVEAL_MS);
+      return schedule(s, { stage: 'deckReveal', feed: log(s, 'Decks revealed') }, now + revealSchedule(s.deck).total);
     case 'deckReveal':
       return schedule(s, { stage: 'categories', categories: dealCategories(s.categoryPool), usedCategories: both([]), feed: log(s, 'Categories dealt') }, now + CATEGORY_REVEAL_MS);
     case 'categories':
@@ -764,14 +799,18 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
             const card = choice[side];
             if (!card) continue;
             next = { ...next, ...spend(next, side, card) };
-            if (card === 'dummy-run') {
-              // Decks are public, so the bluff must be a sabotage card the bluffer still holds (any sabotage if none).
-              const own = next.deck[side].filter((id) => CARD_BY_ID[id].type === 'sabotage' && !next.used[side].includes(id));
-              const fakes: CardId[] = own.length > 0 ? own : ['floodlight-failure', 'fog', 'muddy-pitch', 'yellow-card'];
+            if (BLUFF_CARDS.includes(card)) {
+              // Decks may be public, so the bluff passes for a card of its kind the bluffer still holds (any if none).
+              // It must also fit the moment: no fake Golden Boot from midfield.
+              const all = BLUFF_FAKES[card]!;
+              const fitting = all.filter((id) => roleAllows(CARD_BY_ID[id], side, next.possession));
+              const kinds = fitting.length > 0 ? fitting : all;
+              const own = next.deck[side].filter((id) => kinds.includes(id) && !next.used[side].includes(id));
+              const fakes = own.length > 0 ? own : kinds;
               const fake = fakes[Math.floor(Math.random() * fakes.length)];
               next.dummyShownAs = { ...next.dummyShownAs, [side]: fake };
               // The log shows the bluff until the VAR window has passed; the player knows their own.
-              lines.push(side === 'player' ? `You played Dummy Run (shown as ${CARD_BY_ID[fake].name})` : `${NAMES[side]} played ${CARD_BY_ID[fake].name}`);
+              lines.push(side === 'player' ? `You played ${CARD_BY_ID[card].name} (shown as ${CARD_BY_ID[fake].name})` : `${NAMES[side]} played ${CARD_BY_ID[fake].name}`);
               continue;
             }
             lines.push(`${NAMES[side]} played ${CARD_BY_ID[card].name}`);
@@ -797,7 +836,9 @@ function advance(s: MatchState, content: Content, now: number): MatchState {
             ...s,
             answerLog: { player: [...s.answerLog.player, mark('player')], opponent: [...s.answerLog.opponent, mark('opponent')] },
           };
-          const decision = decideDuel(s.possession, correct, activeCards(s));
+          const at = s.mcq.answeredAt;
+          const faster = at.player !== null && at.opponent !== null && at.player !== at.opponent ? (at.player < at.opponent ? 'player' : 'opponent') : null;
+          const decision = decideDuel(s.possession, correct, activeCards(s), faster);
           if (decision.kind === 'numeric') {
             const numeric = newNumeric(logged, now);
             const firstTouches = activeCards(s);
@@ -849,6 +890,7 @@ export function reducer(s: MatchState, action: Action): MatchState {
           // empty loadout is filled at random.
           deck: { player: matchDeck(action.decks.player), opponent: matchDeck(action.decks.opponent) },
           windowMode: action.windowMode,
+          energy: both(RULES.energy ? ENERGY_START : 0),
         },
         { stage: 'showdown', feed: [`Coin toss: ${NAMES[first]} ${plural(first, 'kick')} off`] },
         action.now + SHOWDOWN_MS,
@@ -871,6 +913,8 @@ export function reducer(s: MatchState, action: Action): MatchState {
       const mcq = s.mcq;
       if (s.stage !== 'play' || s.battleStep !== 'mcq' || !mcq || mcq.answers[action.side] !== null) return s;
       if (action.questionId !== undefined && action.questionId !== mcq.question.id) return s;
+      // Time Wasting: their time ran out early.
+      if (action.now > mcq.deadline - (mcq.squeeze?.[action.side] ?? 0)) return s;
       if (mcq.hidden[action.side].includes(action.index) || mcq.firstMiss[action.side] === action.index) return s;
       const wrong = action.index !== mcq.question.correctIndex;
       const secondBall = activeCards(s)[action.side].includes('second-ball') && mcq.firstMiss[action.side] === null;
@@ -883,8 +927,9 @@ export function reducer(s: MatchState, action: Action): MatchState {
         };
       }
       const answers = { ...mcq.answers, [action.side]: action.index };
+      const answeredAt = { ...mcq.answeredAt, [action.side]: action.now };
       const bothIn = answers.player !== null && answers.opponent !== null;
-      return schedule(s, { mcq: { ...mcq, answers } }, bothIn ? action.now + BOTH_IN_HOLD_MS : s.advanceAt);
+      return schedule(s, { mcq: { ...mcq, answers, answeredAt } }, bothIn ? action.now + BOTH_IN_HOLD_MS : s.advanceAt);
     }
     case 'PICK_CATEGORY':
       return applyCategoryPick(s, action.side, action.categoryId, action.content, action.now);
@@ -899,7 +944,7 @@ export function reducer(s: MatchState, action: Action): MatchState {
       if (reactionBlocker(s, action.side, action.card) !== null) return s;
       const target = otherZoneSide(action.side);
       const targetCard = s.choice[target]!;
-      const wasted = targetCard === 'dummy-run';
+      const wasted = BLUFF_CARDS.includes(targetCard);
       const verb = action.card === 'shin-pads' ? 'block' : 'cancel';
       const prefix = action.card === 'shin-pads' ? 'Shin Pads!' : 'VAR!';
       return {
@@ -910,7 +955,7 @@ export function reducer(s: MatchState, action: Action): MatchState {
           s.duelNo,
           action.side,
           action.card,
-          wasted ? 'it was only a Dummy Run' : `${action.card === 'shin-pads' ? 'blocked' : 'cancelled'} ${CARD_BY_ID[targetCard].name}`,
+          wasted ? `it was only a ${CARD_BY_ID[targetCard].name}` : `${action.card === 'shin-pads' ? 'blocked' : 'cancelled'} ${CARD_BY_ID[targetCard].name}`,
           'reveal',
           targetCard,
         ),
@@ -929,6 +974,7 @@ export function reducer(s: MatchState, action: Action): MatchState {
         'fifty-fifty': 'two wrong answers gone',
         substitution: 'new question for both',
         'first-touch': 'if both are right, it wins without the tiebreak',
+        'time-wasting': '5 seconds less for them',
       };
       const paid = {
         ...s,
@@ -943,6 +989,10 @@ export function reducer(s: MatchState, action: Action): MatchState {
           ...paid,
           mcq: { ...mcq, hidden: { ...mcq.hidden, [action.side]: hidden }, hiddenAt: { ...mcq.hiddenAt, [action.side]: action.now } },
         };
+      }
+      if (action.card === 'time-wasting') {
+        const other = otherZoneSide(action.side);
+        return { ...paid, mcq: { ...mcq, squeeze: { ...(mcq.squeeze ?? both(0)), [other]: 5000 } } };
       }
       if (action.card === 'substitution') {
         const swapped = newMcq(paid, action.content, action.now);

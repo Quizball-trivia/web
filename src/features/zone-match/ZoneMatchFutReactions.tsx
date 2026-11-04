@@ -14,6 +14,7 @@ import { AvatarFullBody, GLOVE_HANDS } from './AvatarFullBody';
 import { CardArt } from './ZoneMatchCardFace';
 import type { CardId } from './zoneMatch.cards';
 import {
+  ARMS_REST,
   FOOT,
   FULL_H,
   FULL_W,
@@ -29,13 +30,17 @@ import {
   idlePose,
   keeperSetPose,
   kneeSlidePose,
+  mixArms,
   mixPose,
+  reachArm,
   runPose,
   slidePose,
   stepOverPose,
   strikePose,
+  type ArmPose,
   type FullBodyPose,
 } from './zoneMatch.fullBody';
+import { CARD_REACTION_S } from './zoneMatch.reveal';
 
 /** A ball the avatar plays with, in the figure's own art units (it moves with the figure): centre, spin, and a soft
  * ring 0–1 as a touch kills its pace. */
@@ -98,6 +103,9 @@ export interface ReactionFrame {
   armband?: { fitted: boolean; pop: number };
   /** Wearing the golden boot yet (Golden Boot's reaction; otherwise the loadout decides). */
   goldBoots?: boolean;
+  /** The move has a direction (a turn, a fall, travel towards the other card): a mirrored card mirrors its tilt, shift
+   * and spin too, not just the figure. */
+  directional?: boolean;
   /** % of the figure's height. */
   lift: number;
   tilt: number;
@@ -108,29 +116,7 @@ export interface ReactionFrame {
   fade: number;
 }
 
-/** How long each card's reaction plays (s). */
-export const CARD_REACTION_S: Record<CardId, number> = {
-  'first-touch': 2.7,
-  'fifty-fifty': 1.4,
-  'golden-boot': 2.7,
-  'captains-armband': 2.2,
-  'second-ball': 2.9,
-  'floodlight-failure': 1.6,
-  'muddy-pitch': 2.6,
-  fog: 2.8,
-  'yellow-card': 2.2,
-  'offside-trap': 2.3,
-  'var-review': 1.7,
-  'goalkeeper-gloves': 2.5,
-  'park-the-bus': 2.6,
-  'shin-pads': 2.2,
-  'long-ball': 1.6,
-  'counter-attack': 1.6,
-  substitution: 1.8,
-  'home-advantage': 2.6,
-  'dummy-run': 2.0,
-  'tiki-taka': 2.9,
-};
+export { CARD_REACTION_S };
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const smooth = (t: number) => {
@@ -258,10 +244,18 @@ export function cardMotion(card: CardId, t: number, now: number, seed: number): 
       const body = t < 0.45 ? mixPose(idlePose(now), { ...crouchPose(0.3), lean: 14 }, feint) : stepOverPose(clamp01((t - 0.45) / 0.8));
       return settle({ ...still(body), shift: -12 * feint + 10 * cut, tilt: -9 * feint + 5 * cut });
     }
+    case 'bicycle-kick': {
+      const frame = bicycleKick(t, now);
+      const settled = settle(frame);
+      return { ...settled, body: { ...settled.body, arms: frame.body.arms }, ball: frame.ball, directional: true };
+    }
     case 'tiki-taka': {
       const frame = tikiTaka(t, now);
       return { ...settle(frame), ball: frame.ball, mates: frame.mates };
     }
+    default:
+      // The newer cards: a celebratory hop (their duet moves are in zoneMatch.duets).
+      return settle({ ...still(celebratePose(t)), lift: 6 * bell(t, 0.2, 0.9) });
   }
 }
 
@@ -287,8 +281,14 @@ const FT_STEP: FullBodyPose = (() => {
   const l = footAt('L', FOOT.L, GROUND_Y - 37, 0, bodyY);
   return { hipL: l.hip, kneeL: l.knee, ankleL: l.ankle, hipR: r.hip, kneeR: r.knee, ankleR: r.ankle, lean: 4, bodyX: 0, bodyY };
 })();
+/** The dead ball at rest, the sole on it (also where a chest control ends). */
+export const BALL_REST: [number, number] = [ROLL_STOP_X, GROUND_Y - BALL_R];
+export const SOLE_ON_BALL = FT_STEP;
 /** Where the ball meets the boot (figure frame, at the catch). */
 const CATCH_AT = bootPoint(FT_CATCH, 'R', ...LACES);
+/** For a ball played in from elsewhere (the showdown duet): when it meets the boot, and where (on the ground frame —
+ * the jump's lift taken out). */
+export const FIRST_TOUCH_CATCH = { at: FT.catch, point: [CATCH_AT[0], CATCH_AT[1] - liftArt(FT.catch)] as [number, number] };
 
 function firstTouch(t: number, now: number): ReactionFrame {
   const keys: [number, FullBodyPose][] = [
@@ -353,6 +353,8 @@ const GB_BALL: [number, number] = (() => {
   const [toeX] = bootPoint(leftFooted(strikePose(GB.strikeAt)), 'L', 84, 15);
   return [toeX + BALL_R - 8, GROUND_Y - BALL_R];
 })();
+/** For a duet: when the boot strikes the ball, and where the ball sits. */
+export const GOLDEN_BOOT_STRIKE = { at: GB_CONTACT, ball: GB_BALL };
 /** Where the struck ball is, `dt` s after contact: up and away, out of the card. */
 const gbFlight = (dt: number): [number, number] => [GB_BALL[0] + 780 * dt, GB_BALL[1] - 620 * dt + 260 * dt * dt];
 
@@ -416,6 +418,12 @@ const sbLift = (p: FullBodyPose, side: 'L' | 'R', a: number): FullBodyPose =>
     ? { ...p, hipR: p.hipR + 38 * a, kneeR: p.kneeR + 62 * a, ankleR: p.ankleR + 24 * a }
     : { ...p, hipL: p.hipL + 38 * a, kneeL: p.kneeL + 62 * a, ankleL: p.ankleL + 24 * a };
 const SB_TOUCH = { R: bootPoint(sbLift(STAND, 'R', 1), 'R', ...LACES), L: bootPoint(sbLift(STAND, 'L', 1), 'L', ...LACES) };
+
+/** For a duet: each ball's first touch — when, and where it meets the boot. */
+export const SECOND_BALL_CATCH = {
+  R: { at: SB.touchesR[0], point: SB_TOUCH.R },
+  L: { at: SB.touchesL[0], point: SB_TOUCH.L },
+};
 
 /** One ball of the pair at `t`: dropped onto its foot, kept up touch after touch, then down to rest. */
 function sbBall(t: number, side: 'L' | 'R'): ReactionBall {
@@ -685,6 +693,138 @@ function groundLift(body: FullBodyPose, tilt: number): number {
 /** A point on the pitch (art units, the figure unmoved) in the turned, lifted figure's own frame (where its ball is drawn). */
 function intoFigure([x, y]: [number, number], tilt: number, lift: number): [number, number] {
   return rotateAbout([x, y + (lift / 100) * FULL_H], -tilt);
+}
+
+/* ── Bicycle Kick: a cross from the wing, struck overhead ──────────── */
+
+/**
+ * He turns his back to goal (spin 180°: the rig mirrored, so his own +x is the screen's −x, towards the cross), the
+ * cross drops in from in front of him; he loads, the right leg swings up first and pulls him over backwards, the left
+ * scissors up past it and volleys the ball on the instep with his back level with the grass, the right dropping below
+ * his hips; the shot goes back over him towards +x. He lands on his back, rolls up and turns round again.
+ * Keys from a review of the move; the joints are splined (no easing to rest at the strike, so the leg whips through).
+ */
+const BK_CONTACT_AT = 1.05;
+/** [t, tilt, hips rise, hips drift, hipL, kneeL, ankleL, hipR, kneeR, ankleR, lean] */
+const BK_KEYS: number[][] = [
+  [0.0, 0, 0, 0, 12, 26, 15, 17, 26, 10, 0],
+  [0.4, 0, -32, 0, 31, 61, 31, 36, 61, 25, 0],
+  [0.58, 0, 0, 0, 12, 26, 15, 65, 35, -25, 0],
+  [0.78, 50, 145, -15, 20, 110, -20, 75, 15, -55, 0],
+  [0.9, 78, 175, -25, 65, 35, -55, -45, 25, -35, 0],
+  [BK_CONTACT_AT, 90, 170, -35, 85, 5, -80, -75, 25, -30, 0],
+  [1.12, 98, 145, -42, 110, 5, -80, -85, 35, -30, 0],
+  [1.3, 100, 15, -55, 110, 35, -55, -40, 85, -25, 0],
+  [1.5, 90, -145, -60, 70, 100, -20, 35, 110, -20, 0],
+  [1.75, 45, -30, -40, 10, 110, -30, -20, 100, -20, -5],
+  [2.0, 0, -25, -10, 27, 55, 28, 33, 55, 23, 8],
+  [2.2, 0, 0, 0, 12, 26, 15, 17, 26, 10, 0],
+];
+/** Cubic Hermite through the keys, tangents from the neighbours (flat at the ends). */
+function bkSample(t: number): number[] {
+  const k = BK_KEYS;
+  if (t <= k[0][0]) return k[0].slice(1);
+  if (t >= k[k.length - 1][0]) return k[k.length - 1].slice(1);
+  let i = 0;
+  while (t > k[i + 1][0]) i += 1;
+  const [t0, t1] = [k[i][0], k[i + 1][0]];
+  const h = t1 - t0;
+  const u = (t - t0) / h;
+  const tangent = (j: number, c: number) => (j <= 0 || j >= k.length - 1 ? 0 : (k[j + 1][c] - k[j - 1][c]) / (k[j + 1][0] - k[j - 1][0]));
+  return k[i].slice(1).map((p0, c0) => {
+    const c = c0 + 1;
+    const p1 = k[i + 1][c];
+    return (2 * u ** 3 - 3 * u ** 2 + 1) * p0 + (u ** 3 - 2 * u ** 2 + u) * h * tangent(i, c) + (-2 * u ** 3 + 3 * u ** 2) * p1 + (u ** 3 - u ** 2) * h * tangent(i + 1, c);
+  });
+}
+/** The turn round: back to goal by 0.35 s, round again from 2.0 s. */
+const bkSpin = (t: number) => 180 * smooth((t - 0.1) / 0.25) * (1 - smooth((t - 2.0) / 0.2));
+/** The card's own pivot (transform-origin 50% 98% of the art) and its translate units. */
+const BK_PIVOT: [number, number] = [FULL_W / 2, 0.98 * FULL_H];
+const BK_SHIFT_PER_ART = 100 / FULL_W / 1.319;
+const BK_HIP_FIG: [number, number] = [FULL_W / 2, 515 + 7];
+const turn = ([x, y]: [number, number], deg: number): [number, number] => {
+  const r = (deg * Math.PI) / 180;
+  const dx = x - BK_PIVOT[0];
+  const dy = y - BK_PIVOT[1];
+  return [BK_PIVOT[0] + dx * Math.cos(r) - dy * Math.sin(r), BK_PIVOT[1] + dx * Math.sin(r) + dy * Math.cos(r)];
+};
+const mirrored = ([x, y]: [number, number], on: boolean): [number, number] => (on ? [2 * BK_PIVOT[0] - x, y] : [x, y]);
+interface BkFrame {
+  tilt: number;
+  T: [number, number];
+  /** Mirrored (back to goal): only once the turn is done is the ball placed through it. */
+  flip: boolean;
+  pose: FullBodyPose;
+}
+function bkFrame(t: number): BkFrame {
+  const [tilt, rise, drift, hipL, kneeL, ankleL, hipR, kneeR, ankleR, lean] = bkSample(t);
+  const flip = bkSpin(t) > 90;
+  const hip = turn(mirrored(BK_HIP_FIG, flip), tilt);
+  const T: [number, number] = [BK_HIP_FIG[0] + drift - hip[0], BK_HIP_FIG[1] - rise - hip[1]];
+  return { tilt, T, flip, pose: { ...STAND, hipL, kneeL, ankleL, hipR, kneeR, ankleR, lean, bodyX: 0, bodyY: 7 } };
+}
+const bkToPitch = (f: BkFrame, p: [number, number]): [number, number] => {
+  const [x, y] = turn(mirrored(p, f.flip), f.tilt);
+  return [x + f.T[0], y + f.T[1]];
+};
+const bkToFigure = (f: BkFrame, [x, y]: [number, number]): [number, number] => mirrored(turn([x - f.T[0], y - f.T[1]], -f.tilt), f.flip);
+/** Where boot meets ball, on the pitch. */
+const BK_CONTACT: [number, number] = (() => {
+  const f = bkFrame(BK_CONTACT_AT);
+  return bkToPitch(f, bootPoint(f.pose, 'L', ...LACES));
+})();
+/** The cross, dropping all the way in (τ s before the strike), and the volley away towards +x. */
+const bkCross = (t: number): [number, number] => {
+  const tau = BK_CONTACT_AT - t;
+  return [BK_CONTACT[0] - 812 * tau, BK_CONTACT[1] - 503 * tau + 310 * tau * tau];
+};
+const bkShot = (d: number): [number, number] => [BK_CONTACT[0] + 1100 * d, BK_CONTACT[1] - 120 * d + 300 * d * d];
+/** For a duet: when and where the ball is struck (on the pitch), so a cross can be played in and the shot carried on. */
+export const BICYCLE_KICK_STRIKE = { at: BK_CONTACT_AT, point: BK_CONTACT };
+
+/**
+ * The arms (his own frame; mirrored and turned 90° at the strike, his −x is the grass): up for the spring, the left
+ * reaching down for the grass and the right thrown up for balance, both down to break the landing, back to his own.
+ */
+const BK_ARMS: [number, ArmPose][] = [
+  [0.35, ARMS_REST],
+  [0.58, { L: reachArm('L', 90, 170, 180, 'open'), R: reachArm('R', 406, 170, 180, 'open') }],
+  [0.9, { L: reachArm('L', -60, 400, -90, 'open'), R: reachArm('R', 560, 300, 110, 'open') }],
+  [1.3, { L: reachArm('L', -70, 430, -95, 'flat'), R: reachArm('R', 470, 520, 60, 'open') }],
+  [1.55, { L: reachArm('L', -40, 470, -90, 'flat'), R: reachArm('R', 300, 640, 0, 'flat') }],
+  [1.9, { L: reachArm('L', 110, 560, 0, 'open'), R: reachArm('R', 390, 560, 0, 'open') }],
+  [2.2, ARMS_REST],
+];
+function bkArms(t: number): ArmPose | undefined {
+  if (t < BK_ARMS[0][0] || t >= BK_ARMS[BK_ARMS.length - 1][0]) return undefined;
+  for (let i = 0; i < BK_ARMS.length - 1; i += 1) {
+    const [t0, a] = BK_ARMS[i];
+    const [t1, b] = BK_ARMS[i + 1];
+    if (t < t1) return mixArms(a, b, smooth((t - t0) / (t1 - t0)));
+  }
+  return undefined;
+}
+
+function bicycleKick(t: number, now: number): ReactionFrame {
+  const f = bkFrame(t);
+  const body = { ...mixPose(idlePose(now), f.pose, smooth(t / 0.15)), arms: bkArms(t) };
+  let ball: ReactionBall | undefined;
+  // In sight once he has turned his back (the cross is in front of him), gone once it's off the card.
+  if (t >= 0.36 && t < BK_CONTACT_AT + 0.55) {
+    const d = t - BK_CONTACT_AT;
+    const onPitch = d < 0 ? bkCross(t) : bkShot(d);
+    const [x, y] = bkToFigure(f, onPitch);
+    ball = {
+      x,
+      y,
+      rot: d < 0 ? -500 * t : 1400 * d,
+      ring: d >= 0 && d < 0.07 ? d / 0.07 : 0,
+      opacity: Math.min(smooth((t - 0.36) / 0.1), smooth((0.5 - d) / 0.12)),
+      trail: d > 0 ? [0.03, 0.06, 0.09].map((back) => bkToFigure(f, bkShot(Math.max(0, d - back)))) : undefined,
+    };
+  }
+  return { body, tilt: f.tilt, spin: bkSpin(t), lift: (-f.T[1] / FULL_H) * 100, shift: f.T[0] * BK_SHIFT_PER_ART, blur: 0, fade: 1, ball, directional: true };
 }
 
 /**
@@ -1495,6 +1635,8 @@ function CardReactionFxInner({ card, customization, frameMask, mirror }: { card:
         );
       case 'tiki-taka':
         // The team-mates and the ball are drawn with the avatar (CardCutout): the passes meet their feet.
+        return null;
+      default:
         return null;
     }
   })();

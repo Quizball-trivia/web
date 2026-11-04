@@ -22,7 +22,7 @@ const PRESETS: { id: string; label: string; orbit: Orbit }[] = [
   { id: 'aerial', label: 'Aerial', orbit: { az: 0.5, el: 1.0, dist: 78, target: [0, 0, 0] } },
 ];
 
-function Pitch() {
+export function StadiumPitch() {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -206,7 +206,7 @@ export function StadiumLab() {
           <hemisphereLight args={['#cfe3ff', '#1b2a1b', 0.9]} />
           <directionalLight position={[20, 40, 25]} intensity={1.6} castShadow />
           <directionalLight position={[-25, 30, -20]} intensity={0.7} />
-          <Pitch />
+          <StadiumPitch />
           <Stadium3D scene={scene} text={text} replay={run} clock={clock} />
           <OrbitRig orbit={orbit} />
         </Canvas>

@@ -256,6 +256,7 @@ export function ZoneMatchStage({
   // The card's contents shrink to fit: on desktop the space between the HUD and the hand; on a phone that less the band.
   const cardMax = Math.max(0, areaHeight - 16 - (desktop ? 0 : PHONE_PLAYER_BAND));
 
+  const clearStep = state.battleStep === 'cards' || state.battleStep === 'reveal';
   const overlayStyle: CSSProperties & { '--party-dock-height': string } = {
     // PossessionQuestionPanel scrolls its answers into view inside the card: the hand is below it, not over it.
     '--party-dock-height': '0.75rem',
@@ -322,11 +323,13 @@ export function ZoneMatchStage({
               <motion.div
                 ref={cardRef}
                 className={cn(
-                  'pointer-events-auto mx-auto max-h-full w-full overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-md',
+                  'pointer-events-auto mx-auto max-h-full w-full overflow-y-auto overscroll-contain rounded-[26px]',
+                  // The playstyle pick floats on the pitch (see-through); the other steps sit on a card.
+                  clearStep ? '' : 'border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-md',
                   // Desktop: narrower on narrow screens, so the players beside it keep room (the camera fits the rest).
                   desktop ? 'max-w-[min(600px,calc(100vw-480px))]' : 'max-w-[600px]',
                 )}
-                style={{ background: STEP_CARD_BG }}
+                style={{ background: clearStep ? 'transparent' : STEP_CARD_BG }}
                 initial={{ y: 24, scale: 0.97 }}
                 animate={{ y: 0, scale: 1 }}
                 exit={{ y: 12, scale: 0.98 }}
@@ -541,6 +544,7 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
             <motion.button
               key={category.id}
               type="button"
+              className="min-w-0"
               onClick={() => onPick(category.id)}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.95 }}
@@ -549,7 +553,7 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
               {tile}
             </motion.button>
           ) : (
-            <motion.div key={category.id} animate={!mine && !used ? { y: [0, -3, 0] } : undefined} transition={{ duration: 1.2, repeat: Infinity, delay: index * 0.17 }}>
+            <motion.div key={category.id} className="min-w-0" animate={!mine && !used ? { y: [0, -3, 0] } : undefined} transition={{ duration: 1.2, repeat: Infinity, delay: index * 0.17 }}>
               {tile}
             </motion.div>
           );

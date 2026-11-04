@@ -50,6 +50,7 @@ import {
 } from './ZoneMatchFutReactions';
 import { CardArt } from './ZoneMatchCardFace';
 import { FULL_H, FULL_W } from './zoneMatch.fullBody';
+import { DUET_MOVE_S, duetMoveFrame, type DuetMove } from './zoneMatch.duetMoves';
 
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -57,7 +58,7 @@ const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const HEX = 'polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%)';
 
 /** The tier frame art's proportions (public/assets/ranks/*_frame.png, 200×321). */
-const FRAME_ASPECT = 321 / 200;
+export const FRAME_ASPECT = 321 / 200;
 /** Light text on every tier frame: the frames run from pale cream to near black, so a soft dark shadow carries it. */
 const CARD_TEXT = '#FFFFFF';
 const CARD_TEXT_SHADOW = '0 1px 2px rgba(0,0,0,0.55), 0 0 6px rgba(0,0,0,0.25)';
@@ -93,6 +94,14 @@ export interface FutReaction {
   card?: CardId;
   /** The loadout is full: the celebration follows the card's reaction. */
   complete?: boolean;
+  /** A showdown duet's move instead of a card reaction (zoneMatch.duetMoves). */
+  move?: DuetMove;
+  /** The card reaction's ball only from / until these times (s): a duet's prop carries it outside them. */
+  ballFrom?: number;
+  ballUntil?: number;
+  ball2From?: number;
+  /** The duet move's ball is the golden one. */
+  goldBall?: boolean;
 }
 
 export function reactionFor(type: CardType | 'complete', key: number, seed = 0, card?: CardId, complete = false): FutReaction {
@@ -101,7 +110,7 @@ export function reactionFor(type: CardType | 'complete', key: number, seed = 0, 
 
 /** When the full-loadout celebration starts, and how long a reaction lasts in all (s). */
 const celebrationAt = (r: FutReaction) => (r.card ? CARD_REACTION_S[r.card] : 0);
-const reactionLength = (r: FutReaction) => (r.card ? CARD_REACTION_S[r.card] + (r.complete ? REACTION_S.complete : 0) : REACTION_S[r.kind]);
+const reactionLength = (r: FutReaction) => (r.move ? DUET_MOVE_S[r.move] : r.card ? CARD_REACTION_S[r.card] + (r.complete ? REACTION_S.complete : 0) : REACTION_S[r.kind]);
 
 const CONFETTI_COLORS = ['#FFE500', '#1CB0F6', '#FF4B4B', '#58CC02', '#FFFFFF', '#FF9600'];
 /** How long each reaction plays (s). */
@@ -114,8 +123,17 @@ const REACTION_S: Record<FutReaction['kind'], number> = { boost: 1.5, defense: 1
 function reactionFrame(reaction: FutReaction | null, t: number, now: number): ReactionFrame {
   const still = { lift: 0, tilt: 0, spin: 0, shift: 0, blur: 0, fade: 1 };
   if (!reaction || t >= reactionLength(reaction)) return { body: idlePose(now), ...still };
+  if (reaction.move) {
+    const f = duetMoveFrame(reaction.move, t, now);
+    return reaction.goldBall && f.ball ? { ...f, ball: { ...f.ball, gold: true } } : f;
+  }
   if (reaction.card) {
-    if (t < celebrationAt(reaction)) return cardMotion(reaction.card, t, now, reaction.seed);
+    if (t < celebrationAt(reaction)) {
+      const f = cardMotion(reaction.card, t, now, reaction.seed);
+      const hidden = (reaction.ballFrom !== undefined && t < reaction.ballFrom) || (reaction.ballUntil !== undefined && t >= reaction.ballUntil);
+      const hidden2 = reaction.ball2From !== undefined && t < reaction.ball2From;
+      return { ...f, ball: hidden ? undefined : f.ball, ball2: hidden2 ? undefined : f.ball2 };
+    }
     return { ...reactionFrame({ ...reaction, card: undefined, kind: 'complete' }, t - celebrationAt(reaction), now) };
   }
   const fade = 1 - Math.max(0, (t - REACTION_S[reaction.kind] + 0.25) / 0.25);
@@ -304,7 +322,9 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
       }
       applyFullBodyPose(els, f.body);
       if (figure.current) {
-        figure.current.style.transform = `translate(${f.shift.toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${f.tilt.toFixed(1)}deg) rotateY(${f.spin.toFixed(0)}deg) scale(${(f.scale ?? 1).toFixed(3)})`;
+        // The figure inside is mirrored on the opponent's card; a directional move's turn and travel are mirrored too.
+        const m = mirror && f.directional ? -1 : 1;
+        figure.current.style.transform = `translate(${(m * f.shift).toFixed(1)}%, ${(-f.lift).toFixed(1)}%) rotate(${(m * f.tilt).toFixed(1)}deg) rotateY(${(m * f.spin).toFixed(0)}deg) scale(${(f.scale ?? 1).toFixed(3)})`;
         figure.current.style.filter = f.blur > 0.05 ? `blur(${f.blur.toFixed(1)}px)` : '';
         figure.current.style.opacity = f.fade < 0.999 ? f.fade.toFixed(2) : '';
       }
@@ -416,7 +436,7 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [els, reaction, gear]);
+  }, [els, reaction, gear, mirror]);
   return (
     <div className="absolute inset-0">
       {/* Park the Bus: the bus behind him (it doesn't move with him). */}
@@ -468,6 +488,8 @@ function CardCutout({ customization, reaction, mirror, seed, gear }: { customiza
             seed={seed}
             onEls={setEls}
             style={{ height: '100%' }}
+            // The art's own raised arms, except in a move that poses them (the bicycle kick's arms out to break the fall).
+            movingArms="auto"
             bootColors={goldBoots ? GOLD_LEFT : undefined}
             muddy={muddy}
             shinPads={pads}

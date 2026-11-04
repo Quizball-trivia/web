@@ -38,6 +38,12 @@ import {
   Timer,
   VenetianMask,
   Zap,
+  Hourglass,
+  RefreshCcw,
+  Split,
+  Undo2,
+  Users,
+  Drama, Flame, Meh,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, type CardDef, type CardId, type CardPhase, type CardRole, type CardType } from './zoneMatch.cards';
@@ -170,6 +176,15 @@ const GLYPH: Record<CardId, Glyph> = {
       </>
     ),
   },
+  // The newer cards: line icons for the small chips.
+  nutmeg: { Icon: Split },
+  'bicycle-kick': { Icon: Undo2 },
+  'high-press': { Icon: Users },
+  'time-wasting': { Icon: Hourglass },
+  'super-sub': { Icon: RefreshCcw },
+  feint: { Icon: Drama },
+  'poker-face': { Icon: Meh },
+  screamer: { Icon: Flame },
 };
 
 /** A card's own picture (a full-colour sticker icon, public/assets/zone-match/cards), for the badges and card faces. */

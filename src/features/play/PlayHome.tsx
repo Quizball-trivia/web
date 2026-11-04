@@ -252,6 +252,11 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
               return;
             }
             if (mode === "ranked") {
+              // Ranked 2.0 (zone match) playtest flow, local only: NEXT_PUBLIC_RANKED_V2=1 in .env.local.
+              if (process.env.NEXT_PUBLIC_RANKED_V2 === "1") {
+                router.push("/dev/zone-match");
+                return;
+              }
               void startMatch({ mode: "ranked", matchType: "ranked" });
               return;
             }

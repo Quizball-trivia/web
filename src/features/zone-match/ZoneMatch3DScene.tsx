@@ -247,7 +247,7 @@ const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from &&
 
 /**
  * The stadium: 3D stands round the pitch (Stadium3D) whose crowd follows the match — a tifo at kick-off, a
- * thunderclap while you're through on goal, a celebration when you score (quiet when they do), phone torches when the
+ * slow jumping, flags and scarves while you're through on goal, a celebration when you score (quiet when they do), phone torches when the
  * floodlights fail, a scarf wall for Home Advantage. The stand on the camera's side is left out (it would only block
  * the touchline shots). Home Advantage also tints the boards on the far side in the owner's colour.
  */
@@ -284,7 +284,7 @@ function Stadium({ fx, input, clock }: { fx: RefObject<CardFx>; input: RefObject
     else if (c.celebration && t < c.holdUntil) want = c.celebration;
     else if (goal === 'opponent') want = 'idle';
     else if (home === 'player') want = 'ynwa-liverpool';
-    else if (inp.mode !== 'outcome' && inp.possession.attacker === 'player' && inp.possession.zone === 'opponent') want = 'thunderclap';
+    else if (inp.mode !== 'outcome' && inp.possession.attacker === 'player' && inp.possession.zone === 'opponent') want = 'big-chance';
     else want = 'idle';
     if (!(c.celebration && t < c.holdUntil) && goal !== 'player') c.celebration = '';
     if (want !== sceneId) setSceneId(want);

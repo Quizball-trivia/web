@@ -173,6 +173,7 @@ const mcqFor = (answers: Record<DuelSide, number | null>) => ({
   categoryName: 'Category 0',
   offCategory: false,
   answers,
+  answeredAt: { player: null, opponent: null },
   firstMiss: { player: null, opponent: null },
   startedAt: 0,
   deadline: 10_000,

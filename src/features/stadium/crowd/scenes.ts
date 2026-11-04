@@ -17,6 +17,7 @@ import {
   scarfWall,
   surfBanner,
   thunderclap,
+  bigChance,
   torches,
   wave,
   type Mechanic,
@@ -285,6 +286,14 @@ export const SCENE_GROUPS: SceneGroup[] = [
     id: "rhythm",
     label: "Beat and bounce",
     scenes: [
+      {
+        id: "big-chance",
+        label: "Big chance",
+        team: "Through on goal",
+        blurb: "Slow jumps with arms up, then flags, scarves, claps and bounces shifting round the stand.",
+        mechanic: bigChance,
+        palette: ["#1645FF", "#FFE500", "#FF4B4B", "#FFFFFF"],
+      },
       {
         id: "thunderclap",
         label: "Viking clap",

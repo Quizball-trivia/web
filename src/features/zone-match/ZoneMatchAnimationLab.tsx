@@ -244,7 +244,7 @@ function BodyStage({ entry, clock, start, customization, left }: { entry: LabEnt
           style={{ opacity: 0, fontSize: 'clamp(28px, 7vh, 64px)', textShadow: '0 3px 0 #14213D, 0 0 18px rgba(0,0,0,0.5)', transform: left ? 'scaleX(-1) translateX(-50%)' : 'translateX(-50%)' }}
         />
         <div ref={figRef} className="relative size-full" style={{ transformOrigin: `50% ${(FULL_GROUND * 100).toFixed(1)}%` }}>
-          <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} gloves={entry.body?.gloves} movingArms={entry.body?.arms} />
+          <AvatarFullBody customization={customization} seed={0} onEls={setEls} style={{ height: '100%' }} gloves={entry.body?.gloves} movingArms={entry.body?.arms ? 'auto' : false} />
           <div ref={moveBall} className="absolute" style={{ display: 'none', width: `${((2 * REACTION_BALL_R) / FULL_W) * 100}%`, aspectRatio: '1' }}>
             <div ref={moveBallSpin} className="size-full">
               <BallArt />

@@ -622,10 +622,10 @@ export function ModeSelectionScreen({
             bottom edge and clip there (matches Figma node 1361:52, which sits
             ~104% down the card). The card's overflow-hidden does the clipping. */}
         <Image
-          src="/assets/brand/ranked-hands-trophy.svg"
+          src="/assets/brand/ranked-hands-ucl.webp"
           alt=""
-          width={257}
-          height={294}
+          width={600}
+          height={682}
           className="hidden lg:block absolute left-[52.6%] top-[15%] h-[90%] w-auto -translate-x-1/2 object-contain object-top pointer-events-none"
         />
 
@@ -758,10 +758,10 @@ export function ModeSelectionScreen({
             <div className="mt-3 flex items-end justify-between gap-3">
               <div className="flex flex-col items-start gap-2">
                 <Image
-                  src="/assets/brand/ranked-hands-trophy.svg"
+                  src="/assets/brand/ranked-hands-ucl.webp"
                   alt=""
-                  width={257}
-                  height={294}
+                  width={600}
+                  height={682}
                   className="h-[176px] w-auto object-contain pointer-events-none"
                 />
                 {!rankedProfileLoading && (

@@ -7,8 +7,9 @@ const playerAt = (zone: Possession['zone']): Possession => ({ attacker: 'player'
 const right = { player: true, opponent: true };
 
 describe('card list', () => {
-  it('has the 20 artifact cards with their energy costs (five changed after playtesting and the balance sims)', () => {
-    expect(CARDS).toHaveLength(20);
+  it('has the 20 artifact cards plus 8 added after the balance sims, with their energy costs', () => {
+    expect(CARDS).toHaveLength(28);
+    expect(CARDS.slice(20).map((c) => c.id)).toEqual(['nutmeg', 'bicycle-kick', 'high-press', 'time-wasting', 'super-sub', 'feint', 'poker-face', 'screamer']);
     expect(Object.fromEntries(CARDS.map((c) => [c.id, c.energy]))).toMatchObject({
       'first-touch': 2, 'fifty-fifty': 1, 'golden-boot': 2, 'captains-armband': 2, 'second-ball': 1,
       'floodlight-failure': 2, 'muddy-pitch': 2, fog: 1, 'yellow-card': 2, 'offside-trap': 2,

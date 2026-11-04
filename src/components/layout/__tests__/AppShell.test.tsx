@@ -926,10 +926,10 @@ describe('AppShell — logout dialog wiring', () => {
 });
 
 describe('AppShell — chrome details', () => {
-  it('renders the navbar currencies from the wallet query', () => {
+  it('renders the navbar coins from the wallet query (tickets hidden for Ranked 2.0)', () => {
     renderShell();
     expect(screen.getAllByText('1,500').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('7').length).toBeGreaterThan(0);
+    expect(screen.queryByAltText('Tickets')).toBeNull();
   });
 
   it('renders the user RP pill from the player context', () => {
