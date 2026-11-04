@@ -25,6 +25,17 @@ describe("answerMatching", () => {
     expect(normalizeAnswer("  Fábio--Capello  ")).toBe("fabio capello");
   });
 
+  it("joins apostrophes so apostrophe-less spellings match (prod bug 2026-09-03)", () => {
+    // Backend fix shipped in quizball-backend#621; this client copy powers
+    // career path / daily clues / FIFA cards and must agree with the server.
+    expect(normalizeAnswer("Samuel Eto'o")).toBe("samuel etoo");
+    expect(normalizeAnswer("სამუელ ეტო’ო")).toBe("სამუელ ეტოო");
+    expect(fuzzyMatchesAnswer("ეტოო", ["Samuel Eto'o", "სამუელ ეტო’ო"])).toBe(true);
+    expect(fuzzyMatchesAnswer("ოში", ["John O'Shea", "ჯონ ო’ში"])).toBe(true);
+    expect(fuzzyMatchesAnswer("etoo", ["Samuel Eto'o", "Eto'o"])).toBe(true);
+    expect(fuzzyMatchesAnswer("o neill", ["Martin O'Neill", "O'Neill"])).toBe(true);
+  });
+
   it("rejects ambiguous countdown prefixes even after one matching answer is already found", () => {
     expect(countdownMatch("ron", answerGroups, [])).toBeNull();
     expect(countdownMatch("ron", answerGroups, ["Ronaldo"])).toBeNull();
