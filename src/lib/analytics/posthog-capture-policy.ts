@@ -32,9 +32,10 @@ function isFootballQuizUrl(value: unknown): boolean {
  * pre-signup funnel, client api_error, flags and session replay.
  * game_start stays: it is the only web signal for daily and mini-game players
  * (one event per game), and 27 saved active-player insights count it.
+ * match_started stays for ranked/friendly, which the server never sends; Tic Tac
+ * Toe's copy is dropped because the server already sends that one.
  */
 const DB_DUPLICATED_EVENTS = new Set([
-  'match_started',
   'match_completed',
   'game_complete',
   'game_view',
@@ -63,6 +64,7 @@ export function preparePostHogCapture(result: CaptureResult | null): CaptureResu
   if (!sanitized) return null;
   if (isDevToolUrl(sanitized.properties?.$current_url)) return null;
   if (DB_DUPLICATED_EVENTS.has(sanitized.event)) return null;
+  if (sanitized.event === 'match_started' && sanitized.properties?.mode === 'football_grid') return null;
 
   const throttleMs = THROTTLED_EVENTS[sanitized.event];
   if (throttleMs) {

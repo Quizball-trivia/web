@@ -70,11 +70,18 @@ describe('event diet: DB-duplicated gameplay events and retry-storm throttles', 
   const ev = (event: string): CaptureResult => ({ uuid: `e-${event}`, event, properties: { $current_url: 'https://quizball.io/en/play' } });
 
   it('drops gameplay events the production DB already records', () => {
-    for (const name of ['match_started', 'match_completed', 'game_complete',
+    for (const name of ['match_completed', 'game_complete',
       'game_view', 'lobby_joined', 'matchmaking_started', 'quiz_question_answered',
       'match_results_viewed', 'wl_banner_viewed']) {
       expect(preparePostHogCapture(ev(name))).toBeNull();
     }
+  });
+
+  it('keeps ranked and friendly match_started but drops the Tic Tac Toe copy the server already sends', () => {
+    const match = (mode: string): CaptureResult => ({ uuid: `m-${mode}`, event: 'match_started', properties: { mode, $current_url: 'https://quizball.io/play' } });
+    expect(preparePostHogCapture(match('ranked'))?.event).toBe('match_started');
+    expect(preparePostHogCapture(match('friendly'))?.event).toBe('match_started');
+    expect(preparePostHogCapture(match('football_grid'))).toBeNull();
   });
 
   it('keeps the PostHog-only surface: pageviews, errors, funnel and conversion events', () => {
