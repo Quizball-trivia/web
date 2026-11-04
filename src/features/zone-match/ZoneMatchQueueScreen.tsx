@@ -89,6 +89,9 @@ export function ZoneMatchQueueScreen() {
   return (
     <ScreenFrame wide>
       <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col gap-3">
+        <div className="rounded-xl border border-brand-yellow/30 bg-brand-yellow/10 px-3 py-2 text-center text-xs text-white/85" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          Ranked 2.0 beta — a test queue with no RP or tickets at stake. If nobody else is searching, you&apos;ll play our practice bot.
+        </div>
         <PlaystylePicker
           seat={SELF}
           deck={deck}

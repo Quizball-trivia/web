@@ -1,4 +1,4 @@
-import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
+import { GUEST_LOBBIES_ENABLED, RANKED_V2_ENABLED, ZONE_BOT_ENABLED } from '@/lib/config';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -500,10 +500,15 @@ export function ModeSelectionScreen({
   };
   const [rankedModalOpen, setRankedModalOpen] = useState(false);
   const openRankedFlow = () => setRankedModalOpen(true);
-  // "Find opponents": guests sign in; brand-new members get the training offer first.
+  // "Find opponents": guests sign in; brand-new members get the training offer first. Under the Ranked 2.0 beta,
+  // guests go straight to the queue instead — the beta is built for guest playtests (no RP, no tickets).
   const findRankedOpponents = () => {
     setRankedModalOpen(false);
-    if (isGuest) { openAuthPrompt(); return; }
+    if (isGuest) {
+      if (RANKED_V2_ENABLED && ZONE_BOT_ENABLED && GUEST_LOBBIES_ENABLED) { router.push('/ranked2'); return; }
+      openAuthPrompt();
+      return;
+    }
     if (onRankedIntercept?.()) return;
     if (trainingOffer?.shouldOffer) {
       setTrainingOfferOpen(true);
