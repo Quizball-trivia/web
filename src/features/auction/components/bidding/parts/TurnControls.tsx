@@ -3,10 +3,10 @@
 import { useId, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { formatMoney, MIN_BID_INCREMENT } from '../../../data';
+import { CURRENCY_SYMBOL, formatMoney, MIN_BID_INCREMENT } from '../../../data';
 import type { AuctionActions } from '../../../hooks/useAuctionGame';
 
-/** Custom input is denominated in millions, so 11.6 means $11,600,000. */
+/** Custom input is denominated in millions, so 11.6 means €11,600,000. */
 const MILLION = 1_000_000;
 
 /**
@@ -15,8 +15,8 @@ const MILLION = 1_000_000;
  *
  * The quick button submits `minBid` (server-computed: opening = starting price,
  * later turns = +one increment) and leads with the resulting *total*. It used to
- * lead with the raise ("+$10M"), but starting prices are real market values and
- * rarely round, so a $1.6M lot raised to $11.6M read as though someone had
+ * lead with the raise ("+€10M"), but starting prices are real market values and
+ * rarely round, so a €1.6M lot raised to €11.6M read as though someone had
  * underbid the increment.
  *
  * The custom input lets a player jump past the minimum in one turn. The server
@@ -88,7 +88,7 @@ export function TurnControls({
   // Raising above the minimum needs headroom; opening a lot is always exact.
   const canRaiseAboveMin = canAfford && maxBid > minBid && !guided;
   // The hint has to be typeable: formatMoney rounds to 1 decimal, so a
-  // 35,050,000 bound renders "$35.0M" — typing that back is below the minimum
+  // 35,050,000 bound renders "€35.0M" — typing that back is below the minimum
   // and gets rejected. Show exact millions, matching the input's own unit.
   const inMillions = (amount: number) => String(Number((amount / MILLION).toFixed(6)));
   const isCustomValid = parsedCustom !== null && parsedCustom >= minBid && parsedCustom <= maxBid;
@@ -153,7 +153,7 @@ export function TurnControls({
           <div className="flex items-stretch gap-1.5 rounded-2xl border-2 border-white/10 bg-white/5 p-1.5">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 font-poppins text-sm font-bold text-white/40">
-                $
+                {CURRENCY_SYMBOL}
               </span>
               <input
                 type="number"

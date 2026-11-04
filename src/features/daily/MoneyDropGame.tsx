@@ -8,6 +8,7 @@ import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { PersonalBestNote } from "./components/PersonalBestNote";
 import {
   ArrowRight,
   Split,
@@ -16,6 +17,7 @@ import {
   Trophy,
   Hourglass,
   XOctagon,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
@@ -193,6 +195,8 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
   const QUESTION_TIME = session.secondsPerQuestion;
 
   const questions = session.questions;
+  // Best final bank on an earlier day (null = first run, undefined = history unavailable).
+  const personalBest = session.personalBest;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentMoney, setCurrentMoney] = useState(STARTING_MONEY);
   const [bets, setBets] = useState<number[]>([0, 0, 0, 0]);
@@ -487,6 +491,27 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
         contentClassName="max-w-[900px]"
       >
         <div className="w-full space-y-3 md:space-y-4 lg:space-y-5">
+
+          {/* The bank to beat: Money Drop's real goal is a better final bank than last time. */}
+          {personalBest !== undefined && (
+            <div className="flex justify-center" data-testid="money-drop-personal-best">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs lg:text-sm font-bold",
+                  personalBest === null || currentMoney > personalBest
+                    ? "bg-brand-yellow/15 text-brand-yellow"
+                    : "bg-white/8 text-brand-slate"
+                )}
+              >
+                <Target className="size-3.5 lg:size-4" aria-hidden />
+                {personalBest === null
+                  ? t("dailyGames.personalBestFirstPill")
+                  : currentMoney > personalBest
+                    ? t("dailyGames.personalBestBeat", { value: formatMoney(personalBest) })
+                    : t("dailyGames.personalBestPill", { value: formatMoney(personalBest) })}
+              </span>
+            </div>
+          )}
 
           {/* Question + help row */}
           <motion.div
@@ -827,6 +852,9 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
         scoreLabel={t("dailyGames.hubCoinsEarned")}
         challengeType={session.challengeType}
         scoreValue={formatMoney(finalMoney ?? 0)}
+        details={personalBest !== undefined && finalMoney !== null
+          ? <PersonalBestNote score={finalMoney} previous={personalBest} format={formatMoney} />
+          : undefined}
         onDone={(nextPath) => onComplete(finalMoney ?? 0, nextPath)}
       />
     </div>

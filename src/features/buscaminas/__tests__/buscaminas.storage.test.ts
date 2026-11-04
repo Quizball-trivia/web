@@ -4,7 +4,7 @@ import type { BuscaminasRun } from "@/lib/repositories/buscaminas.repo";
 
 const run = (done: boolean, score = 42): BuscaminasRun => ({
   run: { id: `r-${score}`, version: score },
-  state: { day: "2026-09-27", round: done ? 19 : 3, picked: [], found: 0, mine: null, settled: null, results: [], done, score, ranked: false },
+  state: { day: "2026-09-27", round: done ? 19 : 3, picked: [], found: 0, mine: null, settled: null, results: [], done, score, dailyRounds: 5, dailyDone: done, dailyScore: score, ranked: false },
 });
 
 describe("buscaminas saved runs", () => {
@@ -26,6 +26,19 @@ describe("buscaminas saved runs", () => {
     expect(finishedScores(["2026-09-27"], "guest")).toEqual({ "2026-09-27": 90 });
     expect(loadRun("2026-09-27", 8, "guest")).toBeNull();
     expect(finishedScores(["2026-09-27"], "guest")).toEqual({});
+  });
+});
+
+describe("buscaminas daily run in the archive", () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it("counts a finished daily run (its daily score) even while the extended rounds are unfinished", async () => {
+    const { inProgressDays } = await import("../buscaminas.storage");
+    const extended: BuscaminasRun = { run: { id: "r-x", version: 12 }, state: { ...run(false).state, round: 7, done: false, score: 80, dailyDone: true, dailyScore: 50 } };
+    saveRun("2026-09-27", 7, extended, "guest");
+    saveRun("2026-09-28", 7, run(false, 3), "guest");
+    expect(finishedScores(["2026-09-27", "2026-09-28"], "guest")).toEqual({ "2026-09-27": 50 });
+    expect([...inProgressDays(["2026-09-27", "2026-09-28"], "guest")]).toEqual(["2026-09-28"]);
   });
 });
 

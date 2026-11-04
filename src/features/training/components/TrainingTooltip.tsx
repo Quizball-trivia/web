@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 
-interface HighlightRect {
+export interface HighlightRect {
   left: number;
   top: number;
   width: number;
@@ -75,38 +75,50 @@ interface AnchoredPlacement {
   caretOffsetPx: number;
 }
 
+/** The visible box a tooltip card must stay inside: the viewport minus the
+ *  safe-area insets (notch / home indicator) and an edge margin. */
+export interface TooltipBounds {
+  vw: number;
+  top: number;
+  bottom: number;
+}
+
 const CARD_GAP = 18;
 const EDGE_MARGIN = 12;
+/** First-frame guess until the real card height is measured. */
 const CARD_EST_H = 240;
+/** Distance of the static "top"/"bottom" slots from the safe edge (was top-24 / bottom-24). */
+const STATIC_EDGE_OFFSET = 96;
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
 
 /**
  * Place the card next to the spotlighted rect: below it, else above, else
- * beside. Returns null when no adjacent slot fits — the caller then falls back
- * to the static position (the spotlight hole still marks the target).
+ * beside — using the card's MEASURED height, so a long (translated) message
+ * can no longer hang off the bottom of a small phone. Returns null when no
+ * adjacent slot fits whole; the caller then uses the static slot (the
+ * spotlight hole still marks the target).
  */
-function placeCard(rect: HighlightRect, vw: number, vh: number): AnchoredPlacement | null {
+export function placeCard(rect: HighlightRect, bounds: TooltipBounds, cardH: number): AnchoredPlacement | null {
+  const { vw } = bounds;
   const cardW = Math.min(384, vw - EDGE_MARGIN * 2);
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const spaceBelow = vh - (rect.top + rect.height);
-  const spaceAbove = rect.top;
+  const below = rect.top + rect.height + CARD_GAP;
+  const above = rect.top - CARD_GAP - cardH;
+  const left = clamp(cx - cardW / 2, EDGE_MARGIN, vw - cardW - EDGE_MARGIN);
+  const caretX = clamp(cx - left, 28, cardW - 28);
+  const fitsBelow = below + cardH <= bounds.bottom;
+  const fitsAbove = above >= bounds.top;
+  const spaceBelow = bounds.bottom - below;
+  const spaceAbove = rect.top - CARD_GAP - bounds.top;
 
-  if (spaceBelow >= CARD_EST_H + CARD_GAP || spaceBelow >= spaceAbove) {
-    if (spaceBelow >= CARD_EST_H * 0.6) {
-      const left = Math.min(Math.max(cx - cardW / 2, EDGE_MARGIN), vw - cardW - EDGE_MARGIN);
-      return {
-        card: { top: rect.top + rect.height + CARD_GAP, left, width: cardW },
-        caretSide: "top",
-        caretOffsetPx: Math.min(Math.max(cx - left, 28), cardW - 28),
-      };
-    }
-  } else if (spaceAbove >= CARD_EST_H * 0.6) {
-    const left = Math.min(Math.max(cx - cardW / 2, EDGE_MARGIN), vw - cardW - EDGE_MARGIN);
-    return {
-      card: { bottom: vh - rect.top + CARD_GAP, left, width: cardW },
-      caretSide: "bottom",
-      caretOffsetPx: Math.min(Math.max(cx - left, 28), cardW - 28),
-    };
+  // Prefer below; take above when only it fits, or when both fit and above has more room.
+  if (fitsBelow && (!fitsAbove || spaceBelow >= spaceAbove)) {
+    return { card: { top: below, left, width: cardW }, caretSide: "top", caretOffsetPx: caretX };
+  }
+  if (fitsAbove) {
+    return { card: { top: above, left, width: cardW }, caretSide: "bottom", caretOffsetPx: caretX };
   }
 
   // Tall target (e.g. the desktop portrait pitch) — sit beside it instead,
@@ -114,13 +126,15 @@ function placeCard(rect: HighlightRect, vw: number, vh: number): AnchoredPlaceme
   const MIN_SIDE_W = 240;
   const spaceRight = vw - (rect.left + rect.width) - CARD_GAP - EDGE_MARGIN;
   const spaceLeft = rect.left - CARD_GAP - EDGE_MARGIN;
-  const top = Math.min(Math.max(cy - CARD_EST_H / 2, EDGE_MARGIN), Math.max(vh - CARD_EST_H - EDGE_MARGIN, EDGE_MARGIN));
+  if (cardH > bounds.bottom - bounds.top) return null;
+  const top = clamp(cy - cardH / 2, bounds.top, bounds.bottom - cardH);
+  const caretY = clamp(cy - top, 28, cardH - 28);
 
   if (spaceRight >= MIN_SIDE_W) {
     return {
       card: { top, left: rect.left + rect.width + CARD_GAP, width: Math.min(384, spaceRight) },
       caretSide: "left",
-      caretOffsetPx: Math.min(Math.max(cy - top, 28), CARD_EST_H - 28),
+      caretOffsetPx: caretY,
     };
   }
   if (spaceLeft >= MIN_SIDE_W) {
@@ -128,10 +142,71 @@ function placeCard(rect: HighlightRect, vw: number, vh: number): AnchoredPlaceme
     return {
       card: { top, left: Math.max(EDGE_MARGIN, rect.left - CARD_GAP - width), width },
       caretSide: "right",
-      caretOffsetPx: Math.min(Math.max(cy - top, 28), CARD_EST_H - 28),
+      caretOffsetPx: caretY,
     };
   }
   return null;
+}
+
+/** Top of the card in its static slot, clamped so the whole card stays on screen. */
+export function staticCardTop(position: "top" | "center" | "bottom", bounds: TooltipBounds, cardH: number): number {
+  const preferred =
+    position === "top"
+      ? bounds.top + STATIC_EDGE_OFFSET
+      : position === "bottom"
+        ? bounds.bottom - STATIC_EDGE_OFFSET - cardH
+        : (bounds.top + bounds.bottom) / 2 - cardH / 2;
+  return clamp(preferred, bounds.top, bounds.bottom - cardH);
+}
+
+/**
+ * Viewport box minus safe-area insets. The insets are read from a probe
+ * element positioned with env(safe-area-inset-*), since JS can't read env().
+ */
+function useTooltipBounds() {
+  const probeRef = useRef<HTMLDivElement>(null);
+  const [bounds, setBounds] = useState<TooltipBounds | null>(null);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const probe = probeRef.current?.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const safeTop = probe && probe.height > 0 ? probe.top : 0;
+      const safeBottom = probe && probe.height > 0 ? probe.bottom : vh;
+      setBounds({ vw: window.innerWidth, top: safeTop + EDGE_MARGIN, bottom: safeBottom - EDGE_MARGIN });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  return { probeRef, bounds };
+}
+
+/** Rendered height of the card, re-measured whenever its content reflows. */
+function useElementHeight<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [height, setHeight] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const h = el.offsetHeight;
+      if (h > 0) setHeight(h);
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, height };
 }
 
 export function TrainingTooltip({
@@ -144,11 +219,13 @@ export function TrainingTooltip({
 }: TrainingTooltipProps) {
   const { t } = useLocale();
   const highlightRect = useHighlightRect(highlightSelector, titleKey);
+  const { probeRef, bounds } = useTooltipBounds();
+  const { ref: cardRef, height: measuredH } = useElementHeight<HTMLDivElement>();
+  const cardH = measuredH ?? CARD_EST_H;
   const PAD = 6;
 
-  const anchored = highlightRect && typeof window !== "undefined"
-    ? placeCard(highlightRect, window.innerWidth, window.innerHeight)
-    : null;
+  const anchored = highlightRect && bounds ? placeCard(highlightRect, bounds, cardH) : null;
+  const staticTop = !anchored && bounds ? staticCardTop(position, bounds, cardH) : null;
 
   const caretStyle: CSSProperties | null = anchored
     ? anchored.caretSide === "top"
@@ -162,6 +239,14 @@ export function TrainingTooltip({
 
   return (
     <div className="fixed inset-0 z-[100] font-poppins select-none">
+      {/* Safe-area probe: spans the viewport between the top and bottom insets. */}
+      <div
+        ref={probeRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute left-0 w-px"
+        style={{ top: "env(safe-area-inset-top, 0px)", bottom: "env(safe-area-inset-bottom, 0px)" }}
+      />
+
       {/* Backdrop — when a target is spotlighted, the dimming comes from the
           spotlight's giant box-shadow so the target itself stays bright. */}
       {highlightRect ? (
@@ -184,41 +269,46 @@ export function TrainingTooltip({
       {/* Skip link */}
       <button
         onClick={onSkip}
-        className="absolute top-12 right-4 z-10 text-xs font-semibold text-white/40 uppercase tracking-wider hover:text-white/70 transition-colors"
+        className="absolute top-[calc(env(safe-area-inset-top,0px)+3rem)] right-4 z-10 text-xs font-semibold text-white/40 uppercase tracking-wider hover:text-white/70 transition-colors"
       >
         {t("training.skipTraining")}
       </button>
 
       {/* Tooltip card — anchored beside the spotlighted element (with a caret
-          pointing at it), or in the static slot when nothing is highlighted. */}
+          pointing at it), or in the static slot when nothing is highlighted.
+          Both are clamped to the safe viewport using the measured card height;
+          the card itself is capped at the safe viewport height and scrolls
+          its message, so the GOT IT button is always reachable. */}
       <div
         className={cn(
           "absolute",
           !anchored && "left-0 right-0 flex justify-center px-4",
-          !anchored && position === "top" && "top-24",
-          !anchored && position === "center" && "top-1/2 -translate-y-1/2",
-          !anchored && position === "bottom" && "bottom-24",
+          // First frame, before the viewport is measured: the legacy slots.
+          !anchored && staticTop === null && position === "top" && "top-24",
+          !anchored && staticTop === null && position === "center" && "top-1/2 -translate-y-1/2",
+          !anchored && staticTop === null && position === "bottom" && "bottom-24",
         )}
-        style={anchored?.card}
+        style={anchored?.card ?? (staticTop !== null ? { top: staticTop } : undefined)}
       >
         <motion.div
+          ref={cardRef}
           initial={{ opacity: 0, scale: 0.85, y: position === "top" ? -20 : 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 22 }}
-          className="relative w-full max-w-sm bg-brand-blue rounded-2xl p-5 shadow-2xl"
+          className="relative flex w-full max-w-sm max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col bg-brand-blue rounded-2xl p-5 shadow-2xl"
         >
           {caretStyle && (
             <div className="absolute h-4 w-4 rotate-45 bg-brand-blue" style={caretStyle} />
           )}
-          <h3 className="font-poppins text-lg text-white uppercase tracking-wide mb-2">
+          <h3 className="shrink-0 font-poppins text-lg text-white uppercase tracking-wide mb-2">
             {t(titleKey)}
           </h3>
-          <p className="text-sm font-medium text-white/85 leading-relaxed mb-5">
+          <p className="min-h-0 overflow-y-auto overscroll-contain text-sm font-medium text-white/85 leading-relaxed mb-5">
             {t(messageKey)}
           </p>
           <button
             onClick={onDismiss}
-            className="font-poppins w-full py-3 rounded-xl bg-brand-green text-sm text-white uppercase tracking-wider transition-colors hover:bg-brand-green-deep active:scale-[0.99]"
+            className="shrink-0 font-poppins w-full py-3 rounded-xl bg-brand-green text-sm text-white uppercase tracking-wider transition-colors hover:bg-brand-green-deep active:scale-[0.99]"
           >
             {t("training.gotIt")}
           </button>

@@ -75,4 +75,19 @@ describe("Squad Spin sample engine (frozen pricing snapshot)", () => {
     }
     expect(s.status).toBe("cashed");
   });
+
+  it("relaxed practice never times out: a slow correct answer still counts, only a wrong name loses", async () => {
+    let clock = 9_000_000; const w = wallet(1_000);
+    const client = createSquadSpinSample({ combos: [combo(1), combo(2)], wallet: w, seed: 3, now: () => clock, untimed: true });
+    let s = await client.start(50, 3, "n");
+    clock += 10 * 60_000;
+    expect((await client.current())?.status).toBe("active");
+    const slow = await client.answer(s.round_id, "iniesta", s.state_version);
+    expect(slow.outcome).toBe("correct");
+    s = await client.continue(slow.state.round_id, slow.state.state_version);
+    clock += 60_000;
+    const wrong = await client.answer(s.round_id, "xavi", s.state_version);
+    expect(wrong.outcome).toBe("wrong"); expect(wrong.state.status).toBe("lost");
+    expect(wrong.state.reveal?.answers[0].name_en).toBe("Andrés Iniesta");
+  });
 });

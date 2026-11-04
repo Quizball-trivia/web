@@ -19,19 +19,19 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'auctionGame.biddingOpen': 'Bidding open',
         'auctionGame.placeFirstBidToStartClock': 'Place first bid',
         'auctionGame.yourTurn': 'Your turn',
-        'auctionGame.bidAmount': `BID ${String(params?.amount ?? '$20M')}`,
-        'auctionGame.raiseBy': `+${String(params?.amount ?? '$10M')}`,
-        'auctionGame.bidTotalAmount': `Bid: ${String(params?.amount ?? '$0')}`,
-        'auctionGame.raiseBreakdown': `${String(params?.previous ?? '$0')} + ${String(params?.raise ?? '$10M')} raise`,
+        'auctionGame.bidAmount': `BID ${String(params?.amount ?? '€20M')}`,
+        'auctionGame.raiseBy': `+${String(params?.amount ?? '€10M')}`,
+        'auctionGame.bidTotalAmount': `Bid: ${String(params?.amount ?? '€0')}`,
+        'auctionGame.raiseBreakdown': `${String(params?.previous ?? '€0')} + ${String(params?.raise ?? '€10M')} raise`,
         'auctionGame.customBidRange': `Or bid any amount from ${String(params?.min ?? '0')}M to ${String(params?.max ?? '0')}M`,
         'auctionGame.customBidInvalid': `Enter an amount between ${String(params?.min ?? '0')}M and ${String(params?.max ?? '0')}M`,
         'auctionGame.customBidLabel': 'Custom bid amount in millions',
         'auctionGame.cannotAffordRaise': 'Not enough budget',
         'auctionGame.biddingOpensIn': 'Bidding opens in',
-        'auctionGame.leftAmount': `Left: ${String(params?.amount ?? '$0')}`,
+        'auctionGame.leftAmount': `Left: ${String(params?.amount ?? '€0')}`,
         'auctionGame.bid': 'Bid',
-        'auctionGame.budgetAmount': `Budget: ${String(params?.amount ?? '$0')}`,
-        'auctionGame.maxBidAmount': `Max bid: ${String(params?.amount ?? '$0')}`,
+        'auctionGame.budgetAmount': `Budget: ${String(params?.amount ?? '€0')}`,
+        'auctionGame.maxBidAmount': `Max bid: ${String(params?.amount ?? '€0')}`,
         'auctionGame.fold': 'Fold',
         'auctionGame.pass': 'Pass',
         'auctionGame.bidPlacedWaiting': 'Bid placed - waiting...',
@@ -186,19 +186,19 @@ describe('BiddingScreen', () => {
     );
 
     expect(screen.getByText('Bid placed - waiting...')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /BID|\+\$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /BID|\+€/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fold' })).not.toBeInTheDocument();
   });
 
   it('offers the quick raise, a custom-amount input and fold once a bid stands', () => {
     render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
 
-    // Standing bid of $25M → quick bid is the $35M total, not a bare "+$10M".
-    expect(screen.getByRole('button', { name: /BID \$35M/ })).toBeInTheDocument();
+    // Standing bid of €25M → quick bid is the €35M total, not a bare "+€10M".
+    expect(screen.getByRole('button', { name: /BID \€35M/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fold' })).toBeInTheDocument();
     // The custom input is back; the five fixed presets are still gone.
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /ALL IN|MIN|\+\$25M|\+\$50M/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /ALL IN|MIN|\+\€25M|\+\€50M/i })).not.toBeInTheDocument();
   });
 
   it('submits a custom amount that is not a multiple of the raise increment', async () => {
@@ -219,7 +219,7 @@ describe('BiddingScreen', () => {
 
     render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
 
-    // Standing bid $25M → minimum is $35M, so $30M must not be submittable.
+    // Standing bid €25M → minimum is €35M, so €30M must not be submittable.
     await user.type(screen.getByRole('spinbutton'), '30');
 
     expect(screen.getByRole('button', { name: 'Bid' })).toBeDisabled();
@@ -255,9 +255,9 @@ describe('BiddingScreen', () => {
   it('shows the raise broken down so a non-round total explains itself', () => {
     render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
 
-    // Standing bid $25M + $10M = $35M. The subtext must show the arithmetic,
+    // Standing bid €25M + €10M = €35M. The subtext must show the arithmetic,
     // which is what stops a non-round total reading as a broken increment.
-    expect(screen.getByText('$25M + $10M raise')).toBeInTheDocument();
+    expect(screen.getByText('€25M + €10M raise')).toBeInTheDocument();
   });
 
   it('states the bounds in the unit the field expects, exactly', async () => {
@@ -265,7 +265,7 @@ describe('BiddingScreen', () => {
 
     render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
 
-    // Bounds are millions, not formatMoney's rounded "$35M" — a rounded bound
+    // Bounds are millions, not formatMoney's rounded "€35M" — a rounded bound
     // can be below the real minimum and get rejected when typed back.
     expect(screen.getByText('Or bid any amount from 35M to 100M')).toBeInTheDocument();
 
@@ -288,7 +288,7 @@ describe('BiddingScreen', () => {
   });
 
   it('suggests a placeholder its own Bid button will accept', () => {
-    // A $350K opening price must not suggest "0.3" — that parses below the
+    // A €350K opening price must not suggest "0.3" — that parses below the
     // minimum and leaves the button permanently disabled.
     const cheapLot = round({
       bids: [],
@@ -342,7 +342,7 @@ describe('BiddingScreen', () => {
 
     // Opening a lot bids the starting price outright — or the opener passes
     // (the forced-open rule is gone; the button reads Pass, not Fold).
-    expect(screen.getByRole('button', { name: /BID \$20M/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /BID \€20M/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fold' })).not.toBeInTheDocument();
   });
@@ -360,7 +360,7 @@ describe('BiddingScreen', () => {
 
     expect(screen.getByText('Bidding opens in')).toBeInTheDocument();
     expect(screen.queryByText('Bidding open')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /BID|\+\$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /BID|\+€/i })).not.toBeInTheDocument();
   });
 
   it('explains why you are sitting a lot out instead of just saying "watching"', () => {

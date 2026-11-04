@@ -7,9 +7,11 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { EASE } from '../../../constants/motion';
 import type { PositionGroup, SeasonSnapshot } from '../../../types';
+import { formatMoney } from '../../../data';
 
-const eur = (v: number) =>
-  v > 0 && v < 1_000_000 ? `€${Math.round(v / 1_000)}K` : `€${Math.round(v / 1_000_000)}M`;
+// The shared auction formatter: the scouting value must read in the same
+// currency and precision as the starting price, bids and the reveal value.
+const eur = (v: number) => formatMoney(v);
 
 type Facet = { icon: typeof Goal; labelKey: MessageKey; get: (s: SeasonSnapshot) => string; money?: boolean };
 
@@ -119,7 +121,11 @@ export function SnapshotClues({
         return (
           <div key={f.labelKey} className={cn('flex items-center gap-3 rounded-xl px-3 py-1.5', rowBg)}>
             <Icon className={cn('size-4 shrink-0', 'text-white/75')} />
-            <span className={cn('flex-1 font-poppins text-sm font-bold', labelColor)}>{t(f.labelKey)}</span>
+            {/* The money row names its season: this value is the SCOUT season's,
+                not the value-season figure the lot is scored on. */}
+            <span className={cn('min-w-0 flex-1 font-poppins text-sm font-bold leading-tight', labelColor)}>
+              {f.money ? t('auctionGame.snapMarketValueSeason', { season: s.season }) : t(f.labelKey)}
+            </span>
             {revealed ? (
               <motion.span
                 initial={{ opacity: 0, y: 4 }}

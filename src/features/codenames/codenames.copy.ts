@@ -83,6 +83,8 @@ export interface CodenamesCopy {
   cardsLeftTitle: string;
   /** A finished run of today's board: the key and reasons wait for the day to close. */
   answersLater: string;
+  /** Picture practice: an earlier daily board replayed on the device, unranked, with every reason at the end. */
+  picturePractice: { cta: string; title: string; note: string; unavailable: string };
   /** The daily's notes when another tab of the same run moved it on under the player's pick. */
   staleNotes: Record<"confirmAgain" | "notSent" | "clueChanged" | "cardTaken" | "finished" | "stopAgain", string>;
 }
@@ -182,6 +184,7 @@ const en: CodenamesCopy = {
   idleText: "Nobody played for four turns in a row, so the game ended without a winner.",
   cardsLeftTitle: "Cards left",
   answersLater: "Every card, the rest of the clues and the reasons appear here when today's board closes.",
+  picturePractice: { cta: "Practice on another board", title: "Practice", note: "An earlier board, unranked. Every reason shows at the end.", unavailable: "No practice boards yet. Come back tomorrow." },
   staleNotes: {
     confirmAgain: "The board changed in another tab. Your pick wasn't played: tap it again to confirm.",
     notSent: "Your pick wasn't played. Tap it again to confirm.",
@@ -287,6 +290,7 @@ const es: CodenamesCopy = {
   idleText: "Nadie jugó durante cuatro turnos seguidos, así que el partido terminó sin ganador.",
   cardsLeftTitle: "Cartas restantes",
   answersLater: "Todas las cartas, el resto de las pistas y las razones aparecen aquí cuando cierre el tablero de hoy.",
+  picturePractice: { cta: "Practicar con otro tablero", title: "Práctica", note: "Un tablero anterior, sin ranking. Todas las razones aparecen al final.", unavailable: "Todavía no hay tableros de práctica. Vuelve mañana." },
   staleNotes: {
     confirmAgain: "El tablero cambió en otra pestaña. Tu carta no se jugó: tócala otra vez para confirmar.",
     notSent: "Tu carta no se jugó. Tócala otra vez para confirmar.",
@@ -392,6 +396,7 @@ const tr: CodenamesCopy = {
   idleText: "Dört tur üst üste kimse oynamadı, bu yüzden oyun kazanansız bitti.",
   cardsLeftTitle: "Kalan kartlar",
   answersLater: "Tüm kartlar, kalan ipuçları ve nedenleri bugünün oyunu kapanınca burada görünecek.",
+  picturePractice: { cta: "Başka bir tahtada antrenman yap", title: "Antrenman", note: "Önceki bir tahta, sıralamaya girmez. Tüm nedenleri sonda görürsün.", unavailable: "Henüz antrenman tahtası yok. Yarın tekrar gel." },
   staleNotes: {
     confirmAgain: "Oyun alanı başka bir sekmede değişti. Seçtiğin kart açılmadı: onaylamak için ona tekrar dokun.",
     notSent: "Seçtiğin kart açılmadı. Onaylamak için ona tekrar dokun.",
@@ -497,6 +502,7 @@ const ru: CodenamesCopy = {
   idleText: "Никто не ходил четыре хода подряд, поэтому игра закончилась без победителя.",
   cardsLeftTitle: "Осталось карточек",
   answersLater: "Все карточки, остальные подсказки и объяснения появятся здесь, когда сегодняшнее поле закроется.",
+  picturePractice: { cta: "Потренироваться на другом поле", title: "Тренировка", note: "Одно из прошлых полей, без рейтинга. Все объяснения — в конце.", unavailable: "Тренировочных полей пока нет. Загляни завтра." },
   staleNotes: {
     confirmAgain: "Поле изменилось в другой вкладке. Карточка не была открыта: нажми на неё ещё раз, чтобы подтвердить.",
     notSent: "Карточка не была открыта. Нажми на неё ещё раз, чтобы подтвердить.",
@@ -601,6 +607,7 @@ const pt: CodenamesCopy = {
   idleText: "Ninguém jogou por quatro turnos seguidos, então a partida terminou sem vencedor.",
   cardsLeftTitle: "Cartas restantes",
   answersLater: "Todas as cartas, as demais dicas e os motivos vão aparecer aqui quando o tabuleiro de hoje fechar.",
+  picturePractice: { cta: "Treinar em outro tabuleiro", title: "Treino", note: "Um tabuleiro anterior, sem ranking. Todos os motivos aparecem no final.", unavailable: "Ainda não há tabuleiros de treino. Volte amanhã." },
   staleNotes: {
     confirmAgain: "O tabuleiro mudou em outra aba. Sua escolha não foi jogada: toque nela de novo para confirmar.",
     notSent: "Sua escolha não foi jogada. Toque nela de novo para confirmar.",
@@ -706,6 +713,7 @@ const de: CodenamesCopy = {
   idleText: "Vier Runden lang hat niemand gespielt. Deshalb endete das Spiel ohne Sieger.",
   cardsLeftTitle: "Übrige Karten",
   answersLater: "Alle Karten, die übrigen Hinweise und ihre Erklärungen erscheinen hier, wenn das heutige Spielfeld geschlossen wird.",
+  picturePractice: { cta: "Auf einem anderen Spielfeld üben", title: "Übung", note: "Ein früheres Spielfeld, ohne Rangliste. Alle Erklärungen siehst du am Ende.", unavailable: "Noch keine Übungsfelder. Schau morgen wieder vorbei." },
   staleNotes: {
     confirmAgain: "Das Spielfeld wurde in einem anderen Tab geändert. Deine Auswahl wurde nicht gespielt: Tippe erneut darauf, um zu bestätigen.",
     notSent: "Deine Auswahl wurde nicht gespielt. Tippe erneut darauf, um zu bestätigen.",
@@ -811,6 +819,7 @@ const ka: CodenamesCopy = {
   idleText: "ოთხი სვლის განმავლობაში არავინ ითამაშა, ამიტომ თამაში გამარჯვებულის გარეშე დასრულდა.",
   cardsLeftTitle: "დარჩენილი ბარათები",
   answersLater: "ყველა ბარათი, დანარჩენი მინიშნებები და ახსნები აქ გამოჩნდება, როცა დღევანდელი დაფა დაიხურება.",
+  picturePractice: { cta: "ივარჯიშე სხვა დაფაზე", title: "ვარჯიში", note: "ერთ-ერთი წინა დაფა, რეიტინგის გარეშე. ყველა ახსნას ბოლოს ნახავ.", unavailable: "სავარჯიშო დაფები ჯერ არ არის. ხვალ შემოიარე." },
   staleNotes: {
     confirmAgain: "დაფა სხვა ჩანართში შეიცვალა. ბარათი არ გახსნილა: დასადასტურებლად ისევ შეეხე მას.",
     notSent: "ბარათი არ გახსნილა. დასადასტურებლად ისევ შეეხე მას.",

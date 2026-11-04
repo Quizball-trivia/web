@@ -26,7 +26,9 @@ export const BOT_MAX_THINK_MS = 5_000;
 // the board one by one, then CLUE_STUDY_MS runs before bidding opens. Shorter now
 // that a lot reveals ~5 individual stats rather than 3 long clue sentences.
 export const CLUE_REVEAL_INTERVAL_MS = 2000;
-export const CLUE_STUDY_MS = 10_000;
+// Mirrors CLUE_STUDY_MS in the backend auction constants (10s → 6s: every clue
+// is already visible and nobody can act, so it was pure waiting).
+export const CLUE_STUDY_MS = 6_000;
 
 /** The season stats revealed one-by-one for a scouting lot, in reveal order.
  *  Drives the reveal-step count for footballers that have `snapshots`. */
@@ -836,19 +838,25 @@ export function lastName(name: string): string {
   return name.split(' ').pop() ?? name;
 }
 
+/** Every auction amount is a Transfermarkt valuation in EUR (budgets, bids,
+ *  scouting values, profit), so it is always shown in euros. This is the ONE
+ *  money formatter for the auction UI: a second formatter with another symbol
+ *  is how the scouting card once showed "€128M" next to "$8M". */
+export const CURRENCY_SYMBOL = '€';
+
 export function formatMoney(amount: number): string {
   if (amount >= 1_000_000_000) {
     const val = amount / 1_000_000_000;
-    return `$${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}B`;
+    return `${CURRENCY_SYMBOL}${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}B`;
   }
   if (amount >= 1_000_000) {
     const val = amount / 1_000_000;
-    return `$${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}M`;
+    return `${CURRENCY_SYMBOL}${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}M`;
   }
   if (amount >= 1_000) {
-    return `$${(amount / 1_000).toFixed(0)}K`;
+    return `${CURRENCY_SYMBOL}${(amount / 1_000).toFixed(0)}K`;
   }
-  return `$${amount}`;
+  return `${CURRENCY_SYMBOL}${amount}`;
 }
 
 export const POSITION_ORDER: PositionGroup[] = ['GK', 'DEF', 'MID', 'FWD'];

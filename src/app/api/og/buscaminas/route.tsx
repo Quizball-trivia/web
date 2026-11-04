@@ -8,13 +8,14 @@ export const runtime = "nodejs";
 
 const COLOR = { perfect: "#58CC02", banked: "#FFE500", mine: "#FF4B4B" } as const;
 
-/** 1200×630 result card for a shared Buscaminas link: score and the 20 round squares. */
+/** 1200×630 result card for a shared Buscaminas link: score and the round squares. */
 export function GET(req: NextRequest) {
   const result = decodeShare(req.nextUrl.searchParams.get("c"));
   if (!result) return NextResponse.redirect(new URL(SITE_OG_IMAGE_PATH, SITE_URL), 302);
   // The default image font has no Georgian glyphs, so Georgian cards use the English lines.
   const copy = SHARE_COPY[result.locale === "ka" ? "en" : result.locale];
-  const rows = [result.outcomes.slice(0, 10), result.outcomes.slice(10, 20)];
+  // A daily run has 5 squares (one row); older links carry all 20 (two rows of ten).
+  const rows = Array.from({ length: Math.ceil(result.outcomes.length / 10) }, (_, i) => result.outcomes.slice(i * 10, i * 10 + 10));
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg, #1645FF 0%, #0b1530 70%)", color: "white", fontFamily: "sans-serif" }}>

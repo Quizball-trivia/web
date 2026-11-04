@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { CountdownGame } from '../CountdownGame';
+import { CountdownGame, CountdownReview } from '../CountdownGame';
 
 const session = {
   challengeType: 'countdown',
@@ -145,5 +145,27 @@ describe('CountdownGame', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(screen.getAllByText('Fabio Capello').length).toBeGreaterThan(0);
+  });
+
+  it('reviews every round after the game: found answers, every missed one, and the personal best', () => {
+    const questions = [
+      { id: 'r1', prompt: 'Round one', answerGroups: [{ display: 'Cristiano Ronaldo' }, { display: 'Lionel Messi' }, { display: 'Raul' }] },
+      { id: 'r2', prompt: 'Round two', answerGroups: [{ display: 'Fabio Capello' }] },
+    ];
+    render(<CountdownReview questions={questions} foundByRound={[['Lionel Messi'], ['Fabio Capello']]} score={2} personalBest={5} />);
+
+    const found = document.querySelectorAll('[data-countdown-answer="found"]');
+    const missed = document.querySelectorAll('[data-countdown-answer="missed"]');
+    expect([...found].map((el) => el.textContent)).toEqual(['Lionel Messi', 'Fabio Capello']);
+    expect([...missed].map((el) => el.textContent)).toEqual(['Cristiano Ronaldo', 'Raul']);
+    expect(screen.getByText('1/3 found')).toBeInTheDocument();
+    expect(screen.getByText('You found every answer!')).toBeInTheDocument();
+    expect(screen.getByText(/Personal best: 5/)).toBeInTheDocument();
+  });
+
+  it('shows no personal best line when the history is unknown (guests)', () => {
+    render(<CountdownReview questions={[{ id: 'r1', prompt: 'Round one', answerGroups: [{ display: 'Raul' }] }]} foundByRound={[[]]} score={0} />);
+    expect(screen.queryByText(/Personal best/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('personal-best-new')).not.toBeInTheDocument();
   });
 });

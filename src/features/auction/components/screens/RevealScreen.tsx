@@ -22,6 +22,9 @@ import { LeagueLogo } from '../shared/LeagueLogo';
 import { ChemistryBadge } from '../shared/ChemistryPanel';
 import { AllSquads } from '../pitch/AllSquads';
 
+/** How long the reveal stays up before acking the server (full picture lands at 1.6s). */
+export const REVEAL_HOLD_MS = 4_500;
+
 /** Staged dramatic reveal: SOLD flash → photo → name → value/sold → deal badge → squads → next. */
 export function RevealScreen({
   state,
@@ -101,7 +104,9 @@ function RevealBody({
       setTimeout(() => setStage(5), 1600),
       // Full picture on screen at 1.6s; hold it so the sold player is
       // actually readable before the server sweeps into the next round.
-      setTimeout(() => setHoldDone(true), 6000),
+      // 6s → 4.5s (tester feedback: waiting phases too long). The server's
+      // reveal ceiling stays 6s, so slower clients (mobile) keep their pace.
+      setTimeout(() => setHoldDone(true), REVEAL_HOLD_MS),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -121,7 +126,13 @@ function RevealBody({
   // Scoring uses the player's LATER-season value (the clue phase showed an
   // earlier season); the gap between what you paid and this is the profit.
   const futureValue = getFutureValue(round.footballer);
-  const valueSeason = round.footballer.snapshots?.at(-1)?.season ?? null;
+  const snapshots = round.footballer.snapshots ?? [];
+  const valueSeason = snapshots.at(-1)?.season ?? null;
+  // Value trail: every figure the lot showed, each with its season, so the
+  // scouting value, the starting price and the scoring value can't read as
+  // contradictory numbers for the same player.
+  const scoutSeason = snapshots.length > 1 ? snapshots[0] : null;
+  const priceOrigin = round.footballer.startingPriceOrigin ?? null;
 
   // Chemistry this signing added to the winner's squad. The player is already
   // assigned by reveal time, so we diff the winner's current chem against the
@@ -233,7 +244,7 @@ function RevealBody({
               >
                 <div className="rounded-[16px] bg-brand-yellow px-6 py-3 text-center shadow-[0_4px_16px_rgba(255,229,0,0.25)]">
                   <div className="text-[10px] font-black uppercase text-black/60" style={poppins}>
-                    {valueSeason ? `${valueSeason} ${t('auctionGame.valueLabel')}` : t('auctionGame.trueValue')}
+                    {valueSeason ? t('auctionGame.valueInSeason', { season: valueSeason }) : t('auctionGame.trueValue')}
                   </div>
                   <div className="font-poppins text-2xl font-black text-black tabular-nums leading-tight">
                     {formatMoney(futureValue)}
@@ -267,6 +278,41 @@ function RevealBody({
                   </div>
                 )}
               </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Value trail — stage 3: where every number on this lot came from. */}
+          <AnimatePresence>
+            {stage >= 3 && (scoutSeason || round.startingPrice > 0) && (
+              <motion.dl
+                data-testid="auction-value-trail"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="mt-3 w-full max-w-xs space-y-1 rounded-[12px] bg-black/25 px-3 py-2"
+              >
+                {scoutSeason && scoutSeason.valueEur > 0 && (
+                  <ValueTrailRow
+                    label={t('auctionGame.revealScoutValue', { season: scoutSeason.season })}
+                    amount={formatMoney(scoutSeason.valueEur)}
+                  />
+                )}
+                <ValueTrailRow
+                  label={
+                    priceOrigin?.season
+                      ? t('auctionGame.revealStartingPrice', { season: priceOrigin.season })
+                      : t('auctionGame.startingPriceLabel')
+                  }
+                  amount={formatMoney(round.startingPrice)}
+                />
+                {valueSeason && (
+                  <ValueTrailRow
+                    label={t('auctionGame.valueInSeason', { season: valueSeason })}
+                    amount={formatMoney(futureValue)}
+                    strong
+                  />
+                )}
+              </motion.dl>
             )}
           </AnimatePresence>
 
@@ -334,5 +380,18 @@ function RevealBody({
         </AnimatePresence>
       </div>
     </AuctionScreen>
+  );
+}
+
+function ValueTrailRow({ label, amount, strong = false }: { label: string; amount: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className={`min-w-0 font-poppins text-[11px] font-semibold leading-tight ${strong ? 'text-white' : 'text-white/65'}`}>
+        {label}
+      </dt>
+      <dd className={`shrink-0 font-poppins text-xs font-black tabular-nums ${strong ? 'text-brand-yellow' : 'text-white/85'}`}>
+        {amount}
+      </dd>
+    </div>
   );
 }

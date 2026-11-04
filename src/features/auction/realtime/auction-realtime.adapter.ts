@@ -237,6 +237,9 @@ function toClientFootballer(
       ...snapshot,
       age: snapshot.age ?? null,
     })),
+    ...(footballer.startingPriceOrigin
+      ? { startingPriceOrigin: { source: footballer.startingPriceOrigin.source, season: footballer.startingPriceOrigin.season ?? null } }
+      : {}),
   };
 }
 

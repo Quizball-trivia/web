@@ -2,7 +2,26 @@ export const ROUNDS_PER_DAY = 20;
 export const CARDS_PER_ROUND = 16;
 export const TARGETS_PER_ROUND = 12;
 export const PERFECT_BONUS = 3;
+/** The whole board, extended challenge included. */
 export const MAX_SCORE = ROUNDS_PER_DAY * (TARGETS_PER_ROUND + PERFECT_BONUS);
+/**
+ * The daily run: the board's first rounds, a couple of minutes, and the score the day's leaderboard ranks.
+ * The other rounds are an optional extended challenge that never changes it. Mirrors the backend's DAILY_ROUNDS.
+ */
+export const DAILY_ROUNDS = 5;
+export const DAILY_MAX_SCORE = DAILY_ROUNDS * (TARGETS_PER_ROUND + PERFECT_BONUS);
+/**
+ * First day with the short daily run (mirrors the backend's SHORT_RUN_FROM). Earlier days keep the original
+ * rules: all 20 rounds ranked, out of 300, no extended challenge. Gameplay reads the server's `dailyRounds`;
+ * this is only the fallback for runs saved before the server sent it.
+ */
+export const SHORT_RUN_FROM = "2026-11-04";
+
+/** Rounds in `day`'s daily (ranked) run. */
+export const dailyRoundsFor = (day: string): number => (day >= SHORT_RUN_FROM ? DAILY_ROUNDS : ROUNDS_PER_DAY);
+
+/** Best possible daily-run score for a daily run of `rounds` rounds. */
+export const dailyMaxScore = (rounds: number): number => rounds * (TARGETS_PER_ROUND + PERFECT_BONUS);
 
 /** The release calendar follows Buenos Aires: the launch audience is Argentine, so the new board lands at their midnight. */
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
@@ -40,9 +59,37 @@ export interface RoundResult {
   points: number;
 }
 
+/** The run fields the daily-run helpers read; `dailyDone`/`dailyScore` come from the server (older saved runs lack them). */
+interface DailyView {
+  day: string;
+  round: number;
+  results: readonly RoundResult[];
+  settled: RoundResult | null;
+  done: boolean;
+  dailyRounds?: number;
+  dailyDone?: boolean;
+  dailyScore?: number;
+}
+
+/** Rounds in this run's daily run: the server's word, else the day's rule. */
+export const dailyRoundsOf = (s: DailyView): number => s.dailyRounds ?? dailyRoundsFor(s.day);
+
+/** The daily run is over: its result is final (and ranked, for a member's live day); the extended rounds are opt-in from there. */
+export const isDailyDone = (s: DailyView): boolean => s.dailyDone ?? (s.done || s.results.length >= dailyRoundsOf(s));
+
+/** The daily run's rounds that have been played. */
+export const dailyResults = (s: DailyView): RoundResult[] => s.results.slice(0, dailyRoundsOf(s));
+
+/** Daily-run points, the current round's settled points included while it is a daily round. */
+export const dailyScoreOf = (s: DailyView): number =>
+  s.dailyScore ?? dailyResults(s).reduce((sum, r) => sum + r.points, 0) + (s.round < dailyRoundsOf(s) ? (s.settled?.points ?? 0) : 0);
+
+/** Rounds the extended challenge played beyond the daily run (0 until the player opts in). */
+export const extendedRoundsPlayed = (s: DailyView): number => Math.max(0, s.results.length - dailyRoundsOf(s));
+
 export const outcomeEmoji: Record<RoundOutcome, string> = { perfect: "🟩", banked: "🟨", mine: "🟥" };
 
-/** Two rows of ten squares: fits a WhatsApp line on a phone. */
+/** Rows of up to ten squares: fits a WhatsApp line on a phone. */
 export function resultGrid(results: readonly RoundResult[]): string {
   const squares = results.map((r) => outcomeEmoji[r.outcome]);
   const rows: string[] = [];
