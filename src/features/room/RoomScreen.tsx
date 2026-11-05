@@ -24,7 +24,6 @@ import type { TenableCommand } from "@/features/tenable/tenable.view";
 import { sharedPlayerScreens } from "@/features/shared-player/SharedPlayerRoom";
 import type { SharedPlayerCommand } from "@/features/shared-player/sharedPlayer.view";
 import { RoomGameShell } from "@/features/wordgames/RoomGameShell";
-import { zoneMatchScreens, type ZoneMatchCommand } from "@/features/zone-match/ZoneMatchRoom";
 import { ROOM_CLIENT_GAMES, roomClientRulesFor } from "./roomGames";
 import { useRoomConnection } from "./useRoomConnection";
 
@@ -51,7 +50,6 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "dato_falso") return <RoomGameShell room={room as Connection<DfCommand>} screens={datoFalsoScreens} />;
   if (game === "conexiones") return <RoomGameShell room={room as Connection<CxCommand>} screens={conexionesScreens} />;
   if (game === "darts501") return <RoomGameShell room={room as Connection<D501Command>} screens={d501Screens} />;
-  if (game === "zone_match") return <RoomGameShell room={room as Connection<ZoneMatchCommand>} screens={zoneMatchScreens} />;
   return <Outdated />;
 }
 

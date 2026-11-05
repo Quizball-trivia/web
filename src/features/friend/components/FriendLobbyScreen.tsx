@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
-import { ZONE_BOT_ENABLED } from "@/lib/config";
 import { CheckCircle2, Loader2, LogOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
@@ -151,12 +150,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     !modeCaps.needsCategories ||
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
-  // A host alone in a zone-match room may start against the server bot (flag-gated; the server enforces it too).
-  const soloVsBot =
-    ZONE_BOT_ENABLED && settings?.gameMode === "room_game" && settings?.roomGame === "zone_match" && members.length === 1;
-  const readyCopy = soloVsBot
-    ? t("friend.readyCopyVsBot")
-    : isAuctionLobby
+  const readyCopy = isAuctionLobby
     ? t("friend.readyCopyAuction")
     : isFootballGridLobby
       ? t("friend.readyCopyFootballGrid")
@@ -175,7 +169,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       isCurrentHost &&
         allReady &&
         lobby?.status === "waiting" &&
-        (canHostStart(settings?.gameMode, members.length, settings?.roomGame) || soloVsBot) &&
+        canHostStart(settings?.gameMode, members.length, settings?.roomGame) &&
         hasFriendlyCategories &&
         !isStartingMatch &&
         // Not while the settings screen shows a game the server has not confirmed: it would start the other one.
@@ -187,8 +181,6 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       ? t("friend.startFootballGrid")
     : isDuelLobby
       ? t("friend.startDuel")
-    : soloVsBot
-      ? t("friend.startVsBot")
     : settings?.gameMode === "room_game"
       ? t("friend.startRoomGame")
     : isPartyMode
@@ -205,9 +197,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       ? t("friend.everyoneReady")
       : t("friend.bothPlayersReady")
     : members.length <= 1
-      ? soloVsBot
-        ? t("friend.readyCopyVsBot")
-        : t("friend.waitingMorePlayers")
+      ? t("friend.waitingMorePlayers")
       : isPartyMode || settings?.gameMode === "room_game"
         ? t("friend.waitingEveryoneReady")
         : t("friend.waitingBothReady");

@@ -96,7 +96,7 @@ const MOBILE_BREAKPOINT = 768;
 
 const WC_GOLD = "#FFC23C"; // rival / "found" accent
 const WC_BALL_SRC = "/assets/brand/goal-ball.webp";
-const TROPHY_SRC = "/assets/brand/ucl-trophy.webp";
+const WC_TROPHY_SRC = "/assets/brand/world-cup-trophy.webp";
 
 // ── Pin colors (WC26 spectrum) ──
 
@@ -1067,7 +1067,7 @@ export function MatchmakingMapScreen({
               {/* World Cup trophy + spinning ball */}
               <div className="flex items-center gap-2.5">
                 <Image
-                  src={TROPHY_SRC}
+                  src={WC_TROPHY_SRC}
                   alt=""
                   width={44}
                   height={44}

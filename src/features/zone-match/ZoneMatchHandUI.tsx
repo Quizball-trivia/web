@@ -86,7 +86,7 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
             initial={{ opacity: 0, y: 6, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 48 }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand-green text-base uppercase text-white hover:bg-brand-green-deep"
+            className="flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand-green text-base uppercase text-white shadow-[0_4px_0_#2D950B] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none"
             style={poppins}
             data-zm-confirm
           >

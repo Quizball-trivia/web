@@ -124,7 +124,7 @@ export function Sidebar({ currentPath, homeHref = "/play", prefetchRoutes = true
         </div>
         <div className="relative">
           <Image
-            src="/assets/brand/ucl-trophy.webp"
+            src="/assets/brand/world-cup-trophy.webp"
             alt="World Cup Trophy"
             width={96}
             height={96}

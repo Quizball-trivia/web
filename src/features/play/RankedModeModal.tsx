@@ -33,7 +33,7 @@ export function RankedModeModal({ isOpen, onOpenChange, onFindOpponents, onTrain
           <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
         </div>
         <div className="mb-2 flex justify-center">
-          <Image src="/assets/brand/ranked-hands-ucl.webp" alt="" width={600} height={682} className="h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)] sm:h-32" />
+          <Image src="/assets/brand/ranked-hands-trophy.svg" alt="" width={257} height={294} className="h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)] sm:h-32" />
         </div>
         <DialogTitle className="text-center text-3xl sm:text-4xl uppercase text-brand-yellow leading-[0.95]" style={poppins}>
           {t("play.rankedMatch")}

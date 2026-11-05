@@ -5,7 +5,6 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RANKED_V2_ENABLED, ZONE_BOT_ENABLED } from "@/lib/config";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -253,11 +252,6 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
               return;
             }
             if (mode === "ranked") {
-              // Ranked 2.0 (zone match) beta queue: both flags, the same condition the /ranked2 page checks.
-              if (RANKED_V2_ENABLED && ZONE_BOT_ENABLED) {
-                router.push("/ranked2");
-                return;
-              }
               void startMatch({ mode: "ranked", matchType: "ranked" });
               return;
             }

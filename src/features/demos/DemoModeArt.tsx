@@ -119,7 +119,7 @@ export function DemoModeArt({ slug: rawSlug, className = "", priority = false, s
   if (slug === "match") {
     return (
       <div className={`relative flex items-center justify-center overflow-hidden bg-brand-green ${className}`} aria-hidden>
-        <Image src="/assets/brand/ranked-hands-ucl.webp" alt="" width={600} height={682} className="h-[88%] w-auto object-contain object-bottom translate-y-[8%]" />
+        <Image src="/assets/brand/ranked-hands-trophy.svg" alt="" width={257} height={294} className="h-[88%] w-auto object-contain object-bottom translate-y-[8%]" />
       </div>
     );
   }

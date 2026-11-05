@@ -8,6 +8,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category art is a remote image of unknown size. */
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { tierFromRp } from '@/utils/rankedTier';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { Category } from './zoneMatch.machine';
+import { MATCH_ROUNDS } from './zoneMatch.rules';
 import type { RevealSeat } from './ZoneMatchCards';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
@@ -23,6 +25,7 @@ const SIDE_GRADIENT: Record<DuelSide, string> = {
   player: 'linear-gradient(160deg, #1CB0F6 0%, #1645FF 100%)',
   opponent: 'linear-gradient(160deg, #FF4B4B 0%, #B8401D 100%)',
 };
+const READY_SHADOW = '0 4px 0 #2D950B';
 const CARD_BACK = 'repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 6px, transparent 6px 12px)';
 
 /** A category as a playing-card tile: art (or icon) and name; `used` stamps it, `muted` greys it. */
@@ -48,7 +51,7 @@ export function CategoryTile({
     <motion.div
       layoutId={layoutId}
       className={cn(
-        'relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-2xl p-1 text-white sm:p-1.5 shadow-[0_6px_16px_rgba(0,0,0,0.35)] ring-2',
+        'relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-2xl p-1.5 text-white shadow-[0_6px_16px_rgba(0,0,0,0.35)] ring-2',
         selected ? 'ring-brand-yellow' : 'ring-white/15',
         (used || muted) && 'opacity-45 grayscale',
         className,
@@ -62,7 +65,7 @@ export function CategoryTile({
           <span className="text-[min(9vw,40px)] leading-none">{category.icon ?? '❓'}</span>
         )}
       </div>
-      <div className="mt-1 line-clamp-2 min-h-[2.2em] w-full text-center text-[7.5px] uppercase leading-tight tracking-[-0.02em] min-[400px]:text-[8.5px] sm:text-[11px] sm:tracking-normal" style={poppins}>
+      <div className="mt-1 line-clamp-2 min-h-[2.2em] w-full text-center text-[8px] uppercase leading-tight [overflow-wrap:anywhere] sm:text-[11px]" style={poppins}>
         {category.name}
       </div>
       {used && (
@@ -122,16 +125,19 @@ function SeatHead({ seat, side }: { seat: RevealSeat; side: DuelSide }) {
   );
 }
 
-/** Both sides' five categories, opened like packs: yours first, then theirs; then a 5-second countdown to kick-off. */
+/** Both sides' five categories, opened like packs: yours first, then theirs. Ready skips the rest of the wait. */
 export function CategoriesReveal({
   categories,
   seats,
   timeLeft,
+  onReady,
 }: {
   categories: Record<DuelSide, Category[]>;
   seats: Record<DuelSide, RevealSeat>;
   timeLeft: number | null;
+  onReady: () => void;
 }) {
+  const [ready, setReady] = useState(false);
   // The packs open once the phase curtain has lifted.
   const start = 2.8;
   return (
@@ -158,10 +164,48 @@ export function CategoriesReveal({
         ))}
         <div className="hidden self-center text-3xl font-black italic text-white/25 md:order-2 md:block" style={poppins}>VS</div>
       </div>
-      <div className="flex justify-center">
-        <div className="rounded-full bg-white/[0.06] px-4 py-2 text-xs font-black uppercase tracking-wide text-white/75" style={poppins}>
-          {timeLeft !== null && timeLeft <= 5 ? `Kick-off in ${timeLeft}` : 'Dealing categories…'}
-        </div>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 text-[11px] font-black uppercase tracking-wide text-white/50">Kick-off{timeLeft !== null ? ` in ${timeLeft}` : ''}</div>
+        <button
+          type="button"
+          disabled={ready}
+          onClick={() => {
+            setReady(true);
+            onReady();
+          }}
+          className="rounded-2xl bg-brand-green px-8 py-3 text-base uppercase text-white hover:bg-brand-green-deep active:translate-y-0.5 disabled:opacity-50"
+          style={{ ...poppins, boxShadow: READY_SHADOW }}
+        >
+          Ready
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Before kick-off: the coin toss, and whose attacks are whose. */
+export function KickoffBoard({ kickoff, seats }: { kickoff: DuelSide; seats: Record<DuelSide, RevealSeat> }) {
+  const you = kickoff === 'player';
+  const yours = Array.from({ length: MATCH_ROUNDS }, (_, i) => i + 1).filter((round) => (round % 2 === 1) === you);
+  return (
+    <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-5 text-center" data-zm-kickoff>
+      <div className="text-xs font-black uppercase tracking-[0.2em] text-brand-yellow">Coin toss</div>
+      <motion.div
+        className="text-4xl uppercase leading-tight text-white sm:text-5xl"
+        style={poppins}
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+      >
+        {you ? 'You kick off' : `${seats.opponent.name} kicks off`}
+      </motion.div>
+      <div className="flex items-center gap-6">
+        <SeatHead seat={seats.player} side="player" />
+        <span className="text-2xl font-black italic text-white/30" style={poppins}>VS</span>
+        <SeatHead seat={seats.opponent} side="opponent" />
+      </div>
+      <div className="rounded-2xl bg-white/[0.06] px-4 py-3 text-sm text-white/85">
+        {MATCH_ROUNDS} rounds · {MATCH_ROUNDS / 2} attacks each, in turn · you attack in rounds {yours.join(', ')}
       </div>
     </div>
   );

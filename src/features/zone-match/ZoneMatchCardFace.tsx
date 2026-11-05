@@ -38,12 +38,6 @@ import {
   Timer,
   VenetianMask,
   Zap,
-  Hourglass,
-  RefreshCcw,
-  Split,
-  Undo2,
-  Users,
-  Drama, Flame, Meh,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, type CardDef, type CardId, type CardPhase, type CardRole, type CardType } from './zoneMatch.cards';
@@ -176,30 +170,9 @@ const GLYPH: Record<CardId, Glyph> = {
       </>
     ),
   },
-  // The newer cards: line icons for the small chips.
-  nutmeg: { Icon: Split },
-  'bicycle-kick': { Icon: Undo2 },
-  'high-press': { Icon: Users },
-  'time-wasting': { Icon: Hourglass },
-  'super-sub': { Icon: RefreshCcw },
-  feint: { Icon: Drama },
-  'poker-face': { Icon: Meh },
-  screamer: { Icon: Flame },
 };
 
-/** A card's own picture (a full-colour sticker icon, public/assets/zone-match/cards), for the badges and card faces. */
-export function CardArt({ id, used = false, className }: { id: CardId; used?: boolean; className?: string }) {
-  return (
-    <img
-      src={`/assets/zone-match/cards/${id}.webp`}
-      alt=""
-      draggable={false}
-      className={cn('pointer-events-none size-full select-none object-contain drop-shadow-[0_0.06em_0.08em_rgba(0,0,0,0.45)]', used && 'opacity-60 grayscale', className)}
-    />
-  );
-}
-
-/** A card's line pictogram, sized by the parent's font-size (1em square): for small chips, where a picture won't read. */
+/** A card's pictogram on its own, sized by the parent's font-size (1em square), e.g. for deck thumbnails. */
 export function CardGlyph({ id, className }: { id: CardId; className?: string }) {
   const glyph = GLYPH[id];
   if ('draw' in glyph) {
@@ -303,7 +276,7 @@ export function CardFace({
               fontSize: `${width * (size === 'full' ? 0.27 : size === 'compact' ? 0.3 : size === 'hand' ? 0.33 : 0.38)}px`,
             }}
           >
-            <CardArt id={id} className="scale-[1.18]" />
+            <CardGlyph id={id} className="drop-shadow-[0_0.06em_0.08em_rgba(0,0,0,0.45)]" />
           </div>
         </div>
 
@@ -453,9 +426,7 @@ function hexPoints(inset: number): string {
 const RAYS = Array.from({ length: 12 }, (_, i) => {
   const a = (i / 12) * Math.PI * 2;
   const b = a + Math.PI / 24;
-  // Rounded: the server's and the browser's sin/cos differ in the last digits (a hydration mismatch).
-  const at = (angle: number) => `${(50 + Math.cos(angle) * 70).toFixed(2)},${(46 + Math.sin(angle) * 70).toFixed(2)}`;
-  return `50,46 ${at(a)} ${at(b)}`;
+  return `50,46 ${50 + Math.cos(a) * 70},${46 + Math.sin(a) * 70} ${50 + Math.cos(b) * 70},${46 + Math.sin(b) * 70}`;
 }).join(' M');
 
 /** Rim colours, top to bottom: silver, gold when picked, the type colour when it can be used, grey once used. */
@@ -572,8 +543,8 @@ export function PlaystyleBadge({
           <polygon points={hexPoints(11)} fill="none" stroke={`url(#${uid}bevel)`} strokeWidth={2.6} strokeLinejoin="round" />
         </svg>
 
-        <div className="absolute inset-[10%] grid place-items-center pb-[2%]">
-          <CardArt id={id} used={used} />
+        <div className="absolute inset-0 grid place-items-center pb-[2%]" style={{ fontSize: size * 0.4, color: used ? 'rgba(255,255,255,0.6)' : '#FFFFFF' }}>
+          <CardGlyph id={id} className="drop-shadow-[0_0.05em_0.06em_rgba(0,0,0,0.55)]" />
         </div>
 
         {emblem && (

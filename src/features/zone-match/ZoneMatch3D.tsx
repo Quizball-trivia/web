@@ -20,7 +20,6 @@ import { cardFx, type CardFx } from './zoneMatch3d.fx';
 import type { Mark } from './zoneMatch.reason';
 import { CutoutLayer, createCutoutRegistry } from './ZoneMatch3DCutouts';
 import { useWebGL } from './zoneMatch3d.webgl';
-import type { SceneClock } from './zoneMatch3d.clock';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
 
 // Raw colours live in style objects: the brand-colour audit forbids hex Tailwind classes.
@@ -122,7 +121,6 @@ function MarkBadge({ mark, delay }: { mark: Mark; delay: number }) {
 
 function Nameplate({ side, seat, plateRef, mark, markKey, booked }: { side: ZoneSide; seat: ZoneMatch3DSeat; plateRef: RefObject<HTMLDivElement | null>; mark: Mark; markKey: string; booked: boolean }) {
   const mine = side === 'player';
-  // `side` is the seat shown (in a swapped shootout view, the scene's other slot).
   return (
     <div
       ref={plateRef}
@@ -162,8 +160,6 @@ export function ZoneMatch3D({
   insets,
   fallback,
   moment,
-  swapSides = false,
-  underlay,
 }: {
   state: MatchState;
   /** The card moment the 2D pop-up shows right now (CardMoments); the scene plays its effect alongside. */
@@ -177,47 +173,12 @@ export function ZoneMatch3D({
   insets: SceneInsets;
   /** Shown when WebGL is unavailable or the scene fails. */
   fallback: ReactNode;
-  swapSides?: boolean;
-  underlay?: ReactNode;
-}) {
-  const fx = useMemo(() => cardFx(state, moment), [state, moment]);
-  const input = useMemo(() => directorInput(state, fx), [state, fx]);
-  // The sky shot labels each ball itself: the nameplates step out of its sky.
-  return <ZoneMatch3DView input={input} fx={fx} player={player} opponent={opponent} insets={insets} fallback={fallback} plates={state.battleStep !== 'numericReveal'} swapSides={swapSides} underlay={underlay} />;
-}
-
-/** The 3D view from the director's input and the card effects directly (the match above; the dev animation lab). */
-export function ZoneMatch3DView({
-  input,
-  fx,
-  player,
-  opponent,
-  insets,
-  fallback,
-  plates: showPlates = true,
-  clock,
-  swapSides = false,
-  underlay,
-}: {
-  input: DirectorInput;
-  fx: CardFx;
-  player: ZoneMatch3DSeat;
-  opponent: ZoneMatch3DSeat;
-  insets: SceneInsets;
-  fallback: ReactNode;
-  plates?: boolean;
-  clock?: SceneClock;
-  /**
-   * The scene's player slot shows the opponent and vice versa — a penalty shootout taken at one goal, where whoever
-   * shoots stands in the slot that attacks that goal. Seats, plates and rings follow the real seats.
-   */
-  swapSides?: boolean;
-  /** Drawn over the pitch but under the players (a shootout's bar battle sits behind them). */
-  underlay?: ReactNode;
 }) {
   const webgl = useWebGL();
   const [failed, setFailed] = useState(false);
   const onFailure = useCallback(() => setFailed(true), []);
+  const fx = useMemo(() => cardFx(state, moment), [state, moment]);
+  const input = useMemo(() => directorInput(state, fx), [state, fx]);
   const inputRef = useRef<DirectorInput>(input);
   const fxRef = useRef<CardFx>(fx);
   useLayoutEffect(() => {
@@ -234,16 +195,12 @@ export function ZoneMatch3DView({
   // The players' cut-outs: DOM avatar art the scene positions every frame.
   const [cutouts] = useState(createCutoutRegistry);
   const customizations = useMemo(
-    () => (swapSides ? { player: opponent.avatarCustomization, opponent: player.avatarCustomization } : { player: player.avatarCustomization, opponent: opponent.avatarCustomization }),
-    [player.avatarCustomization, opponent.avatarCustomization, swapSides],
+    () => ({ player: player.avatarCustomization, opponent: opponent.avatarCustomization }),
+    [player.avatarCustomization, opponent.avatarCustomization],
   );
   const playerPlate = useRef<HTMLDivElement>(null);
   const opponentPlate = useRef<HTMLDivElement>(null);
   const plates = useMemo(() => ({ player: playerPlate, opponent: opponentPlate }), []);
-  const playerAnchor = useRef<HTMLDivElement>(null);
-  const opponentAnchor = useRef<HTMLDivElement>(null);
-  const anchors = useMemo(() => ({ player: playerAnchor, opponent: opponentAnchor }), []);
-  const slotSeat = (slot: ZoneSide): ZoneSide => (swapSides ? (slot === 'player' ? 'opponent' : 'player') : slot);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const visibleRef = useRef(true);
@@ -269,7 +226,7 @@ export function ZoneMatch3DView({
       aria-hidden
     >
       {webgl && (
-        <ZoneMatch3DScene input={inputRef} fx={fxRef} cutouts={cutouts} plates={plates} anchors={anchors} swapColors={swapSides} overlays={overlays} insets={insetsRef} visible={visibleRef} onFailure={onFailure} clock={clock} />
+        <ZoneMatch3DScene input={inputRef} fx={fxRef} cutouts={cutouts} plates={plates} overlays={overlays} insets={insetsRef} visible={visibleRef} onFailure={onFailure} />
       )}
       {/* Speed lines for a sprint or a break; the scene sets their opacity. */}
       <div
@@ -282,15 +239,12 @@ export function ZoneMatch3DView({
         }}
       />
       {fx.moment?.card === 'muddy-pitch' && <MudSplat key={fx.moment.id} />}
-      {underlay && <div className="pointer-events-none absolute inset-0 z-[2]">{underlay}</div>}
       {webgl && <CutoutLayer registry={cutouts} customizations={customizations} />}
-      <div className="transition-opacity duration-300" style={{ opacity: showPlates ? 1 : 0 }}>
-        <Nameplate side={slotSeat('player')} seat={swapSides ? opponent : player} plateRef={playerPlate} mark={fx.reason?.marks[slotSeat('player')] ?? null} markKey={`m-${fx.duelNo}`} booked={fx.booked.includes(slotSeat('player'))} />
-        <Nameplate side={slotSeat('opponent')} seat={swapSides ? player : opponent} plateRef={opponentPlate} mark={fx.reason?.marks[slotSeat('opponent')] ?? null} markKey={`m-${fx.duelNo}`} booked={fx.booked.includes(slotSeat('opponent'))} />
+      {/* The sky shot labels each ball itself: the nameplates step out of its sky. */}
+      <div className="transition-opacity duration-300" style={{ opacity: state.battleStep === 'numericReveal' ? 0 : 1 }}>
+        <Nameplate side="player" seat={player} plateRef={playerPlate} mark={fx.reason?.marks.player ?? null} markKey={`m-${state.duelNo}`} booked={fx.booked.includes('player')} />
+        <Nameplate side="opponent" seat={opponent} plateRef={opponentPlate} mark={fx.reason?.marks.opponent ?? null} markKey={`m-${state.duelNo}`} booked={fx.booked.includes('opponent')} />
       </div>
-      {/* Each player's body on screen (the scene keeps these on them): score flights land here. */}
-      <div ref={playerAnchor} className="pointer-events-none absolute left-0 top-0 size-px" data-pitch-avatar={slotSeat('player')} />
-      <div ref={opponentAnchor} className="pointer-events-none absolute left-0 top-0 size-px" data-pitch-avatar={slotSeat('opponent')} />
       {/* A soft vignette; the reason line and the result title are the match screen's overlays. */}
       <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.45)]" />
     </div>
