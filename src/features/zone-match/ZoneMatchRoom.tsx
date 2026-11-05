@@ -64,9 +64,7 @@ export const zoneMatchRoomRules: RoomClientRules<ZoneMatchCommand> = {
       case 'answer':
         return `answer:${c.key}:${c.index}`;
       case 'guess':
-        // The value is part of the slot (like an answer's option): a guess re-entered after the optimistic window
-        // is its own command, never a retry silently carrying the earlier number.
-        return `guess:${c.key}:${c.value}`;
+        return `guess:${c.key}`;
       case 'live':
         return `live:${c.key}:${c.card}`;
       default:
@@ -119,30 +117,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const now = useServerNow(room);
   const seats = useMemo(() => seatsOf(snapshot, view.you), [snapshot, view.you]);
   const [deck, setDeck] = useState<CardId[]>([]);
-  // Optimistic input: a tap shows at once; the server's snapshot (which carries the right answer once this seat is
-  // locked) takes over a round-trip later. Keyed to the question so a Substitution or the next duel drops it, and
-  // time-bound: a command the server never confirmed must not pin the controls — after the window the player can
-  // simply tap again (the connection's own retry keeps the first command safe from double counting).
-  const OPTIMISTIC_MS = 4_000;
-  const [pendingAnswer, setPendingAnswer] = useState<{ key: number; index: number; at: number } | null>(null);
-  const [pendingGuess, setPendingGuess] = useState<{ key: number; value: number; at: number } | null>(null);
-  const answerPending = !!(view.match.mcq && view.match.battleStep === 'mcq' && view.match.mcq.answers.player === null
-    && pendingAnswer?.key === view.match.mcq.key && now - pendingAnswer.at < OPTIMISTIC_MS
-    && pendingAnswer.index !== view.match.mcq.firstMiss.player
-    // An option a 50/50 hid after the tap can never lock: the remaining options must stay tappable.
-    && !view.match.mcq.hidden.player.includes(pendingAnswer.index));
-  const state = useMemo(() => {
-    let m = view.match;
-    if (m.mcq && answerPending && pendingAnswer && !m.mcq.hidden.player.includes(pendingAnswer.index)) {
-      m = { ...m, mcq: { ...m.mcq, answers: { ...m.mcq.answers, player: pendingAnswer.index } } };
-    }
-    if (m.numeric && !m.numeric.result && m.numeric.guesses.player.value === null && pendingGuess?.key === m.numeric.key
-      && now - pendingGuess.at < OPTIMISTIC_MS) {
-      m = { ...m, numeric: { ...m.numeric, guesses: { ...m.numeric.guesses, player: { value: pendingGuess.value, lockedAtMs: null } } } };
-    }
-    return m;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view.match, pendingAnswer, pendingGuess, answerPending, Math.floor(now / 500)]);
+  const state = view.match;
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
   const send = room.send;
 
@@ -232,11 +207,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         player={seats.player}
         opponent={seats.opponent}
         onQuit={() => room.leave()}
-        onAnswer={(index, questionId) => {
-          if (state.mcq?.question.id !== questionId || answerPending || state.mcq.hidden.player.includes(index)) return;
-          setPendingAnswer({ key: state.mcq.key, index, at: now });
-          send({ type: 'answer', key: state.mcq.key, index });
-        }}
+        onAnswer={(index, questionId) => state.mcq?.question.id === questionId && send({ type: 'answer', key: state.mcq.key, index })}
       />
     );
   } else if (state.stage === 'play') {
@@ -249,18 +220,8 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         muted={false}
         onToggleMute={() => {}}
         onQuit={() => room.leave()}
-        onAnswer={(index, questionId) => {
-          // A second tap while the first is in flight is ignored (the server may already have locked the first);
-          // a Second Ball retry, or an unconfirmed tap past the window, goes through.
-          if (state.mcq?.question.id !== questionId || answerPending || state.mcq.hidden.player.includes(index)) return;
-          setPendingAnswer({ key: state.mcq.key, index, at: now });
-          send({ type: 'answer', key: state.mcq.key, index });
-        }}
-        onGuess={(value) => {
-          if (!state.numeric || state.numeric.guesses.player.value !== null) return;
-          setPendingGuess({ key: state.numeric.key, value, at: now });
-          send({ type: 'guess', key: state.numeric.key, value });
-        }}
+        onAnswer={(index, questionId) => state.mcq?.question.id === questionId && send({ type: 'answer', key: state.mcq.key, index })}
+        onGuess={(value) => state.numeric && send({ type: 'guess', key: state.numeric.key, value })}
         onChooseCard={(card) => send({ type: 'card', duel: state.duelNo, card })}
         onLiveCard={(card) => state.mcq && send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card })}
         onReaction={(card) => send({ type: 'reaction', duel: state.duelNo, card })}
