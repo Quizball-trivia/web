@@ -30,7 +30,8 @@ import {
 import { CARD_TYPE_THEME, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
 import { InfoMark, PlaystyleRules, PlaystyleText } from './ZoneMatchPlaystyleRow';
 import { FutCard, reactionFor, type FutReaction, type FutSeat, type SlotBurst } from './ZoneMatchFutCard';
-import { useDesktop } from './ZoneMatchCards';
+import { useMediaQuery } from './ZoneMatchCards';
+import { isPlaystyleUnlocked } from './zoneMatch.playtest';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -85,12 +86,17 @@ function rectOf(element: HTMLElement | null | undefined): DOMRect | null {
 
 // ── The screen ───────────────────────────────────────────────────────────────
 
+/** The card beside the list from 860px wide (the loadout fits two columns well before the lg breakpoint). */
+const LOADOUT_WIDE = '(min-width: 860px)';
+const useLoadoutWide = () => useMediaQuery(LOADOUT_WIDE);
+
 /**
  * Spend the energy budget (LOADOUT_BUDGET) on up to 3 of the 20 playstyles (at most 1 sabotage), FUT-style: each pick
  * flies onto a slot of your player card, which answers with a shine and a reaction from your avatar. A playstyle that
  * doesn't fit (no slot, or over budget) is swapped in instead: you choose the slot it replaces, among those where it
  * fits (a second sabotage just replaces the first). Your opponent sees your loadout at the showdown, and you see theirs.
  */
+
 export function DeckPicker({
   deck,
   seat,
@@ -109,14 +115,15 @@ export function DeckPicker({
   const [filter, setFilter] = useState<CardType | 'all'>('all');
   const [swapIn, setSwapIn] = useState<CardId | null>(null);
   const [info, setInfo] = useState<CardId | null>(null);
-  const desktop = useDesktop();
+  const desktop = useLoadoutWide();
   const reduceMotion = useReducedMotion();
   // Nothing else fits (3 picked, or the budget is used up); any pick at all is enough to play.
   const full = deckFull(deck);
   const ready = deck.length > 0;
   const left = LOADOUT_BUDGET - deckCost(deck);
   const sabotageAt = deck.findIndex((id) => CARD_BY_ID[id].type === 'sabotage');
-  const shown = CARDS.filter((card) => filter === 'all' || card.type === filter);
+  // Playtest: every playstyle unlocked (zoneMatch.playtest).
+  const shown = CARDS.filter((card) => isPlaystyleUnlocked(card.id) && (filter === 'all' || card.type === filter));
   // A swap waits for a slot while the newcomer is still out of the loadout.
   const pending = swapIn && !deck.includes(swapIn) ? swapIn : null;
   const [notice, setNotice] = useState<string | null>(null);
@@ -151,8 +158,8 @@ export function DeckPicker({
     ]);
     for (const [key, born] of burstBorn.current) if (bornAt - born >= BURST_KEEP_MS) burstBorn.current.delete(key);
     setShineKey((k) => k + 1);
-    const last = CARD_BY_ID[ids[ids.length - 1]].type;
-    setReaction(reactionFor(current.length === DECK_SIZE ? 'complete' : last, now, now));
+    const lastId = ids[ids.length - 1];
+    setReaction(reactionFor(CARD_BY_ID[lastId].type, now, now, lastId, current.length === DECK_SIZE));
   }, []);
 
   // Picks that did not fly in (auto-pick, reduced motion): land them in place.
@@ -270,7 +277,9 @@ export function DeckPicker({
     <div className="flex flex-col gap-4 pb-36">
       <LoadoutSteps ready={ready} />
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-8">
+      {/* One switch for the layout and the card (a CSS breakpoint and the hook could disagree: the big card stacked over
+          the list and slid down it on scroll). */}
+      <div className={desktop ? 'grid grid-cols-[280px_minmax(0,1fr)] items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8' : 'flex flex-col gap-4'}>
         {desktop ? (
           // Your card, pinned beside the list.
           <aside className="sticky top-6 flex flex-col items-center gap-4">
@@ -292,7 +301,12 @@ export function DeckPicker({
             </div>
           </aside>
         ) : (
-          // Phones: the card collapses to its three slots, pinned while you scroll the list.
+          // Phones: your card (with your avatar, reacting to each pick) at the top; below it the three slots, pinned while
+          // you scroll the list.
+          <>
+          <div className="flex justify-center">
+            <FutCard seat={seat} width={176} slots={slots} bursts={bursts} shineKey={shineKey} reaction={reaction} />
+          </div>
           <aside className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 bg-surface-page-alt/95 px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
@@ -303,6 +317,7 @@ export function DeckPicker({
             </div>
             {hint}
           </aside>
+          </>
         )}
 
         <div className="flex min-w-0 flex-col gap-4">
@@ -325,7 +340,7 @@ export function DeckPicker({
           <RuleChips />
 
           <section className="flex flex-col gap-2.5">
-            <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] lg:mx-0 lg:px-0">
+            <div className={cn('flex gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none]', desktop ? '' : '-mx-4 px-4')}>
               {(['all', ...TYPES] as const).map((type) => {
                 const active = filter === type;
                 const theme = type === 'all' ? null : CARD_TYPE_THEME[type];
@@ -388,7 +403,7 @@ export function DeckPicker({
               type="button"
               disabled={loading}
               onClick={onFindMatch}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-green px-4 py-3 text-base uppercase text-white shadow-[0_4px_0_rgba(45,149,11,1)] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-green px-4 py-3 text-base uppercase text-white hover:bg-brand-green-deep disabled:opacity-50"
               style={poppins}
             >
               {loading ? 'Loading…' : (
@@ -426,7 +441,7 @@ const STEPS = ['Pick playstyles', 'Find a match', 'Showdown', 'Kick-off'] as con
 const STEPS_SHORT = ['Pick', 'Find match', 'Showdown', 'Kick-off'] as const;
 
 /** Where you are on the way into a match. Step 1 is this screen; once the loadout is full, step 2 is up next. */
-function LoadoutSteps({ ready }: { ready: boolean }) {
+export function LoadoutSteps({ ready }: { ready: boolean }) {
   return (
     <ol className="flex items-start" aria-label="Getting into a match">
       {STEPS.map((label, i) => {
@@ -478,7 +493,7 @@ function RuleChip({ Icon, color, children }: { Icon: LucideIcon; color: string; 
 }
 
 /** The rules that shape a loadout, once, as chips; the rest behind "How it works". */
-function RuleChips() {
+export function RuleChips() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
@@ -726,25 +741,27 @@ function PlaystyleTile({
         onClick={onPick}
         aria-pressed={selected}
         title={card.effect}
-        className="flex w-full items-center gap-3 py-3 pl-3.5 pr-11 text-left"
+        // One size for every tile: long names and the slot tag don't change it.
+        className="flex h-[124px] w-full items-center gap-3 py-3 pl-3.5 pr-11 text-left"
       >
         <span ref={badgeRef} className="shrink-0">
           <PlaystyleBadge id={card.id} size={60} showName={false} selected={selected} unaffordable={overBudget} />
         </span>
         <PlaystyleText
           card={card}
-          tags={
-            <>
-              {selected && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-surface-page">
-                  <Check className="size-2.5" strokeWidth={4} /> Slot {slot + 1}
-                </span>
-              )}
-              {pending && <span className="text-[10px] font-black uppercase text-brand-yellow">Choose a slot</span>}
-            </>
-          }
         />
       </button>
+      {(selected || pending) && (
+        <span className="pointer-events-none absolute bottom-2 right-3">
+          {selected ? (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-surface-page">
+              <Check className="size-2.5" strokeWidth={4} /> Slot {slot + 1}
+            </span>
+          ) : (
+            <span className="text-[10px] font-black uppercase text-brand-yellow">Choose a slot</span>
+          )}
+        </span>
+      )}
       <button
         type="button"
         data-playstyle-info={card.id}

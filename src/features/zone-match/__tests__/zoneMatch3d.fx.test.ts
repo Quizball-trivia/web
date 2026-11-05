@@ -49,10 +49,13 @@ describe('card-aware outcome scripts', () => {
   const centre: Possession = { attacker: 'player', zone: 'centre' };
   const shot: Possession = { attacker: 'player', zone: 'opponent' };
 
-  it('raises the linesman flag on an Offside Trap', () => {
+  it('has the defender who set the Offside Trap raise the flag in their own hand', () => {
     const script = buildScript(centre, resolveBattle(centre, 'opponent'), 1, cards({ note: 'Offside trap!' }));
     expect(script.kind).toBe('offside');
-    expect(script.fx!(1).flag?.up).toBeGreaterThan(0.9);
+    const frame = script.actor('opponent', 1);
+    expect(frame.kind === 'move' && frame.arms?.R.shape).toBe('flag');
+    const attacker = script.actor('player', 1);
+    expect(attacker.kind === 'move' && attacker.arms).toBeFalsy();
   });
 
   it('lofts a Long Ball, landed or cut out', () => {
