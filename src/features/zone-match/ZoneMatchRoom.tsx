@@ -310,7 +310,10 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           send({ type: 'home', duel: state.duelNo, categoryId });
         }}
         onPickCategory={(categoryId) => {
+          // One pick per round: the connection keeps the FIRST command for this round, so a second tap inside the
+          // optimistic window must not re-gray a different tile the server will never receive.
           if (state.usedCategories.player.includes(categoryId)) return;
+          if (pendingCategory?.round === state.round && now - pendingCategory.at < OPTIMISTIC_MS) return;
           setPendingCategory({ round: state.round, id: categoryId, at: now });
           send({ type: 'category', round: state.round, categoryId });
         }}
