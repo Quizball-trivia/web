@@ -292,7 +292,8 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         }}
         onChooseCard={(card) => {
           // One command per duel slot: while the connection holds it, a second tap must not re-show a different pick.
-          if (state.choice.player !== undefined || room.isSlotPending(`card:${state.duelNo}`)) return;
+          if (state.choice.player !== undefined) return;
+          if (room.isSlotPending(`card:${state.duelNo}`)) { room.resendRetained(); return; }
           setPendingCard({ duel: state.duelNo, card, at: now });
           send({ type: 'card', duel: state.duelNo, card });
         }}
@@ -302,12 +303,13 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card });
         }}
         onReaction={(card) => {
-          if (state.played.player.length > 0 || room.isSlotPending(`reaction:${state.duelNo}`)) return;
+          if (state.played.player.length > 0) return;
+          if (room.isSlotPending(`reaction:${state.duelNo}`)) { room.resendRetained(); return; }
           setPendingPlay({ duel: state.duelNo, card, at: now });
           send({ type: 'reaction', duel: state.duelNo, card });
         }}
         onHomeCategory={(categoryId) => {
-          if (room.isSlotPending(`home:${state.duelNo}`)) return;
+          if (room.isSlotPending(`home:${state.duelNo}`)) { room.resendRetained(); return; }
           setPendingHome({ duel: state.duelNo, id: categoryId, at: now });
           send({ type: 'home', duel: state.duelNo, categoryId });
         }}
@@ -315,7 +317,9 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           // One pick per round: while the connection holds this round's command (unsettled, unrefused), a second
           // tap must not gray a tile the server will never receive — the connection is the truth, not a timer.
           if (state.usedCategories.player.includes(categoryId)) return;
-          if (room.isSlotPending(`category:${state.round}`)) return;
+          // A held slot means the first pick is still in flight (or retained after a drop): a re-tap nudges the
+          // retained retry — same id, same payload — rather than vanishing.
+          if (room.isSlotPending(`category:${state.round}`)) { room.resendRetained(); return; }
           setPendingCategory({ round: state.round, id: categoryId, at: now });
           send({ type: 'category', round: state.round, categoryId });
         }}
