@@ -122,7 +122,7 @@ export function WeekendLeagueStatusBand({
       />
 
       <Image
-        src="/assets/brand/ucl-trophy.webp"
+        src="/assets/brand/world-cup-trophy.webp"
         alt=""
         width={420}
         height={420}

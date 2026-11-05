@@ -7,18 +7,16 @@ import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import {
-  BLUFF_CARDS,
   CARD_BY_ID,
   DECK_SIZE,
   deckCost,
   type CardId,
   type CardPhase,
 } from './zoneMatch.cards';
-import { cardBlocker, reactionBlocker, revealedCard, unusedCategories, type MatchState } from './zoneMatch.machine';
+import { PHASE_CURTAIN_MS, cardBlocker, reactionBlocker, revealedCard, unusedCategories, type MatchState } from './zoneMatch.machine';
 import { CARD_TYPE_THEME, CardBack, CardFace, CardGlyph, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
 import { FutCard, reactionFor, type FutReaction, type SlotBurst } from './ZoneMatchFutCard';
 import { PlaystyleRow } from './ZoneMatchPlaystyleRow';
-import { revealSchedule } from './zoneMatch.reveal';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -31,21 +29,16 @@ function EnergyCost({ value, className }: { value: number | string; className?: 
   );
 }
 
-/** Whether a media query matches, kept in sync (server render: false). */
-export function useMediaQuery(query: string): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const media = window.matchMedia(query);
-      media.addEventListener('change', onChange);
-      return () => media.removeEventListener('change', onChange);
-    },
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
-
 /** Desktop layout (card beside the list) from Tailwind's lg breakpoint. */
-export const useDesktop = (): boolean => useMediaQuery('(min-width: 1024px)');
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const subscribeDesktop = (onChange: () => void) => {
+  const media = window.matchMedia(DESKTOP_QUERY);
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+};
+export function useDesktop(): boolean {
+  return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
+}
 
 export interface RevealSeat {
   name: string;
@@ -104,29 +97,25 @@ function useRevealCardWidth(paused: boolean) {
 /**
  * The showdown's second beat: both loadouts face to face, always the same size. One grid holds both sides — the cards
  * on one row, then a row per playstyle slot — so row i on the left and row i on the right always share a height, and
- * the panels are drawn behind those rows. Tap a playstyle for its full rule. It runs on its timer (no Ready).
+ * the panels are drawn behind those rows. Tap a playstyle for its full rule. Ready skips the rest of the wait.
  */
 export function DeckReveal({
   decks,
   seats,
   timeLeft,
+  onReady,
 }: {
   decks: Record<DuelSide, CardId[]>;
   seats: Record<DuelSide, RevealSeat>;
   timeLeft: number | null;
+  onReady: () => void;
 }) {
+  const [ready, setReady] = useState(false);
   /** The open row, as `side:index`. */
   const [open, setOpen] = useState<string | null>(null);
   const desktop = useDesktop();
   const { rootRef, cellRef, width } = useRevealCardWidth(open !== null);
   const rows = Math.max(DECK_SIZE, decks.player.length, decks.opponent.length);
-  // One card at a time: yours, then theirs, each reaction played out, then time to read (zoneMatch.reveal).
-  const schedule = useMemo(() => revealSchedule(decks), [decks]);
-  const [reading, setReading] = useState(false);
-  useEffect(() => {
-    const id = window.setTimeout(() => setReading(true), schedule.readFrom);
-    return () => window.clearTimeout(id);
-  }, [schedule]);
 
   return (
     <div ref={rootRef} className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-2 gap-y-2 pb-4 sm:gap-x-4">
@@ -140,13 +129,13 @@ export function DeckReveal({
 
       {/* Both player cards facing off, the same size, their playstyles landing one by one once the phase curtain has lifted. */}
       <div ref={cellRef} className="flex justify-center" style={{ gridColumn: 1, gridRow: 2 }}>
-        <RevealCard seat={seats.player} cards={decks.player} width={width} landAt={schedule.landAt.player} />
+        <RevealCard seat={seats.player} cards={decks.player} width={width} startMs={PHASE_CURTAIN_MS + 300} />
       </div>
       <div className="self-center text-2xl font-black italic text-white/30 sm:text-4xl" style={{ ...poppins, gridColumn: 2, gridRow: 2 }}>
         VS
       </div>
       <div className="flex justify-center" style={{ gridColumn: 3, gridRow: 2 }}>
-        <RevealCard seat={seats.opponent} cards={decks.opponent} width={width} landAt={schedule.landAt.opponent} mirror />
+        <RevealCard seat={seats.opponent} cards={decks.opponent} width={width} startMs={PHASE_CURTAIN_MS + 1900} mirror />
       </div>
 
       {/* The two panels, behind their header and slot rows. */}
@@ -192,8 +181,7 @@ export function DeckReveal({
                   badgeSize={desktop ? 52 : 36}
                   open={open === key}
                   onToggle={() => setOpen((current) => (current === key ? null : key))}
-                  // Its row appears as the card lands on the player card.
-                  reveal={{ delay: (schedule.landAt[side][i] ?? 0) / 1000, from: side === 'player' ? -16 : 16 }}
+                  reveal={{ delay: PANEL_DELAY[side] + 0.2 + i * 0.18, from: side === 'player' ? -16 : 16 }}
                 />
               )}
             </div>
@@ -201,35 +189,45 @@ export function DeckReveal({
         }),
       )}
 
-      {/* What's happening, and once every card is in, the countdown to the categories (no Ready: it runs on time). */}
-      <div className="col-span-3 mt-2 flex items-center justify-center gap-3" style={{ gridRow: 4 + rows }}>
-        <div className="rounded-full bg-white/[0.06] px-4 py-2 text-center text-xs font-black uppercase tracking-wide text-white/75" style={poppins}>
-          {reading ? `Remember their playstyles · your categories in ${timeLeft ?? 0}` : 'Revealing playstyles…'}
+      {/* What's next on the left, Ready on the right — as wide as the panels. */}
+      <div className="col-span-3 mt-2 flex items-center gap-3" style={{ gridRow: 4 + rows }}>
+        <div className="min-w-0 flex-1 text-[11px] font-black uppercase tracking-wide text-white/55">
+          Your categories{timeLeft !== null ? ` in ${timeLeft}` : ' next'}
         </div>
+        <button
+          type="button"
+          disabled={ready}
+          onClick={() => {
+            setReady(true);
+            onReady();
+          }}
+          className="rounded-2xl bg-brand-green px-8 py-3 text-base uppercase text-white shadow-[0_4px_0_rgba(45,149,11,1)] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+          style={poppins}
+        >
+          Ready
+        </button>
       </div>
     </div>
   );
 }
 
 /** A seat's FUT card at the showdown: its three playstyles land on it one after another. */
-function RevealCard({ seat, cards, width, landAt, mirror = false }: { seat: RevealSeat; cards: CardId[]; width: number; landAt: number[]; mirror?: boolean }) {
+function RevealCard({ seat, cards, width, startMs, mirror = false }: { seat: RevealSeat; cards: CardId[]; width: number; startMs: number; mirror?: boolean }) {
   const [landed, setLanded] = useState(0);
   // Keyed on the loadout's contents, not the array: the screen re-renders every clock tick.
   const count = cards.length;
   const loadout = cards.join(',');
-  const times = landAt.join(',');
   useEffect(() => {
-    const timers = times.split(',').slice(0, count).map((at, i) => window.setTimeout(() => setLanded(i + 1), Number(at)));
+    const timers = Array.from({ length: count }, (_, i) => window.setTimeout(() => setLanded(i + 1), startMs + i * 520));
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [loadout, count, times]);
+  }, [loadout, count, startMs]);
   const last = landed > 0 ? cards[landed - 1] : null;
   const lastType = last ? CARD_BY_ID[last].type : null;
   // Stable between clock ticks, so the card's figure keeps its animation loop running instead of restarting it.
   const bursts = useMemo<SlotBurst[]>(() => (lastType ? [{ slot: landed - 1, key: landed, type: lastType }] : []), [landed, lastType]);
   const reaction = useMemo<FutReaction | null>(
-    // The card's own reaction (golden boot on, flag raised, gloves pulled on…), the full-loadout celebration after the last.
-    () => (last && lastType ? reactionFor(lastType, landed, landed, last, landed === count) : null),
-    [landed, last, lastType, count],
+    () => (lastType ? reactionFor(landed === count ? 'complete' : lastType, landed, startMs) : null),
+    [landed, lastType, count, startMs],
   );
   return (
     <FutCard
@@ -396,7 +394,7 @@ export function CardInspector({
             <button
               type="button"
               onClick={onPlay}
-              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-green text-lg uppercase text-white transition hover:bg-brand-green-deep"
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-green text-lg uppercase text-white shadow-[0_4px_0_#2D950B] transition hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none"
               style={poppins}
             >
               Use {card.name}
@@ -487,8 +485,8 @@ export function CardClash({
   const mine = state.choice.player;
   const mineFace: SlotFace = mine === undefined ? { kind: 'pick' } : mine === null ? { kind: 'none' } : { kind: 'card', id: mine };
   // Their bluff is exposed once a reaction has hit it.
-  const theirBluffHit = revealed && state.cancelled.opponent && !!state.choice.opponent && BLUFF_CARDS.includes(state.choice.opponent);
-  const theirSeen = theirBluffHit ? state.choice.opponent! : revealedCard(state, 'opponent');
+  const theirBluffHit = revealed && state.cancelled.opponent && state.choice.opponent === 'dummy-run';
+  const theirSeen = theirBluffHit ? 'dummy-run' : revealedCard(state, 'opponent');
   const theirFace: SlotFace = revealed
     ? theirSeen
       ? { kind: 'card', id: theirSeen }
@@ -518,13 +516,12 @@ export function CardClash({
     headline = theirBluffHit
       ? { title: 'Just a bluff!', tone: 'text-brand-red-soft' }
       : { title: `You ${verb(cancelledBy.opponent)} their ${CARD_BY_ID[theirSeen].name}`, tone: 'text-brand-blue' };
-    subtitle = theirBluffHit ? `It was a ${CARD_BY_ID[state.choice.opponent!].name} — your ${CARD_BY_ID[cancelledBy.opponent].name} was wasted` : `With ${CARD_BY_ID[cancelledBy.opponent].name}`;
+    subtitle = theirBluffHit ? `It was a Dummy Run — your ${CARD_BY_ID[cancelledBy.opponent].name} was wasted` : `With ${CARD_BY_ID[cancelledBy.opponent].name}`;
   } else if (cancelledBy.player && mine) {
-    const myBluff = BLUFF_CARDS.includes(mine);
-    headline = myBluff
+    headline = mine === 'dummy-run'
       ? { title: 'Your bluff worked!', tone: 'text-brand-green' }
       : { title: `${opponentName} ${verb(cancelledBy.player)} your ${CARD_BY_ID[mine].name}`, tone: 'text-brand-red-soft' };
-    subtitle = myBluff ? `They wasted ${CARD_BY_ID[cancelledBy.player].name} on a ${CARD_BY_ID[mine].name}` : `With ${CARD_BY_ID[cancelledBy.player].name}`;
+    subtitle = mine === 'dummy-run' ? `They wasted ${CARD_BY_ID[cancelledBy.player].name} on a Dummy Run` : `With ${CARD_BY_ID[cancelledBy.player].name}`;
   } else if (activating) {
     const any = mineFace.kind === 'card' || theirFace.kind === 'card';
     headline = { title: any ? 'Cards activated' : 'No cards this duel', tone: 'text-brand-green' };
@@ -538,7 +535,7 @@ export function CardClash({
   }
 
   return (
-    <div ref={panelRef} className="rounded-[24px] p-3 [text-shadow:0_2px_6px_rgba(0,0,0,0.85)] sm:p-4" style={{ scrollMarginBottom: 'calc(var(--party-dock-height) + 12px)' }}>
+    <div ref={panelRef} className="rounded-[24px] bg-surface-page p-3 sm:p-4" style={{ scrollMarginBottom: 'calc(var(--party-dock-height) + 12px)' }}>
       <div className="text-center">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -564,7 +561,7 @@ export function CardClash({
           width={slotWidth}
           canceller={cancelledBy.player}
           cancellerFrom="right"
-          bluff={!!mine && BLUFF_CARDS.includes(mine)}
+          bluff={mine === 'dummy-run'}
           activated={activating && !cancelledBy.player}
         />
         <div className="grid place-items-center self-center text-xl font-black italic text-white/25" style={poppins}>VS</div>
@@ -602,7 +599,7 @@ export function CardClash({
               onClick={() => onReaction(id)}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-4 py-3 text-sm uppercase text-white hover:bg-brand-blue/90"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-4 py-3 text-sm uppercase text-white shadow-[0_4px_0_#1645FF] hover:bg-brand-blue/90 active:translate-y-0.5 active:shadow-none"
               style={poppins}
             >
               <span className="text-lg"><CardGlyph id={id} /></span>

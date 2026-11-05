@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { Wifi } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AvatarPreview } from '@/components/AvatarPreview';
@@ -28,7 +28,6 @@ function FramedAvatar({
   width,
   mirror,
   className,
-  renderCharacter,
 }: {
   frameSrc: string;
   customization: AvatarCustomization;
@@ -37,7 +36,6 @@ function FramedAvatar({
   width: number;
   mirror?: boolean;
   className?: string;
-  renderCharacter?: RenderCharacter;
 }) {
   const frameW = width;
   // Match the actual rank-frame PNG canvas aspect (~h/w 1.58) so the character
@@ -55,20 +53,13 @@ function FramedAvatar({
         className="absolute inset-0 z-0 h-full w-full object-contain pointer-events-none"
       />
       {/* Character — ON TOP of the frame, centered in the frame body */}
-      {renderCharacter ? (
-        // A full-body character stands on the card's lower edge, head into the top.
-        <div className={cn('absolute inset-x-0 bottom-[9%] top-[12%] z-10 flex items-end justify-center', mirror && '-scale-x-100')}>
-          {renderCharacter(customization, Math.round(frameW * 0.6))}
-        </div>
-      ) : (
-        <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
-          <AvatarPreview
-            customization={customization}
-            width={Math.round(frameW * 0.64)}
-            className={cn(mirror && '-scale-x-100')}
-          />
-        </div>
-      )}
+      <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
+        <AvatarPreview
+          customization={customization}
+          width={Math.round(frameW * 0.64)}
+          className={cn(mirror && '-scale-x-100')}
+        />
+      </div>
       {/* Flag — top-left, plain rectangular chip */}
       {countryCode && (
         <div
@@ -101,9 +92,6 @@ function FramedAvatar({
     </div>
   );
 }
-
-/** Draws the character in the card instead of the upper-body avatar (e.g. a full-body figure), at `width`. */
-export type RenderCharacter = (customization: AvatarCustomization, width: number) => ReactNode;
 
 type MatchResultLetter = 'W' | 'L' | 'D';
 
@@ -148,8 +136,6 @@ interface ShowdownScreenProps {
    *    - `vertical` = always stacked top-to-bottom (mobile / dev preview)
    */
   variant?: 'horizontal' | 'vertical' | 'auto';
-  /** Draw the players with this instead of the upper-body avatar (zone match: the full body). */
-  renderCharacter?: RenderCharacter;
 }
 
 const poppins = {
@@ -201,9 +187,7 @@ function PlayerSide({
   reversed = false,
   showPing = false,
   pingLabel,
-  renderCharacter,
 }: {
-  renderCharacter?: RenderCharacter;
   info: ShowdownPlayerInfo;
   side: 'left' | 'right';
   variant?: 'horizontal' | 'vertical';
@@ -267,7 +251,6 @@ function PlayerSide({
             club={club}
             width={210}
             mirror={isOpponent}
-            renderCharacter={renderCharacter}
           />
         ) : (
           <>
@@ -278,7 +261,6 @@ function PlayerSide({
               club={club}
               width={150}
               mirror={isOpponent}
-              renderCharacter={renderCharacter}
               className="sm:hidden"
             />
             <FramedAvatar
@@ -288,7 +270,6 @@ function PlayerSide({
               club={club}
               width={250}
               mirror={isOpponent}
-              renderCharacter={renderCharacter}
               className="hidden sm:block md:hidden"
             />
             <FramedAvatar
@@ -298,7 +279,6 @@ function PlayerSide({
               club={club}
               width={300}
               mirror={isOpponent}
-              renderCharacter={renderCharacter}
               className="hidden md:block"
             />
           </>
@@ -405,7 +385,6 @@ export function ShowdownScreen({
   onComplete,
   playerInfo,
   opponentInfo,
-  renderCharacter,
   wrapperClassName = 'min-h-screen',
   variant = 'auto',
 }: ShowdownScreenProps) {
@@ -454,7 +433,6 @@ export function ShowdownScreen({
             reversed
             showPing={pingIndicatorEnabled}
             pingLabel={pingLabel}
-            renderCharacter={renderCharacter}
           />
 
           {/* VS divider */}
@@ -495,7 +473,6 @@ export function ShowdownScreen({
             variant="vertical"
             showPing={pingIndicatorEnabled}
             pingLabel={pingLabel}
-            renderCharacter={renderCharacter}
           />
         </div>
       </div>
@@ -512,7 +489,6 @@ export function ShowdownScreen({
             side="left"
             showPing={pingIndicatorEnabled}
             pingLabel={pingLabel}
-            renderCharacter={renderCharacter}
           />
         </div>
 
@@ -556,7 +532,6 @@ export function ShowdownScreen({
             side="right"
             showPing={pingIndicatorEnabled}
             pingLabel={pingLabel}
-            renderCharacter={renderCharacter}
           />
         </div>
       </div>

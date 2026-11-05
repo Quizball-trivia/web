@@ -20,8 +20,8 @@ export const BALL_R = 0.17;
 export const SHOT_U = 16.5;
 /** The defending keeper's mount, just off the goal line. */
 export const KEEPER_U = GOAL_X - 0.45;
-/** Where a goal hits the back of the net, as seen from the attacker: high, in from the far post (where the net gives). */
-export const NET_POCKET = { depth: 1.63, height: 1.95, lateral: 2.5 } as const;
+/** The goal net's ripple pocket (RoadGoal's net), as seen from the attacker: back of the net, near the far post. */
+export const NET_POCKET = { depth: 1.63, height: 2.15, lateral: 3.15 } as const;
 
 export const SIDE_COLOR: Record<ZoneSide, string> = { player: '#1CB0F6', opponent: '#FF4B4B' };
 
@@ -85,16 +85,12 @@ export function duelSpots(possession: Possession): DuelSpots {
 /** Back-of-the-net point a goal hits, for the goal that `attacker` shoots at. */
 export function netPocket(attacker: ZoneSide): { x: number; y: number; z: number } {
   const dir = attackDir(attacker);
-  // Always the far side from the camera (−z), so the net is seen taking the ball through the open goal mouth.
-  return { x: dir * (GOAL_X + NET_POCKET.depth), y: NET_POCKET.height, z: -NET_POCKET.lateral };
+  return { x: dir * (GOAL_X + NET_POCKET.depth), y: NET_POCKET.height, z: dir * NET_POCKET.lateral };
 }
-
-/** +1 when the net pocket is on the keeper rig's +x side (rig +x is world dir·ẑ), −1 when it is on −x. */
-export const pocketRigSide = (attacker: ZoneSide): 1 | -1 => (Math.sign(netPocket(attacker).z) * attackDir(attacker) > 0 ? 1 : -1);
 
 /**
  * A keeper-local point (the GoalkeeperMotion frame: x across the goal, y up, z out of the goal, in rig units) in
- * world space, for the keeper defending against `attacker`. pocketRigSide() says which way x is the net pocket's side.
+ * world space, for the keeper defending against `attacker`. Positive x is the side of the net pocket.
  */
 export function keeperLocalToWorld(attacker: ZoneSide, x: number, y: number, z: number): { x: number; y: number; z: number } {
   const dir = attackDir(attacker);

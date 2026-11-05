@@ -48,9 +48,7 @@ export function isGuestLobbyPath(pathname: string): boolean {
     pathname === "/tic-tac-toe" ||
     pathname === "/game" ||
     pathname.startsWith("/duelo/") ||
-    pathname.startsWith("/sala/") ||
-    // Ranked 2.0 (zone match) beta queue: guests may search during the playtest.
-    pathname === "/ranked2"
+    pathname.startsWith("/sala/")
   );
 }
 

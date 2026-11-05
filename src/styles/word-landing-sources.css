@@ -310,7 +310,6 @@
 @source "../lib/sounds/audioControl.ts";
 @source "../lib/sounds/gameSounds.ts";
 @source "../lib/sounds/useGameSounds.ts";
-@source "../lib/tickets.ts";
 @source "../lib/timeoutSignal.ts";
 @source "../lib/utils.ts";
 @source "../lib/utils/i18n.ts";

@@ -16,7 +16,7 @@ const REMAINING = QP_TARGET - QP;
 function Trophy({ className }: { className: string }) {
   return (
     <Image
-      src="/assets/brand/ucl-trophy.webp"
+      src="/assets/brand/world-cup-trophy.webp"
       alt=""
       width={420}
       height={420}
