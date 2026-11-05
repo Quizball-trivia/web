@@ -64,7 +64,9 @@ export const zoneMatchRoomRules: RoomClientRules<ZoneMatchCommand> = {
       case 'answer':
         return `answer:${c.key}:${c.index}`;
       case 'guess':
-        return `guess:${c.key}`;
+        // The value is part of the slot (like an answer's option): a guess re-entered after the optimistic window
+        // is its own command, never a retry silently carrying the earlier number.
+        return `guess:${c.key}:${c.value}`;
       case 'live':
         return `live:${c.key}:${c.card}`;
       default:
@@ -126,7 +128,9 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const [pendingGuess, setPendingGuess] = useState<{ key: number; value: number; at: number } | null>(null);
   const answerPending = !!(view.match.mcq && view.match.battleStep === 'mcq' && view.match.mcq.answers.player === null
     && pendingAnswer?.key === view.match.mcq.key && now - pendingAnswer.at < OPTIMISTIC_MS
-    && pendingAnswer.index !== view.match.mcq.firstMiss.player);
+    && pendingAnswer.index !== view.match.mcq.firstMiss.player
+    // An option a 50/50 hid after the tap can never lock: the remaining options must stay tappable.
+    && !view.match.mcq.hidden.player.includes(pendingAnswer.index));
   const state = useMemo(() => {
     let m = view.match;
     if (m.mcq && answerPending && pendingAnswer && !m.mcq.hidden.player.includes(pendingAnswer.index)) {
@@ -229,7 +233,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         opponent={seats.opponent}
         onQuit={() => room.leave()}
         onAnswer={(index, questionId) => {
-          if (state.mcq?.question.id !== questionId || answerPending) return;
+          if (state.mcq?.question.id !== questionId || answerPending || state.mcq.hidden.player.includes(index)) return;
           setPendingAnswer({ key: state.mcq.key, index, at: now });
           send({ type: 'answer', key: state.mcq.key, index });
         }}
@@ -248,7 +252,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         onAnswer={(index, questionId) => {
           // A second tap while the first is in flight is ignored (the server may already have locked the first);
           // a Second Ball retry, or an unconfirmed tap past the window, goes through.
-          if (state.mcq?.question.id !== questionId || answerPending) return;
+          if (state.mcq?.question.id !== questionId || answerPending || state.mcq.hidden.player.includes(index)) return;
           setPendingAnswer({ key: state.mcq.key, index, at: now });
           send({ type: 'answer', key: state.mcq.key, index });
         }}
