@@ -38,6 +38,7 @@ import {
   type CardEvent,
   type MatchState,
   type Mcq,
+  type NumericDuel,
   unusedCategories,
 } from './zoneMatch.machine';
 import { CardClash, useDesktop } from './ZoneMatchCards';
@@ -46,6 +47,8 @@ import { CARD_TYPE_THEME, CardFace, CardGlyph } from './ZoneMatchCardFace';
 import { ZoneMatch3D } from './ZoneMatch3D';
 import { CategoryTile } from './ZoneMatchCategories';
 import { SkyShot } from './ZoneMatchSkyShot';
+import { FogWipe } from './ZoneMatchFogWipe';
+import { HIDDEN_ANSWER } from './zoneMatch.view';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -70,7 +73,7 @@ const HUD_FADE = 'linear-gradient(to bottom, rgba(5,11,18,0.88) 0%, rgba(5,11,18
 /** Space between the HUD and the result title. */
 const RESULT_TITLE_GAP = 6;
 /** The floating step card over the 3D view: dark, a little see-through, blurred behind the card only. */
-const STEP_CARD_BG = 'rgba(10,19,28,0.86)';
+export const STEP_CARD_BG = 'rgba(10,19,28,0.86)';
 /** Desktop: the space kept between the card's edge and each player. */
 const SPLIT_GAP = 24;
 /** Phone: the band above the card kept for the players (the card's contents shrink rather than cover them). */
@@ -218,7 +221,7 @@ export function ZoneMatchStage({
   const panelKey = `${state.duelNo}-${
     state.battleStep === 'reveal' ? 'cards' : state.battleStep === 'mcqReveal' ? 'mcq' : state.battleStep
   }`;
-  const numericDark = state.numeric !== null && sabotageOn(state, 'player').includes('floodlight-failure') && now < state.numeric.startedAt + FLOODLIGHT_MS;
+  const numericDark = numericLightsOut(state, now);
 
   // Full-screen 3D underneath; each step (category, cards, question, tiebreak) opens as an overlay over it with the hand
   // at its foot, and goes once the answers have been shown, so the result plays out on the clear scene with its title.
@@ -254,6 +257,7 @@ export function ZoneMatchStage({
   // The card's contents shrink to fit: on desktop the space between the HUD and the hand; on a phone that less the band.
   const cardMax = Math.max(0, areaHeight - 16 - (desktop ? 0 : PHONE_PLAYER_BAND));
 
+  const clearStep = state.battleStep === 'cards' || state.battleStep === 'reveal';
   const overlayStyle: CSSProperties & { '--party-dock-height': string } = {
     // PossessionQuestionPanel scrolls its answers into view inside the card: the hand is below it, not over it.
     '--party-dock-height': '0.75rem',
@@ -320,11 +324,13 @@ export function ZoneMatchStage({
               <motion.div
                 ref={cardRef}
                 className={cn(
-                  'pointer-events-auto mx-auto max-h-full w-full overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-md',
+                  'pointer-events-auto mx-auto max-h-full w-full overflow-y-auto overscroll-contain rounded-[26px]',
+                  // The playstyle pick floats on the pitch (see-through); the other steps sit on a card.
+                  clearStep ? '' : 'border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-md',
                   // Desktop: narrower on narrow screens, so the players beside it keep room (the camera fits the rest).
                   desktop ? 'max-w-[min(600px,calc(100vw-480px))]' : 'max-w-[600px]',
                 )}
-                style={{ background: STEP_CARD_BG }}
+                style={{ background: clearStep ? 'transparent' : STEP_CARD_BG }}
                 initial={{ y: 24, scale: 0.97 }}
                 animate={{ y: 0, scale: 1 }}
                 exit={{ y: 12, scale: 0.98 }}
@@ -370,34 +376,7 @@ export function ZoneMatchStage({
                       )}
                       {handPhase === 'live' && <LiveCardChips state={state} onPlay={onLiveCard} />}
                       {state.battleStep === 'numeric' && state.numeric && (
-                        <div className="relative flex flex-col gap-2">
-                          <div className="flex flex-col gap-2">
-                            <p className="text-center text-xs uppercase tracking-[0.14em] text-brand-yellow" style={poppins}>
-                              Both right! Closest guess wins the duel
-                            </p>
-                            <div
-                              className="flex items-center justify-center rounded-[20px] bg-surface-page px-4 py-2.5 text-center text-white"
-                              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, lineHeight: 1.3, fontSize: 'clamp(15px, 1.9vw, 22px)' }}
-                            >
-                              {getI18nText(state.numeric.question.prompt, locale)}
-                            </div>
-                          </div>
-                          <NumericPad
-                            key={state.numeric.key}
-                            precision={state.numeric.question.precision}
-                            unit={getI18nText(state.numeric.question.unit, locale)}
-                            locked={state.numeric.guesses.player.value !== null}
-                            disabled={numericDark}
-                            compact
-                            onSubmit={onGuess}
-                          />
-                          {/* Short screens: the pad needs the room; the reveal says who locked in. */}
-                          <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
-                            <LockChip label="You" locked={state.numeric.guesses.player.value !== null} pendingLabel="Typing…" />
-                            <LockChip label={opponent.name} locked={state.numeric.guesses.opponent.value !== null} pendingLabel="Thinking…" />
-                          </div>
-                          {numericDark && <Blackout />}
-                        </div>
+                        <NumericPanel numeric={state.numeric} dark={numericDark} opponentName={opponent.name} onGuess={onGuess} />
                       )}
                     </motion.div>
                   </AnimatePresence>
@@ -566,6 +545,7 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
             <motion.button
               key={category.id}
               type="button"
+              className="min-w-0"
               onClick={() => onPick(category.id)}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.95 }}
@@ -574,7 +554,7 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
               {tile}
             </motion.button>
           ) : (
-            <motion.div key={category.id} animate={!mine && !used ? { y: [0, -3, 0] } : undefined} transition={{ duration: 1.2, repeat: Infinity, delay: index * 0.17 }}>
+            <motion.div key={category.id} className="min-w-0" animate={!mine && !used ? { y: [0, -3, 0] } : undefined} transition={{ duration: 1.2, repeat: Infinity, delay: index * 0.17 }}>
               {tile}
             </motion.div>
           );
@@ -665,7 +645,7 @@ function MiniGlyph({ id }: { id: CardId }) {
 }
 
 /** The cards working on this question, popping in as they are played (live cards and 50/50s included). */
-function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: number; opponentName: string }) {
+export function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: number; opponentName: string }) {
   const inQuestion = ['mcq', 'mcqReveal', 'numeric', 'numericReveal'].includes(state.battleStep);
   if (!inQuestion) return null;
   const active = activeCards(state);
@@ -712,6 +692,46 @@ function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: num
   );
 }
 
+/** Floodlight Failure on the player's number question: the pad is dark for its first seconds. */
+export function numericLightsOut(state: MatchState, now: number): boolean {
+  return state.numeric !== null && sabotageOn(state, 'player').includes('floodlight-failure') && now < state.numeric.startedAt + FLOODLIGHT_MS;
+}
+
+/** The number tiebreak: the prompt and the pad (dark under Floodlight Failure), and who has locked in. */
+export function NumericPanel({ numeric, dark, opponentName, onGuess }: { numeric: NumericDuel; dark: boolean; opponentName: string; onGuess: (value: number) => void }) {
+  const { locale } = useLocale();
+  return (
+    <div className="relative flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
+        <p className="text-center text-xs uppercase tracking-[0.14em] text-brand-yellow" style={poppins}>
+          Both right! Closest guess wins the duel
+        </p>
+        <div
+          className="flex items-center justify-center rounded-[20px] bg-surface-page px-4 py-2.5 text-center text-white"
+          style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, lineHeight: 1.3, fontSize: 'clamp(15px, 1.9vw, 22px)' }}
+        >
+          {getI18nText(numeric.question.prompt, locale)}
+        </div>
+      </div>
+      <NumericPad
+        key={numeric.key}
+        precision={numeric.question.precision}
+        unit={getI18nText(numeric.question.unit, locale)}
+        locked={numeric.guesses.player.value !== null}
+        disabled={dark}
+        compact
+        onSubmit={onGuess}
+      />
+      {/* Short screens: the pad needs the room; the reveal says who locked in. */}
+      <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
+        <LockChip label="You" locked={numeric.guesses.player.value !== null} pendingLabel="Typing…" />
+        <LockChip label={opponentName} locked={numeric.guesses.opponent.value !== null} pendingLabel="Thinking…" />
+      </div>
+      {dark && <Blackout />}
+    </div>
+  );
+}
+
 function Blackout() {
   return (
     <motion.div
@@ -729,7 +749,7 @@ function Blackout() {
  * PossessionQuestionPanel fed through an adapter: the cards' option effects (50/50 removals, Muddy Pitch's reshuffle,
  * Second Ball's spent miss) become a view of the question, and taps map back to the real option index.
  */
-function McqPanel({
+export function McqPanel({
   state,
   mcq,
   now,
@@ -746,8 +766,17 @@ function McqPanel({
 }) {
   const sabotage = sabotageOn(state, 'player');
   const dark = !revealed && sabotage.includes('floodlight-failure') && now < mcq.startedAt + FLOODLIGHT_MS;
-  const [fogClearedFor, setFogClearedFor] = useState<number | null>(null);
-  const fogged = !revealed && sabotage.includes('fog') && fogClearedFor !== mcq.key;
+  // Time Wasting: their clock runs out early, and answers after it are refused.
+  const myDeadline = mcq.deadline - (mcq.squeeze?.player ?? 0);
+  const expired = !revealed && now > myDeadline;
+  const shownLeft = timeLeft === null ? null : Math.min(timeLeft, Math.max(0, Math.ceil((myDeadline - now) / 1000)));
+  const nowRef = useRef(now);
+  useEffect(() => {
+    nowRef.current = now;
+  }, [now]);
+  // Fog: the whole question misted over until wiped clear (ZoneMatchFogWipe).
+  const fogged = !revealed && sabotage.includes('fog');
+  const panelRef = useRef<HTMLDivElement>(null);
   const muddy = sabotage.includes('muddy-pitch');
   const [shuffle, setShuffle] = useState<{ key: number; order: number[]; at: number } | null>(null);
   useEffect(() => {
@@ -758,7 +787,7 @@ function McqPanel({
         const j = Math.floor(Math.random() * (i + 1));
         [order[i], order[j]] = [order[j], order[i]];
       }
-      setShuffle({ key: mcq.key, order, at: Date.now() });
+      setShuffle({ key: mcq.key, order, at: nowRef.current });
     }, 2000 + Math.random() * 4000);
     return () => window.clearTimeout(id);
   }, [mcq.key, muddy, revealed]);
@@ -772,6 +801,8 @@ function McqPanel({
   const visible = order.filter((i) => revealed || cutting || !mcq.hidden.player.includes(i));
   const toView = (index: number | null) => (index === null ? null : visible.indexOf(index) === -1 ? null : visible.indexOf(index));
   const { correctIndex } = mcq.question;
+  // Online, the right answer arrives with the reveal: until then a locked answer is only "yours".
+  const answerKnown = correctIndex !== HIDDEN_ANSWER;
   const viewQuestion = useMemo(
     () => ({ ...mcq.question, options: visible.map((i) => mcq.question.options[i]), correctIndex: visible.indexOf(correctIndex) }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -782,7 +813,7 @@ function McqPanel({
   const theirs = mcq.answers.opponent;
   const states: AnswerState[] = visible.map((real) => {
     if (revealed) return real === correctIndex ? 'correct' : real === mine ? 'wrong' : 'disabled';
-    if (mine !== null) return real === mine ? (real === correctIndex ? 'correct' : 'wrong') : 'disabled';
+    if (mine !== null) return real === mine && answerKnown ? (real === correctIndex ? 'correct' : 'wrong') : real === mine ? 'default' : 'disabled';
     if (real === mcq.firstMiss.player) return 'wrong';
     return 'default';
   });
@@ -794,9 +825,9 @@ function McqPanel({
   const cutScope = `cut-${mcq.key}`;
 
   return (
-    <div className="relative" data-fifty-cut={cutScope}>
+    <div ref={panelRef} className="relative" data-fifty-cut={cutScope}>
       {cutViews.length > 0 && <style>{fiftyCutStyle(cutScope, cutViews)}</style>}
-      {mcq.offCategory && (
+      {mcq.offCategory && state.stage !== 'shootout' && (
         <div className="mb-1.5 truncate text-center text-[10px] uppercase tracking-[0.06em] text-brand-orange" style={poppins}>
           No {shortName(mcq.categoryName)} questions left · general question
         </div>
@@ -819,16 +850,16 @@ function McqPanel({
             question={viewQuestion}
             qIndex={state.round}
             totalQuestions={MATCH_ROUNDS}
-            counterLabel={`R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
-            timeRemaining={timeLeft}
-            showOptions={!dark && !fogged}
+            counterLabel={state.shootout ? `Penalty ${state.shootout.kicks.length + 1}` : `R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
+            timeRemaining={shownLeft}
+            showOptions={!dark}
             selectedAnswer={toView(mine)}
             answerStates={answerStates}
             opponentAnswer={mine !== null || revealed ? toView(theirs) : null}
             onAnswer={(viewIndex) => {
               const real = visible[viewIndex];
               // Tagged with this question: the outgoing one stays tappable while a Substitution flips it away.
-              if (real !== undefined) onAnswer(real, mcq.question.id);
+              if (real !== undefined && !expired) onAnswer(real, mcq.question.id);
             }}
           />
         </motion.div>
@@ -838,16 +869,7 @@ function McqPanel({
           Second Ball · one more try
         </div>
       )}
-      {fogged && (
-        <button
-          type="button"
-          onClick={() => setFogClearedFor(mcq.key)}
-          className="absolute inset-x-0 bottom-0 top-[45%] z-20 flex items-center justify-center rounded-[24px] bg-white/25 text-sm uppercase text-white backdrop-blur-md"
-          style={poppins}
-        >
-          🌫️ Fog · tap to clear
-        </button>
-      )}
+      <AnimatePresence>{fogged && <FogWipe key={`fog-${mcq.key}-${mcq.question.id}`} panelRef={panelRef} seed={mcq.key * 97 + 13} />}</AnimatePresence>
       <AnimatePresence>{splashing && <MudSplash key={shuffle?.at} />}</AnimatePresence>
       {dark && <Blackout />}
     </div>

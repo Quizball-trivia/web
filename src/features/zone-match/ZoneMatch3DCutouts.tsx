@@ -12,10 +12,12 @@
 import { useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import type { SceneClock } from './zoneMatch3d.clock';
 import { AvatarFullBody, applyFullBodyPose, type FullBodyEls } from './AvatarFullBody';
 import type { AvatarCustomization } from '@/types/game';
 import type { ZoneSide } from './zoneMatch.rules';
-import { CUTOUT_ASPECT, CUTOUT_BASE, CUTOUT_H, blankPose, clipPose, type CutoutPose, type DuelDirector, type GhostFx } from './zoneMatch3d.director';
+import { CUTOUT_ASPECT, CUTOUT_BASE, CUTOUT_H, GLOVED_ARMS, blankPose, clipPose, type CutoutPose, type DuelDirector, type GhostFx } from './zoneMatch3d.director';
+import { ARMS_REST, mixArms } from './zoneMatch.fullBody';
 import type { CardEffectsEngine } from './zoneMatch3d.effects';
 import type { CardFx } from './zoneMatch3d.fx';
 
@@ -40,14 +42,13 @@ export interface CutoutEls {
   root: HTMLDivElement | null;
   art: HTMLDivElement | null;
   armband: HTMLDivElement | null;
-  gloves: HTMLDivElement | null;
-  /** The two gloves (left hand, right hand). */
-  hands: (HTMLSpanElement | null)[];
   boots: HTMLDivElement | null;
   /** Yellow Card: a lock over the head. */
   lock: HTMLDivElement | null;
   /** Dummy Run's decoy: its "?". */
   bluff: HTMLDivElement | null;
+  /** A caught ball held to the chest (drawn here: the 3D ball would be behind the figure). */
+  heldBall: HTMLDivElement | null;
   confetti: (HTMLSpanElement | null)[];
   /** The legs and upper body, posed every frame. */
   body: FullBodyEls | null;
@@ -55,7 +56,7 @@ export interface CutoutEls {
 
 export type CutoutRegistry = Record<ZoneSide, { main: CutoutEls; ghosts: CutoutEls[] }>;
 
-const emptyEls = (): CutoutEls => ({ root: null, art: null, armband: null, gloves: null, hands: [], boots: null, lock: null, bluff: null, confetti: [], body: null });
+const emptyEls = (): CutoutEls => ({ root: null, art: null, armband: null, boots: null, lock: null, bluff: null, heldBall: null, confetti: [], body: null });
 
 /** The DOM nodes of every cut-out, filled in by the layer's refs and read by the driver each frame. */
 export function createCutoutRegistry(): CutoutRegistry {
@@ -65,22 +66,19 @@ export function createCutoutRegistry(): CutoutRegistry {
   };
 }
 
-type ElKey = 'root' | 'art' | 'armband' | 'gloves' | 'boots' | 'lock' | 'bluff';
+type ElKey = 'root' | 'art' | 'armband' | 'boots' | 'lock' | 'bluff' | 'heldBall';
 function keep(els: CutoutEls, key: ElKey, el: HTMLDivElement | null) {
   els[key] = el;
 }
 function keepPiece(els: CutoutEls, index: number, el: HTMLSpanElement | null) {
   els.confetti[index] = el;
 }
-function keepHand(els: CutoutEls, index: number, el: HTMLSpanElement | null) {
-  els.hands[index] = el;
-}
 
 function keepBody(els: CutoutEls, body: FullBodyEls) {
   els.body = body;
 }
 
-/** The card glows that ride on the upper body: the armband on the arm, gloves on the hands. */
+/** The card glows that ride on the upper body: the armband on the arm, a caught ball at the chest. */
 function UpperBadges({ els }: { els: CutoutEls }) {
   return (
     <>
@@ -92,21 +90,13 @@ function UpperBadges({ els }: { els: CutoutEls }) {
       >
         C
       </div>
-      {/* Keeper gloves on both hands (glowing with Goalkeeper Gloves); the driver puts them on and tosses them. */}
-      <div ref={(el) => keep(els, 'gloves', el)} className="absolute inset-0" style={{ opacity: 0 }}>
-        {[
-          { left: '2%', top: '13%' },
-          { left: '79%', top: '17%' },
-        ].map((spot, i) => (
-          <span
-            key={spot.left}
-            ref={(el) => keepHand(els, i, el)}
-            className="absolute grid place-items-center rounded-full"
-            style={{ ...spot, width: '22%', aspectRatio: '1', fontSize: 24 }}
-          >
-            🧤
-          </span>
-        ))}
+      {/* A caught ball, held to the chest between the gripping gloves. */}
+      <div ref={(el) => keep(els, 'heldBall', el)} className="absolute" style={{ left: '42.5%', top: '68%', width: '15%', aspectRatio: '1', opacity: 0 }}>
+        <svg viewBox="-50 -50 100 100" className="size-full" aria-hidden>
+          <circle r={47} fill="#F7F8FA" stroke="#1B1D22" strokeWidth={4} />
+          <path d="M0 -17 L16 -5 L10 14 L-10 14 L-16 -5 Z" fill="#1B1D22" />
+          <path d="M-30 -36 L-20 -26 M30 -36 L20 -26 M-44 8 L-30 4 M44 8 L30 4 M-14 42 L-8 30 M14 42 L8 30" stroke="#1B1D22" strokeWidth={4} />
+        </svg>
       </div>
     </>
   );
@@ -129,6 +119,7 @@ function Figure({ customization, seed, els, main, side }: { customization: Avata
           onEls={(body) => keepBody(els, body)}
           style={{ width: '100%' }}
           upperOverlay={main ? <UpperBadges els={els} /> : undefined}
+          movingArms={main ? 'auto' : false}
         />
       </div>
       {!main && (
@@ -198,14 +189,14 @@ interface Look {
   filter: string;
   armband: boolean;
   /** `on` 0–1: being put on (from the waist) / 1 worn; `off` 0–1: being tossed away. `card`: Goalkeeper Gloves (glowing). */
-  gloves: { on: number; off: number; card: boolean; flash: number; beaten: boolean };
+  gloves: { on: number; off: number; card: boolean; flash: number; beaten: boolean; inGoal: boolean };
   boots: number;
   bootsTone: 'gold' | 'mint';
   locked: boolean;
   bluff: boolean;
 }
 
-const NO_GLOVES: Look['gloves'] = { on: 0, off: 1, card: false, flash: 0, beaten: false };
+const NO_GLOVES: Look['gloves'] = { on: 0, off: 1, card: false, flash: 0, beaten: false, inGoal: false };
 
 /** Project a cut-out pose and write its CSS (module scope: the elements are DOM, not React state). */
 function layoutFigure(els: CutoutEls, pose: CutoutPose, look: Look, camera: THREE.Camera, size: { width: number; height: number }, now: number) {
@@ -238,30 +229,31 @@ function layoutFigure(els: CutoutEls, pose: CutoutPose, look: Look, camera: THRE
   // Nearer figures in front.
   root.style.zIndex = String(1000 - Math.round(camera.position.distanceTo(_a.set(pose.x, pose.y, pose.z)) * 10));
   if (els.art) els.art.style.transform = `scaleX(${pose.face}) rotateY(${pose.spin.toFixed(3)}rad)`;
-  if (els.body) applyFullBodyPose(els.body, pose.body);
-  if (els.armband) els.armband.style.opacity = look.armband ? String(0.85 + 0.15 * Math.sin(now * 6)) : '0';
-  if (els.gloves) {
-    const g = look.gloves;
-    const shown = g.on > 0 && g.off < 1;
-    els.gloves.style.opacity = shown ? '1' : '0';
-    els.gloves.style.filter = g.beaten ? 'grayscale(1) brightness(0.6)' : `brightness(${(1 + g.flash * 0.8).toFixed(2)})`;
-    if (shown) {
-      els.hands.forEach((hand, i) => {
-        if (!hand) return;
-        const inward = i === 0 ? 1 : -1;
-        // On: from behind the waist up to the hand. Off: flung outwards, spinning, and gone.
-        const away = 1 - g.on;
-        const dx = inward * 160 * away - inward * 240 * g.off;
-        const dy = 330 * away - 260 * g.off * (1 - g.off) * 2 + 120 * g.off * g.off;
-        const spin = (inward * 50 * away + -inward * 420 * g.off).toFixed(0);
-        // Big enough to read on a phone: the hands are small on a full-body figure.
-        const size = (g.card ? 2.1 : 1.7) * (0.6 + 0.4 * g.on) * (1 + 0.06 * Math.sin(now * 5) + g.flash * 0.35);
-        hand.style.transform = `translate(${dx.toFixed(0)}%, ${dy.toFixed(0)}%) rotate(${spin}deg) scale(${size.toFixed(3)})`;
-        hand.style.opacity = String(1 - g.off);
-        hand.style.background = g.card ? 'radial-gradient(closest-side, rgba(255,255,255,0.95), rgba(90,220,255,0.75) 55%, rgba(30,150,255,0))' : 'none';
-      });
+  // Gloves are worn on the moving hands (the save animation's fitted gloves): pulled on into the keeper's set stance in
+  // goal (or carried by the sides with Goalkeeper Gloves elsewhere), the arms back to the art's own when they come off.
+  // A dive drives its own arms (with gloves) and wins.
+  const g = look.gloves;
+  const wear = g.on * (1 - g.off);
+  let body = pose.body;
+  if (!body.arms && wear > 0.01) {
+    const target = g.inGoal ? GLOVED_ARMS.ready : GLOVED_ARMS.down;
+    const arms = mixArms(ARMS_REST, target, smoothStep(wear));
+    // Breathing in the set stance.
+    if (g.inGoal && wear > 0.99) {
+      const b = Math.sin(now * 2.2) * 3;
+      arms.L = { ...arms.L, upper: arms.L.upper + b, fore: arms.L.fore + b };
+      arms.R = { ...arms.R, upper: arms.R.upper - b, fore: arms.R.fore - b };
     }
+    body = { ...body, arms };
   }
+  if (els.body) {
+    applyFullBodyPose(els.body, body);
+    // Goalkeeper Gloves glow (and flash on a save); grey once beaten.
+    const glow = g.beaten ? 'grayscale(1) brightness(0.6)' : g.card ? `drop-shadow(0 0 ${(8 + g.flash * 14).toFixed(0)}px rgba(90,220,255,${(0.75 + g.flash * 0.25).toFixed(2)}))` : '';
+    for (const layer of els.body.armLayers ?? []) if (layer && layer.style.filter !== glow) layer.style.filter = glow;
+  }
+  if (els.armband) els.armband.style.opacity = look.armband ? String(0.85 + 0.15 * Math.sin(now * 6)) : '0';
+  if (els.heldBall) els.heldBall.style.opacity = body.arms?.L.shape === 'grip' ? '1' : '0';
   if (els.boots) {
     els.boots.style.opacity = look.boots.toFixed(2);
     els.boots.style.background = BOOT_GLOW[look.bootsTone];
@@ -287,24 +279,43 @@ function layoutFigure(els: CutoutEls, pose: CutoutPose, look: Look, camera: THRE
 
 const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from && Date.now() < fx.dark.until;
 
+/** Park the Bus: the defender stepping across to stand behind his bus (`k` 0–1), facing the attacker. */
+function standBehindBus(out: CutoutPose, from: CutoutPose, spot: THREE.Vector3, k: number, dir: number): CutoutPose {
+  out.up.copy(from.up);
+  out.x = THREE.MathUtils.lerp(from.x, spot.x, k);
+  out.y = from.y;
+  out.z = THREE.MathUtils.lerp(from.z, spot.z, k);
+  out.sx = from.sx;
+  out.sy = from.sy;
+  out.spin = 0;
+  out.blur = from.blur;
+  out.party = 0;
+  out.face = dir > 0 ? -1 : 1;
+  Object.assign(out.body, from.body);
+  return out;
+}
+
 /** Inside the Canvas: places every cut-out after the director and the effects have run. */
-export function CutoutDriver({ director, engine, fx, registry: reg }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; registry: CutoutRegistry }) {
+export function CutoutDriver({ director, engine, fx, registry: reg, clock }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; registry: CutoutRegistry; clock: SceneClock }) {
   const ghostPose = useMemo(() => blankPose(), []);
   const hopPose = useMemo(() => blankPose(), []);
+  const ridePoses = useMemo(() => ({ player: blankPose(), opponent: blankPose() }), []);
   const fogLevel = useRef(0);
   // When each side last started / stopped wearing gloves (the put-on and toss-away beats).
   const gloveState = useRef<Record<ZoneSide, { wearing: boolean; since: number }>>({ player: { wearing: false, since: -10 }, opponent: { wearing: false, since: -10 } });
   useFrame(({ camera, size }, delta) => {
-    const now = performance.now() / 1000;
+    const now = clock.now();
     const f = fx.current;
     const sfx = director.scriptFx;
-    fogLevel.current = THREE.MathUtils.damp(fogLevel.current, f.fog ? 1 : 0, 1.8, Math.min(delta, 0.1));
+    fogLevel.current = THREE.MathUtils.damp(fogLevel.current, f.fog ? 1 : 0, 1.8, Math.min(delta * clock.rate(), 0.1));
     const dark = isDark(f);
     const reduced = engine.extras.reduced;
     for (const side of SIDES) {
       const lit = !dark || f.dark?.victim === side;
       // A card firing: a quick fist-pump hop.
-      const pose = hopped(hopPose, director.poseOf(side), reduced ? 10 : now - engine.extras.activation[side]);
+      const hop = hopped(hopPose, director.poseOf(side), reduced ? 10 : now - engine.extras.activation[side]);
+      // Park the Bus: he stands behind his bus.
+      const pose = engine.extras.busRider === side ? standBehindBus(ridePoses[side], hop, engine.extras.busSeat, engine.extras.busStandK, director.spots.dir) : hop;
       // Gloves: on while in goal for a shot (or while Goalkeeper Gloves are on), off when it is over.
       const card = f.gloves[side] || sfx.gloves?.side === side;
       const wearing = card || director.keeper === side;
@@ -320,6 +331,7 @@ export function CutoutDriver({ director, engine, fx, registry: reg }: { director
         card,
         flash: sfx.gloves?.side === side ? sfx.gloves.flash : 0,
         beaten: sfx.gloves?.side === side && sfx.gloves.beaten,
+        inGoal: director.keeper === side,
       };
       if (t < 0.7) keepAnimating(engine, now);
       const booked = f.booked.includes(side);

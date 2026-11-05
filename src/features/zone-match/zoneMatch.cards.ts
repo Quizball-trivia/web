@@ -11,6 +11,8 @@
 
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { AttackZone, Possession } from './zoneMatch.rules';
+import { MOVEMENT_CARDS, RULES, SABOTAGE_CARDS } from './zoneMatch.playtest';
+import { rand } from './zoneMatch.random';
 
 export type CardType = 'boost' | 'sabotage' | 'defense' | 'tactical';
 /** blind: chosen before the question, revealed together · live: during the question · reaction: after the reveal. */
@@ -21,7 +23,8 @@ export type CardId =
   | 'first-touch' | 'fifty-fifty' | 'golden-boot' | 'captains-armband' | 'second-ball'
   | 'floodlight-failure' | 'muddy-pitch' | 'fog' | 'yellow-card' | 'offside-trap'
   | 'var-review' | 'goalkeeper-gloves' | 'park-the-bus' | 'shin-pads'
-  | 'long-ball' | 'counter-attack' | 'substitution' | 'home-advantage' | 'dummy-run' | 'tiki-taka';
+  | 'long-ball' | 'counter-attack' | 'substitution' | 'home-advantage' | 'dummy-run' | 'tiki-taka'
+  | 'nutmeg' | 'bicycle-kick' | 'high-press' | 'time-wasting' | 'super-sub' | 'feint' | 'poker-face' | 'screamer';
 
 export interface CardDef {
   id: CardId;
@@ -56,6 +59,13 @@ export const TIKI_TAKA_DUELS = 3;
 // Costs marked originalEnergy were changed after playtesting and bot simulations (thousands of matches, random decks):
 // First Touch is played after you see the question, so at 1⚡ it was the best card for strong players; the time-only
 // sabotage and Second Ball lose value here because answer speed never decides a duel.
+/** Bicycle Kick's rule text per variant under test (RULES.bicycle). */
+const BICYCLE_EFFECT: Record<typeof RULES.bicycle, string> = {
+  comeback: "Only when you're level or behind, on your shot: answer right and you score — even if they're right too; Gloves and the Bus can't stop it. Wrong: they steal it clean.",
+  faster: "On your shot: answer right and you score; if you're both right, the faster answer wins it. Gloves and the Bus can't stop it. Wrong: they steal it and break.",
+};
+const BICYCLE_SHORT: Record<typeof RULES.bicycle, string> = { comeback: 'Comeback goal', faster: 'Beat the keeper' };
+
 export const CARDS: CardDef[] = [
   {
     id: 'first-touch', name: 'First Touch', icon: '👟', type: 'boost', energy: 2, originalEnergy: 1, phase: 'live', role: 'any',
@@ -155,7 +165,56 @@ export const CARDS: CardDef[] = [
     effect: 'For 3 questions, every duel you win moves the ball 1 extra zone. Lose a duel and it ends.',
     short: '+1 zone × 3',
   },
+  {
+    id: 'nutmeg', name: 'Nutmeg', icon: '🦵', type: 'boost', energy: 2, phase: 'blind', role: 'attack',
+    effect: "Win the duel and their defending card is undone — Park the Bus, Offside Trap and Goalkeeper Gloves don't stop you.",
+    short: 'Beat their trap',
+  },
+  {
+    id: 'bicycle-kick', name: 'Bicycle Kick', icon: '🤸', type: 'boost', energy: 3, phase: 'blind', role: 'shot',
+    effect: BICYCLE_EFFECT[RULES.bicycle],
+    short: BICYCLE_SHORT[RULES.bicycle],
+  },
+  {
+    id: 'high-press', name: 'High Press', icon: '🏃', type: 'defense', energy: 2, phase: 'blind', role: 'defend',
+    effect: 'If you both answer right, you win the ball — no number question.',
+    short: 'Win if both right',
+  },
+  {
+    id: 'time-wasting', name: 'Time Wasting', icon: '⏳', type: 'sabotage', energy: 1, phase: 'live', role: 'any',
+    effect: 'Your opponent has 5 seconds less to answer this question.',
+    short: '−5 s for them',
+  },
+  {
+    id: 'super-sub', name: 'Super Sub', icon: '🔁', type: 'tactical', energy: 2, phase: 'blind', role: 'any',
+    effect: 'Brings back the last playstyle you used, to play again.',
+    short: 'Reuse a card',
+  },
+  {
+    id: 'feint', name: 'Feint', icon: '🎭', type: 'tactical', energy: 1, phase: 'blind', role: 'attack',
+    effect: 'Your opponent sees a fake attacking card (Golden Boot, Armband or Long Ball). Bait out their VAR.',
+    short: 'Fake attack',
+  },
+  {
+    id: 'poker-face', name: 'Poker Face', icon: '😐', type: 'tactical', energy: 1, phase: 'blind', role: 'defend',
+    effect: 'Your opponent sees a fake defending card (Gloves, Park the Bus or Offside Trap). Bait out their VAR.',
+    short: 'Fake defence',
+  },
+  {
+    id: 'screamer', name: 'Screamer', icon: '🚀', type: 'boost', energy: 3, phase: 'blind', role: 'attack',
+    effect: 'Only from the centre: answer right and you score. Answer wrong and they steal it clean.',
+    short: 'Score from centre',
+  },
 ];
+
+/** Bluff cards: they show the other side a fake card and have no effect of their own. */
+export const BLUFF_CARDS: readonly CardId[] = ['dummy-run', 'feint', 'poker-face'];
+/** What each bluff can pass for. */
+export const BLUFF_FAKES: Partial<Record<CardId, readonly CardId[]>> = {
+  'dummy-run': ['floodlight-failure', 'fog', 'muddy-pitch', 'yellow-card'],
+  feint: ['golden-boot', 'captains-armband', 'long-ball'],
+  'poker-face': ['goalkeeper-gloves', 'park-the-bus', 'offside-trap'],
+};
 
 export const CARD_BY_ID = Object.fromEntries(CARDS.map((card) => [card.id, card])) as Record<CardId, CardDef>;
 
@@ -206,16 +265,21 @@ export function legalDeck(partial: readonly CardId[]): CardId[] {
 }
 
 /** A partial pick topped up at random until nothing else fits — what Auto-pick and the scripted opponent play with. */
-export function completeDeck(partial: readonly CardId[], random: () => number = Math.random): CardId[] {
+export function completeDeck(partial: readonly CardId[], random: () => number = rand): CardId[] {
   const deck = legalDeck(partial);
-  const pool = [...CARDS].sort(() => random() - 0.5);
+  // Fisher–Yates: the same draws give the same order on every runtime (a sort with a random comparator does not).
+  const pool = [...CARDS];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
   for (const card of pool) {
     if (!deck.includes(card.id) && deckBlocker(deck, card.id) === null) deck.push(card.id);
   }
   return deck;
 }
 
-export function randomDeck(random: () => number = Math.random): CardId[] {
+export function randomDeck(random: () => number = rand): CardId[] {
   return completeDeck([], random);
 }
 
@@ -248,26 +312,60 @@ export type DuelDecision =
  * Who won the duel once both answers are in, with the cards in play. `numeric` = both were right and no card settles
  * it, so the number question decides.
  */
-export function decideDuel(possession: Possession, correct: Record<DuelSide, boolean>, active: ActiveCards): DuelDecision {
+export function decideDuel(
+  possession: Possession,
+  correct: Record<DuelSide, boolean>,
+  active: ActiveCards,
+  /** Who got the right answer in first (both right), for Bicycle Kick's 'faster' rule. */
+  faster?: DuelSide | null,
+): DuelDecision {
   const attacker = possession.attacker;
   const defender: DuelSide = attacker === 'player' ? 'opponent' : 'player';
 
+  // Bicycle Kick (on the shot): a miss is theirs; both right is a goal (comeback) or goes to the faster answer.
+  if (has(active, attacker, 'bicycle-kick')) {
+    if (!correct[attacker]) return { kind: 'resolved', winner: defender, note: 'Bicycle kick misses' };
+    if (!correct[defender] || RULES.bicycle === 'comeback') return { kind: 'resolved', winner: attacker, note: 'Bicycle kick!' };
+    if (faster) return { kind: 'resolved', winner: faster, note: faster === attacker ? 'Bicycle kick — too quick for the keeper' : 'The keeper reads the bicycle kick' };
+  }
+  // Screamer (from the centre): all on the attacker's answer.
+  if (has(active, attacker, 'screamer')) {
+    return correct[attacker] ? { kind: 'resolved', winner: attacker, note: 'Screamer!' } : { kind: 'resolved', winner: defender, note: 'Screamer flies wide' };
+  }
+  const nutmeg = has(active, attacker, 'nutmeg');
+  // Rule variant: Park the Bus and Offside Trap read the attacker's run — a movement card is beaten outright (a Nutmeg
+  // goes through).
+  if (RULES.counters && !nutmeg && MOVEMENT_CARDS.some((id) => has(active, attacker, id))) {
+    if (has(active, defender, 'park-the-bus')) return { kind: 'resolved', winner: defender, note: 'The bus blocks the run' };
+    if (has(active, defender, 'offside-trap')) return { kind: 'resolved', winner: defender, note: 'Caught offside' };
+  }
   if (has(active, attacker, 'long-ball')) {
     return correct[attacker]
       ? { kind: 'resolved', winner: attacker, note: 'Long Ball lands' }
       : { kind: 'resolved', winner: defender, note: 'Long Ball cut out' };
   }
-  if (has(active, defender, 'offside-trap') && !correct[attacker]) {
+  if (!RULES.counters && has(active, defender, 'offside-trap') && !correct[attacker]) {
     return { kind: 'resolved', winner: defender, note: 'Offside trap!' };
   }
   if (correct[attacker] && !correct[defender]) return { kind: 'resolved', winner: attacker };
   if (correct[defender] && !correct[attacker]) return { kind: 'resolved', winner: defender };
-  if (!correct[attacker] && !correct[defender]) return { kind: 'resolved', winner: null };
+  if (!correct[attacker] && !correct[defender]) {
+    // Rule variant: a First Touch played and got wrong hands the duel over.
+    if (RULES.downsides) {
+      const aFt = has(active, attacker, 'first-touch');
+      const dFt = has(active, defender, 'first-touch');
+      if (aFt && !dFt) return { kind: 'resolved', winner: defender, note: 'First Touch misfires' };
+      if (dFt && !aFt) return { kind: 'resolved', winner: attacker, note: 'First Touch misfires' };
+    }
+    return { kind: 'resolved', winner: null };
+  }
 
   const attackerSkips = has(active, attacker, 'first-touch') || (has(active, attacker, 'golden-boot') && possession.zone === 'opponent');
-  const defenderSkips = has(active, defender, 'first-touch');
+  const defenderSkips = has(active, defender, 'first-touch') || has(active, defender, 'high-press');
   if (attackerSkips && !defenderSkips) return { kind: 'resolved', winner: attacker, note: has(active, attacker, 'golden-boot') ? 'Golden Boot' : 'First Touch' };
-  if (defenderSkips && !attackerSkips) return { kind: 'resolved', winner: defender, note: 'First Touch' };
+  if (defenderSkips && !attackerSkips) return { kind: 'resolved', winner: defender, note: has(active, defender, 'high-press') ? 'High Press' : 'First Touch' };
+  // Rule variant: both right goes to the attacker unless the defender has a card in play.
+  if (RULES.attackerWinsTies && active[defender].length === 0) return { kind: 'resolved', winner: attacker, note: "Attacker's edge" };
   return { kind: 'numeric' };
 }
 
@@ -298,21 +396,33 @@ export function movementMods(
   const defender: DuelSide = attacker === 'player' ? 'opponent' : 'player';
   const mods: MovementMods = { attackerSteps: 1, holdGround: false };
   if (winner === attacker) {
-    if (has(active, attacker, 'long-ball')) {
+    if (has(active, attacker, 'screamer')) {
+      mods.attackerSteps = 2;
+    } else if (has(active, attacker, 'long-ball')) {
       mods.attackerSteps = possession.zone === 'own' ? 2 : 1;
     } else {
       if (has(active, attacker, 'captains-armband')) mods.attackerSteps += 1;
       if (tikiTaka[attacker]) mods.attackerSteps += 1;
     }
     // Golden Boot's shot can't be parked.
-    const unstoppable = has(active, attacker, 'golden-boot') && possession.zone === 'opponent';
-    mods.holdGround = has(active, defender, 'park-the-bus') && !unstoppable;
+    const unstoppable = (has(active, attacker, 'golden-boot') || has(active, attacker, 'bicycle-kick')) && possession.zone === 'opponent';
+    // (As a read — counters — the bus only stops a run, settled in decideDuel.)
+    mods.holdGround = !RULES.counters && has(active, defender, 'park-the-bus') && !unstoppable && !has(active, attacker, 'nutmeg');
+    // Rule variant: a sabotage the victim (here the attacker) beats gives them an extra zone.
+    if (RULES.downsides && correct?.[attacker] && SABOTAGE_CARDS.some((id) => has(active, defender, id))) mods.attackerSteps += 1;
   } else if (winner === defender) {
     const attackerWrong = correct !== null && !correct[attacker];
-    mods.cleanSteal = attackerWrong && correct !== null && correct[defender];
+    mods.cleanSteal = (attackerWrong && correct !== null && correct[defender]) || (attackerWrong && (has(active, attacker, 'bicycle-kick') || has(active, attacker, 'screamer')));
     // A lost Long Ball is won on the attacker's side at least.
     if (attackerWrong && has(active, attacker, 'long-ball')) mods.defenderZone = 'opponent';
     mods.defenderSteps = (has(active, defender, 'counter-attack') ? 1 : 0) + (tikiTaka[defender] ? 1 : 0);
+    // A missed Bicycle Kick leaves him on the grass: they break one zone further (the 'faster' rule).
+    if (attackerWrong && RULES.bicycle === 'faster' && has(active, attacker, 'bicycle-kick')) mods.defenderSteps += 1;
+    if (RULES.downsides) {
+      // A lost Armband or Tiki-Taka run leaves the space behind; a sabotage the defender beat backfires.
+      if (has(active, attacker, 'captains-armband') || tikiTaka[attacker]) mods.defenderSteps += 1;
+      if (correct?.[defender] && SABOTAGE_CARDS.some((id) => has(active, attacker, id))) mods.defenderSteps += 1;
+    }
   }
   return mods;
 }

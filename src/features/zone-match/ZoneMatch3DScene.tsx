@@ -11,15 +11,18 @@
 import { Component, Suspense, memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RoadAdvertisingBoards } from '@/features/mini-games/components/RoadAdvertisingBoards';
-import { useMatchBallGeometry, useMatchBallTexture, usePitchTurf, useStadiumArtwork } from '@/features/mini-games/components/footballVisuals';
-import { createRoadNet, deformRoadNet } from '@/features/mini-games/lib/roadNet';
+import { Stadium3D } from '@/features/stadium/Stadium3D';
+import { findScene } from '@/features/stadium/crowd/scenes';
+import { usePitchTurf } from '@/features/mini-games/components/footballVisuals';
 import type { ZoneSide } from './zoneMatch.rules';
 import { BALL_R, GOAL_X, PITCH_HALF_W, SIDE_COLOR, ZONE_LEN, columnX } from './zoneMatch3d.layout';
 import { DuelDirector, type DirectorInput } from './zoneMatch3d.director';
 import { CutoutDriver, type CutoutRegistry } from './ZoneMatch3DCutouts';
 import type { CardFx } from './zoneMatch3d.fx';
 import { CardEffectsEngine } from './zoneMatch3d.effects';
+import { REAL_CLOCK, type SceneClock } from './zoneMatch3d.clock';
+import { makeBallMaterial, useBallStyle } from './zoneMatch3d.balls';
+import { ClothGoal } from './ZoneMatchGoal3D';
 
 /**
  * Screen px covered by overlays on each edge of the full-screen view: the HUD on top, the question sheet and the hand
@@ -50,9 +53,15 @@ export interface ZoneMatch3DSceneProps {
   /** The players' cut-out DOM nodes (ZoneMatch3DCutouts). */
   cutouts: CutoutRegistry;
   plates: Record<ZoneSide, RefObject<HTMLDivElement | null>>;
+  /** Invisible markers kept on each player's body (score flights land there; the bar battle sits behind it). */
+  anchors?: Record<ZoneSide, RefObject<HTMLDivElement | null>>;
+  /** The scene's sides stand in for the other seats (a shootout taken at one goal): the rings swap colours. */
+  swapColors?: boolean;
   /** False while the view is scrolled away: nothing renders. */
   visible: RefObject<boolean>;
   onFailure: () => void;
+  /** Real time unless given (the dev animation lab's slow motion). */
+  clock?: SceneClock;
 }
 
 /** WebGL / three failures fall back to the 2D ball strip instead of crashing the match screen. */
@@ -236,93 +245,57 @@ function Pitch() {
   );
 }
 
-/** RoadGoal's goal frame and net (with its ripple), mounted on either goal line. */
-function Goal({ dir, director }: { dir: 1 | -1; director: DuelDirector }) {
-  const net = useMemo(() => createRoadNet(), []);
-  const lastAge = useRef<number | null>(null);
-  useEffect(() => () => net.geometry.dispose(), [net]);
-  useFrame(() => {
-    const age = director.netAge[dir];
-    const settled = age < 0 || age > 3;
-    if (settled && lastAge.current === -1) return;
-    deformRoadNet(net, settled ? -1 : age);
-    lastAge.current = settled ? -1 : age;
-  });
-  return (
-    <group position={[dir * GOAL_X, 0, 0]} rotation={[0, -dir * (Math.PI / 2), 0]}>
-      {[-4.25, 4.25].map((x) => (
-        <group key={x}>
-          <mesh position={[x, 1.6, 0]} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 3.2, 20]} />
-            <meshStandardMaterial color="#f7faf8" roughness={0.35} metalness={0.16} />
-          </mesh>
-          <mesh position={[x, 0.055, -0.9]}>
-            <boxGeometry args={[0.065, 0.065, 1.9]} />
-            <meshStandardMaterial color="#9caeb2" roughness={0.5} />
-          </mesh>
-          <mesh position={[x, 1.6, -1.8]}>
-            <cylinderGeometry args={[0.022, 0.022, 3.2, 10]} />
-            <meshStandardMaterial color="#83999d" roughness={0.5} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 3.2, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.07, 0.07, 8.5, 20]} />
-        <meshStandardMaterial color="#f7faf8" roughness={0.35} metalness={0.16} />
-      </mesh>
-      <lineSegments geometry={net.geometry}>
-        <lineBasicMaterial color="#dae8e5" transparent opacity={0.55} depthWrite={false} />
-      </lineSegments>
-    </group>
-  );
-}
-
 /** Road to Goal's grandstand panorama, kept centred on what the camera sees, behind its LED boards. */
 /** Floodlight Failure's blackout is on right now. */
 const isDark = (fx: CardFx) => fx.dark !== null && Date.now() >= fx.dark.from && Date.now() < fx.dark.until;
 
 /**
- * Road to Goal's grandstand panorama, kept centred on what the camera sees, behind its LED boards. Home Advantage
- * tints the crowd and the boards in the owner's colour; Floodlight Failure darkens the stands.
+ * The stadium: 3D stands round the pitch (Stadium3D) whose crowd follows the match — a tifo at kick-off, a
+ * slow jumping, flags and scarves while you're through on goal, a celebration when you score (quiet when they do), phone torches when the
+ * floodlights fail, a scarf wall for Home Advantage. The stand on the camera's side is left out (it would only block
+ * the touchline shots). Home Advantage also tints the boards on the far side in the owner's colour.
  */
-function Stadium({ fx }: { fx: RefObject<CardFx> }) {
-  const backdrop = useStadiumArtwork('/assets/demos/road-to-goal-stadium-panorama-v4.png', 80 / 24);
-  const root = useRef<THREE.Group>(null);
-  const crowd = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
+function Stadium({ fx, input, clock }: { fx: RefObject<CardFx>; input: RefObject<DirectorInput>; clock: SceneClock }) {
   const boards = useRef<THREE.MeshBasicMaterial>(null);
-  const tint = useMemo(() => ({ color: new THREE.Color('#ffffff'), target: new THREE.Color(), board: 0 }), []);
-  useFrame(({ camera }, delta) => {
+  const [sceneId, setSceneId] = useState(() => KICKOFF_TIFOS[Math.floor(Math.random() * KICKOFF_TIFOS.length)]);
+  const crowd = useRef({ started: -1, holdUntil: 0, celebration: '' });
+  const now = useMemo(() => () => clock.now(), [clock]);
+  // Floodlight Failure: the crowd goes dark (their phone torches stay bright).
+  const [lit] = useState(() => () => (isDark(fx.current) ? 0.22 : 1));
+  useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
-    if (root.current) root.current.position.x = camera.position.x * 0.85;
-    const home = fx.current.home;
-    const target = tint.target.set(home ? SIDE_COLOR[home] : '#ffffff');
-    if (home) target.lerp(WHITE, 0.12);
-    if (isDark(fx.current)) target.multiplyScalar(0.16);
-    tint.color.lerp(target, 1 - Math.exp(-5 * dt));
-    for (const material of crowd.current) material?.color.copy(tint.color);
+    const f = fx.current;
+    const home = f.home;
     if (boards.current) {
       if (home) boards.current.color.set(SIDE_COLOR[home]);
       boards.current.opacity = THREE.MathUtils.damp(boards.current.opacity, home ? 0.7 : 0, 5, dt);
     }
+    const t = clock.now();
+    const c = crowd.current;
+    if (c.started < 0) c.started = t;
+    const inp = input.current;
+    let want: string;
+    const goal = inp.mode === 'outcome' && inp.outcome?.kind === 'goal' ? inp.outcome.scorer : null;
+    if (goal === 'player') {
+      if (!c.celebration) c.celebration = GOAL_SCENES[Math.abs(inp.seed) % GOAL_SCENES.length];
+      c.holdUntil = t + 6;
+    } else if (goal === 'opponent') {
+      c.celebration = '';
+      c.holdUntil = 0;
+    }
+    if (t - c.started < 9) want = sceneId;
+    else if (isDark(f)) want = 'torches';
+    else if (c.celebration && t < c.holdUntil) want = c.celebration;
+    else if (goal === 'opponent') want = 'idle';
+    else if (home === 'player') want = 'ynwa-liverpool';
+    else if (inp.mode !== 'outcome' && inp.possession.attacker === 'player' && inp.possession.zone === 'opponent') want = 'big-chance';
+    else want = 'idle';
+    if (!(c.celebration && t < c.holdUntil) && goal !== 'player') c.celebration = '';
+    if (want !== sceneId) setSceneId(want);
   });
   return (
     <>
-      <group ref={root}>
-        <mesh position={[0, 9.5, -PITCH_HALF_W - 14]}>
-          <planeGeometry args={[80, 24]} />
-          <meshBasicMaterial ref={(m) => { crowd.current[0] = m; }} map={backdrop} toneMapped={false} fog={false} />
-        </mesh>
-      </group>
-      {/* The same crowd behind both goals, for the shots filmed down the pitch. */}
-      {[-1, 1].map((dir, i) => (
-        <mesh key={dir} position={[dir * (GOAL_X + 16), 9.5, 0]} rotation={[0, -dir * (Math.PI / 2), 0]}>
-          <planeGeometry args={[80, 24]} />
-          <meshBasicMaterial ref={(m) => { crowd.current[i + 1] = m; }} map={backdrop} toneMapped={false} fog={false} />
-        </mesh>
-      ))}
-      <group position={[-20, 0, -PITCH_HALF_W - 3.2 + 9.4]}>
-        <RoadAdvertisingBoards />
-      </group>
+      <Stadium3D scene={findScene(sceneId)} clock={now} brightness={lit} hideNear />
       <mesh position={[0, 0.62, -PITCH_HALF_W - 3.2 + 0.14]}>
         <planeGeometry args={[100, 0.92]} />
         <meshBasicMaterial ref={boards} transparent opacity={0} depthWrite={false} toneMapped={false} />
@@ -331,7 +304,10 @@ function Stadium({ fx }: { fx: RefObject<CardFx> }) {
   );
 }
 
-const WHITE = new THREE.Color('#ffffff');
+/** Kick-off tifos (one at random), and the crowd's goal celebrations (picked by the duel). */
+const KICKOFF_TIFOS = ['milan-devil', 'copenhagen-lion', 'celtic-lisbon', 'copenhagen-cannon', 'lens-giant-scarf', 'dortmund-binoculars'];
+const GOAL_SCENES = ['poznan-lech', 'confetti-final', 'scarf-twirl', 'flags-marseille', 'torches-wave'];
+
 const LIGHT_LEVELS = [0.32, 1.05, 2.6, 1.2, 1.6];
 
 /** Floodlit night; Floodlight Failure cuts the floodlights and leaves a single spot on its victim. */
@@ -418,8 +394,12 @@ function placePlate(plate: HTMLDivElement, p: PlatePlacement) {
   plate.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) translate(-50%, -100%)`;
 }
 
+function placeAnchor(anchor: HTMLDivElement, x: number, y: number) {
+  anchor.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+}
+
 /** A ring under each player in their side's colour (blue = you, red = them), and the HTML nameplates above. */
-function Markers({ director, plates, insets }: { director: DuelDirector; plates: ZoneMatch3DSceneProps['plates']; insets: ZoneMatch3DSceneProps['insets'] }) {
+function Markers({ director, plates, anchors, insets, swapColors = false }: { director: DuelDirector; plates: ZoneMatch3DSceneProps['plates']; anchors?: ZoneMatch3DSceneProps['anchors']; insets: ZoneMatch3DSceneProps['insets']; swapColors?: boolean }) {
   const rings = useRef<Partial<Record<ZoneSide, THREE.Mesh | null>>>({});
   const point = useMemo(() => new THREE.Vector3(), []);
   const placedRef = useRef<Record<ZoneSide, PlatePlacement>>({ player: { x: 0, y: 0, w: 0, h: 0, on: false }, opponent: { x: 0, y: 0, w: 0, h: 0, on: false } });
@@ -432,6 +412,12 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
       if (ring) {
         ring.visible = true;
         ring.position.set(pose.x, 0.02, pose.z);
+      }
+      // The body marker: the middle of the player, on screen.
+      const anchor = anchors?.[side].current;
+      if (anchor) {
+        point.set(pose.x, 1.35, pose.z).project(camera);
+        placeAnchor(anchor, ((point.x + 1) / 2) * size.width, ((1 - point.y) / 2) * size.height);
       }
       const p = placed[side];
       const plate = plates[side].current;
@@ -473,7 +459,7 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
       {SIDES.map((side) => (
         <mesh key={side} ref={(m) => { rings.current[side] = m; }} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={2}>
           <ringGeometry args={[0.72, 0.92, 48]} />
-          <meshBasicMaterial color={SIDE_COLOR[side]} transparent opacity={0.85} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color={SIDE_COLOR[swapColors ? (side === 'player' ? 'opponent' : 'player') : side]} transparent opacity={0.85} depthWrite={false} toneMapped={false} />
         </mesh>
       ))}
     </>
@@ -481,8 +467,11 @@ function Markers({ director, plates, insets }: { director: DuelDirector; plates:
 }
 
 function Ball({ director }: { director: DuelDirector }) {
-  const map = useMatchBallTexture();
-  const geometry = useMatchBallGeometry(BALL_R);
+  const style = useBallStyle();
+  const geometry = useMemo(() => new THREE.SphereGeometry(BALL_R, 48, 32), []);
+  const material = useMemo(() => makeBallMaterial(style), [style]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
   const shadow = useRef<THREE.Mesh>(null);
   useFrame(() => {
     const s = shadow.current;
@@ -499,9 +488,7 @@ function Ball({ director }: { director: DuelDirector }) {
         <circleGeometry args={[0.22, 24]} />
         <meshBasicMaterial color="#020805" transparent opacity={0.3} depthWrite={false} />
       </mesh>
-      <mesh ref={(m) => director.attachBall(m)} geometry={geometry} castShadow>
-        <meshStandardMaterial map={map} roughness={0.62} metalness={0.02} />
-      </mesh>
+      <mesh ref={(m) => director.attachBall(m)} geometry={geometry} material={material} castShadow />
     </>
   );
 }
@@ -517,11 +504,11 @@ const MIN_OPEN_PX = 140;
  * director's framing lands centred in the open area and the rest of the scene still fills the screen behind the
  * overlays. The area eases when a sheet slides, so the camera glides instead of jumping.
  */
-function DirectorLoop({ director, input, insets }: { director: DuelDirector; input: RefObject<DirectorInput>; insets: ZoneMatch3DSceneProps['insets'] }) {
+function DirectorLoop({ director, input, insets, clock }: { director: DuelDirector; input: RefObject<DirectorInput>; insets: ZoneMatch3DSceneProps['insets']; clock: SceneClock }) {
   const area = useRef<SceneInsets | null>(null);
   useFrame((state, delta) => {
     const camera = state.camera as THREE.PerspectiveCamera;
-    const now = performance.now() / 1000;
+    const now = clock.now();
     const width = Math.max(1, state.size.width);
     const height = Math.max(1, state.size.height);
     const target = insets.current;
@@ -556,7 +543,7 @@ function DirectorLoop({ director, input, insets }: { director: DuelDirector; inp
     }
     // The card's reach as a share of the open area's half-width (the director spreads the players past it).
     const split = a.split ? Math.min(0.8, a.split / (openW / 2)) : 0;
-    director.update(input.current, now, delta, camera, aspect, split, target.both ?? false);
+    director.update(input.current, now, delta * clock.rate(), camera, aspect, split, target.both ?? false);
   }, -1);
   return null;
 }
@@ -596,16 +583,16 @@ function FrameDriver({ director, visible, onFrameloop }: { director: DuelDirecto
 }
 
 /** The playstyle cards in the scene (zoneMatch3d.effects), after the director has placed everyone. */
-function CardEffects({ director, engine, fx, overlays }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; overlays: ZoneMatch3DSceneProps['overlays'] }) {
+function CardEffects({ director, engine, fx, overlays, clock }: { director: DuelDirector; engine: CardEffectsEngine; fx: RefObject<CardFx>; overlays: ZoneMatch3DSceneProps['overlays']; clock: SceneClock }) {
   useFrame(({ scene }, delta) => {
-    const now = performance.now() / 1000;
-    engine.update(fx.current, now, Math.min(delta, 0.1), scene, overlays.speed.current);
+    const now = clock.now();
+    engine.update(fx.current, now, Math.min(delta * clock.rate(), 0.1), scene, overlays.speed.current);
     if (engine.busy) director.keepBusy(now + 0.15);
   });
   return <primitive object={engine.root} />;
 }
 
-function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visible, onFailure }: ZoneMatch3DSceneProps) {
+function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, anchors, swapColors, overlays, visible, onFailure, clock = REAL_CLOCK }: ZoneMatch3DSceneProps) {
   const director = useMemo(() => new DuelDirector(), []);
   const engine = useMemo(() => new CardEffectsEngine(director), [director]);
   useEffect(() => () => engine.dispose(), [engine]);
@@ -624,19 +611,20 @@ function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, overlays, visibl
         <fog attach="fog" args={['#07111d', 45, 90]} />
         <Lights director={director} fx={fx} />
         <Suspense fallback={null}>
-          <Stadium fx={fx} />
+          <Stadium fx={fx} input={input} clock={clock} />
         </Suspense>
         <Pitch />
         <Zones director={director} />
-        <Goal dir={-1} director={director} />
-        <Goal dir={1} director={director} />
+        {([-1, 1] as const).map((dir) => (
+          <ClothGoal key={dir} position={[dir * GOAL_X, 0, 0]} rotation={[0, -dir * (Math.PI / 2), 0]} ball={() => director.ballPosition()} rate={() => clock.rate()} />
+        ))}
         <Suspense fallback={null}>
           <Ball director={director} />
         </Suspense>
-        <CardEffects director={director} engine={engine} fx={fx} overlays={overlays} />
-        <Markers director={director} plates={plates} insets={insets} />
-        <CutoutDriver director={director} engine={engine} fx={fx} registry={cutouts} />
-        <DirectorLoop director={director} input={input} insets={insets} />
+        <CardEffects director={director} engine={engine} fx={fx} overlays={overlays} clock={clock} />
+        <Markers director={director} plates={plates} anchors={anchors} insets={insets} swapColors={swapColors} />
+        <CutoutDriver director={director} engine={engine} fx={fx} registry={cutouts} clock={clock} />
+        <DirectorLoop director={director} input={input} insets={insets} clock={clock} />
         <FrameDriver director={director} visible={visible} onFrameloop={setFrameloop} />
       </Canvas>
     </CanvasFailureBoundary>

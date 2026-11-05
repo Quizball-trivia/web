@@ -17,28 +17,28 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { FastForward, FlaskConical, RefreshCw, Settings2 } from 'lucide-react';
+import { FastForward, FlaskConical, Goal, RefreshCw, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { getQuestionsListQuery } from '@/lib/queries/questions.queries';
-import { isMuted as readMuted, playSfx, stopBgm, toggleMute } from '@/lib/sounds/gameSounds';
+import { isMuted as readMuted, playBgm, playSfx, preloadBgm, stopBgm, toggleMute } from '@/lib/sounds/gameSounds';
 import type { GameQuestion } from '@/lib/domain';
 import type { Locale } from '@/lib/i18n/locale-config';
 import type { AvatarCustomization } from '@/types/game';
 import { tierFromRp } from '@/utils/rankedTier';
 import { TRAINING_PENALTY_QUESTIONS, TRAINING_QUESTIONS, localizeTrainingQuestion } from '@/features/training/data/trainingQuestions';
 import { getDemoGameQuestions } from '@/features/demos/data/demoQuestions';
-import { ShowdownScreen } from '@/components/ShowdownScreen';
-import { MatchmakingMapScreen } from '@/components/match/MatchmakingMapScreen';
-import type { OpponentInfo } from '@/lib/realtime/socket.types';
-import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
+import { ShowdownScreen, type RenderCharacter } from '@/components/ShowdownScreen';
+import { AvatarFullBody } from './AvatarFullBody';
+import { SearchStadium3D } from './search/SearchStadium3D';
+import { CoinToss } from './ZoneMatchCoinToss';
 import { ResultsHero } from '@/features/game/results/ResultsHero';
 import { MatchStatsDropdown } from '@/features/game/results/ResultsStatsPanel';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { SampleNumericQuestion } from '@/features/numeric-question/sampleNumericQuestions';
-import { CARD_BY_ID, FLOODLIGHT_MS, deckBlocker, randomDeck, type CardId } from './zoneMatch.cards';
+import { CARD_BY_ID, FLOODLIGHT_MS, randomDeck, type CardId } from './zoneMatch.cards';
 import {
   CATEGORY_COUNT,
   IDLE,
@@ -55,11 +55,15 @@ import {
   unusedCategories,
 } from './zoneMatch.machine';
 import { DeckReveal } from './ZoneMatchCards';
-import { DeckPicker } from './ZoneMatchLoadout';
+import { LoadoutSteps, RuleChips } from './ZoneMatchLoadout';
+import { PlaystylePicker } from './picker/PickerLab';
 import { LAB_TOUR, LabBar, LabPicker, labDuelAction, useLabDriver, type LabRun, type LabSetup } from './ZoneMatchCardLab';
 import { PhaseCurtain } from './ZoneMatchCurtain';
-import { CategoriesReveal, KickoffBoard } from './ZoneMatchCategories';
+import { CategoriesReveal } from './ZoneMatchCategories';
 import { ZoneMatchStage, type ZoneMatchSeat } from './ZoneMatchStage';
+import { ZoneMatchShootout } from './ZoneMatchShootout';
+import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNumericQuestions';
+import { shootoutGoals } from './zoneMatch.shootout';
 
 const MCQ_FETCH_LIMIT = 30;
 /** A category reaches the draft board only with this many playable ranked MCQs (a round can take several duels). */
@@ -69,8 +73,7 @@ const CHECKED_POOL_TARGET = 36;
 const CHECK_BATCH = 8;
 /** How long the scripted search takes to find someone, then the live "match found" hold before the showdown. */
 const SEARCH_MS: [number, number] = [3500, 6000];
-const MATCH_FOUND_HOLD_MS = 2000;
-const KICKOFF_COUNTDOWN_S = 3;
+const MATCH_FOUND_HOLD_MS = 4200;
 /** The profile has no country; the prototype flags the player as Georgian. */
 const PLAYER_COUNTRY = 'ge';
 
@@ -230,7 +233,7 @@ export function ZoneMatchPrototype() {
   }, []);
 
   const startMatch = useCallback(() => {
-    stopBgm(300);
+    // The search music carries on into the showdown (the coin toss hands it to the kick-off track).
     setScreen('match');
     dispatch({ type: 'RESTART', categoryPool: categoryPool ?? FALLBACK_CATEGORIES, decks: { player: myDeck, opponent: randomDeck() }, windowMode, now: Date.now() });
   }, [categoryPool, myDeck, windowMode]);
@@ -260,10 +263,6 @@ export function ZoneMatchPrototype() {
     return () => window.clearTimeout(id);
   }, [screen, searchFound, searchStartedAt, poolReady, startMatch]);
 
-  const toggleDeckCard = useCallback((id: CardId) => {
-    setMyDeck((deck) => (deck.includes(id) ? deck.filter((c) => c !== id) : deckBlocker(deck, id) === null ? [...deck, id] : deck));
-  }, []);
-
   const changeWindowMode = useCallback((mode: CardWindowMode) => {
     setWindowMode(mode);
     dispatch({ type: 'SET_WINDOW_MODE', windowMode: mode });
@@ -285,7 +284,7 @@ export function ZoneMatchPrototype() {
       ...[...TRAINING_QUESTIONS, ...TRAINING_PENALTY_QUESTIONS].map((q) => localizeTrainingQuestion(q, locale)),
       ...getDemoGameQuestions(locale as Locale),
     ];
-    return { mcqByCategory, fallbackMcqs };
+    return { mcqByCategory, fallbackMcqs, numerics: SAMPLE_NUMERIC_QUESTIONS };
   }, [locale, questionQueries, matchCategories]);
   const contentRef = useRef(content);
   useEffect(() => {
@@ -312,7 +311,16 @@ export function ZoneMatchPrototype() {
 
   const stageKey = screen === 'match' ? state.stage : screen;
   useEffect(() => {
-    if (stageKey === 'play') {
+    // Ranked 1.0's music: the search loop from the search through the showdown, reveals and categories; the kick-off
+    // track over the coin toss.
+    if (stageKey === 'search') {
+      preloadBgm('search');
+      playBgm('search');
+    } else if (stageKey === 'showdown' || stageKey === 'deckReveal' || stageKey === 'categories') {
+      playBgm('search');
+    } else if (stageKey === 'lineup') {
+      playBgm('kickoff');
+    } else if (stageKey === 'play') {
       // The kickoff countdown's music hands over to the whistle.
       stopBgm(300);
       playSfx('whistle');
@@ -437,6 +445,14 @@ export function ZoneMatchPrototype() {
     },
     [categoryPool],
   );
+  const startPenalties = useCallback(() => {
+    stopBgm(300);
+    setLab(null);
+    setLabPicker(null);
+    setSearch(null);
+    setScreen('match');
+    dispatch({ type: 'LAB_SHOOTOUT', categoryPool: categoryPool ?? FALLBACK_CATEGORIES, opener: Math.random() < 0.5 ? 'player' : 'opponent', now: Date.now() });
+  }, [categoryPool]);
   const exitLab = useCallback(() => {
     setLabPicker(null);
     toDeck();
@@ -445,37 +461,23 @@ export function ZoneMatchPrototype() {
   // ── Render ──
 
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
-  const foundOpponent: OpponentInfo = useMemo(
-    () => ({
-      id: 'zone-match-bot',
-      username: OPPONENT_NAME,
-      avatarUrl: null,
-      avatarCustomization: OPPONENT_CUSTOMIZATION,
-      isAiOpponent: true,
-      rp: opponentSeat.rankPoints ?? undefined,
-      country: 'United States',
-      countryCode: 'US',
-      city: 'New York',
-      lat: 40.71,
-      lon: -74.01,
-      recentForm: ['W', 'L', 'W'],
-    }),
-    [opponentSeat.rankPoints],
-  );
   const noop = useCallback(() => {}, []);
 
   let body: ReactNode = null;
   if (screen === 'deck') {
     body = (
       <ScreenFrame wide>
-        <DeckPicker
-          deck={myDeck}
-          seat={playerSeat}
-          loading={isPending}
-          onToggle={toggleDeckCard}
-          onRandom={() => setMyDeck(randomDeck())}
-          onFindMatch={findMatch}
-        />
+        <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col gap-3">
+          <PlaystylePicker
+            seat={playerSeat}
+            deck={myDeck}
+            onDeckChange={setMyDeck}
+            loading={isPending}
+            onFindMatch={findMatch}
+            steps={<LoadoutSteps ready={myDeck.length > 0} />}
+            rules={<RuleChips />}
+          />
+        </div>
       </ScreenFrame>
     );
   } else if (state.stage === 'deckReveal') {
@@ -485,24 +487,12 @@ export function ZoneMatchPrototype() {
           decks={state.deck}
           seats={{ player: playerSeat, opponent: opponentSeat }}
           timeLeft={timeLeft}
-          onReady={() => {
-            // The scripted opponent is always ready; only the reveal itself may be skipped.
-            if (stateRef.current.stage === 'deckReveal') dispatch({ type: 'ADVANCE', content: contentRef.current, now: Date.now() });
-          }}
         />
       </ScreenFrame>
     );
   } else if (screen === 'search' && search) {
     body = (
-      <MatchmakingMapScreen
-        matchType="ranked"
-        rankedSearchStartedAt={search.startedAt}
-        rankedFoundOpponent={search.found ? foundOpponent : null}
-        selfUsername={playerSeat.name}
-        selfAvatarCustomization={playerSeat.avatarCustomization}
-        onCancel={toDeck}
-        onRestart={findMatch}
-      />
+      <SearchStadium3D self={playerSeat} deck={myDeck} startedAt={search.startedAt} opponent={search.found ? opponentSeat : null} onCancel={toDeck} />
     );
   } else if (state.stage === 'showdown') {
     body = (
@@ -513,6 +503,7 @@ export function ZoneMatchPrototype() {
         opponentAvatar=""
         matchType="ranked"
         onComplete={noop}
+        renderCharacter={showdownFullBody}
         playerInfo={{
           username: playerSeat.name,
           avatar: '',
@@ -540,35 +531,26 @@ export function ZoneMatchPrototype() {
           categories={state.categories}
           seats={{ player: playerSeat, opponent: opponentSeat }}
           timeLeft={timeLeft}
-          onReady={() => {
-            if (stateRef.current.stage === 'categories') dispatch({ type: 'ADVANCE', content: contentRef.current, now: Date.now() });
-          }}
         />
       </ScreenFrame>
     );
   } else if (state.stage === 'lineup') {
+    // The coin toss (with its own countdown to kick-off at the end).
     body = (
-      <>
-        <ScreenFrame wide>
-          <KickoffBoard kickoff={state.kickoff} seats={{ player: playerSeat, opponent: opponentSeat }} />
-        </ScreenFrame>
-        {timeLeft !== null && timeLeft <= KICKOFF_COUNTDOWN_S && (
-          // Its own dark backdrop, over the kick-off board.
-          <div className="fixed inset-0 z-[90] bg-surface-page/90 backdrop-blur-md">
-            <KickoffCountdownOverlay
-              countdownDisplay={Math.max(1, timeLeft)}
-              durationMs={KICKOFF_COUNTDOWN_S * 1000}
-              runKey={1}
-              playerName={playerSeat.name}
-              opponentName={opponentSeat.name}
-              playerAvatarCustomization={playerSeat.avatarCustomization}
-              opponentAvatarCustomization={opponentSeat.avatarCustomization}
-              playerRankPoints={playerSeat.rankPoints}
-              opponentRankPoints={opponentSeat.rankPoints}
-            />
-          </div>
-        )}
-      </>
+      <ScreenFrame wide>
+        <CoinToss kickoff={state.kickoff} seats={{ player: playerSeat, opponent: opponentSeat }} timeLeft={timeLeft} />
+      </ScreenFrame>
+    );
+  } else if (state.stage === 'shootout') {
+    body = (
+      <ZoneMatchShootout
+        state={state}
+        now={now}
+        player={playerSeat}
+        opponent={opponentSeat}
+        onQuit={toDeck}
+        onAnswer={(index, questionId) => dispatch({ type: 'ANSWER', side: 'player', index, questionId, now: Date.now() })}
+      />
     );
   } else if (state.stage === 'play') {
     body = (
@@ -608,6 +590,7 @@ export function ZoneMatchPrototype() {
         timersOff={timersOff}
         onTimersOff={writeTimersOff}
         onCardLab={() => setLabPicker({ card: lab?.card ?? null })}
+        onPenalties={startPenalties}
       />
       {screen === 'match' && !lab && <PhaseCurtain state={state} />}
       {lab && screen === 'match' && state.stage === 'play' && (
@@ -633,7 +616,10 @@ export function ZoneMatchPrototype() {
 }
 
 /** Full-screen page frame on the live match background, for the card screens. */
-function ScreenFrame({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+/** The showdown cards show the whole player: legs, shorts, socks and boots. */
+export const showdownFullBody: RenderCharacter = (customization, width) => <AvatarFullBody customization={customization} style={{ width }} />;
+
+export function ScreenFrame({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-dvh bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat pb-12 text-white">
       <div className={cn('mx-auto w-full px-4 pt-6', wide ? 'max-w-5xl' : 'max-w-2xl')}>{children}</div>
@@ -651,23 +637,29 @@ function isPlayableMcq(question: GameQuestion): boolean {
 }
 
 /** The live results hero + match stats, as the training match uses them. */
-function FullTime({
+export function FullTime({
   state,
   player,
   opponent,
   onPlayAgain,
   onChangeDeck,
+  verdict,
 }: {
   state: MatchState;
   player: ZoneMatchSeat;
   opponent: ZoneMatchSeat;
   onPlayAgain: () => void;
   onChangeDeck: () => void;
+  /** The server's result, when it decided the match (a side that leaves loses whatever the score). */
+  verdict?: { winner: DuelSide | null; reason: 'score' | 'left' };
 }) {
   const { t } = useLocale();
   const { player: mine, opponent: theirs } = state.score;
-  const playerWon = mine > theirs;
-  const isDraw = mine === theirs;
+  // A drawn match was settled on penalties.
+  const pens = state.shootout?.winner ? shootoutGoals(state.shootout.kicks) : null;
+  const playerWon = verdict ? verdict.winner === 'player' : pens ? state.shootout!.winner === 'player' : mine > theirs;
+  const isDraw = verdict ? verdict.winner === null : !pens && mine === theirs;
+  const left = verdict?.reason === 'left';
   const results = (side: DuelSide) => state.answerLog[side];
   const correct = (side: DuelSide) => results(side).filter((r) => r === 'correct').length;
   const total = Math.max(1, results('player').length);
@@ -689,7 +681,7 @@ function FullTime({
           opponentId="zone-match-bot"
           playerScore={mine}
           opponentScore={theirs}
-          totalGamesLabel={t('results.matchComplete')}
+          totalGamesLabel={left ? (playerWon ? `${opponent.name} left the match` : 'You left the match') : pens ? `${playerWon ? 'Won' : 'Lost'} ${pens.player}–${pens.opponent} on penalties` : t('results.matchComplete')}
           preMatchRankedProfile={null}
           playerTier={tierFromRp(player.rankPoints ?? 0)}
           playerDisplayRp={player.rankPoints}
@@ -766,6 +758,7 @@ function DevPanel({
   onNewMatch,
   onSkip,
   onCardLab,
+  onPenalties,
   timersOff,
   onTimersOff,
 }: {
@@ -778,6 +771,8 @@ function DevPanel({
   /** Ends the current timed step now (playtesting); null when nothing is on a timer. */
   onSkip: (() => void) | null;
   onCardLab: () => void;
+  /** Straight to a penalty shootout at a level score. */
+  onPenalties: () => void;
   timersOff: boolean;
   onTimersOff: (off: boolean) => void;
 }) {
@@ -847,6 +842,17 @@ function DevPanel({
             className="mb-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-yellow px-3 py-2 text-[11px] font-black uppercase tracking-wide text-surface-page hover:bg-brand-yellow/90"
           >
             <FlaskConical className="size-3.5" /> Card Lab
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onPenalties();
+            }}
+            className="mb-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white hover:bg-white/20"
+            data-zm-penalties
+          >
+            <Goal className="size-3.5" /> Penalties
           </button>
           {onSkip && (
             <button

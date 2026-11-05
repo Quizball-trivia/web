@@ -9,6 +9,7 @@
  * files.
  */
 
+import { SHOW_TICKETS } from '@/lib/tickets';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -29,13 +30,15 @@ export function AppShellCurrencyPills({ variant, coins, tickets }: AppShellCurre
           <Image src="/assets/coin-1.png?v=2" alt="Coins" width={24} height={24} className="size-6 shrink-0" />
           <span className="text-sm font-black text-black tabular-nums whitespace-nowrap">{coins.toLocaleString()}</span>
         </Link>
-        <Link
-          href="/store"
-          className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-brand-green-light hover:bg-brand-green-light transition-all active:scale-95"
-        >
-          <Image src="/assets/ticket-1.png" alt="Tickets" width={20} height={20} className="size-5" />
-          <span className="text-sm font-black text-white">{tickets}</span>
-        </Link>
+        {SHOW_TICKETS && (
+          <Link
+            href="/store"
+            className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-brand-green-light hover:bg-brand-green-light transition-all active:scale-95"
+          >
+            <Image src="/assets/ticket-1.png" alt="Tickets" width={20} height={20} className="size-5" />
+            <span className="text-sm font-black text-white">{tickets}</span>
+          </Link>
+        )}
       </div>
     );
   }
@@ -52,15 +55,17 @@ export function AppShellCurrencyPills({ variant, coins, tickets }: AppShellCurre
         <span className="text-sm font-black text-black tabular-nums whitespace-nowrap">{coins.toLocaleString()}</span>
       </Link>
 
-      <Link
-        href="/store"
-        className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-green-light pl-1 pr-3 transition-colors hover:bg-brand-green-light active:scale-95"
-      >
-        <span className="flex size-6 shrink-0 items-center justify-center">
-          <img src="/assets/ticket-1.png" alt="Tickets" className="size-5 object-contain" />
-        </span>
-        <span className="text-sm font-black text-white tabular-nums">{tickets}</span>
-      </Link>
+      {SHOW_TICKETS && (
+        <Link
+          href="/store"
+          className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-green-light pl-1 pr-3 transition-colors hover:bg-brand-green-light active:scale-95"
+        >
+          <span className="flex size-6 shrink-0 items-center justify-center">
+            <img src="/assets/ticket-1.png" alt="Tickets" className="size-5 object-contain" />
+          </span>
+          <span className="text-sm font-black text-white tabular-nums">{tickets}</span>
+        </Link>
+      )}
     </>
   );
 }

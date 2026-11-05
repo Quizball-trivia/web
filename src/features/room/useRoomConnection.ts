@@ -289,5 +289,10 @@ export function useRoomConnection<C>(matchId: string, games: readonly string[], 
   }, [socket, matchId, locale]);
   const clearError = useCallback(() => setError(null), []);
 
-  return { snapshot, error, fatal, clearError, connected, inFlight, retained, send, resendRetained, leave, report, nowMs, principal, guestStatus, resync };
+  /** A command for this slot is still held by the connection (unsettled, unrefused): the UI must not accept another. */
+  const isSlotPending = useCallback((slot: string) => {
+    for (const entry of pending.current.values()) if (entry.slot === slot) return true;
+    return false;
+  }, []);
+  return { snapshot, error, fatal, clearError, connected, inFlight, retained, send, resendRetained, leave, report, nowMs, principal, guestStatus, resync, isSlotPending };
 }
