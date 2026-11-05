@@ -126,6 +126,13 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const OPTIMISTIC_MS = 4_000;
   const [pendingAnswer, setPendingAnswer] = useState<{ key: number; index: number; at: number } | null>(null);
   const [pendingGuess, setPendingGuess] = useState<{ key: number; value: number; at: number } | null>(null);
+  // Every other button gets the same instant feedback: a tap patches the view the way the server is about to, and
+  // the snapshot takes over a round-trip later. All keyed to their moment and time-bound like the answer overlay.
+  const [pendingCategory, setPendingCategory] = useState<{ round: number; id: string; at: number } | null>(null);
+  const [pendingCard, setPendingCard] = useState<{ duel: number; card: CardId | null; at: number } | null>(null);
+  const [pendingPlay, setPendingPlay] = useState<{ duel: number; card: CardId; at: number } | null>(null);
+  const [pendingHome, setPendingHome] = useState<{ duel: number; id: string; at: number } | null>(null);
+  const [pendingLoadout, setPendingLoadout] = useState<number | null>(null);
   const answerPending = !!(view.match.mcq && view.match.battleStep === 'mcq' && view.match.mcq.answers.player === null
     && pendingAnswer?.key === view.match.mcq.key && now - pendingAnswer.at < OPTIMISTIC_MS
     && pendingAnswer.index !== view.match.mcq.firstMiss.player
@@ -140,9 +147,27 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
       && now - pendingGuess.at < OPTIMISTIC_MS) {
       m = { ...m, numeric: { ...m.numeric, guesses: { ...m.numeric.guesses, player: { value: pendingGuess.value, lockedAtMs: null } } } };
     }
+    // The attacker's category tap: the tile grays at once (the component derives tiles from usedCategories).
+    if (m.battleStep === 'category' && pendingCategory?.round === m.round && now - pendingCategory.at < OPTIMISTIC_MS
+      && !m.usedCategories.player.includes(pendingCategory.id)) {
+      m = { ...m, usedCategories: { ...m.usedCategories, player: [...m.usedCategories.player, pendingCategory.id] } };
+    }
+    // The blind pick: the hand closes at once (the hand shows while choice.player is undefined).
+    if (m.battleStep === 'cards' && m.choice.player === undefined && pendingCard?.duel === m.duelNo && now - pendingCard.at < OPTIMISTIC_MS) {
+      m = { ...m, choice: { ...m.choice, player: pendingCard.card } };
+    }
+    // A reaction or live card: played.player disables the hand at once (cardBlocker: one card per question).
+    if ((m.battleStep === 'reveal' || m.battleStep === 'mcq') && pendingPlay?.duel === m.duelNo
+      && now - pendingPlay.at < OPTIMISTIC_MS && !m.played.player.includes(pendingPlay.card)) {
+      m = { ...m, played: { ...m.played, player: [...m.played.player, pendingPlay.card] } };
+    }
+    // Home Advantage's category choice shows at once.
+    if (m.battleStep === 'reveal' && pendingHome?.duel === m.duelNo && now - pendingHome.at < OPTIMISTIC_MS && m.homeCategoryId === null) {
+      m = { ...m, homeCategoryId: pendingHome.id };
+    }
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view.match, pendingAnswer, pendingGuess, answerPending, Math.floor(now / 500)]);
+  }, [view.match, pendingAnswer, pendingGuess, pendingCategory, pendingCard, pendingPlay, pendingHome, answerPending, Math.floor(now / 500)]);
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
   const send = room.send;
 
@@ -165,10 +190,11 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
 
   if (view.phase === 'loadout') {
     const secondsLeft = Math.max(0, Math.ceil((view.deadline - now) / 1000));
+    const loadoutInYou = view.loadoutIn.you || (pendingLoadout !== null && now - pendingLoadout < OPTIMISTIC_MS);
     return (
       <ScreenFrame wide>
         <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col gap-3" data-zm-room="loadout">
-          {view.loadoutIn.you ? (
+          {loadoutInYou ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
               <div className="text-2xl uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}>
                 {view.loadoutIn.them ? 'Kick-off!' : `Waiting for ${seats.opponent.name}…`}
@@ -181,7 +207,10 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
               deck={deck}
               onDeckChange={setDeck}
               loading={false}
-              onFindMatch={() => send({ type: 'loadout', cards: deck })}
+              onFindMatch={() => {
+                setPendingLoadout(now);
+                send({ type: 'loadout', cards: deck });
+              }}
               steps={<LoadoutSteps ready={deck.length > 0} />}
               rules={<RuleChips />}
             />
@@ -261,11 +290,39 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           setPendingGuess({ key: state.numeric.key, value, at: now });
           send({ type: 'guess', key: state.numeric.key, value });
         }}
-        onChooseCard={(card) => send({ type: 'card', duel: state.duelNo, card })}
-        onLiveCard={(card) => state.mcq && send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card })}
-        onReaction={(card) => send({ type: 'reaction', duel: state.duelNo, card })}
-        onHomeCategory={(categoryId) => send({ type: 'home', duel: state.duelNo, categoryId })}
-        onPickCategory={(categoryId) => send({ type: 'category', round: state.round, categoryId })}
+        onChooseCard={(card) => {
+          // One command per duel slot: while the connection holds it, a second tap must not re-show a different pick.
+          if (state.choice.player !== undefined) return;
+          if (room.isSlotPending(`card:${state.duelNo}`)) { room.resendRetained(); return; }
+          setPendingCard({ duel: state.duelNo, card, at: now });
+          send({ type: 'card', duel: state.duelNo, card });
+        }}
+        onLiveCard={(card) => {
+          if (!state.mcq || state.played.player.length > 0) return;
+          setPendingPlay({ duel: state.duelNo, card, at: now });
+          send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card });
+        }}
+        onReaction={(card) => {
+          if (state.played.player.length > 0) return;
+          if (room.isSlotPending(`reaction:${state.duelNo}`)) { room.resendRetained(); return; }
+          setPendingPlay({ duel: state.duelNo, card, at: now });
+          send({ type: 'reaction', duel: state.duelNo, card });
+        }}
+        onHomeCategory={(categoryId) => {
+          if (room.isSlotPending(`home:${state.duelNo}`)) { room.resendRetained(); return; }
+          setPendingHome({ duel: state.duelNo, id: categoryId, at: now });
+          send({ type: 'home', duel: state.duelNo, categoryId });
+        }}
+        onPickCategory={(categoryId) => {
+          // One pick per round: while the connection holds this round's command (unsettled, unrefused), a second
+          // tap must not gray a tile the server will never receive — the connection is the truth, not a timer.
+          if (state.usedCategories.player.includes(categoryId)) return;
+          // A held slot means the first pick is still in flight (or retained after a drop): a re-tap nudges the
+          // retained retry — same id, same payload — rather than vanishing.
+          if (room.isSlotPending(`category:${state.round}`)) { room.resendRetained(); return; }
+          setPendingCategory({ round: state.round, id: categoryId, at: now });
+          send({ type: 'category', round: state.round, categoryId });
+        }}
       />
     );
   }
