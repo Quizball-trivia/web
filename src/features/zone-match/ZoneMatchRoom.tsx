@@ -291,7 +291,8 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           send({ type: 'guess', key: state.numeric.key, value });
         }}
         onChooseCard={(card) => {
-          if (state.choice.player !== undefined) return;
+          // One command per duel slot: while the connection holds it, a second tap must not re-show a different pick.
+          if (state.choice.player !== undefined || room.isSlotPending(`card:${state.duelNo}`)) return;
           setPendingCard({ duel: state.duelNo, card, at: now });
           send({ type: 'card', duel: state.duelNo, card });
         }}
@@ -301,19 +302,20 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card });
         }}
         onReaction={(card) => {
-          if (state.played.player.length > 0) return;
+          if (state.played.player.length > 0 || room.isSlotPending(`reaction:${state.duelNo}`)) return;
           setPendingPlay({ duel: state.duelNo, card, at: now });
           send({ type: 'reaction', duel: state.duelNo, card });
         }}
         onHomeCategory={(categoryId) => {
+          if (room.isSlotPending(`home:${state.duelNo}`)) return;
           setPendingHome({ duel: state.duelNo, id: categoryId, at: now });
           send({ type: 'home', duel: state.duelNo, categoryId });
         }}
         onPickCategory={(categoryId) => {
-          // One pick per round: the connection keeps the FIRST command for this round, so a second tap inside the
-          // optimistic window must not re-gray a different tile the server will never receive.
+          // One pick per round: while the connection holds this round's command (unsettled, unrefused), a second
+          // tap must not gray a tile the server will never receive — the connection is the truth, not a timer.
           if (state.usedCategories.player.includes(categoryId)) return;
-          if (pendingCategory?.round === state.round && now - pendingCategory.at < OPTIMISTIC_MS) return;
+          if (room.isSlotPending(`category:${state.round}`)) return;
           setPendingCategory({ round: state.round, id: categoryId, at: now });
           send({ type: 'category', round: state.round, categoryId });
         }}
