@@ -3,6 +3,7 @@ import { rankPlayGames, isNewPlayGame, type PlayGameStats } from "./playRanking"
 // The hand-made order: what the Play page shows when there are no numbers to order by, and how ties fall.
 // Every slug resolves against ALL_DEMO_MODES; unknown slugs are simply skipped, so a rename can't crash the page.
 export const DAILY_CHALLENGE_SLUGS = [
+  "football-darts-501",
   "conexiones-futboleras",
   "tenable",
   "minuto",
@@ -34,7 +35,6 @@ export const PLAY_WITH_COINS_SLUGS = [
  * - Cut: Road to Goal and Trivia Mines (chance outweighs knowledge), Higher or Lower (all-or-nothing rounds).
  * - Folded into a stronger game: Who Am I? (Football Clues), solo Last Answer Standing (Countdown; the friend
  *   room stays), Imposter (Odd One Out), Football Logic.
- * - Football Darts 501: hidden until it loads reliably.
  */
 export const RETIRED_PLAY_SLUGS = [
   "mini-road-to-goal",
@@ -44,7 +44,6 @@ export const RETIRED_PLAY_SLUGS = [
   "ultimo",
   "daily-imposter",
   "daily-footballLogic",
-  "football-darts-501",
 ];
 
 /** The day each game reached production. A game with no date is never marked new. Add a line with every release. */
