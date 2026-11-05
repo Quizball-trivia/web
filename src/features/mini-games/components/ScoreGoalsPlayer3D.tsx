@@ -310,6 +310,7 @@ export function buildPlayerObject(
       let material = garmentMaterials.get(matName);
       if (!material) {
         material = new THREE.MeshStandardMaterial({ color: garmentColors[matName], roughness: matName === 'Football_Boots' ? 0.48 : 0.82 });
+        material.name = matName;
         material.userData.owned = true;
         garmentMaterials.set(matName, material);
       }

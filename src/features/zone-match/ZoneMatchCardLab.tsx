@@ -75,6 +75,14 @@ const DEMO: Record<CardId, Omit<LabSetup, 'card'>> = {
   'home-advantage': { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
   'dummy-run': { owner: 'opponent', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
   'tiki-taka': { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  nutmeg: { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  'bicycle-kick': { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'right' },
+  'high-press': { owner: 'player', situation: 'defend-centre', ownerAnswer: 'right', otherAnswer: 'right' },
+  'time-wasting': { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  'super-sub': { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  feint: { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  'poker-face': { owner: 'player', situation: 'defend-centre', ownerAnswer: 'right', otherAnswer: 'wrong' },
+  screamer: { owner: 'player', situation: 'attack-centre', ownerAnswer: 'right', otherAnswer: 'right' },
 };
 
 /** Cards that fill out a lab deck; the lab never plays them. */
@@ -107,6 +115,14 @@ const CARD_LOOK: Record<CardId, string> = {
   'home-advantage': 'Flags in your colours wave in the stand behind you and the boards and crowd glow in your colour',
   'dummy-run': 'A see-through copy of them wearing a "?" runs off and dissolves: only a bluff',
   'tiki-taka': 'A passing triangle on the ground round you and three dots over your head, one per duel left; a ghost teammate plays a one-two',
+  nutmeg: 'A generic hop for now (see /dev/zone-match/duets)',
+  'bicycle-kick': 'A generic hop for now (see /dev/zone-match/duets)',
+  'high-press': 'A generic hop for now (see /dev/zone-match/duets)',
+  'time-wasting': 'A generic hop for now (see /dev/zone-match/duets)',
+  'super-sub': 'A generic hop for now (see /dev/zone-match/duets)',
+  feint: 'A generic hop for now (see /dev/zone-match/duets)',
+  'poker-face': 'A generic hop for now (see /dev/zone-match/duets)',
+  screamer: 'A generic hop for now (see /dev/zone-match/duets)',
 };
 
 /**
@@ -354,7 +370,7 @@ export function LabPicker({
             <button
               type="button"
               onClick={() => onPlay(setup)}
-              className="mt-1 flex h-12 items-center justify-center gap-2 rounded-2xl bg-brand-green text-base uppercase shadow-[0_4px_0_#2D950B] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none"
+              className="mt-1 flex h-12 items-center justify-center gap-2 rounded-2xl bg-brand-green text-base uppercase hover:bg-brand-green-deep"
               style={poppins}
             >
               <Play className="size-4 fill-current" /> Play it

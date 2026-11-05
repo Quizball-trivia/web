@@ -23,18 +23,25 @@ import { otherZoneSide, type BattleOutcome, type Possession, type ZoneSide } fro
 import { NO_CARDS, hasResult, type ScriptCards } from './zoneMatch3d.fx';
 import {
   STAND,
+  backpedalPose,
   celebratePose,
   divePose,
+  groundPoints,
   idlePose,
   jockeyPose,
   keeperSetPose,
+  mixPose,
   runPose,
+  runStep,
   slidePose,
-  sprawlPose,
   strikePose,
   FULL_GROUND,
   FULL_H,
   FULL_W,
+  ARMS_REST,
+  mixArms,
+  reachArm,
+  type ArmPose,
   type FullBodyPose,
 } from './zoneMatch.fullBody';
 import {
@@ -46,6 +53,7 @@ import {
   duelSpots,
   keeperLocalToWorld,
   netPocket,
+  pocketRigSide,
   yawToward,
   zoneIndex,
   type DuelSpots,
@@ -69,6 +77,8 @@ export interface DirectorInput {
   seed: number;
   /** Cards that shape the outcome animation. */
   cards: ScriptCards;
+  /** Snap everyone to the duel spots when this input starts (the dev animation lab's replay). */
+  cut?: boolean;
 }
 
 type ClipName = string;
@@ -86,6 +96,8 @@ interface MoveFrame {
   alignKick?: { x: number; z: number };
   /** Ease towards the frame instead of jumping (bullet time). */
   glide?: boolean;
+  /** Moving arms instead of the art's own (holding something up). */
+  arms?: ArmPose;
 }
 interface KeeperFrame {
   kind: 'keeper';
@@ -129,7 +141,6 @@ interface Script {
   ball(t: number): BallFrame;
   lit(t: number): ZoneSide;
   cam?(t: number): CamHint | null;
-  net?(t: number): number;
   tackle?: TackleSpec;
   /** Card effects on top (keeps running after `end`, while the outcome lasts). */
   fx?(t: number): ScriptFx;
@@ -160,7 +171,7 @@ const SPLIT_CLEAR = 0.25;
 const SPLIT_EDGE = 0.95;
 /** A card this wide (share of the half-width) or wider still leaves the figures this much room to fit into. */
 const SPLIT_MIN_ROOM = 0.12;
-const CELEBRATIONS = ['celebrate_siu', 'celebrate_sky', 'celebrate_samba', 'celebrate', 'celebrate_fold'];
+export const CELEBRATIONS = ['celebrate_siu', 'celebrate_sky', 'celebrate_samba', 'celebrate', 'celebrate_fold'];
 /** Strike clips are sampled faster than authored; boot meets ball at clip time 0.8 (as in Road to Goal). */
 const STRIKE_RATE = 0.8 / 0.45;
 /** Sky shot: each player this far either side of the duel's ball, a step towards the camera. */
@@ -209,22 +220,23 @@ export interface ScriptFx {
   goldBoots: { side: ZoneSide; glow: number } | null;
   /** Goalkeeper Gloves in use this outcome (the save, or beaten by a Golden Boot), and a flash at the touch. */
   gloves: { side: ZoneSide; flash: number; beaten: boolean } | null;
-  /** Offside Trap: the linesman's flag on the far touchline (up 0–1). */
-  flag: { x: number; up: number } | null;
   /** Camera rush / speed lines, 0–1. */
   rush: number;
-  /** Park the Bus: the bus parked across the attack at (x, z) facing `dir`; `burst` 0–1 knocks it aside (Golden Boot). */
-  bus: { x: number; z: number; dir: number; burst: number } | null;
+  /**
+   * Park the Bus: the bus parked across the attack at (x, z) facing `dir`; `enter` 0–1 drives it in from its waiting
+   * spot on the far side; `burst` 0–1 knocks it aside (Golden Boot).
+   */
+  bus: { x: number; z: number; dir: number; burst: number; enter?: number } | null;
   /** Long Ball: its dotted trajectory, drawn from (x0, z0) to (x1, z1) peaking at `height`. */
   arc: { x0: number; z0: number; x1: number; z1: number; height: number; fade: number } | null;
 }
 
-export const NO_FX: ScriptFx = { ghosts: [], trail: [], ballTrail: null, goldBoots: null, gloves: null, flag: null, rush: 0, bus: null, arc: null };
+export const NO_FX: ScriptFx = { ghosts: [], trail: [], ballTrail: null, goldBoots: null, gloves: null, rush: 0, bus: null, arc: null };
 const fx = (patch: Partial<ScriptFx>): ScriptFx => ({ ...NO_FX, ...patch });
 
 /** Park the Bus: the bus across the attack at `x` (pushed aside from `burstAt`, by a Golden Boot). */
-function busAt(x: number, z: number, dir: number, t: number, burstAt = Infinity): ScriptFx['bus'] {
-  return { x, z, dir, burst: Number.isFinite(burstAt) ? seg(t, burstAt, burstAt + 0.45) : 0 };
+function busAt(x: number, z: number, dir: number, t: number, burstAt = Infinity, enter = 1): ScriptFx['bus'] {
+  return { x, z, dir, burst: Number.isFinite(burstAt) ? seg(t, burstAt, burstAt + 0.45) : 0, enter };
 }
 
 const ramp = (t: number, t0: number, t1: number, fadeIn = 0.25, fadeOut = 0.35) => smooth(seg(t, t0, t0 + fadeIn)) * (1 - smooth(seg(t, t1 - fadeOut, t1)));
@@ -358,6 +370,37 @@ interface ShotOpts {
 }
 
 /** A shot (or, from further out, a dribble then a long-range strike): goal, keeper save, parry or block. */
+/** How far a goal stretches the back of the net, and how long the net holds the ball before throwing it back. */
+const NET_GIVE = 1.2;
+const NET_HOLD = 0.34;
+/** The camera stays on the net this long after the ball hits it, before going to the scorer. */
+const NET_WATCH = 0.8;
+
+/**
+ * A goal's ball from the moment it meets the back of the net at `contact` (coming from `from`): it carries on into
+ * the net, stretching it out behind the goal (the cloth net is pushed by the ball itself, zoneMatch3d.net), the net
+ * throws it back out, and it drops into the goal, bouncing and rolling to a stop inside it.
+ */
+/** Close on the goal a shot is going into, from the pitch side, for the net taking the ball. */
+const netCam = (pocket: { x: number; z: number }, d: number): CamHint => ({ focus: { x: pocket.x - d * 2.2, z: pocket.z * 0.5 }, span: 6.5 });
+
+export function intoTheNet(out: THREE.Vector3, from: THREE.Vector3, contact: THREE.Vector3, after: number): THREE.Vector3 {
+  const hx = contact.x - from.x;
+  const hz = contact.z - from.z;
+  const len = Math.hypot(hx, hz) || 1;
+  const ux = hx / len;
+  const uz = hz / len;
+  if (after < NET_HOLD) {
+    const k = after / NET_HOLD;
+    const give = NET_GIVE * Math.sin(Math.PI * k) * Math.exp(-1.4 * k);
+    return out.set(contact.x + ux * give, contact.y - 1.5 * after * after, contact.z + uz * give);
+  }
+  const free = after - NET_HOLD;
+  const back = 0.8 * (1 - Math.exp(-2.5 * free));
+  const y = bounceHeight(contact.y - 1.5 * NET_HOLD * NET_HOLD, -1, free, BALL_R, 0.4);
+  return out.set(contact.x - ux * back, y, contact.z - uz * back);
+}
+
 function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block', seed: number, opts: ShotOpts = {}): Script {
   const lead = opts.lead ?? 0;
   const A = from.attacker;
@@ -372,8 +415,10 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
   const contactT = strikeT + STRIKE_CONTACT;
   const ball0 = new THREE.Vector3(ballX0, BALL_R, ballZ0);
   const wallX = ballX0 + d * 3.6;
+  // Keeper-local x: positive towards the net pocket's side (a beaten keeper dives the other way).
+  const side = pocketRigSide(A);
   const keeperTarget: [number, number] =
-    result === 'goal' ? (opts.throughGloves ? [1.55, 1.15] : [-1.8, 1.3]) : result === 'save' ? [1.5, 1.25] : [1.5, 0.95];
+    result === 'goal' ? (opts.throughGloves ? [1.55 * side, 1.15] : [-1.8 * side, 1.3]) : result === 'save' ? [1.5 * side, 1.25] : [1.5 * side, 0.95];
   const saveStyle: KeeperSaveStyle = result === 'save' ? 'catch' : 'parry';
   const contactLocal = new THREE.Vector3(keeperTarget[0], keeperTarget[1], 0.42);
   const pocket = netPocket(A);
@@ -433,10 +478,11 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
         if (!keeperActs || t < keeperT0 - 0.05) {
           return t < end ? { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: 'keeper_idle' } : { kind: 'settle' };
         }
-        if (t < Math.min(end, arrival + 1.3)) {
+        // The dive, the landing and getting up again (holding a caught ball) all run on the keeper's clock.
+        if (t < end) {
           return { kind: 'keeper', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, time: Math.max(0, t - keeperT0), target: keeperTarget, style: saveStyle };
         }
-        return t < end ? { kind: 'hold' } : { kind: 'settle' };
+        return { kind: 'settle' };
       }
       // Long range: the outfield defender is beaten, then turns to watch it fly in.
       const def = s0.defender;
@@ -466,8 +512,8 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
       }
       const after = t - arrival;
       if (result === 'goal') {
-        const e = 1 - Math.exp(-after * 3);
-        return { kind: 'at', x: target.x - d * 0.55 * e, y: bounceHeight(target.y, -0.4, after, BALL_R), z: target.z };
+        intoTheNet(tmp, ball0, target, after);
+        return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
       }
       if (result === 'save') return t < end ? { kind: 'catch', side: D } : { kind: 'settle' };
       if (result === 'block') {
@@ -483,7 +529,9 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
     },
     lit: (t) => (result === 'goal' || result === 'block' || t < arrival ? A : D),
     cam(t) {
-      if (result === 'goal' && t > arrival + 0.25) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (result === 'goal' && t > arrival + NET_WATCH) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      // In close on the net as the ball goes in, to see it take the ball.
+      if (result === 'goal' && keeper && !opts.lob && t > arrival - 0.2) return netCam(pocket, d);
       if (opts.sprint && t > 0.15 && t < runEnd) return { focus: { x: ballX0, z: ballZ0 }, span: 6 };
       // Long range or a lob: from behind the shooter, down the pitch as the ball flies into the net.
       if ((!keeper || opts.lob) && t > contactT + 0.1) {
@@ -491,7 +539,6 @@ function shotScript(from: Possession, result: 'goal' | 'save' | 'parry' | 'block
       }
       return null;
     },
-    net: (t) => (result === 'goal' ? t - arrival : -1),
     fx(t) {
       // The bus parked across the shot: the ball cannons off it, or a Golden Boot blasts it aside.
       const bus = opts.throughBus ? busAt(wallX, ballZ0, d, t, wallPass) : opts.wall ? busAt(wallX, ballZ0, d, t) : null;
@@ -630,13 +677,16 @@ function looseBallScript(from: Possession): Script {
   };
 }
 
-/** Park the Bus: the attacker drives at the parked bus, the ball cannons back off it and the attacker resets. */
+/**
+ * Park the Bus: the attacker sets off; the defender drives the bus in across his path from the far side just as he gets
+ * there; he runs into it, the ball cannons back off it, and he resets.
+ */
 function blockedScript(from: Possession): Script {
   const A = from.attacker;
   const s0 = duelSpots(from);
   const d = s0.dir;
   const push = { x: s0.attacker.x + d * 1.0, z: s0.attacker.z };
-  const wallX = s0.attacker.x + d * 2.9;
+  const wallX = s0.attacker.x + d * 3.2;
   const hit = { x: wallX - d * 0.45, z: push.z };
   return {
     kind: 'blocked',
@@ -670,7 +720,7 @@ function blockedScript(from: Possession): Script {
       return { kind: 'feet', side: A };
     },
     lit: () => A,
-    fx: (t) => fx({ bus: busAt(wallX, push.z, d, t) }),
+    fx: (t) => fx({ bus: busAt(wallX, push.z, d, t, Infinity, smooth(seg(t, 0.05, 0.55))) }),
   };
 }
 
@@ -745,7 +795,20 @@ function longBallScript(from: Possession, next: Possession, lands: boolean): Scr
   };
 }
 
-/** Offside Trap: the linesman's flag goes up, the attacker freezes, and the defender takes the ball. */
+/** The offside flag: raised from the hand over a beat, waved overhead, lowered at the end; the other arm points down. */
+const FLAG_UP: ArmPose = { L: reachArm('L', 112, 560, 0, 'point'), R: reachArm('R', 372, -40, 180, 'flag') };
+function flagArms(t: number): ArmPose {
+  const up = smooth(seg(t, 0.15, 0.5)) * (1 - smooth(seg(t, 1.8, 2.1)));
+  const pose = mixArms(ARMS_REST, FLAG_UP, up);
+  // Waved: the wrist rocks the pole side to side.
+  pose.R = { ...pose.R, hand: pose.R.hand + 14 * Math.sin(t * 13) * up, shape: up > 0.15 ? 'flag' : pose.R.shape };
+  return pose;
+}
+
+/**
+ * Offside Trap: the defender who set it raises the offside flag in their own hand (waving it), the attacker freezes,
+ * and the defender takes the ball.
+ */
 function offsideScript(from: Possession): Script {
   const A = from.attacker;
   const D = otherZoneSide(A);
@@ -765,7 +828,7 @@ function offsideScript(from: Possession): Script {
         // Frozen mid-stride while the flag stays up.
         return t < 2.1 ? { kind: 'hold' } : { kind: 'settle' };
       }
-      if (t < 1.1) return { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: s0.keeper ? 'keeper_idle' : 'jockey', time: t };
+      if (t < 2.1) return { kind: 'move', x: s0.defender.x, z: s0.defender.z, yaw: s0.defender.yaw, clip: s0.keeper ? 'keeper_idle' : 'jockey', time: t, arms: flagArms(t) };
       return { kind: 'settle' };
     },
     ball(t) {
@@ -778,7 +841,6 @@ function offsideScript(from: Possession): Script {
     },
     lit: (t) => (t < 0.6 ? A : D),
     cam: (t) => (t < 2.1 ? { focus: { x: stop.x + d * 1.2, z: -4 }, span: 9 } : null),
-    fx: (t) => fx({ flag: t < 2.4 ? { x: stop.x, up: ramp(t, 0.3, 2.4, 0.25, 0.3) } : null }),
   };
 }
 
@@ -831,17 +893,16 @@ function stealScoreScript(from: Possession, seed: number): Script {
         shotFlight(tmp, ball0, target, t - contactT, flight, d * 0.3);
         return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
       }
-      const after = t - arrival;
-      const e = 1 - Math.exp(-after * 3);
-      return { kind: 'at', x: target.x + d * 0.55 * e, y: bounceHeight(target.y, -0.4, after, BALL_R), z: target.z };
+      intoTheNet(tmp, ball0, target, t - arrival);
+      return { kind: 'at', x: tmp.x, y: tmp.y, z: tmp.z };
     },
     lit: (t) => (t < tackleContact ? A : D),
     cam(t) {
-      if (t > arrival + 0.25) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (t > arrival + NET_WATCH) return { focus: { x: celebrateTo.x, z: celebrateTo.z - 0.5 }, span: 5 };
+      if (t > arrival - 0.2) return netCam(pocket, d);
       if (t > contactT - 0.1) return { focus: { x: (ball0.x + target.x) / 2, z: target.z * 0.5 }, span: Math.abs(target.x - ball0.x) + 4 };
       return null;
     },
-    net: (t) => t - arrival,
     fx: undefined,
   };
 }
@@ -947,12 +1008,14 @@ export function clipPose(out: CutoutPose, clip: string, time: number, yaw: numbe
   out.spin = 0;
   out.blur = 0;
   if (clip === 'dribble' || clip === 'run') {
-    // Alternating strides; a small hop on each footfall.
+    // Alternating strides; the hips bob on the boots by themselves (runPose keeps a boot on the ground).
     const k = Math.min(1, speed / 9);
     Object.assign(out.body, runPose(time * 1.2, 0.4 + k));
-    out.y = 0.08 * Math.abs(Math.sin(time * Math.PI * 2.4)) * (0.4 + k);
     lean(out, fx, fz, 0.05 + 0.06 * k);
     out.blur = THREE.MathUtils.clamp((speed - 9) / 8, 0, 0.6);
+  } else if (clip === 'backpedal') {
+    // Facing the play while moving away from it.
+    Object.assign(out.body, backpedalPose(time * 1.3));
   } else if (clip === 'jockey') {
     Object.assign(out.body, jockeyPose(time, phase));
   } else if (clip === 'keeper_idle') {
@@ -961,10 +1024,14 @@ export function clipPose(out: CutoutPose, clip: string, time: number, yaw: numbe
     // Plant, wind up, through the ball, follow through.
     Object.assign(out.body, strikePose(time));
   } else if (clip.startsWith('celebrate')) {
-    // Jumps with the knees up, a spin on the first.
-    Object.assign(out.body, celebratePose(time));
-    const c = (time % 0.85) / 0.85;
-    out.y = time < 2.6 ? 0.9 * Math.sin(Math.PI * THREE.MathUtils.clamp((c - 0.2) / 0.65, 0, 1)) : 0;
+    // Three jumps with the knees up (a spin on the first), the lift in step with the legs' time in the air; then
+    // standing, weight shifting.
+    if (time < CELEBRATE_S) {
+      Object.assign(out.body, celebratePose(time));
+      out.y = 0.9 * Math.sin(Math.PI * THREE.MathUtils.clamp((((time % 0.85) / 0.85) - 0.25) / 0.55, 0, 1));
+    } else {
+      Object.assign(out.body, idlePose(now, phase));
+    }
     out.spin = time < 0.9 ? Math.PI * 2 * THREE.MathUtils.smoothstep(time, 0, 0.9) : 0;
     out.party = now - time;
   } else {
@@ -990,10 +1057,77 @@ interface Actor {
   catchPoint: THREE.Vector3;
   pose: CutoutPose;
   clip: string;
+  /** The legs last shown, and where an eased change (clip switch, a scripted move starting or ending) began. */
+  shown: FullBodyPose | null;
+  easeFrom: FullBodyPose | null;
+  easeAt: number;
+}
+
+/** One celebration: three jumps (celebratePose loops every 0.85 s). */
+const CELEBRATE_S = 0.85 * 3;
+const POSE_EASE_S = 0.18;
+
+/** Clips that share a motion (switching between them needs no ease). */
+function clipFamily(clip: string): string {
+  if (clip === 'run' || clip === 'dribble') return 'run';
+  if (clip.startsWith('strike')) return 'strike';
+  if (clip.startsWith('celebrate')) return 'celebrate';
+  if (clip === 'backpedal' || clip === 'jockey' || clip === 'keeper_idle') return clip;
+  return 'idle';
+}
+
+/**
+ * Clip seconds per second for a run or a backpedal at ground speed `v` (world units / s): the stride turns over so a
+ * planted boot keeps still on the pitch (capped, so a sprint doesn't blur its legs).
+ */
+function strideRate(v: number, backpedal: boolean): number {
+  const step = runStep(backpedal ? 0.05 : Math.min(1, 0.4 + Math.min(1, v / 9))) * (CUTOUT_H / FULL_H);
+  const cycles = Math.min(6, v / (2 * step));
+  return cycles / (backpedal ? 1.3 : 1.2);
+}
+
+/**
+ * A tilted cut-out never goes into the pitch: lifts it until its lowest knee or stud (after the lean) is on the
+ * grass. `contact`: also lower it onto the grass (a slide on the ground), not only lift it.
+ */
+export function groundCutout(p: CutoutPose, contact = false, tilt = Math.atan2(p.up.x, p.up.y)) {
+  // The art turns about its base (the middle of the soles' line) by its lean on screen (`tilt`, clockwise positive).
+  const unit = CUTOUT_H / FULL_H;
+  let lowest = Infinity;
+  for (const [x, y] of groundPoints(p.body)) {
+    const across = (x - FULL_W / 2) * p.face * p.sx * unit;
+    const up = (FULL_GROUND * FULL_H - y) * p.sy * unit;
+    lowest = Math.min(lowest, up * Math.cos(tilt) - across * Math.sin(tilt));
+  }
+  p.y = contact ? -lowest : Math.max(p.y, -lowest);
 }
 
 /** The keeper's dive meets the ball at this point of its clock (as GoalkeeperMotion's KEEPER_CONTACT_S). */
 const KEEPER_CONTACT_S = 0.45 + 0.78 * 0.88;
+/** Up the figure's axis (from the soles, as a fraction of their height) to the gloves at full stretch, and to the chest. */
+const KEEPER_REACH = (FULL_GROUND * FULL_H + 60) / (FULL_GROUND * FULL_H);
+const KEEPER_CHEST = (FULL_GROUND * FULL_H - 400) / (FULL_GROUND * FULL_H);
+/** A dive's landing: lying on his side (radians from upright), lifted by half the body's thickness (world units). */
+const LYING = 1.45;
+const BODY_HALF = 0.34;
+/** How long after contact he lies there before getting up. */
+const KEEPER_DOWN_S = 1.0;
+/** The keeper's arms (upper-body art units): gloves out at the waist, palms to the ball; both thrown straight past the
+ * head; the ball gathered into the chest. */
+const KEEPER_ARMS_WIDE: ArmPose = { L: reachArm('L', 30, 290, 190, 'glove'), R: reachArm('R', 466, 290, 170, 'glove') };
+const KEEPER_ARMS_FLARE: ArmPose = { L: reachArm('L', 16, 120, 200, 'glove'), R: reachArm('R', 480, 120, 160, 'glove') };
+const KEEPER_ARMS_SET: ArmPose = { L: reachArm('L', 112, 452, 200, 'glove'), R: reachArm('R', 384, 452, 160, 'glove') };
+/** Gloves worn outside a dive: set and ready in goal (palms out at the waist), or carried by the sides elsewhere. */
+export const GLOVED_ARMS: Record<'ready' | 'down', ArmPose> = {
+  ready: KEEPER_ARMS_SET,
+  down: { L: reachArm('L', 122, 548, 8, 'glove'), R: reachArm('R', 374, 548, -8, 'glove') },
+};
+const KEEPER_ARMS_UP: ArmPose = (() => {
+  const L = reachArm('L', 214, -70, 180, 'glove');
+  const R = reachArm('R', 282, -70, 180, 'glove');
+  return { L: { ...L, hand: L.fore }, R: { ...R, hand: R.fore } };
+})();
+const KEEPER_ARMS_HOLD: ArmPose = { L: reachArm('L', 220, 392, 115, 'grip', -1), R: reachArm('R', 276, 392, 245, 'grip', -1) };
 const TACKLE_CONTACT = 0.34;
 /** An elastic 0→1, for bouncing back up. */
 const elastic = (t: number) => (t >= 1 ? 1 : 1 - Math.cos(t * Math.PI * 2.4) * Math.exp(-5 * t));
@@ -1021,8 +1155,9 @@ export class DuelDirector {
 
   /** Outputs read by the scene each frame. */
   readonly focus = new THREE.Vector3();
+  /** The camera's right, flat on the pitch: a flat figure can only lean across the screen, not towards the camera. */
+  private readonly camRight = new THREE.Vector3(1, 0, 0);
   lit: { column: 0 | 1 | 2; side: ZoneSide } = { column: 1, side: 'player' };
-  netAge: Record<1 | -1, number> = { 1: -1, [-1]: -1 };
   /** The running outcome script's card effects. */
   scriptFx: ScriptFx = NO_FX;
   /** The side standing in goal right now (a shot is on), or null: the keeper puts gloves on for it. */
@@ -1033,6 +1168,7 @@ export class DuelDirector {
   /** Effects ask for full frame rate until this time (seconds, performance clock). */
   private busyUntil = 0;
   private rush = 0;
+  private lastNow = 0;
 
   constructor() {
     const make = (side: ZoneSide, phase: number): Actor => ({
@@ -1049,6 +1185,9 @@ export class DuelDirector {
       catchPoint: new THREE.Vector3(),
       pose: blankPose(),
       clip: 'outfield_idle',
+      shown: null,
+      easeFrom: null,
+      easeAt: 0,
     });
     this.actors = { player: make('player', 0), opponent: make('opponent', 1.7) };
   }
@@ -1097,6 +1236,7 @@ export class DuelDirector {
    */
   update(input: DirectorInput, now: number, rawDt: number, camera: THREE.PerspectiveCamera, aspect: number, split = 0, both = false) {
     const dt = Math.min(Math.max(rawDt, 1e-4), 0.1);
+    this.lastNow = now;
     const duel = duelSpots(input.possession);
 
     // A new outcome starts its script; leaving a goal cuts straight to the kick-off positions.
@@ -1105,7 +1245,7 @@ export class DuelDirector {
       this.scriptKey = input.key;
       this.script = input.mode === 'outcome' && input.from && input.outcome ? buildScript(input.from, input.outcome, input.seed, input.cards) : null;
       this.scriptStart = now;
-      if (wasGoal && !this.script) this.needsCut = true;
+      if ((wasGoal && !this.script) || input.cut) this.needsCut = true;
       for (const a of Object.values(this.actors)) a.capture = { x: a.x, z: a.z, yaw: a.yaw };
     }
     if (input.mode === 'bullet' && this.lastMode !== 'bullet') this.bulletStart = now;
@@ -1124,6 +1264,9 @@ export class DuelDirector {
     if (this.needsCut) this.cut(spots, input.possession.attacker, now);
 
     // Players.
+    this.camRight.set(1, 0, 0).applyQuaternion(camera.quaternion).setY(0);
+    if (this.camRight.lengthSq() < 1e-6) this.camRight.set(1, 0, 0);
+    this.camRight.normalize();
     const tackle = active?.tackle && t >= active.tackle.start && t < active.tackle.end ? active.tackle : null;
     if (tackle) this.runTackle(tackle, t - tackle.start);
     for (const side of ['player', 'opponent'] as const) {
@@ -1137,6 +1280,8 @@ export class DuelDirector {
           : { kind: 'settle' };
       const prevX = a.x;
       const prevZ = a.z;
+      // Moving arms are the keeper's (a held save keeps them); everyone else has the art's own.
+      if (frame.kind !== 'keeper' && !(frame.kind === 'hold' && a.proc === 'keeper')) a.pose.body.arms = undefined;
       if (frame.kind === 'tackle') {
         // Posed by runTackle.
       } else if (frame.kind === 'hold') {
@@ -1149,6 +1294,8 @@ export class DuelDirector {
         this.settle(a, spots, input.possession.attacker, dt, now, splitFit !== null);
       }
       a.speed = Math.hypot(a.x - prevX, a.z - prevZ) / dt;
+      this.easeLegs(a, now);
+      groundCutout(a.pose, a.proc === 'tackle' && tackle !== null && side !== tackle.runner, this.screenTilt(a.pose, camera, aspect));
     }
 
     // Ball.
@@ -1164,14 +1311,9 @@ export class DuelDirector {
             : { kind: 'settle' };
     this.updateBall(ballFrame, input.possession.attacker, dt);
 
-    // Zone light, nets, camera.
+    // Zone light, camera (the nets follow the ball themselves).
     const litSide = active ? active.lit(t) : input.possession.attacker;
     this.lit = { column: columnAt(this.ball.x), side: litSide };
-    const age = script?.net ? script.net(t) : -1;
-    // The net that ripples: the scorer's target (a steal-and-score goes the other way).
-    const scorer = input.outcome?.kind === 'goal' ? input.outcome.scorer : input.from?.attacker;
-    const goalDir = script && scorer ? (scorer === 'player' ? 1 : -1) : 1;
-    this.netAge = goalDir > 0 ? { 1: age, [-1]: -1 } : { 1: -1, [-1]: age };
     this.scriptFx = script?.fx ? script.fx(t) : NO_FX;
     this.spots = input.mode === 'outcome' && input.from ? duelSpots(input.from) : duel;
     // In goal while a shot is coming (and through the save); the gloves come off once the result has played out.
@@ -1214,8 +1356,36 @@ export class DuelDirector {
     this.snapCamera = true;
   }
 
+  /** The cut-out's lean as drawn: the angle on screen of its up direction (clockwise from vertical). */
+  private screenTilt(p: CutoutPose, camera: THREE.Camera, aspect: number): number {
+    _v.set(p.x, p.y, p.z).project(camera);
+    _v2.set(p.x + p.up.x, p.y + p.up.y, p.z + p.up.z).project(camera);
+    const dx = (_v2.x - _v.x) * aspect;
+    const dy = _v2.y - _v.y;
+    return dx === 0 && dy === 0 ? 0 : Math.atan2(dx, dy);
+  }
+
+  /** From now, ease the legs over from the ones last shown (a clip switch, a dive or tackle starting or ending). */
+  private startEase(a: Actor, now: number) {
+    if (!a.shown) return;
+    a.easeFrom = { ...a.shown };
+    a.easeAt = now;
+  }
+
+  /** Applies a running ease (startEase) to the legs about to be shown. */
+  private easeLegs(a: Actor, now: number) {
+    const body = a.pose.body;
+    if (a.easeFrom) {
+      const k = smooth((now - a.easeAt) / POSE_EASE_S);
+      if (k >= 1) a.easeFrom = null;
+      else mixPose(a.easeFrom, body, k, body);
+    }
+    a.shown = { ...body };
+  }
+
   /** Pose the cut-out from a clip, bouncing back up if it was down. */
   private pose(a: Actor, clip: string, time: number, now: number) {
+    if (clipFamily(clip) !== clipFamily(a.clip)) this.startEase(a, now);
     a.clip = clip;
     clipPose(a.pose, clip, time, a.yaw, now, a.phase, a.speed);
     a.pose.x = a.x;
@@ -1234,6 +1404,7 @@ export class DuelDirector {
   /** Leave a scripted pose (dive, tackle, hold): bounce back up from it. */
   private exitProc(a: Actor, now: number) {
     if (a.proc === 'none') return;
+    this.startEase(a, now);
     a.recover = { start: now, up: a.pose.up.clone(), y: a.pose.y };
     a.pose.blur = 0;
     a.proc = 'none';
@@ -1269,15 +1440,21 @@ export class DuelDirector {
     a.yaw = yaw;
     a.speed = moved / dt;
     if (f.clip === 'run') {
-      a.runClock += dt * (0.75 + 0.07 * Math.min(moved / dt, 20));
+      a.runClock += dt * strideRate(moved / dt, false);
       this.pose(a, 'run', a.runClock, now);
     } else {
       this.pose(a, f.clip, f.time ?? now + a.phase, now);
     }
+    a.pose.body.arms = f.arms;
   }
 
-  /** Keeper: crouch, then spring and stretch towards the ball (or the wrong corner), land and lie there. */
+  /**
+   * Keeper: set, gloves out at the waist; spring and stretch, both gloves thrown past the head at the ball (or into the
+   * wrong corner), the body angled so the gloves arrive where the ball is; then down onto his side on the grass — a
+   * catch pulled into the chest, a parry or a beaten dive still stretched out.
+   */
   private applyKeeper(a: Actor, f: KeeperFrame) {
+    if (a.proc !== 'keeper') this.startEase(a, this.lastNow);
     a.proc = 'keeper';
     a.recover = null;
     a.x = f.x;
@@ -1293,24 +1470,50 @@ export class DuelDirector {
     const tx = f.x + lx * cos + lz * sin;
     const tz = f.z - lx * sin + lz * cos;
     const reach = smooth((f.time - 0.5) / (KEEPER_CONTACT_S - 0.5));
-    const land = smooth((f.time - KEEPER_CONTACT_S - 0.08) / 0.55);
+    const after = f.time - KEEPER_CONTACT_S;
+    const fall = smooth((after - 0.02) / 0.42);
+    const rise = smooth((after - KEEPER_DOWN_S) / 0.5);
+    const caught = f.style === 'catch';
+    const gather = caught ? smooth(after / 0.3) : 0;
     const load = Math.sin(Math.PI * smooth((f.time - 0.15) / 0.4)) * (1 - reach);
     if (Math.abs(Math.sin(f.yaw)) > 0.2) p.face = Math.sin(f.yaw) > 0 ? 1 : -1;
-    p.x = lerp(f.x, tx, 0.55 * reach);
-    p.z = lerp(f.z, tz, 0.55 * reach);
-    p.y = Math.max(0, (ly * 0.45) * reach * (1 - land) + Math.sin(reach * Math.PI) * 0.3);
-    // Lean towards the ball as the dive extends; nearly flat once landed.
-    const angle = reach * (1.05 + 0.4 * land);
-    lean(p, tx - f.x, tz - f.z, angle);
+
+    // The figure is flat: it leans across the screen, to the side the ball is on (leaning towards or away from the
+    // camera would stand it on its head). Tilted at least ~55° (lower balls flatter), so the gloves (KEEPER_REACH of
+    // the figure up its axis) are at the ball's height at contact, feet off the ground when the ball is high.
+    const dx = tx - f.x;
+    const dz = tz - f.z;
+    const side = dx * this.camRight.x + dz * this.camRight.z >= 0 ? 1 : -1;
+    const len = CUTOUT_H * CUTOUT_BASE * KEEPER_REACH;
+    const tilt = THREE.MathUtils.clamp(Math.acos(THREE.MathUtils.clamp(ly / len, -1, 1)), 0.95, 1.4);
+    const by = Math.max(0, ly - len * Math.cos(tilt));
+    // In flight towards the ball on an arc; after contact down to the grass, lying on his side (lifted by half the
+    // body's thickness, so it lies on the pitch, not through it); after a beat, back up on his feet.
+    const flight = smooth(reach);
+    const angle = (tilt * reach + (LYING - tilt) * fall) * (1 - rise);
+    p.x = lerp(f.x, tx, 0.45 * flight);
+    p.z = lerp(f.z, tz, 0.45 * flight);
+    p.y = lerp(by * flight + Math.sin(Math.PI * reach) * 0.35, 0, fall) + BODY_HALF * Math.sin(angle) * fall;
+    lean(p, this.camRight.x * side, this.camRight.z * side, angle);
     p.sy = 1;
     p.sx = 1;
-    // Crouched, pushing off, then both legs stretched out behind.
-    Object.assign(p.body, reach > 0 ? divePose(reach) : keeperSetPose(f.time, a.phase));
-    if (load > 0 && reach === 0) p.body.bodyY += 20 * load;
+    // Crouched, pushing off, then both legs stretched out behind; standing again as he gets up.
+    // The set stance sinks (planted) before the spring, then hands over to the dive without a pop.
+    const set = keeperSetPose(f.time, a.phase, load);
+    const dive = reach > 0 ? mixPose(set, divePose(reach), smooth(reach / 0.35)) : set;
+    Object.assign(p.body, rise > 0 ? mixPose(dive, STAND, rise) : dive);
+    // The arms: from the art's own (thumbs up) to the set gloves, thrown up past the head, a catch gathered in (and
+    // kept to the chest once up); otherwise back to the art's own arms once he's up.
+    // (Out wide first, so the gloves don't sweep across his face on the way down from the thumbs-up.)
+    const ready = f.time < 0.15 ? mixArms(ARMS_REST, KEEPER_ARMS_WIDE, smooth(f.time / 0.15)) : mixArms(KEEPER_ARMS_WIDE, KEEPER_ARMS_SET, smooth((f.time - 0.15) / 0.2));
+    // Thrown up and out to the sides, then together past the head (not up across his face).
+    const thrown = reach < 0.35 ? mixArms(ready, KEEPER_ARMS_FLARE, smooth(reach / 0.35)) : mixArms(KEEPER_ARMS_FLARE, KEEPER_ARMS_UP, smooth((reach - 0.35) / 0.45));
+    if (caught) p.body.arms = gather > 0 ? mixArms(thrown, KEEPER_ARMS_HOLD, gather) : thrown;
+    else p.body.arms = rise >= 1 ? undefined : mixArms(thrown, ARMS_REST, rise);
     p.spin = 0;
     p.blur = reach * (1 - reach) * 1.6;
-    // Hands at the top corner of the figure, on the side it dives to.
-    a.catchPoint.set(p.x, p.y, p.z).addScaledVector(p.up, CUTOUT_H * CUTOUT_BASE * p.sy * 0.95);
+    // The ball sits between the gloves: past the head at full stretch, at the chest once gathered.
+    a.catchPoint.set(p.x, p.y, p.z).addScaledVector(p.up, CUTOUT_H * CUTOUT_BASE * p.sy * lerp(KEEPER_REACH, KEEPER_CHEST, gather));
   }
 
   /** The slide tackle: the defender dashes in low, the runner tips over backwards. */
@@ -1322,6 +1525,8 @@ export class DuelDirector {
     const r0 = at(spec.canon.runner);
     const d0 = at(spec.canon.defender);
     const e = Math.min(elapsed, 1.1);
+    if (runner.proc !== 'tackle') this.startEase(runner, this.lastNow);
+    if (defender.proc !== 'tackle') this.startEase(defender, this.lastNow);
     runner.proc = 'tackle';
     defender.proc = 'tackle';
     runner.recover = null;
@@ -1339,26 +1544,35 @@ export class DuelDirector {
     dp.face = d > 0 ? -1 : 1;
     const rise = smooth((e - 0.6) / 0.4);
     // Down on the grass, leaning back, the leading leg shot out at the ball; then up again.
-    lean(dp, d, 0, 0.5 * dash * (1 - rise));
-    Object.assign(dp.body, slidePose(dash * (1 - rise)));
+    // Leaning back tips the whole figure, so the leading leg is brought down by the same angle: it runs along the
+    // grass at the ball, not up in the air.
+    const sliding = dash * (1 - rise);
+    lean(dp, d, 0, 0.7 * sliding);
+    Object.assign(dp.body, slidePose(sliding));
+    dp.body.hipR -= 40 * sliding;
+    dp.body.hipL -= 40 * sliding;
     dp.body.bodyY = 210 * dash * (1 - rise);
     dp.sy = 1;
     dp.sx = 1;
     dp.spin = 0;
     dp.blur = dash * (1 - smooth((e - TACKLE_CONTACT) / 0.2)) * 0.9;
 
-    // Runner: caught mid-stride, tips over backwards and bounces once on the grass.
-    const fall = smooth((e - TACKLE_CONTACT) / 0.35);
+    // Runner: his legs are taken from under him as the ball goes: he pitches forward over the slide (a hop, the legs
+    // whipped up behind), lands on his front, skids on a little with one bounce, and stays down until the script ends.
+    const fall = smooth((e - TACKLE_CONTACT) / 0.42);
     const rp = runner.pose;
-    runner.x = r0.x + d * fall * 0.9;
+    runner.x = r0.x + d * (0.25 * smooth(e / TACKLE_CONTACT) + 1.1 * fall);
     runner.z = r0.z;
     rp.x = runner.x;
     rp.z = runner.z;
     rp.face = d > 0 ? 1 : -1;
-    const bounce = e > TACKLE_CONTACT + 0.35 ? Math.abs(Math.sin((e - TACKLE_CONTACT - 0.35) * 9)) * Math.exp(-(e - TACKLE_CONTACT - 0.35) * 6) : 0;
-    rp.y = 0.25 * Math.sin(fall * Math.PI) + 0.2 * bounce;
-    lean(rp, -d, 0, 1.4 * fall - 0.15 * bounce);
-    Object.assign(rp.body, sprawlPose(fall, e));
+    const down = e - TACKLE_CONTACT - 0.42;
+    const bounce = down > 0 ? Math.abs(Math.sin(down * 10)) * Math.exp(-down * 7) : 0;
+    rp.y = 0.32 * Math.sin(Math.PI * Math.min(1, fall * 1.05)) + 0.12 * bounce;
+    lean(rp, d, 0, 1.42 * fall - 0.1 * bounce);
+    // Before the contact still running; then swept: the legs fly up behind him and stay there as he lies.
+    const swept = { hipL: -38, kneeL: 72, ankleL: -20, hipR: -14, kneeR: 44, ankleR: -10, lean: 4, bodyX: 0, bodyY: 0 };
+    Object.assign(rp.body, mixPose(runPose(e * 1.6, 0.8), swept, smooth((e - TACKLE_CONTACT + 0.03) / 0.22)));
     rp.sy = 1;
     rp.sx = 1;
     rp.spin = 0;
@@ -1393,14 +1607,17 @@ export class DuelDirector {
     if (dist > 0.35 || chasing) {
       const speed = hurry ? THREE.MathUtils.clamp(dist * 5, 8, 18) : THREE.MathUtils.clamp(dist * 2.4, 3.5, 10.5);
       const step = Math.min(dist, speed * dt);
+      // A defender dropping back keeps facing the play and backpedals instead of turning its back.
+      const heading = Math.atan2(dx, dz);
+      const backpedal = role === 'defender' && !hurry && !spots.keeper && idle.yaw !== undefined && Math.cos(heading - idle.yaw) < -0.2;
       if (dist > 1e-4) {
         a.x += (dx / dist) * step;
         a.z += (dz / dist) * step;
-        a.yaw = angleDamp(a.yaw, Math.atan2(dx, dz), 10, dt);
+        a.yaw = angleDamp(a.yaw, backpedal && idle.yaw !== undefined ? idle.yaw : heading, 10, dt);
       }
       a.speed = step / dt;
-      a.runClock += dt * (0.75 + 0.07 * Math.min(step / dt, 20));
-      if (step / dt > 0.8) this.pose(a, 'run', a.runClock, now);
+      a.runClock += dt * strideRate(step / dt, backpedal);
+      if (step / dt > 0.8) this.pose(a, backpedal ? 'backpedal' : 'run', a.runClock, now);
       else this.pose(a, idle.clip, now + a.phase, now);
     } else {
       a.x = THREE.MathUtils.damp(a.x, tx, 6, dt);
@@ -1513,7 +1730,8 @@ export class DuelDirector {
     } else if (frame.kind === 'catch') {
       this.ballLoose = false;
       const a = this.actors[frame.side];
-      if (a) this.ball.copy(a.catchPoint);
+      // Into the gloves over a few frames (the flat figure's hands can be off the ball's line in depth).
+      if (a) this.ball.lerp(a.catchPoint, 1 - Math.exp(-30 * dt));
     } else {
       // Loose: free physics from the last frame's velocity.
       this.ballVel.y -= GRAVITY * dt;

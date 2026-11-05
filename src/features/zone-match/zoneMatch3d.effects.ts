@@ -9,19 +9,19 @@
  *   boots glow on the players' cut-outs: ZoneMatch3DCutouts);
  * - outcome effects from the script: ghost players (Tiki-Taka one-two, Park the Bus wall, which a Golden Boot bursts —
  *   drawn as translucent avatar cut-outs from `ghostRequests`), speed trails (sprints, Counter-Attack), the golden
- *   ball trail, the Offside linesman's flag, and the speed lines.
+ *   ball trail and the speed lines.
  *
  * Everything is sprites and flat meshes: no extra assets.
  */
 
 import * as THREE from 'three';
-import { CARD_BY_ID, type CardId } from './zoneMatch.cards';
+import { BLUFF_CARDS, CARD_BY_ID, type CardId } from './zoneMatch.cards';
 import { otherZoneSide, type ZoneSide } from './zoneMatch.rules';
 import { CARD_TYPE_THEME } from './ZoneMatchCardFace';
 import type { DuelDirector, GhostFx } from './zoneMatch3d.director';
 import type { CardFx } from './zoneMatch3d.fx';
 import { CardExtras } from './zoneMatch3d.cardExtras';
-import { PITCH_HALF_W, SIDE_COLOR, attackDir } from './zoneMatch3d.layout';
+import { SIDE_COLOR, attackDir } from './zoneMatch3d.layout';
 
 const EMOJI_FONT = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
 const POPPINS = "Poppins, 'Arial Black', Arial, sans-serif";
@@ -174,8 +174,6 @@ export class CardEffectsEngine {
   readonly root = new THREE.Group();
   private trails: Record<ZoneSide, Ribbon>;
   private ballTrails = { gold: new Ribbon('#FFC21A', 22, 0.11, 0.11, 0.85, false), white: new Ribbon('#DDEBFF', 26, 0.07, 0.07, 0.6, false) };
-  private flag = new THREE.Group();
-  private flagCloth: THREE.Mesh;
   private fogSprites: THREE.Sprite[] = [];
   private fogLevel = 0;
   private mud = new THREE.Group();
@@ -206,27 +204,6 @@ export class CardEffectsEngine {
       opponent: new Ribbon(SIDE_COLOR.opponent, 16, 0.7, 2.3, 0.32, true),
     };
     this.root.add(this.trails.player.mesh, this.trails.opponent.mesh, this.ballTrails.gold.mesh, this.ballTrails.white.mesh);
-
-    // Offside: the linesman's flag on the far touchline.
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.6, 8), new THREE.MeshStandardMaterial({ color: '#202833' }));
-    pole.position.y = 1.3;
-    const flagTexture = canvasTexture(128, 96, (ctx) => {
-      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
-        ctx.fillStyle = (x + y) % 2 ? '#FFE500' : '#FF3B3B';
-        ctx.fillRect(x * 32, y * 24, 32, 24);
-      }
-    });
-    this.textures.push(flagTexture);
-    this.flagCloth = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.2, 0.9),
-      new THREE.MeshBasicMaterial({ map: flagTexture, side: THREE.DoubleSide, toneMapped: false }),
-    );
-    this.flagCloth.position.set(0.6, 2.15, 0);
-    const pivot = new THREE.Group();
-    pivot.add(pole, this.flagCloth);
-    this.flag.add(pivot);
-    this.flag.visible = false;
-    this.root.add(this.flag);
 
     // Fog banks.
     const cloud = canvasTexture(128, 128, (ctx) => {
@@ -402,7 +379,6 @@ export class CardEffectsEngine {
       if (rush > 0.02) speedLines.style.transform = `rotate(${((now * 40) % 6).toFixed(1)}deg) scale(1.2)`;
     }
 
-    this.updateFlag(sfx.flag, now);
     this.updateFog(fx.fog, dt, now, scene);
     this.updateMud(fx);
     this.updateShots(now);
@@ -439,7 +415,7 @@ export class CardEffectsEngine {
               crossOut(ctx, 256, 128, 74);
               ctx.font = `800 50px ${POPPINS}`;
               ctx.fillStyle = '#ffffff';
-              ctx.fillText(shot.against === 'dummy-run' ? 'ONLY A BLUFF' : 'CANCELLED', 256, 250);
+              ctx.fillText(BLUFF_CARDS.includes(shot.against!) ? 'ONLY A BLUFF' : 'CANCELLED', 256, 250);
             })
           : null;
         break;
@@ -459,18 +435,6 @@ export class CardEffectsEngine {
         // Every other card: the shared activation beat and its own piece (CardExtras).
         break;
     }
-  }
-
-  private updateFlag(flag: { x: number; up: number } | null, now: number) {
-    this.flag.visible = Boolean(flag && flag.up > 0.01);
-    if (!flag || !this.flag.visible) return;
-    this.busy = true;
-    this.flag.position.set(flag.x, 0, -PITCH_HALF_W + 4.5);
-    // Up from the hip to straight overhead, then waved.
-    const pivot = this.flag.children[0];
-    pivot.rotation.z = (1 - flag.up) * 1.9 + Math.sin(now * 11) * 0.12 * flag.up;
-    this.flagCloth.rotation.y = Math.sin(now * 14) * 0.35;
-    this.flag.scale.setScalar(1.1 + 0.5 * flag.up);
   }
 
   private updateFog(on: boolean, dt: number, now: number, scene: THREE.Scene) {
@@ -607,7 +571,7 @@ export class CardEffectsEngine {
     this.ballTrails.gold.dispose();
     this.ballTrails.white.dispose();
     // Own meshes (not the ghosts: their geometry is the loader's) and every sprite's material.
-    const own = [this.flagCloth, this.flag.children[0].children[0], ...this.mud.children] as THREE.Mesh[];
+    const own = [...this.mud.children] as THREE.Mesh[];
     for (const mesh of own) {
       mesh.geometry.dispose();
       (mesh.material as THREE.Material).dispose();

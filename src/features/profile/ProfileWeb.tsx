@@ -1247,7 +1247,7 @@ function SeasonToggleCard({
               >
                 {tab.key === 'previous' && previousSeasonNumber === 1 && (
                   <Image
-                    src="/assets/brand/world-cup-trophy.webp"
+                    src="/assets/brand/ucl-trophy.webp"
                     alt=""
                     width={16}
                     height={16}
