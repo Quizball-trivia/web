@@ -505,7 +505,9 @@ export function ModeSelectionScreen({
   const findRankedOpponents = () => {
     setRankedModalOpen(false);
     if (isGuest) {
-      if (RANKED_V2_ENABLED && ZONE_BOT_ENABLED && GUEST_LOBBIES_ENABLED) { router.push('/ranked2'); return; }
+      // Only a settled guest routes to the beta queue: isGuest is also true while auth is still loading, and a
+      // member mid-load must not be sent down the guest path.
+      if (settledGuest && RANKED_V2_ENABLED && ZONE_BOT_ENABLED && GUEST_LOBBIES_ENABLED) { router.push('/ranked2'); return; }
       openAuthPrompt();
       return;
     }
