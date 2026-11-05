@@ -117,7 +117,21 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const now = useServerNow(room);
   const seats = useMemo(() => seatsOf(snapshot, view.you), [snapshot, view.you]);
   const [deck, setDeck] = useState<CardId[]>([]);
-  const state = view.match;
+  // Optimistic input: a tap shows at once; the server's snapshot (which carries the right answer once this seat is
+  // locked) takes over a round-trip later. Keyed to the question so a Substitution or the next duel drops it.
+  const [pendingAnswer, setPendingAnswer] = useState<{ key: number; index: number } | null>(null);
+  const [pendingGuess, setPendingGuess] = useState<{ key: number; value: number } | null>(null);
+  const state = useMemo(() => {
+    let m = view.match;
+    if (m.mcq && m.battleStep === 'mcq' && m.mcq.answers.player === null && pendingAnswer?.key === m.mcq.key
+      && pendingAnswer.index !== m.mcq.firstMiss.player && !m.mcq.hidden.player.includes(pendingAnswer.index)) {
+      m = { ...m, mcq: { ...m.mcq, answers: { ...m.mcq.answers, player: pendingAnswer.index } } };
+    }
+    if (m.numeric && !m.numeric.result && m.numeric.guesses.player.value === null && pendingGuess?.key === m.numeric.key) {
+      m = { ...m, numeric: { ...m.numeric, guesses: { ...m.numeric.guesses, player: { value: pendingGuess.value, lockedAtMs: null } } } };
+    }
+    return m;
+  }, [view.match, pendingAnswer, pendingGuess]);
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
   const send = room.send;
 
@@ -207,7 +221,11 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         player={seats.player}
         opponent={seats.opponent}
         onQuit={() => room.leave()}
-        onAnswer={(index, questionId) => state.mcq?.question.id === questionId && send({ type: 'answer', key: state.mcq.key, index })}
+        onAnswer={(index, questionId) => {
+          if (state.mcq?.question.id !== questionId) return;
+          setPendingAnswer({ key: state.mcq.key, index });
+          send({ type: 'answer', key: state.mcq.key, index });
+        }}
       />
     );
   } else if (state.stage === 'play') {
@@ -220,8 +238,16 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         muted={false}
         onToggleMute={() => {}}
         onQuit={() => room.leave()}
-        onAnswer={(index, questionId) => state.mcq?.question.id === questionId && send({ type: 'answer', key: state.mcq.key, index })}
-        onGuess={(value) => state.numeric && send({ type: 'guess', key: state.numeric.key, value })}
+        onAnswer={(index, questionId) => {
+          if (state.mcq?.question.id !== questionId) return;
+          setPendingAnswer({ key: state.mcq.key, index });
+          send({ type: 'answer', key: state.mcq.key, index });
+        }}
+        onGuess={(value) => {
+          if (!state.numeric) return;
+          setPendingGuess({ key: state.numeric.key, value });
+          send({ type: 'guess', key: state.numeric.key, value });
+        }}
         onChooseCard={(card) => send({ type: 'card', duel: state.duelNo, card })}
         onLiveCard={(card) => state.mcq && send({ type: 'live', duel: state.duelNo, key: state.mcq.key, card })}
         onReaction={(card) => send({ type: 'reaction', duel: state.duelNo, card })}

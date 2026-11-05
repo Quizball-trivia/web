@@ -46,15 +46,17 @@ describe('seat views', () => {
     expect(flipped.deck.player).toEqual(s.deck.opponent);
   });
 
-  it('hides the right answer and their answer until the reveal', () => {
+  it('hides the right answer while a seat can answer; a locked seat gets its own feedback', () => {
     let s = play(9, (x) => x.stage === 'play' && x.battleStep === 'mcq');
     s = reducer(s, { type: 'ANSWER', side: 'opponent', index: 2, now: s.mcq!.startedAt + 300 });
     for (const seat of ['player', 'opponent'] as const) {
       const view = seatView(s, seat);
-      expect(view.state.mcq!.question.correctIndex).toBe(HIDDEN_ANSWER);
       expect(view.state.mcq!.answers.opponent).toBeNull();
       expect(view.state.feed).toEqual([]);
     }
+    // The seat still answering sees no right answer; the locked seat may know it (instant own right/wrong).
+    expect(seatView(s, 'player').state.mcq!.question.correctIndex).toBe(HIDDEN_ANSWER);
+    expect(seatView(s, 'opponent').state.mcq!.question.correctIndex).toBe(s.mcq!.question.correctIndex);
     // The opponent seat sees its own answer as "player"; the player seat only that they answered.
     expect(seatView(s, 'opponent').state.mcq!.answers.player).toBe(2);
     expect(seatView(s, 'player').opponentAnswered).toBe(true);
