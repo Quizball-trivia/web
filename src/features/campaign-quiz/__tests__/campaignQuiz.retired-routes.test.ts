@@ -68,4 +68,35 @@ describe("retired and renamed quiz pages", () => {
     expect(response.status).toBe(301);
     expect(new URL(response.headers.get("location")!).pathname).toBe("/de/fussball-quiz/karrierestationen-erraten");
   });
+
+  it("answers a retired Turkish quiz with a Turkish 410, looked up by its English source slug", async () => {
+    const fetchMock = routeLookup({ kind: "gone" });
+    const response = await middleware(new NextRequest("https://quizball.io/tr/futbol-bilgi-yarismasi/logodan-takim-bilme"));
+    expect(response.status).toBe(410);
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toMatch(/\/campaign-quizzes\/routes\/club-badges$/);
+    const body = await response.text();
+    expect(body).toContain('lang="tr"');
+    expect(body).toContain("Bu test artık kullanılamıyor.");
+  });
+
+  it("moves a renamed Turkish quiz to the Turkish page of its new slug", async () => {
+    routeLookup({ kind: "redirect", target_slug: "career-path" });
+    const response = await middleware(new NextRequest("https://quizball.io/tr/futbol-bilgi-yarismasi/logodan-takim-bilme"));
+    expect(response.status).toBe(301);
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/tr/futbol-bilgi-yarismasi/kariyerden-futbolcu-tahmin-etme");
+  });
+
+  it("answers a retired Spanish quiz with a Spanish 410", async () => {
+    const fetchMock = routeLookup({ kind: "gone" });
+    const response = await middleware(new NextRequest("https://quizball.io/es/quiz-de-futbol/adivina-el-jugador"));
+    expect(response.status).toBe(410);
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toMatch(/\/campaign-quizzes\/routes\/guess-the-player$/);
+    expect(await response.text()).toContain('lang="es"');
+  });
+
+  it("does not look a route up for a quiz path under another language's folder", async () => {
+    const fetchMock = routeLookup({ kind: "gone" });
+    await middleware(new NextRequest("https://quizball.io/tr/fussball-quiz/arsenal-quiz"));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

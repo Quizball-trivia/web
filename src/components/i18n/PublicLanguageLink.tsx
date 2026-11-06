@@ -10,9 +10,8 @@ import { findPublicGameBySlug, isPublishedIn } from "@/lib/seo/public-games";
 
 // Swap the leading /:locale segment of the current path with the target locale.
 function swapLocale(pathname: string, target: Locale): string {
-  // Campaign quizzes have no Turkish edition; switching on one lands on the English quiz. Quiz pages offer pt in their
-  // switcher only when the quiz has a Portuguese edition, so pt goes to the Portuguese quiz.
-  const campaignPath = swapCampaignLocalePath(pathname, target === 'tr' ? 'en' : target);
+  // Quiz pages offer a language in their switcher only when the quiz has that edition.
+  const campaignPath = swapCampaignLocalePath(pathname, target);
   if (campaignPath) return campaignPath;
   const segments = pathname.split("/").filter(Boolean);
   // Public game pages have translated folders and slugs (/es/juegos-de-futbol/subasta).

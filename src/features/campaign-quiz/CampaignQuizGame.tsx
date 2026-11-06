@@ -158,7 +158,7 @@ const UI_COPY = {
  * the question, so the heading is kept for screen readers only in that case.
  * Prompts that carry real extra wording are always shown.
  */
-const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста', 'Adivinhe o jogador', 'Errate den Spieler'];
+const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста', 'Adivinhe o jogador', 'Errate den Spieler', 'Oyuncuyu tahmin et', 'გამოიცანი ფეხბურთელი', 'გამოიცანით მოთამაშე'];
 
 function isRedundantCareerPrompt(question: CampaignQuizQuestion): boolean {
   if (question.type !== 'career_path' || question.details.length === 0) return false;

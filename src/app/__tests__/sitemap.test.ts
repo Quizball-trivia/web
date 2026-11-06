@@ -17,10 +17,11 @@ describe('sitemap lastModified signals', () => {
   });
 
   it('omits fake dates from evergreen pages and uses CMS dates for campaign URLs', async () => {
-    listCampaignQuizPagesMock.mockResolvedValue([
+    const catalog = [
       { slug: 'club-badges', locale_mode: 'en_only', updated_at: '2026-08-12T10:00:00.000Z' },
       { slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' },
-    ]);
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === 'ka' || locale === 'tr' ? [] : catalog));
 
     const entries = await sitemap();
     const englishHome = entries.find((entry) => entry.url.endsWith('/en'));
@@ -52,6 +53,36 @@ describe('sitemap lastModified signals', () => {
     expect(entries.some((entry) => entry.url === 'https://quizball.io/ru/futbolnaya-viktorina/viktorina-liverpul')).toBe(true);
     expect(liverpool?.lastModified).toEqual(new Date('2026-08-20T12:30:00.000Z'));
     expect(entries.some((entry) => entry.url.endsWith('/ka/football-quiz'))).toBe(false);
+  });
+
+  it.each([
+    ['ka', 'https://quizball.io/ka/football-quiz', 'https://quizball.io/ka/football-quiz/club-badges', 'https://quizball.io/ka/football-quiz/liverpool'],
+    ['tr', 'https://quizball.io/tr/futbol-bilgi-yarismasi', 'https://quizball.io/tr/futbol-bilgi-yarismasi/logodan-takim-bilme', 'https://quizball.io/tr/futbol-bilgi-yarismasi/liverpool-testi'],
+  ])('lists the %s hub and a quiz page only when that catalog has its edition', async (language, hub, listed, unlisted) => {
+    const pages = [
+      { slug: 'club-badges', locale_mode: 'en_ka', updated_at: '2026-08-12T10:00:00.000Z' },
+      { slug: 'liverpool', locale_mode: 'en_ka', updated_at: '2026-08-20T12:30:00.000Z' },
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === language ? pages.slice(0, 1) : pages));
+
+    const entries = await sitemap();
+
+    expect(entries.find((entry) => entry.url === hub)?.lastModified).toEqual(new Date('2026-08-12T10:00:00.000Z'));
+    expect(entries.some((entry) => entry.url === listed)).toBe(true);
+    expect(entries.some((entry) => entry.url === unlisted)).toBe(false);
+  });
+
+  it('a backend without Turkish pages (400 on locale=tr) gives no tr entries instead of failing', async () => {
+    const pages = [{ slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' }];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'tr') throw new CampaignQuizApiError(400);
+      return pages;
+    });
+
+    const entries = await sitemap();
+
+    expect(entries.some((entry) => entry.url.includes('/tr/futbol-bilgi-yarismasi'))).toBe(false);
+    expect(entries.some((entry) => entry.url.endsWith('/en/football-quiz/liverpool'))).toBe(true);
   });
 
   it('adds Georgian hub and page entries only when localized content exists', async () => {

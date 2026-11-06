@@ -1,23 +1,34 @@
 import { cache } from 'react';
 import { listCampaignQuizPages } from './campaignQuiz.api';
+import { CAMPAIGN_HREFLANG, CAMPAIGN_OG_LOCALE, CAMPAIGN_QUIZ_LOCALES, campaignHubPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { SITE_URL } from '@/lib/seo/site';
 
-/**
- * The Portuguese hub (and the other hubs' pt-BR alternates) exists once at least one quiz has a pt edition. The pt
- * catalog lists only those quizzes; a catalog that cannot be read (or a backend without pt) means no hub.
- */
-export const hasPortugueseCampaignHub = cache(async (): Promise<boolean> => {
+/** These hubs exist from the start; the others once at least one quiz has an edition in that language. */
+export const ALWAYS_ON_CAMPAIGN_HUBS: readonly CampaignQuizLocale[] = ['en', 'es', 'ru'];
+
+/** The catalog lists only quizzes with that edition; a catalog that cannot be read (or a backend without the language) means no hub. */
+export const hasCampaignHub = cache(async (locale: CampaignQuizLocale): Promise<boolean> => {
+  if (ALWAYS_ON_CAMPAIGN_HUBS.includes(locale)) return true;
   try {
-    return (await listCampaignQuizPages('pt')).length > 0;
+    return (await listCampaignQuizPages(locale)).length > 0;
   } catch {
     return false;
   }
 });
 
-/** The German hub (and the other hubs' de alternates) likewise exists once at least one quiz has a de edition. */
-export const hasGermanCampaignHub = cache(async (): Promise<boolean> => {
-  try {
-    return (await listCampaignQuizPages('de')).length > 0;
-  } catch {
-    return false;
-  }
-});
+export async function availableCampaignHubs(): Promise<CampaignQuizLocale[]> {
+  const open = await Promise.all(CAMPAIGN_QUIZ_LOCALES.map(hasCampaignHub));
+  return CAMPAIGN_QUIZ_LOCALES.filter((_, index) => open[index]);
+}
+
+/** The hreflang alternates and Open Graph locales of a hub page. */
+export async function campaignHubAlternates(locale: CampaignQuizLocale) {
+  const hubs = await availableCampaignHubs();
+  return {
+    languages: {
+      ...Object.fromEntries(hubs.map((hub) => [CAMPAIGN_HREFLANG[hub], `${SITE_URL}${campaignHubPath(hub)}`])),
+      'x-default': `${SITE_URL}${campaignHubPath('en')}`,
+    } as Record<string, string>,
+    alternateLocale: hubs.filter((hub) => hub !== locale).map((hub) => CAMPAIGN_OG_LOCALE[hub]),
+  };
+}

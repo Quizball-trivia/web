@@ -9,7 +9,7 @@ export interface CampaignQuizGuide {
   practiceLabel: string;
 }
 
-type GuideLocale = Extract<CampaignQuizLocale, 'en' | 'es'>;
+type GuideLocale = Extract<CampaignQuizLocale, 'en' | 'es' | 'ka' | 'tr'>;
 
 const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = {
   'guess-the-player': {
@@ -41,6 +41,34 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       practiceSlug: 'career-path',
       practiceLabel: 'Practica con el quiz de trayectorias de futbolistas',
     },
+    ka: {
+      eyebrow: '„გამოიცანი ფეხბურთელი“ — ქვიზის რჩევები',
+      heading: 'როგორ გამოიცნო ფეხბურთელი მინიშნებებით',
+      introduction:
+        'ფეხბურთელის გამოსაცნობად ყოველი მინიშნება ვარიანტების შესავიწროებლად გამოიყენე. დაიწყე ეროვნებით, შემდეგ კი კლუბების მიმდევრობას დააკვირდი. ერთი უჩვეულო მიღწევა ხშირად პასუხის დადასტურებაში გეხმარება.',
+      tips: [
+        'ეროვნებითა და პოზიციით დაიწყე. მათი დახმარებით კლუბის მინიშნების გამოყენებამდე ოთხი ვარიანტიდან უმეტესობას გამორიცხავ.',
+        'კლუბებს თანმიმდევრობით დააკვირდი. იმავე კლუბში დაბრუნება, იჯარა ან ლიგებს შორის გადასვლა ხშირად სიაში ყველაზე ცნობილი კლუბის ცოდნაზე სასარგებლოა.',
+        'ტიტულები და რეკორდები პასუხის დასადასტურებლად გამოიყენე. გამორჩეული მიღწევები ძლიერი მინიშნებებია, მაგრამ გადაამოწმე, რომ ფეხბურთელის მთელ კარიერას შეესაბამება.',
+        'ქვიზი ახალი მინიშნებებით თავიდან ითამაშე. განმეორება დაგეხმარება, ფეხბურთელები კარიერის გზებს დაუკავშირო და ერთი პასუხი არ დაიზეპირო.',
+      ],
+      practiceSlug: 'career-path',
+      practiceLabel: 'ივარჯიშე ქვიზში „გამოიცანი ფეხბურთელი კარიერით“',
+    },
+    tr: {
+      eyebrow: 'Futbolcu Bilmece için ipuçları',
+      heading: 'İpuçlarından futbolcu tahmin etme',
+      introduction:
+        'Futbolcu tahmin ederken her ipucunu seçenekleri elemek için kullan. Önce milliyetine bak, sonra kulüp sırasını incele. Alışılmadık bir başarı çoğu zaman cevabı doğrulayabilir.',
+      tips: [
+        'Milliyet ve mevkiden başla. Bu ikisi, kulüp ipucuna geçmeden önce dört seçenekten çoğunu elemeni sağlayabilir.',
+        'Kulüpleri sırasıyla oku. Bir takıma dönüş, kiralık dönem veya ligler arasındaki geçiş, listedeki en büyük kulüpten daha faydalı olabilir.',
+        'Kupaları ve rekorları cevabı doğrulamak için kullan. Öne çıkan başarılar güçlü ipuçlarıdır; yine de futbolcunun kariyerinin tamamıyla uyuştuğundan emin ol.',
+        'Yeni bir soru grubuyla tekrar oyna. Tekrar etmek, tek bir cevabı ezberlemek yerine futbolcularla kariyer yolları arasında bağlantı kurmana yardımcı olur.',
+      ],
+      practiceSlug: 'career-path',
+      practiceLabel: 'Kariyerden Futbolcu Tahmin Etme ile pratik yap',
+    },
   },
   'career-path': {
     en: {
@@ -70,6 +98,34 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       ],
       practiceSlug: 'guess-the-player',
       practiceLabel: 'Practica con el quiz Adivina el futbolista',
+    },
+    ka: {
+      eyebrow: 'კარიერის გზის ქვიზის რჩევები',
+      heading: 'როგორ ამოიცნო ფეხბურთელი მისი კარიერის გზით',
+      introduction:
+        'ერთბაშად ყველა ტრანსფერის გახსენებას ნუ ეცდები. კარიერის გზა თანმიმდევრობად აღიქვი და მოძებნე ის გადასვლა, რომელიც ამ ფეხბურთელს გამორჩეულს ხდის.',
+      tips: [
+        'აკადემიით ან პირველი პროფესიული კლუბით დაიწყე. გამორჩეულმა საწყისმა ეტაპმა შეიძლება ვარიანტების უმეტესობა მაშინვე გამოგარიცხინოს.',
+        'ლიგის შეცვლასა და კლუბში დაბრუნებას დააკვირდი. საზღვარგარეთ გადასვლა ან იმავე კლუბში მეორედ თამაში ხშირად ყველაზე ძლიერი მინიშნებაა.',
+        'მუდმივი ტრანსფერები იჯარისგან განასხვავე. ხანმოკლე გაჩერებებმა შეიძლება ორი ერთი შეხედვით მსგავსი კარიერის გზა ერთმანეთისგან მკვეთრად განასხვაოს.',
+        'ბოლო კლუბი პასუხის შესამოწმებლად გამოიყენე და არა პირველი ვარაუდისთვის. პასუხის დაფიქსირებამდე კარიერის მთელ გზას მიჰყევი.',
+      ],
+      practiceSlug: 'guess-the-player',
+      practiceLabel: 'ივარჯიშე ქვიზში „გამოიცანი ფეხბურთელი“',
+    },
+    tr: {
+      eyebrow: 'Kariyerden futbolcu tahmin etme ipuçları',
+      heading: 'Kariyerden futbolcu tahmin etme',
+      introduction:
+        'Her transferi bir kerede hatırlamaya çalışma. Kariyer yolunu sırayla incele ve futbolcuyu diğerlerinden ayıran transferi bul.',
+      tips: [
+        'Altyapı takımından veya ilk profesyonel kulübünden başla. Ayırt edici bir başlangıç noktası, seçeneklerin çoğunu hemen elemeni sağlayabilir.',
+        'Lig değişikliklerine ve geri dönüşlere dikkat et. Yurt dışına transfer veya aynı kulüpte ikinci dönem, çoğu zaman en güçlü ipucudur.',
+        'Kalıcı transferleri kiralık dönemlerden ayır. Kısa süreli takımlar, birbirine benzeyen iki kariyeri tamamen farklı kılabilir.',
+        'Son kulübü ilk tahminin olarak değil, kontrol etmek için kullan. Cevabı seçmeden önce tüm kariyer yolunu incele.',
+      ],
+      practiceSlug: 'guess-the-player',
+      practiceLabel: 'Futbolcu Bilmece ile pratik yap',
     },
   },
   'club-badges': {
@@ -101,6 +157,34 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       practiceSlug: 'premier-league',
       practiceLabel: 'Practica con el quiz de la Premier League',
     },
+    ka: {
+      eyebrow: 'ფეხბურთის ემბლემების ქვიზის რჩევები',
+      heading: 'როგორ ამოიცნო საფეხბურთო კლუბის ემბლემა',
+      introduction:
+        'ემბლემის დამახსოვრება გაგიადვილდება, თუ მის დეტალებს კონკრეტულ ადგილს ან ამბავს დაუკავშირებ და მთლიანი გამოსახულების დაზეპირებას არ ეცდები.',
+      tips: [
+        'ჯერ ქალაქის სიმბოლო მოძებნე: გემი, კოშკი, ფრინველი ან ადგილობრივი ღირსშესანიშნაობა ხშირად პირდაპირ მიგანიშნებს, სად არის კლუბი.',
+        'ფერები დამატებით მინიშნებად გამოიყენე. რამდენიმე კლუბს ერთი და იგივე ფერები აქვს, ამიტომ ისინი ცენტრალურ სიმბოლოს შეუხამე.',
+        'ემბლემის კიდეებზე წარწერებს, თარიღებსა და დევიზს დააკვირდი. პატარა დეტალები მსგავსი ფორმის ემბლემების გარჩევაში დაგეხმარება.',
+        'გაითვალისწინე, რომ ემბლემები შეიძლება შეიცვალოს. თანამედროვე ვერსიაში ძველი ემბლემა შეიძლება გამარტივებული იყოს, თუმცა ერთი ცნობადი სიმბოლო შენარჩუნებული დარჩეს.',
+      ],
+      practiceSlug: 'premier-league',
+      practiceLabel: 'ივარჯიშე ქვიზში „პრემიერ ლიგის ქვიზი“',
+    },
+    tr: {
+      eyebrow: 'Logodan takım bilme ipuçları',
+      heading: 'Logodan takım bilme: Bir futbol kulübünün arması nasıl tanınır?',
+      introduction:
+        'Bir armanın ayrıntılarını tek tek ezberlemek yerine onları bir yer veya hikâyeyle ilişkilendirmek, akılda tutmayı kolaylaştırır.',
+      tips: [
+        'Önce şehir simgesine bak: gemiler, kuleler, kuşlar ve yerel yapılar çoğu zaman kulübün bulunduğu yeri doğrudan gösterir.',
+        'Renkleri yardımcı ipucu olarak değerlendir. Birçok kulüp aynı renkleri kullanır; bu yüzden renkleri merkezdeki simgeyle birlikte düşün.',
+        'Kenarlardaki harfleri, tarihleri ve sloganları kontrol et. Küçük ayrıntılar, şekli birbirine benzeyen armaları ayırt etmene yardımcı olabilir.',
+        'Logo değişikliklerini hesaba kat. Güncel armalar eski tasarımları sadeleştirmiş olabilir, ancak genellikle tanınabilir bir simgeyi korur.',
+      ],
+      practiceSlug: 'premier-league',
+      practiceLabel: 'Premier Lig Quiz ile pratik yap',
+    },
   },
 };
 
@@ -108,6 +192,5 @@ export function getCampaignQuizGuide(
   slug: string,
   locale: CampaignQuizLocale,
 ): CampaignQuizGuide | undefined {
-  if (locale !== 'en' && locale !== 'es') return undefined;
-  return GUIDES[slug]?.[locale];
+  return GUIDES[slug]?.[locale as GuideLocale];
 }

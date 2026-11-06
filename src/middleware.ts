@@ -9,7 +9,7 @@ import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerS
 import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
 import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
-import { campaignQuizPath, campaignSourceSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { CAMPAIGN_HUB_FOLDER, campaignQuizPath, campaignSourceSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
 // pages are localized; everything else (app, auth, game) is intentionally
@@ -51,12 +51,14 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
 
 /** The 410 page of a retired quiz, in the language of the address it was asked for. */
-const QUIZ_GONE: Record<'en' | 'ka' | 'ru' | 'pt' | 'de', { title: string; message: string }> = {
+const QUIZ_GONE: Record<CampaignQuizLocale, { title: string; message: string }> = {
   en: { title: 'Quiz no longer available', message: 'This quiz is no longer available.' },
   ka: { title: 'ქვიზი აღარ არის ხელმისაწვდომი', message: 'ეს ქვიზი აღარ არის ხელმისაწვდომი.' },
   ru: { title: 'Викторина больше недоступна', message: 'Эта викторина больше недоступна.' },
   pt: { title: 'Quiz indisponível', message: 'Este quiz não está mais disponível.' },
   de: { title: 'Quiz nicht mehr verfügbar', message: 'Dieses Quiz ist nicht mehr verfügbar.' },
+  es: { title: 'Quiz no disponible', message: 'Este quiz ya no está disponible.' },
+  tr: { title: 'Test artık kullanılamıyor', message: 'Bu test artık kullanılamıyor.' },
 };
 
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
@@ -270,12 +272,11 @@ export async function middleware(req: NextRequest) {
   // Slug changes and retired CMS quiz pages are resolved before Next renders.
   // This is the only reliable way to return a real 410 (rather than a themed
   // 404 page) while keeping redirects locale-aware.
-  const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-    ?? pathname.match(/^\/(ru)\/futbolnaya-viktorina\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-    ?? pathname.match(/^\/(pt)\/quiz-de-futebol\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-    ?? pathname.match(/^\/(de)\/fussball-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
-  const quizLocale = quizPath?.[1] as 'en' | 'ka' | 'ru' | 'pt' | 'de' | undefined;
-  const quizSource = quizPath && quizLocale ? campaignSourceSlug(quizPath[2], quizLocale) : '';
+  const quizPath = pathname.match(/^\/(en|ka|es|ru|pt|de|tr)\/([a-z-]+)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizLocale = quizPath && CAMPAIGN_HUB_FOLDER[quizPath[1] as CampaignQuizLocale] === quizPath[2]
+    ? quizPath[1] as CampaignQuizLocale
+    : undefined;
+  const quizSource = quizPath && quizLocale ? campaignSourceSlug(quizPath[3], quizLocale) : '';
   if (
     quizPath && quizLocale
     && !req.nextUrl.searchParams.has('preview')

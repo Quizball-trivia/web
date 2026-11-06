@@ -3,7 +3,9 @@ import { CampaignQuizApiError, listCampaignQuizPages } from "@/features/campaign
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { DOWNLOAD_UPDATED_AT } from "@/lib/seo/app-download";
-import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { ALWAYS_ON_CAMPAIGN_HUBS } from "@/features/campaign-quiz/campaignQuiz.editions";
+import { CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
+import type { CampaignQuizHubPage } from "@/features/campaign-quiz/campaignQuiz.types";
 
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
@@ -73,119 +75,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fail on an unavailable catalog instead of returning a successful, incomplete sitemap.
   const campaignPages = await listCampaignQuizPages('en');
-  // Only quizzes with a Russian edition: the quiz endpoint would answer the rest in English under a Russian URL.
-  const russianSlugs = new Set((await listCampaignQuizPages('ru')).map((page) => page.slug));
-  // Only quizzes with a complete pt edition (page copy and every question). A backend without Portuguese pages
-  // rejects the locale (400): no pt entries rather than a failed sitemap.
-  const portuguesePages = await listCampaignQuizPages('pt').catch((error: unknown) => {
+  // Only quizzes with that edition: the quiz endpoint would answer the rest in English under a translated URL. These
+  // catalogs also need the page copy and every question. A backend without the language rejects it (400): no entries
+  // rather than a failed sitemap.
+  const catalogOrNone = (locale: CampaignQuizLocale) => listCampaignQuizPages(locale).catch((error: unknown) => {
     if (error instanceof CampaignQuizApiError && error.status === 400) return [];
     throw error;
   });
-  const portugueseSlugs = new Set(portuguesePages.map((page) => page.slug));
-  // Likewise only quizzes with a complete de edition; a backend without German pages rejects the locale (400).
-  const germanPages = await listCampaignQuizPages('de').catch((error: unknown) => {
-    if (error instanceof CampaignQuizApiError && error.status === 400) return [];
-    throw error;
-  });
-  const germanSlugs = new Set(germanPages.map((page) => page.slug));
+  const catalogs = new Map(await Promise.all(CAMPAIGN_QUIZ_LOCALES.map(async (locale) => {
+    if (locale === 'en' || locale === 'es') return [locale, campaignPages] as const;
+    return [locale, await (locale === 'ru' ? listCampaignQuizPages(locale) : catalogOrNone(locale))] as const;
+  })));
+  const newestUpdate = (pages: CampaignQuizHubPage[]) => pages
+    .map((page) => validLastModified(page.updated_at))
+    .filter((date): date is Date => Boolean(date))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
 
   const campaignEntries: MetadataRoute.Sitemap = [
-    entry(
-      '/en/football-quiz',
-      'weekly',
-      0.9,
-      campaignPages
-        .map((page) => validLastModified(page.updated_at))
-        .filter((date): date is Date => Boolean(date))
-        .sort((a, b) => b.getTime() - a.getTime())[0],
-    ),
-    entry(
-      '/es/quiz-de-futbol',
-      'weekly',
-      0.9,
-      campaignPages
-        .map((page) => validLastModified(page.updated_at))
-        .filter((date): date is Date => Boolean(date))
-        .sort((a, b) => b.getTime() - a.getTime())[0],
-    ),
-    entry(
-      '/ru/futbolnaya-viktorina',
-      'weekly',
-      0.9,
-      campaignPages
-        .map((page) => validLastModified(page.updated_at))
-        .filter((date): date is Date => Boolean(date))
-        .sort((a, b) => b.getTime() - a.getTime())[0],
-    ),
-    ...(portuguesePages.length
-      ? [entry(
-          '/pt/quiz-de-futebol',
-          'weekly',
-          0.9,
-          portuguesePages
-            .map((page) => validLastModified(page.updated_at))
-            .filter((date): date is Date => Boolean(date))
-            .sort((a, b) => b.getTime() - a.getTime())[0],
-        )]
-      : []),
-    ...(germanPages.length
-      ? [entry(
-          '/de/fussball-quiz',
-          'weekly',
-          0.9,
-          germanPages
-            .map((page) => validLastModified(page.updated_at))
-            .filter((date): date is Date => Boolean(date))
-            .sort((a, b) => b.getTime() - a.getTime())[0],
-        )]
-      : []),
-    ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
-      ? [entry(
-          '/ka/football-quiz',
-          'weekly',
-          0.9,
-          campaignPages
-            .filter((page) => page.locale_mode === 'en_ka')
-            .map((page) => validLastModified(page.updated_at))
-            .filter((date): date is Date => Boolean(date))
-            .sort((a, b) => b.getTime() - a.getTime())[0],
-        )]
-      : []),
-    ...campaignPages.flatMap((page) => {
-      const english = {
-        ...entry(
-          `/en/football-quiz/${page.slug}`,
-          'monthly',
-          0.8,
-          validLastModified(page.updated_at),
-        ),
-      };
-      const spanish = {
-        ...english,
-        url: `${SITE_URL}${campaignQuizPath(page.slug, 'es')}`,
-      };
-      const russian = {
-        ...english,
-        url: `${SITE_URL}${campaignQuizPath(page.slug, 'ru')}`,
-      };
-      const portuguese = {
-        ...english,
-        url: `${SITE_URL}${campaignQuizPath(page.slug, 'pt')}`,
-      };
-      const german = {
-        ...english,
-        url: `${SITE_URL}${campaignQuizPath(page.slug, 'de')}`,
-      };
-      const editions = [
-        spanish,
-        ...(russianSlugs.has(page.slug) ? [russian] : []),
-        ...(portugueseSlugs.has(page.slug) ? [portuguese] : []),
-        ...(germanSlugs.has(page.slug) ? [german] : []),
-      ];
-      return page.locale_mode === 'en_ka'
-        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, ...editions]
-        : [english, ...editions];
+    ...CAMPAIGN_QUIZ_LOCALES.flatMap((locale) => {
+      // The Russian hub always exists; its pages stay to the Russian catalog.
+      const pages = locale === 'ru' ? campaignPages : catalogs.get(locale)!;
+      return ALWAYS_ON_CAMPAIGN_HUBS.includes(locale) || pages.length > 0
+        ? [entry(campaignHubPath(locale), 'weekly', 0.9, newestUpdate(pages))]
+        : [];
     }),
+    ...campaignPages.flatMap((page) => CAMPAIGN_QUIZ_LOCALES
+      .filter((locale) => catalogs.get(locale)!.some((edition) => edition.slug === page.slug))
+      .map((locale) => entry(campaignQuizPath(page.slug, locale), 'monthly', 0.8, validLastModified(page.updated_at)))),
   ];
 
   return [

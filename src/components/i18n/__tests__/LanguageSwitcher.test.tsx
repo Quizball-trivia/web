@@ -81,20 +81,23 @@ describe("LanguageSwitcher", () => {
   it.each([
     ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", "tr", /español/i, "/es/juegos-de-futbol/jugador-en-comun"],
     ["/en/football-games/football-name-chain", "en", /türkçe/i, "/tr/futbol-oyunlari/son-harfle-futbolcu"],
-    ["/es/quiz-de-futbol/adivina-el-jugador", "es", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/es/quiz-de-futbol/adivina-el-jugador", "es", /türkçe/i, "/tr/futbol-bilgi-yarismasi/futbolcu-bilmece"],
     ["/en/football-quiz/career-path", "en", /русский/i, "/ru/futbolnaya-viktorina/ugaday-futbolista-po-karere"],
     ["/ru/futbolnaya-viktorina/viktorina-arsenal", "ru", /english/i, "/en/football-quiz/arsenal"],
     ["/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii", "ru", /español/i, "/es/quiz-de-futbol/seleccion-espanola"],
-    ["/ru/futbolnaya-viktorina/ugaday-futbolista", "ru", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/ru/futbolnaya-viktorina/ugaday-futbolista", "ru", /türkçe/i, "/tr/futbol-bilgi-yarismasi/futbolcu-bilmece"],
     ["/en/football-quiz/career-path", "en", /português/i, "/pt/quiz-de-futebol/adivinhe-o-jogador-pela-carreira"],
     ["/pt/quiz-de-futebol/quiz-do-arsenal", "pt", /english/i, "/en/football-quiz/arsenal"],
     ["/pt/quiz-de-futebol/quiz-da-selecao-espanhola", "pt", /русский/i, "/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii"],
-    ["/pt/quiz-de-futebol/adivinhe-o-jogador", "pt", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/pt/quiz-de-futebol/adivinhe-o-jogador", "pt", /türkçe/i, "/tr/futbol-bilgi-yarismasi/futbolcu-bilmece"],
     ["/en/football-quiz/career-path", "en", /deutsch/i, "/de/fussball-quiz/karrierestationen-erraten"],
     ["/de/fussball-quiz/arsenal-quiz", "de", /english/i, "/en/football-quiz/arsenal"],
     ["/de/fussball-quiz/spanien-quiz", "de", /русский/i, "/ru/futbolnaya-viktorina/viktorina-sbornaya-ispanii"],
     ["/de/fussball-quiz/fc-barcelona-quiz", "de", /português/i, "/pt/quiz-de-futebol/quiz-do-barcelona"],
-    ["/de/fussball-quiz/fussballer-erraten", "de", /türkçe/i, "/en/football-quiz/guess-the-player"],
+    ["/de/fussball-quiz/fussballer-erraten", "de", /türkçe/i, "/tr/futbol-bilgi-yarismasi/futbolcu-bilmece"],
+    ["/tr/futbol-bilgi-yarismasi/arsenal-testi", "tr", /english/i, "/en/football-quiz/arsenal"],
+    ["/tr/futbol-bilgi-yarismasi/ispanya-milli-takimi-testi", "tr", /deutsch/i, "/de/fussball-quiz/spanien-quiz"],
+    ["/ka/football-quiz/arsenal", "ka", /türkçe/i, "/tr/futbol-bilgi-yarismasi/arsenal-testi"],
   ] as const)("keeps localized destinations after deferred loading on %s", async (pathname, locale, language, destination) => {
     navigation.pathname = pathname;
     navigation.search = "preview=public-test&ref=campaign";

@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n/locale";
-import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { campaignHubPath, campaignPublicSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
 import { GAME_PAGE_DETAILS } from "./game-page-details";
 export { engineEmitsEvents, FULL_GAME_DEMO_SLUGS, isFullGameDemo, SIGN_IN_PATH } from "./public-game-runtime";
@@ -156,13 +156,11 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 
 /** Where a card links: its page, the established quiz page, or the app. */
 /**
- * Campaign quiz pages have English, Spanish, Russian, Brazilian Portuguese and German editions; the Georgian edition
- * is per page, so ka links to English. pt and de pages appear only once their content is complete: ship the pt / de
- * web after that campaign content is on the target (scripts/campaign-quizzes-pt.ts, scripts/campaign-quizzes-de.ts),
- * or these links 404.
+ * Campaign quiz pages have an edition in every locale. This cannot know which are open (it runs in client bundles too),
+ * so the destination decides: closed ka and tr pages redirect to English (CampaignQuizServerPage). Closed pt and de pages
+ * answer 404, so ship those webs after their content is on the target.
  */
-export const campaignLocaleOf = (locale: Locale): "en" | "es" | "ru" | "pt" | "de" =>
-  (locale === "es" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en");
+export const campaignLocaleOf = (locale: Locale): CampaignQuizLocale => locale;
 
 /** Locales in which this game's public page exists (page flag + a written body). */
 export function publishedLocalesOf(game: PublicGame): SeoPageLocale[] {

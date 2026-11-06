@@ -115,6 +115,8 @@ describe("public games manifest", () => {
     // career-path has no game page of its own: the de card goes to the campaign quiz that reuses its slug.
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "de")).toBe("/de/fussball-quiz/karrierestationen-erraten");
     expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "de")).toBe("/de/fussball-quiz/fussballer-erraten");
-    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "tr")).toBe("/en/football-quiz/career-path");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "tr")).toBe("/tr/futbol-bilgi-yarismasi/kariyerden-futbolcu-tahmin-etme");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "clues")!, "tr")).toBe("/tr/futbol-bilgi-yarismasi/futbolcu-bilmece");
+    expect(cardHref(PUBLIC_GAMES.find((g) => g.modeId === "careerPath")!, "ka")).toBe("/ka/football-quiz/career-path");
   });
 });

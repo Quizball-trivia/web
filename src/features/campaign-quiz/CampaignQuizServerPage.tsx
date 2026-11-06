@@ -1,12 +1,12 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
-import { getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
+import { CampaignQuizApiError, getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
 import type { CampaignQuiz } from './campaignQuiz.types';
-import { CAMPAIGN_HREFLANG, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { CAMPAIGN_HREFLANG, CAMPAIGN_OG_LOCALE, CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
@@ -16,15 +16,7 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   ru: 'ru-RU',
   pt: 'pt-BR',
   de: 'de-DE',
-};
-
-const OG_LOCALE: Record<CampaignQuizLocale, string> = {
-  en: 'en_GB',
-  ka: 'ka_GE',
-  es: 'es_ES',
-  ru: 'ru_RU',
-  pt: 'pt_BR',
-  de: 'de_DE',
+  tr: 'tr-TR',
 };
 
 const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
@@ -34,19 +26,23 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   ru: { home: 'Главная', hub: 'Футбольная викторина' },
   pt: { home: 'Início', hub: 'Quiz de futebol' },
   de: { home: 'Startseite', hub: 'Fußball-Quiz' },
+  tr: { home: 'Ana sayfa', hub: 'Futbol Bilgi Yarışması' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
   getCampaignQuiz(slug, preview, locale));
 
+/** Editions that always exist; a missing edition of any other language is answered in English by the quiz endpoint. */
+const ALWAYS_ON_EDITIONS: readonly CampaignQuizLocale[] = ['en', 'es'];
+
 /**
- * The quiz endpoint answers a missing Russian, Portuguese or German edition in English, so such a page exists only
- * when the quiz says it has that edition. Older backends do not say: that language's catalog decides, and a catalog
- * that cannot be read means no edition (never an English page under a Russian, Portuguese or German address). A
- * backend without Portuguese or German pages rejects that catalog, so the language stays closed there.
+ * So a gated edition's page exists only when the quiz says it has that edition. Older backends do not say: that
+ * language's catalog decides, and a catalog that cannot be read means no edition (never an English page under another
+ * language's address). A backend without that language rejects the catalog, so the language stays closed there.
  */
-export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>, locale: 'ru' | 'pt' | 'de') => {
-  const said = quiz.editions?.[locale];
+export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<CampaignQuiz, 'editions'>, locale: CampaignQuizLocale) => {
+  if (ALWAYS_ON_EDITIONS.includes(locale)) return true;
+  const said = quiz.editions?.[locale as keyof NonNullable<CampaignQuiz['editions']>];
   if (typeof said === 'boolean') return said;
   try {
     return (await listCampaignQuizPages(locale)).some((page) => page.slug === slug);
@@ -55,17 +51,43 @@ export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<Campaign
   }
 });
 
-export const hasRussianEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'ru');
-export const hasPortugueseEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'pt');
-export const hasGermanEdition = (slug: string, quiz: Pick<CampaignQuiz, 'editions'>) => hasCampaignEdition(slug, quiz, 'de');
+/**
+ * Cards, footers and home links in these languages always point at their own edition, and a question edit can close one
+ * at any time, so a closed page sends the visitor to the English quiz (temporarily) instead of a 404. The destination
+ * decides, which also covers cached pages and client bundles that cannot know what is open.
+ */
+const ENGLISH_WHEN_CLOSED: readonly CampaignQuizLocale[] = ['ka', 'tr'];
 
-/** True when this page may be served under `locale`: Russian, Portuguese and German need their edition (previews always render). */
-function servable(locale: CampaignQuizLocale, preview: string | undefined, editions: { ru: boolean; pt: boolean; de: boolean }): boolean {
-  if (preview) return true;
-  if (locale === 'ru') return editions.ru;
-  if (locale === 'pt') return editions.pt;
-  if (locale === 'de') return editions.de;
-  return true;
+function closedEdition(sourceSlug: string, locale: CampaignQuizLocale): never {
+  if (ENGLISH_WHEN_CLOSED.includes(locale)) redirect(campaignQuizPath(sourceSlug, 'en'));
+  notFound();
+}
+
+/** The languages this quiz can be read in, in switcher order. */
+export async function campaignQuizEditions(slug: string, quiz: Pick<CampaignQuiz, 'editions'>): Promise<CampaignQuizLocale[]> {
+  const open = await Promise.all(CAMPAIGN_QUIZ_LOCALES.map((locale) => hasCampaignEdition(slug, quiz, locale)));
+  return CAMPAIGN_QUIZ_LOCALES.filter((_, index) => open[index]);
+}
+
+/**
+ * The quizzes a page under `locale` can link to; undefined when every quiz can be linked. A gated edition closes while
+ * one of its questions is being retranslated, so a catalog that cannot be read means no links rather than all of them.
+ */
+export const campaignOpenSlugs = cache(async (locale: CampaignQuizLocale): Promise<ReadonlySet<string> | undefined> => {
+  if (ALWAYS_ON_EDITIONS.includes(locale)) return undefined;
+  try {
+    return new Set((await listCampaignQuizPages(locale)).map((page) => page.slug));
+  } catch {
+    return new Set();
+  }
+});
+
+/** The hreflang map of a quiz page. */
+export function campaignQuizLanguages(sourceSlug: string, editions: readonly CampaignQuizLocale[]): Record<string, string> {
+  return {
+    ...Object.fromEntries(editions.map((edition) => [CAMPAIGN_HREFLANG[edition], `${SITE_URL}${campaignQuizPath(sourceSlug, edition)}`])),
+    'x-default': `${SITE_URL}${campaignQuizPath(sourceSlug, 'en')}`,
+  };
 }
 
 function absoluteImage(url: string): string {
@@ -79,29 +101,13 @@ export async function buildCampaignQuizMetadata(
 ): Promise<Metadata> {
   try {
     const quiz = await loadQuiz(sourceSlug, preview, locale);
-    const editions = {
-      ru: await hasRussianEdition(sourceSlug, quiz),
-      pt: await hasPortugueseEdition(sourceSlug, quiz),
-      de: await hasGermanEdition(sourceSlug, quiz),
-    };
-    if (!servable(locale, preview, editions)) return {};
+    const editions = await campaignQuizEditions(sourceSlug, quiz);
+    if (!preview && !editions.includes(locale)) return {};
     const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
     if (!content) return {};
 
     const pageUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, locale)}`;
-    const englishUrl = `${SITE_URL}${campaignQuizPath(sourceSlug, 'en')}`;
-    const editionLocales: CampaignQuizLocale[] = [
-      'en',
-      ...(content.localeMode === 'en_ka' ? ['ka' as const] : []),
-      'es',
-      ...(editions.ru ? ['ru' as const] : []),
-      ...(editions.pt ? ['pt' as const] : []),
-      ...(editions.de ? ['de' as const] : []),
-    ];
-    const languages: Record<string, string> = {
-      ...Object.fromEntries(editionLocales.map((edition) => [CAMPAIGN_HREFLANG[edition], `${SITE_URL}${campaignQuizPath(sourceSlug, edition)}`])),
-      'x-default': englishUrl,
-    };
+    const languages = campaignQuizLanguages(sourceSlug, editions);
     const image = content.ogImage ?? content.heroImage;
     const imageAlt = content.ogImageAlt ?? content.heroImageAlt;
 
@@ -116,8 +122,8 @@ export async function buildCampaignQuizMetadata(
         title: content.metadataTitle,
         description: content.description,
         url: pageUrl,
-        locale: OG_LOCALE[locale],
-        alternateLocale: editionLocales.filter((edition) => edition !== locale).map((edition) => OG_LOCALE[edition]),
+        locale: CAMPAIGN_OG_LOCALE[locale],
+        alternateLocale: editions.filter((edition) => edition !== locale).map((edition) => CAMPAIGN_OG_LOCALE[edition]),
         images: [{ url: absoluteImage(image), alt: imageAlt }],
       },
       twitter: {
@@ -138,11 +144,13 @@ export async function renderCampaignQuizPage(
   preview?: string,
 ) {
   // Loaded first: a renamed quiz is a 404 here, which the route turns into its redirect.
-  const quiz = await loadQuiz(sourceSlug, preview, locale);
-  const russian = await hasRussianEdition(sourceSlug, quiz);
-  const portuguese = await hasPortugueseEdition(sourceSlug, quiz);
-  const german = await hasGermanEdition(sourceSlug, quiz);
-  if (!servable(locale, preview, { ru: russian, pt: portuguese, de: german })) notFound();
+  const quiz = await loadQuiz(sourceSlug, preview, locale).catch((error: unknown) => {
+    // The slug is already validated, so a 400 is a backend that does not know this language yet: a closed edition.
+    if (!preview && locale !== 'en' && error instanceof CampaignQuizApiError && error.status === 400) closedEdition(sourceSlug, locale);
+    throw error;
+  });
+  const editions = await campaignQuizEditions(sourceSlug, quiz);
+  if (!preview && !editions.includes(locale)) closedEdition(sourceSlug, locale);
   const content = getCampaignQuizContent(sourceSlug, quiz.page, locale);
   if (!content) notFound();
 
@@ -180,7 +188,7 @@ export async function renderCampaignQuizPage(
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={russian} portugueseEdition={portuguese} germanEdition={german} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} editions={editions} openSlugs={await campaignOpenSlugs(locale)} />
     </>
   );
 }
