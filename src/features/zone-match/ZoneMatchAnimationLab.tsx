@@ -71,7 +71,7 @@ function runFx(scene: LabScene, duelNo: number, momentId: number): CardFx {
   const fx: CardFx = { ...emptyFx(duelNo), ...scene.fx, results: scene.cards.results };
   if (scene.moment) {
     const { side, card } = scene.moment;
-    fx.moment = { id: momentId, duelNo, side, card, effect: '', phase: 'reveal' };
+    fx.moment = { id: momentId, duelNo, side, card, effect: 'played', phase: 'reveal' };
     // Floodlight Failure runs on the wall clock (as in the match).
     if (card === 'floodlight-failure') fx.dark = { victim: otherZoneSide(side), from: Date.now(), until: Date.now() + FLOODLIGHT_MS };
   }

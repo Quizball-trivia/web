@@ -195,7 +195,7 @@ export class CardEffectsEngine {
   /** Translucent avatar copies to draw this frame (ZoneMatch3D draws them as cut-outs). */
   ghostRequests: GhostFx[] = [];
 
-  constructor(private readonly director: DuelDirector) {
+  constructor(private readonly director: DuelDirector, private readonly labels: { varChecking: string; onlyBluff: string; cancelled: string }) {
     this.extras = new CardExtras(director);
     this.root.add(this.extras.root);
     if (typeof window !== 'undefined' && window.matchMedia) this.extras.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -275,7 +275,7 @@ export class CardEffectsEngine {
       ctx.fillText('VAR', 256, 150);
       ctx.font = `800 54px ${POPPINS}`;
       ctx.fillStyle = '#1CB0F6';
-      ctx.fillText('CHECKING…', 256, 236);
+      ctx.fillText(this.labels.varChecking, 256, 236, 470);
     });
     const shieldTexture = canvasTexture(200, 220, (ctx) => {
       ctx.beginPath();
@@ -415,7 +415,7 @@ export class CardEffectsEngine {
               crossOut(ctx, 256, 128, 74);
               ctx.font = `800 50px ${POPPINS}`;
               ctx.fillStyle = '#ffffff';
-              ctx.fillText(BLUFF_CARDS.includes(shot.against!) ? 'ONLY A BLUFF' : 'CANCELLED', 256, 250);
+              ctx.fillText(BLUFF_CARDS.includes(shot.against!) ? this.labels.onlyBluff : this.labels.cancelled, 256, 250, 480);
             })
           : null;
         break;

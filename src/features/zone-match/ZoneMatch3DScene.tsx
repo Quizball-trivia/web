@@ -23,6 +23,7 @@ import { CardEffectsEngine } from './zoneMatch3d.effects';
 import { REAL_CLOCK, type SceneClock } from './zoneMatch3d.clock';
 import { makeBallMaterial, useBallStyle } from './zoneMatch3d.balls';
 import { ClothGoal } from './ZoneMatchGoal3D';
+import { useZoneCopy } from './useZoneCopy';
 
 /**
  * Screen px covered by overlays on each edge of the full-screen view: the HUD on top, the question sheet and the hand
@@ -122,7 +123,7 @@ function useLabelTexture(text: string) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(text, 256, 52);
+    ctx.fillText(text, 256, 52, 500);
     const map = new THREE.CanvasTexture(canvas);
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = 8;
@@ -144,6 +145,7 @@ function ZoneLabel({ text, x }: { text: string; x: number }) {
 
 /** The three zones: faint dividers, names near the far touchline, and the ball's zone lit in the attacker's colour. */
 function Zones({ director }: { director: DuelDirector }) {
+  const { c } = useZoneCopy();
   const mask = useZoneMask();
   const materials = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
   const colors = useMemo(() => ({ player: new THREE.Color(SIDE_COLOR.player), opponent: new THREE.Color(SIDE_COLOR.opponent) }), []);
@@ -183,9 +185,9 @@ function Zones({ director }: { director: DuelDirector }) {
           ))}
         </group>
       ))}
-      <ZoneLabel text="YOUR SIDE" x={columnX(0) - 2} />
-      <ZoneLabel text="CENTRE" x={columnX(1)} />
-      <ZoneLabel text="THEIR SIDE" x={columnX(2) + 2} />
+      <ZoneLabel text={c.pitch.painted[0]} x={columnX(0) - 2} />
+      <ZoneLabel text={c.pitch.painted[1]} x={columnX(1)} />
+      <ZoneLabel text={c.pitch.painted[2]} x={columnX(2) + 2} />
     </group>
   );
 }
@@ -594,7 +596,8 @@ function CardEffects({ director, engine, fx, overlays, clock }: { director: Duel
 
 function ZoneMatch3DScene({ input, insets, fx, cutouts, plates, anchors, swapColors, overlays, visible, onFailure, clock = REAL_CLOCK }: ZoneMatch3DSceneProps) {
   const director = useMemo(() => new DuelDirector(), []);
-  const engine = useMemo(() => new CardEffectsEngine(director), [director]);
+  const { c } = useZoneCopy();
+  const engine = useMemo(() => new CardEffectsEngine(director, c.fx), [director, c.fx]);
   useEffect(() => () => engine.dispose(), [engine]);
   const [frameloop, setFrameloop] = useState<Frameloop>('demand');
   return (

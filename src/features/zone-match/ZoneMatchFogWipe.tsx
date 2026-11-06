@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { motion } from 'motion/react';
+import { useZoneCopy } from './useZoneCopy';
 
 const BRUSH = 46;
 /** Fog this opaque (0–255) at a point stops a tap there. */
@@ -49,6 +50,7 @@ function paintFog(ctx: CanvasRenderingContext2D, w: number, h: number, seed: num
 }
 
 export function FogWipe({ panelRef, seed }: { panelRef: RefObject<HTMLDivElement | null>; seed: number }) {
+  const { c } = useZoneCopy();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [top, setTop] = useState(0);
   const [wiped, setWiped] = useState(false);
@@ -184,7 +186,7 @@ export function FogWipe({ panelRef, seed }: { panelRef: RefObject<HTMLDivElement
             animate={{ x: [-14, 14, -14] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <span aria-hidden>👋</span> Drag to wipe the fog away
+            <span aria-hidden>👋</span> {c.fog.wipe}
           </motion.div>
         </div>
       )}

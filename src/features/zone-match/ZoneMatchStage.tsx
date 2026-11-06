@@ -22,14 +22,13 @@ import type { ShotMode } from '@/features/possession/components/pitch/pitch.type
 import { NumericPad } from '@/features/numeric-question/NumericPad';
 import { LockChip } from '@/features/numeric-draft/NumericDraftView';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
-import { MATCH_ROUNDS, pitchColumn, pitchLabel, type BattleOutcome, type Possession } from './zoneMatch.rules';
+import { MATCH_ROUNDS, pitchColumn, type BattleOutcome, type Possession } from './zoneMatch.rules';
 import { outcomeReason, stealStep, type OutcomeReason } from './zoneMatch.reason';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
-import { CARD_BY_ID, FLOODLIGHT_MS, type CardId, type CardPhase } from './zoneMatch.cards';
+import { CARD_BY_ID, FLOODLIGHT_MS, type CardId, type CardPhase, type OutcomeNote } from './zoneMatch.cards';
 import {
   GLOVES_SAVE_NOTE,
   ATTACKS_EACH,
-  NAMES,
   OVERLAY_IN_MS,
   activeCards,
   attackNumber,
@@ -49,6 +48,8 @@ import { CategoryTile } from './ZoneMatchCategories';
 import { SkyShot } from './ZoneMatchSkyShot';
 import { FogWipe } from './ZoneMatchFogWipe';
 import { HIDDEN_ANSWER } from './zoneMatch.view';
+import { cardEventLine, fill, type ZoneMatchCopy } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -120,6 +121,7 @@ export function ZoneMatchStage({
   onPickCategory: (categoryId: string) => void;
 }) {
   const { locale } = useLocale();
+  const { c } = useZoneCopy();
   // One continuous match: the player's goal is always on the left.
   const mirrored = false;
   const outcome = state.battleStep === 'outcome' ? state.outcome : null;
@@ -164,7 +166,7 @@ export function ZoneMatchStage({
           opponentRankPoints: opponent.rankPoints,
           // Under each score: the attacks that side has left.
           renderPoints: (side) => <AttackCounter state={state} side={side} />,
-          centerLabel: roundLabel(state),
+          centerLabel: roundLabel(state, c),
           timeRemaining: clockRunning ? timeLeft : null,
           half: 1,
           questionInHalf: Math.min(state.round + 1, MATCH_ROUNDS),
@@ -199,7 +201,7 @@ export function ZoneMatchStage({
     }),
     [
       state, shownPossession, player, opponent, clockRunning, timeLeft,
-      onQuit, shotMode, shotFrom, attackerIsMe, mirrored, mcqOpen, muted,
+      onQuit, shotMode, shotFrom, attackerIsMe, mirrored, mcqOpen, muted, c,
     ],
   );
 
@@ -288,7 +290,7 @@ export function ZoneMatchStage({
         />
       </div>
 
-      <MatchHudIconButton onClick={onToggleMute} aria-label={muted ? 'Unmute' : 'Mute'} className="fixed left-3 top-3 z-[70] sm:left-4 sm:top-4">
+      <MatchHudIconButton onClick={onToggleMute} aria-label={muted ? c.stage.unmute : c.stage.mute} className="fixed left-3 top-3 z-[70] sm:left-4 sm:top-4">
         {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
       </MatchHudIconButton>
 
@@ -299,7 +301,7 @@ export function ZoneMatchStage({
           {/* Each side's playstyles, under its score (the hand lives in the step card now). */}
           <HudLoadouts state={state} opponentName={opponent.name} phase={handPhase} onPlay={playCard} />
           <div className="px-3 sm:px-4">
-            <StandingEffects state={state} />
+            <StandingEffects state={state} opponentName={opponent.name} />
           </div>
         </div>
       </div>
@@ -341,7 +343,7 @@ export function ZoneMatchStage({
               <FitHeight max={cardMax}>
                 <div className="flex flex-col gap-2 px-4 py-2">
                   {/* The last result (through the card window) and the cards working on this question. */}
-                  <OutcomeFeed outcome={state.lastOutcome} note={state.lastOutcomeNote} show={state.battleStep === 'cards' || state.battleStep === 'reveal'} />
+                  <OutcomeFeed outcome={state.lastOutcome} note={state.lastOutcomeNote} show={state.battleStep === 'cards' || state.battleStep === 'reveal'} opponentName={opponent.name} />
                   <CardsInPlay state={state} now={now} opponentName={opponent.name} />
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.div
@@ -409,7 +411,8 @@ export function ZoneMatchStage({
             note={state.outcomeNote}
             fired={state.cardEvents.filter((event) => event.duelNo === state.duelNo && event.phase === 'result')}
             opponentName={opponent.name}
-            reason={outcomeReason(state)}
+            reason={outcomeReason(state, locale)}
+            state={state}
             top={hudHeight + RESULT_TITLE_GAP}
             titleRef={titleRef}
             panelRef={resultRef}
@@ -504,10 +507,10 @@ function shortName(name: string): string {
 }
 
 /** Over the HUD clock: which of the ten rounds this is (the last one called out). */
-function roundLabel(state: MatchState): string {
-  if (state.stage === 'fulltime') return 'Full time';
+function roundLabel(state: MatchState, c: ZoneMatchCopy): string {
+  if (state.stage === 'fulltime') return c.common.fullTime;
   const round = Math.min(state.round + 1, MATCH_ROUNDS);
-  return round === MATCH_ROUNDS ? 'Last round' : `Round ${round}/${MATCH_ROUNDS}`;
+  return round === MATCH_ROUNDS ? c.stage.lastRound : fill(c.stage.round, { n: round, total: MATCH_ROUNDS });
 }
 
 /** The attacker of the duel on screen: during the result, the side that just attacked (the next one comes after). */
@@ -517,6 +520,7 @@ function duelPossession(state: MatchState): Possession {
 
 /** The round's first step: the attacker picks one of their categories (yours to tap; theirs to watch). */
 function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchState; opponentName: string; timeLeft: number | null; onPick: (categoryId: string) => void }) {
+  const { c } = useZoneCopy();
   const attacker = state.possession.attacker;
   const mine = attacker === 'player';
   const open = unusedCategories(state, attacker).map((c) => c.id);
@@ -525,15 +529,15 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
     <div className="flex flex-col gap-2.5" data-zm-category-pick={attacker}>
       <div className="rounded-[20px] px-4 py-3 text-center text-white" style={{ background: mine ? BLUE : RED }}>
         <div className="text-[11px] uppercase tracking-[0.18em] text-white/80" style={poppins}>
-          {mine ? 'Your' : 'Their'} attack {attackNumber(state.round)} of {ATTACKS_EACH}
-          {timeLeft !== null ? ` · ${timeLeft}s` : ''}
+          {fill(mine ? c.stage.yourAttackOf : c.stage.theirAttackOf, { n: attackNumber(state.round), total: ATTACKS_EACH })}
+          {timeLeft !== null ? ` · ${fill(c.common.secondsShort, { s: timeLeft })}` : ''}
         </div>
         <div className="mt-0.5 text-lg uppercase leading-tight sm:text-xl" style={poppins}>
-          {mine ? 'Choose the category for your attack' : `${opponentName} is choosing…`}
+          {mine ? c.stage.chooseCategory : fill(c.stage.isChoosing, { name: opponentName })}
         </div>
         {lastAttack && (
           <div className="mx-auto mt-1 w-fit rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] uppercase text-surface-page" style={poppins} data-zm-last-attack>
-            {mine ? 'Your last attack' : 'Their last attack'}
+            {mine ? c.stage.yourLastAttack : c.stage.theirLastAttack}
           </div>
         )}
       </div>
@@ -549,7 +553,7 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
               onClick={() => onPick(category.id)}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.95 }}
-              aria-label={`Attack with ${category.name}`}
+              aria-label={fill(c.stage.attackWith, { category: category.name })}
             >
               {tile}
             </motion.button>
@@ -567,14 +571,15 @@ function CategoryPick({ state, opponentName, timeLeft, onPick }: { state: MatchS
 /** Where the ball is: your side, the centre or theirs, lit in the attacker's colour; the ball rolls when it moves.
  *  The 3D duel view replaces it; it stays as that view's fallback without WebGL. */
 function BallStrip({ possession }: { possession: Possession }) {
+  const { c } = useZoneCopy();
   const column = pitchColumn(possession);
   const mine = possession.attacker === 'player';
   return (
     <div className="relative mx-3 mt-2 flex items-center gap-1">
-      <span className="h-6 w-1 rounded-full bg-brand-blue/70" title="Your goal" />
+      <span className="h-6 w-1 rounded-full bg-brand-blue/70" title={c.stage.yourGoal} />
       <div className="relative h-9 flex-1">
         <div className="absolute inset-0 grid grid-cols-3 gap-1">
-          {['Your side', 'Centre', 'Their side'].map((label, zone) => (
+          {c.pitch.zones.map((label, zone) => (
             <div
               key={label}
               className={cn(
@@ -597,21 +602,22 @@ function BallStrip({ possession }: { possession: Possession }) {
           transition={{ type: 'spring', stiffness: 120, damping: 16 }}
         />
       </div>
-      <span className="h-6 w-1 rounded-full bg-brand-red-soft/70" title="Their goal" />
+      <span className="h-6 w-1 rounded-full bg-brand-red-soft/70" title={c.stage.theirGoal} />
     </div>
   );
 }
 
 /** Standing card effects worth keeping in view (gloves on, a Tiki-Taka run, a yellow card). */
-function StandingEffects({ state }: { state: MatchState }) {
+function StandingEffects({ state, opponentName }: { state: MatchState; opponentName: string }) {
+  const { c } = useZoneCopy();
   const chips: Array<{ key: string; card: CardId; label: string; side: DuelSide }> = [];
   for (const side of ['player', 'opponent'] as const) {
-    const who = side === 'player' ? 'You' : NAMES[side];
-    if (state.gloves[side]) chips.push({ key: `g-${side}`, card: 'goalkeeper-gloves', label: `${who}: gloves on`, side });
-    if (state.tiki[side] > 0) chips.push({ key: `t-${side}`, card: 'tiki-taka', label: `${who}: Tiki-Taka ×${state.tiki[side]}`, side });
+    const who = side === 'player' ? c.common.you : opponentName;
+    if (state.gloves[side]) chips.push({ key: `g-${side}`, card: 'goalkeeper-gloves', label: fill(c.stage.glovesOn, { who }), side });
+    if (state.tiki[side] > 0) chips.push({ key: `t-${side}`, card: 'tiki-taka', label: fill(c.stage.tikiRun, { who, n: state.tiki[side] }), side });
     // During a round's category pick the next duel is the one that counts.
     const duel = state.battleStep === 'category' ? state.duelNo + 1 : state.duelNo;
-    if (state.yellowThrough[side] > 0 && duel <= state.yellowThrough[side]) chips.push({ key: `y-${side}`, card: 'yellow-card', label: `${who}: no cards`, side });
+    if (state.yellowThrough[side] > 0 && duel <= state.yellowThrough[side]) chips.push({ key: `y-${side}`, card: 'yellow-card', label: fill(c.stage.noCards, { who }), side });
   }
   if (chips.length === 0) return null;
   return (
@@ -646,6 +652,7 @@ function MiniGlyph({ id }: { id: CardId }) {
 
 /** The cards working on this question, popping in as they are played (live cards and 50/50s included). */
 export function CardsInPlay({ state, now, opponentName }: { state: MatchState; now: number; opponentName: string }) {
+  const { c } = useZoneCopy();
   const inQuestion = ['mcq', 'mcqReveal', 'numeric', 'numericReveal'].includes(state.battleStep);
   if (!inQuestion) return null;
   const active = activeCards(state);
@@ -655,15 +662,15 @@ export function CardsInPlay({ state, now, opponentName }: { state: MatchState; n
   const chips = (['player', 'opponent'] as const).flatMap((side) =>
     // Reactions did their work at the reveal; the rest are still shaping this question.
     active[side].filter((id) => CARD_BY_ID[id].phase !== 'reaction').map((id) => {
-      const name = CARD_BY_ID[id].name;
+      const name = c.cards[id].name;
       const sabotage = CARD_BY_ID[id].type === 'sabotage';
       const text = side === 'player'
         ? sabotage
-          ? id === 'floodlight-failure' && lightsOut ? 'Their lights are out' : `${name} on them`
-          : `You: ${name}`
+          ? id === 'floodlight-failure' && lightsOut ? c.stage.lightsOut : fill(c.stage.cardOnThem, { card: name })
+          : fill(c.stage.whoCard, { who: c.common.you, card: name })
         : sabotage
-          ? `${name} on you`
-          : `${opponentName}: ${name}`;
+          ? fill(c.stage.cardOnYou, { card: name })
+          : fill(c.stage.whoCard, { who: opponentName, card: name });
       return { key: `${side}-${id}`, id, side, text };
     }),
   );
@@ -700,11 +707,12 @@ export function numericLightsOut(state: MatchState, now: number): boolean {
 /** The number tiebreak: the prompt and the pad (dark under Floodlight Failure), and who has locked in. */
 export function NumericPanel({ numeric, dark, opponentName, onGuess }: { numeric: NumericDuel; dark: boolean; opponentName: string; onGuess: (value: number) => void }) {
   const { locale } = useLocale();
+  const { c } = useZoneCopy();
   return (
     <div className="relative flex flex-col gap-2">
       <div className="flex flex-col gap-2">
         <p className="text-center text-xs uppercase tracking-[0.14em] text-brand-yellow" style={poppins}>
-          Both right! Closest guess wins the duel
+          {c.stage.numericTitle}
         </p>
         <div
           className="flex items-center justify-center rounded-[20px] bg-surface-page px-4 py-2.5 text-center text-white"
@@ -724,8 +732,8 @@ export function NumericPanel({ numeric, dark, opponentName, onGuess }: { numeric
       />
       {/* Short screens: the pad needs the room; the reveal says who locked in. */}
       <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
-        <LockChip label="You" locked={numeric.guesses.player.value !== null} pendingLabel="Typing…" />
-        <LockChip label={opponentName} locked={numeric.guesses.opponent.value !== null} pendingLabel="Thinking…" />
+        <LockChip label={c.common.you} locked={numeric.guesses.player.value !== null} pendingLabel={c.stage.typing} />
+        <LockChip label={opponentName} locked={numeric.guesses.opponent.value !== null} pendingLabel={c.stage.thinking} />
       </div>
       {dark && <Blackout />}
     </div>
@@ -733,6 +741,7 @@ export function NumericPanel({ numeric, dark, opponentName, onGuess }: { numeric
 }
 
 function Blackout() {
+  const { c } = useZoneCopy();
   return (
     <motion.div
       className="absolute inset-0 z-20 flex items-center justify-center rounded-[24px] bg-black text-sm uppercase text-white/60"
@@ -740,7 +749,7 @@ function Blackout() {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      💡 Floodlight failure…
+      💡 {c.stage.floodlight}
     </motion.div>
   );
 }
@@ -764,6 +773,7 @@ export function McqPanel({
   timeLeft: number | null;
   onAnswer: (index: number, questionId: string) => void;
 }) {
+  const { c } = useZoneCopy();
   const sabotage = sabotageOn(state, 'player');
   const dark = !revealed && sabotage.includes('floodlight-failure') && now < mcq.startedAt + FLOODLIGHT_MS;
   // Time Wasting: their clock runs out early, and answers after it are refused.
@@ -829,7 +839,7 @@ export function McqPanel({
       {cutViews.length > 0 && <style>{fiftyCutStyle(cutScope, cutViews)}</style>}
       {mcq.offCategory && state.stage !== 'shootout' && (
         <div className="mb-1.5 truncate text-center text-[10px] uppercase tracking-[0.06em] text-brand-orange" style={poppins}>
-          No {shortName(mcq.categoryName)} questions left · general question
+          {fill(c.stage.offCategory, { category: shortName(mcq.categoryName) })}
         </div>
       )}
       {/* A Substitution flips the question over to the new one. */}
@@ -850,7 +860,9 @@ export function McqPanel({
             question={viewQuestion}
             qIndex={state.round}
             totalQuestions={MATCH_ROUNDS}
-            counterLabel={state.shootout ? `Penalty ${state.shootout.kicks.length + 1}` : `R${Math.min(state.round + 1, MATCH_ROUNDS)}/${MATCH_ROUNDS} · ${shortName(mcq.categoryName)}${state.duelInRound > 0 ? ` · duel ${state.duelInRound + 1}` : ''}`}
+            counterLabel={state.shootout
+              ? fill(c.stage.penaltyCounter, { n: state.shootout.kicks.length + 1 })
+              : fill(state.duelInRound > 0 ? c.stage.roundCounterDuel : c.stage.roundCounter, { round: Math.min(state.round + 1, MATCH_ROUNDS), total: MATCH_ROUNDS, category: shortName(mcq.categoryName), n: state.duelInRound + 1 })}
             timeRemaining={shownLeft}
             showOptions={!dark}
             selectedAnswer={toView(mine)}
@@ -866,7 +878,7 @@ export function McqPanel({
       </AnimatePresence>
       {mcq.firstMiss.player !== null && mine === null && !revealed && (
         <div className="mt-2 text-center text-xs uppercase tracking-[0.12em] text-brand-yellow" style={poppins}>
-          Second Ball · one more try
+          {c.stage.secondBallTry}
         </div>
       )}
       <AnimatePresence>{fogged && <FogWipe key={`fog-${mcq.key}-${mcq.question.id}`} panelRef={panelRef} seed={mcq.key * 97 + 13} />}</AnimatePresence>
@@ -896,6 +908,7 @@ const MUD_BLOBS = [
 
 /** Muddy Pitch: mud splats over the answers as they reshuffle under it. */
 function MudSplash() {
+  const { c } = useZoneCopy();
   return (
     <motion.div
       className="pointer-events-none absolute inset-x-0 bottom-0 top-[45%] z-20 grid place-items-center overflow-hidden rounded-[24px]"
@@ -919,17 +932,10 @@ function MudSplash() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
       >
-        Mud! Your answers moved
+        {c.stage.mudMoved}
       </motion.span>
     </motion.div>
   );
-}
-
-/** A card event's line, from the player's seat: `{them}`/`{their}` become they/their or you/your. */
-function eventEffect(event: CardEvent): string {
-  const mine = event.side === 'player';
-  const text = event.effect.replace(/\{them\}/g, mine ? 'they' : 'you').replace(/\{their\}/g, mine ? 'their' : 'your');
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
@@ -937,6 +943,7 @@ function eventEffect(event: CardEvent): string {
  * did, one at a time. Results show in the outcome card instead.
  */
 function CardMoments({ state, opponentName, onMoment }: { state: MatchState; opponentName: string; onMoment: (event: CardEvent | null) => void }) {
+  const { c } = useZoneCopy();
   const [baseline] = useState(() => state.cardEvents[state.cardEvents.length - 1]?.id ?? 0);
   const [doneUpTo, setDoneUpTo] = useState(0);
   const queue = state.cardEvents.filter(
@@ -982,7 +989,7 @@ function CardMoments({ state, opponentName, onMoment }: { state: MatchState; opp
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.45, type: 'spring', stiffness: 420, damping: 16 }}
                 >
-                  <span className="-rotate-12 rounded-md bg-brand-red-soft px-2 py-0.5 text-[10px] font-black uppercase text-white">Beaten</span>
+                  <span className="-rotate-12 rounded-md bg-brand-red-soft px-2 py-0.5 text-[10px] font-black uppercase text-white">{c.stage.beaten}</span>
                 </motion.span>
               </motion.div>
             )}
@@ -1000,11 +1007,11 @@ function CardMoments({ state, opponentName, onMoment }: { state: MatchState; opp
           <div className="mt-2 max-w-md rounded-2xl px-4 py-2 text-center text-white shadow-xl" style={{ background: current.side === 'player' ? BLUE : RED }}>
             <div className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80" style={poppins}>
               <span className="rounded-full bg-black/25 px-1.5 py-px text-[9px] tracking-[0.1em] text-white">
-                {current.against ? 'Countered' : current.phase === 'result' ? 'Took effect' : 'Activated'}
+                {current.against ? c.stage.countered : current.phase === 'result' ? c.stage.tookEffect : c.stage.activated}
               </span>
-              {current.side === 'player' ? 'You' : opponentName} · {CARD_BY_ID[current.card].name}
+              {current.side === 'player' ? c.common.you : opponentName} · {c.cards[current.card].name}
             </div>
-            <div className="text-[15px] uppercase leading-tight" style={poppins}>{eventEffect(current)}</div>
+            <div className="text-[15px] uppercase leading-tight" style={poppins}>{cardEventLine(c, current, state)}</div>
           </div>
         </motion.div>
       )}
@@ -1012,20 +1019,23 @@ function CardMoments({ state, opponentName, onMoment }: { state: MatchState; opp
   );
 }
 
-function OutcomeFeed({ outcome, note, show }: { outcome: BattleOutcome | null; note: string | null; show: boolean }) {
+function OutcomeFeed({ outcome, note, show, opponentName }: { outcome: BattleOutcome | null; note: OutcomeNote | null; show: boolean; opponentName: string }) {
+  const { c } = useZoneCopy();
   if (!outcome || !show) return null;
+  const f = c.stage.feed;
+  const name = opponentName;
   const next = outcome.next.attacker;
   const message = {
-    advance: next === 'player' ? 'You moved forward' : `${NAMES.opponent} moved forward`,
-    held: 'Held up — no ground',
-    goal: outcome.kind === 'goal' ? (outcome.stolen ? (outcome.scorer === 'player' ? 'You stole it and scored!' : `${NAMES.opponent} stole it and scored`) : outcome.scorer === 'player' ? 'You scored!' : `${NAMES.opponent} scored`) : '',
-    turnover: next === 'player' ? 'You won the ball' : 'You lost the ball',
-    bothWrong: next === 'player' ? 'Both wrong — your ball' : 'Both wrong — their ball',
+    advance: next === 'player' ? f.forwardYou : fill(f.forwardThem, { name }),
+    held: f.heldUp,
+    goal: outcome.kind === 'goal' ? (outcome.stolen ? (outcome.scorer === 'player' ? f.stoleYou : fill(f.stoleThem, { name })) : outcome.scorer === 'player' ? f.scoredYou : fill(f.scoredThem, { name })) : '',
+    turnover: next === 'player' ? f.wonBall : f.lostBall,
+    bothWrong: next === 'player' ? f.bothWrongYours : f.bothWrongTheirs,
   }[outcome.kind];
   const good = next === 'player' ? outcome.kind !== 'goal' : outcome.kind === 'goal';
   return (
     <PossessionFeed
-      message={`Last duel: ${note ? `${note} · ` : ''}${message}`}
+      message={fill(c.stage.lastDuel, { text: `${note ? `${c.notes[note] ?? note} · ` : ''}${message}` })}
       direction={good ? 'forward' : 'backward'}
       side={good ? 'left' : 'right'}
     />
@@ -1037,6 +1047,7 @@ const trackLeft = (column: number) => `${[4, 16.7, 50, 83.3, 96][column + 1]}%`;
 
 /** The ball moving from where the duel started to where the next one starts (or into the net). */
 function ZoneTrack({ from, outcome }: { from: Possession; outcome: BattleOutcome }) {
+  const { c } = useZoneCopy();
   const fromColumn = pitchColumn(from);
   const toColumn = outcome.kind === 'goal' ? (outcome.scorer === 'player' ? 3 : -1) : pitchColumn(outcome.next);
   const nextIsMe = outcome.next.attacker === 'player';
@@ -1045,7 +1056,7 @@ function ZoneTrack({ from, outcome }: { from: Possession; outcome: BattleOutcome
       <div className="absolute inset-y-1 left-0 w-1.5 rounded-full bg-white/50" />
       <div className="absolute inset-y-1 right-0 w-1.5 rounded-full bg-white/50" />
       <div className="absolute inset-y-0 left-3 right-3 grid grid-cols-3 gap-1">
-        {['Your side', 'Centre', 'Their side'].map((label, column) => (
+        {c.pitch.zones.map((label, column) => (
           <div
             key={label}
             className={cn(
@@ -1072,28 +1083,34 @@ function ZoneTrack({ from, outcome }: { from: Possession; outcome: BattleOutcome
 }
 
 /** The result's headline: title, the line under it and its colour. */
-function outcomeView(outcome: BattleOutcome, from: Possession): { title: string; detail: string; background: string; ink: string } {
+function outcomeView(outcome: BattleOutcome, from: Possession, c: ZoneMatchCopy, name: string): { title: string; detail: string; background: string; ink: string } {
   const next = outcome.next;
-  const who = next.attacker === 'player' ? 'You attack' : `${NAMES.opponent} attacks`;
-  const side = next.attacker === 'player' ? BLUE : RED;
+  const s = c.stage;
+  const mine = next.attacker === 'player';
+  const column = pitchColumn(next);
+  const attacks = fill(mine ? s.attackYou : s.attackThem, { name, from: c.pitch.from[column] });
+  const attacksHere = fill(mine ? s.hereYou : s.hereThem, { name, place: c.pitch.places[column] });
+  const side = mine ? BLUE : RED;
   switch (outcome.kind) {
     case 'advance':
-      return { title: next.attacker === 'player' ? 'Forward!' : 'Pushed back', detail: `${who} from ${pitchLabel(next)}`, background: side, ink: WHITE };
+      return { title: mine ? s.forward : s.pushedBack, detail: attacks, background: side, ink: WHITE };
     case 'held':
-      return { title: 'Held up', detail: 'Park the Bus — no ground gained', background: HELD_BG, ink: WHITE };
+      return { title: s.heldTitle, detail: s.heldDetail, background: HELD_BG, ink: WHITE };
     case 'goal':
       return {
-        title: outcome.stolen ? 'Stolen and scored!' : 'GOAL!',
-        detail: outcome.stolen ? `${outcome.scorer === 'player' ? 'You' : NAMES.opponent} won it near goal and went straight in` : outcome.scorer === 'player' ? 'You scored' : `${NAMES.opponent} scored`,
+        title: outcome.stolen ? s.stolenTitle : s.goalTitle,
+        detail: outcome.stolen
+          ? outcome.scorer === 'player' ? s.stolenYou : fill(s.stolenThem, { name })
+          : outcome.scorer === 'player' ? s.scoredYou : fill(s.scoredThem, { name }),
         background: GOAL_YELLOW,
         ink: GOAL_INK,
       };
     case 'turnover':
       return stealStep(from, outcome) > 0
-        ? { title: next.attacker === 'player' ? 'Ball stolen!' : 'Ball stolen', detail: `${who} from ${pitchLabel(next)}`, background: side, ink: WHITE }
-        : { title: next.attacker === 'player' ? 'Ball won!' : 'Ball lost', detail: `${who} from here — ${pitchLabel(next)}`, background: side, ink: WHITE };
+        ? { title: mine ? s.ballStolenYou : s.ballStolenThem, detail: attacks, background: side, ink: WHITE }
+        : { title: mine ? s.ballWon : s.ballLost, detail: attacksHere, background: side, ink: WHITE };
     case 'bothWrong':
-      return { title: 'Both wrong', detail: `${who} from ${pitchLabel(next)}`, background: BOTH_WRONG_BG, ink: WHITE };
+      return { title: s.bothWrong, detail: attacks, background: BOTH_WRONG_BG, ink: WHITE };
   }
 }
 
@@ -1108,6 +1125,7 @@ function ResultOverlay({
   fired,
   opponentName,
   reason,
+  state,
   top,
   titleRef,
   panelRef,
@@ -1115,11 +1133,12 @@ function ResultOverlay({
 }: {
   outcome: BattleOutcome;
   from: Possession;
-  note: string | null;
+  note: OutcomeNote | null;
   /** The cards that decided or moved this duel. */
   fired: CardEvent[];
   opponentName: string;
   reason: OutcomeReason | null;
+  state: MatchState;
   /** Where the title sits: just under the HUD. */
   top: number;
   titleRef: (element: HTMLDivElement | null) => void;
@@ -1127,7 +1146,8 @@ function ResultOverlay({
   /** Once the round is over: the attacks each side has left. */
   attacks: { player: number; opponent: number } | null;
 }) {
-  const v = outcomeView(outcome, from);
+  const { c } = useZoneCopy();
+  const v = outcomeView(outcome, from, c, opponentName);
   return (
     <>
       <motion.div
@@ -1169,10 +1189,10 @@ function ResultOverlay({
               >
                 <MiniGlyph id={event.card} />
                 <span>
-                  <span className="opacity-75">{event.side === 'player' ? 'You' : opponentName} · {CARD_BY_ID[event.card].name}:</span> {eventEffect(event)}
+                  <span className="opacity-75">{event.side === 'player' ? c.common.you : opponentName} · {c.cards[event.card].name}:</span> {cardEventLine(c, event, state)}
                 </span>
                 {event.against && (
-                  <span className="relative shrink-0 opacity-70 grayscale" title={`${CARD_BY_ID[event.against.card].name} beaten`}>
+                  <span className="relative shrink-0 opacity-70 grayscale" title={fill(c.stage.cardBeaten, { card: c.cards[event.against.card].name })}>
                     <MiniGlyph id={event.against.card} />
                     <span className="absolute inset-x-[-2px] top-1/2 h-0.5 -rotate-45 rounded bg-brand-red-soft" />
                   </span>
@@ -1183,7 +1203,7 @@ function ResultOverlay({
         ) : (
           note && (
             <div className="mx-auto mb-2 w-fit rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.12em]" style={poppins}>
-              {note}
+              {c.notes[note] ?? note}
             </div>
           )
         )}
@@ -1203,8 +1223,8 @@ function ResultOverlay({
         {attacks && (
           <div className="mt-1.5 text-[11px] uppercase tracking-[0.08em] text-white/70" style={poppins} data-zm-attacks-after>
             {attacks.player + attacks.opponent === 0
-              ? 'That was the last attack'
-              : `Attacks left · you ${attacks.player} · ${opponentName} ${attacks.opponent}`}
+              ? c.stage.lastAttackDone
+              : fill(c.stage.attacksAfter, { you: attacks.player, name: opponentName, them: attacks.opponent })}
           </div>
         )}
       </motion.div>

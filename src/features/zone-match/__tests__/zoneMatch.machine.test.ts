@@ -239,7 +239,7 @@ describe('reactions', () => {
 
   it('keeps Shin Pads off anything but sabotage', () => {
     const s = revealing('tiki-taka', { deck: { player: ['shin-pads', 'home-advantage', 'fog', 'dummy-run', 'fifty-fifty'], opponent: ['tiki-taka', 'yellow-card', 'var-review', 'dummy-run', 'fifty-fifty'] } });
-    expect(reactionBlocker(s, 'player', 'shin-pads')).toMatch(/only stop sabotage/);
+    expect(reactionBlocker(s, 'player', 'shin-pads')).toBe('shin-pads-sabotage-only');
     expect(reducer(s, { type: 'PLAY_REACTION', side: 'player', card: 'shin-pads', now: 0 })).toBe(s);
   });
 
@@ -429,7 +429,7 @@ describe('card edge cases', () => {
 
   it('blocks Home Advantage once every category has been used', () => {
     const spent = inPlay({ usedCategories: { player: ['c0', 'c1', 'c2', 'c3', 'c4'], opponent: [] } });
-    expect(cardBlocker(spent, 'player', 'home-advantage', 'blind')).toBe('No categories left to pick');
+    expect(cardBlocker(spent, 'player', 'home-advantage', 'blind')).toBe('no-categories');
     expect(cardBlocker({ ...spent, usedCategories: { player: ['c0'], opponent: [] } }, 'player', 'home-advantage', 'blind')).toBeNull();
   });
 
@@ -489,7 +489,7 @@ describe('cards firing', () => {
     expect(stopped.cardEvents.at(-1)).toMatchObject({
       side: 'player',
       card: 'park-the-bus',
-      effect: "stopped {their} Captain's Armband",
+      effect: 'bus-stopped',
       against: { side: 'opponent', card: 'captains-armband' },
     });
   });
@@ -555,7 +555,7 @@ describe('cards firing', () => {
     expect(blocked.cardEvents.at(-1)).toMatchObject({
       side: 'player',
       card: 'shin-pads',
-      effect: 'blocked Yellow Card',
+      effect: 'shin-pads-blocked',
       against: { side: 'opponent', card: 'yellow-card' },
     });
 

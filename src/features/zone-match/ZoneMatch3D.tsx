@@ -22,6 +22,7 @@ import { CutoutLayer, createCutoutRegistry } from './ZoneMatch3DCutouts';
 import { useWebGL } from './zoneMatch3d.webgl';
 import type { SceneClock } from './zoneMatch3d.clock';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
+import { useZoneCopy } from './useZoneCopy';
 
 // Raw colours live in style objects: the brand-colour audit forbids hex Tailwind classes.
 const MUD_BROWN = '#4a2e17';
@@ -121,6 +122,7 @@ function MarkBadge({ mark, delay }: { mark: Mark; delay: number }) {
 }
 
 function Nameplate({ side, seat, plateRef, mark, markKey, booked }: { side: ZoneSide; seat: ZoneMatch3DSeat; plateRef: RefObject<HTMLDivElement | null>; mark: Mark; markKey: string; booked: boolean }) {
+  const { c } = useZoneCopy();
   const mine = side === 'player';
   // `side` is the seat shown (in a swapped shootout view, the scene's other slot).
   return (
@@ -136,7 +138,7 @@ function Nameplate({ side, seat, plateRef, mark, markKey, booked }: { side: Zone
         {seat.name}
       </span>
       {mine && seat.name.toLowerCase() !== 'you' && (
-        <span className="rounded-full bg-white px-1 text-[9px] font-black leading-[14px]" style={{ color: YOU_INK }}>YOU</span>
+        <span className="rounded-full bg-white px-1 text-[9px] font-black leading-[14px]" style={{ color: YOU_INK }}>{c.common.youBadge}</span>
       )}
       {/* Yellow Card: booked — no cards for now. */}
       {booked && (
@@ -145,7 +147,7 @@ function Nameplate({ side, seat, plateRef, mark, markKey, booked }: { side: Zone
           style={{ background: BOOKED_YELLOW }}
           initial={{ scale: 0, rotate: 20 }}
           animate={{ scale: 1, rotate: 0 }}
-          title="No cards"
+          title={c.clash.noCard}
         >
           🔒
         </motion.span>

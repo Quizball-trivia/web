@@ -20,6 +20,8 @@ import { FutCard } from '../ZoneMatchFutCard';
 import { useMediaQuery } from '../ZoneMatchCards';
 import { CARD_BY_ID } from '../zoneMatch.cards';
 import { CancelButton, clockText, useSearchSeconds, type SearchScreenProps } from './searchShared';
+import { fill } from '../zoneMatch.copy';
+import { useZoneCopy } from '../useZoneCopy';
 
 /** The search state the 3D scene reads every frame: when the opponent was found (canvas clock, s). */
 type Live = { found: number | null };
@@ -75,6 +77,7 @@ function Camera({ live, phone }: { live: React.RefObject<Live>; phone: boolean }
 }
 
 export function SearchStadium3D({ self, deck, startedAt, opponent, opponentDeck, onCancel }: SearchScreenProps) {
+  const { c } = useZoneCopy();
   const seconds = useSearchSeconds(startedAt);
   const live = useRef<Live>({ found: null });
   const [clock] = useState(() => () => performance.now() / 1000);
@@ -108,12 +111,12 @@ export function SearchStadium3D({ self, deck, startedAt, opponent, opponentDeck,
         <directionalLight position={[20, 40, 25]} intensity={opponent ? 1.6 : 0.25} />
         <StadiumPitch />
         <Stadium3D scene={scene} text={opponent ? `VS ${opponent.name}`.toUpperCase().slice(0, 15) : ''} clock={clock} brightness={() => lit} />
-        <BigScreen text={opponent ? `${self.name}  vs  ${opponent.name}` : `SEARCHING  ${clockText(seconds)}`} />
+        <BigScreen text={opponent ? `${self.name}  vs  ${opponent.name}` : fill(c.search.screenSearching, { clock: clockText(seconds) })} />
         <Camera live={live} phone={phone} />
       </Canvas>
       <div className={cn('pointer-events-none absolute inset-x-0 text-center', phone ? 'top-[max(14px,env(safe-area-inset-top))] px-4' : 'top-6')}>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-yellow sm:text-xs">Ranked · Zone match</p>
-        <h1 className={cn('mt-1 font-black uppercase drop-shadow-lg', phone ? 'text-xl' : 'text-3xl')}>{opponent ? 'Opponent found!' : 'Finding your opponent'}</h1>
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-yellow sm:text-xs">{c.search.eyebrow}</p>
+        <h1 className={cn('mt-1 font-black uppercase drop-shadow-lg', phone ? 'text-xl' : 'text-3xl')}>{opponent ? c.search.found : c.search.finding}</h1>
         {phone && !opponent && <p className="mt-0.5 font-mono text-sm text-white/80">{clockText(seconds)}</p>}
       </div>
       {/* The two cards: yours waiting bottom-left, the "?" being scanned bottom-right; found, they meet in the middle. */}
@@ -144,7 +147,7 @@ export function SearchStadium3D({ self, deck, startedAt, opponent, opponentDeck,
           <AnimatePresence mode="wait">
             <motion.p key={tip} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className={cn('rounded-2xl bg-black/55 px-4 py-2 text-center backdrop-blur', phone ? 'max-w-full text-xs' : 'max-w-[46vw] text-sm')}>
               <span className="mr-1">{CARD_BY_ID[deck[tip % deck.length]]?.icon}</span>
-              <b>{CARD_BY_ID[deck[tip % deck.length]]?.name}:</b> {CARD_BY_ID[deck[tip % deck.length]]?.effect}
+              <b>{c.cards[deck[tip % deck.length]]?.name}:</b> {c.cards[deck[tip % deck.length]]?.effect}
             </motion.p>
           </AnimatePresence>
         </div>
