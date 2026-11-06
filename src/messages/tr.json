@@ -619,7 +619,10 @@
     "subtitle": "Otomatik olarak jeton ve xp kazanmak için maç hedeflerini tamamla.",
     "tabDaily": "Günlük",
     "tabWeekly": "Haftalık",
-    "back": "Geri"
+    "back": "Geri",
+    "loading": "Hedefler yükleniyor...",
+    "error": "Hedefler yüklenemedi. Yenilemeyi dene.",
+    "empty": "Kullanılabilir hedef yok."
   },
   "homeDashboard": {
     "dailyObjectives": "Günlük Görevler",
@@ -2629,7 +2632,11 @@
     "rewardEntryRule": "Katılım ücretsizdir. Sıralamalı maçlarda gereken QP’yi kazan, kaydol ve başlangıçtan önce hazır olduğunu onayla.",
     "rewardScoringRule": "Kazananları final sıralaması belirler: önce puan, ardından toplam yanıt süresi. Adil oyun kontrolü uygulanır. Sıralama yalnızca gerçek oyuncular arasında yapılır; botlar ödül almaz.",
     "rewardNonCash": "Yalnızca oyun içi ödüller. Nakit, kupon veya hediye kartı verilmez. Eşyalar ve jetonlar satılamaz, devredilemez ve paraya çevrilemez.",
-    "rewardContact": "Ödüllerin hakkında soruların mı var? Yardım/Geri Bildirim üzerinden Quizball’a etkinlik tarihini ve kullanıcı adını ilet."
+    "rewardContact": "Ödüllerin hakkında soruların mı var? Yardım/Geri Bildirim üzerinden Quizball’a etkinlik tarihini ve kullanıcı adını ilet.",
+    "statusChampion": "Şampiyon sensin!",
+    "statusWrapped": "Hafta sonu sona erdi",
+    "statusFinished": "#{rank}. sırada bitirdin.",
+    "statusSeeYou": "Gelecek hafta sonu görüşürüz."
   },
   "wlAward": {
     "title1": "Weekend League Şampiyonu",

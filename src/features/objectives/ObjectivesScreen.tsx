@@ -143,17 +143,17 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
         <section className="mt-4 space-y-2 pb-8 md:mt-5 md:space-y-2.5">
           {isLoading && (
             <div className="rounded-[14px] border-2 border-brand-green p-4 uppercase text-white/60" style={{ ...poppins, fontSize: 12 }}>
-              Loading objectives...
+              {t("objectives.loading")}
             </div>
           )}
           {isError && (
             <div className="rounded-[14px] border-2 border-brand-red-soft p-4 uppercase text-brand-red-soft" style={{ ...poppins, fontSize: 12 }}>
-              Could not load objectives. Try refreshing.
+              {t("objectives.error")}
             </div>
           )}
           {!isLoading && !isError && objectives.length === 0 && (
             <div className="rounded-[14px] border-2 border-brand-green p-4 uppercase text-white/60" style={{ ...poppins, fontSize: 12 }}>
-              No objectives available.
+              {t("objectives.empty")}
             </div>
           )}
           {objectives.map((objective, index) => (

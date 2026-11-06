@@ -619,7 +619,10 @@
     "subtitle": "Complete match goals to earn coins and xp automatically.",
     "tabDaily": "Daily",
     "tabWeekly": "Weekly",
-    "back": "Back"
+    "back": "Back",
+    "loading": "Loading objectives...",
+    "error": "Could not load objectives. Try refreshing.",
+    "empty": "No objectives available."
   },
   "homeDashboard": {
     "dailyObjectives": "Daily Objectives",
@@ -2629,7 +2632,11 @@
     "rewardEntryRule": "Free to enter. Earn the event’s QP target by playing Ranked, register and check in before kickoff.",
     "rewardScoringRule": "Final standings decide the winners: score first, then total response time. Fair-play checks apply. Places count real players only: bots never take a reward.",
     "rewardNonCash": "In-game rewards only. No cash, vouchers or gift cards. Items and coins cannot be traded, transferred or redeemed for money.",
-    "rewardContact": "Questions about your rewards? Contact Quizball through Help/Feedback with the event date and your nickname."
+    "rewardContact": "Questions about your rewards? Contact Quizball through Help/Feedback with the event date and your nickname.",
+    "statusChampion": "You're the champion!",
+    "statusWrapped": "Weekend wrapped",
+    "statusFinished": "You finished #{rank}.",
+    "statusSeeYou": "See you next weekend."
   },
   "wlAward": {
     "title1": "Weekend League Champion",
