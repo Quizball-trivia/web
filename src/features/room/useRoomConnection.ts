@@ -10,6 +10,7 @@ import type { DuelCommandResultPayload, ErrorPayload, RoomStatePayload } from "@
 const FATAL_ERRORS = new Set(["room_not_found", "not_in_match"]);
 /** Refusals the screen already shows by itself (the state that follows says it). */
 const QUIET_ERRORS = new Set(["stale_round", "not_active", "command_id_reused", "excluded"]);
+const STALE_REFUSALS = /^(stale|not_open$|not_your_turn$)/;
 /** An accepted command's state is asked for after this; the input is never held longer than the give-up. */
 const STATE_WAIT_MS = 1_500;
 const GIVE_UP_MS = 5_000;
@@ -130,6 +131,8 @@ export function useRoomConnection<C>(matchId: string, games: readonly string[], 
         later(() => { const e = still(); if (e) { pending.current.set(commandId, { ...e, waiting: false }); recount(); } }, GIVE_UP_MS);
       }
       recount();
+      // Refused for being behind (a state broadcast was missed): ask for the current state instead of sending on it again.
+      if (!payload.ok && payload.code && STALE_REFUSALS.test(payload.code) && socket.connected) socket.emit("room:resync", { matchId, locale, games: gamesRef.current });
       if (!payload.ok && payload.code && !QUIET_ERRORS.has(payload.code)) setError(payload.code);
     };
     const onError = (payload: ErrorPayload & { matchId?: string }) => {
@@ -286,5 +289,10 @@ export function useRoomConnection<C>(matchId: string, games: readonly string[], 
   }, [socket, matchId, locale]);
   const clearError = useCallback(() => setError(null), []);
 
-  return { snapshot, error, fatal, clearError, connected, inFlight, retained, send, resendRetained, leave, report, nowMs, principal, guestStatus, resync };
+  /** A command for this slot is still held by the connection (unsettled, unrefused): the UI must not accept another. */
+  const isSlotPending = useCallback((slot: string) => {
+    for (const entry of pending.current.values()) if (entry.slot === slot) return true;
+    return false;
+  }, []);
+  return { snapshot, error, fatal, clearError, connected, inFlight, retained, send, resendRetained, leave, report, nowMs, principal, guestStatus, resync, isSlotPending };
 }

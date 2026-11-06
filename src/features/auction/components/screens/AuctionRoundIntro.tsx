@@ -7,8 +7,10 @@ import { POS_COLORS } from '../../constants/auction.constants';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
 import type { PositionGroup } from '../../types';
 
-/** How long the full-screen round intro holds before the clue card takes over. */
-export const ROUND_INTRO_MS = 3000;
+/** How long the full-screen round intro holds before the clue card takes over.
+ *  Its animations settle by ~0.75s; 3s → 2s cuts a static hold that also
+ *  delayed the server's first clue (the intro gates the round ui_ready ack). */
+export const ROUND_INTRO_MS = 2000;
 
 interface AuctionRoundIntroProps {
   roundIndex: number;

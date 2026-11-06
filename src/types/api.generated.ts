@@ -11311,6 +11311,7 @@ export interface components {
             questionCount: number;
             secondsPerQuestion: number;
             startingMoney: number;
+            personalBest?: number | null;
             questions: {
                 /** Format: uuid */
                 id: string;
@@ -11347,6 +11348,7 @@ export interface components {
             description: string;
             roundCount: number;
             secondsPerRound: number;
+            personalBest?: number | null;
             rounds: {
                 /** Format: uuid */
                 id: string;
@@ -11560,6 +11562,7 @@ export interface components {
             description: string;
             questionCount: number;
             secondsPerQuestion: number;
+            personalBest?: number | null;
             questions: {
                 /** Format: uuid */
                 id: string;

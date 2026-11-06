@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import type { TrueFalseSession } from "@/lib/domain/dailyChallenge";
-import { shuffleArray } from "@/lib/utils";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { QuitGameDialog } from "./QuitGameDialog";
@@ -21,6 +20,15 @@ const poppins = {
   letterSpacing: '0',
   lineHeight: 1,
 } as const;
+
+/** True is always the left button and False the right one: positions never swap between
+ *  questions, so a fast player can answer by side without re-reading the labels. */
+export function trueFalseOptions(trueLabel: string, falseLabel: string): Array<{ value: boolean; label: string }> {
+  return [
+    { value: true, label: trueLabel },
+    { value: false, label: falseLabel },
+  ];
+}
 
 interface TrueFalseGameProps {
   session: TrueFalseSession;
@@ -60,13 +68,7 @@ export function TrueFalseGame({
 
   const currentQuestion = session.questions[currentQuestionIndex];
   const answerOptions = useMemo(
-    () =>
-      currentQuestion
-        ? shuffleArray([
-            { value: true, label: currentQuestion.trueLabel },
-            { value: false, label: currentQuestion.falseLabel },
-          ])
-        : [],
+    () => (currentQuestion ? trueFalseOptions(currentQuestion.trueLabel, currentQuestion.falseLabel) : []),
     [currentQuestion]
   );
   const isAnswerCorrect = useMemo(
@@ -108,7 +110,6 @@ export function TrueFalseGame({
 
       setSelectedAnswer(answer);
       // The correct button's column decides which side the splash flies from.
-      // Options are shuffled, so derive the side from the rendered position.
       const correctIndex = answerOptions.findIndex(
         (option) => option.value === currentQuestion.correctAnswer
       );

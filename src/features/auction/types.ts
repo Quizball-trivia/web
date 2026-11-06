@@ -25,12 +25,23 @@ export interface SeasonSnapshot {
   valueEur: number;
 }
 
+/** Where a lot's opening price came from — server-sent after the reveal only
+ *  (pre-reveal it would hint that the player's value declined). */
+export interface StartingPriceOrigin {
+  /** `scout_season`: the scouting card's own season value; `market_history`:
+   *  another real past valuation of the player; `estimate`: a fallback formula. */
+  source: 'scout_season' | 'market_history' | 'estimate';
+  /** Season label ("2009/10") the opening value comes from, when known. */
+  season: string | null;
+}
+
 export interface Footballer {
   id: string;
   name: string;
   positionGroup: PositionGroup;
   value: number;
   startingPrice: number;
+  startingPriceOrigin?: StartingPriceOrigin | null;
   clues: string[];
   /** Older-season stat lines shown snapshot-by-snapshot instead of text clues
    *  (when present). Same reveal cadence as `clues`. */

@@ -13,12 +13,13 @@ import {
   getSquadProfit,
   getAdjustedProfit,
   getFilledCount,
+  squadSizeOf,
   isTeamComplete,
   lastName,
   POSITION_ORDER,
 } from '../data';
 
-/** Profit with an explicit sign, e.g. "+$70M" / "−$40M". */
+/** Profit with an explicit sign, e.g. "+€70M" / "−€40M". */
 const formatProfit = (n: number): string => `${n < 0 ? '−' : '+'}${formatMoney(Math.abs(n))}`;
 import { POS_COLORS, poppins, medalColor, MEDAL_COLORS } from '../constants/auction.constants';
 import { ChemistryBadge, ChemistryBreakdown } from './shared/ChemistryPanel';
@@ -151,6 +152,8 @@ export function AuctionResultsScreen({
       adjustedProfit: getAdjustedProfit(p),
       teamComplete: isTeamComplete(p.team),
       filledCount: getFilledCount(p.team),
+      // 7 in a live auction, 3 in the training auction — never a hard-coded total.
+      squadSize: squadSizeOf(p.team.formation),
     };
   });
 
@@ -211,7 +214,7 @@ export function AuctionResultsScreen({
           >
             {humanWon ? (
               <Image
-                src="/assets/brand/world-cup-trophy.webp"
+                src="/assets/brand/ucl-trophy.webp"
                 alt=""
                 width={72}
                 height={72}
@@ -425,7 +428,7 @@ export function AuctionResultsScreen({
                 <div className="mt-3 flex flex-wrap gap-2">
                   <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
-                    {t('auctionGame.playersFilled', { filled: player.filledCount })}
+                    {t('auctionGame.playersFilled', { filled: player.filledCount, total: player.squadSize })}
                   </span>
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.budgetAmount', { amount: formatMoney(player.budget) })}

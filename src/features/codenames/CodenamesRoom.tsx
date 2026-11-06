@@ -10,7 +10,7 @@ import { BoardPicker } from "./BoardPicker";
 import { CodenamesBoard, type BoardCard } from "./CodenamesBoard";
 import { useFlipSounds } from "./codenames.sounds";
 import { codenamesCopy, type CodenamesCopy } from "./codenames.copy";
-import { ClueBanner } from "./CodenamesSolo";
+import { ClueBanner, StickyClue } from "./CodenamesSolo";
 import { useCardAlt } from "./codenames.alt";
 import { knownName, suggestNames } from "./codenames.names";
 import { cardArt, cardsLeft, clueOnBoard, foldClue, kindFor, me, myTeamOf, type BoardKind, type CodenamesCommand, type CodenamesRoomView, type RoomPlayer, type Team } from "./codenames.view";
@@ -367,10 +367,12 @@ export function CodenamesGame({ view, locale, busy, sending = false, error, onSe
             <TeamPill c={c} label={c.yourTeam} players={view.players.filter((p) => p.team === myTeam)} left={cardsLeft(view, myTeam)} mine active={myTurn} bot={view.botScout[myTeam]} />
             <TeamPill c={c} label={c.rivalTeam} players={view.players.filter((p) => p.team !== myTeam)} left={cardsLeft(view, other(myTeam))} mine={false} active={!myTurn} bot={view.botScout[other(myTeam)]} />
           </div>
-          <div className="mt-3 flex items-stretch gap-2 lg:mt-0">
-            <div className="min-w-0 flex-1">{banner}</div>
-            {secondsLeft !== null && !finale && <TurnClock c={c} seconds={secondsLeft} />}
-          </div>
+          <StickyClue className="mt-1 lg:mt-0 lg:pt-0">
+            <div className="flex items-stretch gap-2">
+              <div className="min-w-0 flex-1">{banner}</div>
+              {secondsLeft !== null && !finale && <TurnClock c={c} seconds={secondsLeft} />}
+            </div>
+          </StickyClue>
           {error && CLUE_ERRORS.has(error) && <p role="alert" className="mt-2 text-center text-sm font-semibold text-brand-red-light">{error === "used" ? c.clueUsed : error === "blocked" ? c.clueBlocked : error === "board" ? c.words.onBoardAny : c.clueProblems[error as "empty" | "words" | "long"]}</p>}
           <CodenamesBoard className="mt-3" cards={cards} mode={self.scout && !finale ? "scout" : "guess"} selected={selected} marked={writingClue ? marked : undefined} disabled={writingClue ? busy || sending : !canGuess} kinds={c.kinds} flipLabel={c.flip} cardLabel={c.cardLabel} altOf={altOf} onTap={tap} finale={finale} />
           {writingClue && <ClueForm key={view.turnNo} c={c} locale={locale} disabled={busy || sending} used={view.used} boardWords={wordBoard ? view.cards.filter((x) => !x.revealed && x.word).map((x) => x.word!) : undefined}

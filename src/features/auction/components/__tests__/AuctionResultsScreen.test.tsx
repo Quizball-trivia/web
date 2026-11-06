@@ -128,4 +128,18 @@ describe('AuctionResultsScreen — forfeit hides the ongoing match', () => {
     expect(screen.getByText('You finish 3rd')).toBeInTheDocument();
     expect(screen.queryByText('Bot One')).not.toBeInTheDocument();
   });
+  it('shows squad fill against the real squad size, not a hard-coded total', () => {
+    renderScreen();
+    expect(screen.getAllByText('Players: 0/7').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/\/11/)).not.toBeInTheDocument();
+  });
+
+  it('counts against the training formation in the guided auction', () => {
+    const training = { ...formation, name: '1-1-1', required: { GK: 1, DEF: 0, MID: 1, FWD: 1 } } as typeof formation;
+    const trainingState = state(['seat-human', 'seat-bot-1', 'seat-bot-2']);
+    trainingState.formation = training;
+    trainingState.players = trainingState.players.map((p) => ({ ...p, team: createEmptyTeam(training) }));
+    renderScreen({ state: trainingState });
+    expect(screen.getAllByText('Players: 0/3').length).toBeGreaterThan(0);
+  });
 });

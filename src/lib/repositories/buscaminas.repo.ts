@@ -20,7 +20,14 @@ export interface BuscaminasRunState {
   settled: BuscaminasSettled | null;
   results: RoundResult[];
   done: boolean;
+  /** Every round played so far, extended challenge included. */
   score: number;
+  /** Rounds in the daily run (the rest is the optional extended challenge). Absent from servers and saved runs predating it. */
+  dailyRounds?: number;
+  /** The daily run is over: its result is final and, for a ranked run, on the leaderboard. */
+  dailyDone?: boolean;
+  /** Daily-run points only: what the leaderboard ranks. */
+  dailyScore?: number;
   ranked: boolean;
   rank?: number;
 }

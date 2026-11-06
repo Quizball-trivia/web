@@ -87,6 +87,18 @@ describe("useRoomConnection", () => {
     expect(result.current.retained).toBeNull();
   });
 
+  it("a command refused for being behind asks for the current state; other refusals do not", () => {
+    const { result } = renderHook(() => useRoomConnection("m1", GAMES, rulesFor));
+    act(() => socket.fire("room:state", snapshot(1, "word_game", { attempt: 0 })));
+    const before = sent("room:resync").length;
+    act(() => result.current.send({ type: "word", attempt: 0, text: "one" }));
+    act(() => socket.fire("room:command_result", { matchId: "m1", commandId: sent("room:command")[0].commandId, ok: false, code: "invalid" }));
+    expect(sent("room:resync")).toHaveLength(before);
+    act(() => result.current.send({ type: "word", attempt: 0, text: "two" }));
+    act(() => socket.fire("room:command_result", { matchId: "m1", commandId: sent("room:command")[1].commandId, ok: false, code: "stale_turn" }));
+    expect(sent("room:resync")).toHaveLength(before + 1);
+  });
+
   it("sends nothing for a game without rules", () => {
     const { result } = renderHook(() => useRoomConnection<Word>("m1", GAMES, rulesFor));
     act(() => socket.fire("room:state", snapshot(1, "a_newer_game", { attempt: 0 })));

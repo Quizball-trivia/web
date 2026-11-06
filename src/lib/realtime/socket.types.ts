@@ -19,7 +19,7 @@ export interface LobbySeenGame {
 
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
-export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones';
+export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones' | 'darts501' | 'zone_match';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
 export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**
@@ -837,6 +837,12 @@ export interface PublicAuctionFootballer {
    * answer to the price gamble until the reveal.
    */
   snapshots?: AuctionSeasonSnapshotPayload[];
+  /** Where startingPrice came from. Sent only once the player is revealed. */
+  startingPriceOrigin?: {
+    source: 'scout_season' | 'market_history' | 'estimate';
+    season: string | null;
+    valuationDate?: string | null;
+  };
 }
 
 export interface AuctionSeasonSnapshotPayload {
@@ -1121,6 +1127,17 @@ export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCo
   locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
   /** Pick-from-four: the footballer picked. */
   optionPlayerId?: string;
+}
+
+/** Zone match (Ranked 2.0 beta) queue: searching -> matched (the match itself arrives as room:found). */
+export interface ZoneMatchSearchStatePayload {
+  state: 'idle' | 'searching' | 'matched';
+  searchId: string | null;
+  queuedAt?: string;
+  fallbackAt?: string;
+  matchId?: string;
+  lobbyId?: string;
+  vsBot?: boolean;
 }
 
 export interface FootballGridSearchStatePayload {
@@ -1844,6 +1861,8 @@ export interface ClientToServerEvents {
   /** Where this player stands in their room's match: answered with room:active + room:sitting_out. */
   'room:pointer': () => void;
   'grid:search_start': (data?: FootballGridSearchStartPayload) => void;
+  'zone:search_start': () => void;
+  'zone:search_cancel': (data: { searchId: string }) => void;
   /** Guest "Play now" (public Tic Tac Toe page): immediate bot pairing, no queue, no rewards. */
   'grid:practice_bot_start': (data?: FootballGridSearchStartPayload) => void;
   'grid:search_cancel': (data: { searchId: string }) => void;
@@ -2149,6 +2168,7 @@ export interface ServerToClientEvents {
   'auction:match_finished': (data: AuctionMatchFinishedPayload) => void;
   'grid:error': (data: ErrorPayload) => void;
   'grid:search_state': (data: FootballGridSearchStatePayload) => void;
+  'zone:search_state': (data: ZoneMatchSearchStatePayload) => void;
   'duel:found': (data: DuelFoundPayload) => void;
   /** Sent on every connect: the player's live duel, or null (a remembered duel has ended). */
   'duel:active': (data: DuelFoundPayload | null) => void;

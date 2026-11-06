@@ -9,6 +9,8 @@ import { AproximadoRoomMatch } from "@/features/aproximado/RoomMatchScreen";
 import { useAproximadoRoom, type RoomCommand } from "@/features/aproximado/useRoom";
 import { codenamesScreens } from "@/features/codenames/CodenamesRoomScreens";
 import type { CodenamesServerCommand } from "@/features/codenames/codenames.server";
+import { d501Screens } from "@/features/darts501/D501Room";
+import type { D501Command } from "@/features/darts501/d501.view";
 import { datoFalsoScreens } from "@/features/dato-falso/DatoFalsoRoom";
 import { conexionesScreens } from "@/features/conexiones/ConexionesRoom";
 import type { CxCommand } from "@/features/conexiones/conexiones.server";
@@ -22,6 +24,7 @@ import type { TenableCommand } from "@/features/tenable/tenable.view";
 import { sharedPlayerScreens } from "@/features/shared-player/SharedPlayerRoom";
 import type { SharedPlayerCommand } from "@/features/shared-player/sharedPlayer.view";
 import { RoomGameShell } from "@/features/wordgames/RoomGameShell";
+import { zoneMatchScreens, type ZoneMatchCommand } from "@/features/zone-match/ZoneMatchRoom";
 import { ROOM_CLIENT_GAMES, roomClientRulesFor } from "./roomGames";
 import { useRoomConnection } from "./useRoomConnection";
 
@@ -47,6 +50,8 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "codenames") return <RoomGameShell room={room as Connection<CodenamesServerCommand>} screens={codenamesScreens} />;
   if (game === "dato_falso") return <RoomGameShell room={room as Connection<DfCommand>} screens={datoFalsoScreens} />;
   if (game === "conexiones") return <RoomGameShell room={room as Connection<CxCommand>} screens={conexionesScreens} />;
+  if (game === "darts501") return <RoomGameShell room={room as Connection<D501Command>} screens={d501Screens} />;
+  if (game === "zone_match") return <RoomGameShell room={room as Connection<ZoneMatchCommand>} screens={zoneMatchScreens} />;
   return <Outdated />;
 }
 

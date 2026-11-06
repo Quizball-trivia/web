@@ -24,10 +24,12 @@ export const WORD_LANDING_ROOTS = [
     "futbolnye-igry/lozhnyj-fakt",
     "football-games/football-connections", "juegos-de-futbol/conexiones-futboleras", "futbol-oyunlari/futbol-connections",
     "futbolnye-igry/futbolnye-svyazi",
+    "football-games/football-darts-501", "juegos-de-futbol/dardos-futboleros-501", "futbol-oyunlari/futbol-dart-oyunu",
+    "futbolnye-igry/futbolnyy-darts-501",
     "jogos-de-futebol/jogo-da-ultima-letra", "jogos-de-futebol/jogador-em-comum", "jogos-de-futebol/corrida-das-selecoes",
-    "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira", "jogos-de-futebol/conexoes-do-futebol",
+    "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira", "jogos-de-futebol/conexoes-do-futebol", "jogos-de-futebol/dardos-com-jogadores-de-futebol",
     "fussballspiele/fussballer-wortkette", "fussballspiele/spieler-fuer-beide-vereine", "fussballspiele/nationen-rennen",
-    "fussballspiele/fussball-codenames", "fussballspiele/welche-aussage-ist-falsch", "fussballspiele/fussball-connections",
+    "fussballspiele/fussball-codenames", "fussballspiele/welche-aussage-ist-falsch", "fussballspiele/fussball-connections", "fussballspiele/fussball-darts-501",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -63,7 +65,7 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
     "@/features/minuto/MinutoGame", "@/features/ultimo/UltimoGame", "@/features/mini-games/components/GuessTheGoalGuest",
-    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily", "@/features/codenames/CodenamesDaily", "@/features/dato-falso/DatoFalsoDaily", "@/features/conexiones/ConexionesDaily",
+    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily", "@/features/codenames/CodenamesDaily", "@/features/dato-falso/DatoFalsoDaily", "@/features/conexiones/ConexionesDaily", "@/features/darts501/D501Daily",
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),

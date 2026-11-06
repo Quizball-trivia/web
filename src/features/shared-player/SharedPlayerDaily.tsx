@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils";
 
 type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string; pt?: string; de?: string };
 interface ClubName { key: string; name: Localized; crest: string }
-interface PairResult { clubs: [ClubName, ClubName] | null; found: string | null; total: number | null; examples: string[] | null }
+/** `others`: other footballers who played for both, on pairs this run has finished with (absent from older servers). */
+interface PairResult { clubs: [ClubName, ClubName] | null; found: string | null; total: number | null; examples: string[] | null; others?: string[] | null }
 /** Server-held run state (backend shared-player-daily.rules PublicRunState): never an accepted name of an open day. */
 export interface SharedPlayerDailyState extends WordRunStateBase {
   pair: number; totalPairs: number; raceMs: number; clubs: [ClubName, ClubName] | null; lockedUntil: string | null; attempt: number;
@@ -29,6 +30,8 @@ type Result = "ok" | "wrong" | "locked" | "late";
 
 export const sharedPlayerDailyApi = createWordDailyApi<SharedPlayerDailyState, Result, { day: string; pairs: PairResult[] }>("/api/v1/shared-player");
 const loadBoard = (day: string, locale: string) => sharedPlayerDailyApi.leaderboard(day, locale);
+/** The names a finished pair teaches: the other footballers shown after it, else (older servers, closed days) its examples. */
+const pairNames = (r: PairResult): string[] => (r.others && r.others.length > 0 ? r.others : r.examples ?? []);
 
 export { sharedPlayerDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 
@@ -73,6 +76,8 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
     const busy = daily.pending !== null;
     const note = lockLeft > 0 ? g.locked(Math.ceil(lockLeft / 1000)) : busy ? g.sending : daily.notice === "connection" ? d.notices.connection : null;
     const settled = state.settled;
+    // Valid answers beyond the ones on screen (the player's own and the others shown).
+    const othersLeft = settled?.others ? Math.max(0, (settled.total ?? 0) - settled.others.length - (settled.found ? 1 : 0)) : 0;
     const lastPair = state.pair + 1 >= state.totalPairs;
     play = (
       <div className="flex flex-1 flex-col">
@@ -111,7 +116,13 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
               {settled.reason === "found" ? gd.found : gd.missed}
             </p>
             {settled.found && <p className="mt-2 text-sm font-semibold">{gd.yourAnswer(settled.found)}</p>}
-            {settled.examples ? (
+            {settled.others && settled.others.length > 0 ? (
+              <>
+                <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/75">{settled.found ? gd.othersFound : gd.othersMissed}</p>
+                <Chips className="mt-2" names={settled.others} />
+                {othersLeft > 0 && <p className="mt-2 text-xs text-white/70">{g.more(othersLeft)}</p>}
+              </>
+            ) : settled.examples ? (
               <>
                 <p className="mt-4 text-xs font-black uppercase tracking-wide text-white/75">{g.answers(settled.total ?? settled.examples.length)}</p>
                 <Chips className="mt-2" names={settled.examples} />
@@ -152,7 +163,7 @@ export function SharedPlayerDaily({ locale, onExit, onEvent, initialDay, onDay }
               <span className="min-w-0 flex-1 truncate font-semibold">{r.clubs ? `${(r.clubs[0].name[lang] ?? r.clubs[0].name.en)} × ${(r.clubs[1].name[lang] ?? r.clubs[1].name.en)}` : `#${i + 1}`}</span>
               <span className="shrink-0 truncate text-xs text-white/65">{r.found ?? gd.notFound}</span>
             </div>
-            {r.examples && r.examples.length > 0 && <p className="mt-1 pl-7 text-xs text-white/55">{r.examples.join(" · ")}</p>}
+            {pairNames(r).length > 0 && <p className="mt-1 pl-7 text-xs text-white/55">{pairNames(r).join(" · ")}</p>}
           </li>
         ))}
       </ul>

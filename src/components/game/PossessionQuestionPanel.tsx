@@ -45,6 +45,8 @@ interface PossessionQuestionPanelProps {
   question: GameQuestion | null;
   qIndex: number;
   totalQuestions: number;
+  /** Replaces the "QUESTION x/y" pill text (modes that count rounds, not questions). */
+  counterLabel?: string;
   timeRemaining: number | null;
 
   showOptions: boolean;
@@ -142,6 +144,7 @@ export function PossessionQuestionPanel({
   question,
   qIndex,
   totalQuestions,
+  counterLabel,
   timeRemaining,
   showOptions,
   selectedAnswer,
@@ -219,7 +222,7 @@ export function PossessionQuestionPanel({
   const timerPillClass =
     'flex shrink-0 items-center justify-center rounded-[16px] bg-brand-blue text-white tabular-nums';
 
-  const questionCounterLabel = isPenaltyPhase
+  const questionCounterLabel = counterLabel ?? (isPenaltyPhase
     ? isPenaltySuddenDeath
       // Sudden-death kicks are still penalties — the generic "Question 1/1"
       // label here read as a glitch to players mid-shootout (bug report).
@@ -231,7 +234,7 @@ export function PossessionQuestionPanel({
     : t('possession.questionCounter', {
       current: displayQuestionNum,
       total: totalQuestions,
-    });
+    }));
 
   const questionPill = (
     <div
