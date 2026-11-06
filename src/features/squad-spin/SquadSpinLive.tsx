@@ -57,7 +57,7 @@ const REEL_OPTIONS: Array<{ reels: 3 | 4 | 5; key: "reels3" | "reels4" | "reels5
 const POSITION_COLOR: Record<string, string> = { GK: "#FFE500", DEF: "#1CB0F6", MID: "#38B60E", FWD: "#FB3101" };
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : locale === "pt" ? reel.label_pt : locale === "de" ? reel.label_de : reel.label_en) || reel.label_en;
+const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : locale === "pt" ? reel.label_pt : locale === "de" ? reel.label_de : locale === "es" ? reel.label_es : locale === "tr" ? reel.label_tr : reel.label_en) || reel.label_en;
 const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : locale === "ru" && p.name_ru ? p.name_ru : p.name_en);
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 

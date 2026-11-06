@@ -27,6 +27,7 @@ function resolve(
   hasEntered: boolean,
   qualified: boolean,
   yourRank: number,
+  t: ReturnType<typeof useLocale>['t'],
 ): { emoji: string; headline: string; sub: string; tone: Tone } {
   switch (phase) {
     case 'upcoming':
@@ -49,8 +50,8 @@ function resolve(
         : { emoji: '👀', headline: 'The final is live', sub: 'Watch the top 24 play for the title.', tone: 'neutral' };
     case 'completed':
       return qualified
-        ? { emoji: '🏆', headline: "You're the champion!", sub: '', tone: 'gold' }
-        : { emoji: '🏁', headline: 'Weekend wrapped', sub: yourRank > 0 ? `You finished #${yourRank}.` : 'See you next weekend.', tone: 'neutral' };
+        ? { emoji: '🏆', headline: t("weekendLeague.statusChampion"), sub: '', tone: 'gold' }
+        : { emoji: '🏁', headline: t("weekendLeague.statusWrapped"), sub: yourRank > 0 ? t("weekendLeague.statusFinished", { rank: yourRank }) : t("weekendLeague.statusSeeYou"), tone: 'neutral' };
   }
 }
 
@@ -67,7 +68,7 @@ export function YourStatusCard({
   yourRank: number;
 }) {
   const { t } = useLocale();
-  const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank);
+  const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank, t);
   const description = phase === 'completed' && qualified ? t('weekendLeague.prizesPayoutNote') : sub;
   return (
     <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${TONE_CLASS[tone]}`}>

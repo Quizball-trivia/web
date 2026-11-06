@@ -619,7 +619,10 @@
     "subtitle": "Complete objetivos da partida para ganhar moedas e XP automaticamente.",
     "tabDaily": "Diário",
     "tabWeekly": "Semanal",
-    "back": "Voltar"
+    "back": "Voltar",
+    "loading": "Carregando objetivos...",
+    "error": "Não foi possível carregar os objetivos. Tente atualizar.",
+    "empty": "Nenhum objetivo disponível."
   },
   "homeDashboard": {
     "dailyObjectives": "Objetivos diários",
@@ -2629,7 +2632,11 @@
     "rewardEntryRule": "Inscrição grátis. Ganhe a quantidade de QP exigida pelo evento jogando no Ranqueado, inscreva-se e confirme presença antes do apito inicial.",
     "rewardScoringRule": "A classificação final define os vencedores: primeiro, pela pontuação; depois, pelo tempo total de resposta. Valem as verificações de jogo limpo. Só jogadores reais contam na classificação: bots não ganham recompensas.",
     "rewardNonCash": "Recompensas apenas no jogo. Sem dinheiro, vales ou cartões-presente. Itens e moedas não podem ser negociados, transferidos ou trocados por dinheiro.",
-    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido."
+    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido.",
+    "statusChampion": "Você é o campeão!",
+    "statusWrapped": "Fim de semana encerrado",
+    "statusFinished": "Você terminou em #{rank}º lugar.",
+    "statusSeeYou": "Até o próximo fim de semana."
   },
   "wlAward": {
     "title1": "Campeão da Weekend League",

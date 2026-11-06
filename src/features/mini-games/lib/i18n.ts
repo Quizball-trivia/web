@@ -15,6 +15,23 @@ import { RU } from "./i18n.ru";
 export type MiniLocale = "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de";
 
 const KA: Record<string, string> = {
+  "Fairness proof could not be loaded — try again": "სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა",
+  "Connection interrupted — try again": "კავშირი შეფერხდა — სცადე ხელახლა",
+  "Your previous action is still resolving — retry the same action": "წინა მოქმედება ჯერ მოწმდება — გაიმეორე იგივე მოქმედება",
+  "Client seed": "კლიენტის seed",
+  "Auto-bank": "ავტომატურად აიღე",
+  "New runs are paused — any active run remains available": "ახალი თამაშები დროებით გამორთულია — მიმდინარე გარბენი კვლავ დაცულია",
+  "Wallet unavailable": "ბალანსი ვერ ჩაიტვირთა",
+  "Correct answer": "სწორი პასუხი",
+  "Wrong answer": "არასწორი პასუხი",
+  "Fair-play proof": "სამართლიანი თამაშის მტკიცებულება",
+  "Verifying proof…": "მტკიცებულება მოწმდება…",
+  "✓ Proof independently verified": "✓ მტკიცებულება გადამოწმებულია",
+  "⚠ Proof verification failed": "⚠ მტკიცებულება ვერ დადასტურდა",
+  "verified rolls": "დადასტურებული გათამაშება",
+  "AI wins": "AI-მ მოიგო",
+  "Not enough coins — top up in the store": "მონეტები არ გყოფნის — შეავსე ბალანსი მაღაზიაში",
+  "You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.": "ბიბლიოთეკის ყველა გოლი ამოხსენი. გამეორებები გონებას ამახვილებს — განმეორებითი ჯილდოების გარეშე.",
   // Guess the Goal (live)
   "Guess the Goal": "გამოიცანი გოლი",
   "Name the iconic goal — real rewards, server-scored": "ამოიცანი ლეგენდარული გოლი — რეალური ჯილდოები",
@@ -632,6 +649,23 @@ const KA: Record<string, string> = {
 };
 
 const PT: Record<string, string> = {
+  "Fairness proof could not be loaded — try again": "Não foi possível carregar a prova de jogo justo — tente novamente",
+  "Connection interrupted — try again": "A conexão foi interrompida — tente novamente",
+  "Your previous action is still resolving — retry the same action": "Sua ação anterior ainda está sendo processada — tente repeti-la",
+  "Client seed": "Seed do cliente",
+  "Auto-bank": "Resgate automático",
+  "New runs are paused — any active run remains available": "Novas partidas estão pausadas — as partidas ativas continuam disponíveis",
+  "Wallet unavailable": "Saldo indisponível",
+  "Correct answer": "Resposta correta",
+  "Wrong answer": "Resposta incorreta",
+  "Fair-play proof": "Prova de jogo justo",
+  "Verifying proof…": "Verificando a prova…",
+  "✓ Proof independently verified": "✓ Prova verificada de forma independente",
+  "⚠ Proof verification failed": "⚠ Falha na verificação da prova",
+  "verified rolls": "rodadas verificadas",
+  "AI wins": "A IA venceu",
+  "Not enough coins — top up in the store": "Moedas insuficientes — recarregue na loja",
+  "You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.": "Você resolveu todos os gols da biblioteca. Repetir mantém sua mente afiada, sem recompensas repetidas.",
   // Guess the Goal (live)
   "Guess the Goal": "Adivinhe o Gol",
   "Name the iconic goal — real rewards, server-scored": "Adivinhe o gol icônico — recompensas reais, pontuação pelo servidor",
@@ -1228,6 +1262,23 @@ const PT: Record<string, string> = {
 };
 
 const DE: Record<string, string> = {
+  "Fairness proof could not be loaded — try again": "Fairness-Nachweis konnte nicht geladen werden — versuch es erneut",
+  "Connection interrupted — try again": "Verbindung unterbrochen — versuch es erneut",
+  "Your previous action is still resolving — retry the same action": "Deine vorherige Aktion wird noch verarbeitet — wiederhole dieselbe Aktion",
+  "Client seed": "Client-Seed",
+  "Auto-bank": "Auto-Auszahlung",
+  "New runs are paused — any active run remains available": "Neue Läufe pausiert — aktive Läufe bleiben verfügbar",
+  "Wallet unavailable": "Guthaben nicht verfügbar",
+  "Correct answer": "Richtige Antwort",
+  "Wrong answer": "Falsche Antwort",
+  "Fair-play proof": "Fair-Play-Nachweis",
+  "Verifying proof…": "Nachweis wird geprüft…",
+  "✓ Proof independently verified": "✓ Nachweis unabhängig verifiziert",
+  "⚠ Proof verification failed": "⚠ Nachweisprüfung fehlgeschlagen",
+  "verified rolls": "verifizierte Würfe",
+  "AI wins": "KI gewinnt",
+  "Not enough coins — top up in the store": "Nicht genug Münzen — lade im Shop auf",
+  "You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.": "Du hast alle Tore der Bibliothek gelöst. Wiederholungen halten dich fit, es gibt aber keine erneuten Belohnungen.",
   // Guess the Goal (live)
   "Guess the Goal": "Tor erraten",
   "Name the iconic goal — real rewards, server-scored": "Errate das legendäre Tor — echte Belohnungen, serverseitig gewertet",

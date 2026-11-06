@@ -154,6 +154,8 @@ const en: Copy = {
 
 const ka: Copy = {
   ...en,
+  scoringPodium: "პოდიუმი (3-2-1)",
+  scoringClosest: "მხოლოდ ყველაზე ახლოს მყოფი",
   // Same names as the live daily (messages play.statSniperTitle).
   brandA: "სტატ",
   brandB: "სნაიპერი",

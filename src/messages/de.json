@@ -619,7 +619,10 @@
     "subtitle": "Erfülle Spielziele und erhalte automatisch Münzen und XP.",
     "tabDaily": "Täglich",
     "tabWeekly": "Wöchentlich",
-    "back": "Zurück"
+    "back": "Zurück",
+    "loading": "Ziele werden geladen...",
+    "error": "Ziele konnten nicht geladen werden. Versuch es mit Aktualisieren.",
+    "empty": "Keine Ziele verfügbar."
   },
   "homeDashboard": {
     "dailyObjectives": "Tägliche Aufgaben",
@@ -2629,7 +2632,11 @@
     "rewardEntryRule": "Kostenlose Teilnahme. Erreiche das QP-Ziel des Events mit Ranked-Spielen, registriere dich und bestätige deine Teilnahme vor Anpfiff.",
     "rewardScoringRule": "Die Endplatzierung entscheidet: zuerst die Punktzahl, dann die Gesamtantwortzeit. Es gelten Fair-Play-Prüfungen. Es zählen nur echte Spieler: Bots erhalten nie eine Belohnung.",
     "rewardNonCash": "Nur Belohnungen im Spiel. Kein Bargeld, keine Gutscheine oder Geschenkkarten. Gegenstände und Münzen können nicht getauscht, übertragen oder gegen Geld eingelöst werden.",
-    "rewardContact": "Fragen zu deinen Belohnungen? Kontaktiere Quizball über Hilfe/Feedback und gib das Eventdatum und deinen Nicknamen an."
+    "rewardContact": "Fragen zu deinen Belohnungen? Kontaktiere Quizball über Hilfe/Feedback und gib das Eventdatum und deinen Nicknamen an.",
+    "statusChampion": "Du bist der Champion!",
+    "statusWrapped": "Wochenende vorbei",
+    "statusFinished": "Du hast Platz #{rank} erreicht.",
+    "statusSeeYou": "Bis zum nächsten Wochenende."
   },
   "wlAward": {
     "title1": "Weekend-League-Sieger",

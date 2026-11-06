@@ -31,7 +31,10 @@ vi.mock("../MiniGameShell", () => ({
   MiniGameShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
   StatPill: () => null,
 }));
-vi.mock("../../lib/i18n", () => ({ useMiniLocale: () => "en" }));
+vi.mock("../../lib/i18n", () => {
+  const t = (key: string) => key;
+  return { useMiniLocale: () => "en", useMiniT: () => t };
+});
 vi.mock("@/lib/queries/store.queries", () => ({
   useStoreWallet: () => ({
     data: { coins: 1_000, tickets: 0 },
