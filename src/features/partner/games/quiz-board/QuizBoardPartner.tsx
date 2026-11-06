@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Loader2, Play } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
-import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeHeader } from "@/features/daily/components/DailyChallengeHeader";
 import { DailyGameStage } from "@/features/daily/components/DailyGameStage";
 import { QuizBoardBanner, QuizBoardGrid, QuizBoardQuestionCard } from "@/features/mini-games/components/quizBoardUi";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
 import { money } from "@/features/mini-games/lib/odds";
+import { PartnerGameIntro } from "../../game-kit/PartnerGameIntro";
 import { PartnerApiError } from "../../api/partnerApiClient";
-import { PARTNER_GAME_DEMO_SLUG, partnerGameTitle } from "../../partnerGames";
+import { partnerGameTitle } from "../../partnerGames";
 import { partnerCopy, toPartnerLocale } from "../../partnerCopy";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import {
@@ -373,38 +373,20 @@ export function QuizBoardPartner({ gameId, api, onFinished, onExit }: PartnerGam
   return (
     <div className="mt-4 flex flex-col gap-5" data-testid="quiz-board-partner" data-screen={screen}>
       {screen === "intro" ? (
-        <>
-          <button
-            type="button"
-            onClick={onExit}
-            data-testid="quiz-board-intro-back"
-            className="inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white/[0.08] px-3 font-poppins text-xs font-semibold text-white transition-colors hover:bg-white/[0.14]"
-          >
-            <ArrowLeft className="size-4" aria-hidden />
-            {shellCopy.backToGames}
-          </button>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-2xl bg-brand-blue">
-            <div className="aspect-video w-full overflow-hidden">
-              <DemoModeArt slug={PARTNER_GAME_DEMO_SLUG[gameId]} className="size-full" />
-            </div>
-            <div className="flex flex-col gap-2 p-4">
-              <h1 className="font-poppins text-lg font-semibold uppercase text-white">{title}</h1>
-              <p className="font-poppins text-sm text-white/70">{copy.subtitle}</p>
-              <p className="font-poppins text-sm font-semibold text-brand-yellow">{copy.rules}</p>
-              <p className="font-poppins text-xs text-white/50">{quitCopy.usesPlay}</p>
-              <button
-                type="button"
-                onClick={start}
-                disabled={busy}
-                data-testid="quiz-board-start"
-                className="mt-2 inline-flex h-11 w-fit items-center gap-1.5 rounded-full bg-brand-yellow px-6 font-poppins text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 disabled:opacity-60"
-              >
-                <Play className="size-4" aria-hidden />
-                {copy.start}
-              </button>
-            </div>
-          </motion.div>
-        </>
+        <PartnerGameIntro
+          gameId={gameId}
+          title={title}
+          description={copy.subtitle}
+          rules={copy.rules}
+          note={quitCopy.usesPlay}
+          startLabel={copy.start}
+          backLabel={shellCopy.backToGames}
+          busy={busy}
+          onStart={start}
+          onBack={onExit}
+          startTestId="quiz-board-start"
+          backTestId="quiz-board-intro-back"
+        />
       ) : screen === "no-plays" ? (
         <div className="mt-6 flex flex-col items-center gap-3 text-center" data-testid="quiz-board-no-plays">
           <p className="font-poppins text-lg font-semibold text-white">{copy.noPlaysTitle}</p>

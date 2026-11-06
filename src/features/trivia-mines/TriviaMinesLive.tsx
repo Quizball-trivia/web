@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,8 @@ export interface TriviaMinesPartnerMode {
   };
   onFinished: (state: TriviaMinesState) => void;
   onExit: () => void;
+  /** The partner's own start screen in place of the start card (it carries its own way back). */
+  renderIntro?: (ctx: { start: () => void; busy: boolean; error: string | null }) => ReactNode;
 }
 
 /** Trivia Mines, live: the board is held server-side; every pick, scout and cash-out is a request. */
@@ -188,19 +190,21 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
     finally { setBusy(false); }
   };
 
+  const intro = !state && partner?.renderIntro ? partner.renderIntro({ start: () => void start(), busy: busy || !resumed, error }) : null;
   const balance = partner ? Number.POSITIVE_INFINITY : sample ? sample.coins : wallet?.coins ?? 0;
   const settled = state && state.status !== "active";
 
   return (
     <div className={partner ? "flex flex-1 flex-col text-white" : "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
       <MoneyFlight flight={flight} />
-      <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pb-28 pt-4 md:pb-8", state ? "max-w-md lg:max-w-4xl" : "max-w-md")}>
-        <div className="mb-3 flex items-center justify-between">
+      <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pb-28 pt-4 md:pb-8", state ? "max-w-md lg:max-w-4xl" : intro ? "px-0 pt-0" : "max-w-md")}>
+        {intro}
+        {!intro && <div className="mb-3 flex items-center justify-between">
           <button type="button" onClick={() => { if (partner) partner.onExit(); else if (sample?.onExit) sample.onExit(); else router.push(backHref); }} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
-        </div>
+        </div>}
 
         {/* Start card — same family as the Guess the Goal card, in brand blue */}
-        {!state && partner && (
+        {!state && partner && !intro && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 rounded-[20px] bg-brand-blue p-4 text-center text-white md:p-5">
             <p className="text-base font-black uppercase tracking-wide text-brand-yellow" style={poppins} data-testid="trivia-mines-start-points">{partner.labels.startPoints}</p>
             {error && <p className="text-xs font-bold text-white" style={poppins}>{error}</p>}
@@ -267,7 +271,8 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
                 {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString()}</div>}
               </div>
             </div>
-            <div className="grid grid-cols-5 gap-2">
+            {/* A partner frame is short: the board shrinks with its height so the buttons under it stay in view. */}
+            <div className={cn("grid grid-cols-5 gap-2", partner && "lg:mx-auto lg:max-w-[max(260px,calc(100dvh_-_350px))]")}>
               {Array.from({ length: state.board_size }).map((_, i) => {
                 const opened = state.opened.includes(i);
                 const flagged = state.flagged.includes(i);

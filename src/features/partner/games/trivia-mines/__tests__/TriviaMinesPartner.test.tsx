@@ -40,7 +40,7 @@ describe("Trivia Mines partner screen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back to games" }));
     expect(onExit).toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Play" }));
-    expect(await screen.findByTestId("trivia-mines-start-points")).toBeTruthy();
+    expect(await screen.findByTestId("trivia-mines-play")).toBeTruthy();
     expect(onFinished).not.toHaveBeenCalled();
   });
 
