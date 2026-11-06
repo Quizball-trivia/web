@@ -18,16 +18,18 @@ import { PlaystylePicker } from './picker/PickerLab';
 import { ScreenFrame } from './ZoneMatchPrototype';
 import { SearchStadium3D } from './search/SearchStadium3D';
 import type { FutSeat } from './ZoneMatchFutCard';
+import { useZoneCopy } from './useZoneCopy';
 
 export const ZONE_QUEUE_DECK_KEY = 'zone-queue-deck';
 
-const SELF: FutSeat = { name: 'You', avatarCustomization: null, rankPoints: null };
 
 export function ZoneMatchQueueScreen() {
   const router = useRouter();
+  const { c, locale } = useZoneCopy();
+  const self: FutSeat = { name: c.common.you, avatarCustomization: null, rankPoints: null };
   // Guests may queue in the beta: without a principal the socket never connects — and the connection itself is
   // driven here (nothing else on this screen opens it).
-  useEnsureGuestPrincipal('en');
+  useEnsureGuestPrincipal(locale);
   const principal = useRealtimePrincipal();
   useRealtimeConnection({ enabled: principal.kind !== 'none', selfUserId: principal.userId });
   const [deck, setDeck] = useState<CardId[]>([]);
@@ -84,16 +86,16 @@ export function ZoneMatchQueueScreen() {
   }, [search]);
 
   if (search) {
-    return <SearchStadium3D self={SELF} deck={deck} startedAt={search.startedAt} opponent={null} onCancel={cancel} />;
+    return <SearchStadium3D self={self} deck={deck} startedAt={search.startedAt} opponent={null} onCancel={cancel} />;
   }
   return (
     <ScreenFrame wide>
       <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col gap-3">
         <div className="rounded-xl border border-brand-yellow/30 bg-brand-yellow/10 px-3 py-2 text-center text-xs text-white/85" style={{ fontFamily: "'Poppins', sans-serif" }}>
-          Ranked 2.0 beta — a test queue with no RP or tickets at stake. If nobody else is searching, you&apos;ll play our practice bot.
+          {c.room.queueNotice}
         </div>
         <PlaystylePicker
-          seat={SELF}
+          seat={self}
           deck={deck}
           onDeckChange={setDeck}
           loading={principal.kind === 'none'}

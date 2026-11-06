@@ -16,6 +16,8 @@ import { tierFromRp } from '@/utils/rankedTier';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { Category } from './zoneMatch.machine';
 import type { RevealSeat } from './ZoneMatchCards';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 // Raw colours live in style objects (the brand-colour audit forbids hex Tailwind classes).
@@ -44,6 +46,7 @@ export function CategoryTile({
   layoutId?: string;
   className?: string;
 }) {
+  const { c } = useZoneCopy();
   return (
     <motion.div
       layoutId={layoutId}
@@ -69,7 +72,7 @@ export function CategoryTile({
         <span className="absolute inset-x-0 top-[38%] flex justify-center">
           <span className="-rotate-12 rounded-md bg-surface-page/90 px-2 py-0.5 text-[10px] font-black uppercase text-white ring-1 ring-white/40">
             <Check className="mr-0.5 inline size-3" strokeWidth={4} />
-            Used
+            {c.common.used}
           </span>
         </span>
       )}
@@ -112,11 +115,12 @@ function FlipCard({ category, side, delay }: { category: Category; side: DuelSid
 }
 
 function SeatHead({ seat, side }: { seat: RevealSeat; side: DuelSide }) {
+  const { c } = useZoneCopy();
   return (
     <div className="flex min-w-0 items-center gap-2">
       <TierFrameAvatar tier={tierFromRp(seat.rankPoints ?? 0)} avatarCustomization={seat.avatarCustomization ?? undefined} size="sm" mirrorAvatar={side === 'opponent'} />
       <span className={cn('truncate text-lg uppercase', side === 'player' ? 'text-brand-blue' : 'text-brand-red-soft')} style={poppins}>
-        {side === 'player' ? 'You' : seat.name}
+        {side === 'player' ? c.common.you : seat.name}
       </span>
     </div>
   );
@@ -132,15 +136,16 @@ export function CategoriesReveal({
   seats: Record<DuelSide, RevealSeat>;
   timeLeft: number | null;
 }) {
+  const { c } = useZoneCopy();
   // The packs open once the phase curtain has lifted.
   const start = 2.8;
   return (
     <div className="flex flex-col gap-4 pb-6" data-zm-categories>
       <div className="text-center">
-        <div className="text-xs font-black uppercase tracking-[0.2em] text-brand-yellow">Your categories</div>
-        <div className="text-3xl uppercase text-white" style={poppins}>5 each · one per attack</div>
+        <div className="text-xs font-black uppercase tracking-[0.2em] text-brand-yellow">{c.common.yourCategories}</div>
+        <div className="text-3xl uppercase text-white" style={poppins}>{c.categories.fiveEach}</div>
         <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/50">
-          Before each of your attacks you pick one of yours · every question of that attack comes from it
+          {c.categories.hint}
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-start">
@@ -160,7 +165,7 @@ export function CategoriesReveal({
       </div>
       <div className="flex justify-center">
         <div className="rounded-full bg-white/[0.06] px-4 py-2 text-xs font-black uppercase tracking-wide text-white/75" style={poppins}>
-          {timeLeft !== null && timeLeft <= 5 ? `Kick-off in ${timeLeft}` : 'Dealing categories…'}
+          {timeLeft !== null && timeLeft <= 5 ? fill(c.categories.kickOffIn, { s: timeLeft }) : c.categories.dealing}
         </div>
       </div>
     </div>

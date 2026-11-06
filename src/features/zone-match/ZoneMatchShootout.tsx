@@ -17,6 +17,8 @@ import { McqPanel, type ZoneMatchSeat } from './ZoneMatchStage';
 import { MCQ_MS, SHOOTOUT_BATTLE_MS, type MatchState } from './zoneMatch.machine';
 import { answerPoints, isSuddenDeath, shootoutGoals } from './zoneMatch.shootout';
 import { otherZoneSide, type BattleOutcome, type Possession, type ZoneSide as DuelSide } from './zoneMatch.rules';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 800 } as const;
 /** Within the battle step: the answers show, then each side's time. */
@@ -51,6 +53,7 @@ export function ZoneMatchShootout({
   onAnswer: (index: number, questionId: string) => void;
   onQuit: () => void;
 }) {
+  const { c } = useZoneCopy();
   const so = state.shootout!;
   const mcq = state.mcq;
   const shooter = state.possession.attacker;
@@ -126,7 +129,7 @@ export function ZoneMatchShootout({
         {so.step === 'mcq' && (
           <motion.div key={`role-${kickKey}`} className="absolute inset-x-0 top-[104px] z-20 flex justify-center" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <span className={cn('rounded-full px-4 py-1.5 text-xs uppercase tracking-wider shadow-lg', youShoot ? 'bg-brand-blue' : 'bg-brand-red-soft')} style={poppins}>
-              {youShoot ? 'You shoot — beat the keeper to it' : `${opponent.name} shoots — answer faster to save it`}
+              {youShoot ? c.shootout.youShoot : fill(c.shootout.themShoot, { name: opponent.name })}
             </span>
           </motion.div>
         )}
@@ -158,7 +161,7 @@ export function ZoneMatchShootout({
             exit={{ opacity: 0 }}
           >
             <span className={cn('text-5xl uppercase italic drop-shadow-[0_4px_0_rgba(0,0,0,0.35)] sm:text-7xl', lastKick.result === 'goal' ? 'text-brand-yellow' : 'text-white')} style={poppins}>
-              {lastKick.result === 'goal' ? 'Goal!' : lastKick.result === 'saved' ? 'Saved!' : 'Missed!'}
+              {lastKick.result === 'goal' ? c.shootout.goal : lastKick.result === 'saved' ? c.shootout.saved : c.shootout.missed}
             </span>
           </motion.div>
         )}
@@ -204,23 +207,24 @@ function SpeedVerdict({
   opponent: ZoneMatchSeat;
   reveal: boolean;
 }) {
+  const { c } = useZoneCopy();
   const right = (side: DuelSide) => mcq.answers[side] === mcq.question.correctIndex;
   const keeper = otherZoneSide(shooter);
   const faster: DuelSide | null = right('player') && right('opponent') ? (points.player === points.opponent ? null : points.player > points.opponent ? 'player' : 'opponent') : null;
   const verdict =
     right(shooter) && !right(keeper)
-      ? 'Keeper got it wrong — the shot is on'
+      ? c.shootout.keeperWrong
       : right(shooter) && right(keeper)
         ? faster === shooter
-          ? 'Shooter was faster — the shot is on'
+          ? c.shootout.shooterFaster
           : faster === keeper
-            ? 'Keeper was faster — it will be saved'
-            : 'Dead level — the keeper holds'
+            ? c.shootout.keeperFaster
+            : c.shootout.deadLevel
         : !right(shooter) && !right(keeper)
-          ? 'Both wrong — it goes wide'
-          : 'Shooter got it wrong — keeper saves';
+          ? c.shootout.bothWrong
+          : c.shootout.shooterWrong;
   const rows: { side: DuelSide; name: string }[] = [
-    { side: 'player', name: 'You' },
+    { side: 'player', name: c.common.you },
     { side: 'opponent', name: opponent.name },
   ];
   return (
@@ -230,7 +234,7 @@ function SpeedVerdict({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
     >
-      <div className="mb-3 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/50">Who was faster?</div>
+      <div className="mb-3 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/50">{c.shootout.whoFaster}</div>
       <div className="space-y-2.5">
         {rows.map(({ side, name }) => {
           const ok = right(side);
@@ -264,7 +268,7 @@ function SpeedVerdict({
         animate={{ opacity: reveal ? 1 : 0 }}
         transition={{ delay: 0.5 }}
       >
-        {faster && times.player !== null && times.opponent !== null ? `⚡ ${faster === 'player' ? 'You' : opponent.name} by ${(Math.abs(times.player - times.opponent) / 1000).toFixed(1)}s · ` : ''}
+        {faster && times.player !== null && times.opponent !== null ? `⚡ ${fill(c.shootout.fasterBy, { who: faster === 'player' ? c.common.you : opponent.name, t: (Math.abs(times.player - times.opponent) / 1000).toFixed(1) })} · ` : ''}
         {verdict}
       </motion.div>
     </motion.div>
@@ -273,6 +277,8 @@ function SpeedVerdict({
 
 /** Penalties begin: over the stadium, the title, how it works, who shoots first, a short countdown. */
 function ShootoutIntro({ opponent, score, opener, count }: { opponent: ZoneMatchSeat; score: number; opener: DuelSide; count: number }) {
+  const { c } = useZoneCopy();
+  const [rulesBefore, rulesAfter = ''] = c.shootout.rules.split('{faster}');
   const pips = (
     <div className="flex gap-1.5">
       {Array.from({ length: 5 }, (_, i) => (
@@ -283,24 +289,24 @@ function ShootoutIntro({ opponent, score, opener, count }: { opponent: ZoneMatch
   return (
     <motion.div className="absolute inset-0 z-30 flex items-center justify-center bg-surface-page/55 px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div className="w-full max-w-md text-center" initial={{ y: 16, scale: 0.96 }} animate={{ y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 22 }}>
-        <div className="text-[11px] font-black uppercase tracking-[0.25em] text-white/60">{score}–{score} after full time</div>
+        <div className="text-[11px] font-black uppercase tracking-[0.25em] text-white/60">{fill(c.shootout.afterFullTime, { a: score, b: score })}</div>
         <h1 className="mt-1 text-5xl uppercase italic text-white sm:text-6xl" style={poppins}>
-          Penalties
+          {c.shootout.penalties}
         </h1>
         <div className="mx-auto mt-2 h-1 w-20 rounded-full bg-brand-yellow" />
         <div className="mt-6 grid grid-cols-2 gap-3">
           {(['player', 'opponent'] as const).map((side) => (
             <div key={side} className={cn('flex flex-col items-center gap-2 rounded-2xl bg-white/[0.06] px-3 py-3 ring-1', side === 'player' ? 'ring-brand-blue/50' : 'ring-brand-red-soft/50')}>
               <span className={cn('truncate text-sm uppercase', side === 'player' ? 'text-brand-blue' : 'text-brand-red-soft')} style={poppins}>
-                {side === 'player' ? 'You' : opponent.name}
+                {side === 'player' ? c.common.you : opponent.name}
               </span>
               {pips}
-              {opener === side && <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase text-surface-page">Shoots first</span>}
+              {opener === side && <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase text-surface-page">{c.shootout.shootsFirst}</span>}
             </div>
           ))}
         </div>
         <p className="mt-5 text-sm text-white/70">
-          Same question for both. Right and <span className="text-brand-yellow">faster</span> than the keeper = goal. 5 each, then sudden death.
+          {rulesBefore}<span className="text-brand-yellow">{c.shootout.rulesFaster}</span>{rulesAfter}
         </p>
         <motion.div key={count} className="mt-5 text-4xl text-brand-yellow" style={poppins} initial={{ scale: 1.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           {count}

@@ -17,7 +17,7 @@ import type { AvatarCustomization } from '@/types/game';
 import { tierFromRp } from '@/utils/rankedTier';
 import { getTierAccent, getTierFrameSrc } from '@/utils/tierVisuals';
 import { cn } from '@/lib/utils';
-import { CARD_BY_ID, DECK_SIZE, type CardId, type CardType } from './zoneMatch.cards';
+import { DECK_SIZE, type CardId, type CardType } from './zoneMatch.cards';
 import { CARD_TYPE_THEME, PlaystyleBadge } from './ZoneMatchCardFace';
 import {
   ARMBAND,
@@ -51,6 +51,9 @@ import {
 import { CardArt } from './ZoneMatchCardFace';
 import { FULL_H, FULL_W } from './zoneMatch.fullBody';
 import { DUET_MOVE_S, duetMoveFrame, type DuetMove } from './zoneMatch.duetMoves';
+import { fill } from './zoneMatch.copy';
+import { useLocale } from '@/contexts/LocaleContext';
+import { useZoneCopy } from './useZoneCopy';
 
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -698,6 +701,7 @@ export function FutCard({
   footer?: ReactNode;
   className?: string;
 }) {
+  const { c } = useZoneCopy();
   const height = Math.round(width * FRAME_ASPECT);
   const hasGoldBoot = slots.includes('golden-boot');
   const hasArmband = slots.includes('captains-armband');
@@ -714,7 +718,9 @@ export function FutCard({
     () => ({ goldBoot: hasGoldBoot, armband: hasArmband, balls: hasBalls, mud: hasMud, fog: hasFog, yellowCard: hasYellow, flag: hasFlag, gloves: hasGloves, bus: hasBus, scarf: hasScarf, shinPads: hasPads }),
     [hasGoldBoot, hasArmband, hasBalls, hasMud, hasFog, hasYellow, hasFlag, hasGloves, hasBus, hasScarf, hasPads],
   );
+  const { t } = useLocale();
   const { tier, frame, accent } = tierLook(seat.rankPoints);
+  const tierName = t(`tiers.${tier}`);
   // The sheen and the shine sweep are cut to the frame art's own outline, and only lighten it (never recolour it).
   const frameMask = { WebkitMaskImage: `url(${frame})`, maskImage: `url(${frame})`, WebkitMaskSize: '100% 100%', maskSize: '100% 100%' };
 
@@ -772,7 +778,7 @@ export function FutCard({
       style={{ width, height, perspective: 900 }}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      aria-label={`${seat.name} player card`}
+      aria-label={fill(c.loadout.playerCard, { name: seat.name })}
     >
       <motion.div className="relative size-full" style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}>
         {/* Glow behind the card, in the tier's accent. */}
@@ -821,7 +827,7 @@ export function FutCard({
           <span className="font-extrabold opacity-90" style={{ fontSize: s(0.055) }}>RP</span>
           <span className="mt-1 h-0.5 w-full rounded-full" style={{ background: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.4)' }} />
           {/* On a dark chip: some frames are near white at the top. */}
-          <span className="mt-1 max-w-[5.5em] rounded-md px-1 py-px text-center font-extrabold uppercase" style={{ fontSize: s(0.042), background: 'rgba(0,0,0,0.32)' }}>{tier}</span>
+          <span className="mt-1 max-w-[5.5em] rounded-md px-1 py-px text-center font-extrabold uppercase" style={{ fontSize: s(0.042), background: 'rgba(0,0,0,0.32)' }}>{tierName}</span>
         </div>
 
         {/* PlayStyle slots down the side. */}
@@ -841,7 +847,7 @@ export function FutCard({
                 <button
                   type="button"
                   onClick={() => onSlotClick?.(index)}
-                  aria-label={`Remove ${CARD_BY_ID[id].name}`}
+                  aria-label={fill(c.loadout.remove, { card: c.cards[id].name })}
                   disabled={!onSlotClick || blockedSlots?.[index] === true}
                   className={cn(blockedSlots?.[index] === true && 'opacity-35')}
                 >
@@ -866,7 +872,7 @@ export function FutCard({
           <span className="max-w-[78%] truncate font-black uppercase leading-tight" style={{ fontSize: s(0.085) }}>{seat.name}</span>
           <span className="my-1 h-0.5 w-[62%] rounded-full" style={{ background: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.4)' }} />
           <span className="rounded-full px-2 py-px font-extrabold uppercase tracking-wide" style={{ fontSize: s(0.042), background: 'rgba(0,0,0,0.32)' }}>
-            {tier}
+            {tierName}
           </span>
           {footer && <div className="mt-1" style={{ fontSize: s(0.042) }}>{footer}</div>}
         </div>

@@ -12,6 +12,7 @@ import { Check, Info, X, Zap, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, type CardDef, type CardId, type CardType } from './zoneMatch.cards';
 import { CARD_TYPE_THEME, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -44,28 +45,30 @@ export function TileChip({ Icon, label, color }: { Icon: LucideIcon; label: stri
  * badge's gem carries the cost, the rules panel the rest).
  */
 export function PlaystyleText({ card, tags, dense = false }: { card: CardDef; tags?: ReactNode; dense?: boolean }) {
+  const { c } = useZoneCopy();
   const phase = PHASE_INFO[card.phase];
   const role = ROLE_INFO[card.role];
-  const split = card.name.lastIndexOf(' ') + 1;
+  const text = c.cards[card.id];
+  const split = text.name.lastIndexOf(' ') + 1;
   const short = (
     <span className={cn('font-black uppercase leading-tight tracking-wide', dense ? 'text-[10px] sm:text-xs' : 'text-xs')} style={{ color: TYPE_INK[card.type] }}>
-      {card.short}
+      {text.short}
     </span>
   );
   const chips = (
     <span className={cn('contents', dense && 'max-sm:hidden')}>
-      <TileChip Icon={phase.Icon} label={phase.label} color={phaseColor(card)} />
-      <TileChip Icon={role.Icon} label={role.label} color={CARD_TYPE_THEME[card.type].color} />
+      <TileChip Icon={phase.Icon} label={c.phases[card.phase].label} color={phaseColor(card)} />
+      <TileChip Icon={role.Icon} label={c.roles[card.role].label} color={CARD_TYPE_THEME[card.type].color} />
     </span>
   );
   return (
     <span className={cn('flex min-w-0 flex-1 flex-col', dense ? 'gap-0.5 sm:gap-1' : 'gap-1')}>
       <span className={cn('uppercase leading-tight text-white', dense ? 'text-xs sm:text-[15px]' : 'text-[15px]')} style={poppins}>
-        {card.name.slice(0, split)}
+        {text.name.slice(0, split)}
         {/* The cost stays with the last word, so a wrapped name never leaves it alone on a line (dense phones show no cost
             chip, and a long hyphenated word must be free to break there). */}
         <span className={dense ? 'sm:whitespace-nowrap' : 'whitespace-nowrap'}>
-          {card.name.slice(split)}
+          {text.name.slice(split)}
           <Cost value={card.energy} className={cn('ml-1.5 align-[2px]', dense && 'max-sm:hidden')} />
         </span>
       </span>
@@ -90,17 +93,18 @@ export function PlaystyleText({ card, tags, dense = false }: { card: CardDef; ta
 
 /** The full rule: the effect, and when / who spelled out. */
 export function PlaystyleRules({ card, className }: { card: CardDef; className?: string }) {
+  const { c } = useZoneCopy();
   const phase = PHASE_INFO[card.phase];
   const role = ROLE_INFO[card.role];
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <p className="text-[13px] leading-snug text-white/90">{card.effect}</p>
+      <p className="text-[13px] leading-snug text-white/90">{c.cards[card.id].effect}</p>
       <div className="flex flex-col gap-1 text-[11px] leading-snug text-white/60">
         <span className="flex items-center gap-1.5">
-          <phase.Icon className="size-3.5 shrink-0" style={{ color: phaseColor(card) }} /> {phase.long}
+          <phase.Icon className="size-3.5 shrink-0" style={{ color: phaseColor(card) }} /> {c.phases[card.phase].long}
         </span>
         <span className="flex items-center gap-1.5">
-          <role.Icon className="size-3.5 shrink-0" style={{ color: CARD_TYPE_THEME[card.type].color }} /> {role.long}
+          <role.Icon className="size-3.5 shrink-0" style={{ color: CARD_TYPE_THEME[card.type].color }} /> {c.roles[card.role].long}
         </span>
       </div>
     </div>
@@ -142,6 +146,7 @@ export function PlaystyleRow({
   reveal?: { delay: number; from: number };
   className?: string;
 }) {
+  const { c } = useZoneCopy();
   const card = CARD_BY_ID[id];
   return (
     <motion.div
@@ -155,7 +160,7 @@ export function PlaystyleRow({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        title={card.effect}
+        title={c.cards[id].effect}
         className={cn('flex w-full items-center text-left', dense ? 'gap-2 p-1.5 sm:gap-3 sm:p-2.5' : 'gap-3 p-2.5')}
       >
         <PlaystyleBadge id={id} size={badgeSize} showName={false} used={used} />
@@ -166,7 +171,7 @@ export function PlaystyleRow({
             tags={
               used ? (
                 <span className="inline-flex items-center gap-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-white/70">
-                  <Check className="size-2.5" strokeWidth={4} /> Used
+                  <Check className="size-2.5" strokeWidth={4} /> {c.common.used}
                 </span>
               ) : undefined
             }

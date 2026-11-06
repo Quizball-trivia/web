@@ -35,8 +35,8 @@ describe('cardFx', () => {
   });
 
   it('keeps Goalkeeper Gloves on between duels and passes on only this duel’s moment and result cards', () => {
-    const stale: CardEvent = { id: 1, duelNo: 2, side: 'player', card: 'fog', effect: '', phase: 'reveal' };
-    const result: CardEvent = { id: 2, duelNo: 3, side: 'opponent', card: 'counter-attack', effect: '', phase: 'result' };
+    const stale: CardEvent = { id: 1, duelNo: 2, side: 'player', card: 'fog', effect: 'fog-on', phase: 'reveal' };
+    const result: CardEvent = { id: 2, duelNo: 3, side: 'opponent', card: 'counter-attack', effect: 'counter-break', phase: 'result' };
     const fx = cardFx(duel({}, { battleStep: 'outcome', gloves: { player: false, opponent: true }, cardEvents: [stale, result] }), stale);
     expect(fx.gloves.opponent).toBe(true);
     expect(fx.moment).toBeNull();
@@ -50,7 +50,7 @@ describe('card-aware outcome scripts', () => {
   const shot: Possession = { attacker: 'player', zone: 'opponent' };
 
   it('has the defender who set the Offside Trap raise the flag in their own hand', () => {
-    const script = buildScript(centre, resolveBattle(centre, 'opponent'), 1, cards({ note: 'Offside trap!' }));
+    const script = buildScript(centre, resolveBattle(centre, 'opponent'), 1, cards({ note: 'offside-trap' }));
     expect(script.kind).toBe('offside');
     const frame = script.actor('opponent', 1);
     expect(frame.kind === 'move' && frame.arms?.R.shape).toBe('flag');
@@ -60,8 +60,8 @@ describe('card-aware outcome scripts', () => {
 
   it('lofts a Long Ball, landed or cut out', () => {
     const own: Possession = { attacker: 'player', zone: 'own' };
-    expect(buildScript(own, resolveBattle(own, 'player', { attackerSteps: 2 }), 1, cards({ note: 'Long Ball lands' })).kind).toBe('long-ball');
-    const cut = buildScript(own, resolveBattle(own, 'opponent'), 1, cards({ note: 'Long Ball cut out' }));
+    expect(buildScript(own, resolveBattle(own, 'player', { attackerSteps: 2 }), 1, cards({ note: 'long-ball-lands' })).kind).toBe('long-ball');
+    const cut = buildScript(own, resolveBattle(own, 'opponent'), 1, cards({ note: 'long-ball-cut' }));
     expect(cut.kind).toBe('long-ball-cut');
     const high = cut.ball(0.8);
     expect(high.kind === 'at' && high.y).toBeGreaterThan(1);
@@ -78,9 +78,9 @@ describe('card-aware outcome scripts', () => {
 
   it('draws the Long Ball flight path and flicks a First Touch win over the defender', () => {
     const own: Possession = { attacker: 'player', zone: 'own' };
-    const lob = buildScript(own, resolveBattle(own, 'player', { attackerSteps: 2 }), 1, cards({ note: 'Long Ball lands' }));
+    const lob = buildScript(own, resolveBattle(own, 'player', { attackerSteps: 2 }), 1, cards({ note: 'long-ball-lands' }));
     expect(lob.fx!(1).arc?.height).toBeGreaterThan(5);
-    const flick = buildScript(centre, resolveBattle(centre, 'player'), 1, cards({ note: 'First Touch' }));
+    const flick = buildScript(centre, resolveBattle(centre, 'player'), 1, cards({ note: 'first-touch' }));
     const up = flick.ball(0.67);
     expect(up.kind === 'at' && up.y).toBeGreaterThan(1);
   });

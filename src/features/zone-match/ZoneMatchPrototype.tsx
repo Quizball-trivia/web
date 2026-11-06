@@ -64,6 +64,8 @@ import { ZoneMatchStage, type ZoneMatchSeat } from './ZoneMatchStage';
 import { ZoneMatchShootout } from './ZoneMatchShootout';
 import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNumericQuestions';
 import { shootoutGoals } from './zoneMatch.shootout';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const MCQ_FETCH_LIMIT = 30;
 /** A category reaches the draft board only with this many playable ranked MCQs (a round can take several duels). */
@@ -653,6 +655,7 @@ export function FullTime({
   /** The server's result, when it decided the match (a side that leaves loses whatever the score). */
   verdict?: { winner: DuelSide | null; reason: 'score' | 'left' };
 }) {
+  const { c } = useZoneCopy();
   const { t } = useLocale();
   const { player: mine, opponent: theirs } = state.score;
   // A drawn match was settled on penalties.
@@ -671,7 +674,7 @@ export function FullTime({
           playerWon={playerWon}
           isDraw={isDraw}
           isCancelledNoContest={false}
-          resultHeading={playerWon ? 'Victory' : isDraw ? 'Draw' : 'Defeat'}
+          resultHeading={playerWon ? c.fullTime.victory : isDraw ? c.fullTime.draw : c.fullTime.defeat}
           playerUsername={player.name}
           playerAvatar=""
           playerAvatarCustomization={player.avatarCustomization}
@@ -681,7 +684,7 @@ export function FullTime({
           opponentId="zone-match-bot"
           playerScore={mine}
           opponentScore={theirs}
-          totalGamesLabel={left ? (playerWon ? `${opponent.name} left the match` : 'You left the match') : pens ? `${playerWon ? 'Won' : 'Lost'} ${pens.player}–${pens.opponent} on penalties` : t('results.matchComplete')}
+          totalGamesLabel={left ? (playerWon ? fill(c.fullTime.leftThem, { name: opponent.name }) : c.fullTime.leftYou) : pens ? fill(playerWon ? c.fullTime.wonPens : c.fullTime.lostPens, { a: pens.player, b: pens.opponent }) : t('results.matchComplete')}
           preMatchRankedProfile={null}
           playerTier={tierFromRp(player.rankPoints ?? 0)}
           playerDisplayRp={player.rankPoints}
@@ -710,7 +713,7 @@ export function FullTime({
             onClick={onChangeDeck}
             className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins text-[1.5rem] font-semibold uppercase text-white transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"
           >
-            Change deck
+            {c.fullTime.changeDeck}
           </button>
         </div>
       </motion.div>

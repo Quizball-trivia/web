@@ -12,6 +12,7 @@ import type { AvatarCustomization } from '@/types/game';
 import { HAIR_PARTS, RANDOM_JERSEY_IDS, SKIN_PARTS } from '@/lib/avatars/parts';
 import { FutCard, type FutSeat } from '../ZoneMatchFutCard';
 import type { CardId } from '../zoneMatch.cards';
+import { useZoneCopy } from '../useZoneCopy';
 
 export interface SearchScreenProps {
   self: FutSeat;
@@ -51,13 +52,14 @@ export function randomSeat(seed: number): FutSeat {
 }
 
 export function CancelButton({ onCancel, className = '' }: { onCancel: () => void; className?: string }) {
+  const { c } = useZoneCopy();
   return (
     <button
       type="button"
       onClick={onCancel}
       className={`inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white backdrop-blur hover:bg-white/20 ${className}`}
     >
-      <X className="size-4" /> Cancel
+      <X className="size-4" /> {c.common.cancel}
     </button>
   );
 }

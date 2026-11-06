@@ -7,12 +7,14 @@
 
 import { RANKED_V2_ENABLED, ZONE_BOT_ENABLED } from '@/lib/config';
 import { ZoneMatchQueueScreen } from '@/features/zone-match/ZoneMatchQueueScreen';
+import { useZoneCopy } from '@/features/zone-match/useZoneCopy';
 
 export default function Ranked2Page() {
+  const { c } = useZoneCopy();
   if (!RANKED_V2_ENABLED || !ZONE_BOT_ENABLED) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-surface-page font-poppins text-white">
-        Ranked 2.0 is not available yet
+        {c.room.notAvailable}
       </div>
     );
   }
