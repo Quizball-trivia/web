@@ -12,6 +12,7 @@ import { CampaignTrackedLink } from './CampaignTrackedLink';
 import { CampaignSignupLink } from './CampaignSignupLink';
 import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { availableCampaignHubs } from './campaignQuiz.editions';
 import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from './campaignQuiz.hub-seo';
 import { SITE_URL } from '@/lib/seo/site';
 
@@ -22,6 +23,7 @@ const POPULAR_QUIZ_SLUGS = {
   ru: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
   pt: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
   de: ['career-path', 'guess-the-player', 'club-badges', 'premier-league'],
+  tr: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
@@ -103,6 +105,19 @@ const HUB_COPY = {
     rankedBody: 'Einzelquizze sind dein Warm-up. Registriere dich kostenlos, tritt gegen echte Fans an und steige in der QuizBall-Rangliste auf.',
     groups: { team: 'Vereinsquizze', league: 'Ligaquizze', quiz_type: 'Fußball-Challenges', article: 'Fußballwissen' },
   },
+  tr: {
+    ranked: 'Sıralamalı Oyna', eyebrow: 'Ücretsiz futbol bilgi yarışması',
+    title: 'Futbol Bilgi Yarışması: Sorular ve Cevaplar Online',
+    intro: 'Bir test seç, doğrulanmış futbol sorularını cevapla ve puanını anında gör. Her tek kişilik testi ücretsiz başlatabilir, hesapsız oynayabilirsin.',
+    popularHeading: 'Popüler futbol testleri',
+    popularBody: 'Favorilerle başla: kariyerinden ve ipuçlarından futbolcuyu tahmin et, armasından takımı bul ve Real Madrid hakkında ne kadar bilgi sahibi olduğunu gör.',
+    playFree: 'Ücretsiz oyna', verifiedHeading: 'Doğruluğu kontrol edilmiş futbol soruları',
+    verifiedBody: 'QuizBall\'ın herkese açık testlerindeki kulüp, turnuva, futbolcu ve futbol tarihi sorularının doğruluğu kontrol edilir.',
+    methodologyLink: 'QuizBall her sorunun doğruluğunu nasıl kontrol ediyor?',
+    rankedHeading: 'Puanını sıralamalı düellolarda göster',
+    rankedBody: 'Tek kişilik testler ısınma turu. Gerçek taraftarlarla karşılaşmak ve QuizBall\'ın sıralamasında yükselmek için ücretsiz kayıt ol.',
+    groups: { team: 'Kulüp ve milli takım testleri', league: 'Lig testleri', quiz_type: 'Futbol mücadeleleri', article: 'Futbol bilgi yarışması' },
+  },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
@@ -140,10 +155,7 @@ function QuizCard({ page, locale, label, preload = false }: {
 export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }) {
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
-  // The Portuguese hub is offered once at least one quiz has a pt edition.
-  const hasPortuguese = (locale === 'pt' ? pages : await loadHubPages('pt')).length > 0;
-  // The German hub is offered once at least one quiz has a de edition.
-  const hasGerman = (locale === 'de' ? pages : await loadHubPages('de')).length > 0;
+  const hubs = await availableCampaignHubs();
   const popularSlugs = POPULAR_QUIZ_SLUGS[locale];
   const popularSlugSet = new Set<string>(popularSlugs);
   const popularPages = popularSlugs.flatMap((slug) => {
@@ -178,7 +190,7 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href={`/${locale}`} aria-label="QuizBall"><Image src="/assets/brand/quizball-logo.webp" alt="QuizBall" width={218} height={64} className="h-10 w-auto object-contain sm:h-12" /></Link>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher locale={locale} locales={hasPortuguese ? (hasGerman ? ['en', 'es', 'ru', 'pt', 'de'] : ['en', 'es', 'ru', 'pt']) : (hasGerman ? ['en', 'es', 'ru', 'de'] : ['en', 'es', 'ru'])} className="hidden sm:inline-flex" />
+            <LanguageSwitcher locale={locale} locales={hubs} className="hidden sm:inline-flex" />
             <CampaignSignupLink slug="football-quiz" placement="hero" href={`/${locale}?signup=1&source=football-quiz-hub-header`} className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90">{copy.ranked}</CampaignSignupLink>
           </div>
         </div>

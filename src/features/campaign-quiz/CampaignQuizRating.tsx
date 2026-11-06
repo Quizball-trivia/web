@@ -37,6 +37,28 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
         rating: 'Bewertung',
         ratings: 'Bewertungen',
       }
+    : locale === 'tr'
+    ? {
+        saved: 'Teşekkürler, değerlendirmen kaydedildi.',
+        failed: 'Değerlendirmen kaydedilemedi. Lütfen tekrar dene.',
+        heading: 'Bu testi nasıl değerlendirirsin?',
+        first: 'İlk değerlendirmeyi sen yap.',
+        rate: 'Değerlendir',
+        outOf: 'üzerinden 5',
+        rating: 'değerlendirme',
+        ratings: 'değerlendirme',
+      }
+    : locale === 'ka'
+    ? {
+        saved: 'მადლობა — შენი შეფასება შენახულია.',
+        failed: 'შეფასების შენახვა ვერ მოხერხდა. სცადე ხელახლა.',
+        heading: 'როგორ შეაფასებდი ამ ქვიზს?',
+        first: 'პირველი იყავი, ვინც შეაფასებს.',
+        rate: 'შეაფასე',
+        outOf: '5-დან',
+        rating: 'შეფასება',
+        ratings: 'შეფასება',
+      }
     : locale === 'ru'
     ? {
         saved: 'Спасибо — твоя оценка сохранена.',
@@ -93,7 +115,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
-  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : 'en-GB';
+  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'ka' ? 'ka-GE' : 'en-GB';
   return (
     <section
       id="quiz-rating"

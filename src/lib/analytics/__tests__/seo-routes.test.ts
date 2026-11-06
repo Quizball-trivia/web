@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { isLightweightSeoRoute } from '@/lib/seo/lightweight-routes';
 import { SEO_QUIZ_PATH, isSeoAnalyticsPath } from '../seo-routes';
 describe('shared SEO routing for replay and vitals', () => {
+  it.each(CAMPAIGN_QUIZ_LOCALES)('routes the %s quiz hub and its pages as SEO pages', (locale) => {
+    for (const path of [campaignHubPath(locale), campaignQuizPath('arsenal', locale)]) {
+      expect(SEO_QUIZ_PATH.test(path)).toBe(true);
+      expect(isLightweightSeoRoute(path)).toBe(true);
+    }
+  });
   it.each(['/en', '/ka/', '/es', '/tr/'])('includes the public hub %s', path => {
     expect(isSeoAnalyticsPath(path)).toBe(true);
   });
