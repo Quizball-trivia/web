@@ -27,6 +27,7 @@ import competitionsRegistry from "@/data/football-grid/launch-assets/competition
 import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { squadSpinApi, SquadSpinApiError, type SquadSpinPlayer, type SquadSpinReel, type SquadSpinState } from "@/lib/repositories/squadSpin.repo";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
+import { decimalText } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const STAKES = [50, 100, 250];
@@ -318,12 +319,12 @@ export function SquadSpinLive({ backHref = "/play", client, sample, onPractice }
                   <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("squadSpin.multiplier")}</div>
                   {state.spin && !settled ? (
                     <div className="flex items-baseline justify-center gap-1 text-lg font-black tabular-nums" style={poppins}>
-                      <span className="text-white/60">{(state.mult_bp / 10000).toFixed(2)}×</span>
+                      <span className="text-white/60">{decimalText(state.mult_bp / 10000, 2, locale)}×</span>
                       <span className="text-xs text-white/40">→</span>
-                      <span className="text-brand-yellow">{((state.spin.next_pot_coins * 10000) / state.stake_coins / 10000).toFixed(2)}×</span>
+                      <span className="text-brand-yellow">{decimalText((state.spin.next_pot_coins * 10000) / state.stake_coins / 10000, 2, locale)}×</span>
                     </div>
                   ) : (
-                    <div className="text-lg font-black tabular-nums text-white" style={poppins}>{(state.mult_bp / 10000).toFixed(2)}×</div>
+                    <div className="text-lg font-black tabular-nums text-white" style={poppins}>{decimalText(state.mult_bp / 10000, 2, locale)}×</div>
                   )}
                 </div>
               </div>
@@ -349,7 +350,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample, onPractice }
                     </div>
                   )}
                   <div className="mt-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/60" style={poppins}>
-                    <span>{t("squadSpin.spinN", { n: String(state.spin.index) })} · ×{(state.spin.step_bp / 10000).toFixed(2)}</span>
+                    <span>{t("squadSpin.spinN", { n: String(state.spin.index) })} · ×{decimalText(state.spin.step_bp / 10000, 2, locale)}</span>
                     {relaxed ? <span>{t("squadSpin.noTimer")}</span> : <span className={cn("tabular-nums", left <= 3 && "text-brand-red-soft")}>{secondsShort(Math.ceil(left), locale)}</span>}
                   </div>
                   <div className="relative mt-3">

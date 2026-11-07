@@ -1914,6 +1914,9 @@
     "finalizingResult": "Finalizando resultado..."
   },
   "training": {
+    "demoEndMessage": "Este é o nosso principal modo 1v1: no ranqueado, o adversário é um jogador de verdade.",
+    "demoEndDone": "Concluir",
+    "demoBack": "Voltar às demos",
     "loadError": "Não foi possível carregar as perguntas do tutorial. Tente novamente.",
     "retryLoading": "Tentar novamente",
     "exitLoading": "Sair do tutorial",

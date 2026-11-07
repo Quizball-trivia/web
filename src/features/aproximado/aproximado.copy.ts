@@ -611,7 +611,11 @@ export function intlNumberLocale(locale: string): string {
   return NUMBER_LOCALE[(locale in NUMBER_LOCALE ? locale : "en") as Locale];
 }
 
-export function formatValue(value: number, unit: string, precision: number, locale: string): string {
+/** A French reader writes M€; content can still carry the English form. */
+export const displayUnit = (unit: string, locale: string): string => (locale === "fr" && unit === "€M" ? "M€" : unit);
+
+export function formatValue(value: number, rawUnit: string, precision: number, locale: string): string {
+  const unit = displayUnit(rawUnit, locale);
   const n = new Intl.NumberFormat(intlNumberLocale(locale), { maximumFractionDigits: precision, minimumFractionDigits: 0 }).format(value);
   const shown = (Number(value.toFixed(precision)) === 1 || (locale === "fr" && Number(value.toFixed(precision)) === 0)) && SINGULAR_UNIT[unit] ? SINGULAR_UNIT[unit] : unit;
   return shown ? `${n} ${shown}` : n;

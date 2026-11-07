@@ -61,6 +61,7 @@ import type { Locale } from '@/lib/i18n/messages';
 import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { localizedPlayerName } from '@/lib/football-grid/playerName';
+import { labelColon } from "@/lib/i18n/typography";
 
 export const FOOTBALL_GRID_COPY = {
   en: {
@@ -1945,7 +1946,7 @@ export function GridRulesPanel({ board, locale }: { board: FootballGridState['bo
       <ul className="mt-3 space-y-2.5" lang={locale}>
         {rules.map((rule) => (
           <li key={rule.id} className="border-l-2 border-white/15 pl-3 text-[13px] leading-relaxed text-white/75">
-            <span className="font-bold text-white">{rule.family}: </span>{rule.text}
+            <span className="font-bold text-white">{rule.family}{labelColon(locale)} </span>{rule.text}
           </li>
         ))}
         <li className="border-l-2 border-white/15 pl-3 text-[13px] leading-relaxed text-white/60">{BOTH_CLUES_EXPLANATION[locale]}</li>

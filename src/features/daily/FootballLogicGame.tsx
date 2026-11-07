@@ -16,6 +16,8 @@ import { DailyChallengeCompleteModal } from "./components/DailyChallengeComplete
 import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
+import { labelColon } from "@/lib/i18n/typography";
+import { useLocale } from "@/contexts/LocaleContext";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -50,6 +52,7 @@ export function FootballLogicGame({
   const [finished, setFinished] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const copy = getDailyChallengeCopy();
+  const { locale } = useLocale();
 
   const currentQuestion = session.questions[currentQuestionIndex];
 
@@ -209,7 +212,7 @@ export function FootballLogicGame({
             <div className="flex items-center justify-center gap-2" style={{ ...poppins, fontSize: 'clamp(13px, 1.7vw, 20px)', color: lastWasCorrect ? '#58CC02' : '#FB3101' }}>
               {lastWasCorrect ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}
               <span>
-                {lastWasCorrect ? copy.correct : `${copy.answerPrefix}: ${currentQuestion.displayAnswer}`}
+                {lastWasCorrect ? copy.correct : `${copy.answerPrefix}${labelColon(locale)} ${currentQuestion.displayAnswer}`}
               </span>
             </div>
             {currentQuestion.explanation && (

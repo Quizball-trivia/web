@@ -1914,6 +1914,9 @@
     "finalizingResult": "Ergebnis wird bestätigt …"
   },
   "training": {
+    "demoEndMessage": "Das ist unser wichtigster 1v1-Modus: Im Ranked spielst du gegen einen echten Gegner.",
+    "demoEndDone": "Fertig",
+    "demoBack": "Zurück zu den Demos",
     "loadError": "Die Tutorialfragen konnten nicht geladen werden. Bitte versuche es erneut.",
     "retryLoading": "Erneut versuchen",
     "exitLoading": "Tutorial beenden",

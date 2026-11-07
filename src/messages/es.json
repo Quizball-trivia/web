@@ -1914,6 +1914,9 @@
     "finalizingResult": "Finalizando resultado..."
   },
   "training": {
+    "demoEndMessage": "Este es nuestro modo estrella 1v1: en las partidas clasificatorias el rival es un jugador real.",
+    "demoEndDone": "Listo",
+    "demoBack": "Volver a las demos",
     "loadError": "No se pudieron cargar las preguntas del tutorial. Inténtalo de nuevo.",
     "retryLoading": "Reintentar",
     "exitLoading": "Salir del tutorial",
