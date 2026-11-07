@@ -94,6 +94,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   if (locale === 'pt') permanentRedirect(withPreview(campaignQuizPath(slug, 'pt'), preview));
   if (locale === 'de') permanentRedirect(withPreview(campaignQuizPath(slug, 'de'), preview));
   if (locale === 'tr') permanentRedirect(withPreview(campaignQuizPath(slug, 'tr'), preview));
+  if (locale === 'fr') permanentRedirect(withPreview(campaignQuizPath(slug, 'fr'), preview));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;

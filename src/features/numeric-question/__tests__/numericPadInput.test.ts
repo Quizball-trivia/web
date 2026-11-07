@@ -86,6 +86,8 @@ describe('formatPadText', () => {
     expect(formatPadText('74500', 'de-DE')).toBe('74.500');
     expect(formatPadText('85.', 'en-GB')).toBe('85.');
     expect(formatPadText('85.5', 'de-DE')).toBe('85,5');
+    expect(formatPadText('74500', 'fr-FR')).toBe('74\u202f500');
+    expect(formatPadText('85.5', 'fr-FR')).toBe('85,5');
     expect(formatPadText('', 'en-GB')).toBe('');
   });
 });

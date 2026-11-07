@@ -17,6 +17,8 @@ import { FIFA_CARDS, PLAYABLE_EDITIONS } from "@/features/mini-games/data/guessF
 import { DEMO_QUESTIONS } from "./demoQuestions";
 
 type L = Locale;
+/** The labels here sit on real demo content, which stays out of French: fr reads English. */
+type LabelLocale = Exclude<L, "fr">;
 
 const EXTRA = {
   "Money Drop": {
@@ -291,12 +293,12 @@ const EXTRA = {
   }
 } as const satisfies Record<string, { es: string; pt: string; de: string; tr: string }>;
 /** Display labels that the mini-game data keeps in English only. */
-const MATCH_LABELS: Record<string, Record<L, string>> = {
+const MATCH_LABELS: Record<string, Record<LabelLocale, string>> = {
   "vs Manchester United — 2011 Champions League Final": { en: "vs Manchester United — 2011 Champions League Final", ka: "მანჩესტერ იუნაიტედთან — 2011 ჩემპიონთა ლიგის ფინალი", es: "vs Manchester United — Final de la Champions 2011", tr: "Manchester United'a karşı — 2011 Şampiyonlar Ligi Finali", ru: "против «Манчестер Юнайтед» — финал Лиги чемпионов 2011 года", pt: "vs Manchester United — Final da Champions League de 2011", de: "gegen Manchester United — Champions-League-Finale 2011" },
   "vs Juventus — 2017 Champions League Final": { en: "vs Juventus — 2017 Champions League Final", ka: "იუვენტუსთან — 2017 ჩემპიონთა ლიგის ფინალი", es: "vs Juventus — Final de la Champions 2017", tr: "Juventus'a karşı — 2017 Şampiyonlar Ligi Finali", ru: "против «Ювентуса» — финал Лиги чемпионов 2017 года", pt: "vs Juventus — Final da Champions League de 2017", de: "gegen Juventus — Champions-League-Finale 2017" },
   "vs France — 2022 World Cup Final": { en: "vs France — 2022 World Cup Final", ka: "საფრანგეთთან — 2022 მსოფლიო ჩემპიონატის ფინალი", es: "vs Francia — Final del Mundial 2022", tr: "Fransa'ya karşı — 2022 Dünya Kupası Finali", ru: "против Франции — финал чемпионата мира 2022 года", pt: "vs França — Final da Copa do Mundo de 2022", de: "gegen Frankreich — WM-Finale 2022" },
 };
-export const LEAGUE_LABELS: Record<string, Record<L, string>> = {
+export const LEAGUE_LABELS: Record<string, Record<LabelLocale, string>> = {
   "Liga Portugal": { en: "Liga Portugal", ka: "პორტუგალიის ლიგა", es: "Liga Portugal", tr: "Portekiz Ligi", ru: "Лига Португалии", pt: "Liga Portugal", de: "Liga Portugal" },
   "Portuguese Liga ZON SAGRES": { en: "Portuguese Liga ZON SAGRES", ka: "პორტუგალიის ლიგა", es: "Liga portuguesa", tr: "Portekiz Ligi", ru: "Португальская лига ZON SAGRES", pt: "Liga Portuguesa ZON SAGRES", de: "Portugiesische Liga ZON SAGRES" },
   "Ligue 1 McDonald's": { en: "Ligue 1 McDonald's", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1", ru: "Лига 1 McDonald's", pt: "Ligue 1 McDonald's", de: "Ligue 1 McDonald's" },
@@ -330,14 +332,46 @@ export const LEAGUE_LABELS: Record<string, Record<L, string>> = {
   "Chinese Super League": { en: "Chinese Super League", ka: "ჩინეთის სუპერლიგა", es: "Superliga china", tr: "Çin Süper Ligi", ru: "Китайская Суперлига", pt: "Superliga Chinesa", de: "Chinesische Super League" },
   "Japanese J. League Division 1": { en: "Japanese J. League Division 1", ka: "იაპონიის J-ლიგა", es: "J. League japonesa", tr: "Japonya J. Ligi", ru: "Первый дивизион J-лиги Японии", pt: "J. League Japonesa", de: "Japanische J. League Division 1" },
 };
-const label = (table: Record<string, Record<L, string>>, locale: L, value: string) => table[value]?.[locale] ?? value;
+const label = (table: Record<string, Record<LabelLocale, string>>, locale: L, value: string) => (locale === "fr" ? value : table[value]?.[locale] ?? value);
 type ExtraKey = keyof typeof EXTRA;
+/** Session names and one-line rules only; the questions and answers in this file have no French. */
+const FR_LABELS: Partial<Record<ExtraKey, string>> = {
+  "Money Drop": "Répartis tes pièces",
+  "Answer correctly to protect your money": "Réponds juste pour garder tes pièces",
+  "Football Logic": "Rébus foot",
+  "Decode the player from the two pictures": "Trouve le joueur à partir des deux images",
+  Transfers: "Transferts",
+  "Missing XI": "Devine le 11",
+  "Tap a shirt and name the player who started there.": "Touche un maillot et cite le joueur titulaire à ce poste.",
+  "Closest Wins": "Au plus proche",
+  "Slide to your best guess.": "Fais glisser le curseur jusqu’à ta réponse.",
+  "Pass Chain": "Relie les joueurs",
+  "Link two players through shared clubs.": "Relie deux joueurs par leurs clubs communs.",
+  "FIFA Cards": "Devine la carte en or",
+  "Card Detective": "Devine la carte",
+  "A gold card, stats only — name the player.": "Une carte en or, les stats seulement : cite le joueur.",
+  "Everything hidden, a 100-point hint budget per card — name the player using the least information.": "Tout est caché, 100 points d’indices par carte : cite le joueur avec le moins d’informations possible.",
+};
 /** en/ka inline; es/pt/de/tr from EXTRA. `en` must be a known key, so an English copy edit without its translations fails to compile. */
 const pick = (locale: L, en: ExtraKey, ka: string): string => {
   if (locale === "ka") return ka;
+  if (locale === "fr") return FR_LABELS[en] ?? en;
   if (locale === "es" || locale === "pt" || locale === "de" || locale === "tr") return EXTRA[en][locale];
   return en;
 };
+
+/** The pool's questions have no French; its session names and one-line rules do, so English game names stay off French pages. */
+function frenchPoolLabels(pool: ReturnType<typeof getPoolSessions>): ReturnType<typeof getPoolSessions> {
+  return {
+    trueFalse: { ...pool.trueFalse, title: "Vrai ou faux", description: "Dis si chaque affirmation de foot est vraie ou fausse" },
+    clues: { ...pool.clues, title: "Qui suis-je ?", description: "Devine le joueur avec les indices : moins d’indices, plus de points" },
+    countdown: { ...pool.countdown, title: "Cite le plus de joueurs", description: "Donne le plus de bonnes réponses avant la fin du chrono" },
+    imposter: { ...pool.imposter, title: "Trouve l’intrus", description: "Sélectionne toutes les bonnes réponses et laisse les intrus de côté" },
+    careerPath: { ...pool.careerPath, title: "Parcours du joueur", description: "Devine le joueur à partir de ses transferts" },
+    highLow: { ...pool.highLow, title: "Higher or Lower", description: "Choisis la valeur la plus élevée pour prolonger ta série" },
+    putInOrder: { ...pool.putInOrder, title: "Frise du foot", description: "Fais glisser les éléments dans le bon ordre" },
+  };
+}
 
 function moneyDropSession(locale: L): MoneyDropSession {
   return {
@@ -680,7 +714,7 @@ export function buildDemoDailySession(
   // wherever the pool has native content for the type. moneyDrop keeps the
   // pool MCQ fixture; footballLogic keeps curated club riddles because the
   // pool's footballLogic rows still carry placeholder images.
-  const pool = getPoolSessions(locale);
+  const pool = locale === "fr" ? frenchPoolLabels(getPoolSessions(locale)) : getPoolSessions(locale);
   switch (type) {
     case "moneyDrop":
       return moneyDropSession(locale);

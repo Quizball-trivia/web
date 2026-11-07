@@ -1,5 +1,5 @@
 /** A new language is added here; the tables below then refuse to compile until they carry it. */
-export const CAMPAIGN_QUIZ_LOCALES = ['en', 'ka', 'es', 'ru', 'pt', 'de', 'tr'] as const;
+export const CAMPAIGN_QUIZ_LOCALES = ['en', 'ka', 'es', 'ru', 'pt', 'de', 'tr', 'fr'] as const;
 export type CampaignQuizLocale = (typeof CAMPAIGN_QUIZ_LOCALES)[number];
 
 const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
@@ -160,12 +160,51 @@ const TURKISH_PUBLIC_SLUGS: Record<string, string> = {
   spain: 'ispanya-milli-takimi-testi',
 };
 
+/**
+ * French public slugs (docs/SEO-GAME-NAMING-FR-2026-11-06.md §4): "quiz-<club>" with the full club name, because bare city
+ * names are Quiz Room bars and pubs; national teams "quiz-<pays>-foot", because the country alone reads as geography.
+ * Lowercase ASCII, accents stripped. career-path reuses the career-path game slug, as pt and de do. The backend's Search
+ * Console mapping (campaign-quiz-search-console.service.ts) mirrors this table.
+ */
+const FRENCH_PUBLIC_SLUGS: Record<string, string> = {
+  'career-path': 'devine-le-joueur-avec-les-clubs',
+  'guess-the-player': 'devine-le-joueur',
+  'club-badges': 'quiz-logo-foot',
+  'premier-league': 'quiz-premier-league',
+  'la-liga': 'quiz-la-liga',
+  arsenal: 'quiz-arsenal',
+  'aston-villa': 'quiz-aston-villa',
+  bournemouth: 'quiz-bournemouth',
+  brentford: 'quiz-brentford',
+  brighton: 'quiz-brighton',
+  chelsea: 'quiz-chelsea',
+  'coventry-city': 'quiz-coventry-city',
+  'crystal-palace': 'quiz-crystal-palace',
+  everton: 'quiz-everton',
+  fulham: 'quiz-fulham',
+  'hull-city': 'quiz-hull-city',
+  'ipswich-town': 'quiz-ipswich-town',
+  'leeds-united': 'quiz-leeds-united',
+  liverpool: 'quiz-liverpool',
+  'manchester-city': 'quiz-manchester-city',
+  'manchester-united': 'quiz-manchester-united',
+  'newcastle-united': 'quiz-newcastle-united',
+  'nottingham-forest': 'quiz-nottingham-forest',
+  sunderland: 'quiz-sunderland',
+  tottenham: 'quiz-tottenham',
+  'real-madrid': 'quiz-real-madrid',
+  barcelona: 'quiz-fc-barcelone',
+  argentina: 'quiz-argentine-foot',
+  spain: 'quiz-espagne-foot',
+};
+
 const PUBLIC_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = {
   es: SPANISH_PUBLIC_SLUGS,
   ru: RUSSIAN_PUBLIC_SLUGS,
   pt: PORTUGUESE_PUBLIC_SLUGS,
   de: GERMAN_PUBLIC_SLUGS,
   tr: TURKISH_PUBLIC_SLUGS,
+  fr: FRENCH_PUBLIC_SLUGS,
 };
 
 const SOURCE_SLUGS: Partial<Record<CampaignQuizLocale, Record<string, string>>> = Object.fromEntries(
@@ -184,6 +223,7 @@ export const CAMPAIGN_HUB_FOLDER: Record<CampaignQuizLocale, string> = {
   pt: 'quiz-de-futebol',
   de: 'fussball-quiz',
   tr: 'futbol-bilgi-yarismasi',
+  fr: 'quiz-foot',
 };
 
 /** hreflang per edition: the internal locale is `pt`, the Brazilian page is announced as pt-BR (HTML_LANG). */
@@ -195,6 +235,7 @@ export const CAMPAIGN_HREFLANG: Record<CampaignQuizLocale, string> = {
   pt: 'pt-BR',
   de: 'de',
   tr: 'tr',
+  fr: 'fr',
 };
 
 export const CAMPAIGN_OG_LOCALE: Record<CampaignQuizLocale, string> = {
@@ -205,11 +246,15 @@ export const CAMPAIGN_OG_LOCALE: Record<CampaignQuizLocale, string> = {
   pt: 'pt_BR',
   de: 'de_DE',
   tr: 'tr_TR',
+  fr: 'fr_FR',
 };
 
 export function campaignHubPath(locale: CampaignQuizLocale): string {
   return `/${locale}/${CAMPAIGN_HUB_FOLDER[locale]}`;
 }
+
+/** A backend that predates a language rejects it in the query string, with 422 from the validator (older ones said 400). */
+export const isLanguageRejected = (status: number): boolean => status === 400 || status === 422;
 
 /** The API accepts lowercase, hyphen-separated slugs of at most 80 characters. */
 export const CAMPAIGN_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

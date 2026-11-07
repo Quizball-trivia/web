@@ -30,6 +30,7 @@ export function normalizeGridAnswerText(value: string): string {
     .replace(/['’ʻ`´]/g, '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/œ/g, 'oe')
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .normalize('NFC')
     .replace(/ı/g, 'i')
@@ -111,7 +112,7 @@ export function loadGridTypeaheadRoster(): Promise<PreparedPlayer[]> {
 export function searchGridPlayers(
   roster: PreparedPlayer[],
   query: string,
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de',
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr',
   limit = 6,
 ): GridTypeaheadPlayer[] {
   const queryWords = normalizeGridAnswerText(query).split(' ').filter(Boolean);

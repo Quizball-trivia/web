@@ -14,6 +14,7 @@ const loaders = {
   ru: () => import("@/messages/ru.json").then((module) => module.default),
   pt: () => import("@/messages/pt.json").then((module) => module.default),
   de: () => import("@/messages/de.json").then((module) => module.default),
+  fr: () => import("@/messages/fr.json").then((module) => module.default),
 };
 
 export function cachedLocaleMessages(locale: Locale): MessageDictionary | undefined {

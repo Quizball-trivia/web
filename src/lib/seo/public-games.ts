@@ -157,7 +157,7 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 /** Where a card links: its page, the established quiz page, or the app. */
 /**
  * Campaign quiz pages have an edition in every locale. This cannot know which are open (it runs in client bundles too),
- * so the destination decides: closed ka and tr pages redirect to English (CampaignQuizServerPage). Closed pt and de pages
+ * so the destination decides: closed ka, tr and fr pages redirect to English (CampaignQuizServerPage). Closed pt and de pages
  * answer 404, so ship those webs after their content is on the target.
  */
 export const campaignLocaleOf = (locale: Locale): CampaignQuizLocale => locale;

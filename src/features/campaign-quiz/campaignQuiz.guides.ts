@@ -9,7 +9,7 @@ export interface CampaignQuizGuide {
   practiceLabel: string;
 }
 
-type GuideLocale = Extract<CampaignQuizLocale, 'en' | 'es' | 'ka' | 'tr'>;
+type GuideLocale = Extract<CampaignQuizLocale, 'en' | 'es' | 'ka' | 'tr' | 'fr'>;
 
 const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = {
   'guess-the-player': {
@@ -69,6 +69,20 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       practiceSlug: 'career-path',
       practiceLabel: 'Kariyerden Futbolcu Tahmin Etme ile pratik yap',
     },
+    fr: {
+      eyebrow: 'Conseils pour Devine le joueur',
+      heading: 'Comment deviner le joueur de foot à partir des indices',
+      introduction:
+        'Pour deviner le joueur, utilise chaque indice comme un filtre. Commence par la nationalité, puis suis l’ordre des clubs. Un exploit peu courant suffit souvent à confirmer la réponse.',
+      tips: [
+        'Commence par la nationalité et le poste. Ensemble, ils peuvent écarter la plupart des quatre choix avant même un indice sur les clubs.',
+        'Lis les clubs dans l’ordre. Un retour, un prêt ou un changement de championnat aide souvent plus que le plus grand club de la liste.',
+        'Sers-toi des trophées et des records pour confirmer. Un exploit marquant est un bon indice, mais vérifie qu’il colle à toute la carrière.',
+        'Rejoue avec une nouvelle série. La répétition t’aide à relier les joueurs à leur parcours, plutôt qu’à mémoriser une seule réponse.',
+      ],
+      practiceSlug: 'career-path',
+      practiceLabel: 'Entraîne-toi avec le quiz Devine le joueur avec les clubs',
+    },
   },
   'career-path': {
     en: {
@@ -127,6 +141,20 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       practiceSlug: 'guess-the-player',
       practiceLabel: 'Futbolcu Bilmece ile pratik yap',
     },
+    fr: {
+      eyebrow: 'Conseils pour Parcours du joueur',
+      heading: 'Comment reconnaître un joueur grâce à son parcours',
+      introduction:
+        'N’essaie pas de te rappeler tous les transferts d’un coup. Lis le parcours dans l’ordre et cherche le transfert qui rend ce joueur unique.',
+      tips: [
+        'Commence par le centre de formation ou le premier club pro. Un point de départ singulier peut écarter tout de suite la plupart des choix.',
+        'Repère les changements de championnat et les retours. Un départ à l’étranger ou un deuxième passage au même club est souvent le meilleur indice.',
+        'Distingue les transferts définitifs des prêts. Un court passage peut rendre très différentes deux carrières qui se ressemblent.',
+        'Garde le dernier club comme vérification, pas comme première idée. Parcours toute la carrière avant de te décider.',
+      ],
+      practiceSlug: 'guess-the-player',
+      practiceLabel: 'Entraîne-toi avec le quiz Devine le joueur',
+    },
   },
   'club-badges': {
     en: {
@@ -184,6 +212,20 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       ],
       practiceSlug: 'premier-league',
       practiceLabel: 'Premier Lig Quiz ile pratik yap',
+    },
+    fr: {
+      eyebrow: 'Conseils pour le quiz logo foot',
+      heading: 'Comment reconnaître le logo d’un club de foot',
+      introduction:
+        'Un logo se retient plus facilement quand tu relies ses détails à un lieu ou à une histoire, au lieu de mémoriser toute l’image.',
+      tips: [
+        'Cherche d’abord un symbole de la ville : bateaux, tours, oiseaux et monuments locaux mènent souvent directement au club.',
+        'Vois les couleurs comme un indice d’appoint. Plusieurs clubs ont les mêmes, alors associe-les au symbole central.',
+        'Regarde les lettres, les dates et les devises sur le pourtour. Un petit détail peut séparer deux logos de forme proche.',
+        'Pense aux changements de logo. Une version moderne simplifie parfois un ancien logo, tout en gardant un symbole reconnaissable.',
+      ],
+      practiceSlug: 'premier-league',
+      practiceLabel: 'Entraîne-toi avec le quiz Premier League',
     },
   },
 };

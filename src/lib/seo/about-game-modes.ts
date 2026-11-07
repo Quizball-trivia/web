@@ -420,4 +420,60 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
     ],
     rankedMeta: "Meist 12–18 Fragen · etwa 5 Minuten · Rangpunkte zählen",
   },
+  fr: {
+    overviewEyebrow: "Le jeu",
+    overviewTitle: "La culture foot, comme dans un match",
+    modesEyebrow: "Modes de jeu",
+    modesTitle: "Comment jouer à QuizBall",
+    modesIntro:
+      "Échauffe-toi avec le défi du jour, joue avec un ami sans pression sur ton rang ou lance un duel classé en 1 contre 1 pour grimper au classement. Chaque mode fait appel à ta culture foot d’une façon différente.",
+    modes: [
+      {
+        id: "ranked",
+        title: "Duel classé en 1 contre 1",
+        body:
+          "Joue un duel en direct, prends la possession grâce à tes bonnes réponses, marque des buts et obtiens des RP pour gravir les rangs de QuizBall.",
+      },
+      {
+        id: "friendly",
+        title: "Entre amis en 1 contre 1",
+        body:
+          "Crée un salon privé ou rejoins celui d’un ami pour jouer avec tes propres règles. Aucun point de rang n’est en jeu.",
+      },
+      {
+        id: "daily",
+        title: "Défis du jour",
+        body:
+          "Joue à une sélection de jeux de foot courts qui changent régulièrement : Qui suis-je ?, Vrai ou faux, Parcours du joueur, Higher or Lower et Répartis tes pièces. Reviens pour de nouveaux défis.",
+      },
+      {
+        id: "auction",
+        title: "Enchères foot",
+        body:
+          "Utilise un budget de €350M pour choisir des footballeurs mystères et composer un effectif de sept joueurs. Tes prix, le bénéfice et la cohésion de l’effectif déterminent le vainqueur.",
+      },
+    ],
+    rankedEyebrow: "Mode compétitif",
+    rankedTitle: "Comment fonctionne le duel classé en 1 contre 1",
+    rankedIntro:
+      "Le duel classé transforme les mêmes questions de foot en un match court en direct contre un autre joueur.",
+    rankedSteps: [
+      {
+        title: "Bloque une catégorie",
+        body:
+          "Trois catégories de foot sont tirées au sort. Chaque joueur en bloque une, puis le match se joue dans la catégorie restante.",
+      },
+      {
+        title: "Prends la possession",
+        body:
+          "Les deux joueurs répondent à des questions en direct. Les bonnes réponses font avancer le ballon, lancent des attaques et créent des occasions de but.",
+      },
+      {
+        title: "Marque des buts et grimpe au classement",
+        body:
+          "Les buts déterminent le résultat. Après le match, tes RP actualisent ton niveau et ta place au classement.",
+      },
+    ],
+    rankedMeta: "En général 12–18 questions · environ 5 minutes · RP en jeu",
+  },
 };

@@ -171,9 +171,33 @@ const de = {
   "errors.INSUFFICIENT_TICKETS": "Nicht genug Tickets"
 } satisfies Record<keyof typeof en, string>;
 
+const fr = {
+  "dailyChallenge.answerPrefix": "Réponse",
+  "dailyChallenge.chainComplete": "Série terminée.",
+  "dailyChallenge.correct": "Correct.",
+  "dailyChallenge.correctAnswers": "Réponses correctes",
+  "dailyChallenge.higherValueInstruction": "Choisis qui a la valeur la plus élevée. Une mauvaise réponse met fin à la série.",
+  "dailyChallenge.imposterInstruction": "Sélectionne l’ensemble exact des bonnes réponses.",
+  "dailyChallenge.matchup": "Duel",
+  "dailyChallenge.pick": "Choisir",
+  "dailyChallenge.round": "Manche",
+  "dailyChallenge.roundFailed": "Manche ratée.",
+  "dailyChallenge.score": "Score",
+  "common.submit": "Envoyer",
+  "dailyChallenge.submitSelection": "Valider la sélection",
+  "dailyChallenge.typePlayerName": "Saisis le nom du joueur",
+  "dailyChallenge.typeYourAnswer": "Saisis ta réponse",
+  "auth.sessionEnded": "Ta session est terminée",
+  "notifications.challengeReceivedToast": "Défi de {name}",
+  "notifications.challengeAccepted": "Défi accepté",
+  "notifications.challengeDeclined": "Défi refusé",
+  "notifications.challengeExpired": "Défi expiré",
+  "errors.INSUFFICIENT_TICKETS": "Pas assez de tickets"
+} satisfies Record<keyof typeof en, string>;
+
 export type RuntimeMessageKey = keyof typeof en;
 export const RUNTIME_MESSAGE_KEYS = Object.keys(en) as RuntimeMessageKey[];
-const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru, pt, de };
+const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru, pt, de, fr };
 
 export function translateRuntimeCopy(locale: Locale, key: RuntimeMessageKey, params?: Record<string, string | number>): string {
   const template = dictionaries[locale][key];

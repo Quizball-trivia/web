@@ -98,6 +98,11 @@ describe("LanguageSwitcher", () => {
     ["/tr/futbol-bilgi-yarismasi/arsenal-testi", "tr", /english/i, "/en/football-quiz/arsenal"],
     ["/tr/futbol-bilgi-yarismasi/ispanya-milli-takimi-testi", "tr", /deutsch/i, "/de/fussball-quiz/spanien-quiz"],
     ["/ka/football-quiz/arsenal", "ka", /türkçe/i, "/tr/futbol-bilgi-yarismasi/arsenal-testi"],
+    ["/en/football-quiz/career-path", "en", /français/i, "/fr/quiz-foot/devine-le-joueur-avec-les-clubs"],
+    ["/fr/quiz-foot/quiz-arsenal", "fr", /english/i, "/en/football-quiz/arsenal"],
+    ["/fr/quiz-foot/quiz-espagne-foot", "fr", /deutsch/i, "/de/fussball-quiz/spanien-quiz"],
+    ["/en/football-games/football-name-chain", "en", /français/i, "/fr/jeux-de-foot/jeu-de-la-derniere-lettre"],
+    ["/fr/jeux-de-foot/jeu-de-la-derniere-lettre", "fr", /español/i, "/es/juegos-de-futbol/cadena-de-futbolistas"],
   ] as const)("keeps localized destinations after deferred loading on %s", async (pathname, locale, language, destination) => {
     navigation.pathname = pathname;
     navigation.search = "preview=public-test&ref=campaign";

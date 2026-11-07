@@ -159,6 +159,31 @@ describe('sitemap lastModified signals', () => {
     expect(entries.some((entry) => entry.url === 'https://quizball.io/de/fussball-quiz/liverpool-quiz')).toBe(false);
   });
 
+  it('lists the fr hub and a fr quiz page only when the fr catalog has its edition, and survives a backend without fr', async () => {
+    const pages = [
+      { slug: 'club-badges', locale_mode: 'en_only', updated_at: '2026-08-12T10:00:00.000Z' },
+      { slug: 'barcelona', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' },
+    ];
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => (locale === 'fr' ? pages.slice(0, 1) : pages));
+    const entries = await sitemap();
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/quiz-foot')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/quiz-foot/quiz-logo-foot')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/quiz-foot/quiz-fc-barcelone')).toBe(false);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/jeux-de-foot/jeux-quotidiens')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/jeux-de-foot/morpion-foot')).toBe(true);
+    expect(entries.some((entry) => entry.url === 'https://quizball.io/fr/jeux-de-foot/codenames-foot')).toBe(true);
+
+    // Staging answers a language it does not know with 422 from the query validator.
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'fr') throw new CampaignQuizApiError(422);
+      return pages;
+    });
+    const without = await sitemap();
+    expect(without.some((entry) => entry.url.includes('/fr/quiz-foot'))).toBe(false);
+    expect(without.some((entry) => entry.url.includes('/fr/jeux-de-foot/'))).toBe(true);
+  });
+
   it('a backend without German pages (400 on locale=de) gives no de quiz entries instead of failing', async () => {
     const pages = [{ slug: 'liverpool', locale_mode: 'en_only', updated_at: '2026-08-20T12:30:00.000Z' }];
     listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {

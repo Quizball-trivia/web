@@ -124,6 +124,19 @@ describe('LocaleProvider', () => {
     await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('ka'));
   });
 
+  it.each(['fr', 'de'] as const)('keeps %s for a guest with no saved language who leaves a language page for the app', async (locale) => {
+    mocks.preferredLanguage = undefined;
+    mocks.pathname = `/${locale}/about`;
+    const view = render(<LocaleProvider initialLocale={locale}><LocaleProbe /></LocaleProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    mocks.pathname = '/play';
+    view.rerender(<LocaleProvider initialLocale={locale}><LocaleProbe /></LocaleProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    await waitFor(() => expect(screen.getByTestId('locale').textContent).toBe(locale));
+  });
+
   it('does not persist a URL locale over the stored app locale', async () => {
     mocks.preferredLanguage = undefined;
     localStorage.setItem('quizball_locale', JSON.stringify('ka'));

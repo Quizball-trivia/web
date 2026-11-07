@@ -38,6 +38,11 @@ function isGermanLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'de' || normalized?.startsWith('de-') === true;
 }
 
+function isFrenchLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'fr' || normalized?.startsWith('fr-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -69,6 +74,7 @@ export function inferLocaleFromSignals({
     if (isRussianLanguageTag(tag)) return 'ru';
     if (isPortugueseLanguageTag(tag)) return 'pt';
     if (isGermanLanguageTag(tag)) return 'de';
+    if (isFrenchLanguageTag(tag)) return 'fr';
   }
 
   return 'en';

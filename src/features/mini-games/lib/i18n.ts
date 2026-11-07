@@ -5,14 +5,15 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { ES } from "./i18n.es";
 import { TR } from "./i18n.tr";
 import { RU } from "./i18n.ru";
+import { FR } from "./i18n.fr";
 
 /**
- * Lightweight EN→KA/ES/PT-BR/TR copy layer for the mini-game prototypes. Keys are the
+ * Lightweight EN→KA/ES/PT-BR/TR/FR copy layer for the mini-game prototypes. Keys are the
  * English strings themselves (with {slot} placeholders); anything missing
  * from the dictionary falls back to the English key, so untranslated copy
  * renders unchanged rather than breaking.
  */
-export type MiniLocale = "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de";
+export type MiniLocale = "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
 
 const KA: Record<string, string> = {
   "Fairness proof could not be loaded — try again": "სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა",
@@ -1870,7 +1871,7 @@ const DE: Record<string, string> = {
   "Rival": "Rivale",
 };
 
-const DICTS: Partial<Record<MiniLocale, Record<string, string>>> = { ka: KA, es: ES, tr: TR, ru: RU, pt: PT, de: DE };
+const DICTS: Partial<Record<MiniLocale, Record<string, string>>> = { ka: KA, es: ES, tr: TR, ru: RU, pt: PT, de: DE, fr: FR };
 
 export function useMiniLocale(): MiniLocale {
   const { locale } = useLocale();

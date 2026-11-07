@@ -15,7 +15,7 @@ import { AnswerBox, Chips, GreenButton, RefusedReports, TimeBar, TopBar, poppins
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { cn } from "@/lib/utils";
 
-type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string; pt?: string; de?: string };
+type Localized = Record<"es" | "en" | "ka" | "tr", string> & { ru?: string; pt?: string; de?: string; fr?: string };
 interface ClubName { key: string; name: Localized; crest: string }
 /** `others`: other footballers who played for both, on pairs this run has finished with (absent from older servers). */
 interface PairResult { clubs: [ClubName, ClubName] | null; found: string | null; total: number | null; examples: string[] | null; others?: string[] | null }

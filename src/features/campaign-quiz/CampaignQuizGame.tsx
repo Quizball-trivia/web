@@ -150,6 +150,23 @@ const UI_COPY = {
     score: 'Mein Ergebnis ansehen',
     next: 'Nächste Frage',
   },
+  fr: {
+    answerError: 'Impossible de vérifier ta réponse. Réessaie.',
+    fullTime: 'Fin du match',
+    youScored: 'Tu as obtenu',
+    playRanked: 'Jouer en duel classé',
+    playAgain: 'Rejouer au quiz',
+    question: 'Question',
+    of: 'sur',
+    correctCount: 'bonne réponse',
+    correctAnswer: 'Bonne réponse',
+    incorrectAnswer: 'Ta réponse est incorrecte',
+    checking: 'Vérification de ta réponse…',
+    correctFeedback: 'Bonne réponse, bien joué !',
+    incorrectFeedback: 'Pas tout à fait : la bonne réponse est surlignée.',
+    score: 'Voir mon score',
+    next: 'Question suivante',
+  },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**
@@ -158,7 +175,7 @@ const UI_COPY = {
  * the question, so the heading is kept for screen readers only in that case.
  * Prompts that carry real extra wording are always shown.
  */
-const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста', 'Adivinhe o jogador', 'Errate den Spieler', 'Oyuncuyu tahmin et', 'გამოიცანი ფეხბურთელი', 'გამოიცანით მოთამაშე'];
+const BARE_CAREER_PROMPTS = ['Guess the player', 'Угадай игрока', 'Угадайте игрока', 'Угадай футболиста', 'Adivinhe o jogador', 'Errate den Spieler', 'Devine le joueur', 'Oyuncuyu tahmin et', 'გამოიცანი ფეხბურთელი', 'გამოიცანით მოთამაშე'];
 
 function isRedundantCareerPrompt(question: CampaignQuizQuestion): boolean {
   if (question.type !== 'career_path' || question.details.length === 0) return false;
@@ -355,7 +372,7 @@ export function CampaignQuizGame({
           {copy.question} {currentIndex + 1} {copy.of} {questions.length}
         </div>
         <div className="flex h-12 min-w-28 shrink-0 items-center justify-center rounded-2xl bg-brand-blue px-4 font-semibold text-white sm:h-14 sm:text-lg">
-          {score} {copy.correctCount}
+          {score} {locale === 'fr' && score > 1 ? 'bonnes réponses' : copy.correctCount}
         </div>
       </div>
 

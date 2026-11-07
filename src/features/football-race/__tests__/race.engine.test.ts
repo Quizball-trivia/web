@@ -275,6 +275,16 @@ describe("dealing and search on the invented fixture", () => {
     const level: RacePack = { ...PACK, stats: [{ id: "S:flat", scope: "S", metric: "flat", values: { A: 4, B: 4, C: 4 } }] };
     expect(() => dealMatch(level, 3, 1)).toThrow(/no playable deal/);
   });
+  it("finds stats by their French metric and scope names, ignoring accents", () => {
+    const french: Pick<RacePack, "metrics" | "scopes"> = {
+      metrics: [metric("m1", { label: { en: "Clean sheets", es: "Porterías a cero", fr: "Matchs sans but encaissé" } })],
+      scopes: [{ id: "S", label: { en: "Tournament", es: "Torneo", fr: "Compétition" } }],
+    };
+    const stat = { id: "S:m1", scope: "S", metric: "m1" } as Parameters<typeof searchStats>[1][number];
+    expect(searchStats(french, [stat], "encaisse")).toEqual([stat]);
+    expect(searchStats(french, [stat], "competition")).toEqual([stat]);
+    expect(searchStats(french, [stat], "zzzz")).toEqual([]);
+  });
   it("finds stats by a typed word in either language, ignoring accents", () => {
     const all = toPublicStats(pack, pack.stats.map((s) => s.id));
     expect(searchStats(pack, all, "penales").every((s) => s.metric === "penalty_goals" || s.metric === "shootouts_won")).toBe(true);

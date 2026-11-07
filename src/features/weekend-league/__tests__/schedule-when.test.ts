@@ -28,7 +28,8 @@ describe('formatStageWhen', () => {
     expect(formatStageWhen(satKickoff, 'ka', GE)).toBe('შაბ. 22:00');
     expect(formatStageWhen(satKickoff, 'es', GE)).toBe('Sáb 22:00');
     expect(formatStageWhen(satKickoff, 'tr', GE)).toBe('Cmt 22:00');
-    expect(formatStageWhen(satKickoff, 'fr', GE)).toBe('Sat 22:00');
+    expect(formatStageWhen(satKickoff, 'fr', GE)).toBe('Sam. 22:00');
+    expect(formatStageWhen(satKickoff, 'it', GE)).toBe('Sat 22:00');
   });
 
   it('prints the same instant on each viewer\'s own clock', () => {

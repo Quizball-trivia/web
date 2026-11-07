@@ -11,7 +11,7 @@ export const RANKED_START = "2026-09-29";
 export const PUBLISHED_DAYS = 60;
 
 export type ClueKind = "confed" | "position" | "foot" | "decade" | "fact";
-export type LocalizedText = { es: string; en: string; ka?: string; tr?: string; ru?: string; pt?: string; de?: string };
+export type LocalizedText = { es: string; en: string; ka?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string };
 
 export interface PistasClue {
   kind: ClueKind;

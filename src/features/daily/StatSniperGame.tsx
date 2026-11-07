@@ -63,7 +63,7 @@ export function StatSniperGame({
   confirmQuit?: boolean;
 }) {
   const { t, locale } = useLocale();
-  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : locale === "ru" ? "ru-RU" : locale === "pt" ? "pt-BR" : locale === "de" ? "de-DE" : "en-GB";
+  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : locale === "ru" ? "ru-RU" : locale === "pt" ? "pt-BR" : locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : "en-GB";
   const questions = session.questions;
   const [index, setIndex] = useState(0);
   const [guess, setGuess] = useState(() => (questions[0] ? midpoint(questions[0]) : 0));

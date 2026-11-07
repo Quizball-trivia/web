@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import en from "@/messages/en.json";
 import es from "@/messages/es.json";
+import fr from "@/messages/fr.json";
 import ka from "@/messages/ka.json";
 import ru from "@/messages/ru.json";
 import tr from "@/messages/tr.json";
@@ -42,6 +43,29 @@ describe("i18n message parity", () => {
     expect(trKeys).toEqual(enKeys);
   });
 
+  it("en.json and fr.json have identical key sets", () => {
+    expect(flatten(fr).sort()).toEqual(flatten(en).sort());
+  });
+
+  it("no fr.json value is empty, and each keeps the English edge spaces", () => {
+    for (const key of flatten(fr)) {
+      const value = getByPath(fr, key);
+      expect(typeof value === "string" && value.trim().length > 0, `fr.json missing or empty translation for ${key}`).toBe(true);
+      const english = String(getByPath(en, key));
+      expect(String(value).match(/^\s*/)?.[0], `${key} leading space`).toBe(english.match(/^\s*/)?.[0]);
+      expect(String(value).match(/\s*$/)?.[0], `${key} trailing space`).toBe(english.match(/\s*$/)?.[0]);
+    }
+  });
+
+  it("fr.json stays in Latin script and follows French typography", () => {
+    for (const key of flatten(fr)) {
+      const value = String(getByPath(fr, key));
+      expect(value, key).not.toMatch(/[\u0370-\u03FF\u0400-\u052F\u1800-\u18AF\u10A0-\u10FF]/);
+      expect(value, `${key} straight apostrophe`).not.toMatch(/\p{L}'\p{L}/u);
+      expect(value, `${key} plain space before a mark`).not.toMatch(/ [;:!?»]|« /);
+    }
+  });
+
   it("en.json and ru.json have identical key sets", () => {
     expect(flatten(ru).sort()).toEqual(flatten(en).sort());
   });
@@ -71,6 +95,7 @@ describe("i18n message parity", () => {
     ["es", es],
     ["tr", tr],
     ["ru", ru],
+    ["fr", fr],
   ] as const)("%s.json keeps every {placeholder} of the English source", (_name, catalog) => {
     const placeholders = (value: unknown) =>
       (typeof value === "string" ? value.match(/\{\w+\}/g) ?? [] : []).slice().sort();

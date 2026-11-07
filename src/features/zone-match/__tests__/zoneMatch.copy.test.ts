@@ -121,6 +121,7 @@ const ADDRESSES_THE_READER: Record<string, RegExp[]> = {
   es: [word('tú|tu|tus|te|ti|su|sus|rival'), /\p{L}(aste|iste)(?!\p{L})/u, word('avanzas|ganas|pierdes|tienes')],
   pt: [word('você|vocês|seu|sua|seus|suas|deles|delas|adversário')],
   de: [word('du|dein|deine|deinen|deinem|deiner|dich|dir|gegner|gegners')],
+  fr: [word('tu|ton|ta|tes|toi|te|t|vous|votre|vos|adversaire|rival')],
   ru: [word('ты|твой|твоя|твоё|твои|тебя|тебе|соперник|соперника|сопернику'), /\p{L}(ешь|(?<!л)ишь)(?!\p{L})/u],
   tr: [word('sen|senin|sana|seni|ikiniz|rakip|rakibe|rakibin|hakkın|seçimin'), /\p{L}(dın|din|dun|dün)(?!\p{L})/u],
   ka: [word('შენ|შენი|შენს|მათი|მათ|მოწინააღმდეგე|მოიგე|დაკარგე|ითამაშე|ითამაშეთ|უპასუხეთ|დაგრჩა|გაგიმართლა|აღმოჩნდი')],

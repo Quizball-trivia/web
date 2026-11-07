@@ -23,6 +23,7 @@ const BACK_LABEL: Record<Locale, string> = {
   ru: "Назад",
   pt: "Voltar",
   de: "Zurück",
+  fr: "Retour",
 };
 
 const HOME_LABEL: Record<Locale, string> = {
@@ -33,6 +34,7 @@ const HOME_LABEL: Record<Locale, string> = {
   ru: "Главная QuizBall",
   pt: "Início do QuizBall",
   de: "QuizBall-Startseite",
+  fr: "Accueil QuizBall",
 };
 
 const MODE_COLORS = [
