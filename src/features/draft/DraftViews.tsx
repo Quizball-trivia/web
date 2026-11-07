@@ -188,6 +188,12 @@ export function SpinCard({ c, spin, league, spinning, armed, pool = [], tight }:
   );
 }
 
+/** A long club name steps down a size, because one long word cannot wrap and would be cut off on a small phone. */
+const reelSize = (value: string) => {
+  const longestWord = Math.max(...value.split(" ").map((word) => word.length));
+  return longestWord >= 13 ? "text-sm" : value.length > 20 ? "text-base" : "text-lg";
+};
+
 function Reel({ label, value, sub, spinning, tone, tight }: { label: string; value: string; sub?: string; spinning?: boolean; tone: "blue" | "yellow"; tight?: boolean }) {
   const blue = tone === "blue";
   return (
@@ -195,7 +201,7 @@ function Reel({ label, value, sub, spinning, tone, tight }: { label: string; val
       className={cn("relative min-w-0 overflow-hidden rounded-2xl px-3 shadow-lg", tight ? "py-1.5" : "py-2", blue ? "bg-brand-blue text-white" : "min-w-[6.25rem] bg-brand-yellow text-surface-page")}>
       <span aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1/2", blue ? "bg-white/10" : "bg-white/25")} />
       <p className={cn("relative text-[10px] font-bold uppercase tracking-[0.12em]", tight && "sr-only", blue ? "text-white/70" : "text-surface-page/70")} style={poppins}>{label}</p>
-      <p className={cn("relative line-clamp-2 break-words text-lg font-black leading-tight", spinning && "truncate blur-[0.6px]")} style={poppins}>{value}</p>
+      <p className={cn("relative line-clamp-2 break-words font-black leading-tight", spinning ? "truncate text-lg blur-[0.6px]" : reelSize(value))} style={poppins}>{value}</p>
       {sub && !tight && <p className={cn("relative truncate text-[11px] font-semibold", blue ? "text-white/75" : "text-surface-page/75")}>{sub}</p>}
     </motion.div>
   );
