@@ -1911,6 +1911,9 @@
     "finalizingResult": "Finalizing result..."
   },
   "training": {
+    "demoEndMessage": "That's our flagship 1v1 mode — in ranked play the opponent is a real player.",
+    "demoEndDone": "Done",
+    "demoBack": "Back to demos",
     "loadError": "Could not load the tutorial questions. Please try again.",
     "retryLoading": "Try again",
     "exitLoading": "Exit tutorial",

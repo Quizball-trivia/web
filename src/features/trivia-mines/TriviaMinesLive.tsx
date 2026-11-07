@@ -18,6 +18,7 @@ import { MoneyFlight, flightFrom, type MoneyFlightSpec } from "@/features/mini-g
 import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { triviaMinesApi, TriviaMinesApiError, type TriviaMinesState } from "@/lib/repositories/triviaMines.repo";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
+import { decimalText } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const STAKES = [50, 100, 250];
@@ -263,7 +264,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
               </div>
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("triviaMines.multiplier")}</div>
-                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{(state.mult_bp / 10000).toFixed(2)}×</div>
+                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{decimalText(state.mult_bp / 10000, 2, locale)}×</div>
                 {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString()}</div>}
               </div>
             </div>

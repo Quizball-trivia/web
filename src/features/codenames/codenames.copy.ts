@@ -538,7 +538,7 @@ const pt: CodenamesCopy = {
   // No Portuguese deck yet: Portuguese rooms and practice deal the English words (codenames.practice.ts).
   words: { placeholder: "Digite uma dica…", rule: "Qualquer palavra ou nome, mais quantas cartas ela liga. Não pode ser uma palavra do tabuleiro, nem parte de uma.", onBoard: (word) => `${word} está no tabuleiro`, onBoardAny: "Essa dica é uma palavra do tabuleiro, ou parte de uma", scoutKeyNote: "Só os Olheiros veem as cores. Dê uma dica que ligue suas palavras verdes.", tag: "Dicas com palavras", lines: [
       "25 palavras de futebol, cada uma com um segundo sentido. 9 são suas, 8 do adversário, 7 neutras e uma é o Gol contra.",
-      "O Olheiro liga suas palavras com uma dica e um número, como “Wedding · 3” para RICE, BEST e TIE.",
+      "O Olheiro liga suas palavras com uma dica e um número, como “Casamento · 3” para ALIANÇA, BOLO e PADRINHO.",
     ], starts: "começa · 9 cartas", otherCards: "8 cartas", wordsIn: "Palavras em inglês", practiceTag: "Treino · tabuleiro novo a cada vez", newBoard: "Novo tabuleiro", unavailable: "Os tabuleiros de palavras ainda não estão prontos neste idioma. Tente mais tarde.", endComplete: "Achou as 9!" },
   board: { label: "Tabuleiro", pictures: "Imagens", words: "Palavras", picturesNote: "20 imagens de futebol", wordsNote: "25 palavras com duplo sentido", hostPicks: "O anfitrião escolhe o tabuleiro." },
   modal: { tagline: "Uma dica, várias cartas: encontre as do seu time antes que o adversário encontre as dele.", pickBoard: "Escolha seu tabuleiro", daily: "Tabuleiro do dia", rules: "Regras", rulesTitle: "Como jogar", rulesList: [
@@ -645,7 +645,7 @@ const de: CodenamesCopy = {
   clueUsed: "In diesem Spiel bereits verwendet",
   words: { placeholder: "Hinweis eingeben…", rule: "Beliebiges Wort oder Name und dazu, wie viele Karten es verbindet. Das Wort darf nicht auf dem Spielfeld stehen oder Teil davon sein.", onBoard: (word) => `${word} steht auf dem Spielfeld`, onBoardAny: "Dieser Hinweis ist ein Wort auf dem Spielfeld oder ein Teil davon", scoutKeyNote: "Nur Scouts sehen die Farben. Gib einen Hinweis, der deine grünen Wörter verbindet.", tag: "Worthinweise", lines: [
       "25 Fußballbegriffe, jeder mit einer zweiten Bedeutung. 9 gehören deinem Team, 8 dem gegnerischen Team, 7 sind neutral und eines ist das Eigentor.",
-      "Der Scout verbindet deine Wörter mit einem Hinweis und einer Zahl, zum Beispiel „Wedding · 3“ für RICE, BEST und TIE.",
+      "Der Scout verbindet deine Wörter mit einem Hinweis und einer Zahl, zum Beispiel „Hochzeit · 3“ für TORTE, RING und TRAUZEUGE.",
       "Der Bot gibt bis zu 4 Hinweise. Bei jedem darfst du bis zu seiner Zahl + 1 Karten aufdecken: Tippe eine Karte an, um sie auszuwählen, und tippe sie erneut an, um sie umzudrehen.",
       "Mit einer richtigen Karte bleibt der Hinweis aktiv. Eine Karte des gegnerischen Teams oder eine neutrale Karte beendet ihn. Das Eigentor beendet das Spiel.",
     ], starts: "Beginnt · 9 Karten", otherCards: "8 Karten", wordsIn: "Wörter auf Englisch", practiceTag: "Übung · jedes Mal ein neues Spielfeld", newBoard: "Neues Spielfeld", unavailable: "Wort-Spielfelder sind in dieser Sprache noch nicht verfügbar. Versuch es später noch einmal.", endComplete: "Alle 9 gefunden!" },
@@ -751,7 +751,7 @@ const fr: CodenamesCopy = {
   clueUsed: "Déjà utilisé dans cette partie",
   words: { placeholder: "Saisis un indice…", rule: "N’importe quel mot ou nom, avec le nombre de cartes qu’il relie. Le mot ne doit pas être sur le plateau, même en partie.", onBoard: (word) => `${word} est sur le plateau`, onBoardAny: "Cet indice est un mot du plateau ou une partie d’un mot du plateau", scoutKeyNote: "Seuls les éclaireurs voient les couleurs. Donne un indice qui relie tes mots verts.", tag: "Indices avec des mots", lines: [
       "25 mots du foot, chacun avec un deuxième sens. 9 sont à ton équipe, 8 à l’équipe adverse, 7 neutres et un est le but contre son camp.",
-      "L’éclaireur relie tes mots avec un indice et un nombre, par exemple « Mariage · 3 » pour RICE, BEST et TIE.",
+      "L’éclaireur relie tes mots avec un indice et un nombre, par exemple « Mariage · 3 » pour GÂTEAU, ALLIANCE et TÉMOIN.",
       "Le bot donne jusqu’à 4 indices. Pour chacun, tu peux retourner jusqu’à une carte de plus que le nombre indiqué : touche une carte pour la choisir, puis touche-la de nouveau pour la retourner.",
       "Une bonne carte prolonge l’indice. Une carte adverse ou neutre y met fin. Le but contre son camp termine la partie.",
     ], starts: "Commence · 9 cartes", otherCards: "8 cartes", wordsIn: "Mots en anglais", practiceTag: "Entraînement · un nouveau plateau à chaque fois", newBoard: "Nouveau plateau", unavailable: "Les plateaux de mots ne sont pas encore prêts dans cette langue. Réessaie plus tard.", endComplete: "Les 9 cartes ont été trouvées !" },

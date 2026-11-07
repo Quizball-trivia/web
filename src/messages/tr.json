@@ -1911,6 +1911,9 @@
     "finalizingResult": "Sonuç tamamlanıyor..."
   },
   "training": {
+    "demoEndMessage": "Bu, en önemli 1v1 modumuz: sıralamalı oyunda rakibin gerçek bir oyuncu olur.",
+    "demoEndDone": "Tamam",
+    "demoBack": "Demolara dön",
     "loadError": "Öğretici soruları yüklenemedi. Lütfen tekrar deneyin.",
     "retryLoading": "Tekrar dene",
     "exitLoading": "Öğreticiden çık",

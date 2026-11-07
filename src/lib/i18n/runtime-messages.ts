@@ -188,7 +188,7 @@ const fr = {
   "dailyChallenge.typePlayerName": "Saisis le nom du joueur",
   "dailyChallenge.typeYourAnswer": "Saisis ta réponse",
   "auth.sessionEnded": "Ta session est terminée",
-  "notifications.challengeReceivedToast": "Défi de {name}",
+  "notifications.challengeReceivedToast": "Défi : {name}",
   "notifications.challengeAccepted": "Défi accepté",
   "notifications.challengeDeclined": "Défi refusé",
   "notifications.challengeExpired": "Défi expiré",

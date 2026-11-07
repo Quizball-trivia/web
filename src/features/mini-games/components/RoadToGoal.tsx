@@ -16,6 +16,7 @@ import { LiveActivityStrip } from './LiveActivityStrip';
 import { type MiniLocale, useMiniLocale, useMiniT } from '../lib/i18n';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useStoreWallet } from '@/lib/queries/store.queries';
+import { decimalText } from "@/lib/i18n/typography";
 import {
   acquireRoadToGoalMutation,
   didRoadToGoalMutationAdvance,
@@ -544,6 +545,7 @@ interface RoadSceneProps {
 }
 
 function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
+  const locale = useMiniLocale();
   const activeZone = Math.min(progress, ZONES - 1);
   const focusX = progress >= ZONES ? FIRST_ZONE_X + ZONES * LANE : FIRST_ZONE_X + activeZone * LANE;
   const playerX = progress === 0 ? FIRST_ZONE_X - 58 : FIRST_ZONE_X + (progress - 1) * LANE;
@@ -590,7 +592,7 @@ function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
                 animate={active ? { scale: [1, 1.06, 1] } : { scale: 1 }}
                 transition={{ duration: 1.15, repeat: active ? Infinity : 0 }}
               >
-                {multiplier.toFixed(2)}×
+                {decimalText(multiplier, 2, locale)}×
               </motion.div>
               <div className="absolute left-1/2 top-[132px] -translate-x-1/2 whitespace-nowrap font-poppins text-[8px] font-black uppercase tracking-[0.14em] text-white/38">
                 {cleared ? labels.safe : active ? labels.target : `0${index + 1}`.slice(-2)}
@@ -1515,7 +1517,7 @@ export function RoadToGoal({
                           <option value={0}>{t('Off')}</option>
                           {MULTIPLIERS.slice(0, 10).map((multiplier, index) => (
                             <option key={multiplier} value={index + 1}>
-                              {t('Zone')} {index + 1} · {multiplier.toFixed(2)}×
+                              {t('Zone')} {index + 1} · {decimalText(multiplier, 2, locale)}×
                             </option>
                           ))}
                         </select>
@@ -1678,7 +1680,7 @@ export function RoadToGoal({
                 </div>
                 <h2 className="mt-3 font-poppins text-xl font-black uppercase text-brand-yellow">{copy.cashed}</h2>
                 <p className="mt-1 font-poppins text-xs font-semibold text-white/75">
-                  {fill(copy.cashedBody, { zones: progress, mult: currentMultiplier.toFixed(2) })}
+                  {fill(copy.cashedBody, { zones: progress, mult: decimalText(currentMultiplier, 2, locale) })}
                 </p>
                 <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout, locale)}</div>
                 <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">

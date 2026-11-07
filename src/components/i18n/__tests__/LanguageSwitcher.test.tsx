@@ -78,6 +78,18 @@ describe("LanguageSwitcher", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("picking a language drops a pending signup language and saves the choice", async () => {
+    localStorage.setItem("quizball_signup_locale", JSON.stringify({ locale: "fr", at: Date.now() }));
+    navigation.pathname = "/fr/jeux-de-foot/morpion-foot";
+    navigation.search = "";
+    const user = userEvent.setup();
+    render(<LanguageSwitcher locale="fr" />);
+    await user.click(screen.getByRole("button", { name: /current language|langue/i }));
+    await user.click(await screen.findByRole("menuitem", { name: /ქართული/i }));
+    expect(localStorage.getItem("quizball_signup_locale")).toBeNull();
+    expect(localStorage.getItem("quizball_locale")).toBe(JSON.stringify("ka"));
+  });
+
   it.each([
     ["/tr/futbol-oyunlari/ortak-futbolcu-oyunu", "tr", /español/i, "/es/juegos-de-futbol/jugador-en-comun"],
     ["/en/football-games/football-name-chain", "en", /türkçe/i, "/tr/futbol-oyunlari/son-harfle-futbolcu"],

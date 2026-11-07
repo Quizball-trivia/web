@@ -15,6 +15,7 @@ import { TENABLE_CALENDAR, tenableDailyGame } from "./tenable.game";
 export { TENABLE_CALENDAR, tenableDailyGame };
 import { Lives, TenableTower, towerEmoji } from "./TenableTower";
 import { foundCount, type TenableSoloState } from "./tenable.view";
+import { labelColon } from "@/lib/i18n/typography";
 
 function Feedback({ state, locale }: { state: TenableSoloState; locale: string }) {
   const c = tenableCopy(locale);
@@ -134,7 +135,7 @@ export function TenableEndView({ locale, number, state, guestOnPastBoard, leader
       {!corrected && revealed && (
         <div className="mt-4" data-tenable-full-list>
           <div className="mb-2 flex items-center justify-between gap-2 px-1">
-            <p className="text-xs font-black uppercase tracking-wide text-white/55">{missedCount > 0 ? `${c.missedTitle}: ${missedCount}` : c.fullListTitle}</p>
+            <p className="text-xs font-black uppercase tracking-wide text-white/55">{missedCount > 0 ? `${c.missedTitle}${labelColon(locale)} ${missedCount}` : c.fullListTitle}</p>
             <span className="flex items-center gap-3 text-[11px] font-bold text-white/60">
               <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm bg-brand-green" aria-hidden />{c.legendFound}</span>
               {missedCount > 0 && <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-dashed border-white/50" aria-hidden />{c.legendMissed}</span>}

@@ -24,6 +24,7 @@ import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackLifelineUsed } from "@/lib/analytics/game-events";
 import { playSfx } from "@/lib/sounds/gameSounds";
+import { labelColon } from "@/lib/i18n/typography";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -187,7 +188,7 @@ function HelpButtons({
 /* ── Main Component ── */
 
 export function MoneyDropGame({ session, onBack, onComplete, practice = false }: MoneyDropGameProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // The run's final bank once it ends; the completion modal reports it and
   // only then hands the score to the page.
   const [finalMoney, setFinalMoney] = useState<number | null>(null);
@@ -556,7 +557,7 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
               >
                 <Lightbulb className="size-4 shrink-0 text-brand-orange" />
                 <p className="text-sm lg:text-base text-brand-slate">
-                  <span className="text-brand-orange font-bold">{t('dailyGames.clue')}: </span>
+                  <span className="text-brand-orange font-bold">{t('dailyGames.clue')}{labelColon(locale)} </span>
                   {hasClue
                     ? currentQuestion.clue
                     : t('dailyGames.noClueRound')}

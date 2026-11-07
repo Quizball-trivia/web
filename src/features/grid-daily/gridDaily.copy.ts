@@ -380,7 +380,7 @@ const fr: Copy = {
   signInToday: "Connecte-toi pour jouer au plateau du jour. Les anciens plateaux sont accessibles aux invités une fois la journée terminée.",
   alreadyTried: "Tu as déjà essayé ce nom ici. Aucune tentative n’a été utilisée.",
   maybeTried: "Ta dernière tentative avec ce nom a peut-être déjà été comptée. Renvoie-la pour réessayer.",
-  reportPrompt: "Tu penses que « {name} » correspond à {square} ?",
+  reportPrompt: "« {name} » pour {square} : tu confirmes ?",
   reportAction: "Signaler",
   reported: "Merci, nous allons vérifier. Le signalement ne consomme jamais de tentative.",
   reportFailed: "Impossible d’envoyer le signalement. Réessaie.",
