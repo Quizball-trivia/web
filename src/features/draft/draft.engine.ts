@@ -124,7 +124,8 @@ function ensureFit(u: DraftUniverse, s: DraftState): DraftState {
     if (isShared(next.mode) && pickable(next.spin.players, slotsOf(next), next.seats[seatIdx].picks, takenIds(next)).length === 0) break;
     // Out of money: another spin would not help. The player chooses which place goes to a free academy kid.
     if (pickable(next.spin.players, slotsOf(next), next.seats[seatIdx].picks, takenIds(next)).length > 0) return { ...next, notice: seatIdx === 0 ? "no_money" : next.notice };
-    next = { ...next, ...nextSpin(u, next, "fit"), notice: "no_fit" };
+    // Tagged by the round, not by how the draft got here: whoever needs this replacement gets the same one.
+    next = { ...next, ...nextSpin(u, { ...next, spinCount: next.round * 100 + guard }, "fit"), notice: "no_fit" };
   }
   return advance(u, { ...autoAcademy(next), notice: activeSeat(next) === 0 ? "academy" : next.notice });
 }
@@ -164,11 +165,12 @@ export function pick(u: DraftUniverse, s: DraftState, playerId: string, slotId?:
   const budget = s.variant === "budget";
   if (budget && priceOf(player) > wallet(seat.picks, s.budget).left) return s;
   // The reveal compares like with like: the best player on offer for the line he filled.
+  const signed = { name: player.name, rating: destination(player, slots, seat.picks, target.id)?.rating ?? player.rating };
   const best = optionsFor(s, seatIdx)
     .map((p) => ({ dest: destination(p, slots, seat.picks), name: p.name }))
     .filter((x) => x.dest?.slot.pos === target.pos)
     .map((x) => ({ name: x.name, rating: x.dest?.rating ?? 0 }))
-    .reduce((a, b) => (b.rating > a.rating ? b : a));
+    .reduce((a, b) => (b.rating > a.rating ? b : a), signed);
   const picks = place(seat.picks, slots, target.id, player, s.spin).map((p) => (p?.slotId === target.id ? { ...p, best, round: s.round, ...(budget ? { price: priceOf(player) } : {}) } : p));
   return advance(u, { ...s, seats: s.seats.map((x, k) => (k === seatIdx ? { ...x, picks } : x)), taken: [...s.taken, { playerId, seat: seatIdx }], feed: [...s.feed, { seat: seatIdx, name: player.name, club: s.spin.club, season: s.spin.season }], notice: null });
 }
@@ -199,8 +201,16 @@ export function botPick(u: DraftUniverse, s: DraftState, skill = 0.7, tag = ""):
   return pick(u, s, choice.id);
 }
 
+/** The clock ran out: the first name that fits and can be paid for, so letting time run out is never smarter than choosing. */
+export function timeoutPick(u: DraftUniverse, s: DraftState): DraftState {
+  const options = optionsFor(s, activeSeat(s)).slice().sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+  return options.length ? pick(u, s, options[0].id) : advance(u, autoAcademy(s));
+}
+
 /** Play every seat's season; in a duel also the match day. Coins only for the player's own seat. */
 export function finish(u: DraftUniverse, s: DraftState): DraftState {
+  // Only a complete XI plays, and only once: coins and results can never come twice.
+  if (s.phase !== "ready" || s.seats.some((seat) => seat.picks.some((p) => !p))) return s;
   const league = leagueOf(u, s);
   const opps = u.opponents(s.leagueId, s.seed);
   const seasons = s.seats.map((seat) => playSeason(slotsOf(s), seat.picks, league, opps, s.seed));

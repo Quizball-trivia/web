@@ -462,7 +462,8 @@ export function matchGoals(seed: string, m: { round: number; gf: number; ga: num
   const scorer = () => {
     let at = r() * total;
     for (let i = 0; i < weights.length; i++) { at -= weights[i]; if (weights[i] > 0 && at <= 0) return slots[i].id; }
-    return slots[weights.findLastIndex((w) => w > 0)]?.id ?? null;
+    for (let i = weights.length - 1; i >= 0; i--) if (weights[i] > 0) return slots[i].id;
+    return null;
   };
   const goals: MatchGoal[] = [];
   const a = rng(`${seed}|assists|${m.round}`);
