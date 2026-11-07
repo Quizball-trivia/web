@@ -1699,7 +1699,7 @@
     "alreadyInGame": "Tu es déjà dans une autre partie ou un salon. Termine-la ou quitte-le avant de jouer en classé.",
     "dbOutagePaused": "La recherche d’adversaire est momentanément suspendue : ton ticket n’a pas été utilisé. Nouvelle tentative…",
     "matchSetupStuck": "La préparation du match est bloquée",
-    "matchSetupStuckDescription": "Relance la recherche d’adversaire. Si le problème persiste, le serveur n’arrive toujours pas à préparer la draft.",
+    "matchSetupStuckDescription": "Relance la recherche d’adversaire. Si le problème persiste, le serveur n’arrive toujours pas à préparer le draft.",
     "restartSearch": "Relancer la recherche",
     "backToPlay": "Retour au jeu",
     "unknownCity": "Ville inconnue",

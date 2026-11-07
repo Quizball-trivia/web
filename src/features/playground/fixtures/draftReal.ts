@@ -31,7 +31,8 @@ export function realUniverse(pack: RealPack): DraftUniverse {
     spin: (leagueId: string, era: Era, seed: string, used: readonly string[]) => {
       const r = rng(seed);
       const all = byLeague.get(leagueId) ?? pack.clubs;
-      const inEra = era === "modern" ? all.filter((c) => c.year >= 2004) : era === "legends" ? all.filter((c) => c.year < 2004) : all;
+      const filtered = era === "modern" ? all.filter((c) => c.year >= 2004) : era === "legends" ? all.filter((c) => c.year < 2004) : all;
+      const inEra = filtered.length ? filtered : all;
       const fresh = inEra.filter((c) => !used.includes(c.clubId));
       const pool = fresh.length ? fresh : inEra;
       return toClubSeason(pool[Math.floor(r() * pool.length)]);

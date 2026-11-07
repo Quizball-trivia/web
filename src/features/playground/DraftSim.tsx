@@ -119,7 +119,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
   const [upTo, setUpTo] = useState(0);
   const multi = isShared(s.mode);
   const clock = pickSeconds(s.seats.length);
-  const [seconds, setSeconds] = useState(clock);
+  const [clockLeft, setClockLeft] = useState({ key: "", left: clock });
   const [undoFrom, setUndoFrom] = useState<{ state: DraftState; name: string } | null>(null);
   const [target, setTarget] = useState<ChallengeTarget | null>(null);
   const lastSpin = useRef(config.intro ? s.spin.id : "");
@@ -152,20 +152,22 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
 
   // Bots pick after a short think; my own clock (duel/room) auto-picks for me at zero.
   const seat = activeSeat(s);
+  // The clock belongs to one turn, so a zero left over from the last turn can never pick for this one.
+  const clockKey = `${s.round}:${s.turn}:${armed}:${spinning}`;
+  const seconds = clockLeft.key === clockKey ? clockLeft.left : clock;
   useEffect(() => {
     if (screen !== "draft" || s.phase !== "picking" || spinning || armed) return;
-    if (multi) setSeconds(clock);
     if (!s.seats[seat].bot) return;
     const t = setTimeout(() => setS((x) => botPick(u, x, config.botSkill)), (900 + (seat * 137) % 600) / config.speed);
     return () => clearTimeout(t);
-  }, [u, screen, s.phase, s.round, s.turn, seat, spinning, armed, multi, clock, config.botSkill, config.speed, s.seats]);
+  }, [u, screen, s.phase, s.round, s.turn, seat, spinning, armed, config.botSkill, config.speed, s.seats]);
   useEffect(() => {
     if (!multi || screen !== "draft" || s.phase !== "picking" || s.seats[seat].bot || spinning) return;
     if (seconds <= 0) { setS((x) => botPick(u, x, 0.3)); return; }
     if (seconds === 5) sfx("hurry");
-    const t = setTimeout(() => setSeconds((v) => v - 1), 1000 / config.speed);
+    const t = setTimeout(() => setClockLeft({ key: clockKey, left: seconds - 1 }), 1000 / config.speed);
     return () => clearTimeout(t);
-  }, [u, multi, screen, s.phase, s.seats, seat, seconds, spinning, config.speed, sfx]);
+  }, [u, multi, screen, s.phase, s.seats, seat, seconds, clockKey, spinning, config.speed, sfx]);
 
   const playOn = useCallback(() => { setS((x) => finish(u, x)); setUndoFrom(null); setUpTo(0); setScreen("season"); sfx("kickoff"); }, [u, sfx]);
   // Shared drafts go straight to the season; a solo player sees the finished XI first and presses play.

@@ -92,7 +92,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   // What the first screen says about today, for the version chosen.
   useEffect(() => {
     let live = true;
-    void withRetry(() => draftApi.today(variant, locale, initialDay)).then((t) => { if (live) setToday(t); }).catch(() => { if (live) setProblem(c.loadFailed); });
+    void withRetry(() => draftApi.today(variant, locale, initialDay)).then((t) => { if (!live) return; setToday(t); setProblem((p) => (p === c.loadFailed ? null : p)); }).catch(() => { if (live) setProblem(c.loadFailed); });
     return () => { live = false; };
   }, [variant, locale, initialDay, authStatus, c.loadFailed]);
 

@@ -26,20 +26,27 @@ const LONG = { timeoutMs: 20_000 };
 export type RunKind = { daily: Variant } | { free: true };
 const moveBase = (kind: RunKind) => ("daily" in kind ? `/${kind.daily}` : "/play/free");
 
+const q = encodeURIComponent;
+/** A challenge code comes from the address bar. Encoding leaves "." and ".." alone, and those would walk to another API path. */
+const codePath = (code: string) => {
+  if (code === "." || code === "..") throw new DailyGameApiError("not_found", 404);
+  return q(code);
+};
+
 export const draftApi = {
-  today: (variant: Variant, locale: string, day?: string | null) => call<DraftToday>(`/${variant}/today${day ? `?day=${day}` : ""}`, "GET", undefined, locale, { identity: "optional" }),
+  today: (variant: Variant, locale: string, day?: string | null) => call<DraftToday>(`/${variant}/today${day ? `?day=${q(day)}` : ""}`, "GET", undefined, locale, { identity: "optional" }),
   startDaily: (variant: Variant, day: string, locale: string) => call<RunEnvelope>(`/${variant}/start`, "POST", { day }, locale),
   startFree: (choice: { leagueId: string; era: Era; formation: FormationId; variant: Variant }, locale: string) => call<RunEnvelope>("/play/free", "POST", choice, locale),
-  currentFree: (runId: string, locale: string) => call<RunEnvelope>(`/play/free?runId=${runId}`, "GET", undefined, locale),
+  currentFree: (runId: string, locale: string) => call<RunEnvelope>(`/play/free?runId=${q(runId)}`, "GET", undefined, locale),
   move: (kind: RunKind, path: "spin" | "pick" | "academy" | "respin" | "undo" | "finish", run: RunEnvelope["run"], body: Record<string, unknown>, locale: string) =>
     call<RunEnvelope>(`${moveBase(kind)}/${path}`, "POST", { runId: run.id, version: run.version, ...body }, locale, path === "finish" ? LONG : {}),
-  leaderboard: (variant: Variant, day: string, locale: string) => call<Leaderboard>(`/${variant}/leaderboard?day=${day}`, "GET", undefined, locale, { identity: "optional" }),
-  team: (variant: Variant, day: string, userId: string, locale: string) => call<TeamResponse>(`/${variant}/team?day=${day}&userId=${userId}`, "GET", undefined, locale),
+  leaderboard: (variant: Variant, day: string, locale: string) => call<Leaderboard>(`/${variant}/leaderboard?day=${q(day)}`, "GET", undefined, locale, { identity: "optional" }),
+  team: (variant: Variant, day: string, userId: string, locale: string) => call<TeamResponse>(`/${variant}/team?day=${q(day)}&userId=${q(userId)}`, "GET", undefined, locale),
   tie: (variant: Variant, day: string, userId: string, locale: string) => call<TieResponse>(`/${variant}/tie`, "POST", { day, userId }, locale),
   challengeCreate: (body: { variant: Variant; day: string } | { runId: string }, locale: string) => call<{ code: string }>("/play/challenges", "POST", body, locale),
-  challengeRead: (code: string, locale: string) => call<ChallengeView>(`/play/challenges/${code}`, "GET", undefined, locale),
-  challengeAccept: (code: string, locale: string) => call<{ daily?: RunEnvelope; variant?: Variant; day?: string; free?: RunEnvelope }>(`/play/challenges/${code}/accept`, "POST", {}, locale),
-  challengeTie: (code: string, locale: string) => call<TieResponse>(`/play/challenges/${code}/tie`, "POST", {}, locale),
+  challengeRead: (code: string, locale: string) => call<ChallengeView>(`/play/challenges/${codePath(code)}`, "GET", undefined, locale),
+  challengeAccept: (code: string, locale: string) => call<{ daily?: RunEnvelope; variant?: Variant; day?: string; free?: RunEnvelope }>(`/play/challenges/${codePath(code)}/accept`, "POST", {}, locale),
+  challengeTie: (code: string, locale: string) => call<TieResponse>(`/play/challenges/${codePath(code)}/tie`, "POST", {}, locale),
   myTies: (locale: string) => call<TieResponse[]>("/play/ties", "GET", undefined, locale),
 };
 

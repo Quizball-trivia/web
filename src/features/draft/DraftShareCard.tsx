@@ -161,8 +161,11 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
       const a = document.createElement("a");
       a.href = url;
       a.download = "football-draft.png";
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      a.remove();
+      // Some browsers start the download after this turn, so the address has to outlive the click.
+      setTimeout(() => URL.revokeObjectURL(url), 1_000);
       onDone("save");
     } catch { setFailed(true); }
   };
