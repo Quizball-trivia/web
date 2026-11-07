@@ -33,9 +33,11 @@ const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page",
 
 // ── Intro ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, variant, onVariant, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn }: {
+export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, variant, onVariant, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn, resumeLabel, onResume }: {
   /** The main button when today is already played, or for a guest (closed-day practice). */
   dailyLabel?: string; guestNote?: string | null; onSignIn?: () => void;
+  /** An unfinished free draft waiting on the server. */
+  resumeLabel?: string | null; onResume?: () => void;
   locale: string; number: number; league: League; formation?: FormationId; best?: string | null; nextDaily?: string | null; variant: Variant; onVariant: (v: Variant) => void;
   onDaily: () => void; onFree: () => void; onFriends: () => void; onExit: () => void;
 }) {
@@ -71,6 +73,7 @@ export function DraftIntro({ locale, number, league, formation = "4-3-3", best, 
         </div>
       </div>
       <div className="mt-4 space-y-2">
+        {resumeLabel && onResume && <QuietButton onClick={onResume}>{resumeLabel}</QuietButton>}
         <GreenButton onClick={onDaily}>{dailyLabel ?? c.playDaily}</GreenButton>
         {guestNote && <button type="button" onClick={onSignIn} className="w-full text-center text-xs font-semibold text-brand-green-light underline underline-offset-2">{guestNote}</button>}
         <div className="grid grid-cols-2 gap-2">
@@ -388,7 +391,7 @@ export function RatingSheet({ c, player, spin, teams, onClose }: { c: DraftText;
 
 // ── The draft board (solo, duel, room) ─────────────────────────────────────────────────────────────────────────────
 
-export interface BoardSeat { name: string; avatar: AvatarCustomization | null; picks: (Pick | null)[]; me: boolean; active: boolean }
+export interface BoardSeat { name: string; avatar: AvatarCustomization | null; picks: (Pick | null)[]; me: boolean; active: boolean; note?: string | null }
 
 export function DraftBoard({ locale, slots, spin, league, variant, round, seats, myPicks, taken, respins, respinCost, coins, mode, notice, spinning, armed = false, seconds, waitingFor, side, pool, feed = null, initialWhy = null, initialTeam = null, undoName = null, onUndo, onSpin, onPick, onRespin, onExit, budget = BUDGET.total, onAcademy }: {
   locale: string; slots: Slot[]; spin: ClubSeason; league: League; variant: Variant; round: number; seats: BoardSeat[]; myPicks: (Pick | null)[];
@@ -535,7 +538,7 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
     <button ref={self} type="button" onClick={onOpen} aria-label={c.teamOf(seat.me ? c.you : seat.name)} className={cn("flex min-w-[8.5rem] flex-1 items-center gap-2 rounded-2xl px-2.5 text-left", tight ? "py-1" : "py-2", seat.active ? (seat.me ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-brand-blue/25 ring-2 ring-brand-blue") : "bg-surface-card")}>
       {seat.avatar ? <DuelAvatar customization={seat.avatar} size="xs" /> : <span className="size-8 rounded-full bg-white/15" />}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-bold text-white/80">{seat.me ? c.you : seat.name}</span>
+        <span className="block truncate text-xs font-bold text-white/80">{seat.me ? c.you : seat.name}{seat.note ? ` · ${seat.note}` : ""}</span>
         <span className="block text-lg font-black leading-none tabular-nums" style={poppins}>{hidden ? `${n}/11` : <>{n ? Math.round(team.overall) : "–"}<span className="ml-1 text-[10px] font-bold text-white/70">{n}/11</span></>}</span>
       </span>
     </button>
@@ -1041,7 +1044,7 @@ function LineBars({ c, team }: { c: DraftText; team: Lines }) {
 const LEG_REVEAL_MS = 8000;
 const LEG_BEAT_MS = 1200;
 
-export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = false, onFinish, onGoal, onBack, backLabel, onAgain, onExit }: {
+export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = false, onFinish, onGoal, onBack, backLabel, onAgain, onExit, resultNote }: {
   locale: string; match: MatchDay; me: BoardSeat; rival: BoardSeat; slots: Slot[];
   /** Names the scorers; the same pairing always shows the same goals. */
   seed?: string;
@@ -1049,6 +1052,8 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
   reveal?: boolean; onFinish?: (won: boolean) => void; onGoal?: (mine: boolean) => void;
   /** A head-to-head from the result screen returns there instead of starting a new draft. */
   onBack?: () => void; backLabel?: string; onAgain?: () => void; onExit: () => void;
+  /** When the result is not the score's: the other side left. */
+  resultNote?: string | null;
 }) {
   const c = draftCopy(locale);
   const won = match.winner === 0;
@@ -1132,6 +1137,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
         <>
           {match.penalties && <p className="mt-1 text-center text-sm font-bold text-white/80">{c.penalties(match.penalties[0], match.penalties[1])}<span className="block text-xs font-medium text-white/65">{c.penaltiesNote}</span></p>}
           <motion.p initial={reveal ? { scale: 0.7, opacity: 0 } : false} animate={{ scale: 1, opacity: 1 }} className={cn("mt-3 text-center text-2xl font-black uppercase", won ? "text-brand-green-light" : "text-brand-red-light")} style={poppins}>{won ? c.youWin : c.youLose}</motion.p>
+          {resultNote && <p className="mt-1 text-center text-sm font-semibold text-white/80">{resultNote}</p>}
           <ul className="mt-5 space-y-2">
             {match.battles.map((b) => (
               <li key={b.key} className="rounded-2xl bg-surface-card px-4 py-3">

@@ -18,6 +18,8 @@ import { FORMATIONS, SEASON_PACE, matchMs, type ClubSeason, type League, type Ma
 import type { ChallengeTarget } from "./draft.engine";
 
 const ROLL_MS = 1000;
+/** Stored a moment ago: this is the first time it is played. An older one opens straight at its result. */
+const isNewTie = (t: TieResponse) => Date.now() - Date.parse(t.at) < 20_000;
 const ME = (picks: (Pick | null)[], name: string): BoardSeat => ({ name, avatar: null, picks, me: true, active: true });
 
 /** Time to the next Buenos Aires midnight, like every daily. */
@@ -37,6 +39,14 @@ function useNextDaily(active: boolean): string | null {
   return text;
 }
 
+const FREE_RUN_KEY = "football-draft-free-run";
+const VARIANT_KEY = "football-draft-variant";
+const savedFreeRun = (): string | null => { try { return localStorage.getItem(FREE_RUN_KEY); } catch { return null; } };
+const rememberFreeRun = (id: string) => { try { localStorage.setItem(FREE_RUN_KEY, id); } catch { /* private window */ } };
+const forgetFreeRun = () => { try { localStorage.removeItem(FREE_RUN_KEY); } catch { /* private window */ } };
+const savedVariant = (): Variant => { try { const v = typeof window === "undefined" ? null : sessionStorage.getItem(VARIANT_KEY); return v === "classic" || v === "knowledge" ? v : "budget"; } catch { return "budget"; } };
+const rememberVariant = (v: Variant) => { try { sessionStorage.setItem(VARIANT_KEY, v); } catch { /* private window */ } };
+
 type Screen = "intro" | "setup" | "challenge" | "draft" | "season" | "result" | "versus" | "gone";
 
 export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialChallenge }: {
@@ -51,7 +61,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   const sfx = useCallback((m: DraftSoundMoment) => { const name = DRAFT_SOUNDS[m]; if (name) playSfx(name); }, [playSfx]);
   const exit = useCallback(() => (onExit ? onExit() : router.push("/play")), [onExit, router]);
 
-  const [variant, setVariant] = useState<Variant>("budget");
+  const [variant, setVariant] = useState<Variant>(savedVariant);
   const [today, setToday] = useState<DraftToday | null>(null);
   const [screen, setScreen] = useState<Screen>(initialChallenge ? "challenge" : "intro");
   const [env, setEnv] = useState<RunEnvelope | null>(null);
@@ -70,6 +80,8 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   const [seenTies, setSeenTies] = useState<string[]>([]);
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const started = useRef(false);
+  const starting = useRef(false);
+  const [resumable, setResumable] = useState<string | null>(null);
 
   const state = env?.state ?? null;
   const league: League | null = state?.league ?? today?.league ?? null;
@@ -84,6 +96,14 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     return () => { live = false; };
   }, [variant, locale, initialDay, authStatus, c.loadFailed]);
 
+  // An unfinished free draft stays on the server: a reload offers it back.
+  useEffect(() => {
+    const id = savedFreeRun();
+    if (!id || initialChallenge) return;
+    let live = true;
+    void draftApi.currentFree(id, locale).then((r) => { if (live) { if (r.state.phase === "result") forgetFreeRun(); else setResumable(id); } }).catch(() => forgetFreeRun());
+    return () => { live = false; };
+  }, [initialChallenge, locale, authStatus]);
   useEffect(() => {
     if (!initialChallenge) return;
     let live = true;
@@ -91,11 +111,17 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     return () => { live = false; };
   }, [initialChallenge, locale]);
 
+  /** Answers can arrive out of order: an older copy of the same run never replaces a newer one. */
+  const take = useCallback((next: RunEnvelope) => setEnv((cur) => (cur && cur.run.id === next.run.id && cur.run.version > next.run.version ? cur : next)), []);
   const adopt = useCallback((next: RunEnvelope, k: RunKind) => {
-    setEnv(next); setKind(k); setProblem(null);
-    if (next.state.phase === "result") { setScreen("result"); return; }
-    setScreen("draft");
-  }, []);
+    take(next); setKind(k); setProblem(null);
+    setScreen(next.state.phase === "result" ? "result" : "draft");
+  }, [take]);
+
+  const resume = useCallback(async () => {
+    if (!resumable) return;
+    try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { forgetFreeRun(); setResumable(null); setProblem(c.loadFailed); }
+  }, [resumable, locale, adopt, c.loadFailed]);
 
   /** One move on the run. Moves are never resent: a lost or stale one re-reads the run and the player goes on from what the server holds. */
   const move = useCallback(async (path: Parameters<typeof draftApi.move>[1], body: Record<string, unknown> = {}): Promise<RunEnvelope | null> => {
@@ -103,22 +129,26 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     setPending(true);
     try {
       const next = await draftApi.move(kind, path, env.run, body, locale);
-      setEnv(next); setProblem(null);
+      take(next); setProblem(null);
       return next;
     } catch (error) {
       const reason = reasonOf(error);
       if (reason !== "invalid_pick" && reason !== "no_respins") {
         const fresh = "daily" in kind && env.state.day ? await draftApi.startDaily(kind.daily, env.state.day, locale).catch(() => null) : "free" in kind ? await draftApi.currentFree(env.run.id, locale).catch(() => null) : null;
-        if (fresh) setEnv(fresh);
+        if (fresh) {
+          take(fresh);
+          // The answer was lost but the move happened: the season was played, so go on to it.
+          if (fresh.state.phase === "result") setScreen("result");
+        }
       }
       setProblem(reason === "day_over" ? c.dayOver : reason === "no_coins" ? c.noCoins : c.moveFailed);
       return null;
     } finally {
       setPending(false);
     }
-  }, [env, pending, kind, locale, c]);
+  }, [env, pending, kind, locale, c, take]);
 
-  const signedInPrompt = useCallback(() => { rememberPostAuthRedirect(initialChallenge ? `/football-draft?challenge=${initialChallenge}` : "/football-draft"); openAuthPrompt(); }, [initialChallenge, openAuthPrompt]);
+  const signedInPrompt = useCallback(() => { rememberVariant(variant); rememberPostAuthRedirect(initialChallenge ? `/football-draft?challenge=${initialChallenge}` : initialDay ? `/football-draft?dia=${initialDay}` : "/football-draft"); openAuthPrompt(); }, [initialChallenge, initialDay, variant, openAuthPrompt]);
 
   const beginTracked = useCallback(() => {
     if (started.current) onEvent?.("replay");
@@ -127,10 +157,12 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   }, [onEvent]);
 
   const playDaily = useCallback(async () => {
-    if (!today) return;
+    if (!today || starting.current) return;
+    starting.current = true;
     setPending(true);
     try {
-      const day = today.guest ? today.practiceDay : today.day;
+      // A guest opens yesterday from today's entry, and a closed day chosen from the address as it is.
+      const day = today.guest && today.day >= today.live ? today.practiceDay : today.day;
       if (!day) { signedInPrompt(); return; }
       const next = await withRetry(() => draftApi.startDaily(variant, day, locale));
       if (next.state.phase !== "result") beginTracked();
@@ -138,30 +170,35 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       onDay?.(day, day === today.day);
     } catch (error) {
       if (reasonOf(error) === "sign_in_for_today") signedInPrompt(); else setProblem(c.loadFailed);
-    } finally { setPending(false); }
+    } finally { setPending(false); starting.current = false; }
   }, [today, variant, locale, adopt, beginTracked, signedInPrompt, onDay, c.loadFailed]);
 
   const startSetup = useCallback(async () => {
+    if (starting.current) return;
+    starting.current = true;
     setPending(true);
+    setChallengeCode(null); setChallenge(null);
     try {
       const next = await draftApi.startFree({ leagueId: setup.leagueId, era: setup.era, formation: setup.formation, variant: setup.variant }, locale);
       beginTracked();
+      rememberFreeRun(next.run.id);
       adopt(next, { free: true });
-    } catch { setProblem(c.loadFailed); } finally { setPending(false); }
-  }, [setup, locale, adopt, beginTracked, c.loadFailed]);
+    } catch (error) { setProblem(reasonOf(error) === "unknown_league" ? c.noSuchEra : c.loadFailed); } finally { setPending(false); starting.current = false; }
+  }, [setup, locale, adopt, beginTracked, c.loadFailed, c.noSuchEra]);
 
   const acceptChallenge = useCallback(async () => {
-    if (!challengeCode) return;
+    if (!challengeCode || starting.current) return;
+    starting.current = true;
     setPending(true);
     try {
       const out = await draftApi.challengeAccept(challengeCode, locale);
-      beginTracked();
+      if ((out.daily ?? out.free)?.state.phase !== "result") beginTracked();
       if (out.daily && out.variant) { setVariant(out.variant); adopt(out.daily, { daily: out.variant }); }
       else if (out.free) adopt(out.free, { free: true });
     } catch (error) {
       const reason = reasonOf(error);
       if (reason === "sign_in_for_today") signedInPrompt(); else setProblem(reason === "own_challenge" ? c.ownChallenge : c.loadFailed);
-    } finally { setPending(false); }
+    } finally { setPending(false); starting.current = false; }
   }, [challengeCode, locale, adopt, beginTracked, signedInPrompt, c]);
 
   // Spin: the squad is asked for at once and shown when the reels stop, so the wait feels the same on any connection.
@@ -202,6 +239,15 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if ((state?.result?.coinsEarned ?? 0) > 0) { const t = setTimeout(() => sfx("coins"), 1200); return () => clearTimeout(t); }
   }, [screen, season, env, sfx, state?.result?.coinsEarned]);
 
+  // Once played, the challenger's team opens: it is the comparison on the result.
+  const reread = useRef(false);
+  useEffect(() => {
+    if (screen !== "result" || !challengeCode || reread.current) return;
+    reread.current = true;
+    void withRetry(() => draftApi.challengeRead(challengeCode, locale)).then(setChallenge).catch(() => undefined);
+  }, [screen, challengeCode, locale]);
+  useEffect(() => { if (state?.phase === "result" && "free" in kind) forgetFreeRun(); }, [state?.phase, kind]);
+
   // The board of the day just played.
   const boardDay = "daily" in kind ? state?.day : null;
   const boardVariant = state?.variant ?? variant;
@@ -232,7 +278,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       const t = await draftApi.tie(boardVariant, boardDay, openRival.userId, locale);
       setTie({ ...t, rivalName: openRival.name });
       setOpenRival(null);
-      if (!seenTies.includes(t.id)) sfx("kickoff");
+      if (!seenTies.includes(t.id) && isNewTie(t)) sfx("kickoff"); else setSeenTies((x) => [...x, t.id]);
       setScreen("versus");
     } catch { setProblem(c.loadFailed); } finally { setPending(false); }
   }, [openRival, boardDay, boardVariant, locale, seenTies, sfx, c.loadFailed]);
@@ -243,7 +289,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     try {
       const t = await draftApi.challengeTie(challengeCode, locale);
       setTie({ ...t, rivalName: challenge.from });
-      sfx("kickoff");
+      if (isNewTie(t)) sfx("kickoff"); else setSeenTies((x) => [...x, t.id]);
       setScreen("versus");
     } catch { setProblem(c.loadFailed); } finally { setPending(false); }
   }, [challengeCode, challenge, locale, sfx, c.loadFailed]);
@@ -273,7 +319,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       {screen === "intro" && today ? (
         <DraftIntro locale={locale} number={today.number} league={today.league as League} best={today.best?.rec ?? null} nextDaily={nextDaily} variant={variant} onVariant={setVariant} onExit={exit}
           dailyLabel={today.guest ? c.guestPractice : today.played ? c.dailySeen : undefined} guestNote={today.guest ? c.guestSignIn : null} onSignIn={signedInPrompt}
-          onDaily={() => void playDaily()} onFree={() => { setSetup((x) => ({ ...x, variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} />
+          resumeLabel={resumable ? c.resumeDraft : null} onResume={() => void resume()} onDaily={() => void playDaily()} onFree={() => { setSetup((x) => ({ ...x, variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} />
       ) : screen === "setup" && today ? (
         <DraftSetup locale={locale} leagues={today.leagues as League[]} values={setup} friends={false} onChange={setSetup} onStart={() => void startSetup()} onExit={() => setScreen("intro")} />
       ) : screen === "challenge" ? (
@@ -283,9 +329,9 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       ) : screen === "draft" && state && league ? (
         <DraftBoard locale={locale} slots={slots} spin={(state.spin ? { ...state.spin, clubId: state.spin.id, leagueId: league.id } : { id: "", clubId: "", club: "", season: "", leagueId: league.id, legend: false, finish: 0, players: [] }) as ClubSeason} league={league} variant={state.variant} round={state.round}
           seats={[ME(myPicks, c.you)]} myPicks={myPicks} taken={[]} respins={state.respins} respinCost={state.respinCost} coins={null} mode={"daily" in kind ? "daily" : "free"} notice={notice} spinning={rolling} armed={state.armed && !rolling} onSpin={() => void spinNow()} pool={state.pool}
-          budget={state.budget ?? undefined} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onAcademy={(slotId) => { sfx("sign"); void move("academy", { slotId }); }}
-          onPick={(playerId, slotId) => { const p = state.spin?.players.find((x) => x.id === playerId); sfx(p && p.rating >= 85 ? "signStar" : "sign"); void move("pick", { playerId, slotId }); }}
-          onRespin={(k) => { sfx("respin"); setRolling(true); void move("respin", { kind: k }).then(() => setTimeout(() => setRolling(false), ROLL_MS)); }} onExit={exit} />
+          budget={state.budget ?? undefined} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onAcademy={(slotId) => { void move("academy", { slotId }).then((next) => { if (next) sfx("sign"); }); }}
+          onPick={(playerId, slotId) => { const p = state.spin?.players.find((x) => x.id === playerId); void move("pick", { playerId, slotId }).then((next) => { if (next) sfx(p && p.rating >= 85 ? "signStar" : "sign"); }); }}
+          onRespin={(k) => { setRolling(true); void move("respin", { kind: k }).then((next) => { if (next && next.state.spin?.id !== state.spin?.id) { sfx("respin"); setTimeout(() => setRolling(false), ROLL_MS); } else setRolling(false); }); }} onExit={exit} />
       ) : screen === "season" && season && state?.result ? (
         <SeasonTicker locale={locale} seed={state.result.goalSeed} season={season} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(season, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onSkip={() => setScreen("result")} />
       ) : screen === "versus" && tie && state ? (
@@ -298,10 +344,11 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
             leaderboard={boardDay ? <DraftLeaderboard locale={locale} rows={board} variant={boardVariant} onVariant={(v) => { setVariant(v); setScreen("intro"); }} onOpen={(row) => void openTeam(row)} /> : undefined}
             onShare={() => undefined} onAgain={() => { setSetup((x) => ({ ...x, variant: state.variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
           {linkNote && <p role="status" className="mt-2 text-center text-xs font-semibold text-brand-green-light">{linkNote}</p>}
-          {problem && <p role="alert" className="mt-2 text-center text-xs font-semibold text-brand-red-light">{problem}</p>}
           {openRival && <TeamSheet c={c} name={openRival.name} slots={slots} picks={openRival.picks} onPlay={() => void playRival()} onClose={() => setOpenRival(null)} />}
         </>
       ) : null}
+      {problem && screen !== "draft" && <p role="alert" className="mt-3 rounded-xl bg-brand-red-soft/20 px-3 py-2 text-center text-xs font-semibold text-white">{problem}</p>}
+      {problem && screen === "draft" && state?.phase === "ready" && <p role="alert" className="mt-3 rounded-xl bg-brand-red-soft/20 px-3 py-2 text-center text-xs font-semibold text-white">{problem}</p>}
     </Frame>
   );
 }

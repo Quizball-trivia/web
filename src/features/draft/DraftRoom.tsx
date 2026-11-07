@@ -22,15 +22,15 @@ function useSecondsLeft(deadline: number, nowMs: () => number, live: boolean): n
   return live && now !== null ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
 }
 
-const seatsOf = (view: DraftRoomView, snapshot: RoomStatePayload): BoardSeat[] => {
+const seatsOf = (view: DraftRoomView, snapshot: RoomStatePayload, labels: { away: string; left: string }): BoardSeat[] => {
   const rows = wordSeats(snapshot, view.status.map((status, seat) => ({ seat, status, score: 0 })));
-  return view.picks.map((picks, seat) => ({ name: rows[seat]?.name ?? "—", avatar: rows[seat]?.avatar ?? null, picks, me: seat === view.you, active: view.activeSeat === seat }));
+  return view.picks.map((picks, seat) => ({ name: rows[seat]?.name ?? "—", avatar: rows[seat]?.avatar ?? null, picks, me: seat === view.you, active: view.activeSeat === seat, note: view.status[seat] === "away" ? labels.away : view.status[seat] === "withdrawn" ? labels.left : null }));
 };
 
 function Board({ view, snapshot, room, locale, error }: { view: DraftRoomView; snapshot: RoomStatePayload; room: RoomConnection<DraftRoomCommand>; locale: string; error: string | null }) {
   const c = draftCopy(locale);
   const shared = wordSharedCopy(locale);
-  const seats = useMemo(() => seatsOf(view, snapshot), [view, snapshot]);
+  const seats = useMemo(() => seatsOf(view, snapshot, shared), [view, snapshot, shared]);
   const seconds = useSecondsLeft(view.deadline, room.nowMs, view.phase === "picking");
   const me = view.you;
   const myTurn = view.activeSeat === me;
@@ -60,24 +60,30 @@ function Board({ view, snapshot, room, locale, error }: { view: DraftRoomView; s
   );
 }
 
-const flipTie = (t: MatchDay): MatchDay => ({
-  ...t, goals: [t.goals[1], t.goals[0]], legs: [[t.legs[0][1], t.legs[0][0]], [t.legs[1][1], t.legs[1][0]]], penalties: t.penalties ? [t.penalties[1], t.penalties[0]] : null, winner: (1 - t.winner) as 0 | 1,
-  battles: t.battles.map((b) => ({ ...b, mine: b.theirs, theirs: b.mine, winner: b.winner === null ? null : ((1 - b.winner) as 0 | 1) })),
-});
+/** The tie from the other side: their goals first, their home leg first, their attack against the first side's defence. */
+const flipTie = (t: MatchDay): MatchDay => {
+  const by = (key: MatchDay["battles"][number]["key"]) => t.battles.find((b) => b.key === key)!;
+  const turn = (b: MatchDay["battles"][number], key: MatchDay["battles"][number]["key"]) => ({ key, mine: b.theirs, theirs: b.mine, winner: b.winner === null ? null : ((1 - b.winner) as 0 | 1) });
+  return {
+    ...t, goals: [t.goals[1], t.goals[0]], legs: [[t.legs[1][1], t.legs[1][0]], [t.legs[0][1], t.legs[0][0]]], penalties: t.penalties ? [t.penalties[1], t.penalties[0]] : null, winner: (1 - t.winner) as 0 | 1,
+    battles: [turn(by("defence"), "attack"), turn(by("midfield"), "midfield"), turn(by("attack"), "defence")],
+  };
+};
 
 function Results({ view, snapshot, locale, onRoom, onExit }: { view: DraftRoomView; snapshot: RoomStatePayload; locale: string; onRoom: () => void; onExit: () => void }) {
-  const seats = useMemo(() => seatsOf(view, snapshot), [view, snapshot]);
+  const shared = wordSharedCopy(locale);
+  const seats = useMemo(() => seatsOf(view, snapshot, shared), [view, snapshot, shared]);
   const slots = FORMATIONS[view.formation];
   const me = view.you;
   if (view.tie && view.seats === 2) {
     const tie = me === 0 ? view.tie : flipTie(view.tie);
     // Someone who left lost, whatever the legs said.
     const shown = view.winner === me && tie.winner !== 0 ? { ...tie, winner: 0 as const } : view.winner !== me && tie.winner === 0 ? { ...tie, winner: 1 as const } : tie;
-    return <Frame lang={locale}><MatchDayView locale={locale} match={shown} me={seats[me]} rival={seats[1 - me]} slots={slots} seed={snapshot.matchId} reveal onBack={onRoom} backLabel={wordSharedCopy(locale).backToRoom} onExit={onExit} /></Frame>;
+    return <Frame lang={locale}><MatchDayView locale={locale} match={shown} me={seats[me]} rival={seats[1 - me]} slots={slots} seed={snapshot.matchId} reveal onBack={onRoom} backLabel={shared.backToRoom} resultNote={view.status[1 - me] === "withdrawn" ? shared.rivalLeft : null} onExit={onExit} /></Frame>;
   }
-  const rows = seats.map((seat, i) => ({ seat, season: view.seasons![i] as unknown as SeasonResult, team: view.lines?.[i] ?? lines(slots, seat.picks).overall, withdrawn: view.status[i] === "withdrawn" }))
+  const rows = seats.map((seat, i) => ({ seat: { ...seat, name: seat.note ? `${seat.name} · ${seat.note}` : seat.name }, season: view.seasons![i] as unknown as SeasonResult, team: view.lines?.[i] ?? lines(slots, seat.picks).overall, withdrawn: view.status[i] === "withdrawn" }))
     .sort((a, b) => Number(a.withdrawn) - Number(b.withdrawn) || b.season.points - a.season.points || (b.season.gf - b.season.ga) - (a.season.gf - a.season.ga) || b.season.gf - a.season.gf);
-  return <Frame lang={locale} wide><RoomTable locale={locale} rows={rows} slots={slots} againLabel={wordSharedCopy(locale).backToRoom} onAgain={onRoom} onExit={onExit} /></Frame>;
+  return <Frame lang={locale} wide><RoomTable locale={locale} rows={rows} slots={slots} againLabel={shared.backToRoom} onAgain={onRoom} onExit={onExit} /></Frame>;
 }
 
 export const draftScreens: RoomGameScreens<DraftRoomView, DraftRoomCommand> = {

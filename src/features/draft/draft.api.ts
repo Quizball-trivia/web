@@ -13,7 +13,7 @@ export interface ServerRun {
   done: boolean; day?: string; ranked?: boolean; rank?: number; number?: number | null; kind?: "free" | "challenge"; challengeCode?: string | null;
 }
 export interface RunEnvelope { run: { id: string; version: number }; state: ServerRun }
-export interface DraftToday { day: string; number: number; league: { id: string; name: string; short: string; teams: number; games: number }; era: Era; formation: FormationId; leagues: Array<{ id: string; name: string; short: string; teams: number; games: number }>; best: { rec: string; points: number } | null; played: boolean; guest: boolean; practiceDay: string | null }
+export interface DraftToday { day: string; number: number; league: { id: string; name: string; short: string; teams: number; games: number }; era: Era; formation: FormationId; leagues: Array<{ id: string; name: string; short: string; teams: number; games: number }>; best: { rec: string; points: number } | null; played: boolean; guest: boolean; live: string; practiceDay: string | null }
 export interface BoardEntry { rank: number; userId: string; username: string; avatarUrl: string | null; avatarCustomization: never; w: number; d: number; l: number; points: number; gd: number; gf: number; score: number }
 export interface Leaderboard { day: string; players: number; top: BoardEntry[]; me: BoardEntry | null }
 export interface TeamResponse { formation: FormationId; picks: (Pick | null)[] }

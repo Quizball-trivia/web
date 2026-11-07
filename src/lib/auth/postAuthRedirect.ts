@@ -31,6 +31,9 @@ export function normalizePostAuthRedirect(pathname: string | null | undefined): 
   if (code) return buildFriendInvitePath(code);
   const path = pathname.split(/[?#]/)[0];
   if (!path.startsWith("/") || path.startsWith("//") || !RETURNABLE_PATH.test(path)) return null;
+  // The one query kept: a friend's challenge or a past day of Football Draft, so signing in returns to it.
+  const kept = /^\/football-draft\?(challenge=[A-Za-z0-9_-]{6,16}|dia=\d{4}-\d{2}-\d{2})$/.exec(pathname);
+  if (kept) return pathname;
   return path.length > 1 ? path.replace(/\/$/, "") : path;
 }
 
