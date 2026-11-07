@@ -173,9 +173,9 @@ const copy = {
     score: (n: number) => `${n}/10`, missedTitle: "Non trouvés",
     fullListTitle: "La liste complète", legendFound: "Trouvées", legendMissed: "Manquées", practiceCta: "Tour d’entraînement", practiceHint: "Entraîne-toi avec une liste plus facile des archives. Sans classement ni pression.",
     shareText: (n: number, found: number, tower: string) => `Devine le top 10 #${n} : ${found}/10\n${tower}`,
-    yourTurn: "À toi de jouer", seatTurn: (name: string) => `Au tour de ${name}`, waiting: "Attends ton tour", sending: "Vérification…", youOut: "Tu n’as plus de vies sur cette liste",
+    yourTurn: "À toi de jouer", seatTurn: (name: string) => `À ${name} de jouer`, waiting: "Attends ton tour", sending: "Vérification…", youOut: "Tu n’as plus de vies sur cette liste",
     listOf: (n: number, of: number) => `Liste ${n}/${of}`, listDone: "Liste terminée !", listOut: "Tout le monde a été éliminé", nextList: "Prochaine liste en approche…",
-    pointsStat: "Points", foundStat: "Trouvées", slotsDetail: (n: number) => `${n} réponses trouvées`, lifeLost: (name: string) => `${name} a perdu une vie`, outOfList: "Éliminé",
+    pointsStat: "Points", foundStat: "Trouvées", slotsDetail: (n: number) => `Réponses trouvées : ${n}`, lifeLost: (name: string) => `${name} a perdu une vie`, outOfList: "Éliminé",
   },
 } as const;
 

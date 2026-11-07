@@ -25,6 +25,7 @@ import { GoalCard, GoalPicture } from "./MinutoCard";
 import { MinuteInput } from "./MinuteInput";
 import { MinutoLeaderboard } from "./MinutoLeaderboard";
 import { trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./minuto.analytics";
+import { decimalText, labelColon } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 type View = "intro" | "play" | "end" | "archive";
@@ -555,7 +556,7 @@ export function EndScreen({ locale, day, today, state, days, versions, boardRefr
   const c = minutoCopy(locale);
   const results = state.results;
   const score = state.score;
-  const avgOff = results.length ? (results.reduce((sum, r) => sum + r.diff, 0) / results.length).toFixed(1) : "–";
+  const avgOff = results.length ? decimalText(results.reduce((sum, r) => sum + r.diff, 0) / results.length, 1, locale) : "–";
   const number = puzzleNumber(day);
   const grid = resultGrid(results);
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
@@ -681,7 +682,7 @@ function Goals({ locale, day, closed, results }: { locale: Locale; day: string; 
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-sm font-black tabular-nums text-brand-green-light" style={poppins}>{formatMinute(r.answer)}</p>
-                <p className="text-[10px] text-white/45">{c.end.you}: {r.guess}&apos;</p>
+                <p className="text-[10px] text-white/45">{c.end.you}{labelColon(locale)} {r.guess}&apos;</p>
               </div>
             </li>
           );

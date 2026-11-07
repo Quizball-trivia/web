@@ -120,7 +120,8 @@ const BY_DEMO_SLUG = new Map(PUBLIC_GAMES.filter((game) => game.demoSlug).map((g
  * sent to the public page / owning quiz instead of an account-only route.
  */
 export function findPublicGameForCard(card: { slug: string; dailyType?: string | null }): PublicGame | null {
-  return BY_DEMO_SLUG.get(card.slug) ?? (card.dailyType ? BY_MODE_ID.get(card.dailyType) ?? null : null);
+  // The Play card of Guess the Goal keeps its old prototype slug; the public page runs the live game.
+  return BY_DEMO_SLUG.get(card.slug === "mini-guess-the-goal" ? "guess-the-goal" : card.slug) ?? (card.dailyType ? BY_MODE_ID.get(card.dailyType) ?? null : null);
 }
 
 /** Where a signed-out visitor goes from a Play card; null = the card needs an account (sign-in dialog). */

@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth/supabase";
 import { getCampaignAttributionHeader } from "@/features/campaign-quiz/campaignAttribution";
 import { getUtmAttributionHeader } from "@/lib/analytics/utmAttribution";
+import { clearSignupLocale, rememberSignupLocale } from "@/lib/i18n/signupLocale";
 
 type AuthResponse = components["schemas"]["AuthResponse"];
 
@@ -93,6 +94,17 @@ export function consumeRedirectOAuthProvider(): RedirectOAuthProvider | null {
   }
 }
 
+/** A sign-in that fails leaves nothing behind. */
+async function withSignupLocale<T>(run: () => Promise<T>): Promise<T> {
+  rememberSignupLocale();
+  try {
+    return await run();
+  } catch (error) {
+    clearSignupLocale();
+    throw error;
+  }
+}
+
 async function provisionCurrentSession(): Promise<void> {
   // Provisioning the backend user record is required for a usable login: a
   // failure here means the user is authenticated in Supabase but has no backend
@@ -163,29 +175,33 @@ export type RegisterResult = {
 export async function register(payload: RegisterPayload): Promise<RegisterResult> {
   const normalizedEmail = normalizeEmail(payload.email);
   logger.info("Auth register start", { email: normalizedEmail });
-  const { data, error } = await getSupabaseClient().auth.signUp({
-    email: normalizedEmail,
-    password: payload.password,
-    options: {
-      emailRedirectTo: payload.redirect_to,
-      data: payload.locale ? { locale: payload.locale } : undefined,
-    },
+  return withSignupLocale(async () => {
+    const { data, error } = await getSupabaseClient().auth.signUp({
+      email: normalizedEmail,
+      password: payload.password,
+      options: {
+        emailRedirectTo: payload.redirect_to,
+        data: payload.locale ? { locale: payload.locale } : undefined,
+      },
+    });
+    if (error) throw error;
+
+    const identities = (data.user as { identities?: unknown[] } | null)?.identities;
+    const hasSession = Boolean(data.session?.access_token);
+    if (hasSession) {
+      await provisionCurrentSession();
+    }
+    const alreadyRegistered = !hasSession && Array.isArray(identities) && identities.length === 0;
+    if (alreadyRegistered) clearSignupLocale();
+
+    logger.info("Auth register success");
+    return {
+      user: null,
+      tokensSet: hasSession,
+      alreadyRegistered,
+      pendingDeletion: false,
+    };
   });
-  if (error) throw error;
-
-  const identities = (data.user as { identities?: unknown[] } | null)?.identities;
-  const hasSession = Boolean(data.session?.access_token);
-  if (hasSession) {
-    await provisionCurrentSession();
-  }
-
-  logger.info("Auth register success");
-  return {
-    user: null,
-    tokensSet: hasSession,
-    alreadyRegistered: !hasSession && Array.isArray(identities) && identities.length === 0,
-    pendingDeletion: false,
-  };
 }
 
 function authErrorReason(error: unknown): string | null {
@@ -286,6 +302,7 @@ export async function logout(): Promise<void> {
     logger.warn("Auth logout failed");
   } finally {
     clearTokens();
+    clearSignupLocale();
   }
 }
 
@@ -319,11 +336,13 @@ export async function socialLogin(
   logger.info("Auth social login start", { provider, redirectTo });
   if (typeof window === "undefined") return;
   rememberRedirectOAuthProvider(provider);
-  const { error } = await getSupabaseClient().auth.signInWithOAuth({
-    provider: provider as Provider,
-    options: { redirectTo },
+  await withSignupLocale(async () => {
+    const { error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: provider as Provider,
+      options: { redirectTo },
+    });
+    if (error) throw error;
   });
-  if (error) throw error;
 }
 
 /**
@@ -353,13 +372,15 @@ export async function socialLoginWithIdToken(
     return response.user ?? null;
   }
 
-  const { error } = await getSupabaseClient().auth.signInWithIdToken({
-    provider,
-    token: idToken,
-    nonce,
+  await withSignupLocale(async () => {
+    const { error } = await getSupabaseClient().auth.signInWithIdToken({
+      provider,
+      token: idToken,
+      nonce,
+    });
+    if (error) throw error;
+    await provisionCurrentSession();
   });
-  if (error) throw error;
-  await provisionCurrentSession();
   logger.info("Auth social login token success");
   return null;
 }

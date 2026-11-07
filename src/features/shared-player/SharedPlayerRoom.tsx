@@ -13,6 +13,7 @@ import { AnswerBox, Chips, Dots, Frame, GreenButton, QuietButton, RefusedReports
 import type { RoomStatePayload } from "@/lib/realtime/socket.types";
 import { cn } from "@/lib/utils";
 import type { SharedPlayerCommand, SharedPlayerResult, SharedPlayerView } from "./sharedPlayer.view";
+import { labelColon } from "@/lib/i18n/typography";
 
 const RACE_MS = 10_000;
 
@@ -178,7 +179,7 @@ function Board({ view, snapshot, room, locale, error }: { view: SharedPlayerView
           <p className="text-xs font-bold uppercase tracking-wide text-white/75">{result.clubs[0].name} × {result.clubs[1].name}</p>
           <p className="mt-2 text-2xl font-black" style={poppins}>{verdict}</p>
           <ul className="mt-2 space-y-1 text-sm font-semibold">
-            {result.answers[me] !== null && <li className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-brand-green-light" />{c.you}: {result.answers[me]}</li>}
+            {result.answers[me] !== null && <li className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-brand-green-light" />{c.you}{labelColon(locale)} {result.answers[me]}</li>}
             {result.answers[rival] !== null && <li className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-white" />{nameOf(rival)}: {result.answers[rival]}</li>}
           </ul>
           <RevealAnswers result={result} locale={locale} />

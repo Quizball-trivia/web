@@ -4,11 +4,15 @@ import { ALL_DEMO_MODES } from "@/features/demos/demoModes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
 import { SEO_PAGE_LOCALES } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
-import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublicGameByModeId, findPublishedGame, isFullGameDemo, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
+import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublicGameByModeId, guestCardHref, findPublishedGame, isFullGameDemo, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
 
 const demoSlugs = new Set(ALL_DEMO_MODES.map((mode) => mode.slug));
 
 describe("public games manifest", () => {
+  it.each([["fr", "/fr/jeux-de-foot/devine-le-but"], ["de", "/de/fussballspiele/tor-erraten"], ["es", "/es/juegos-de-futbol/adivina-el-gol"], ["en", "/en/football-games/guess-the-goal"], ["tr", "/tr/futbol-oyunlari/guess-the-goal"], ["ru", "/ru/futbolnye-igry/ugaday-gol"], ["pt", "/pt/jogos-de-futebol/adivinhe-o-gol"], ["ka", "/ka/football-games/guess-the-goal"]] as const)("the Guess the Goal Play card takes a %s guest to the page, not to sign-in", (locale, path) => {
+    expect(guestCardHref({ slug: "mini-guess-the-goal" }, locale)).toBe(path);
+  });
+
   it("has unique mode ids and slugs", () => {
     const ids = PUBLIC_GAMES.map((g) => g.modeId);
     expect(new Set(ids).size).toBe(ids.length);

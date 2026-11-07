@@ -6,11 +6,12 @@ import { Check, Clock3, Crosshair, LogOut, Moon, WifiOff, X } from "lucide-react
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
-import { aproximadoCopy, formatValue, type AproximadoCopy } from "./aproximado.copy";
+import { aproximadoCopy, displayUnit, formatValue, type AproximadoCopy } from "./aproximado.copy";
 import { parseGuess, type RoundResult, type Standing } from "./aproximado.rules";
 import type { AproximadoRoomView, PublicQuestion, RoomSeatView } from "./aproximado.views";
 import { scoreSourceAttr, toPartyStandings, useRoomScoreFlights } from "./AproximadoParty";
 import { PartyScoreFlights, PartyStandingsPill, PartyStandingsSidebar } from "@/features/party-kit";
+import { useLocale } from "@/contexts/LocaleContext";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -86,13 +87,14 @@ export function RosterStrip({ seats, mySeat, copy, gained }: { seats: RoomSeatVi
 
 /** The question: a kind chip, the prompt and its unit. */
 export function QuestionCard({ question, copy }: { question: PublicQuestion; copy: AproximadoCopy }) {
+  const { locale } = useLocale();
   return (
     <div className="rounded-3xl bg-white px-5 py-5 text-surface-page shadow-lg">
       <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-brand-blue" style={poppins}>
         <Crosshair className="size-3.5" /> {copy.kinds[question.kind]}
       </span>
       <p id="aproximado-question" className="mt-3 text-xl font-black leading-snug lg:text-2xl" style={poppins}>{question.prompt}</p>
-      {question.unit && <p id="aproximado-unit" className="mt-2 text-xs font-bold uppercase tracking-wide text-surface-page/50">{question.unit}</p>}
+      {question.unit && <p id="aproximado-unit" className="mt-2 text-xs font-bold uppercase tracking-wide text-surface-page/50">{displayUnit(question.unit, locale)}</p>}
     </div>
   );
 }
@@ -121,7 +123,7 @@ export function GuessInput({ question, copy, locale, busy, onSubmit, autoFocus =
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
       <label htmlFor="aproximado-guess" className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/70" style={poppins}>
-        {copy.inputLabel}{question.unit ? ` · ${question.unit}` : ""}
+        {copy.inputLabel}{question.unit ? ` · ${displayUnit(question.unit, locale)}` : ""}
       </label>
       <div className="flex flex-col gap-2 min-[400px]:flex-row">
         <div className={cn("flex h-16 min-w-0 flex-1 items-center rounded-2xl border-[3px] bg-brand-blue transition-colors", invalid ? "border-brand-red-soft" : "border-brand-blue focus-within:border-white/60")}>

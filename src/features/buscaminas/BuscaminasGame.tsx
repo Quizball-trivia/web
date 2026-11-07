@@ -25,6 +25,7 @@ import { buscaminasCopy, promptFor } from "./buscaminas.copy";
 import { encodeShare } from "./buscaminas.share";
 import { actionOf, trackActionError, trackActionRecovered, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
 import { PlayWithFriendButton } from "@/features/duel/PlayWithFriendButton";
+import { labelColon } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 // Boards come from the backend, which serves a day only once it is playable (future boards stay private).
@@ -501,7 +502,7 @@ function Board({ locale, content, round, state, pending, notice, onPick, onBank,
 
       <div className="mt-3 flex items-center gap-3">
         <p className="shrink-0 text-xs font-black uppercase tracking-wide text-white/70" style={poppins}>
-          {c.found}: <span className="text-brand-green-light">{found}</span> / {targets}
+          {c.found}{labelColon(locale)} <span className="text-brand-green-light">{found}</span> / {targets}
         </p>
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full bg-brand-green-light transition-[width] duration-300" style={{ width: `${(found / targets) * 100}%` }} />
