@@ -159,6 +159,17 @@ const DARTS501_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   fr: { ...NAME_CHAIN_PAGE.fr, label: "Une manche par jour · sans compte", start: "Jouer", note: "Commence à 501 : chaque fléchette représente un joueur de la catégorie, et son numéro est déduit du score. Termine entre 0 et −10. En invité, tu joues les jours précédents ; avec un compte, tu accèdes à la partie du jour et au classement." },
 };
 
+const DRAFT_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...NAME_CHAIN_PAGE.en, label: "A new draft every day · no account needed", start: "Play now", note: "Spin a club and season, sign a player, repeat until your XI is full, then play the season. As a guest you play past days and free play; with an account, today's draft and the leaderboards." },
+  ka: { ...NAME_CHAIN_PAGE.ka, label: "ყოველდღე ახალი დრაფტი · ანგარიშის გარეშე", start: "თამაში", note: "დაატრიალე კლუბი და სეზონი, აიყვანე ფეხბურთელი, შეავსე 11 და ითამაშე სეზონი. სტუმრად წინა დღეებსა და თავისუფალ თამაშს თამაშობ; ანგარიშით დღევანდელ დრაფტს და რეიტინგებს." },
+  es: { ...NAME_CHAIN_PAGE.es, label: "Un draft nuevo cada día · sin cuenta", start: "Jugar ahora", note: "Girá un club y una temporada, fichá a un jugador, completá tu once y jugá la temporada. Sin cuenta jugás los días anteriores y el juego libre; con cuenta, el draft de hoy y los rankings." },
+  tr: { ...NAME_CHAIN_PAGE.tr, label: "Her gün yeni bir draft · hesap gerekmez", start: "Oyna", note: "Bir kulüp ve sezon çevir, oyuncu al, ilk 11'ini tamamla ve sezonu oyna. Misafir olarak önceki günleri ve serbest oyunu oynarsın; hesapla bugünün draftını ve sıralamaları." },
+  ru: { ...NAME_CHAIN_PAGE.ru, label: "Новый драфт каждый день · аккаунт не нужен", start: "Играть сейчас", note: "Крути клуб и сезон, бери игрока, собери состав из 11 и сыграй сезон. Гость играет за прошлые дни и в свободной игре, а с аккаунтом доступны сегодняшний драфт и рейтинги." },
+  pt: { ...NAME_CHAIN_PAGE.pt, label: "Um draft novo todo dia · sem precisar de conta", start: "Jogue agora", note: "Gire um clube e uma temporada, contrate um jogador, complete seu time e jogue a temporada. Como visitante, você joga os dias anteriores e o jogo livre; com uma conta, acessa o draft de hoje e os rankings." },
+  de: { ...NAME_CHAIN_PAGE.de, label: "Jeden Tag ein neuer Draft · kein Konto nötig", start: "Jetzt spielen", note: "Dreh Verein und Saison, verpflichte einen Spieler, stell deine Elf auf und spiel die Saison. Als Gast spielst du frühere Tage und das freie Spiel; mit Konto den heutigen Draft und die Ranglisten." },
+  fr: { ...NAME_CHAIN_PAGE.fr, label: "Un nouveau draft chaque jour · sans compte", start: "Jouer", note: "Fais tourner un club et une saison, recrute un joueur, complète ton onze et joue la saison. En invité, tu joues les jours précédents et le mode libre ; avec un compte, tu accèdes au draft du jour et aux classements." },
+};
+
 const GUESS_THE_GOAL_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { label: "5 goals a day · no account needed", start: "Play now", note: "The real game: five goals a day. As a guest you play for points; sign in to earn coins and XP.", account: "Earn coins for every goal", accountText: "Sign in to earn coins and XP the first time you name each goal, and play Tic Tac Toe, Auction and ranked matches against real opponents." },
   ka: { label: "5 გოლი დღეში · ანგარიშის გარეშე", start: "თამაში", note: "ნამდვილი თამაში: ხუთი გოლი დღეში. სტუმრად ქულებზე თამაშობ; შედი ანგარიშზე, რომ ქოინები და XP მიიღო.", account: "მიიღე ქოინები ყოველ გოლზე", accountText: "შედი ანგარიშზე, რომ ყოველ პირველად გამოცნობილ გოლზე ქოინები და XP მიიღო და ითამაშო Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან." },
@@ -181,7 +192,7 @@ const TENABLE_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   fr: { ...ULTIMO_PAGE.fr, label: "Un nouveau top 10 chaque jour · jours précédents gratuits, sans compte", note: "Une liste cachée, 3 vies. En invité, tu joues les jours précédents ; avec un compte, tu accèdes à la liste du jour et au classement." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "conexiones-futboleras": CONEXIONES_PAGE, "football-darts-501": DARTS501_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, "guess-the-goal": GUESS_THE_GOAL_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "shared-player": SHARED_PLAYER_PAGE, "name-chain": NAME_CHAIN_PAGE, "football-horserace": FOOTBALL_HORSERACE_PAGE, "football-codenames": FOOTBALL_CODENAMES_PAGE, "dato-falso-futbolero": DATO_FALSO_PAGE, "conexiones-futboleras": CONEXIONES_PAGE, "football-darts-501": DARTS501_PAGE, "football-draft": DRAFT_PAGE, "daily-statSniper": STAT_SNIPER_PAGE, tenable: TENABLE_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -252,7 +263,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} />}
-          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso" || game.modeId === "conexiones" || game.modeId === "darts501"
+          {fullGame && (game.modeId === "sharedPlayer" || game.modeId === "nameChain" || game.modeId === "tenable" || game.modeId === "footballRace" || game.modeId === "codenames" || game.modeId === "datoFalso" || game.modeId === "conexiones" || game.modeId === "darts501" || game.modeId === "draft"
             ? <DeferredWordDailyBoard modeId={game.modeId} locale={locale} className="mt-6" />
             : (game.modeId === "pistas" || game.modeId === "ultimo" || game.modeId === "minuto" || game.modeId === "buscaminas" || game.modeId === "statSniper")
               ? <PublicPageBoard modeId={game.modeId} locale={locale} playPath={game.playPath} className="mt-6" /> : null)}

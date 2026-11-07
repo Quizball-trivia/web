@@ -33,7 +33,9 @@ const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page",
 
 // ── Intro ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, variant, onVariant, onDaily, onFree, onFriends, onExit }: {
+export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, variant, onVariant, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn }: {
+  /** The main button when today is already played, or for a guest (closed-day practice). */
+  dailyLabel?: string; guestNote?: string | null; onSignIn?: () => void;
   locale: string; number: number; league: League; formation?: FormationId; best?: string | null; nextDaily?: string | null; variant: Variant; onVariant: (v: Variant) => void;
   onDaily: () => void; onFree: () => void; onFriends: () => void; onExit: () => void;
 }) {
@@ -69,7 +71,8 @@ export function DraftIntro({ locale, number, league, formation = "4-3-3", best, 
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        <GreenButton onClick={onDaily}>{c.playDaily}</GreenButton>
+        <GreenButton onClick={onDaily}>{dailyLabel ?? c.playDaily}</GreenButton>
+        {guestNote && <button type="button" onClick={onSignIn} className="w-full text-center text-xs font-semibold text-brand-green-light underline underline-offset-2">{guestNote}</button>}
         <div className="grid grid-cols-2 gap-2">
           <QuietButton onClick={onFree}>{c.freePlay}</QuietButton>
           <QuietButton onClick={onFriends}>{c.withFriends}</QuietButton>
@@ -1038,14 +1041,14 @@ function LineBars({ c, team }: { c: DraftText; team: Lines }) {
 const LEG_REVEAL_MS = 8000;
 const LEG_BEAT_MS = 1200;
 
-export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = false, onFinish, onGoal, onBack, onAgain, onExit }: {
+export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = false, onFinish, onGoal, onBack, backLabel, onAgain, onExit }: {
   locale: string; match: MatchDay; me: BoardSeat; rival: BoardSeat; slots: Slot[];
   /** Names the scorers; the same pairing always shows the same goals. */
   seed?: string;
   /** Play both legs out on a clock before showing the result. */
   reveal?: boolean; onFinish?: (won: boolean) => void; onGoal?: (mine: boolean) => void;
   /** A head-to-head from the result screen returns there instead of starting a new draft. */
-  onBack?: () => void; onAgain?: () => void; onExit: () => void;
+  onBack?: () => void; backLabel?: string; onAgain?: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
   const won = match.winner === 0;
@@ -1142,7 +1145,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
             ))}
           </ul>
           {pitches}
-          {onBack && <GreenButton onClick={onBack} className="mt-5">{c.backToResult}</GreenButton>}
+          {onBack && <GreenButton onClick={onBack} className="mt-5">{backLabel ?? c.backToResult}</GreenButton>}
           {onAgain && <GreenButton onClick={onAgain} className="mt-5">{c.again}</GreenButton>}
         </>
       )}
@@ -1161,8 +1164,8 @@ function SeatHead({ seat, c }: { seat: BoardSeat; c: DraftText }) {
 
 // ── Room results ───────────────────────────────────────────────────────────────────────────────────────────────────
 
-export function RoomTable({ locale, rows, slots, initialTeam = null, onAgain, onExit }: {
-  locale: string; rows: { seat: BoardSeat; season: SeasonResult; team: number }[]; slots: Slot[]; initialTeam?: string | null; onAgain: () => void; onExit: () => void;
+export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel, onAgain, onExit }: {
+  locale: string; rows: { seat: BoardSeat; season: SeasonResult; team: number }[]; slots: Slot[]; initialTeam?: string | null; againLabel?: string; onAgain: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
   const [teamSeat, setTeamSeat] = useState<string | null>(initialTeam);
@@ -1184,7 +1187,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, onAgain, on
           </li>
         ))}
       </ol>
-      <GreenButton onClick={onAgain} className="mt-auto">{c.again}</GreenButton>
+      <GreenButton onClick={onAgain} className="mt-auto">{againLabel ?? c.again}</GreenButton>
       {open && <TeamSheet c={c} name={open.me ? c.you : open.name} slots={slots} picks={open.picks} onClose={() => setTeamSeat(null)} />}
     </div>
   );
@@ -1192,7 +1195,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, onAgain, on
 
 // ── Leaderboard (main board tab + public page mirror) ──────────────────────────────────────────────────────────────
 
-export interface BoardRow { rank: number; name: string; avatar: AvatarCustomization | null; season: { w: number; d: number; l: number; points: number }; me?: boolean; picks?: (Pick | null)[] }
+export interface BoardRow { userId?: string; rank: number; name: string; avatar: AvatarCustomization | null; season: { w: number; d: number; l: number; points: number }; me?: boolean; picks?: (Pick | null)[] }
 
 export function DraftLeaderboard({ locale, rows, variant, onVariant, title, compact, onOpen }: {
   locale: string; rows: BoardRow[]; variant: Variant; onVariant: (v: Variant) => void; title?: string; compact?: boolean;
@@ -1223,7 +1226,7 @@ export function DraftLeaderboard({ locale, rows, variant, onVariant, title, comp
             <span className="w-14 text-right text-xs text-white/70 tabular-nums">{r.season.points} {c.pts}</span>
           </>);
               const row = cn("grid w-full grid-cols-[2rem_auto_1fr_auto_auto] items-center gap-2 rounded-xl px-2 py-1.5 text-left text-sm", r.me ? "bg-brand-green/15" : "");
-              return onOpen && r.picks && !r.me
+              return onOpen && (r.picks || r.userId) && !r.me
                 ? <button type="button" onClick={() => onOpen(r)} aria-label={c.teamOf(r.name)} className={cn(row, "transition-colors hover:bg-white/10")}>{body}</button>
                 : <div className={row}>{body}</div>;
             })()}

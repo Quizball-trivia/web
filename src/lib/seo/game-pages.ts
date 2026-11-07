@@ -88,6 +88,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-connections": { es: "conexiones-futboleras", tr: "futbol-connections", ru: "futbolnye-svyazi", pt: "conexoes-do-futebol", de: "fussball-connections" , fr: "connections-foot" },
   // Owner brief 2026-10-28: every name keeps the word for darts. KA follows EN.
   "football-darts-501": { es: "dardos-futboleros-501", tr: "futbol-dart-oyunu", ru: "futbolnyy-darts-501", pt: "dardos-com-jogadores-de-futebol", de: "fussball-darts-501" , fr: "flechettes-foot-501" },
+  // Working names: the owner has not chosen the final ones. KA follows EN.
+  "football-draft-game": { es: "draft-de-futbol", tr: "futbol-draft-oyunu", ru: "futbolnyy-draft", pt: "draft-de-futebol", de: "fussball-draft-spiel", fr: "draft-de-foot" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -2202,6 +2204,72 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Des fléchettes avec des joueurs de foot. Tu commences à 501 ; chaque fléchette est un joueur de la catégorie du jour et son total est retiré de ton score. Termine entre 0 et −10 avec le moins de fléchettes possible.",
       howToPlay: ["Tu commences à 501. Cite un joueur de la catégorie : il représente ta fléchette et son total (matchs joués, buts ou statistique choisie) est retiré de ton score.", "Termine entre 0 et −10. Un total supérieur à 180 ne rapporte rien ; passer sous −10 annule la fléchette et ton score reste inchangé. Un joueur hors catégorie consomme aussi une fléchette sans rapporter de points.", "Tu as 10 fléchettes. Un joueur déjà cité ou introuvable ne consomme rien : vérifie l’orthographe et réessaie. Le classement quotidien privilégie le moins de fléchettes, puis le score le plus proche de 0.", "Avec des amis, ouvre un salon pour 2 à 6 joueurs. Vous jouez chacun votre tour avec votre propre score de 501. Dès qu’un joueur termine, le tour en cours se finit, puis le score le plus proche de 0 remporte la manche ; à égalité, le premier à avoir terminé l’emporte. La partie se joue au meilleur des 3 manches."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour le jeu du jour et le classement quotidien.",
+    },
+  }),
+  mode("football-draft-game", "/football-draft", "football-draft", {
+    en: {
+      metaTitle: "Football Draft: Build an XI From Real Seasons | QuizBall",
+      metaDescription: "Football Draft: spin a real club and season, sign a player, build your XI, then play a league season. A new daily draft, free play and rooms of 2 to 6.",
+      title: "Football Draft",
+      intro: "Spin a real club and season, sign one of its players and repeat until you have a full XI of 11. Then your team plays a simulated league season and you find out how good your picks really were.",
+      howToPlay: ["Spin a real club and season and sign one of its players. Repeat until all 11 places in your XI are filled.", "Pick a version. Budget: buy your XI with €300M; better players cost more, so a lower-rated bargain can be the smart buy. Classic: ratings are shown, so pick the best. Ball Knowledge: ratings and stats are hidden, so you must remember who was good that season.", "Your team then plays a simulated league season. There is a new daily draft every day, with the same draws for everyone and a leaderboard for each version. After you have played today, open any team on the leaderboard and play your XI against it.", "In free play you choose the league (Premier League, LaLiga, Serie A, Bundesliga or Ligue 1), the era and the formation. With friends, challenge someone on the same draws or open a live room of 2 to 6, where a player taken is gone and team against team is decided over two legs, home and away."],
+      reward: "Free to play, no download. Play past days and free play without an account; sign in for today's draft and the leaderboards.",
+    },
+    ka: {
+      metaTitle: "ფეხბურთის დრაფტი: შეკრიბე 11 ნამდვილი სეზონებიდან | QuizBall",
+      metaDescription: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე ფეხბურთელი, შეკრიბე 11 და ითამაშე ლიგის სეზონი. ყოველდღე ახალი დრაფტი, თავისუფალი თამაში და ოთახები 2–6-ზე.",
+      title: "ფეხბურთის დრაფტი",
+      intro: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე მისი ერთი ფეხბურთელი და გაიმეორე, სანამ 11-კაციანი გუნდი არ შეგივსდება. შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს და ნახავ, რამდენად კარგი იყო შენი არჩევანი.",
+      howToPlay: ["დაატრიალე ნამდვილი კლუბი და სეზონი და აიყვანე მისი ერთი ფეხბურთელი. გაიმეორე, სანამ გუნდის 11-ვე ადგილი არ შეივსება.", "აირჩიე ვერსია. ბიუჯეტი: შენს 11-ს €300M-ით ყიდულობ; უკეთესი ფეხბურთელები უფრო ძვირია, ამიტომ დაბალი რეიტინგის იაფი ვარიანტი შეიძლება ჭკვიანური შენაძენი იყოს. კლასიკური: რეიტინგები ჩანს, აირჩიე საუკეთესო. ფეხბურთის მცოდნე: რეიტინგები და სტატისტიკა დამალულია, უნდა გახსოვდეს, ვინ იყო კარგი იმ სეზონში.", "შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს. ყოველდღე ახალი დრაფტია, ყველასთვის ერთი და იგივე დატრიალებებით და ცალკე რეიტინგით თითოეულ ვერსიაზე. დღევანდელის თამაშის შემდეგ შეგიძლია რეიტინგის ნებისმიერი გუნდი გახსნა და მის წინააღმდეგ შენი 11-ით ითამაშო.", "თავისუფალ თამაშში შენ ირჩევ ლიგას (Premier League, LaLiga, Serie A, Bundesliga ან Ligue 1), ეპოქას და ფორმაციას. მეგობრებთან გამოიწვიე ვინმე იმავე დატრიალებებზე ან გახსენი ცოცხალი ოთახი 2-დან 6 მოთამაშემდე: აყვანილი ფეხბურთელი სხვისთვის აღარ არის ხელმისაწვდომი, გუნდი გუნდის წინააღმდეგ კი ორ მატჩში წყდება, სახლში და გასვლაზე."],
+      reward: "უფასოა, ჩამოტვირთვა არ სჭირდება. წინა დღეები და თავისუფალი თამაში ანგარიშის გარეშე ითამაშე; დღევანდელი დრაფტისა და რეიტინგებისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Draft futbolero: armá tu once con temporadas reales | QuizBall",
+      metaDescription: "Draft futbolero: girá un club y una temporada reales, fichá un jugador, armá tu once y jugá la temporada. Un draft por día, juego libre y salas de 2 a 6.",
+      title: "Draft futbolero",
+      intro: "Girá un club y una temporada reales, fichá a uno de sus jugadores y repetí hasta tener tu once completo. Después tu equipo juega una temporada de liga simulada y ves cuánto valían tus elecciones.",
+      howToPlay: ["Girá un club y una temporada reales y fichá a uno de sus jugadores. Repetí hasta completar los 11 puestos de tu equipo.", "Elegí una versión. Presupuesto: comprás tu once con €300M; los mejores jugadores cuestan más, así que una ganga con menos valoración puede ser la compra inteligente. Clásico: las valoraciones se ven, elegí a los mejores. Sabelotodo: las valoraciones y las estadísticas están ocultas, tenés que acordarte de quién la rompió esa temporada.", "Después tu equipo juega una temporada de liga simulada. Cada día hay un draft nuevo, con los mismos giros para todos y un ranking por versión. Cuando ya jugaste el de hoy, podés abrir cualquier equipo del ranking y jugar tu once contra él.", "En juego libre elegís la liga (Premier League, LaLiga, Serie A, Bundesliga o Ligue 1), la época y la formación. Con amigos, desafiá a alguien con los mismos giros o abrí una sala en vivo de 2 a 6, donde un jugador elegido ya no está disponible y los cruces de equipo contra equipo se definen a dos partidos, ida y vuelta."],
+      reward: "Gratis y sin descargas. Sin cuenta jugás los días anteriores y el juego libre; con tu cuenta, el draft de hoy y los rankings.",
+    },
+    tr: {
+      metaTitle: "Futbol Draftı: Gerçek Sezonlardan İlk 11 Kur | QuizBall",
+      metaDescription: "Futbol Draftı: gerçek bir kulüp ve sezon çevir, oyuncu al, ilk 11'ini kur ve lig sezonunu oyna. Her gün yeni draft, serbest oyun ve 2-6 kişilik odalar.",
+      title: "Futbol Draftı",
+      intro: "Gerçek bir kulüp ve sezon çevir, o kadrodan bir oyuncu al ve ilk 11'in tamamlanana kadar tekrarla. Sonra takımın simüle edilen bir lig sezonu oynar ve seçimlerinin ne kadar iyi olduğunu görürsün.",
+      howToPlay: ["Gerçek bir kulüp ve sezon çevir, o kadrodan bir oyuncu al. İlk 11'indeki 11 yer dolana kadar tekrarla.", "Bir sürüm seç. Bütçe: ilk 11'ini €300M ile alırsın; iyi oyuncular daha pahalıdır, bu yüzden reytingi düşük bir kelepir akıllıca bir alım olabilir. Klasik: reytingler açıktır, en iyisini seç. Futbol Bilgisi: reytingler ve istatistikler gizlidir, o sezon kimin iyi olduğunu hatırlaman gerekir.", "Sonra takımın simüle edilen bir lig sezonu oynar. Her gün yeni bir draft var; çevirmeler herkes için aynı ve her sürümün kendi sıralaması var. Bugünkünü oynadıktan sonra sıralamadaki herhangi bir takımı açıp ilk 11'inle ona karşı oynayabilirsin.", "Serbest oyunda ligi (Premier League, LaLiga, Serie A, Bundesliga veya Ligue 1), dönemi ve dizilişi sen seçersin. Arkadaşlarınla aynı çevirmelerde meydan okuyabilir ya da 2 ile 6 kişilik canlı bir oda açabilirsin; alınan oyuncu başkasına kalmaz, takım takıma eşleşmeler ise iç saha ve deplasman olmak üzere iki maçta belirlenir."],
+      reward: "Ücretsiz, indirme yok. Önceki günleri ve serbest oyunu hesapsız oyna; bugünün draftı ve sıralamalar için giriş yap.",
+    },
+    ru: {
+      metaTitle: "Футбольный драфт: собери состав из реальных сезонов | QuizBall",
+      metaDescription: "Крути реальный клуб и сезон, бери игрока, собери состав из 11 и сыграй сезон в лиге. Новый драфт каждый день, свободная игра и комнаты на 2–6 игроков.",
+      title: "Футбольный драфт",
+      intro: "Крути реальный клуб и сезон, бери одного из его игроков и повторяй, пока не соберёшь полный состав из 11. Затем твоя команда играет симулированный сезон в лиге, и ты узнаёшь, насколько хорош был твой выбор.",
+      howToPlay: ["Покрути реальный клуб и сезон и возьми одного из его игроков. Повторяй, пока не заполнишь все 11 мест в составе.", "Выбери версию. Бюджет: ты покупаешь состав на €300 млн; лучшие игроки стоят дороже, поэтому недорогой игрок с рейтингом пониже может оказаться умной покупкой. Классика: рейтинги видны, бери лучших. Знаток: рейтинги и статистика скрыты, придётся вспомнить, кто был хорош в том сезоне.", "Затем твоя команда играет симулированный сезон в лиге. Каждый день выходит новый драфт: прокруты одинаковы для всех, а у каждой версии свой рейтинг. Сыграв сегодняшний драфт, можно открыть любую команду из рейтинга и сыграть против неё своим составом.", "В свободной игре ты выбираешь лигу (Premier League, LaLiga, Serie A, Bundesliga или Ligue 1), эпоху и схему. С друзьями можно бросить вызов на тех же прокрутах или открыть живую комнату на 2–6 игроков, где взятый игрок уже никому не достанется, а противостояния команд решаются в двух матчах, дома и в гостях."],
+      reward: "Бесплатно и без скачивания. Прошлые дни и свободная игра доступны без аккаунта; войди, чтобы сыграть сегодняшний драфт и попасть в рейтинги.",
+    },
+    pt: {
+      metaTitle: "Draft de futebol: monte seu time com temporadas reais",
+      metaDescription: "Draft de futebol: gire um clube e uma temporada reais, contrate um jogador, monte seu time e jogue a liga. Um draft novo por dia, jogo livre e salas de 2 a 6.",
+      title: "Draft de futebol",
+      intro: "Gire um clube e uma temporada reais, contrate um dos jogadores e repita até ter um time completo de 11. Depois, seu time joga uma temporada simulada da liga e você descobre se escolheu bem.",
+      howToPlay: ["Gire um clube e uma temporada reais e contrate um dos jogadores. Repita até preencher as 11 vagas do seu time.", "Escolha uma versão. Orçamento: você compra seu time com €300M; jogadores melhores custam mais, então uma pechincha com nota menor pode ser a compra certa. Clássico: as notas aparecem, escolha os melhores. Entendido: notas e estatísticas ficam ocultas, e você precisa lembrar quem foi bem naquela temporada.", "Depois, seu time joga uma temporada simulada da liga. Todo dia tem um draft novo, com os mesmos giros para todos e um ranking para cada versão. Depois de jogar o de hoje, você pode abrir qualquer time do ranking e jogar com o seu contra ele.", "No jogo livre, você escolhe a liga (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), a época e a formação. Com amigos, desafie alguém nos mesmos giros ou abra uma sala ao vivo de 2 a 6, onde um jogador escolhido sai da disputa e time contra time se decide em dois jogos, ida e volta."],
+      reward: "Grátis e sem download. Jogue os dias anteriores e o jogo livre sem conta; entre para acessar o draft de hoje e os rankings.",
+    },
+    de: {
+      metaTitle: "Fußball-Draft: Stell deine Elf aus echten Saisons auf",
+      metaDescription: "Fußball-Draft: Dreh einen echten Verein mit Saison, verpflichte einen Spieler, stell deine Elf auf und spiel die Liga. Täglich neu, freies Spiel, Räume für 2–6.",
+      title: "Fußball-Draft",
+      intro: "Dreh einen echten Verein und eine Saison, verpflichte einen seiner Spieler und wiederhole das, bis deine Elf komplett ist. Dann spielt dein Team eine simulierte Ligasaison, und du siehst, wie gut deine Wahl wirklich war.",
+      howToPlay: ["Dreh einen echten Verein und eine Saison und verpflichte einen seiner Spieler. Wiederhole das, bis alle 11 Plätze deiner Elf besetzt sind.", "Wähl eine Version. Budget: Du kaufst deine Elf für 300 Mio. €; bessere Spieler kosten mehr, ein Schnäppchen mit niedrigerer Wertung kann also der kluge Kauf sein. Klassisch: Die Wertungen sind sichtbar, nimm die Besten. Fußballwissen: Wertungen und Statistiken sind versteckt, du musst wissen, wer in jener Saison gut war.", "Dann spielt dein Team eine simulierte Ligasaison. Jeden Tag gibt es einen neuen Draft, mit denselben Drehs für alle und einer Rangliste pro Version. Hast du heute gespielt, kannst du jedes Team der Rangliste öffnen und mit deiner Elf dagegen antreten.", "Im freien Spiel wählst du Liga (Premier League, LaLiga, Serie A, Bundesliga oder Ligue 1), Ära und Formation. Mit Freunden forderst du jemanden mit denselben Drehs heraus oder öffnest einen Live-Raum für 2 bis 6, in dem ein vergebener Spieler weg ist. Team gegen Team wird in Hin- und Rückspiel entschieden."],
+      reward: "Kostenlos und ohne Download. Spiele frühere Tage und das freie Spiel ohne Konto; melde dich für den heutigen Draft und die Ranglisten an.",
+    },
+    fr: {
+      metaTitle: "Draft foot : compose ton onze avec de vraies saisons | QuizBall",
+      metaDescription: "Fais tourner un vrai club et une saison, recrute un joueur, compose ton onze et joue la saison. Un draft par jour, mode libre et salons de 2 à 6 entre amis.",
+      title: "Draft foot",
+      intro: "Fais tourner un vrai club et une saison, recrute l’un de ses joueurs et recommence jusqu’à former un onze complet. Ton équipe joue ensuite une saison de championnat simulée, et tu découvres ce que valaient tes choix.",
+      howToPlay: ["Fais tourner un vrai club et une saison, puis recrute l’un de ses joueurs. Recommence jusqu’à remplir les 11 postes de ton équipe.", "Choisis une version. Budget : tu achètes ton onze avec 300 M€ ; les meilleurs joueurs coûtent plus cher, donc une bonne affaire moins bien notée peut être le bon achat. Classique : les notes sont affichées, prends les meilleurs. Culture foot : notes et statistiques sont cachées, à toi de te souvenir de qui était bon cette saison-là.", "Ton équipe joue ensuite une saison de championnat simulée. Chaque jour, un nouveau draft arrive, avec les mêmes tirages pour tout le monde et un classement par version. Une fois le draft du jour joué, tu peux ouvrir n’importe quelle équipe du classement et l’affronter avec ton onze.", "En mode libre, tu choisis le championnat (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), l’époque et la formation. Entre amis, défie quelqu’un sur les mêmes tirages ou ouvre un salon en direct de 2 à 6, où un joueur pris n’est plus disponible ; équipe contre équipe se joue sur deux matchs, aller et retour."],
+      reward: "Gratuit et sans téléchargement. Joue aux jours précédents et au mode libre sans compte ; connecte-toi pour le draft du jour et les classements.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {

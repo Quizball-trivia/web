@@ -58,6 +58,7 @@ const REAL_ROUTES: Record<string, string> = {
   "dato-falso-futbolero": "/dato-falso-futbolero",
   "conexiones-futboleras": "/conexiones-futboleras",
   "football-darts-501": "/football-darts-501",
+  "football-draft": "/football-draft",
   buscaminas: "/buscaminas",
   pistas: "/pistas",
   ultimo: "/ultimo",

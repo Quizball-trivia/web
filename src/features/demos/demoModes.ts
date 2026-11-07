@@ -216,6 +216,21 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "football-draft",
+    title: { en: "Football Draft", ka: "ფეხბურთის დრაფტი", es: "Draft futbolero", tr: "Futbol Draftı", ru: "Футбольный драфт", pt: "Draft de futebol", de: "Fußball-Draft", fr: "Draft foot" },
+    description: {
+      en: "Spin a real club and season, sign one player, repeat until your XI is full, then play the league season. A new draft every day, or with friends.",
+      ka: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე ერთი ფეხბურთელი და გაიმეორე, სანამ 11 არ შეივსება. მერე შენი გუნდი ლიგის სეზონს თამაშობს. ყოველდღე ახალი დრაფტი ან მეგობრებთან ერთად.",
+      es: "Girá un club y una temporada reales, fichá a un jugador y repetí hasta completar tu once. Después, tu equipo juega la temporada. Un draft nuevo cada día o con amigos.",
+      tr: "Gerçek bir kulüp ve sezon çevir, bir oyuncu al, ilk 11'in tamamlanana kadar tekrarla, sonra takımın lig sezonunu oynasın. Her gün yeni bir draft ya da arkadaşlarla oyna.",
+      ru: "Крути реальный клуб и сезон, бери одного игрока и повторяй, пока не соберёшь состав из 11. Затем твоя команда играет сезон в лиге. Новый драфт каждый день или с друзьями.",
+      pt: "Gire um clube e uma temporada reais, contrate um jogador e repita até fechar seu time de 11. Depois, ele joga a temporada da liga. Um draft novo por dia ou com amigos.",
+      de: "Dreh einen echten Verein und eine Saison, verpflichte einen Spieler und wiederhole das, bis deine Elf steht. Dann spielt dein Team eine Ligasaison. Jeden Tag ein neuer Draft oder mit Freunden.",
+      fr: "Fais tourner un vrai club et une saison, recrute un joueur et recommence jusqu’à former ton onze. Ton équipe joue ensuite une saison de championnat. Un nouveau draft chaque jour ou entre amis.",
+    },
+    group: "daily",
+  },
+  {
     slug: "dato-falso-futbolero",
     title: { en: "Football Odd One Out", ka: "ყალბი ფაქტი", es: "Dato falso futbolero", tr: "Hangisi Yanlış?", ru: "Ложный факт", pt: "O Intruso do Futebol", de: "Welche Aussage ist falsch?", fr: "Trouve le faux" },
     description: {

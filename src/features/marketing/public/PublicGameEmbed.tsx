@@ -29,6 +29,7 @@ const CodenamesDaily = dynamic(() => import("@/features/codenames/CodenamesDaily
 const DatoFalsoDaily = dynamic(() => import("@/features/dato-falso/DatoFalsoDaily").then((m) => m.DatoFalsoDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const ConexionesDaily = dynamic(() => import("@/features/conexiones/ConexionesDaily").then((m) => m.ConexionesDaily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const D501Daily = dynamic(() => import("@/features/darts501/D501Daily").then((m) => m.D501Daily), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const DraftGame = dynamic(() => import("@/features/draft/DraftGame").then((m) => m.DraftGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const StatSniperPublicPlay = dynamic(() => import("./StatSniperPublicPlay").then((m) => m.StatSniperPublicPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
@@ -184,6 +185,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
             <ConexionesDaily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "football-darts-501" ? (
             <D501Daily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : demoSlug === "football-draft" ? (
+            <DraftGame locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : dailyType === "statSniper" ? (
             <StatSniperPublicPlay locale={locale as Locale} modeId={modeId} pagePath={pagePath} playPath={playPath} onExit={exit} onEvent={onEngineEvent} onLeaveToRealGame={recordExit} onMember={() => { recordExit(); playInApp(); }} />
           ) : dailyType ? (

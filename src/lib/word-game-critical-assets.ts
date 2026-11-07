@@ -38,6 +38,14 @@ const WORD_GAME_PATHS = new Set([
   "/pt/jogos-de-futebol/dardos-com-jogadores-de-futebol",
   "/de/fussballspiele/fussball-darts-501",
   "/fr/jeux-de-foot/flechettes-foot-501",
+  "/en/football-games/football-draft-game",
+  "/ka/football-games/football-draft-game",
+  "/es/juegos-de-futbol/draft-de-futbol",
+  "/tr/futbol-oyunlari/futbol-draft-oyunu",
+  "/ru/futbolnye-igry/futbolnyy-draft",
+  "/pt/jogos-de-futebol/draft-de-futebol",
+  "/de/fussballspiele/fussball-draft-spiel",
+  "/fr/jeux-de-foot/draft-de-foot",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {
