@@ -201,7 +201,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
     if (s.coinsEarned > 0) { const t = setTimeout(() => sfx("coins"), 1200); return () => clearTimeout(t); }
   }, [screen, s.seasons, s.mode, s.match, s.coinsEarned, sfx]);
 
-  const begin = (next: DraftState) => { lastSpin.current = ""; setArmed(false); setRolling(null); setUndoFrom(null); setS(next); setScreen("draft"); };
+  const begin = (next: DraftState) => { lastSpin.current = ""; setClockLeft({ key: "", left: clock }); setArmed(false); setRolling(null); setUndoFrom(null); setS(next); setScreen("draft"); };
   const restart = (mode: DraftMode = s.mode) => {
     setTarget(null);
     const done = mode === "daily" && config.intro ? readAttempt(variant, dailyKey()) : null;
