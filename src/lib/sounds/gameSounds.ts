@@ -5,6 +5,22 @@ import { registerBgmStop } from "./audioControl";
 
 // ─── Sound file paths (place MP3s in /public/sounds/) ────────────
 export const SOUND_FILES = {
+  draftSpin: "/sounds/draft/spin.mp3",
+  draftLand: "/sounds/draft/land.mp3",
+  draftSign: "/sounds/draft/sign.mp3",
+  draftSignStar: "/sounds/draft/sign-star.mp3",
+  draftRespin: "/sounds/draft/respin.mp3",
+  draftHurry: "/sounds/draft/hurry.mp3",
+  draftKickoff: "/sounds/draft/kickoff.mp3",
+  draftFullTime: "/sounds/draft/full-time.mp3",
+  draftGoal: "/sounds/draft/goal.mp3",
+  draftConceded: "/sounds/draft/conceded.mp3",
+  draftGlory: "/sounds/draft/glory.mp3",
+  draftPerfect: "/sounds/draft/perfect.mp3",
+  draftResult: "/sounds/draft/result.mp3",
+  draftDefeat: "/sounds/draft/defeat.mp3",
+  draftMatchWin: "/sounds/draft/match-win.mp3",
+  draftCoins: "/sounds/draft/coins.mp3",
   whistle: "/sounds/whistle.mp3",
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
