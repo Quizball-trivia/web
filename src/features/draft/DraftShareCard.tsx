@@ -134,7 +134,17 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardData,
   ctx.fillRect((W * 2) / 3, H - 8, W / 3, 8);
 }
 
+/** Sheets close on Escape like any dialog. */
+export function useEscape(onClose: () => void): void {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+}
+
 export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c: DraftText; data: ShareCardData; text: string; defaultNames: boolean; onDone: (how: "share" | "save" | "copy") => void; onClose: () => void }) {
+  useEscape(onClose);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [names, setNames] = useState(defaultNames);
   const [copied, setCopied] = useState(false);

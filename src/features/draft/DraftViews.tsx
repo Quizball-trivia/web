@@ -10,7 +10,7 @@ import { GreenButton, QuietButton, TopBar, poppins } from "@/features/wordgames/
 import type { AvatarCustomization } from "@/types/game";
 import { draftCopy, type DraftText } from "./draft.copy";
 import type { ChallengeTarget } from "./draft.engine";
-import { ShareSheet } from "./DraftShareCard";
+import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
   ACADEMY_RATING, BUDGET, FORMATIONS, XI, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
   type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Prediction, type Pos, type SeasonResult, type Slot, type Variant,
@@ -195,7 +195,7 @@ function Reel({ label, value, sub, spinning, tone, tight }: { label: string; val
       className={cn("relative min-w-0 overflow-hidden rounded-2xl px-3 shadow-lg", tight ? "py-1.5" : "py-2", blue ? "bg-brand-blue text-white" : "min-w-[6.25rem] bg-brand-yellow text-surface-page")}>
       <span aria-hidden className={cn("pointer-events-none absolute inset-x-0 top-0 h-1/2", blue ? "bg-white/10" : "bg-white/25")} />
       <p className={cn("relative text-[10px] font-bold uppercase tracking-[0.12em]", tight && "sr-only", blue ? "text-white/70" : "text-surface-page/70")} style={poppins}>{label}</p>
-      <p className={cn("relative truncate text-lg font-black leading-tight", spinning && "blur-[0.6px]")} style={poppins}>{value}</p>
+      <p className={cn("relative line-clamp-2 break-words text-lg font-black leading-tight", spinning && "truncate blur-[0.6px]")} style={poppins}>{value}</p>
       {sub && !tight && <p className={cn("relative truncate text-[11px] font-semibold", blue ? "text-white/75" : "text-surface-page/75")}>{sub}</p>}
     </motion.div>
   );
@@ -332,7 +332,7 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
                   <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-black tabular-nums shadow-md", hidden ? "bg-brand-blue/40 text-white" : tierBg(rated(p)))} style={poppins}>{hidden ? "?" : rated(p)}</span>
                   <span className="min-w-0 flex-1">
                     <span className={cn("block truncate text-sm font-bold", !open && "text-white/40 line-through decoration-white/30")}>{p.name}</span>
-                    <span className="block truncate text-[11px] text-white/65">{tooDear(p) ? c.tooExpensive : !open ? unavailable(c, p, picks, takenBy) : hidden ? (p.alt ? `${p.pos} / ${p.alt.join(", ")}` : p.pos) : phone ? shortStat(c, p).join(" · ") : statLine(c, p)}</span>
+                    <span className="block truncate text-[11px] text-white/65">{tooDear(p) ? c.tooExpensive : !open ? unavailable(c, p, picks, takenBy) : hidden ? [p.pos, ...(p.alt ?? [])].map((x) => c.posShort[x]).join(" / ") : phone ? shortStat(c, p).join(" · ") : statLine(c, p)}</span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-0.5">
                     {maxPrice !== null && <span className={cn("text-xs font-black tabular-nums", tooDear(p) ? "text-brand-red-light" : "text-brand-yellow")} style={poppins}>{euros(priceOf(p))}</span>}
@@ -367,6 +367,7 @@ function statLine(c: DraftText, p: DraftPlayer) {
 }
 
 export function RatingSheet({ c, player, spin, teams, onClose }: { c: DraftText; player: DraftPlayer; spin: ClubSeason; teams: number; onClose: () => void }) {
+  useEscape(onClose);
   const why = rateSeason({ ...player, finish: spin.finish, teams });
   const rows: [string, number][] = [[c.whyBase, why.base], [c.whyMinutes, why.minutes], [c.whyClub, why.club], [c.whyOutput, why.output]];
   if (why.legend) rows.push([c.whyLegend, why.legend]);
@@ -547,6 +548,7 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
 
 /** Anyone's XI, from a seat chip or the final table: seeing each other's teams is what starts the arguing. */
 export function TeamSheet({ c, name, slots, picks, hidden, seconds, onPlay, onClose }: { c: DraftText; name: string; slots: Slot[]; picks: (Pick | null)[]; hidden?: boolean; seconds?: number | null; onPlay?: () => void; onClose: () => void }) {
+  useEscape(onClose);
   const team = lines(slots, picks);
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" role="dialog" aria-modal aria-label={c.teamOf(name)} onClick={onClose}>
@@ -1098,7 +1100,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
   };
   const legRow = (i: 0 | 1, s: [number, number]) => (
     <div className={cn("rounded-xl px-2 py-1.5 text-center", !over && i === leg ? "bg-brand-blue" : "bg-surface-card")}>
-      <p className="truncate text-[11px] font-bold text-white/75">{c.legN(i + 1)} · {i === 0 ? c.legHome : c.legAway}</p>
+      <p className="text-[11px] font-bold leading-tight text-white/75">{c.legN(i + 1)} · {i === 0 ? c.legHome : c.legAway}</p>
       <p className={cn("text-xl font-black tabular-nums leading-tight", !over && i > leg && "text-white/30")} style={poppins}>{s[0]}–{s[1]}</p>
     </div>
   );

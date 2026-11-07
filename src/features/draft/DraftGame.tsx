@@ -101,7 +101,11 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     const id = savedFreeRun();
     if (!id || initialChallenge) return;
     let live = true;
-    void draftApi.currentFree(id, locale).then((r) => { if (live) { if (r.state.phase === "result") forgetFreeRun(); else setResumable(id); } }).catch(() => forgetFreeRun());
+    void withRetry(() => draftApi.currentFree(id, locale)).then((r) => { if (live) { if (r.state.phase === "result") forgetFreeRun(); else setResumable(id); } }).catch((error: unknown) => {
+      // Only when the run is really gone or someone else's: a dropped connection must not lose the way back to it.
+      const reason = reasonOf(error);
+      if (reason && reason !== "session_unavailable") forgetFreeRun();
+    });
     return () => { live = false; };
   }, [initialChallenge, locale, authStatus]);
   useEffect(() => {
@@ -120,7 +124,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
 
   const resume = useCallback(async () => {
     if (!resumable) return;
-    try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { forgetFreeRun(); setResumable(null); setProblem(c.loadFailed); }
+    try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { setProblem(c.loadFailed); }
   }, [resumable, locale, adopt, c.loadFailed]);
 
   /** One move on the run. Moves are never resent: a lost or stale one re-reads the run and the player goes on from what the server holds. */
@@ -138,7 +142,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
         if (fresh) {
           take(fresh);
           // The answer was lost but the move happened: the season was played, so go on to it.
-          if (fresh.state.phase === "result") setScreen("result");
+          if (fresh.state.phase === "result") { setScreen("result"); if (path === "finish") onEvent?.("complete", { score: fresh.state.result?.season.points } as EngineEventDetail); }
         }
       }
       setProblem(reason === "day_over" ? c.dayOver : reason === "no_coins" ? c.noCoins : c.moveFailed);
@@ -146,7 +150,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     } finally {
       setPending(false);
     }
-  }, [env, pending, kind, locale, c, take]);
+  }, [env, pending, kind, locale, c, take, onEvent]);
 
   const signedInPrompt = useCallback(() => { rememberVariant(variant); rememberPostAuthRedirect(initialChallenge ? `/football-draft?challenge=${initialChallenge}` : initialDay ? `/football-draft?dia=${initialDay}` : "/football-draft"); openAuthPrompt(); }, [initialChallenge, initialDay, variant, openAuthPrompt]);
 
@@ -167,7 +171,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       const next = await withRetry(() => draftApi.startDaily(variant, day, locale));
       if (next.state.phase !== "result") beginTracked();
       adopt(next, { daily: variant });
-      onDay?.(day, day === today.day);
+      onDay?.(day, day === today.live);
     } catch (error) {
       if (reasonOf(error) === "sign_in_for_today") signedInPrompt(); else setProblem(c.loadFailed);
     } finally { setPending(false); starting.current = false; }
@@ -289,10 +293,10 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     try {
       const t = await draftApi.challengeTie(challengeCode, locale);
       setTie({ ...t, rivalName: challenge.from });
-      if (isNewTie(t)) sfx("kickoff"); else setSeenTies((x) => [...x, t.id]);
+      if (!seenTies.includes(t.id) && isNewTie(t)) sfx("kickoff"); else setSeenTies((x) => [...x, t.id]);
       setScreen("versus");
     } catch { setProblem(c.loadFailed); } finally { setPending(false); }
-  }, [challengeCode, challenge, locale, sfx, c.loadFailed]);
+  }, [challengeCode, challenge, locale, seenTies, sfx, c.loadFailed]);
 
   /** A link a friend opens on the same draw. */
   const challengeFriend = useCallback(async () => {
