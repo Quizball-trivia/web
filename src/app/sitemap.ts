@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { DOWNLOAD_UPDATED_AT } from "@/lib/seo/app-download";
 import { ALWAYS_ON_CAMPAIGN_HUBS } from "@/features/campaign-quiz/campaignQuiz.editions";
-import { CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, isLanguageRejected, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 import type { CampaignQuizHubPage } from "@/features/campaign-quiz/campaignQuiz.types";
 
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
@@ -76,10 +76,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fail on an unavailable catalog instead of returning a successful, incomplete sitemap.
   const campaignPages = await listCampaignQuizPages('en');
   // Only quizzes with that edition: the quiz endpoint would answer the rest in English under a translated URL. These
-  // catalogs also need the page copy and every question. A backend without the language rejects it (400): no entries
+  // catalogs also need the page copy and every question. A backend without the language rejects it: no entries
   // rather than a failed sitemap.
   const catalogOrNone = (locale: CampaignQuizLocale) => listCampaignQuizPages(locale).catch((error: unknown) => {
-    if (error instanceof CampaignQuizApiError && error.status === 400) return [];
+    if (error instanceof CampaignQuizApiError && isLanguageRejected(error.status)) return [];
     throw error;
   });
   const catalogs = new Map(await Promise.all(CAMPAIGN_QUIZ_LOCALES.map(async (locale) => {

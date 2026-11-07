@@ -334,6 +334,42 @@ const COPY = {
     target: 'Ziel',
     finish: 'Tor',
   },
+  fr: {
+    title: 'Direction le but',
+    subtitle: 'Bats 10 défenseurs et le gardien. Une question de foot par zone.',
+    balance: 'Solde',
+    zone: 'Zone',
+    stake: 'Points',
+    introEyebrow: 'Le défi des onze zones',
+    introTitle: 'Connais le jeu. Dribble. Sécurise.',
+    introBody: 'Chaque réponse déclenche un test de survie. Les bonnes réponses améliorent tes chances. Après chaque zone franchie sans encombre, sécurise le montant ou attaque le défenseur suivant.',
+    kickOff: 'Commence avec {stake}',
+    noFunds: 'Pas assez de points pour cette tentative',
+    nextReturn: 'Prochain montant',
+    currentReturn: 'Montant actuel',
+    question: 'Question',
+    answerFast: 'Réponds avant que le défenseur te rattrape',
+    clean: 'Défenseur passé',
+    cleanBody: 'Tu as franchi la zone {zone}. Le défenseur suivant s’avance déjà.',
+    continue: 'Attaque la zone {zone}',
+    cashOut: 'Sécurise {amount}',
+    saved: 'Arrêt !',
+    savedBody: 'Le gardien a arrêté ton dernier tir. Tes points sont perdus.',
+    tackled: 'Tacle !',
+    tackledBody: 'Le défenseur a stoppé ta course dans la zone {zone}. Tes points sont perdus.',
+    correctWas: 'Bonne réponse : {answer}',
+    newRun: 'Nouvelle tentative',
+    cashed: 'Parcours sécurisé',
+    cashedBody: 'Zones franchies : {zones} · {mult}×.',
+    finalTitle: 'BUT !',
+    finalBody: 'Dix défenseurs éliminés. Gardien battu. Un parcours parfait à 4,00×.',
+    won: 'Tu as sécurisé {amount}',
+    startAgain: 'Rejouer',
+    liveRoute: 'Parcours en direct',
+    safe: 'franchie',
+    target: 'cible',
+    finish: 'But',
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -360,7 +396,7 @@ function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): T
 }
 
 function points(value: number, locale: string) {
-  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'pt' ? 'pt-BR' : undefined, {
+  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'pt' ? 'pt-BR' : undefined, {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });

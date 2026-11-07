@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { getCampaignQuizGuide } from '../campaignQuiz.guides';
 
 describe('campaign quiz guides', () => {
-  it('publishes useful English, Spanish, Georgian and Turkish guidance for the priority clusters', () => {
+  it('publishes useful English, Spanish, Georgian, Turkish and French guidance for the priority clusters', () => {
     for (const slug of ['guess-the-player', 'career-path', 'club-badges']) {
-      for (const locale of ['en', 'es', 'ka', 'tr'] as const) {
+      for (const locale of ['en', 'es', 'ka', 'tr', 'fr'] as const) {
         const guide = getCampaignQuizGuide(slug, locale);
         expect(guide?.heading).toBeTruthy();
         expect(guide?.introduction.length).toBeGreaterThan(60);

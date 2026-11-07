@@ -2,7 +2,7 @@ import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
 import { createWordDailyApi, type WordRun, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
 import { textIn, type CxBoard, type CxSoloState, type CxSolved, type CxText, type CxTier, type CxVerdict } from "./conexiones.logic";
 
-type Localized = { en: string; es: string; ka: string; tr: string; ru: string; pt?: string; de?: string };
+type Localized = { en: string; es: string; ka: string; tr: string; ru: string; pt?: string; de?: string; fr?: string };
 interface ServerTile { id: string; name: { en: string; ka: string; ru: string }; portrait: string | null }
 interface ServerGroup { id: string; tier: CxTier; link: Localized; note: Localized | null; members: string[]; missed: boolean }
 

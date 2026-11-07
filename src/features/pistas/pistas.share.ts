@@ -1,6 +1,6 @@
 import { CLUES_PER_ROUND, ROUNDS_PER_DAY, latestDay, pointsFor, puzzleNumber, releaseDay, type RoundResult } from "./pistas.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr";
 /** g/y/o: solved with ≤3 / ≤6 / more clues, r: missed — the same buckets as the emoji grid. */
 const letterOf = (r: RoundResult) => (r.outcome === "missed" ? "r" : r.clues <= 3 ? "g" : r.clues <= 6 ? "y" : "o");
 /** The points a colour can stand for: solved with clues 1–3 / 4–6 / 7–10 pays 10–8 / 7–5 / 4–1, a miss pays 0. */
@@ -11,7 +11,7 @@ const POINTS_OF: Record<string, readonly [min: number, max: number]> = {
   r: [0, 0],
 };
 /** `pf-` keeps these apart from Buscaminas codes on the shared /r/ route. */
-const CODE = /^pf-(\d{1,3})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr|ru|pt|de)$/;
+const CODE = /^pf-(\d{1,3})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr|ru|pt|de|fr)$/;
 
 export interface PistasShareResult {
   number: number;
@@ -22,7 +22,7 @@ export interface PistasShareResult {
 
 export function encodePistasShare(number: number, results: readonly RoundResult[], locale: string): string {
   const score = results.reduce((sum, r) => sum + r.points, 0);
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" ? locale : "en";
   return `pf-${number}-${score}-${results.map(letterOf).join("")}-${shareLocale}`;
 }
 
@@ -54,4 +54,5 @@ export const PISTAS_SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: st
   ru: { brandA: "Футбольные", brandB: "подсказки", points: "/100", challenge: "Сможешь меня обыграть?", title: (n, s) => `Футбольные подсказки #${n}: ${s}/100`, description: "10 загаданных игроков, по 10 подсказок на каждого. Угадывай с меньшим числом подсказок и набирай больше очков.", open: "Играть в «Футбольные подсказки»" },
   pt: { brandA: "Dicas", brandB: "de futebol", points: "/100", challenge: "Você consegue me vencer?", title: (n, s) => `Dicas de futebol #${n}: ${s}/100`, description: "10 jogadores ocultos, 10 dicas para cada um. Adivinhe com menos dicas para marcar mais pontos.", open: "Jogue Dicas de futebol" },
   de: { brandA: "Fußballer", brandB: "erraten", points: "/100", challenge: "Schlägst du mich?", title: (n, s) => `Fußballer erraten #${n}: ${s}/100`, description: "10 versteckte Spieler mit je 10 Hinweisen. Errate sie mit weniger Hinweisen und hol mehr Punkte.", open: "Fußballer erraten spielen" },
+  fr: { brandA: "Devine", brandB: "le joueur", points: "/100", challenge: "Tu peux me battre ?", title: (n, s) => `Devine le joueur #${n} : ${s}/100`, description: "10 joueurs à deviner, 10 indices chacun. Devine avec moins d’indices pour marquer plus de points.", open: "Jouer à Devine le joueur" },
 };

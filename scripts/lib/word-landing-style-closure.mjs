@@ -30,6 +30,8 @@ export const WORD_LANDING_ROOTS = [
     "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira", "jogos-de-futebol/conexoes-do-futebol", "jogos-de-futebol/dardos-com-jogadores-de-futebol",
     "fussballspiele/fussballer-wortkette", "fussballspiele/spieler-fuer-beide-vereine", "fussballspiele/nationen-rennen",
     "fussballspiele/fussball-codenames", "fussballspiele/welche-aussage-ist-falsch", "fussballspiele/fussball-connections", "fussballspiele/fussball-darts-501",
+    "jeux-de-foot/jeu-de-la-derniere-lettre", "jeux-de-foot/joueur-en-commun", "jeux-de-foot/course-des-nations",
+    "jeux-de-foot/codenames-foot", "jeux-de-foot/trouve-le-faux", "jeux-de-foot/connections-foot", "jeux-de-foot/flechettes-foot-501",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -46,9 +48,9 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
     "../../shared/ContactModal", "./AppShellProfileMenu", "./AppShellLogoutDialog",
   ].map((specifier) => boundary("src/components/layout/app-shell/shellChromeLoader.ts", specifier, "pre-play", "Explicit intent loads an original popup; include its complete styles, not just the first viewport.")),
   boundary("src/app/route-providers.tsx", "./providers", "pre-play", "Hub word routes render FullProviders immediately, including toast UI."),
-  ...["es", "tr", "ka", "ru", "pt", "de"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
+  ...["es", "tr", "ka", "ru", "pt", "de", "fr"].map((locale) => boundary("src/app/route-providers.tsx", `./locale-asset-providers.${locale}`, "pre-play", "Staging opt-in entry renders the same complete Providers tree; preserve all shell/auth/toast styles.")),
   boundary("src/app/route-providers.tsx", "@/features/partner/PartnerProviders", "other-host", "Partner hosts never render these Quizball word routes."),
-  ...["es", "ka", "tr", "ru", "pt", "de"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
+  ...["es", "ka", "tr", "ru", "pt", "de", "fr"].map((locale) => boundary("src/lib/i18n/client-messages.ts", `@/messages/${locale}.json`, "data", "Translation data has no rendered component styles.")),
   boundary("src/components/auth/AppAuthGate.tsx", "@/features/auth/GuestAuthDialog", "pre-play", "Guest authentication can open before Play."),
   boundary("src/components/auth/AppAuthGate.tsx", "@/components/shared/LoadingScreen", "pre-play", "Retain all authentication loading states."),
   boundary("src/components/AppLogo.tsx", "./AnimatedAppLogo", "pre-play", "Preserve animated-logo styling even when currently dormant."),

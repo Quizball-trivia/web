@@ -26,6 +26,17 @@ describe('compact board clues', () => {
     expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:la-liga-title', labelEn: 'La Liga winner', labelEs: 'Campeón La Liga' }), 'es'))
       .toEqual({ title: 'La Liga', eyebrow: 'Ganador' });
   });
+  it('reads the French teammate and trophy labels the backend writes', () => {
+    expect(criterionPresentation(clue({ family: 'teammate', labelFr: 'A joué en club avec Jean Lambert' }), 'fr'))
+      .toEqual({ title: 'J. Lambert', eyebrow: 'Coéquipier en club' });
+    expect(criterionPresentation(clue({ family: 'teammate', labelFr: 'A joué avec Jean Lambert' }), 'fr'))
+      .toEqual({ title: 'J. Lambert', eyebrow: 'Coéquipier en club' });
+    for (const [labelFr, title] of [['Vainqueur de la Coupe du Nord', 'Coupe du Nord'], ['Vainqueur de l\u2019Euro Nord', 'Euro Nord'], ["Vainqueur de l'Euro Nord", 'Euro Nord'], ['Vainqueur du Trophée Nord', 'Trophée Nord'], ['Vainqueur de Northwick', 'Northwick']]) {
+      expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:nord', labelFr }), 'fr')).toEqual({ title, eyebrow: 'Vainqueur' });
+    }
+    expect(criterionPresentation(clue({ family: 'trophy_award', key: 'trophy:la-liga-title', labelFr: 'Vainqueur de La Liga' }), 'fr'))
+      .toEqual({ title: 'La Liga', eyebrow: 'Vainqueur' });
+  });
   it('keeps the birth decade explicit rather than a cryptic shield abbreviation', () => {
     expect(criterionPresentation(clue({ key: 'wildcard:born-1990s' }), 'en')).toEqual({ title: '1990–99', eyebrow: 'Born' });
     expect(criterionPresentation(clue({ key: 'wildcard:born-2000s' }), 'ka')).toEqual({ title: '2000–09', eyebrow: 'დაბადება' });

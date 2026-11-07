@@ -29,6 +29,13 @@
 @source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/igravshie-za-oba-kluba/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/kodovye-imena-futbol/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/futbolnye-igry/lozhnyj-fakt/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/codenames-foot/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/connections-foot/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/course-des-nations/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/flechettes-foot-501/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/jeu-de-la-derniere-lettre/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/joueur-en-commun/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/jeux-de-foot/trouve-le-faux/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/jogos-de-futebol/codenames-futebol/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/jogos-de-futebol/conexoes-do-futebol/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/jogos-de-futebol/corrida-das-selecoes/page.tsx";
@@ -48,6 +55,7 @@
 @source "../app/layout.tsx";
 @source "../app/locale-asset-providers.de.tsx";
 @source "../app/locale-asset-providers.es.tsx";
+@source "../app/locale-asset-providers.fr.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
 @source "../app/locale-asset-providers.pt.tsx";
 @source "../app/locale-asset-providers.ru.tsx";
@@ -174,6 +182,7 @@
 @source "../features/mini-games/lib/guessCard.ts";
 @source "../features/mini-games/lib/guessCardConstants.ts";
 @source "../features/mini-games/lib/i18n.es.ts";
+@source "../features/mini-games/lib/i18n.fr.ts";
 @source "../features/mini-games/lib/i18n.ru.ts";
 @source "../features/mini-games/lib/i18n.tr.ts";
 @source "../features/mini-games/lib/i18n.ts";

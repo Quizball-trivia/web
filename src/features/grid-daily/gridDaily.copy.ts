@@ -338,7 +338,55 @@ const de: Copy = {
   reportFailed: "Die Meldung konnte nicht gesendet werden. Versuch es erneut.",
 };
 
-export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt, de };
+const fr: Copy = {
+  title: "Défi du jour",
+  subtitle: "Un plateau par jour. Neuf tentatives pour remplir neuf cases.",
+  guesses: "Tentatives",
+  time: "Temps",
+  filled: "Remplies",
+  tapCell: "Touche une case, puis cite un joueur qui correspond aux deux indices.",
+  finish: "Terminer ici",
+  kickOff: "Démarrer",
+  kickOffFailed: "Impossible de démarrer le plateau. Réessaie.",
+  movedElsewhere: "Le plateau a changé dans un autre onglet : cette tentative n’a pas été comptée. Réessaie.",
+  movedElsewhereDone: "Le plateau a été terminé dans un autre onglet : cette tentative n’a pas été comptée.",
+  kickOffNote: "Les cases restent cachées jusqu’à ce que tu démarres. Le chrono démarre à ce moment-là.",
+  finishConfirm: "Arrêter avec {n} tentatives restantes ?",
+  yes: "Oui, terminer",
+  no: "Continuer à jouer",
+  ambiguous: "Précise le nom complet. Aucune tentative n’a été utilisée.",
+  wrong: "Ce joueur ne correspond pas. Tentative utilisée.",
+  alreadyUsed: "Tu as déjà utilisé ce joueur. Tentative utilisée.",
+  correct: "Case remplie !",
+  resultTitle: "{score} sur 9",
+  resultPerfect: "Plateau parfait",
+  resultTime: "en {time}",
+  rank: "Ton rang du jour : {rank}",
+  practice: "Partie d’entraînement : hors classement.",
+  share: "Partager",
+  copied: "Copié",
+  shareText: "Défi du jour Quizball n°{n}\n{score}/9 · {time}\n{grid}\n{url}",
+  leaderboard: "Classement du jour",
+  players: "Nombre de joueurs : {n}",
+  empty: "Personne n’a encore terminé. À toi de terminer en premier.",
+  leaderboardFailed: "Impossible de charger le classement.",
+  guestNote: "Tu joues au plateau d’hier. Connecte-toi pour jouer à celui du jour et apparaître dans le classement.",
+  signIn: "Se connecter",
+  loading: "Chargement du plateau…",
+  unavailable: "Le défi du jour est indisponible pour le moment.",
+  retry: "Réessayer",
+  back: "Retour",
+  comeBack: "Un nouveau plateau arrive chaque jour.",
+  signInToday: "Connecte-toi pour jouer au plateau du jour. Les anciens plateaux sont accessibles aux invités une fois la journée terminée.",
+  alreadyTried: "Tu as déjà essayé ce nom ici. Aucune tentative n’a été utilisée.",
+  maybeTried: "Ta dernière tentative avec ce nom a peut-être déjà été comptée. Renvoie-la pour réessayer.",
+  reportPrompt: "Tu penses que « {name} » correspond à {square} ?",
+  reportAction: "Signaler",
+  reported: "Merci, nous allons vérifier. Le signalement ne consomme jamais de tentative.",
+  reportFailed: "Impossible d’envoyer le signalement. Réessaie.",
+};
+
+export const GRID_DAILY_COPY: Record<Locale, Copy> = { en, ka, es, tr, ru, pt, de, fr };
 export type GridDailyCopy = Copy;
 
 export const fillDaily = (template: string, values: Record<string, string | number>): string =>

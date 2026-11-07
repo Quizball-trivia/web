@@ -12,12 +12,13 @@ import { generateMetadata as generateRussianMetadata } from '@/app/[locale]/futb
 import { generateMetadata as generatePortugueseMetadata } from '@/app/[locale]/quiz-de-futebol/page';
 import { generateMetadata as generateGermanMetadata } from '@/app/[locale]/fussball-quiz/page';
 import { generateMetadata as generateTurkishMetadata } from '@/app/[locale]/futbol-bilgi-yarismasi/page';
+import { generateMetadata as generateFrenchMetadata } from '@/app/[locale]/quiz-foot/page';
 
 const clubBadges = { slug: 'club-badges', locale_mode: 'en_only', category: 'quiz_type', breadcrumb_label: 'Club badges' };
 
-// No quiz has a ka, pt, de or tr edition unless a test says so: those catalogs are then empty.
+// No quiz has a ka, pt, de, tr or fr edition unless a test says so: those catalogs are then empty.
 const withEditions = (...editions: string[]) => async (locale: string) =>
-  !['ka', 'pt', 'de', 'tr'].includes(locale) || editions.includes(locale) ? [clubBadges] : [];
+  !['ka', 'pt', 'de', 'tr', 'fr'].includes(locale) || editions.includes(locale) ? [clubBadges] : [];
 beforeEach(() => {
   listCampaignQuizPagesMock.mockReset().mockImplementation(withEditions());
 });
@@ -174,6 +175,34 @@ describe('German football quiz hub metadata', () => {
     });
     await expect(generateGermanMetadata({ params: Promise.resolve({ locale: 'de' }) })).resolves.toEqual({});
     await expect(generateGermanMetadata({ params: Promise.resolve({ locale: 'en' }) })).resolves.toEqual({});
+  });
+});
+
+describe('French football quiz hub metadata', () => {
+  it('leads with quiz foot, says football once in the title and links every open edition', async () => {
+    listCampaignQuizPagesMock.mockImplementation(withEditions('fr'));
+    const metadata = await generateFrenchMetadata({ params: Promise.resolve({ locale: 'fr' }) });
+
+    expect(metadata.title).toEqual({ absolute: expect.stringMatching(/^Quiz foot\u00a0: .*football/) });
+    expect(metadata.alternates).toEqual({
+      canonical: 'https://quizball.io/fr/quiz-foot',
+      languages: {
+        en: 'https://quizball.io/en/football-quiz',
+        es: 'https://quizball.io/es/quiz-de-futbol',
+        ru: 'https://quizball.io/ru/futbolnaya-viktorina',
+        fr: 'https://quizball.io/fr/quiz-foot',
+        'x-default': 'https://quizball.io/en/football-quiz',
+      },
+    });
+    expect(metadata.openGraph).toMatchObject({ locale: 'fr_FR', alternateLocale: ['en_GB', 'es_ES', 'ru_RU'] });
+  });
+
+  it('has no metadata before a French edition exists, nor on another locale', async () => {
+    await expect(generateFrenchMetadata({ params: Promise.resolve({ locale: 'fr' }) })).resolves.toEqual({});
+    listCampaignQuizPagesMock.mockImplementation(withEditions('fr'));
+    await expect(generateFrenchMetadata({ params: Promise.resolve({ locale: 'en' }) })).resolves.toEqual({});
+    const english = await generateMetadata({ params: Promise.resolve({ locale: 'en' }) });
+    expect(english.alternates?.languages).toHaveProperty('fr', 'https://quizball.io/fr/quiz-foot');
   });
 });
 

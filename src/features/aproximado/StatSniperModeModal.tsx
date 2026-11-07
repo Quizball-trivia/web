@@ -128,6 +128,22 @@ const COPY: Record<Locale, {
       "Wer nach zehn Fragen die meisten Punkte hat, gewinnt.",
     ],
   },
+  fr: {
+    description: "Dix chiffres réels du football : montants des transferts, buts, affluence. Le plus proche l’emporte, en solo ou en direct avec tes amis.",
+    solo: "Jouer au défi du jour",
+    done: (time) => `Défi du jour terminé · reviens dans ${time}`,
+    friends: "Jouer entre amis (2–6)",
+    friendsHint: "Salon privé avec un lien : tout le monde répond à la même question en même temps.",
+    rules: "Comment jouer",
+    rulesTitle: "Comment jouer",
+    rulesList: [
+      "Dix questions avec un chiffre réel : montant d’un transfert, buts d’une saison, affluence d’une finale.",
+      "Défi du jour (solo) : fais glisser le curseur jusqu’à ta réponse ; plus tu es proche, plus tu marques de points. 100, c’est un sans-faute.",
+      "Avec tes amis (2 à 6) : tout le monde voit la même question et saisit un chiffre en 20 secondes.",
+      "À 2 joueurs : le plus proche remporte la manche. À partir de 3 : le plus proche marque le plus de points (jusqu’à 3), puis le suivant ; +1 pour une réponse exacte.",
+      "Le joueur qui totalise le plus de points après dix questions l’emporte.",
+    ],
+  },
 };
 
 /**

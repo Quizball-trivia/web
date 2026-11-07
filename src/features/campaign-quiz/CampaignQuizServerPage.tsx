@@ -6,7 +6,7 @@ import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
 import { CampaignQuizApiError, getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
 import type { CampaignQuiz } from './campaignQuiz.types';
-import { CAMPAIGN_HREFLANG, CAMPAIGN_OG_LOCALE, CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
+import { CAMPAIGN_HREFLANG, CAMPAIGN_OG_LOCALE, CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, isLanguageRejected, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
@@ -17,6 +17,7 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   pt: 'pt-BR',
   de: 'de-DE',
   tr: 'tr-TR',
+  fr: 'fr-FR',
 };
 
 const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
@@ -27,6 +28,7 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   pt: { home: 'Início', hub: 'Quiz de futebol' },
   de: { home: 'Startseite', hub: 'Fußball-Quiz' },
   tr: { home: 'Ana sayfa', hub: 'Futbol Bilgi Yarışması' },
+  fr: { home: 'Accueil', hub: 'Quiz foot' },
 };
 
 const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
@@ -56,7 +58,7 @@ export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<Campaign
  * at any time, so a closed page sends the visitor to the English quiz (temporarily) instead of a 404. The destination
  * decides, which also covers cached pages and client bundles that cannot know what is open.
  */
-const ENGLISH_WHEN_CLOSED: readonly CampaignQuizLocale[] = ['ka', 'tr'];
+const ENGLISH_WHEN_CLOSED: readonly CampaignQuizLocale[] = ['ka', 'tr', 'fr'];
 
 function closedEdition(sourceSlug: string, locale: CampaignQuizLocale): never {
   if (ENGLISH_WHEN_CLOSED.includes(locale)) redirect(campaignQuizPath(sourceSlug, 'en'));
@@ -145,8 +147,8 @@ export async function renderCampaignQuizPage(
 ) {
   // Loaded first: a renamed quiz is a 404 here, which the route turns into its redirect.
   const quiz = await loadQuiz(sourceSlug, preview, locale).catch((error: unknown) => {
-    // The slug is already validated, so a 400 is a backend that does not know this language yet: a closed edition.
-    if (!preview && locale !== 'en' && error instanceof CampaignQuizApiError && error.status === 400) closedEdition(sourceSlug, locale);
+    // The slug is already validated, so this is a backend that does not know this language yet: a closed edition.
+    if (!preview && locale !== 'en' && error instanceof CampaignQuizApiError && isLanguageRejected(error.status)) closedEdition(sourceSlug, locale);
     throw error;
   });
   const editions = await campaignQuizEditions(sourceSlug, quiz);

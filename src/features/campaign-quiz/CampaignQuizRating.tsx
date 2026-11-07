@@ -37,6 +37,17 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
         rating: 'Bewertung',
         ratings: 'Bewertungen',
       }
+    : locale === 'fr'
+    ? {
+        saved: 'Merci — ta note a été enregistrée.',
+        failed: 'Impossible d’enregistrer ta note. Réessaie.',
+        heading: 'Quelle note donnerais-tu à ce quiz ?',
+        first: 'Sois le premier joueur à le noter.',
+        rate: 'Noter',
+        outOf: 'sur 5',
+        rating: 'note',
+        ratings: 'notes',
+      }
     : locale === 'tr'
     ? {
         saved: 'Teşekkürler, değerlendirmen kaydedildi.',
@@ -115,7 +126,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
-  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'ka' ? 'ka-GE' : 'en-GB';
+  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'tr' ? 'tr-TR' : locale === 'ka' ? 'ka-GE' : 'en-GB';
   return (
     <section
       id="quiz-rating"

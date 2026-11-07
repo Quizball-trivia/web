@@ -569,10 +569,91 @@ const de: Copy = {
   },
 };
 
-const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt, de };
+const fr: Copy = {
+  brandA: "Devine",
+  brandB: "le joueur",
+  player: (n, total) => `Joueur ${n} / ${total}`,
+  pointsInPlay: "Points en jeu",
+  score: "Tes points",
+  revealClue: "Révéler l’indice",
+  clueLocked: "Indice verrouillé",
+  inputLabel: "Saisis le nom de famille du joueur",
+  inputPlaceholder: "Nom de famille…",
+  inputHint: "Nom de famille ou surnom · accents et majuscules sans importance",
+  guess: "Deviner",
+  giveUp: "Abandonner",
+  wrong: "Faux",
+  lastChance: (clues) => (clues > 0 ? `Dernière chance : tu peux révéler ${clues === 1 ? "1 indice de plus" : `${clues} indices de plus`} et tu as 1 essai.` : "Dernière chance : tu as 1 essai."),
+  solved: (n) => `Bien joué ! +${n}`,
+  missed: "Pas cette fois",
+  was: (name) => `C’était ${name}`,
+  revealLater: "La réponse du jour sera visible demain dans « Jours précédents ».",
+  next: "Joueur suivant",
+  finish: "Voir le résultat",
+  kinds: { confed: "Confédération", position: "Poste", foot: "Pied fort", decade: "Décennie", fact: "Indice" },
+  positions: { GK: "GB", DF: "DEF", MF: "MIL", FW: "ATT" },
+  feet: { left: "Gauche", right: "Droite" },
+  intro: {
+    lines: [
+      "10 joueurs par jour, chacun avec 10 indices, du plus difficile au plus facile.",
+      "Devine le joueur avec le premier indice et marque 10 points. Chaque indice révélé te coûte 1 point.",
+      "Saisis le nom de famille (les accents n’ont pas d’importance). Si tu te trompes, tu as droit à 1 essai de plus et à 3 indices supplémentaires maximum.",
+    ],
+    start: "Jouer",
+    resume: (n) => `Continuer · joueur ${n}`,
+    past: "Jours précédents",
+    newBoard: "10 nouveaux joueurs chaque jour à 00:00 (heure d’Argentine).",
+    soon: "Les premiers indices arrivent bientôt.",
+  },
+  end: {
+    score: "Points",
+    of: (max) => `sur ${max}`,
+    solved: "Joueurs trouvés",
+    avgClues: "Indices par bonne réponse",
+    streak: "Série",
+    days: (n) => (n < 2 ? `${n} jour` : `${n} jours`),
+    comeBack: "10 nouveaux joueurs demain.",
+    share: "Partager",
+    whatsapp: "WhatsApp",
+    copy: "Copier",
+    copied: "Copié !",
+    past: "Jouer les jours précédents",
+    more: "Autres jeux",
+    answers: "Réponses",
+    answersLater: "Les réponses du jour seront visibles demain.",
+    clues: (n) => (n < 2 ? `${n} indice` : `${n} indices`),
+  },
+  archive: { title: "Jours précédents", played: (s) => `${s.toLocaleString("fr-FR")} pts`, inProgress: "En cours", notPlayed: "Pas joué", today: "Aujourd’hui", back: "Retour" },
+  shareText: (n, score, grid, url) => `Devine le joueur #${n} — ${score}/100\n${grid}\nTu peux faire mieux ? ${url}`,
+  report: "Signaler une erreur dans un indice",
+  reported: "Merci ! On va vérifier.",
+  exit: "Quitter",
+  loading: "Chargement des indices…",
+  loadError: "Impossible de charger les indices. Réessaie dans un instant.",
+  retry: "Réessayer",
+  actionError: "Connexion perdue. Réessaie.",
+  restarted: "Ta partie a changé (sur un autre appareil ou après une correction). On l’a rechargée.",
+  dayOver: "La journée est terminée en Argentine : les nouveaux joueurs sont disponibles.",
+  guestYesterday: "Tu joues un jour précédent. Crée un compte pour jouer au défi du jour et rejoindre le classement.",
+  playToday: "Jouer le défi du jour",
+  maintenance: "Le jeu est en maintenance. Reviens bientôt.",
+  sessionChanged: "Ta session a changé. Recommence.",
+  board: {
+    title: "Classement du jour",
+    players: (n) => (n < 2 ? `${n} joueur a terminé` : `${n} joueurs ont terminé`),
+    empty: "Personne n’a encore terminé les indices du jour. Sois le premier !",
+    rank: (r) => `Rang du jour : #${r}`,
+    join: "Crée un compte pour rejoindre le classement du jour",
+    joinButton: "Rejoindre le classement",
+    unranked: "Les jours précédents ne comptent pas pour le classement.",
+    guestPlay: "Tu joues en invité : ton score ne compte pas pour le classement.",
+  },
+};
+
+const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt, de, fr };
 
 export const pistasCopy = (locale: string): Copy => COPY[locale] ?? en;
 
-/** Clue text in the page locale; ka/tr/ru/pt/de fall back to English, then Spanish. */
+/** Clue text in the page locale; ka/tr/ru/pt/de/fr fall back to English, then Spanish. */
 export const textFor = (text: LocalizedText, locale: string): string =>
-  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : locale === "de" ? (text as LocalizedText & { de?: string }).de : text.en) || text.en || text.es;
+  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : locale === "de" ? (text as LocalizedText & { de?: string }).de : locale === "fr" ? (text as LocalizedText & { fr?: string }).fr : text.en) || text.en || text.es;

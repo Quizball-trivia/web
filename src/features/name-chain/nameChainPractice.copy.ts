@@ -51,6 +51,13 @@ const practice = {
     endChain: "Kette beenden", chainOver: "Kette vorbei", newChain: "Neue Kette", back: "Zurück zum Tagesspiel", fromEnd: "Entspanntes Training (ohne Timer)",
     nobodyLeft: "Keine Startnamen mehr übrig. Starkes Training!",
   },
+  fr: {
+    open: "Entraînement libre", hint: "Sans chrono ni classement : apprends les noms à ton rythme.", badge: "Entraînement",
+    banner: "Pas de chrono. Prends ton temps : l’entraînement ne compte jamais pour le classement.",
+    inChain: (n: number) => `Dans cette suite : ${n}`, best: (n: number) => `Plus longue suite : ${n}`,
+    endChain: "Terminer la suite", chainOver: "Suite terminée", newChain: "Nouvelle suite", back: "Retour au défi du jour", fromEnd: "Entraînement libre (sans chrono)",
+    nobodyLeft: "Il ne reste aucun nom de départ. Bel entraînement !",
+  },
 } as const;
 
 export const nameChainPracticeCopy = (locale: string) => practice[asWordLocale(locale)];

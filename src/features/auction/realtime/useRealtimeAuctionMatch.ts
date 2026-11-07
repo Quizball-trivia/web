@@ -1333,6 +1333,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: "Ты уже в матче. Переподключаемся…",
     pt: 'Você já está em uma partida. Reconectando…',
     de: 'Du bist schon in einem Match. Verbindung wird wiederhergestellt…',
+    fr: 'Tu es déjà dans un match. Reconnexion…',
   },
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
@@ -1342,6 +1343,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: 'Сейчас аукцион недоступен.',
     pt: 'O conteúdo do leilão não está disponível no momento.',
     de: 'Momentan sind keine Auktionsinhalte verfügbar.',
+    fr: 'Aucun contenu pour les enchères n’est disponible pour le moment.',
   },
   // Turn-action rejections. These are the ones a player actually hits mid-match
   // (double-tap, losing a race to a rival, tapping after their turn passed), so
@@ -1354,6 +1356,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: "Этот ход уже прошёл — твоё предложение не принято.",
     pt: 'Essa rodada já passou — seu lance não foi realizado.',
     de: 'Diese Runde ist bereits vorbei — dein Gebot wurde nicht abgegeben.',
+    fr: 'Le tour est déjà passé — ton enchère n’a pas été placée.',
   },
   auction_no_active_bidding: {
     en: 'Bidding is not open right now.',
@@ -1363,6 +1366,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: 'Сейчас нельзя делать предложения.',
     pt: 'Não é possível dar lances no momento.',
     de: 'Gebote sind gerade nicht möglich.',
+    fr: 'Les enchères ne sont pas ouvertes pour le moment.',
   },
   auction_seat_already_folded: {
     en: 'You already folded on this player.',
@@ -1372,6 +1376,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: 'Ты уже отказался от этого игрока.',
     pt: 'Você já desistiu de dar lances por este jogador.',
     de: 'Du hast bei diesem Spieler bereits gepasst.',
+    fr: 'Tu t’es déjà retiré des enchères pour ce joueur.',
   },
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
@@ -1381,6 +1386,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: 'Твоё предложение уже самое высокое.',
     pt: 'Você já tem o maior lance.',
     de: 'Du hast bereits das höchste Gebot.',
+    fr: 'Tu as déjà l’enchère la plus élevée.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
@@ -1390,6 +1396,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: "Ты не можешь сделать предложение за этого игрока.",
     pt: 'Você não pode dar lances por este jogador.',
     de: 'Du kannst für diesen Spieler kein Gebot abgeben.',
+    fr: 'Tu ne peux pas enchérir sur ce joueur.',
   },
   auction_invalid_bid: {
     en: "That bid isn't valid any more — the price moved.",
@@ -1399,6 +1406,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: "Это предложение больше не действует — цена изменилась.",
     pt: 'Esse lance não é mais válido — o preço mudou.',
     de: 'Dieses Gebot ist nicht mehr gültig — der Preis hat sich geändert.',
+    fr: 'Cette enchère n’est plus valable — le prix a changé.',
   },
   auction_solo_pick_not_yours: {
     en: "That choice belongs to another player.",
@@ -1408,6 +1416,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     ru: "Этот выбор принадлежит другому игроку.",
     pt: 'Essa escolha pertence a outro jogador.',
     de: 'Diese Auswahl gehört einem anderen Spieler.',
+    fr: 'Ce choix appartient à un autre joueur.',
   },
 };
 
@@ -1419,6 +1428,7 @@ const AUCTION_ERROR_GENERIC = {
   ru: 'Что-то пошло не так. Попробуй ещё раз.',
   pt: 'Algo deu errado. Tente novamente.',
   de: 'Etwas ist schiefgelaufen. Versuch es erneut.',
+  fr: 'Une erreur s’est produite. Réessaie.',
 };
 
 function friendlyAuctionError(payload: AuctionErrorPayload, locale: Locale): string {

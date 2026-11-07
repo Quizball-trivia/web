@@ -6,6 +6,8 @@ describe("parseGuess (the first guess is final, so ambiguity is refused, never g
     ["74500", 0, 74500], ["74 500", 0, 74500], ["74.500", 0, 74500], ["74,500", 0, 74500], ["1,234,567", 0, 1234567], ["1.234.567", 1, 1234567],
     ["64,5", 1, 64.5], ["64.5", 1, 64.5], ["64,50", 1, 64.5], ["1.234,5", 1, 1234.5], ["1,234.5", 1, 1234.5], ["0,5", 1, 0.5],
     ["191", 0, 191], ["007", 0, 7], ["0.125", 3, 0.125], ["0,125", 3, 0.125], ["1.250", 3, 1.25],
+    // French: a space (plain, non-breaking or the narrow one Intl writes) groups thousands, a comma marks decimals.
+    ["1 000", 0, 1000], ["1\u00a0000", 0, 1000], ["1\u202f000", 0, 1000], ["74\u202f500", 0, 74500], ["1 234,5", 1, 1234.5], ["1\u202f234,5", 1, 1234.5], ["1\u00a0234\u00a0567", 0, 1234567],
   ])("%s at precision %i = %d", (raw, precision, value) => expect(parseGuess(raw, precision)).toBe(value));
 
   it.each([

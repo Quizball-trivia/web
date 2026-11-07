@@ -216,6 +216,31 @@ const COPY = {
     playQuiz: 'Spielen',
     footer: '© 2026 QuizBall. Fußballquiz für echten Wettbewerb.',
   },
+  fr: {
+    rankedTrivia: 'Quiz de foot en mode classé',
+    playRanked: 'Jouer en mode classé',
+    home: 'Accueil',
+    footballQuiz: 'Quiz de foot',
+    verifiedQuestions: 'questions vérifiées',
+    startQuiz: 'Commencer le quiz',
+    noLogin: 'Pas besoin de se connecter',
+    easy: 'questions faciles',
+    medium: 'questions moyennes',
+    hard: 'questions difficiles',
+    soloWarmup: 'Échauffement en solo',
+    answerPrompt: 'Choisis une réponse par question. Ton score s’affiche instantanément.',
+    factChecked: 'Questions vérifiées',
+    fiveMinutes: 'Environ 5 minutes',
+    instantScore: 'Score instantané',
+    readyRanked: 'Prêt pour le mode classé ?',
+    fairPlay: 'Conçu pour le fair-play',
+    publicOnly: 'Ces questions publiques d’échauffement restent séparées de la banque de questions du mode classé.',
+    keepPlaying: 'Continuer à jouer',
+    relatedQuizzes: 'Quiz de foot associés',
+    allQuizzes: 'Tous les quiz de foot',
+    playQuiz: 'Jouer',
+    footer: '© 2026 QuizBall. Des quiz de foot conçus pour la compétition.',
+  },
   tr: {
     rankedTrivia: 'Sıralamalı futbol bilgi yarışması',
     playRanked: 'Sıralamalı Oyna',
@@ -266,9 +291,17 @@ const GERMAN_SINGULAR = {
   hard: 'schwere',
 } as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
 
+const FRENCH_SINGULAR = {
+  verifiedQuestions: 'question vérifiée',
+  easy: 'question facile',
+  medium: 'question moyenne',
+  hard: 'question difficile',
+} as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
+
 function countLabel(locale: CampaignQuizLocale, count: number, key: keyof typeof RUSSIAN_COUNT_FORMS): string {
   if (locale === 'pt' && count === 1) return PORTUGUESE_SINGULAR[key];
   if (locale === 'de' && count === 1) return GERMAN_SINGULAR[key];
+  if (locale === 'fr' && count <= 1) return FRENCH_SINGULAR[key];
   if (locale !== 'ru') return COPY[locale][key];
   const [one, few, many] = RUSSIAN_COUNT_FORMS[key];
   return russianPlural(count, one, few, many);

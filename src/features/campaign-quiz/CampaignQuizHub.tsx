@@ -24,6 +24,7 @@ const POPULAR_QUIZ_SLUGS = {
   pt: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
   de: ['career-path', 'guess-the-player', 'club-badges', 'premier-league'],
   tr: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
+  fr: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
@@ -117,6 +118,20 @@ const HUB_COPY = {
     rankedHeading: 'Puanını sıralamalı düellolarda göster',
     rankedBody: 'Tek kişilik testler ısınma turu. Gerçek taraftarlarla karşılaşmak ve QuizBall\'ın sıralamasında yükselmek için ücretsiz kayıt ol.',
     groups: { team: 'Kulüp ve milli takım testleri', league: 'Lig testleri', quiz_type: 'Futbol mücadeleleri', article: 'Futbol bilgi yarışması' },
+  },
+  fr: {
+    ranked: 'Jouer en classé', eyebrow: 'Quiz foot gratuit',
+    // docs/SEO-GAME-NAMING-FR-2026-11-06.md §4: the H1 of the quiz hub.
+    title: 'Quiz foot : teste ta culture foot',
+    intro: 'Choisis un quiz, réponds à des questions de foot vérifiées et découvre ton score tout de suite. Tous les quiz en solo sont gratuits et sans inscription.',
+    popularHeading: 'Quiz foot populaires',
+    popularBody: 'Commence par les favoris : devine le joueur avec les clubs ou les indices, reconnais le club à son logo et montre ce que tu sais du Real Madrid.',
+    playFree: 'Jouer gratuitement', verifiedHeading: 'Des questions de foot vérifiées',
+    verifiedBody: 'Les quiz publics de QuizBall utilisent des questions vérifiées sur les clubs, les compétitions, les joueurs et l’histoire du foot.',
+    methodologyLink: 'Comment QuizBall vérifie chaque question',
+    rankedHeading: 'Passe aux duels classés',
+    rankedBody: 'Les quiz en solo sont l’échauffement. Inscris-toi gratuitement pour affronter de vrais fans et grimper au classement QuizBall.',
+    groups: { team: 'Quiz clubs et sélections', league: 'Quiz championnats', quiz_type: 'Défis foot', article: 'Culture foot' },
   },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;

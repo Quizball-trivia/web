@@ -300,6 +300,7 @@ const PLAY_HEADING: Record<CampaignQuizLocale, (label: string) => string> = {
   pt: (label) => `${label}: vamos começar`,
   de: (label) => `${label}: Los geht’s`,
   tr: (label) => `${label}: Hemen Başla`,
+  fr: (label) => `${label} : c’est parti`,
 };
 
 const ABOUT_EYEBROW: Record<CampaignQuizLocale, string> = {
@@ -310,6 +311,7 @@ const ABOUT_EYEBROW: Record<CampaignQuizLocale, string> = {
   pt: 'A história por trás das perguntas',
   de: 'Die Geschichte hinter den Fragen',
   tr: 'Soruların ardındaki hikâye',
+  fr: 'L’histoire derrière les questions',
 };
 
 export function getCampaignQuizContent(
