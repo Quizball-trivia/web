@@ -10,7 +10,7 @@ import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { Frame, GreenButton, QuietButton } from "@/features/wordgames/ui";
 import { useAuthStore } from "@/stores/auth.store";
 import { draftCopy } from "./draft.copy";
-import { DRAFT_SOUNDS, type DraftSoundMoment } from "./draft.sounds";
+import { DRAFT_SOUNDS, preloadDraftSounds, type DraftSoundMoment } from "./draft.sounds";
 import { ChallengeIntro, DraftBoard, DraftIntro, DraftLeaderboard, DraftSetup, MatchDayView, SeasonResultView, SeasonTicker, TeamSheet, XiReady, type BoardRow, type BoardSeat, type DraftSetupValues } from "./DraftViews";
 import { boardRowsOf } from "./DraftBoardPage";
 import { draftApi, reasonOf, withRetry, type ChallengeView, type DraftToday, type RunEnvelope, type RunKind, type TieResponse } from "./draft.api";
@@ -58,6 +58,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   const authStatus = useAuthStore((s) => s.status);
   const openAuthPrompt = useAuthPromptStore((s) => s.open);
   const { playSfx } = useGameSounds();
+  useEffect(() => { preloadDraftSounds(); }, []);
   const sfx = useCallback((m: DraftSoundMoment) => { const name = DRAFT_SOUNDS[m]; if (name) playSfx(name); }, [playSfx]);
   const exit = useCallback(() => (onExit ? onExit() : router.push("/play")), [onExit, router]);
 
@@ -124,6 +125,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
 
   const resume = useCallback(async () => {
     if (!resumable) return;
+    setChallengeCode(null); setChallenge(null);
     try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { setProblem(c.loadFailed); }
   }, [resumable, locale, adopt, c.loadFailed]);
 
@@ -164,6 +166,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if (!today || starting.current) return;
     starting.current = true;
     setPending(true);
+    setChallengeCode(null); setChallenge(null);
     try {
       // A guest opens yesterday from today's entry, and a closed day chosen from the address as it is.
       const day = today.guest && today.day >= today.live ? today.practiceDay : today.day;
@@ -298,11 +301,12 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     } catch { setProblem(c.loadFailed); } finally { setPending(false); }
   }, [challengeCode, challenge, locale, seenTies, sfx, c.loadFailed]);
 
+  const runDay = state?.day;
   /** A link a friend opens on the same draw. */
   const challengeFriend = useCallback(async () => {
     if (!env) return;
     try {
-      const body = "daily" in kind && state?.day ? { variant: kind.daily, day: state.day } : { runId: env.run.id };
+      const body = "daily" in kind && runDay ? { variant: kind.daily, day: runDay } : { runId: env.run.id };
       const { code } = await draftApi.challengeCreate(body, locale);
       const url = `${window.location.origin}/football-draft?challenge=${code}`;
       if (navigator.share) await navigator.share({ url, text: c.challengeShare });
@@ -310,7 +314,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) setProblem(c.loadFailed);
     }
-  }, [env, kind, state?.day, locale, c]);
+  }, [env, kind, runDay, locale, c]);
 
   const notice = (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoney : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
   const target: ChallengeTarget | null = challenge ? { from: challenge.from, seed: "", leagueId: "", era: challenge.era, formation: challenge.formation, variant: challenge.variant, respins: 2, ...challenge.record, picks: challenge.picks ?? Array(11).fill(null) } : null;

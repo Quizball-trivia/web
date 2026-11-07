@@ -1,4 +1,4 @@
-import type { SoundName } from "@/lib/sounds/gameSounds";
+import { isMuted, preloadSfx, type SoundName } from "@/lib/sounds/gameSounds";
 
 /**
  * Which sound each moment of Football Draft plays (null = silent on purpose). The game plays from this map and the
@@ -36,3 +36,10 @@ export const DRAFT_SOUNDS = {
 } as const satisfies Record<string, SoundName | null>;
 
 export type DraftSoundMoment = keyof typeof DRAFT_SOUNDS;
+
+/** Only when sound is on, so a muted player downloads nothing. */
+export const preloadDraftSounds = () => {
+  if (isMuted()) return;
+  const names: (SoundName | null)[] = Object.values(DRAFT_SOUNDS);
+  preloadSfx(...names.filter((name): name is SoundName => name !== null));
+};

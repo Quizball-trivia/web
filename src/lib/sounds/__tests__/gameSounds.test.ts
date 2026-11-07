@@ -69,6 +69,16 @@ describe('gameSounds', () => {
     vi.unstubAllGlobals();
   });
 
+  it('leaves Football Draft clips out of the shared preload, and loads them when the draft asks', async () => {
+    const { preloadAll, preloadSfx, SOUND_FILES } = await import('../gameSounds');
+    preloadAll();
+    const loaded = () => HowlMock.mock.calls.map(([options]) => (options as { src: string[] }).src[0]);
+    expect(loaded()).toContain(SOUND_FILES.whistle);
+    expect(loaded()).not.toContain(SOUND_FILES.draftSpin);
+    preloadSfx('draftSpin');
+    expect(loaded()).toContain(SOUND_FILES.draftSpin);
+  });
+
   it('does not download effects or music when the saved preference is muted', async () => {
     window.localStorage.setItem('quizball_audio_muted', 'true');
     const { preloadAll, preloadBgm, playBgm } = await import('../gameSounds');

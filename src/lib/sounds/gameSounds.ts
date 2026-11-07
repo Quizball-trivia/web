@@ -177,7 +177,8 @@ export function preloadSfx(...names: SoundName[]) {
 export function preloadAll() {
   ensureMutePreferenceLoaded();
   if (_muted) return;
-  (Object.keys(SOUND_FILES) as SoundName[]).forEach(getSound);
+  // Football Draft preloads its own clips, so other games do not download them.
+  (Object.keys(SOUND_FILES) as SoundName[]).filter((name) => !name.startsWith("draft")).forEach(getSound);
 }
 
 /** Unload all sounds (cleanup) */

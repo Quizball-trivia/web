@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useGameSounds } from "@/lib/sounds/useGameSounds";
-import { DRAFT_SOUNDS, type DraftSoundMoment } from "@/features/draft/draft.sounds";
+import { DRAFT_SOUNDS, preloadDraftSounds, type DraftSoundMoment } from "@/features/draft/draft.sounds";
 import { randomBotAvatar } from "@/features/auction/data/botAvatars";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { activeSeat, botPick, finish, isShared, leagueOf, newDraft, pick, respin, signAcademy, slotsOf, type ChallengeTarget, type DraftMode, type DraftState, type DraftUniverse } from "@/features/draft/draft.engine";
@@ -126,6 +126,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
   const league = leagueOf(u, s);
   const slots = slotsOf(s);
   const { playSfx } = useGameSounds();
+  useEffect(() => { preloadDraftSounds(); }, []);
   const sfx = useCallback((m: DraftSoundMoment) => { const name = DRAFT_SOUNDS[m]; if (name) playSfx(name); }, [playSfx]);
   const pool = useMemo(() => u.opponents(s.leagueId, s.seed).map((o) => o.name), [u, s.leagueId, s.seed]);
 

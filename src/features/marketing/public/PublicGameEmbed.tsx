@@ -122,6 +122,14 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     url.searchParams.set("dia", day);
     window.history.replaceState(window.history.state, "", url);
   };
+  // The newest day is the plain address, so a saved link does not stay on one day.
+  const onDraftDay = (day: string, newest: boolean) => {
+    if (!newest) return onDay(day);
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("dia")) return;
+    url.searchParams.delete("dia");
+    window.history.replaceState(window.history.state, "", url);
+  };
   const recordExit = () => {
     if (!sessionRef.current) return;
     trackGameExit({ modeId, sessionId: sessionRef.current, sessionKind, stage: completedRef.current ? "results" : "playing", durationMs: Date.now() - startedAtRef.current });
@@ -186,7 +194,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
           ) : demoSlug === "football-darts-501" ? (
             <D501Daily locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "football-draft" ? (
-            <DraftGame locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+            <DraftGame locale={locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDraftDay} />
           ) : dailyType === "statSniper" ? (
             <StatSniperPublicPlay locale={locale as Locale} modeId={modeId} pagePath={pagePath} playPath={playPath} onExit={exit} onEvent={onEngineEvent} onLeaveToRealGame={recordExit} onMember={() => { recordExit(); playInApp(); }} />
           ) : dailyType ? (
