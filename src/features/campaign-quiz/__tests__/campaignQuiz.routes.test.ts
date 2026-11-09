@@ -146,4 +146,18 @@ describe('localized campaign quiz routes', () => {
     expect(swapCampaignLocalePath('/de/fussballspiele/karrierestationen-erraten', 'en')).toBeNull();
     expect(swapCampaignLocalePath('/en/fussball-quiz/liverpool-quiz', 'de')).toBeNull();
   });
+
+  it('names Turkish pages by what Turkish speakers search, in ASCII, and round-trips them', () => {
+    expect(campaignQuizPath('arsenal', 'tr')).toBe('/tr/futbol-bilgi-yarismasi/arsenal-testi');
+    expect(campaignQuizPath('club-badges', 'tr')).toBe('/tr/futbol-bilgi-yarismasi/logodan-takim-bilme');
+    expect(campaignQuizPath('spain', 'tr')).toBe('/tr/futbol-bilgi-yarismasi/ispanya-milli-takimi-testi');
+    expect(campaignSourceSlug('arjantin-milli-takimi-testi', 'tr')).toBe('argentina');
+    expect(swapCampaignLocalePath('/tr/futbol-bilgi-yarismasi/arsenal-testi', 'ka')).toBe('/ka/football-quiz/arsenal');
+    expect(swapCampaignLocalePath('/ka/football-quiz', 'tr')).toBe('/tr/futbol-bilgi-yarismasi');
+  });
+
+  it('keeps English slugs on the Georgian folder', () => {
+    expect(campaignQuizPath('arsenal', 'ka')).toBe('/ka/football-quiz/arsenal');
+    expect(campaignPublicSlug('career-path', 'ka')).toBe('career-path');
+  });
 });

@@ -53,6 +53,11 @@ export function PartnerGameCard({ tile, locale, index, fill = false }: { tile: P
               <Lock className="size-5 text-white/80" aria-hidden />
             )}
             <span className="font-poppins text-[10px] font-bold uppercase tracking-wide text-white">{statusLabel}</span>
+            {state === "done" && tile.lastResult && (
+              <span data-testid="partner-game-earned" className="font-poppins text-xl font-bold tabular-nums leading-tight text-brand-yellow">
+                {copy.earnedPoints(formatPartnerPoints(tile.lastResult.score, locale))}
+              </span>
+            )}
           </div>
         )}
       </div>

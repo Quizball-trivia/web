@@ -1,4 +1,4 @@
-import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
+import { GUEST_LOBBIES_ENABLED, RANKED_V2_ENABLED, ZONE_BOT_ENABLED } from '@/lib/config';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -368,6 +368,7 @@ interface ModeSelectionScreenProps {
   rankedProfileLoading?: boolean;
   /** Server-rendered content the public hub places between the cards and the footer. */
   beforeFooter?: React.ReactNode;
+  adSlot?: React.ReactNode;
 }
 
 
@@ -387,6 +388,7 @@ export function ModeSelectionScreen({
   rankedProfile,
   rankedProfileLoading = false,
   beforeFooter,
+  adSlot,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const tierLabelOf = useTierLabel();
@@ -500,10 +502,17 @@ export function ModeSelectionScreen({
   };
   const [rankedModalOpen, setRankedModalOpen] = useState(false);
   const openRankedFlow = () => setRankedModalOpen(true);
-  // "Find opponents": guests sign in; brand-new members get the training offer first.
+  // "Find opponents": guests sign in; brand-new members get the training offer first. Under the Ranked 2.0 beta,
+  // guests go straight to the queue instead — the beta is built for guest playtests (no RP, no tickets).
   const findRankedOpponents = () => {
     setRankedModalOpen(false);
-    if (isGuest) { openAuthPrompt(); return; }
+    if (isGuest) {
+      // Only a settled guest routes to the beta queue: isGuest is also true while auth is still loading, and a
+      // member mid-load must not be sent down the guest path.
+      if (settledGuest && RANKED_V2_ENABLED && ZONE_BOT_ENABLED && GUEST_LOBBIES_ENABLED) { router.push('/ranked2'); return; }
+      openAuthPrompt();
+      return;
+    }
     if (onRankedIntercept?.()) return;
     if (trainingOffer?.shouldOffer) {
       setTrainingOfferOpen(true);
@@ -622,10 +631,10 @@ export function ModeSelectionScreen({
             bottom edge and clip there (matches Figma node 1361:52, which sits
             ~104% down the card). The card's overflow-hidden does the clipping. */}
         <Image
-          src="/assets/brand/ranked-hands-trophy.svg"
+          src="/assets/brand/ranked-hands-ucl.webp"
           alt=""
-          width={257}
-          height={294}
+          width={600}
+          height={682}
           className="hidden lg:block absolute left-[52.6%] top-[15%] h-[90%] w-auto -translate-x-1/2 object-contain object-top pointer-events-none"
         />
 
@@ -758,10 +767,10 @@ export function ModeSelectionScreen({
             <div className="mt-3 flex items-end justify-between gap-3">
               <div className="flex flex-col items-start gap-2">
                 <Image
-                  src="/assets/brand/ranked-hands-trophy.svg"
+                  src="/assets/brand/ranked-hands-ucl.webp"
                   alt=""
-                  width={257}
-                  height={294}
+                  width={600}
+                  height={682}
                   className="h-[176px] w-auto object-contain pointer-events-none"
                 />
                 {!rankedProfileLoading && (
@@ -1111,6 +1120,7 @@ export function ModeSelectionScreen({
         <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />
       )}
       {beforeFooter}
+      {!rankedDemoOpen && adSlot}
       <SiteFooter />
     </motion.div>
   );

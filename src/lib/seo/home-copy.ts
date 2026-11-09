@@ -178,6 +178,29 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
       { q: "Was passiert, wenn ich mich nach einem Spiel registriere?", a: "Du kehrst zum Spiel zurück, das du gerade gespielt hast." },
     ],
   },
+  fr: {
+    metaTitle: "Quizball — Jeux de foot en ligne et quiz de football",
+    metaDescription: "Jeux de foot en ligne gratuits, sans inscription : quiz de culture foot, Morpion foot et défis entre amis sur Quizball.",
+    h1: "Jeux de foot en ligne : quiz et défis de culture foot",
+    intro: "Joue aux quiz de foot sur Quizball, le jeu officiel sur quizball.io. Essaie Morpion foot ou Enchères foot dans ton navigateur, ou télécharge Quizball sur Android. Crée un compte pour jouer en Duel classé et à la Weekend League. Chaque événement indique les récompenses en pièces du jeu et en packs cosmétiques rares.",
+    accessLine: "Joue en invité sans compte. Pour le Duel classé et la Weekend League, connecte-toi.",
+    nav: { games: "Jeux de foot", quizzes: "Quiz de foot", signIn: "Se connecter" },
+    sections: { competitive: "Défis et récompenses en jeu", daily: "Défis du jour", dailyHint: "Un nouveau défi chaque jour. Entraîne-toi ici, joue au vrai défi dans l’app.", dailyAll: "Tous les défis du jour", whyAccount: "Pourquoi créer un compte Quizball", quizzes: "Quiz de foot", faq: "Questions fréquentes" },
+    cards: { practice: "Manche d’entraînement", accountRequired: "Compte requis", guest: "Jouer en invité", playLabel: "Jouer", rankedTitle: "Duel classé", rankedText: "Teste tes connaissances en foot contre d’autres joueurs et améliore ton rang. Compte requis.", rankedCta: "S’inscrire en classé", wlTitle: "Weekend League", wlText: "Participe à la compétition du week-end de Quizball pour remporter des pièces du jeu et des objets cosmétiques rares. Compte requis ; les conditions de qualification et les règles de l’événement s’appliquent.", wlCta: "Voir les détails de la Weekend League", quizPage: "Ouvrir le quiz" },
+    whyAccount: [
+      "Joue en invité pour découvrir Quizball tout de suite. Crée un compte quand tu veux participer au Duel classé et à la Weekend League.",
+      "Améliore ton rang et suis le classement. Les récompenses de la Weekend League sont des pièces du jeu et des packs cosmétiques rares, jamais des espèces, des cartes cadeaux ou des bons d’achat. Avant de participer, vérifie le calendrier, les conditions de qualification et les récompenses de l’événement en cours.",
+      "Les résultats des parties d’entraînement en invité ne rapportent ni points de Duel classé ni pièces, et ne permettent pas de se qualifier pour la Weekend League.",
+    ],
+    about: { title: "À propos des jeux", text: "Quizball transforme tes connaissances du foot en jeux en ligne. Associe des joueurs à des catégories dans Morpion foot, fais tes choix dans Enchères foot ou réponds à des quiz de foot en mode Entre amis. Choisis le format qui te plaît et lis ses règles sur la page du jeu. Tu peux aussi découvrir des quiz sur les joueurs, les clubs et les championnats, puis rejoindre des compétitions avec compte quand tu es prêt." },
+    quizLinks: { hub: "Tous les quiz de foot", guessPlayer: "Devine le joueur", careerPath: "Quiz Parcours du joueur" },
+    faq: [
+      { q: "Tu peux jouer sans compte ?", a: "Oui. Les jeux en invité affichés ici sont accessibles sans inscription. Un compte est nécessaire pour le Duel classé et la Weekend League." },
+      { q: "Quelles sont les récompenses de la Weekend League ?", a: "La Weekend League offre des pièces du jeu et des packs cosmétiques rares. Les récompenses varient selon l’événement et le résultat. Elles restent dans le jeu : aucun versement, aucune carte cadeau ni aucun bon d’achat. Vérifie les conditions de qualification et les récompenses de l’événement actuel." },
+      { q: "Les scores des mini-jeux comptent-ils en Duel classé ?", a: "Les résultats des mini-jeux en invité ne rapportent pas de points de Duel classé et ne comptent pas pour la qualification à la Weekend League. La progression en Duel classé suit ses propres règles." },
+      { q: "Que se passe-t-il si tu t’inscris après une partie ?", a: "Tu retournes à la partie en cours." },
+    ],
+  },
 };
 
 export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDescription: string; h1: string; intro: string; reset: string }> = {
@@ -188,4 +211,5 @@ export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDes
   ru: { metaTitle: "Ежедневные футбольные испытания — новый набор каждый день | QuizBall", metaDescription: "Ежедневные футбольные испытания Quizball: Money Drop, «Верно или неверно», Countdown, Higher or Lower, Imposter и Card Detective. Тренируйся как гость, а настоящее ежедневное испытание проходи в приложении.", h1: "Ежедневные футбольные испытания", intro: "Каждый день — новый набор футбольных головоломок. Попробуй тренировочный раунд каждого испытания здесь, без аккаунта; настоящий ежедневный набор, монеты и серии ждут тебя в приложении.", reset: "Ежедневные наборы обновляются в 04:00 по времени Грузии (в полночь UTC)." },
   pt: { metaTitle: "Jogos diários de futebol — novos desafios todos os dias | QuizBall", metaDescription: "Os desafios diários do Quizball: Moedas nas respostas, Verdadeiro ou falso do futebol, Fale jogadores de futebol contra o relógio, Higher or Lower do futebol: quem vale mais?, Encontre o intruso e Adivinhe o jogador pela carta. Treine como visitante; jogue o desafio diário oficial no app.", h1: "Jogos diários de futebol", intro: "Todos os dias, você encontra novos desafios de futebol. Experimente aqui uma rodada de treino de cada jogo sem criar uma conta. O desafio diário oficial, as moedas e sua sequência ficam no app.", reset: "Os desafios diários são renovados às 04:00 no horário da Geórgia (meia-noite UTC)." },
   de: { metaTitle: "Tägliche Fußball-Rätsel — jeden Tag neue Challenges | QuizBall", metaDescription: "Quizballs tägliche Fußball-Rätsel: Münzen verteilen, Wahr oder falsch, Countdown, Higher or Lower, Wer passt nicht? und Spielerkarte erraten. Übe als Gast; spiele die echte Tages-Challenge in der App.", h1: "Tägliche Fußball-Rätsel", intro: "Jeden Tag neue Fußballrätsel. Probiere hier von jedem eine Übungsrunde ohne Konto aus; das echte Tages-Set, Münzen und Serien findest du in der App.", reset: "Die Tages-Sets werden um 04:00 Uhr georgischer Zeit (Mitternacht UTC) zurückgesetzt." },
+  fr: { metaTitle: "Défis de foot du jour — un nouveau défi chaque jour | QuizBall", metaDescription: "Défis du jour de Quizball : Répartis tes pièces, Vrai ou faux, Cite le plus de joueurs, Higher or Lower, Trouve l’intrus et Devine la carte. Entraîne-toi en invité, joue au défi officiel dans l’app.", h1: "Jeux quotidiens de foot", intro: "Chaque jour, une nouvelle sélection de quiz de foot. Essaie ici une manche d’entraînement de chaque jeu sans compte ; le vrai défi du jour, les pièces et ta série sont dans l’app.", reset: "Les sélections quotidiennes se renouvellent à 04 h 00, heure de Géorgie (minuit UTC)." },
 };

@@ -619,7 +619,10 @@
     "subtitle": "Complete objetivos da partida para ganhar moedas e XP automaticamente.",
     "tabDaily": "Diário",
     "tabWeekly": "Semanal",
-    "back": "Voltar"
+    "back": "Voltar",
+    "loading": "Carregando objetivos...",
+    "error": "Não foi possível carregar os objetivos. Tente atualizar.",
+    "empty": "Nenhum objetivo disponível."
   },
   "homeDashboard": {
     "dailyObjectives": "Objetivos diários",
@@ -1499,6 +1502,8 @@
     "readyCopyRoomGameUpTo4": "De 2 a 4 jogadores. Quando todos estiverem prontos, quem criou a sala pode iniciar.",
     "readyCopyRoomGameUpTo8": "De 2 a 8 jogadores. Quando todos estiverem prontos, quem criou a sala pode iniciar.",
     "startRoomGame": "Iniciar jogo",
+    "startVsBot": "Jogar contra o bot",
+    "readyCopyVsBot": "Pronto? Começa uma partida de treino contra o bot.",
     "roomTabSharedPlayer": "Jogou nos Dois (2–6)",
     "roomSharedPlayer": "Jogou nos Dois · 2 a 6 jogadores",
     "roomSharedPlayerDescription": "Dois clubes aparecem, e todos correm para dizer o nome de um jogador que atuou pelos dois. Com 2 jogadores, quem acertar primeiro ganha o ponto; com 3 ou mais, quanto mais rápido você responder, mais pontos ganha. Sem moedas nem RP em jogo.",
@@ -1514,12 +1519,18 @@
     "roomTabDatoFalso": "Qual é o Falso? (2–6)",
     "roomDatoFalso": "Qual é o Falso? · 2 a 6 jogadores",
     "roomDatoFalsoDescription": "Todos recebem a mesma carta ao mesmo tempo: um jogador, uma afirmação e cinco opções, uma delas falsa. Encontre-a. Cada jogador tem dois curingas por partida. Sem moedas nem RP em jogo.",
+    "roomTabZoneMatch": "Ranked 2.0 (beta)",
+    "roomZoneMatch": "Ranked 2.0 beta · 1 contra 1",
+    "roomZoneMatchDescription": "O novo ranqueado: ataque zona a zona, vença duelos de perguntas, use seus estilos e marque. Partida de teste sem moedas nem RP.",
     "roomTabConexiones": "Conexões do futebol (1v1)",
     "roomConexiones": "Conexões do futebol · 1 contra 1",
     "roomConexionesDescription": "Cinco tabuleiros de 16 jogadores. Em turnos, encontre um grupo de quatro: uma tentativa cada, acertando ou não. Os últimos quatro? Diga o que os liga e leve o ponto. Sem moedas nem RP em jogo.",
     "roomTabDarts501": "Dardos de futebol 501",
     "roomDarts501": "Dardos de futebol 501 · 2–6 jogadores",
     "roomDarts501Description": "Todos começam no 501. Cada dardo é um jogador da categoria do leg, e o número dele sai. Feche entre 0 e −10; mais de 180 não pontua. Melhor de 3 legs. Sem moedas nem RP em jogo.",
+    "roomTabDraft": "Draft de futebol",
+    "roomDraft": "Draft de futebol · 2–6 jogadores",
+    "roomDraftDescription": "Todos montam o time com os mesmos giros, e um jogador escolhido sai da disputa. Time contra time se decide em dois jogos, ida e volta. Sem moedas nem RP em jogo.",
     "roomOptionTournament": "Torneio",
     "roomTournamentRandom": "Aleatório",
     "roomTournamentTooSmall": "Este torneio não comporta tantos jogadores: escolha um maior.",
@@ -1903,6 +1914,9 @@
     "finalizingResult": "Finalizando resultado..."
   },
   "training": {
+    "demoEndMessage": "Este é o nosso principal modo 1v1: no ranqueado, o adversário é um jogador de verdade.",
+    "demoEndDone": "Concluir",
+    "demoBack": "Voltar às demos",
     "loadError": "Não foi possível carregar as perguntas do tutorial. Tente novamente.",
     "retryLoading": "Tentar novamente",
     "exitLoading": "Sair do tutorial",
@@ -2624,7 +2638,11 @@
     "rewardEntryRule": "Inscrição grátis. Ganhe a quantidade de QP exigida pelo evento jogando no Ranqueado, inscreva-se e confirme presença antes do apito inicial.",
     "rewardScoringRule": "A classificação final define os vencedores: primeiro, pela pontuação; depois, pelo tempo total de resposta. Valem as verificações de jogo limpo. Só jogadores reais contam na classificação: bots não ganham recompensas.",
     "rewardNonCash": "Recompensas apenas no jogo. Sem dinheiro, vales ou cartões-presente. Itens e moedas não podem ser negociados, transferidos ou trocados por dinheiro.",
-    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido."
+    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido.",
+    "statusChampion": "Você é o campeão!",
+    "statusWrapped": "Fim de semana encerrado",
+    "statusFinished": "Você terminou em #{rank}º lugar.",
+    "statusSeeYou": "Até o próximo fim de semana."
   },
   "wlAward": {
     "title1": "Campeão da Weekend League",

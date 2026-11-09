@@ -4,11 +4,12 @@ import { motion } from 'motion/react';
 import { CalendarDays, Trophy } from 'lucide-react';
 
 import { useLocale } from '@/contexts/LocaleContext';
+import { labelColon } from "@/lib/i18n/typography";
 
 const MIN_RANK_TIER = 'Rotation';
 
 export function UpcomingEventScreen() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pb-24 font-fun">
@@ -42,7 +43,7 @@ export function UpcomingEventScreen() {
         <div className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-white/90">
           <CalendarDays className="size-4 shrink-0 text-brand-yellow" aria-hidden />
           <span>
-            {t('events.startsLabel')}: <span className="text-white">{t('events.startsValue')}</span>
+            {t('events.startsLabel')}{labelColon(locale)} <span className="text-white">{t('events.startsValue')}</span>
           </span>
         </div>
 

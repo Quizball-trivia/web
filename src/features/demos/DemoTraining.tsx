@@ -22,7 +22,7 @@ function demoBanCategories(locale: Locale): CategorySummary[] {
 
 export function DemoTraining({ backHref = "/demos", onExit }: { backHref?: string; onExit?: () => void } = {}) {
   const router = useRouter();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const embedded = Boolean(onExit);
 
   const questions = useMemo(
@@ -37,17 +37,11 @@ export function DemoTraining({ backHref = "/demos", onExit }: { backHref?: strin
   }, [onExit, backHref, router]);
 
   const resultsCopy = useMemo(
-    () =>
-      locale === "ka"
-        ? {
-            message: "ასე გამოიყურება ჩვენი მთავარი 1v1 რეჟიმი — რეიტინგულ თამაშში მოწინააღმდეგე ნამდვილი მოთამაშეა.",
-            cta: embedded ? "დახურვა" : "დემოებზე დაბრუნება",
-          }
-        : {
-            message: "That's our flagship 1v1 mode — in ranked play the opponent is a real player.",
-            cta: embedded ? "Done" : "Back to demos",
-          },
-    [locale, embedded],
+    () => ({
+      message: t("training.demoEndMessage"),
+      cta: embedded ? t("training.demoEndDone") : t("training.demoBack"),
+    }),
+    [t, embedded],
   );
 
   return (

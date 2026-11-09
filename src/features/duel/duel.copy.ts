@@ -27,6 +27,8 @@ export interface DuelCopy {
   };
   ul: {
     category: (n: number, total: number) => string;
+    /** Who suggested the category, under its title. */
+    credit: (name: string) => string;
     perTurn: (s: number) => string;
     left: (n: number, total: number) => string;
     starts: (name: string) => string;
@@ -128,6 +130,7 @@ const es: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Categoría ${n} de ${total}`,
+    credit: (name) => `Créditos a ${name}`,
     perTurn: (s) => `${s} s por turno`,
     left: (n, total) => `quedan ${n} de ${total}`,
     starts: (name) => `Arranca ${name}`,
@@ -253,6 +256,7 @@ const en: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Category ${n} of ${total}`,
+    credit: (name) => `Credits to ${name}`,
     perTurn: (s) => `${s} s per turn`,
     left: (n, total) => `${n} of ${total} left`,
     starts: (name) => `${name} starts`,
@@ -378,6 +382,7 @@ const ka: DuelCopy = {
   },
   ul: {
     category: (n, total) => `კატეგორია ${n} / ${total}`,
+    credit: (name) => `იდეის ავტორი: ${name}`,
     perTurn: (s) => `${s} წმ სვლაზე`,
     left: (n, total) => `დარჩა ${n} / ${total}`,
     starts: (name) => `იწყებს ${name}`,
@@ -503,6 +508,7 @@ const tr: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Kategori ${n} / ${total}`,
+    credit: (name) => `Katkı: ${name}`,
     perTurn: (s) => `Tur başına ${s} sn`,
     left: (n, total) => `${total} içinden ${n} kaldı`,
     starts: (name) => `${name} başlıyor`,
@@ -628,6 +634,7 @@ const ru: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Категория ${n} из ${total}`,
+    credit: (name) => `Идея: ${name}`,
     perTurn: (s) => `${s} с на ход`,
     left: (n, total) => `Осталось ${n} из ${total}`,
     starts: (name) => `Начинает ${name}`,
@@ -753,6 +760,7 @@ const pt: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Categoria ${n} de ${total}`,
+    credit: (name) => `Créditos a ${name}`,
     perTurn: (s) => `${s} s por vez`,
     left: (n, total) => `Restantes: ${n}/${total}`,
     starts: (name) => `${name} começa`,
@@ -878,6 +886,7 @@ const de: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Kategorie ${n} von ${total}`,
+    credit: (name) => `Idee von ${name}`,
     perTurn: (s) => `${s} s pro Runde`,
     left: (n, total) => `${n} von ${total} übrig`,
     starts: (name) => `${name} beginnt`,
@@ -977,7 +986,133 @@ const de: DuelCopy = {
   },
 };
 
-const COPY: Record<Locale, DuelCopy> = { es, en, ka, tr, ru, pt, de };
+const fr: DuelCopy = {
+  games: { buscaminas: "Démineur foot", pistas: "Devine le joueur", ultimo: "Cite-les tous !", minuto: "À quelle minute ?" },
+  playWithFriend: "Jouer avec un ami",
+  playWithFriendHint: "Envoie le lien et joue en direct, face à face.",
+  you: "Toi",
+  connecting: "Connexion…",
+  waitingRival: (name) => `En attente : ${name}…`,
+  getReady: "C’est parti !",
+  yourTurn: "À toi de jouer",
+  theirTurn: (name) => `À ${name} de jouer`,
+  round: (n, total) => `Manche ${n}/${total}`,
+  player: (n, total) => `Joueur ${n}/${total}`,
+  points: (n) => `${n} ${n === 0 || n === 1 ? "point" : "points"}`,
+  secondsLeft: (n) => `${n} s`,
+  idleWarning: "Tu es toujours là ? Si tu ne joues pas, tu perds le match.",
+  bm: {
+    pick: "Choisis un joueur qui correspond à la catégorie",
+    random: "au hasard",
+    youMine: (rival, pts) => `Tu as touché une mine · +${pts} pour ${rival}`,
+    rivalMine: (name, pts) => `${name} a touché une mine · +${pts} pour toi`,
+    cleared: (pts) => `Les 12 ont été trouvés ! +${pts} pour chacun`,
+    found: (n, of) => `${n}/${of} trouvé${n < 2 ? "" : "s"}`,
+    impostor: "Intrus",
+  },
+  ul: {
+    category: (n, total) => `Catégorie ${n} sur ${total}`,
+    credit: (name) => `Crédits\u00a0: ${name}`,
+    perTurn: (s) => `${s} s par tour`,
+    left: (n, total) => `Il en reste ${n} sur ${total}`,
+    starts: (name) => `${name} commence`,
+    errors: "erreurs",
+    placeholder: "Saisis une réponse",
+    say: "Dire",
+    wrong: (who, t) => `✗ ${who} : « ${t} » ne figure pas dans la liste`,
+    repeat: (who, t) => `↺ ${who} : « ${t} » a déjà été cité`,
+    ambiguous: (t) => `Quel « ${t} » ? Saisis le nom complet`,
+    youStand: "Tu es le dernier en lice !",
+    rivalStands: (name) => `${name} est le dernier en lice`,
+    both: "Liste complète ! Un point chacun",
+    outTime: (name, me) => (me ? "Tu as manqué de temps" : `${name} a manqué de temps`),
+    outMisses: (name, me) => (me ? "Tu as fait 3 erreurs" : `${name} a fait 3 erreurs`),
+    complete: "Il ne reste rien à citer",
+    left2: (n) => `Encore ${n} à citer`,
+  },
+  md: {
+    question: "À quelle minute ?",
+    waitingRival: (name) => `Réponse envoyée · en attente : ${name}…`,
+    revealing: "Les deux ont répondu !",
+    youExact: "Minute exacte ! +3",
+    rivalExact: (name) => `${name} a trouvé : +3`,
+    bothExact: "Les deux ont trouvé ! +3 chacun",
+    youCloser: "Tu étais plus proche : +1",
+    rivalCloser: (name) => `${name} était plus proche : +1`,
+    tie: "Tout aussi proches : +1 chacun",
+    nobody: "Personne n’a répondu",
+    was: (minute) => `C’était à la minute ${minute}`,
+    answered: "A répondu",
+    thinking: "Réfléchit…",
+    noAnswer: "Aucune réponse",
+  },
+  pf: {
+    pointsInPlay: "points en jeu",
+    nextClue: "Indice suivant",
+    skip: "Passer au suivant",
+    guess: "Deviner",
+    placeholder: "Nom de famille du joueur",
+    youPassed: "Tu as demandé un autre indice",
+    rivalPassed: (name) => `${name} veut un autre indice`,
+    lockedYou: "Mauvaise réponse : ton adversaire continue",
+    lockedRival: (name, clues) => `${name} s’est trompé · il te reste jusqu’à ${clues} ${clues < 2 ? "indice" : "indices"}`,
+    tried: (name, text) => `${name} a tenté « ${text} »`,
+    solvedBy: (name, pts) => `${name} a trouvé ! +${pts}`,
+    youSolved: (pts) => `Tu as trouvé ! +${pts}`,
+    nobody: "Personne n’a trouvé",
+    answerWas: "C’était",
+  },
+  result: {
+    win: "Victoire !",
+    lose: "Défaite",
+    draw: "Match nul",
+    cancelled: "Le match a été annulé",
+    forfeit: (name) => `${name} a abandonné le match`,
+    idle: (name) => `${name} a arrêté de jouer`,
+    noShow: (name) => `${name} n’a jamais rejoint le match`,
+    disconnect: (name) => `${name} s’est déconnecté et n’est pas revenu`,
+    youForfeit: "Tu as abandonné le match",
+    youIdle: "Tu as arrêté de jouer",
+    youDisconnect: "Tu t’es déconnecté et tu n’es pas revenu à temps",
+    youNoShow: "Tu n’as jamais rejoint le match",
+    backToRoom: "Retour au salon",
+    exit: "Quitter",
+  },
+  forfeit: { button: "Abandon", confirm: "Abandonner le match ? Ton adversaire gagne.", yes: "Oui, abandonner", no: "Continuer à jouer" },
+  retry: "Réessayer",
+  intro: {
+    vs: "VS",
+    go: "Jouer !",
+    startsIn: "Début dans",
+    rules: {
+      pistas: ["Les mêmes indices pour tous les deux, un par un.", "Le premier à trouver marque 11 − le nombre d’indices.", "Si tu te trompes, ton adversaire reçoit jusqu’à 3 indices de plus."],
+      buscaminas: ["Choisis un joueur à ton tour.", "Si tu touches une mine, ton adversaire marque des points.", "Les 12 trouvés : des points pour les deux."],
+      ultimo: ["Cite à tour de rôle des réponses de la catégorie, sans répétition.", "20 s par tour, puis moins à chaque tour. Si tu manques de temps ou fais 3 erreurs, tu perds la catégorie.", "Le premier à remporter 3 catégories gagne."],
+      minuto: ["Le même but pour les deux : saisis la minute.", "Minute exacte : 3 points. Sinon, la réponse la plus proche marque 1 point.", "Aucun ne voit la minute de l’autre avant que les deux aient répondu."],
+    },
+  },
+  pause: {
+    rivalGone: (name) => `${name} s’est déconnecté`,
+    waiting: "En attente de son retour…",
+    ifNotBack: "Si ton adversaire ne revient pas à temps, tu remportes le match.",
+    reconnecting: "Reconnexion…",
+  },
+  offline: "Hors ligne · reconnexion…",
+  activeDuel: { title: "Tu as un duel en cours", back: "Retour au duel" },
+  errors: {
+    not_your_turn: "Ce n’est pas encore ton tour",
+    locked_out: "Tu t’es déjà trompé pour ce joueur",
+    rate_limited: "Ralentis…",
+    duel_not_found: "Impossible de trouver ce match",
+    not_in_match: "Ce n’est pas ton match",
+    empty_guess: "Saisis un nom de famille",
+    already_answered: "Tu as déjà répondu pour ce but",
+    stale_round: "Le défi autour de ce but est terminé",
+    default: "Une erreur s’est produite. Réessaie.",
+  },
+};
+
+const COPY: Record<Locale, DuelCopy> = { es, en, ka, tr, ru, pt, de, fr };
 
 export const duelCopy = (locale: Locale): DuelCopy => COPY[locale] ?? es;
 

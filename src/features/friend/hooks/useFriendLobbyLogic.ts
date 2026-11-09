@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 
-const LOBBY_LOCALES = ["en", "ka", "es", "pt", "de", "tr", "ru"] as const;
+const LOBBY_LOCALES = ["en", "ka", "es", "pt", "de", "fr", "tr", "ru"] as const;
 const asLobbyLocale = (locale: string): (typeof LOBBY_LOCALES)[number] =>
   (LOBBY_LOCALES as readonly string[]).includes(locale) ? (locale as (typeof LOBBY_LOCALES)[number]) : "en";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -86,6 +86,8 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   MEMBER_BUSY: "friend.errorMemberBusy",
   LOBBY_GUEST_LIMIT: "friend.errorGuestLimit",
   LOBBY_FULL: "friend.inviteFullTitle",
+  LOBBY_GAME_STARTED: "friend.inviteInProgressDescription",
+  LOBBY_ENDED: "friend.inviteEndedTitle",
   LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
   RATE_LIMITED: "friend.errorRateLimited",
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
@@ -117,7 +119,7 @@ function isJoinEcho(error: { code: string; meta?: unknown }, inviteCode: string 
   const meta = (error.meta ?? {}) as { inviteCode?: string; source?: string; reason?: string };
   // Join refusals (not found, full, account-only, guest limit) name the invite code; other room errors never do.
   if (typeof meta.inviteCode === "string") return meta.inviteCode.toUpperCase() === inviteCode;
-  return meta.source === "session:blocked" && (meta.reason === "INVALID_INVITE" || meta.reason === "LOBBY_NOT_FOUND");
+  return meta.source === "session:blocked" && (["INVALID_INVITE", "LOBBY_NOT_FOUND", "LOBBY_GAME_STARTED", "LOBBY_ENDED"].includes(meta.reason ?? ""));
 }
 
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
@@ -535,11 +537,11 @@ export function useFriendLobbyLogic({
         // arrive after a language switch: translate with the current language, not the one at send time.
         if (inviteFailureKind({ reasonCode: result.code, room }) === "failed") toast.error(tRef.current(messageKey));
       };
-      // Reopening the invite of your own room while its match runs: the join only finds waiting rooms, so it says
-      // "not found" — but the player still has that room (the server's snapshot lists it as open). Wait briefly for
+      // Reopening your own active room: the join says "game started" (older servers say "not found"),
+      // but the player still has that room in the server snapshot. Wait briefly for
       // its state: when it is this code's room, the room screen hands off to the match and no failure is shown.
       const isOwnRoom = () => useRealtimeMatchStore.getState().lobby?.inviteCode?.toUpperCase() === targetCode;
-      if (result.code === "LOBBY_NOT_FOUND" && (isOwnRoom() || ("stateSnapshot" in result && (result.stateSnapshot?.openLobbyIds.length ?? 0) > 0))) {
+      if ((result.code === "LOBBY_NOT_FOUND" || result.code === "LOBBY_GAME_STARTED") && (isOwnRoom() || ("stateSnapshot" in result && (result.stateSnapshot?.openLobbyIds.length ?? 0) > 0))) {
         const startedAt = Date.now();
         const check = () => {
           ownRoomWaitRef.current = null;
@@ -948,8 +950,9 @@ export function useFriendLobbyLogic({
     if (!game) return undefined;
     // Codenames' board (pictures or words) is part of what a Ready agrees to: one pressed on the old board is refused.
     // The board shown is the room's stored one (its picker appears once the room is on Codenames); otherwise Pictures.
-    if (game.gameMode !== "room_game" || game.roomGame !== "codenames") return game;
-    const options = settings?.gameMode === "room_game" && settings.roomGame === "codenames" ? settings.roomOptions ?? null : null;
+    // Football Draft's version, league, era and formation are agreed the same way.
+    if (game.gameMode !== "room_game" || (game.roomGame !== "codenames" && game.roomGame !== "draft")) return game;
+    const options = settings?.gameMode === "room_game" && settings.roomGame === game.roomGame ? settings.roomOptions ?? null : null;
     return { ...game, roomOptions: roomOptionsKey(options) };
   };
 

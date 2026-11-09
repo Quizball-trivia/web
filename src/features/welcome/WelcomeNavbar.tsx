@@ -54,7 +54,7 @@ export function WelcomeNavbar() {
         </div>
         <div className="flex items-center gap-2.5">
           <div className="relative shrink-0">
-            <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
+            <Image src="/assets/brand/ucl-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
           </div>
         </div>
       </div>

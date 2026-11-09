@@ -9,6 +9,7 @@ export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = {
   ru: "futbolnye-igry",
   pt: "jogos-de-futebol",
   de: "fussballspiele",
+  fr: "jeux-de-foot",
 };
 
 export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
@@ -19,4 +20,5 @@ export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
   ru: "ezhednevnye-golovolomki",
   pt: "jogos-diarios",
   de: "taegliche-raetsel",
+  fr: "jeux-quotidiens",
 };

@@ -13,6 +13,8 @@ import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
+import { labelColon } from "@/lib/i18n/typography";
+import { useLocale } from "@/contexts/LocaleContext";
 
 // The imposter reveal sting is ~2s long; delay the reveal to match it.
 const IMPOSTER_REVEAL_DELAY_MS = 2000;
@@ -53,6 +55,7 @@ export function ImposterGame({
   const [finished, setFinished] = useState(false);
   const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
+  const { locale } = useLocale();
 
   // Embedded flows: report completion immediately instead of holding on the
   // daily-challenge modal ("see you tomorrow" makes no sense there).
@@ -194,7 +197,7 @@ export function ImposterGame({
           scoreSlot={
             !embedded && (
               <>
-                {copy.score}: <span className="text-white">{correctCount}</span>
+                {copy.score}{labelColon(locale)} <span className="text-white">{correctCount}</span>
               </>
             )
           }

@@ -7,16 +7,21 @@ import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import {
+  BLUFF_CARDS,
   CARD_BY_ID,
   DECK_SIZE,
   deckCost,
   type CardId,
   type CardPhase,
 } from './zoneMatch.cards';
-import { PHASE_CURTAIN_MS, cardBlocker, reactionBlocker, revealedCard, unusedCategories, type MatchState } from './zoneMatch.machine';
+import { cardBlocker, reactionBlocker, revealedCard, unusedCategories, type MatchState } from './zoneMatch.machine';
 import { CARD_TYPE_THEME, CardBack, CardFace, CardGlyph, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
 import { FutCard, reactionFor, type FutReaction, type SlotBurst } from './ZoneMatchFutCard';
 import { PlaystyleRow } from './ZoneMatchPlaystyleRow';
+import { revealSchedule } from './zoneMatch.reveal';
+import type { CardBlocker } from './zoneMatch.machine';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -29,16 +34,21 @@ function EnergyCost({ value, className }: { value: number | string; className?: 
   );
 }
 
-/** Desktop layout (card beside the list) from Tailwind's lg breakpoint. */
-const DESKTOP_QUERY = '(min-width: 1024px)';
-const subscribeDesktop = (onChange: () => void) => {
-  const media = window.matchMedia(DESKTOP_QUERY);
-  media.addEventListener('change', onChange);
-  return () => media.removeEventListener('change', onChange);
-};
-export function useDesktop(): boolean {
-  return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
+/** Whether a media query matches, kept in sync (server render: false). */
+export function useMediaQuery(query: string): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia(query);
+      media.addEventListener('change', onChange);
+      return () => media.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }
+
+/** Desktop layout (card beside the list) from Tailwind's lg breakpoint. */
+export const useDesktop = (): boolean => useMediaQuery('(min-width: 1024px)');
 
 export interface RevealSeat {
   name: string;
@@ -97,45 +107,50 @@ function useRevealCardWidth(paused: boolean) {
 /**
  * The showdown's second beat: both loadouts face to face, always the same size. One grid holds both sides — the cards
  * on one row, then a row per playstyle slot — so row i on the left and row i on the right always share a height, and
- * the panels are drawn behind those rows. Tap a playstyle for its full rule. Ready skips the rest of the wait.
+ * the panels are drawn behind those rows. Tap a playstyle for its full rule. It runs on its timer (no Ready).
  */
 export function DeckReveal({
   decks,
   seats,
   timeLeft,
-  onReady,
 }: {
   decks: Record<DuelSide, CardId[]>;
   seats: Record<DuelSide, RevealSeat>;
   timeLeft: number | null;
-  onReady: () => void;
 }) {
-  const [ready, setReady] = useState(false);
+  const { c } = useZoneCopy();
   /** The open row, as `side:index`. */
   const [open, setOpen] = useState<string | null>(null);
   const desktop = useDesktop();
   const { rootRef, cellRef, width } = useRevealCardWidth(open !== null);
   const rows = Math.max(DECK_SIZE, decks.player.length, decks.opponent.length);
+  // One card at a time: yours, then theirs, each reaction played out, then time to read (zoneMatch.reveal).
+  const schedule = useMemo(() => revealSchedule(decks), [decks]);
+  const [reading, setReading] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setReading(true), schedule.readFrom);
+    return () => window.clearTimeout(id);
+  }, [schedule]);
 
   return (
     <div ref={rootRef} className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-2 gap-y-2 pb-4 sm:gap-x-4">
       <header className="col-span-3 mb-1 text-center">
-        <div className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-yellow">Showdown</div>
-        <h1 className="text-2xl uppercase leading-tight text-white sm:text-3xl" style={poppins}>Playstyles</h1>
+        <div className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-yellow">{c.common.showdown}</div>
+        <h1 className="text-2xl uppercase leading-tight text-white sm:text-3xl" style={poppins}>{c.reveal.playstyles}</h1>
         <div className="mt-0.5 text-[11px] text-white/55 sm:text-xs">
-          Each works once<span className="max-sm:hidden"> · tap theirs at the top during the match</span>
+          {c.common.eachWorksOnce}<span className="max-sm:hidden"> · {c.reveal.tapTheirs}</span>
         </div>
       </header>
 
       {/* Both player cards facing off, the same size, their playstyles landing one by one once the phase curtain has lifted. */}
       <div ref={cellRef} className="flex justify-center" style={{ gridColumn: 1, gridRow: 2 }}>
-        <RevealCard seat={seats.player} cards={decks.player} width={width} startMs={PHASE_CURTAIN_MS + 300} />
+        <RevealCard seat={seats.player} cards={decks.player} width={width} landAt={schedule.landAt.player} />
       </div>
       <div className="self-center text-2xl font-black italic text-white/30 sm:text-4xl" style={{ ...poppins, gridColumn: 2, gridRow: 2 }}>
         VS
       </div>
       <div className="flex justify-center" style={{ gridColumn: 3, gridRow: 2 }}>
-        <RevealCard seat={seats.opponent} cards={decks.opponent} width={width} startMs={PHASE_CURTAIN_MS + 1900} mirror />
+        <RevealCard seat={seats.opponent} cards={decks.opponent} width={width} landAt={schedule.landAt.opponent} mirror />
       </div>
 
       {/* The two panels, behind their header and slot rows. */}
@@ -181,7 +196,8 @@ export function DeckReveal({
                   badgeSize={desktop ? 52 : 36}
                   open={open === key}
                   onToggle={() => setOpen((current) => (current === key ? null : key))}
-                  reveal={{ delay: PANEL_DELAY[side] + 0.2 + i * 0.18, from: side === 'player' ? -16 : 16 }}
+                  // Its row appears as the card lands on the player card.
+                  reveal={{ delay: (schedule.landAt[side][i] ?? 0) / 1000, from: side === 'player' ? -16 : 16 }}
                 />
               )}
             </div>
@@ -189,45 +205,35 @@ export function DeckReveal({
         }),
       )}
 
-      {/* What's next on the left, Ready on the right — as wide as the panels. */}
-      <div className="col-span-3 mt-2 flex items-center gap-3" style={{ gridRow: 4 + rows }}>
-        <div className="min-w-0 flex-1 text-[11px] font-black uppercase tracking-wide text-white/55">
-          Your categories{timeLeft !== null ? ` in ${timeLeft}` : ' next'}
+      {/* What's happening, and once every card is in, the countdown to the categories (no Ready: it runs on time). */}
+      <div className="col-span-3 mt-2 flex items-center justify-center gap-3" style={{ gridRow: 4 + rows }}>
+        <div className="rounded-full bg-white/[0.06] px-4 py-2 text-center text-xs font-black uppercase tracking-wide text-white/75" style={poppins}>
+          {reading ? fill(c.reveal.remember, { s: timeLeft ?? 0 }) : c.reveal.revealing}
         </div>
-        <button
-          type="button"
-          disabled={ready}
-          onClick={() => {
-            setReady(true);
-            onReady();
-          }}
-          className="rounded-2xl bg-brand-green px-8 py-3 text-base uppercase text-white shadow-[0_4px_0_rgba(45,149,11,1)] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none disabled:opacity-50"
-          style={poppins}
-        >
-          Ready
-        </button>
       </div>
     </div>
   );
 }
 
 /** A seat's FUT card at the showdown: its three playstyles land on it one after another. */
-function RevealCard({ seat, cards, width, startMs, mirror = false }: { seat: RevealSeat; cards: CardId[]; width: number; startMs: number; mirror?: boolean }) {
+function RevealCard({ seat, cards, width, landAt, mirror = false }: { seat: RevealSeat; cards: CardId[]; width: number; landAt: number[]; mirror?: boolean }) {
   const [landed, setLanded] = useState(0);
   // Keyed on the loadout's contents, not the array: the screen re-renders every clock tick.
   const count = cards.length;
   const loadout = cards.join(',');
+  const times = landAt.join(',');
   useEffect(() => {
-    const timers = Array.from({ length: count }, (_, i) => window.setTimeout(() => setLanded(i + 1), startMs + i * 520));
+    const timers = times.split(',').slice(0, count).map((at, i) => window.setTimeout(() => setLanded(i + 1), Number(at)));
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [loadout, count, startMs]);
+  }, [loadout, count, times]);
   const last = landed > 0 ? cards[landed - 1] : null;
   const lastType = last ? CARD_BY_ID[last].type : null;
   // Stable between clock ticks, so the card's figure keeps its animation loop running instead of restarting it.
   const bursts = useMemo<SlotBurst[]>(() => (lastType ? [{ slot: landed - 1, key: landed, type: lastType }] : []), [landed, lastType]);
   const reaction = useMemo<FutReaction | null>(
-    () => (lastType ? reactionFor(landed === count ? 'complete' : lastType, landed, startMs) : null),
-    [landed, lastType, count, startMs],
+    // The card's own reaction (golden boot on, flag raised, gloves pulled on…), the full-loadout celebration after the last.
+    () => (last && lastType ? reactionFor(lastType, landed, landed, last, landed === count) : null),
+    [landed, last, lastType, count],
   );
   return (
     <FutCard
@@ -267,9 +273,10 @@ function PanelHeader({ side, seat, cards }: { side: DuelSide; seat: RevealSeat; 
 
 /** The seat's name in its side's colour (the FUT card right above already shows who they are). */
 function SeatName({ seat, side }: { seat: RevealSeat; side: DuelSide }) {
+  const { c } = useZoneCopy();
   return (
     <span className={cn('min-w-0 truncate text-sm uppercase sm:text-lg', side === 'player' ? 'text-brand-blue' : 'text-brand-red-soft')} style={poppins}>
-      {side === 'player' ? 'You' : seat.name}
+      {side === 'player' ? c.common.you : seat.name}
     </span>
   );
 }
@@ -289,9 +296,9 @@ export function DeckDetails({ cards, used = [] }: { cards: CardId[]; used?: Card
 // ── In play ──────────────────────────────────────────────────────────────────
 
 /** Why the player can't play `id` in the open window, or null when they can. */
-export function handBlocker(state: MatchState, id: CardId, phase: CardPhase | null): string | null {
-  if (state.used.player.includes(id)) return 'Already used this match';
-  if (!phase) return 'No card window right now';
+export function handBlocker(state: MatchState, id: CardId, phase: CardPhase | null): CardBlocker | 'already-used' | 'no-window' | null {
+  if (state.used.player.includes(id)) return 'already-used';
+  if (!phase) return 'no-window';
   if (CARD_BY_ID[id].phase === 'reaction' && phase === 'reaction') return reactionBlocker(state, 'player', id);
   return cardBlocker(state, 'player', id, phase);
 }
@@ -351,10 +358,11 @@ export function CardInspector({
   onClose,
 }: {
   id: CardId;
-  blocker: string | null;
+  blocker: ReturnType<typeof handBlocker>;
   onPlay: () => void;
   onClose: () => void;
 }) {
+  const { c } = useZoneCopy();
   const card = CARD_BY_ID[id];
   const phase = PHASE_INFO[card.phase];
   const role = ROLE_INFO[card.role];
@@ -374,7 +382,7 @@ export function CardInspector({
           animate={{ opacity: 1, transition: { delay: 0.1 } }}
           exit={{ opacity: 0, transition: { duration: 0.1 } }}
         >
-          {card.effect}
+          {c.cards[id].effect}
         </motion.p>
         <motion.div
           className="pointer-events-auto flex w-full max-w-[320px] flex-col gap-2"
@@ -384,28 +392,28 @@ export function CardInspector({
         >
           <div className="grid grid-cols-2 gap-1.5 text-[10px] uppercase leading-tight text-white/75" style={poppins}>
             <span className="flex items-center gap-1.5 rounded-xl bg-white/[0.08] px-2.5 py-2">
-              <phase.Icon className="size-3.5 shrink-0 text-brand-yellow" /> {phase.long}
+              <phase.Icon className="size-3.5 shrink-0 text-brand-yellow" /> {c.phases[card.phase].long}
             </span>
             <span className="flex items-center gap-1.5 rounded-xl bg-white/[0.08] px-2.5 py-2">
-              <role.Icon className="size-3.5 shrink-0" style={{ color: CARD_TYPE_THEME[card.type].color }} /> {role.long}
+              <role.Icon className="size-3.5 shrink-0" style={{ color: CARD_TYPE_THEME[card.type].color }} /> {c.roles[card.role].long}
             </span>
           </div>
           {blocker === null ? (
             <button
               type="button"
               onClick={onPlay}
-              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-green text-lg uppercase text-white shadow-[0_4px_0_#2D950B] transition hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none"
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-green text-lg uppercase text-white transition hover:bg-brand-green-deep"
               style={poppins}
             >
-              Use {card.name}
+              {fill(c.reveal.useCard, { card: c.cards[id].name })}
             </button>
           ) : (
             <div className="rounded-2xl bg-white/[0.08] px-4 py-3 text-center text-xs uppercase text-white/60" style={poppins}>
-              {blocker}
+              {c.blockers[blocker]}
             </div>
           )}
           <button type="button" onClick={onClose} className="h-11 rounded-2xl border-2 border-white/15 text-sm uppercase text-white/80 hover:border-white/30" style={poppins}>
-            Close
+            {c.common.close}
           </button>
         </motion.div>
       </div>
@@ -414,6 +422,7 @@ export function CardInspector({
 }
 
 export function OpponentDeckSheet({ state, name, used, onClose }: { state: MatchState; name: string; used: CardId[]; onClose: () => void }) {
+  const { c } = useZoneCopy();
   const trapRef = useModalKeys(onClose);
   return (
     <>
@@ -429,10 +438,10 @@ export function OpponentDeckSheet({ state, name, used, onClose }: { state: Match
         <div ref={trapRef} className="mx-auto max-w-[1000px]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-lg uppercase text-brand-red-soft" style={poppins}>{name}&apos;s deck</div>
-              <div className="text-[11px] uppercase tracking-wide text-white/45" style={poppins}>Each card once per match · faded ones are already played</div>
+              <div className="text-lg uppercase text-brand-red-soft" style={poppins}>{fill(c.reveal.deckOf, { name })}</div>
+              <div className="text-[11px] uppercase tracking-wide text-white/45" style={poppins}>{c.reveal.deckSheetHint}</div>
             </div>
-            <button type="button" onClick={onClose} aria-label="Close" className="grid size-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20">
+            <button type="button" onClick={onClose} aria-label={c.common.close} className="grid size-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20">
               <X className="size-4" />
             </button>
           </div>
@@ -481,12 +490,14 @@ export function CardClash({
   /** Your playstyle choices (the card window), between the two slots and "No playstyle". */
   children?: ReactNode;
 }) {
+  const { c } = useZoneCopy();
+  const cl = c.clash;
   const revealed = state.battleStep === 'reveal';
   const mine = state.choice.player;
   const mineFace: SlotFace = mine === undefined ? { kind: 'pick' } : mine === null ? { kind: 'none' } : { kind: 'card', id: mine };
   // Their bluff is exposed once a reaction has hit it.
-  const theirBluffHit = revealed && state.cancelled.opponent && state.choice.opponent === 'dummy-run';
-  const theirSeen = theirBluffHit ? 'dummy-run' : revealedCard(state, 'opponent');
+  const theirBluffHit = revealed && state.cancelled.opponent && !!state.choice.opponent && BLUFF_CARDS.includes(state.choice.opponent);
+  const theirSeen = theirBluffHit ? state.choice.opponent! : revealedCard(state, 'opponent');
   const theirFace: SlotFace = revealed
     ? theirSeen
       ? { kind: 'card', id: theirSeen }
@@ -509,33 +520,37 @@ export function CardClash({
     panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [panelRef, state.duelNo]);
 
-  const verb = (card: CardId) => (card === 'shin-pads' ? 'blocked' : 'cancelled');
   let headline: { title: string; tone: string };
   let subtitle: string;
   if (cancelledBy.opponent && theirSeen) {
     headline = theirBluffHit
-      ? { title: 'Just a bluff!', tone: 'text-brand-red-soft' }
-      : { title: `You ${verb(cancelledBy.opponent)} their ${CARD_BY_ID[theirSeen].name}`, tone: 'text-brand-blue' };
-    subtitle = theirBluffHit ? `It was a Dummy Run — your ${CARD_BY_ID[cancelledBy.opponent].name} was wasted` : `With ${CARD_BY_ID[cancelledBy.opponent].name}`;
+      ? { title: cl.justBluff, tone: 'text-brand-red-soft' }
+      : { title: fill(cancelledBy.opponent === 'shin-pads' ? cl.youBlocked : cl.youCancelled, { card: c.cards[theirSeen].name }), tone: 'text-brand-blue' };
+    subtitle = theirBluffHit
+      ? fill(cl.bluffWasted, { bluff: c.cards[state.choice.opponent!].name, card: c.cards[cancelledBy.opponent].name })
+      : fill(cl.withCard, { card: c.cards[cancelledBy.opponent].name });
   } else if (cancelledBy.player && mine) {
-    headline = mine === 'dummy-run'
-      ? { title: 'Your bluff worked!', tone: 'text-brand-green' }
-      : { title: `${opponentName} ${verb(cancelledBy.player)} your ${CARD_BY_ID[mine].name}`, tone: 'text-brand-red-soft' };
-    subtitle = mine === 'dummy-run' ? `They wasted ${CARD_BY_ID[cancelledBy.player].name} on a Dummy Run` : `With ${CARD_BY_ID[cancelledBy.player].name}`;
+    const myBluff = BLUFF_CARDS.includes(mine);
+    headline = myBluff
+      ? { title: cl.bluffWorked, tone: 'text-brand-green' }
+      : { title: fill(cancelledBy.player === 'shin-pads' ? cl.theyBlocked : cl.theyCancelled, { name: opponentName, card: c.cards[mine].name }), tone: 'text-brand-red-soft' };
+    subtitle = myBluff
+      ? fill(cl.theyWasted, { card: c.cards[cancelledBy.player].name, bluff: c.cards[mine].name })
+      : fill(cl.withCard, { card: c.cards[cancelledBy.player].name });
   } else if (activating) {
     const any = mineFace.kind === 'card' || theirFace.kind === 'card';
-    headline = { title: any ? 'Cards activated' : 'No cards this duel', tone: 'text-brand-green' };
-    subtitle = 'The question is next';
+    headline = { title: any ? cl.cardsActivated : cl.noCardsDuel, tone: 'text-brand-green' };
+    subtitle = cl.questionNext;
   } else if (revealed) {
-    headline = { title: 'Cards revealed', tone: 'text-white' };
-    subtitle = reactions.length > 0 ? 'Answer their card — or let it stand' : 'The question is next';
+    headline = { title: cl.cardsRevealed, tone: 'text-white' };
+    subtitle = reactions.length > 0 ? cl.answerTheirCard : cl.questionNext;
   } else {
-    headline = { title: mine === undefined ? 'Use a playstyle?' : 'Locked in', tone: 'text-white' };
-    subtitle = mine === undefined ? 'Tap a playstyle below · both pick at once' : `Waiting for ${opponentName} · then both cards flip`;
+    headline = { title: mine === undefined ? cl.usePlaystyle : cl.lockedIn, tone: 'text-white' };
+    subtitle = mine === undefined ? cl.tapBelow : fill(cl.waitingFlip, { name: opponentName });
   }
 
   return (
-    <div ref={panelRef} className="rounded-[24px] bg-surface-page p-3 sm:p-4" style={{ scrollMarginBottom: 'calc(var(--party-dock-height) + 12px)' }}>
+    <div ref={panelRef} className="rounded-[24px] p-3 [text-shadow:0_2px_6px_rgba(0,0,0,0.85)] sm:p-4" style={{ scrollMarginBottom: 'calc(var(--party-dock-height) + 12px)' }}>
       <div className="text-center">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -555,13 +570,13 @@ export function CardClash({
 
       <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-start gap-2">
         <ClashSlot
-          label="You"
+          label={c.common.you}
           tone="text-brand-blue"
           face={mineFace}
           width={slotWidth}
           canceller={cancelledBy.player}
           cancellerFrom="right"
-          bluff={mine === 'dummy-run'}
+          bluff={!!mine && BLUFF_CARDS.includes(mine)}
           activated={activating && !cancelledBy.player}
         />
         <div className="grid place-items-center self-center text-xl font-black italic text-white/25" style={poppins}>VS</div>
@@ -586,7 +601,7 @@ export function CardClash({
           className="mt-2.5 h-10 w-full rounded-[16px] border-2 border-white/15 text-sm uppercase text-white/75 transition hover:border-white/30 hover:text-white"
           style={poppins}
         >
-          No playstyle this duel
+          {cl.noPlaystyleDuel}
         </button>
       )}
 
@@ -599,12 +614,12 @@ export function CardClash({
               onClick={() => onReaction(id)}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-4 py-3 text-sm uppercase text-white shadow-[0_4px_0_#1645FF] hover:bg-brand-blue/90 active:translate-y-0.5 active:shadow-none"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-4 py-3 text-sm uppercase text-white hover:bg-brand-blue/90"
               style={poppins}
             >
               <span className="text-lg"><CardGlyph id={id} /></span>
-              React: {CARD_BY_ID[id].name}
-              <span className="text-[11px] normal-case text-white/80">{id === 'shin-pads' ? 'block their sabotage' : 'cancel their card'}</span>
+              {fill(cl.react, { card: c.cards[id].name })}
+              <span className="text-[11px] normal-case text-white/80">{id === 'shin-pads' ? cl.blockSabotage : cl.cancelTheirCard}</span>
             </motion.button>
           ))}
         </div>
@@ -612,7 +627,7 @@ export function CardClash({
 
       {homePick && (
         <div className="mt-3 flex flex-col gap-1.5">
-          <div className="text-center text-xs font-black uppercase tracking-wide text-brand-yellow">Home Advantage · this question from one of your categories</div>
+          <div className="text-center text-xs font-black uppercase tracking-wide text-brand-yellow">{cl.homeAdvantage}</div>
           <div className="grid grid-cols-2 gap-1.5">
             {unusedCategories(state, 'player').map((category) => (
               <button
@@ -655,6 +670,7 @@ function ClashSlot({
   bluff: boolean;
   activated: boolean;
 }) {
+  const { c } = useZoneCopy();
   const height = Math.round((width * 88) / 63);
   const card = face.kind === 'card' ? CARD_BY_ID[face.id] : null;
   let body: ReactNode;
@@ -664,7 +680,7 @@ function ClashSlot({
       body = (
         <div className="grid h-full w-full place-items-center rounded-[18px] border-2 border-dashed border-brand-yellow/50 text-center">
           <div className="flex flex-col items-center gap-1 px-2 text-[10px] uppercase leading-tight text-brand-yellow" style={poppins}>
-            Pick a playstyle
+            {c.common.pickPlaystyle}
             <motion.span animate={{ y: [0, 5, 0] }} transition={{ duration: 1, repeat: Infinity }}>
               <ArrowDown className="size-5" />
             </motion.span>
@@ -674,33 +690,32 @@ function ClashSlot({
       break;
     case 'waiting':
       body = <CardBack width={width} waiting />;
-      caption = 'Choosing…';
+      caption = c.clash.choosing;
       break;
     case 'back':
       body = <CardBack width={width} />;
       caption = (
         <span className="inline-flex items-center gap-1">
-          <Check className="size-3" /> Locked in
+          <Check className="size-3" /> {c.clash.lockedIn}
         </span>
       );
       break;
     case 'none':
       body = (
         <div className="grid h-full w-full place-items-center rounded-[18px] border-2 border-dashed border-white/15 text-xs font-black uppercase text-white/35">
-          No card
+          {c.clash.noCard}
         </div>
       );
       break;
     case 'card':
       body = <CardFace id={face.id} width={width} size="compact" showCost={false} />;
-      caption = CARD_BY_ID[face.id].effect;
+      caption = c.cards[face.id].effect;
       break;
   }
   if (canceller) {
     caption = (
       <span className="font-semibold text-brand-red-soft">
-        {bluff ? 'Bluff — ' : ''}
-        {canceller === 'shin-pads' ? 'Blocked' : 'Cancelled'} by {CARD_BY_ID[canceller].name}
+        {fill(canceller === 'shin-pads' ? (bluff ? c.clash.bluffBlockedBy : c.clash.blockedBy) : bluff ? c.clash.bluffCancelledBy : c.clash.cancelledBy, { card: c.cards[canceller].name })}
       </span>
     );
   }
@@ -745,6 +760,7 @@ function ClashSlot({
 
 /** A reaction card flying in from its owner's side and slamming onto the card it cancels: flash, crack, stamp. */
 function CancelHit({ canceller, from, width, height, bluff }: { canceller: CardId; from: 'left' | 'right'; width: number; height: number; bluff: boolean }) {
+  const { c } = useZoneCopy();
   const dir = from === 'right' ? 1 : -1;
   return (
     <>
@@ -786,7 +802,7 @@ function CancelHit({ canceller, from, width, height, bluff }: { canceller: CardI
         transition={{ delay: 0.6, type: 'spring', stiffness: 420, damping: 16 }}
       >
         <span className="-rotate-12 rounded-lg bg-brand-red-soft px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-lg">
-          {bluff ? 'Bluff!' : canceller === 'shin-pads' ? 'Blocked' : 'Cancelled'}
+          {bluff ? c.clash.stampBluff : canceller === 'shin-pads' ? c.clash.stampBlocked : c.clash.stampCancelled}
         </span>
       </motion.div>
     </>
@@ -795,6 +811,7 @@ function CancelHit({ canceller, from, width, height, bluff }: { canceller: CardI
 
 /** A card switching on: a burst in its colour and an Activated badge. */
 function Activation({ color }: { color: string }) {
+  const { c } = useZoneCopy();
   return (
     <>
       <motion.div
@@ -811,7 +828,7 @@ function Activation({ color }: { color: string }) {
         transition={{ type: 'spring', stiffness: 420, damping: 15, delay: 0.12 }}
       >
         <span className="flex items-center gap-1 rounded-full bg-brand-green px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-lg">
-          <Check className="size-3" strokeWidth={4} /> Activated
+          <Check className="size-3" strokeWidth={4} /> {c.stage.activated}
         </span>
       </motion.div>
     </>

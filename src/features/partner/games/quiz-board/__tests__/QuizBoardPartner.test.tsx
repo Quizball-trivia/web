@@ -13,7 +13,7 @@ afterEach(() => {
 
 const tiles = (owners: Record<number, "player" | "none"> = {}) =>
   Array.from({ length: 9 }, (_, tile) => ({
-    tile, category: Math.floor(tile / 3), row: tile % 3, value: (tile % 3 + 1) * 100, owner: owners[tile] ?? null,
+    tile, category: Math.floor(tile / 3), row: tile % 3, value: (tile % 3 + 1) * 50, owner: owners[tile] ?? null,
   }));
 
 const board = (over: Partial<QuizBoardView> = {}): QuizBoardView => ({
@@ -23,7 +23,7 @@ const board = (over: Partial<QuizBoardView> = {}): QuizBoardView => ({
   ...over,
 });
 
-const question = { tile: 2, value: 300, prompt: "Who won the 2005 final?", image: null, options: ["A", "B", "C", "D"] };
+const question = { tile: 2, value: 150, prompt: "Who won the 2005 final?", image: null, options: ["A", "B", "C", "D"] };
 const ev = (seq: number, e: Partial<QuizBoardEvent>): QuizBoardEvent => ({
   seq, actor: "player", kind: "pick", tile: null, correct: null, choice: null, points: 0, ...e,
 });
@@ -54,7 +54,7 @@ describe("Quiz Board partner screen (solo)", () => {
     const { container } = renderWith(null);
     await screen.findByTestId("quiz-board-start");
     expect(screen.getByText("აირჩიე უჯრები და უპასუხე — სწორი პასუხი უჯრის ქულას მოგიტანს")).toBeTruthy();
-    expect(screen.getByText("9 უჯრა · თითო კითხვაზე 20 წამი · სწორ პასუხზე 100, 200 ან 300 ქულა")).toBeTruthy();
+    expect(screen.getByText("9 უჯრა · თითო კითხვაზე 20 წამი · სწორ პასუხზე 50, 100 ან 150 ქულა")).toBeTruthy();
     expect(container.textContent).not.toMatch(/\bAI\b|მოიპარ/);
   });
 
@@ -77,8 +77,8 @@ describe("Quiz Board partner screen (solo)", () => {
       deadlineAt: new Date(Date.now() + 20_000).toISOString(),
     });
     const answered = board({
-      turn: 2, playerScore: 300, tiles: tiles({ 2: "player" }),
-      events: [ev(1, { tile: 2 }), ev(2, { kind: "answer", tile: 2, correct: true, choice: 1, correctIndex: 1, points: 300 })],
+      turn: 2, playerScore: 150, tiles: tiles({ 2: "player" }),
+      events: [ev(1, { tile: 2 }), ev(2, { kind: "answer", tile: 2, correct: true, choice: 1, correctIndex: 1, points: 150 })],
     });
     const { api } = renderWith(board(), { pick: picked, answer: answered });
     fireEvent.click(await screen.findByTestId("quiz-board-tile-2"));
@@ -94,8 +94,8 @@ describe("Quiz Board partner screen (solo)", () => {
     // The tile stays disabled while the answer is shown.
     expect((screen.getByTestId("quiz-board-tile-0") as HTMLButtonElement).disabled).toBe(true);
     await waitFor(() => expect(screen.getByTestId("quiz-board-tile-2").dataset.owner).toBe("player"), { timeout: 3_000 });
-    expect(screen.getByTestId("quiz-board-tile-2").textContent).toBe("+300");
-    expect(screen.getByTestId("quiz-board-score").textContent).toBe("300");
+    expect(screen.getByTestId("quiz-board-tile-2").textContent).toBe("+150");
+    expect(screen.getByTestId("quiz-board-score").textContent).toBe("150");
     expect((screen.getByTestId("quiz-board-tile-0") as HTMLButtonElement).disabled).toBe(false);
   });
 
@@ -118,12 +118,12 @@ describe("Quiz Board partner screen (solo)", () => {
 
   it("a finished board shows the points and reports them to the host", async () => {
     const { onFinished } = renderWith(
-      board({ phase: "finished", turn: 18, deadlineAt: null, playerScore: 1200, result: { score: 1200, endReason: "completed" } }),
+      board({ phase: "finished", turn: 18, deadlineAt: null, playerScore: 600, result: { score: 600, endReason: "completed" } }),
     );
     expect((await screen.findByTestId("quiz-board-over")).textContent).toContain("Board complete");
-    expect(screen.getByTestId("quiz-board-final-score").textContent).toBe(`You earned ${(1200).toLocaleString()} of 1,800 points.`);
+    expect(screen.getByTestId("quiz-board-final-score").textContent).toBe(`You earned ${(600).toLocaleString()} of 900 points.`);
     fireEvent.click(screen.getByTestId("quiz-board-see-points"));
-    expect(onFinished).toHaveBeenCalledWith({ playId: "play-1", score: 1200 });
+    expect(onFinished).toHaveBeenCalledWith({ playId: "play-1", score: 600 });
   });
 
   it("back mid-play opens the partner leave dialog; continue keeps the play going", async () => {

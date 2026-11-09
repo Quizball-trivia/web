@@ -39,12 +39,10 @@ interface CampaignQuizLandingProps {
   quiz: CampaignQuiz;
   locale?: CampaignQuizLocale;
   previewToken?: string;
-  /** Offered in the language switcher only when the quiz has a Russian edition. */
-  russianEdition?: boolean;
-  /** Offered in the language switcher only when the quiz has a Brazilian Portuguese edition. */
-  portugueseEdition?: boolean;
-  /** Offered in the language switcher only when the quiz has a German edition. */
-  germanEdition?: boolean;
+  /** The languages offered in the switcher: the editions this quiz has. */
+  editions: readonly CampaignQuizLocale[];
+  /** The quizzes that can be linked to in this language; absent means all of them. */
+  openSlugs?: ReadonlySet<string>;
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
@@ -218,6 +216,56 @@ const COPY = {
     playQuiz: 'Spielen',
     footer: '© 2026 QuizBall. Fußballquiz für echten Wettbewerb.',
   },
+  fr: {
+    rankedTrivia: 'Quiz de foot en mode classé',
+    playRanked: 'Jouer en mode classé',
+    home: 'Accueil',
+    footballQuiz: 'Quiz de foot',
+    verifiedQuestions: 'questions vérifiées',
+    startQuiz: 'Commencer le quiz',
+    noLogin: 'Pas besoin de se connecter',
+    easy: 'questions faciles',
+    medium: 'questions moyennes',
+    hard: 'questions difficiles',
+    soloWarmup: 'Échauffement en solo',
+    answerPrompt: 'Choisis une réponse par question. Ton score s’affiche instantanément.',
+    factChecked: 'Questions vérifiées',
+    fiveMinutes: 'Environ 5 minutes',
+    instantScore: 'Score instantané',
+    readyRanked: 'Prêt pour le mode classé ?',
+    fairPlay: 'Conçu pour le fair-play',
+    publicOnly: 'Ces questions publiques d’échauffement restent séparées de la banque de questions du mode classé.',
+    keepPlaying: 'Continuer à jouer',
+    relatedQuizzes: 'Quiz de foot associés',
+    allQuizzes: 'Tous les quiz de foot',
+    playQuiz: 'Jouer',
+    footer: '© 2026 QuizBall. Des quiz de foot conçus pour la compétition.',
+  },
+  tr: {
+    rankedTrivia: 'Sıralamalı futbol bilgi yarışması',
+    playRanked: 'Sıralamalı Oyna',
+    home: 'Ana sayfa',
+    footballQuiz: 'Futbol Bilgi Yarışması',
+    verifiedQuestions: 'doğrulanmış soru',
+    startQuiz: 'Teste başla',
+    noLogin: 'Giriş yapman gerekmez',
+    easy: 'kolay',
+    medium: 'orta',
+    hard: 'zor',
+    soloWarmup: 'Tek başına ısınma turu',
+    answerPrompt: 'Her soru için bir cevap seç. Puanını anında gör.',
+    factChecked: 'Bilgileri doğrulanmış sorular',
+    fiveMinutes: 'Yaklaşık 5 dakika',
+    instantScore: 'Anında puan',
+    readyRanked: 'Sıralamalı oynamaya hazır mısın?',
+    fairPlay: 'Adil oyun için tasarlandı',
+    publicOnly: 'Bu açık ısınma soruları, sıralamalı soru havuzundan ayrı tutulur.',
+    keepPlaying: 'Oynamaya devam et',
+    relatedQuizzes: 'İlgili futbol testleri',
+    allQuizzes: 'Tüm futbol testleri',
+    playQuiz: 'Oyna',
+    footer: '© 2026 QuizBall. Gerçek rekabet için hazırlanmış futbol bilgi yarışması.',
+  },
 } as const satisfies Record<CampaignQuizLocale, Record<string, string>>;
 
 /** Russian words after a count change form (1 лёгкий, 3 лёгких); the other editions use the COPY string as is. */
@@ -243,9 +291,17 @@ const GERMAN_SINGULAR = {
   hard: 'schwere',
 } as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
 
+const FRENCH_SINGULAR = {
+  verifiedQuestions: 'question vérifiée',
+  easy: 'question facile',
+  medium: 'question moyenne',
+  hard: 'question difficile',
+} as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
+
 function countLabel(locale: CampaignQuizLocale, count: number, key: keyof typeof RUSSIAN_COUNT_FORMS): string {
   if (locale === 'pt' && count === 1) return PORTUGUESE_SINGULAR[key];
   if (locale === 'de' && count === 1) return GERMAN_SINGULAR[key];
+  if (locale === 'fr' && count <= 1) return FRENCH_SINGULAR[key];
   if (locale !== 'ru') return COPY[locale][key];
   const [one, few, many] = RUSSIAN_COUNT_FORMS[key];
   return russianPlural(count, one, few, many);
@@ -272,7 +328,7 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
   }, []);
 }
 
-export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, russianEdition, portugueseEdition, germanEdition }: CampaignQuizLandingProps) {
+export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, editions, openSlugs }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
   const hubPath = campaignHubPath(locale);
@@ -292,6 +348,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
       ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text })),
   );
   const guide = getCampaignQuizGuide(content.slug, locale);
+  const isOpen = (slug: string) => !openSlugs || openSlugs.has(slug);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
@@ -319,12 +376,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </span>
             <LanguageSwitcher
               locale={locale}
-              locales={[
-                ...(content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] as const : ['en', 'es'] as const),
-                ...(russianEdition ? ['ru'] as const : []),
-                ...(portugueseEdition ? ['pt'] as const : []),
-                ...(germanEdition ? ['de'] as const : []),
-              ]}
+              locales={editions}
               className="hidden sm:inline-flex"
             />
             <CampaignSignupLink
@@ -504,13 +556,15 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
                     <li key={tip} className="pl-2">{tip}</li>
                   ))}
                 </ul>
-                <Link
-                  href={campaignQuizPath(guide.practiceSlug, locale)}
-                  className="mt-6 inline-flex items-center gap-2 font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
-                >
-                  {guide.practiceLabel}
-                  <ArrowRight className="size-4" aria-hidden />
-                </Link>
+                {isOpen(guide.practiceSlug) ? (
+                  <Link
+                    href={campaignQuizPath(guide.practiceSlug, locale)}
+                    className="mt-6 inline-flex items-center gap-2 font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
+                  >
+                    {guide.practiceLabel}
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                ) : null}
               </section>
             ) : null}
           </article>
@@ -573,7 +627,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </Link>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
-            {content.relatedSlugs.map((slug) => {
+            {content.relatedSlugs.filter(isOpen).map((slug) => {
               const managedRelated = content.relatedPages?.find((page) => page.slug === slug);
               const legacyRelated = CAMPAIGN_QUIZ_CONTENT[slug];
               const relatedLabel = managedRelated?.breadcrumb_label ?? legacyRelated?.breadcrumbLabel ?? slug;

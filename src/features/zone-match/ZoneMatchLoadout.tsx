@@ -30,7 +30,10 @@ import {
 import { CARD_TYPE_THEME, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
 import { InfoMark, PlaystyleRules, PlaystyleText } from './ZoneMatchPlaystyleRow';
 import { FutCard, reactionFor, type FutReaction, type FutSeat, type SlotBurst } from './ZoneMatchFutCard';
-import { useDesktop } from './ZoneMatchCards';
+import { useMediaQuery } from './ZoneMatchCards';
+import { isPlaystyleUnlocked } from './zoneMatch.playtest';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -85,12 +88,17 @@ function rectOf(element: HTMLElement | null | undefined): DOMRect | null {
 
 // ── The screen ───────────────────────────────────────────────────────────────
 
+/** The card beside the list from 860px wide (the loadout fits two columns well before the lg breakpoint). */
+const LOADOUT_WIDE = '(min-width: 860px)';
+const useLoadoutWide = () => useMediaQuery(LOADOUT_WIDE);
+
 /**
  * Spend the energy budget (LOADOUT_BUDGET) on up to 3 of the 20 playstyles (at most 1 sabotage), FUT-style: each pick
  * flies onto a slot of your player card, which answers with a shine and a reaction from your avatar. A playstyle that
  * doesn't fit (no slot, or over budget) is swapped in instead: you choose the slot it replaces, among those where it
  * fits (a second sabotage just replaces the first). Your opponent sees your loadout at the showdown, and you see theirs.
  */
+
 export function DeckPicker({
   deck,
   seat,
@@ -106,17 +114,19 @@ export function DeckPicker({
   onRandom: () => void;
   onFindMatch: () => void;
 }) {
+  const { c } = useZoneCopy();
   const [filter, setFilter] = useState<CardType | 'all'>('all');
   const [swapIn, setSwapIn] = useState<CardId | null>(null);
   const [info, setInfo] = useState<CardId | null>(null);
-  const desktop = useDesktop();
+  const desktop = useLoadoutWide();
   const reduceMotion = useReducedMotion();
   // Nothing else fits (3 picked, or the budget is used up); any pick at all is enough to play.
   const full = deckFull(deck);
   const ready = deck.length > 0;
   const left = LOADOUT_BUDGET - deckCost(deck);
   const sabotageAt = deck.findIndex((id) => CARD_BY_ID[id].type === 'sabotage');
-  const shown = CARDS.filter((card) => filter === 'all' || card.type === filter);
+  // Playtest: every playstyle unlocked (zoneMatch.playtest).
+  const shown = CARDS.filter((card) => isPlaystyleUnlocked(card.id) && (filter === 'all' || card.type === filter));
   // A swap waits for a slot while the newcomer is still out of the loadout.
   const pending = swapIn && !deck.includes(swapIn) ? swapIn : null;
   const [notice, setNotice] = useState<string | null>(null);
@@ -151,8 +161,8 @@ export function DeckPicker({
     ]);
     for (const [key, born] of burstBorn.current) if (bornAt - born >= BURST_KEEP_MS) burstBorn.current.delete(key);
     setShineKey((k) => k + 1);
-    const last = CARD_BY_ID[ids[ids.length - 1]].type;
-    setReaction(reactionFor(current.length === DECK_SIZE ? 'complete' : last, now, now));
+    const lastId = ids[ids.length - 1];
+    setReaction(reactionFor(CARD_BY_ID[lastId].type, now, now, lastId, current.length === DECK_SIZE));
   }, []);
 
   // Picks that did not fly in (auto-pick, reduced motion): land them in place.
@@ -216,12 +226,12 @@ export function DeckPicker({
       // A second sabotage can only take the first one's place.
       if (CARD_BY_ID[id].type === 'sabotage' && sabotageAt !== -1) {
         if (fitsAt(sabotageAt, id)) replace(sabotageAt, id);
-        else setNotice(`${CARD_BY_ID[id].name} costs ${CARD_BY_ID[id].energy}⚡ — too much in place of ${CARD_BY_ID[deck[sabotageAt]].name}`);
+        else setNotice(fill(c.loadout.tooMuchInPlace, { card: c.cards[id].name, cost: CARD_BY_ID[id].energy, other: c.cards[deck[sabotageAt]].name }));
         return;
       }
       // Otherwise swap it in where it fits; if it fits nowhere, say why.
       if (deck.some((_, index) => fitsAt(index, id))) setSwapIn(id);
-      else setNotice(`${CARD_BY_ID[id].name} costs ${CARD_BY_ID[id].energy}⚡ — take more out first`);
+      else setNotice(fill(c.loadout.takeMoreOut, { card: c.cards[id].name, cost: CARD_BY_ID[id].energy }));
       return;
     }
     setSwapIn(null);
@@ -270,7 +280,9 @@ export function DeckPicker({
     <div className="flex flex-col gap-4 pb-36">
       <LoadoutSteps ready={ready} />
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-8">
+      {/* One switch for the layout and the card (a CSS breakpoint and the hook could disagree: the big card stacked over
+          the list and slid down it on scroll). */}
+      <div className={desktop ? 'grid grid-cols-[280px_minmax(0,1fr)] items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8' : 'flex flex-col gap-4'}>
         {desktop ? (
           // Your card, pinned beside the list.
           <aside className="sticky top-6 flex flex-col items-center gap-4">
@@ -292,30 +304,36 @@ export function DeckPicker({
             </div>
           </aside>
         ) : (
-          // Phones: the card collapses to its three slots, pinned while you scroll the list.
+          // Phones: your card (with your avatar, reacting to each pick) at the top; below it the three slots, pinned while
+          // you scroll the list.
+          <>
+          <div className="flex justify-center">
+            <FutCard seat={seat} width={176} slots={slots} bursts={bursts} shineKey={shineKey} reaction={reaction} />
+          </div>
           <aside className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 bg-surface-page-alt/95 px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">Your loadout</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{c.common.yourLoadout}</div>
                 <Progress deck={deck} />
               </div>
               <SlotRow slots={slots} size={46} pending={pending} swappable={swappable} closed={full} onSlot={onSlot} registerSlot={registerSlot} />
             </div>
             {hint}
           </aside>
+          </>
         )}
 
         <div className="flex min-w-0 flex-col gap-4">
           {desktop && (
             <div>
-              <h1 className="text-3xl uppercase text-white" style={poppins}>Pick your playstyles</h1>
+              <h1 className="text-3xl uppercase text-white" style={poppins}>{c.common.pickYourPlaystyles}</h1>
               <div className="mt-1 flex items-center gap-2 text-sm text-white/70">
                 {full ? (
                   <span className="flex items-center gap-1.5 text-brand-green-light">
-                    <Check className="size-4" strokeWidth={3.5} /> Loadout ready — find a match
+                    <Check className="size-4" strokeWidth={3.5} /> {c.loadout.readyFindMatch}
                   </span>
                 ) : (
-                  `Spend up to ${LOADOUT_BUDGET}⚡ on up to ${DECK_SIZE} playstyles`
+                  fill(c.loadout.spendUpTo, { budget: LOADOUT_BUDGET, size: DECK_SIZE })
                 )}
                 <BudgetMeter spent={deckCost(deck)} />
               </div>
@@ -325,7 +343,7 @@ export function DeckPicker({
           <RuleChips />
 
           <section className="flex flex-col gap-2.5">
-            <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] lg:mx-0 lg:px-0">
+            <div className={cn('flex gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none]', desktop ? '' : '-mx-4 px-4')}>
               {(['all', ...TYPES] as const).map((type) => {
                 const active = filter === type;
                 const theme = type === 'all' ? null : CARD_TYPE_THEME[type];
@@ -342,7 +360,7 @@ export function DeckPicker({
                     style={active && theme ? { background: theme.color, color: theme.ink } : undefined}
                   >
                     {theme && <theme.Icon className="size-3" style={active ? undefined : { color: theme.color }} />}
-                    {type === 'all' ? 'All' : theme!.label}
+                    {type === 'all' ? c.common.all : c.cardTypes[type]}
                   </button>
                 );
               })}
@@ -376,24 +394,24 @@ export function DeckPicker({
           <button
             type="button"
             onClick={autoPick}
-            title={full ? 'Swap your whole loadout for a random one' : 'Fill what is left of the budget at random'}
+            title={full ? c.loadout.rerollTitle : c.loadout.autoTitle}
             className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-sm uppercase text-white hover:bg-white/15"
             style={poppins}
           >
             {full ? <Shuffle className="size-4" /> : <WandSparkles className="size-4" />}
-            {full ? 'Re-roll' : 'Auto-pick'}
+            {full ? c.loadout.reroll : c.loadout.autoPick}
           </button>
           {ready ? (
             <button
               type="button"
               disabled={loading}
               onClick={onFindMatch}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-green px-4 py-3 text-base uppercase text-white shadow-[0_4px_0_rgba(45,149,11,1)] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-green px-4 py-3 text-base uppercase text-white hover:bg-brand-green-deep disabled:opacity-50"
               style={poppins}
             >
-              {loading ? 'Loading…' : (
+              {loading ? c.common.loading : (
                 <>
-                  Find match <ArrowRight className="size-5" strokeWidth={3} />
+                  {c.common.findMatch} <ArrowRight className="size-5" strokeWidth={3} />
                 </>
               )}
             </button>
@@ -404,7 +422,7 @@ export function DeckPicker({
               className="flex-1 rounded-2xl bg-white/[0.06] px-4 py-3 text-base uppercase text-white/55 ring-1 ring-inset ring-white/10"
               style={poppins}
             >
-              Pick a playstyle
+              {c.common.pickPlaystyle}
             </button>
           )}
         </div>
@@ -421,15 +439,13 @@ export function DeckPicker({
 
 // ── Steps and rules ──────────────────────────────────────────────────────────
 
-const STEPS = ['Pick playstyles', 'Find a match', 'Showdown', 'Kick-off'] as const;
-/** Shorter labels where four have to share a phone's width. */
-const STEPS_SHORT = ['Pick', 'Find match', 'Showdown', 'Kick-off'] as const;
-
 /** Where you are on the way into a match. Step 1 is this screen; once the loadout is full, step 2 is up next. */
-function LoadoutSteps({ ready }: { ready: boolean }) {
+export function LoadoutSteps({ ready }: { ready: boolean }) {
+  const { c } = useZoneCopy();
+  const steps = c.loadout.steps;
   return (
-    <ol className="flex items-start" aria-label="Getting into a match">
-      {STEPS.map((label, i) => {
+    <ol className="flex items-start" aria-label={c.loadout.stepsAria}>
+      {steps.map((label, i) => {
         const done = i === 0 && ready;
         const current = i === 0 && !ready;
         const next = i === 1 && ready;
@@ -448,7 +464,7 @@ function LoadoutSteps({ ready }: { ready: boolean }) {
               >
                 {done ? <Check className="size-4" strokeWidth={3.5} /> : i + 1}
               </span>
-              <span className={cn('h-0.5 flex-1 rounded-full sm:hidden', i === STEPS.length - 1 ? 'opacity-0' : 'bg-white/15')} />
+              <span className={cn('h-0.5 flex-1 rounded-full sm:hidden', i === steps.length - 1 ? 'opacity-0' : 'bg-white/15')} />
             </div>
             <span
               className={cn(
@@ -457,10 +473,10 @@ function LoadoutSteps({ ready }: { ready: boolean }) {
               )}
               style={poppins}
             >
-              <span className="sm:hidden">{STEPS_SHORT[i]}</span>
+              <span className="sm:hidden">{c.loadout.stepsShort[i]}</span>
               <span className="hidden sm:inline">{label}</span>
             </span>
-            {i < STEPS.length - 1 && <span className="hidden h-0.5 min-w-4 flex-1 rounded-full bg-white/15 sm:mx-1 sm:block" />}
+            {i < steps.length - 1 && <span className="hidden h-0.5 min-w-4 flex-1 rounded-full bg-white/15 sm:mx-1 sm:block" />}
           </li>
         );
       })}
@@ -478,17 +494,19 @@ function RuleChip({ Icon, color, children }: { Icon: LucideIcon; color: string; 
 }
 
 /** The rules that shape a loadout, once, as chips; the rest behind "How it works". */
-function RuleChips() {
+export function RuleChips() {
+  const { c } = useZoneCopy();
+  const l = c.loadout;
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-1.5">
         <RuleChip Icon={Zap} color="#FFE500">
-          {LOADOUT_BUDGET}⚡ budget · up to {DECK_SIZE}
+          {fill(l.budgetChip, { budget: LOADOUT_BUDGET, size: DECK_SIZE })}
         </RuleChip>
-        <RuleChip Icon={Ticket} color="#7FD6FF">Each works once</RuleChip>
+        <RuleChip Icon={Ticket} color="#7FD6FF">{c.common.eachWorksOnce}</RuleChip>
         <RuleChip Icon={CARD_TYPE_THEME.sabotage.Icon} color={CARD_TYPE_THEME.sabotage.color}>
-          Max {MAX_SABOTAGE_IN_DECK} sabotage
+          {fill(l.maxSabotage, { max: MAX_SABOTAGE_IN_DECK })}
         </RuleChip>
         <button
           type="button"
@@ -496,26 +514,25 @@ function RuleChips() {
           aria-expanded={open}
           className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-black uppercase tracking-wide text-brand-yellow hover:bg-white/[0.06]"
         >
-          <CircleHelp className="size-3.5" /> How it works
+          <CircleHelp className="size-3.5" /> {l.howItWorks}
         </button>
       </div>
       {open && (
         <div className="grid gap-3 rounded-2xl bg-surface-page/85 p-3 text-xs leading-snug text-white/75 ring-1 ring-white/10 sm:grid-cols-2">
-          <HowRow Icon={Zap} color="#FFE500" title="Energy">
-            Your loadout can cost up to {LOADOUT_BUDGET}⚡ in all — say a 3⚡ and a 2⚡, or a 1⚡ and two 2⚡. That is all the energy there is:
-            in the match each playstyle simply works once.
+          <HowRow Icon={Zap} color="#FFE500" title={l.energyTitle}>
+            {fill(l.energyBody, { budget: LOADOUT_BUDGET })}
           </HowRow>
-          <HowRow Icon={Eye} color="#7FD6FF" title="No secrets">
-            Both loadouts are shown at the showdown. A playstyle turns into a card when you use it.
+          <HowRow Icon={Eye} color="#7FD6FF" title={l.secretsTitle}>
+            {l.secretsBody}
           </HowRow>
-          <HowRow Icon={PHASE_INFO.blind.Icon} color="#9CB6C2" title="When">
-            <b className="text-white">{PHASE_INFO.blind.label}</b>: both pick at once, then reveal ·{' '}
-            <b className="text-white">{PHASE_INFO.live.label}</b>: while the question is up ·{' '}
-            <b className="text-white">{PHASE_INFO.reaction.label}</b>: answer the card they just showed
+          <HowRow Icon={PHASE_INFO.blind.Icon} color="#9CB6C2" title={l.whenTitle}>
+            <b className="text-white">{c.phases.blind.label}</b>: {l.whenBlind} ·{' '}
+            <b className="text-white">{c.phases.live.label}</b>: {l.whenLive} ·{' '}
+            <b className="text-white">{c.phases.reaction.label}</b>: {l.whenReaction}
           </HowRow>
-          <HowRow Icon={ROLE_INFO.attack.Icon} color="#58CC02" title="Who">
-            <b className="text-white">{ROLE_INFO.attack.label}</b>: you attack · <b className="text-white">{ROLE_INFO.defend.label}</b>: they
-            attack · <b className="text-white">{ROLE_INFO.shot.label}</b>: attacking from their side · <b className="text-white">{ROLE_INFO.any.label}</b>: any time
+          <HowRow Icon={ROLE_INFO.attack.Icon} color="#58CC02" title={l.whoTitle}>
+            <b className="text-white">{c.roles.attack.label}</b>: {l.whoAttack} · <b className="text-white">{c.roles.defend.label}</b>: {l.whoDefend} ·{' '}
+            <b className="text-white">{c.roles.shot.label}</b>: {l.whoShot} · <b className="text-white">{c.roles.any.label}</b>: {l.whoAny}
           </HowRow>
         </div>
       )}
@@ -538,17 +555,18 @@ function HowRow({ Icon, color, title, children }: { Icon: LucideIcon; color: str
 // ── Slots and the status line ────────────────────────────────────────────────
 
 function Progress({ deck }: { deck: CardId[] }) {
+  const { c } = useZoneCopy();
   if (deckFull(deck)) {
     return (
       <div className="flex items-center gap-1.5 text-base uppercase text-brand-green-light" style={poppins}>
-        <Check className="size-4" strokeWidth={3.5} /> Ready
+        <Check className="size-4" strokeWidth={3.5} /> {c.loadout.ready}
         <BudgetMeter spent={deckCost(deck)} />
       </div>
     );
   }
   return (
     <div className="flex items-center gap-1.5 text-white" style={poppins}>
-      <span className="text-base uppercase">{deck.length === 0 ? 'Pick' : 'Add more?'}</span>
+      <span className="text-base uppercase">{deck.length === 0 ? c.loadout.pick : c.loadout.addMore}</span>
       <BudgetMeter spent={deckCost(deck)} />
     </div>
   );
@@ -556,8 +574,9 @@ function Progress({ deck }: { deck: CardId[] }) {
 
 /** The budget as five pips: spent ones lit. */
 function BudgetMeter({ spent }: { spent: number }) {
+  const { c } = useZoneCopy();
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 py-0.5 pl-1.5 pr-2 text-xs font-black text-white" title={`${spent} of ${LOADOUT_BUDGET}⚡ spent`} data-zm-budget={spent}>
+    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 py-0.5 pl-1.5 pr-2 text-xs font-black text-white" title={fill(c.loadout.spent, { spent, budget: LOADOUT_BUDGET })} data-zm-budget={spent}>
       <Zap className="size-3 fill-brand-yellow text-brand-yellow" />
       <span className="flex items-center gap-[2px]">
         {Array.from({ length: LOADOUT_BUDGET }, (_, i) => (
@@ -592,6 +611,7 @@ function SlotRow({
   onSlot: (index: number) => void;
   registerSlot?: (index: number, element: HTMLElement | null) => void;
 }) {
+  const { c } = useZoneCopy();
   return (
     <div className="flex shrink-0 items-center gap-2">
       {slots.map((id, index) => (
@@ -601,7 +621,7 @@ function SlotRow({
               type="button"
               onClick={() => onSlot(index)}
               disabled={pending !== null && swappable?.[index] === false}
-              aria-label={pending ? `Replace ${CARD_BY_ID[id].name} with ${CARD_BY_ID[pending].name}` : `Remove ${CARD_BY_ID[id].name}`}
+              aria-label={pending ? fill(c.loadout.replaceWith, { card: c.cards[id].name, other: c.cards[pending].name }) : fill(c.loadout.remove, { card: c.cards[id].name })}
               className="relative block disabled:opacity-35"
             >
               {pending && swappable?.[index] !== false && (
@@ -619,12 +639,13 @@ function SlotRow({
 }
 
 function EmptySlot({ index, size, closed }: { index: number; size: number; closed: boolean }) {
+  const { c } = useZoneCopy();
   return (
     <svg
       viewBox="0 0 100 90"
       width={size}
       height={size * 0.9}
-      aria-label={closed ? `Slot ${index + 1}, closed: budget spent` : `Slot ${index + 1}, empty`}
+      aria-label={fill(closed ? c.loadout.slotClosed : c.loadout.slotEmpty, { n: index + 1 })}
       className={cn('transition-opacity', closed && 'opacity-30')}
     >
       <polygon points="26,4 74,4 97,45 74,86 26,86 3,45" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.3)" strokeWidth={3} strokeDasharray="7 6" strokeLinejoin="round" />
@@ -637,6 +658,7 @@ function EmptySlot({ index, size, closed }: { index: number; size: number; close
 
 /** One line under the slots: what to do next, and the budget / sabotage rule when it bites. */
 function LoadoutHint({ deck, pending, notice, onCancel }: { deck: CardId[]; pending: CardId | null; notice: string | null; onCancel: () => void }) {
+  const { c } = useZoneCopy();
   const full = deckFull(deck);
   const sabotage = deck.find((id) => CARD_BY_ID[id].type === 'sabotage');
   const left = LOADOUT_BUDGET - deckCost(deck);
@@ -646,22 +668,16 @@ function LoadoutHint({ deck, pending, notice, onCancel }: { deck: CardId[]; pend
     message = <span className="text-brand-yellow">{notice}</span>;
   } else if (pending) {
     message = (
-      <span className="text-brand-yellow">
-        Tap a slot to swap in <b>{CARD_BY_ID[pending].name}</b> ({CARD_BY_ID[pending].energy}⚡)
-      </span>
+      <span className="text-brand-yellow">{fill(c.loadout.swapHint, { card: c.cards[pending].name, cost: CARD_BY_ID[pending].energy })}</span>
     );
   } else if (full) {
-    message = left === 0 ? 'Budget spent — tap another playstyle to swap' : 'Full — tap another playstyle to swap';
+    message = left === 0 ? c.loadout.budgetSpentHint : c.loadout.fullHint;
   } else if (sabotage) {
-    message = (
-      <>
-        {MAX_SABOTAGE_IN_DECK} sabotage max — another replaces <span className="text-brand-red-soft">{CARD_BY_ID[sabotage].name}</span>
-      </>
-    );
+    message = fill(c.loadout.sabotageMaxHint, { max: MAX_SABOTAGE_IN_DECK, card: c.cards[sabotage].name });
   } else if (deck.length > 0) {
-    message = `${left}⚡ left — add more, or find a match`;
+    message = fill(c.loadout.leftHint, { left });
   } else {
-    message = 'Tap a playstyle to add it';
+    message = c.loadout.tapToAdd;
   }
 
   return (
@@ -670,7 +686,7 @@ function LoadoutHint({ deck, pending, notice, onCancel }: { deck: CardId[]; pend
       <span className="min-w-0 flex-1">{message}</span>
       {pending ? (
         <button type="button" onClick={onCancel} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-black uppercase text-white hover:bg-white/20">
-          <X className="size-3" strokeWidth={3} /> Cancel
+          <X className="size-3" strokeWidth={3} /> {c.common.cancel}
         </button>
       ) : null}
     </div>
@@ -708,6 +724,7 @@ function PlaystyleTile({
   onInfo: () => void;
   badgeRef: (element: HTMLElement | null) => void;
 }) {
+  const { c } = useZoneCopy();
   const theme = CARD_TYPE_THEME[card.type];
   const selected = slot !== -1;
   return (
@@ -725,32 +742,34 @@ function PlaystyleTile({
         data-playstyle={card.id}
         onClick={onPick}
         aria-pressed={selected}
-        title={card.effect}
-        className="flex w-full items-center gap-3 py-3 pl-3.5 pr-11 text-left"
+        title={c.cards[card.id].effect}
+        // One size for every tile: long names and the slot tag don't change it.
+        className="flex h-[124px] w-full items-center gap-3 py-3 pl-3.5 pr-11 text-left"
       >
         <span ref={badgeRef} className="shrink-0">
           <PlaystyleBadge id={card.id} size={60} showName={false} selected={selected} unaffordable={overBudget} />
         </span>
         <PlaystyleText
           card={card}
-          tags={
-            <>
-              {selected && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-surface-page">
-                  <Check className="size-2.5" strokeWidth={4} /> Slot {slot + 1}
-                </span>
-              )}
-              {pending && <span className="text-[10px] font-black uppercase text-brand-yellow">Choose a slot</span>}
-            </>
-          }
         />
       </button>
+      {(selected || pending) && (
+        <span className="pointer-events-none absolute bottom-2 right-3">
+          {selected ? (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-surface-page">
+              <Check className="size-2.5" strokeWidth={4} /> {fill(c.loadout.slotN, { n: slot + 1 })}
+            </span>
+          ) : (
+            <span className="text-[10px] font-black uppercase text-brand-yellow">{c.loadout.chooseSlot}</span>
+          )}
+        </span>
+      )}
       <button
         type="button"
         data-playstyle-info={card.id}
         onClick={onInfo}
         aria-expanded={open}
-        aria-label={`${card.name}: full rules`}
+        aria-label={fill(c.loadout.fullRules, { card: c.cards[card.id].name })}
         className="absolute right-2 top-2 rounded-full hover:bg-white/10"
       >
         <InfoMark open={open} className="size-8" />

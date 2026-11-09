@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ getCampaignQuiz: vi.fn(), listCampaignQuizPages: vi.fn() }));
+const api = vi.hoisted(() => ({ getCampaignQuiz: vi.fn(), listCampaignQuizPages: vi.fn(), CampaignQuizApiError: class extends Error {} }));
 vi.mock("../campaignQuiz.api", () => api);
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NEXT_NOT_FOUND"); } }));
+vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NEXT_NOT_FOUND"); }, redirect: (path: string) => { throw new Error(`NEXT_REDIRECT ${path}`); } }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 
 import { buildCampaignQuizMetadata, renderCampaignQuizPage } from "../CampaignQuizServerPage";

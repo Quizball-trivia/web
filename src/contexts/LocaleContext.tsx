@@ -9,6 +9,7 @@ import { cachedLocaleMessages, loadLocaleMessages, primeLocaleMessages, translat
 import { inferLocaleFromBrowser } from '@/lib/i18n/infer-locale';
 import { useDocumentLanguage } from '@/lib/i18n/useDocumentLanguage';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { chosenAccountLanguage, clearSignupLocale, takeSignupLocale } from '@/lib/i18n/signupLocale';
 
 interface LocaleContextType {
   locale: Locale;
@@ -55,8 +56,8 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
   // Only treat the stored value as an explicit choice when it's a genuinely
   // supported locale (including regional variants such as `ka-GE` or
-  // `es-MX`, `tr-TR`, `ru-RU`, `pt-BR` or `de-DE` that normalizeLocale maps to a supported base language).
-  // Otherwise an unsupported value like "fr" would normalize to "en" and be
+  // `es-MX`, `tr-TR`, `ru-RU`, `pt-BR`, `de-DE` or `fr-FR` that normalizeLocale maps to a supported base language).
+  // Otherwise an unsupported value like "xx" would normalize to "en" and be
   // mistaken for a deliberate English selection, pinning the user to English
   // instead of honoring preferredLanguage / browser inference.
   const trimmed = typeof stored === 'string' ? stored.trim() : '';
@@ -67,7 +68,8 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
     trimmed.toLowerCase().startsWith('tr') ||
     trimmed.toLowerCase().startsWith('ru') ||
     trimmed.toLowerCase().startsWith('pt') ||
-    trimmed.toLowerCase().startsWith('de');
+    trimmed.toLowerCase().startsWith('de') ||
+    trimmed.toLowerCase().startsWith('fr');
   return {
     locale: normalizeLocale(stored),
     hasStoredLocale,
@@ -93,7 +95,7 @@ function useMessages(locale: Locale, initialLocale?: Locale, initialMessages?: M
 }
 
 export function LocaleProvider({ children, initialLocale, initialMessages, geoCountry }: LocaleProviderProps) {
-  const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
+  const preferredLanguage = useAuthStore((state) => chosenAccountLanguage(state.user));
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
   // usePathname updates on every client-side navigation, so we can derive the
   // active SEO locale from the URL in real time. initialLocale only seeds the
@@ -125,9 +127,7 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
     if (initialLocale || pathLocale) return;
     const { locale: stored, hasStoredLocale } = readStoredLocale();
     const preferredLocale = isSupportedLocale(preferredLanguage) ? preferredLanguage : null;
-    const nextLocale = hasStoredLocale
-      ? stored
-      : preferredLocale ?? inferLocaleFromBrowser(geoCountry);
+    const nextLocale = preferredLocale ?? (hasStoredLocale ? stored : inferLocaleFromBrowser(geoCountry));
     if (nextLocale !== 'en') {
       queueMicrotask(() => {
         localeSourceRef.current = 'app';
@@ -149,7 +149,22 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
   useEffect(() => {
     if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;
 
-    const { locale: storedLocale } = readStoredLocale();
+    // A signed-in account's language wins over whatever this browser held before the localized page.
+    if (isSupportedLocale(preferredLanguage)) {
+      localeSourceRef.current = 'app';
+      storage.set(STORAGE_KEYS.LOCALE, preferredLanguage);
+      if (preferredLanguage !== locale) queueMicrotask(() => setLocaleState(preferredLanguage));
+      return;
+    }
+
+    const { locale: storedLocale, hasStoredLocale } = readStoredLocale();
+    // A visitor who never chose a language keeps the one they arrived in (a French search result, then Play), and keeps it
+    // across a reload, which would otherwise infer it again from the browser.
+    if (!hasStoredLocale) {
+      localeSourceRef.current = 'app';
+      storage.set(STORAGE_KEYS.LOCALE, locale);
+      return;
+    }
     if (storedLocale === locale) {
       localeSourceRef.current = 'app';
       return;
@@ -159,7 +174,24 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
       localeSourceRef.current = 'app';
       setLocaleState(storedLocale);
     });
-  }, [locale, pathLocale]);
+  }, [locale, pathLocale, preferredLanguage]);
+
+  // The language a signup started in: for a new account only, and it runs after the effect above so it wins over a stored one.
+  useEffect(() => {
+    if (!hasHydratedRef.current || preferredLanguage === undefined) return;
+    if (preferredLanguage !== null) {
+      clearSignupLocale();
+      return;
+    }
+    if (pathLocale) return;
+    const pending = takeSignupLocale();
+    if (!pending) return;
+    storage.set(STORAGE_KEYS.LOCALE, pending);
+    queueMicrotask(() => {
+      localeSourceRef.current = 'app';
+      setLocaleState(pending);
+    });
+  }, [pathLocale, preferredLanguage]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -188,6 +220,7 @@ export function LocaleProvider({ children, initialLocale, initialMessages, geoCo
   }, [locale, pathLocale, preferredLanguage]);
 
   const setLocale = useCallback((newLocale: Locale) => {
+    clearSignupLocale();
     localeSourceRef.current = 'app';
     setLocaleState(newLocale);
   }, []);

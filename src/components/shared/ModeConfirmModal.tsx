@@ -16,6 +16,7 @@
 //   • Black full-width primary CTA: "PLAY FOR <N> TICKET(S)" with
 //     the cost in yellow.
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
+import { SHOW_TICKETS } from "@/lib/tickets";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -54,10 +55,11 @@ const CONFIG = {
     titlePrefixKey: "modeConfirm.rankedTitlePrefix",
     titleRestKey: "modeConfirm.rankedTitleRest",
     descriptionKey: "modeConfirm.rankedDescription",
-    icon: "/assets/brand/ranked-hands-trophy.svg",
+    icon: "/assets/brand/ranked-hands-ucl.webp",
     statLeftKey: "modeConfirm.rankedStatLeft",
     statRightKey: "modeConfirm.rankedStatRight",
-    entryCost: 1,
+    // Ranked 2.0 is free (tickets hidden, see lib/tickets).
+    entryCost: SHOW_TICKETS ? 1 : 0,
   },
   friendly: {
     bg: "#1645FF",

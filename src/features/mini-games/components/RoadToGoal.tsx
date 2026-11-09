@@ -13,9 +13,10 @@ import type { CoinSampleMode } from './FinalThird';
 import { ROAD_DECISION_MS, ROAD_QUESTION_MS, didSurvive, payoutForClearedZones, survivalOddsForZone } from '@/features/coin-samples/engines/roadToGoalOdds';
 import { playCash } from '../lib/crowdAudio';
 import { LiveActivityStrip } from './LiveActivityStrip';
-import { type MiniLocale, useMiniLocale } from '../lib/i18n';
+import { type MiniLocale, useMiniLocale, useMiniT } from '../lib/i18n';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useStoreWallet } from '@/lib/queries/store.queries';
+import { decimalText } from "@/lib/i18n/typography";
 import {
   acquireRoadToGoalMutation,
   didRoadToGoalMutationAdvance,
@@ -334,6 +335,42 @@ const COPY = {
     target: 'Ziel',
     finish: 'Tor',
   },
+  fr: {
+    title: 'Direction le but',
+    subtitle: 'Bats 10 défenseurs et le gardien. Une question de foot par zone.',
+    balance: 'Solde',
+    zone: 'Zone',
+    stake: 'Points',
+    introEyebrow: 'Le défi des onze zones',
+    introTitle: 'Connais le jeu. Dribble. Sécurise.',
+    introBody: 'Chaque réponse déclenche un test de survie. Les bonnes réponses améliorent tes chances. Après chaque zone franchie sans encombre, sécurise le montant ou attaque le défenseur suivant.',
+    kickOff: 'Commence avec {stake}',
+    noFunds: 'Pas assez de points pour cette tentative',
+    nextReturn: 'Prochain montant',
+    currentReturn: 'Montant actuel',
+    question: 'Question',
+    answerFast: 'Réponds avant que le défenseur te rattrape',
+    clean: 'Défenseur passé',
+    cleanBody: 'Tu as franchi la zone {zone}. Le défenseur suivant s’avance déjà.',
+    continue: 'Attaque la zone {zone}',
+    cashOut: 'Sécurise {amount}',
+    saved: 'Arrêt !',
+    savedBody: 'Le gardien a arrêté ton dernier tir. Tes points sont perdus.',
+    tackled: 'Tacle !',
+    tackledBody: 'Le défenseur a stoppé ta course dans la zone {zone}. Tes points sont perdus.',
+    correctWas: 'Bonne réponse : {answer}',
+    newRun: 'Nouvelle tentative',
+    cashed: 'Parcours sécurisé',
+    cashedBody: 'Zones franchies : {zones} · {mult}×.',
+    finalTitle: 'BUT !',
+    finalBody: 'Dix défenseurs éliminés. Gardien battu. Un parcours parfait à 4,00×.',
+    won: 'Tu as sécurisé {amount}',
+    startAgain: 'Rejouer',
+    liveRoute: 'Parcours en direct',
+    safe: 'franchie',
+    target: 'cible',
+    finish: 'But',
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -360,7 +397,7 @@ function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): T
 }
 
 function points(value: number, locale: string) {
-  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'pt' ? 'pt-BR' : undefined, {
+  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'pt' ? 'pt-BR' : undefined, {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });
@@ -505,9 +542,12 @@ interface RoadSceneProps {
   progress: number;
   phase: Phase;
   labels: { liveRoute: string; safe: string; target: string };
+  /** The partner frame can scale the page (CSS zoom): the pitch must measure its unscaled size. */
+  zoomSafe?: boolean;
 }
 
 function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
+  const locale = useMiniLocale();
   const activeZone = Math.min(progress, ZONES - 1);
   const focusX = progress >= ZONES ? FIRST_ZONE_X + ZONES * LANE : FIRST_ZONE_X + activeZone * LANE;
   const playerX = progress === 0 ? FIRST_ZONE_X - 58 : FIRST_ZONE_X + (progress - 1) * LANE;
@@ -554,7 +594,7 @@ function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
                 animate={active ? { scale: [1, 1.06, 1] } : { scale: 1 }}
                 transition={{ duration: 1.15, repeat: active ? Infinity : 0 }}
               >
-                {multiplier.toFixed(2)}×
+                {decimalText(multiplier, 2, locale)}×
               </motion.div>
               <div className="absolute left-1/2 top-[132px] -translate-x-1/2 whitespace-nowrap font-poppins text-[8px] font-black uppercase tracking-[0.14em] text-white/38">
                 {cleared ? labels.safe : active ? labels.target : `0${index + 1}`.slice(-2)}
@@ -639,6 +679,7 @@ export function RoadToGoal({
   const live = liveProp || Boolean(partner);
   const api = partner?.client ?? roadToGoalApi;
   const locale = useMiniLocale();
+  const t = useMiniT();
   const { t: tApp } = useLocale();
   const copy = { ...(COPY[locale] ?? COPY.en), ...partner?.copy };
   const bank = useMemo(() => sample?.questions ?? getTrivia(locale), [locale, sample]);
@@ -872,18 +913,16 @@ export function RoadToGoal({
         setPhase('idle');
       }
       setLiveError(proofLoadFailed
-        ? locale === 'ka'
-          ? 'სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა'
-          : 'Fairness proof could not be loaded — try again'
+        ? t('Fairness proof could not be loaded — try again')
         : null);
       return state;
     } catch {
       lastReconcileFailedRef.current = true;
       trackRoadToGoalError({ action: 'resume', errorName: 'reconcile_failed' });
-      setLiveError(locale === 'ka' ? 'კავშირი შეფერხდა — სცადე ხელახლა' : 'Connection interrupted — try again');
+      setLiveError(t('Connection interrupted — try again'));
       return null;
     }
-  }, [api, applyLiveState, hasPartner, loadProof, locale, refetchWallet]);
+  }, [api, applyLiveState, hasPartner, loadProof, refetchWallet, t]);
 
   useEffect(() => {
     if (!live) return;
@@ -1009,9 +1048,7 @@ export function RoadToGoal({
     pendingMutationRef.current = acquired.pending;
     if (acquired.blocked) {
       setLiveError(
-        locale === 'ka'
-          ? 'წინა მოქმედება ჯერ მოწმდება — გაიმეორე იგივე მოქმედება'
-          : 'Your previous action is still resolving — retry the same action',
+        t('Your previous action is still resolving — retry the same action'),
       );
       return null;
     }
@@ -1028,9 +1065,7 @@ export function RoadToGoal({
       } catch {
         trackRoadToGoalError({ action: 'proof', errorName: 'proof_load_failed' });
         setLiveError(
-          locale === 'ka'
-            ? 'სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა'
-            : 'Fairness proof could not be loaded — try again',
+          t('Fairness proof could not be loaded — try again'),
         );
       }
       await refetchWallet();
@@ -1414,6 +1449,7 @@ export function RoadToGoal({
             progress={progress}
             phase={phase}
             labels={{ liveRoute: copy.liveRoute, safe: copy.safe, target: copy.target }}
+            zoomSafe={hasPartner}
           />
         </div>
 
@@ -1465,7 +1501,7 @@ export function RoadToGoal({
                   {live && !partner && (
                     <div className="mt-2 grid gap-2 border-t border-white/10 pt-2">
                       <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
-                        {locale === 'ka' ? 'კლიენტის seed' : 'Client seed'}
+                        {t('Client seed')}
                         <input
                           value={clientSeed}
                           onChange={(event) => setClientSeed(event.target.value.slice(0, 128))}
@@ -1474,17 +1510,17 @@ export function RoadToGoal({
                         />
                       </label>
                       <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
-                        {locale === 'ka' ? 'ავტომატურად აიღე' : 'Auto-bank'}
+                        {t('Auto-bank')}
                         <select
                           value={autoCashoutZone ?? 0}
                           onChange={(event) => setAutoCashoutZone(Number(event.target.value) || null)}
                           disabled={busy || !newRunsEnabled}
                           className="h-8 rounded-lg border border-white/15 bg-game-stadium-panel/65 px-2 text-[9px] text-white outline-none focus:border-brand-cyan"
                         >
-                          <option value={0}>{locale === 'ka' ? 'გამორთულია' : 'Off'}</option>
+                          <option value={0}>{t('Off')}</option>
                           {MULTIPLIERS.slice(0, 10).map((multiplier, index) => (
                             <option key={multiplier} value={index + 1}>
-                              {locale === 'ka' ? 'ზონა' : 'Zone'} {index + 1} · {multiplier.toFixed(2)}×
+                              {t('Zone')} {index + 1} · {decimalText(multiplier, 2, locale)}×
                             </option>
                           ))}
                         </select>
@@ -1508,12 +1544,10 @@ export function RoadToGoal({
                   {effectiveBalance < stake && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">{copy.noFunds}</p>}
                   {live && !newRunsEnabled && (
                     <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">
-                      {locale === 'ka'
-                        ? 'ახალი თამაშები დროებით გამორთულია — მიმდინარე გარბენი კვლავ დაცულია'
-                        : 'New runs are paused — any active run remains available'}
+                      {t('New runs are paused — any active run remains available')}
                     </p>
                   )}
-                  {live && walletError && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-orange">{locale === 'ka' ? 'ბალანსი ვერ ჩაიტვირთა' : 'Wallet unavailable'}</p>}
+                  {live && walletError && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-orange">{t('Wallet unavailable')}</p>}
                 </div>
               </motion.div>
             )}
@@ -1559,11 +1593,11 @@ export function RoadToGoal({
                 {live && !partner && liveState?.question && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <div className="rounded-lg border border-brand-green/35 bg-brand-green/10 px-2 py-1.5 text-center">
-                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{locale === 'ka' ? 'სწორი პასუხი' : 'Correct answer'}</div>
+                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{t('Correct answer')}</div>
                       <div className="font-poppins text-xs font-black text-brand-green">{(liveState.question.correct_survival_bp / 100).toFixed(2)}%</div>
                     </div>
                     <div className="rounded-lg border border-brand-orange/35 bg-brand-orange/10 px-2 py-1.5 text-center">
-                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{locale === 'ka' ? 'არასწორი პასუხი' : 'Wrong answer'}</div>
+                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{t('Wrong answer')}</div>
                       <div className="font-poppins text-xs font-black text-brand-orange">{(liveState.question.wrong_survival_bp / 100).toFixed(2)}%</div>
                     </div>
                   </div>
@@ -1649,7 +1683,7 @@ export function RoadToGoal({
                 </div>
                 <h2 className="mt-3 font-poppins text-xl font-black uppercase text-brand-yellow">{copy.cashed}</h2>
                 <p className="mt-1 font-poppins text-xs font-semibold text-white/75">
-                  {fill(copy.cashedBody, { zones: progress, mult: currentMultiplier.toFixed(2) })}
+                  {fill(copy.cashedBody, { zones: progress, mult: decimalText(currentMultiplier, 2, locale) })}
                 </p>
                 <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout, locale)}</div>
                 <button type="button" data-testid="road-to-goal-finish" onClick={finishOrReset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
@@ -1684,19 +1718,19 @@ export function RoadToGoal({
           {live && proof && (phase === 'cashed' || phase === 'complete' || phase === 'tackled') && (
             <details className="relative z-10 mt-2 rounded-lg border border-white/10 bg-game-stadium-panel/55 px-2.5 py-2 font-poppins text-[8px] text-white/55">
               <summary className="cursor-pointer font-black uppercase tracking-wider text-brand-cyan">
-                {locale === 'ka' ? 'სამართლიანი თამაშის მტკიცებულება' : 'Fair-play proof'}
+                {t('Fair-play proof')}
               </summary>
               <div className="mt-2 break-all leading-relaxed">
                 <div className={proofVerified === true ? 'text-brand-green' : proofVerified === false ? 'text-brand-orange' : 'text-white/55'}>
                   {proofVerified === null
-                    ? (locale === 'ka' ? 'მტკიცებულება მოწმდება…' : 'Verifying proof…')
+                    ? (t('Verifying proof…'))
                     : proofVerified
-                      ? (locale === 'ka' ? '✓ მტკიცებულება გადამოწმებულია' : '✓ Proof independently verified')
-                      : (locale === 'ka' ? '⚠ მტკიცებულება ვერ დადასტურდა' : '⚠ Proof verification failed')}
+                      ? (t('✓ Proof independently verified'))
+                      : (t('⚠ Proof verification failed'))}
                 </div>
                 <div>commit: {proof.commit_hash}</div>
                 <div>seed: {proof.server_seed}</div>
-                <div>{proof.zones.length} {locale === 'ka' ? 'დადასტურებული გათამაშება' : 'verified rolls'}</div>
+                <div>{proof.zones.length} {t('verified rolls')}</div>
               </div>
             </details>
           )}

@@ -155,6 +155,28 @@ const copy = {
     listOf: (n: number, of: number) => `Liste ${n}/${of}`, listDone: "Liste vollständig!", listOut: "Alle sind ausgeschieden", nextList: "Nächste Liste kommt…",
     pointsStat: "Punkte", foundStat: "Gefunden", slotsDetail: (n: number) => `Gefunden: ${n}`, lifeLost: (name: string) => `${name} hat ein Leben verloren`, outOfList: "Ausgeschieden",
   },
+  fr: {
+    brand: ["Devine", "le top 10"] as const,
+    title: "Devine le top 10", tag: "Un top 10 par jour",
+    lines: [
+      "Une liste cachée du top 10 par jour. Nomme les joueurs qui y figurent.",
+      "Chaque bonne réponse rejoint sa place dans la tour. Une réponse déjà dans la tour ne coûte rien.",
+      "3 erreurs et la tour l’emporte. Trouve les dix !",
+    ],
+    roomLines: ["À tour de rôle, nommez des réponses de la même liste cachée.", "Chaque place vaut le nombre de points indiqué : #10 = 10 points.", "Mauvaise réponse ou chrono écoulé = une vie en moins. 2 vies par liste, 3 listes."],
+    hidden: "Liste cachée", asOf: (d: string) => `Au ${d}`, found: (n: number) => `${n}/10`,
+    placeholder: "Qui figure dans la liste ?", say: "Envoyer", giveUp: "Abandonner",
+    ok: (name: string, rank: number) => `#${rank} ${name}`, wrong: (t: string) => `${t} ne figure pas dans la liste`, repeat: (t: string) => `${t} est déjà dans la tour`,
+    unknown: (t: string) => `« ${t} » n’est pas reconnu : vérifie l’orthographe`, repeatWrong: (t: string) => `${t} : déjà essayé, aucune vie perdue`, opensTomorrow: "Le reste de la liste s’ouvrira demain, une fois le classement du jour clôturé.", corrected: "Cette liste a été corrigée après ta partie : ses réponses ne sont donc pas affichées ici.", ambiguous: (t: string) => `« ${t} » peut désigner plusieurs joueurs : écris le nom complet`, time: "Temps écoulé",
+    missesTitle: "Pas dans la liste", livesLeft: (n: number) => `${n} ${n > 1 ? "vies" : "vie"} restante${n > 1 ? "s" : ""}`,
+    endComplete: "Les dix sont trouvés !", endLives: "La tour t’a battu", endGaveUp: "Tu as abandonné",
+    score: (n: number) => `${n}/10`, missedTitle: "Non trouvés",
+    fullListTitle: "La liste complète", legendFound: "Trouvées", legendMissed: "Manquées", practiceCta: "Tour d’entraînement", practiceHint: "Entraîne-toi avec une liste plus facile des archives. Sans classement ni pression.",
+    shareText: (n: number, found: number, tower: string) => `Devine le top 10 #${n} : ${found}/10\n${tower}`,
+    yourTurn: "À toi de jouer", seatTurn: (name: string) => `À ${name} de jouer`, waiting: "Attends ton tour", sending: "Vérification…", youOut: "Tu n’as plus de vies sur cette liste",
+    listOf: (n: number, of: number) => `Liste ${n}/${of}`, listDone: "Liste terminée !", listOut: "Tout le monde a été éliminé", nextList: "Prochaine liste en approche…",
+    pointsStat: "Points", foundStat: "Trouvées", slotsDetail: (n: number) => `Réponses trouvées : ${n}`, lifeLost: (name: string) => `${name} a perdu une vie`, outOfList: "Éliminé",
+  },
 } as const;
 
 export const tenableCopy = (locale: string) => copy[asWordLocale(locale)];

@@ -38,33 +38,40 @@ import {
   Timer,
   VenetianMask,
   Zap,
+  Hourglass,
+  RefreshCcw,
+  Split,
+  Undo2,
+  Users,
+  Drama, Flame, Meh,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CARD_BY_ID, type CardDef, type CardId, type CardPhase, type CardRole, type CardType } from './zoneMatch.cards';
+import { useZoneCopy } from './useZoneCopy';
 
 type Icon = typeof Zap;
 
 /** The artifact's QuizBall palette per card type; `ink` is the readable text colour on `color`. */
-export const CARD_TYPE_THEME: Record<CardType, { label: string; color: string; ink: string; deep: string; grad: [string, string]; Icon: Icon }> = {
-  boost: { label: 'Boost', color: '#58CC02', ink: '#071013', deep: '#1F6B06', grad: ['#85E000', '#2D950B'], Icon: Rocket },
-  sabotage: { label: 'Sabotage', color: '#FF4B4B', ink: '#FFFFFF', deep: '#8A1F1F', grad: ['#FF6B6B', '#B8401D'], Icon: Bomb },
-  defense: { label: 'Defense', color: '#1CB0F6', ink: '#FFFFFF', deep: '#0B2FA8', grad: ['#1CB0F6', '#1645FF'], Icon: ShieldCheck },
-  tactical: { label: 'Tactical', color: '#FFC800', ink: '#071013', deep: '#A35A00', grad: ['#FFE500', '#FF9600'], Icon: Brain },
+export const CARD_TYPE_THEME: Record<CardType, { color: string; ink: string; deep: string; grad: [string, string]; Icon: Icon }> = {
+  boost: { color: '#58CC02', ink: '#071013', deep: '#1F6B06', grad: ['#85E000', '#2D950B'], Icon: Rocket },
+  sabotage: { color: '#FF4B4B', ink: '#FFFFFF', deep: '#8A1F1F', grad: ['#FF6B6B', '#B8401D'], Icon: Bomb },
+  defense: { color: '#1CB0F6', ink: '#FFFFFF', deep: '#0B2FA8', grad: ['#1CB0F6', '#1645FF'], Icon: ShieldCheck },
+  tactical: { color: '#FFC800', ink: '#071013', deep: '#A35A00', grad: ['#FFE500', '#FF9600'], Icon: Brain },
 };
 
-/** When a card is played: the chip on the card, and the words for the deck builder and the inspect view. */
-export const PHASE_INFO: Record<CardPhase, { label: string; long: string; Icon: Icon }> = {
-  blind: { label: 'Before Q', long: 'Before the question — both pick at once', Icon: EyeOff },
-  live: { label: 'During Q', long: 'During the question', Icon: Timer },
-  reaction: { label: 'After reveal', long: 'Right after their card is revealed', Icon: RotateCcw },
+/** When a card is played: its icon (zoneMatch.copy has the words). */
+export const PHASE_INFO: Record<CardPhase, { Icon: Icon }> = {
+  blind: { Icon: EyeOff },
+  live: { Icon: Timer },
+  reaction: { Icon: RotateCcw },
 };
 
-/** Who can play it. */
-export const ROLE_INFO: Record<CardRole, { label: string; long: string; Icon: Icon }> = {
-  any: { label: 'Any ball', long: 'Attacking or defending', Icon: ArrowLeftRight },
-  attack: { label: 'Your ball', long: 'Only when you attack', Icon: Swords },
-  defend: { label: 'Their ball', long: 'Only when they attack', Icon: Shield },
-  shot: { label: 'Your shot', long: 'Only on your shot (attacking from their side)', Icon: Goal },
+/** Who can play it: its icon. */
+export const ROLE_INFO: Record<CardRole, { Icon: Icon }> = {
+  any: { Icon: ArrowLeftRight },
+  attack: { Icon: Swords },
+  defend: { Icon: Shield },
+  shot: { Icon: Goal },
 };
 
 const SHAPE: CSSProperties = {
@@ -170,9 +177,30 @@ const GLYPH: Record<CardId, Glyph> = {
       </>
     ),
   },
+  // The newer cards: line icons for the small chips.
+  nutmeg: { Icon: Split },
+  'bicycle-kick': { Icon: Undo2 },
+  'high-press': { Icon: Users },
+  'time-wasting': { Icon: Hourglass },
+  'super-sub': { Icon: RefreshCcw },
+  feint: { Icon: Drama },
+  'poker-face': { Icon: Meh },
+  screamer: { Icon: Flame },
 };
 
-/** A card's pictogram on its own, sized by the parent's font-size (1em square), e.g. for deck thumbnails. */
+/** A card's own picture (a full-colour sticker icon, public/assets/zone-match/cards), for the badges and card faces. */
+export function CardArt({ id, used = false, className }: { id: CardId; used?: boolean; className?: string }) {
+  return (
+    <img
+      src={`/assets/zone-match/cards/${id}.webp`}
+      alt=""
+      draggable={false}
+      className={cn('pointer-events-none size-full select-none object-contain drop-shadow-[0_0.06em_0.08em_rgba(0,0,0,0.45)]', used && 'opacity-60 grayscale', className)}
+    />
+  );
+}
+
+/** A card's line pictogram, sized by the parent's font-size (1em square): for small chips, where a picture won't read. */
 export function CardGlyph({ id, className }: { id: CardId; className?: string }) {
   const glyph = GLYPH[id];
   if ('draw' in glyph) {
@@ -236,6 +264,8 @@ export function CardFace({
   dimmed?: boolean;
   className?: string;
 }) {
+  const { c } = useZoneCopy();
+  const text = c.cards[id];
   const card: CardDef = CARD_BY_ID[id];
   const theme = CARD_TYPE_THEME[card.type];
   const phase = PHASE_INFO[card.phase];
@@ -254,7 +284,7 @@ export function CardFace({
           ? 'grayscale(1) brightness(0.55)'
           : `drop-shadow(0 0.35em 0.6em rgba(0,0,0,0.45))${glow ? ` drop-shadow(0 0 0.8em ${selected ? '#FFE500' : theme.color})` : ''}`,
       }}
-      title={`${card.name}${showCost ? ` · ${card.energy}⚡` : ''} — ${card.effect}`}
+      title={`${text.name}${showCost ? ` · ${card.energy}⚡` : ''} — ${text.effect}`}
     >
       {/* Rim: white, or the brand yellow when selected. */}
       <div className="absolute inset-0" style={{ ...SHAPE, background: selected ? '#FFE500' : glow ? theme.color : 'rgba(255,255,255,0.55)' }} />
@@ -276,7 +306,7 @@ export function CardFace({
               fontSize: `${width * (size === 'full' ? 0.27 : size === 'compact' ? 0.3 : size === 'hand' ? 0.33 : 0.38)}px`,
             }}
           >
-            <CardGlyph id={id} className="drop-shadow-[0_0.06em_0.08em_rgba(0,0,0,0.45)]" />
+            <CardArt id={id} className="scale-[1.18]" />
           </div>
         </div>
 
@@ -285,10 +315,10 @@ export function CardFace({
             <Name card={card} />
             <Headline card={card} fontSize="0.74em" />
             <div className="mt-[0.35em] flex flex-wrap justify-center gap-[0.25em]">
-              <Chip Icon={phase.Icon} label={phase.label} color={card.phase === 'blind' ? '#9CB6C2' : '#FFE500'} />
-              <Chip Icon={role.Icon} label={role.label} color={theme.color} />
+              <Chip Icon={phase.Icon} label={c.phases[card.phase].label} color={card.phase === 'blind' ? '#9CB6C2' : '#FFE500'} />
+              <Chip Icon={role.Icon} label={c.roles[card.role].label} color={theme.color} />
             </div>
-            <p className="mt-[0.35em] text-center text-[0.56em] font-medium leading-[1.28] text-white/85">{card.effect}</p>
+            <p className="mt-[0.35em] text-center text-[0.56em] font-medium leading-[1.28] text-white/85">{text.effect}</p>
           </div>
         )}
         {size === 'compact' && (
@@ -296,8 +326,8 @@ export function CardFace({
             <Name card={card} />
             <Headline card={card} fontSize="0.8em" />
             <div className="mt-[0.3em] flex flex-wrap justify-center gap-[0.22em]">
-              <Chip Icon={phase.Icon} label={phase.label} color={card.phase === 'blind' ? '#9CB6C2' : '#FFE500'} />
-              <Chip Icon={role.Icon} label={role.label} color={theme.color} />
+              <Chip Icon={phase.Icon} label={c.phases[card.phase].label} color={card.phase === 'blind' ? '#9CB6C2' : '#FFE500'} />
+              <Chip Icon={role.Icon} label={c.roles[card.role].label} color={theme.color} />
             </div>
           </div>
         )}
@@ -305,9 +335,9 @@ export function CardFace({
           <div className="absolute inset-x-[0.4em] bottom-[1.05em] top-[58%] flex items-center justify-center rounded-[0.65em] px-[0.25em]" style={{ background: PANEL }}>
             <span
               className="line-clamp-2 text-center font-black uppercase leading-[1.02] tracking-[0.01em]"
-              style={{ color: theme.color === '#1CB0F6' ? '#7FD6FF' : theme.color === '#FF4B4B' ? '#FF8A8A' : theme.color, fontSize: card.short.length > 13 ? '1.42em' : '1.62em' }}
+              style={{ color: theme.color === '#1CB0F6' ? '#7FD6FF' : theme.color === '#FF4B4B' ? '#FF8A8A' : theme.color, fontSize: text.short.length > 13 ? '1.42em' : '1.62em' }}
             >
-              {card.short}
+              {text.short}
             </span>
           </div>
         )}
@@ -342,7 +372,7 @@ export function CardFace({
         <span className="grid size-[1.9em] place-items-center">
           <theme.Icon className="size-[1.05em] text-white" strokeWidth={2.6} />
         </span>
-        {size === 'full' && <span className="-ml-[0.2em] pr-[0.55em] text-[0.55em] font-extrabold uppercase tracking-[0.06em] text-white">{theme.label}</span>}
+        {size === 'full' && <span className="-ml-[0.2em] pr-[0.55em] text-[0.55em] font-extrabold uppercase tracking-[0.06em] text-white">{c.cardTypes[card.type]}</span>}
       </div>
 
       {selected && (
@@ -353,7 +383,7 @@ export function CardFace({
       {used && (
         <div className="absolute inset-0 grid place-items-center">
           <span className="-rotate-12 rounded-[0.4em] bg-surface-page/90 px-[0.6em] py-[0.2em] text-[0.9em] font-black uppercase text-white/80" style={{ fontSize: `${badge}em` }}>
-            Used
+            {c.common.used}
           </span>
         </div>
       )}
@@ -382,22 +412,25 @@ export function CardBack({ width, waiting = false, className }: { width: number;
 }
 
 function Name({ card }: { card: CardDef }) {
+  const { c } = useZoneCopy();
+  const { name } = c.cards[card.id];
   return (
-    <div className="text-center font-extrabold leading-[1.02] text-white" style={{ fontSize: card.name.length > 14 ? '0.95em' : '1.1em' }}>
-      {card.name}
+    <div className="max-w-full text-center font-extrabold leading-[1.02] text-white [overflow-wrap:anywhere]" style={{ fontSize: name.length > 14 ? '0.95em' : '1.1em' }}>
+      {name}
     </div>
   );
 }
 
 /** What the card does, in a few words on a type-coloured pill. */
 function Headline({ card, fontSize }: { card: CardDef; fontSize: string }) {
+  const { c } = useZoneCopy();
   const theme = CARD_TYPE_THEME[card.type];
   return (
     <div
       className="mt-[0.3em] rounded-full px-[0.6em] py-[0.12em] text-center font-black uppercase leading-[1.15] tracking-[0.03em]"
       style={{ background: theme.color, color: theme.ink, fontSize }}
     >
-      {card.short}
+      {c.cards[card.id].short}
     </div>
   );
 }
@@ -426,7 +459,9 @@ function hexPoints(inset: number): string {
 const RAYS = Array.from({ length: 12 }, (_, i) => {
   const a = (i / 12) * Math.PI * 2;
   const b = a + Math.PI / 24;
-  return `50,46 ${50 + Math.cos(a) * 70},${46 + Math.sin(a) * 70} ${50 + Math.cos(b) * 70},${46 + Math.sin(b) * 70}`;
+  // Rounded: the server's and the browser's sin/cos differ in the last digits (a hydration mismatch).
+  const at = (angle: number) => `${(50 + Math.cos(angle) * 70).toFixed(2)},${(46 + Math.sin(angle) * 70).toFixed(2)}`;
+  return `50,46 ${at(a)} ${at(b)}`;
 }).join(' M');
 
 /** Rim colours, top to bottom: silver, gold when picked, the type colour when it can be used, grey once used. */
@@ -470,6 +505,8 @@ export function PlaystyleBadge({
   dimmed?: boolean;
   className?: string;
 }) {
+  const { c } = useZoneCopy();
+  const text = c.cards[id];
   const card = CARD_BY_ID[id];
   const theme = CARD_TYPE_THEME[card.type];
   const glow = (playable || selected) && !used;
@@ -485,7 +522,7 @@ export function PlaystyleBadge({
     <div
       className={cn('relative flex shrink-0 select-none flex-col items-center font-poppins', (dimmed || used) && 'opacity-45', className)}
       style={{ width: Math.max(size, showName ? size + 16 : size) }}
-      title={`${card.name}${showCost ? ` · ${card.energy}⚡` : ''} — ${card.effect}`}
+      title={`${text.name}${showCost ? ` · ${card.energy}⚡` : ''} — ${text.effect}`}
     >
       <div className="relative" style={{ width: size, height: size * 0.9 }}>
         {glow && (
@@ -543,8 +580,8 @@ export function PlaystyleBadge({
           <polygon points={hexPoints(11)} fill="none" stroke={`url(#${uid}bevel)`} strokeWidth={2.6} strokeLinejoin="round" />
         </svg>
 
-        <div className="absolute inset-0 grid place-items-center pb-[2%]" style={{ fontSize: size * 0.4, color: used ? 'rgba(255,255,255,0.6)' : '#FFFFFF' }}>
-          <CardGlyph id={id} className="drop-shadow-[0_0.05em_0.06em_rgba(0,0,0,0.55)]" />
+        <div className="absolute inset-[10%] grid place-items-center pb-[2%]">
+          <CardArt id={id} used={used} />
         </div>
 
         {emblem && (
@@ -574,18 +611,18 @@ export function PlaystyleBadge({
         {used && (
           <span className="absolute inset-x-0 bottom-[8%] flex justify-center">
             <span className="flex items-center gap-0.5 rounded-full bg-surface-page/90 px-1.5 py-px text-[9px] font-black uppercase text-white/80">
-              <Check className="size-2.5" strokeWidth={4} /> Used
+              <Check className="size-2.5" strokeWidth={4} /> {c.common.used}
             </span>
           </span>
         )}
       </div>
       {showName && (
         <>
-          <div className="mt-1 max-w-full text-center font-extrabold uppercase leading-tight text-white" style={{ fontSize: Math.max(10, size * 0.14), marginTop: emblem ? size * 0.06 : undefined }}>
-            {card.name}
+          <div className="mt-1 max-w-full text-center font-extrabold uppercase leading-tight text-white [overflow-wrap:anywhere]" style={{ fontSize: Math.max(10, size * 0.14), marginTop: emblem ? size * 0.06 : undefined }}>
+            {text.name}
           </div>
           <div className="mt-0.5 max-w-full text-center font-black uppercase leading-tight" style={{ color: theme.color, fontSize: Math.max(9, size * 0.115) }}>
-            {card.short}
+            {text.short}
           </div>
         </>
       )}

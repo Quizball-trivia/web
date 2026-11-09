@@ -87,10 +87,10 @@ export interface CampaignQuiz {
   rating: CampaignQuizRating;
   page: CampaignQuizPage | null;
   /**
-   * Which language editions exist (a missing one is served in English). Absent from older backends; `pt` is absent
-   * from backends older than the Brazilian Portuguese pages (and needs the page copy and every question in pt).
+   * Which language editions exist (a missing one is served in English). Absent from older backends, as is any language
+   * a backend predates. ka, pt, de, tr and fr also need every question of the set in that language.
    */
-  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean };
+  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean; tr?: boolean; fr?: boolean };
 }
 
 export interface CampaignQuizAnswer {

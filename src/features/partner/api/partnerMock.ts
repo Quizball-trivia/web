@@ -20,7 +20,7 @@ const SEEDED_GAMES: Array<Omit<PartnerGameTile, "playsLeft">> = [
   { gameId: "card-detective", playsLimit: 1, playsUsed: 0, maxScore: 1000, available: true, inProgress: false, lastResult: null },
   { gameId: "road-to-goal", playsLimit: 1, playsUsed: 0, maxScore: 400, available: true, inProgress: false, lastResult: null },
   { gameId: "trivia-mines", playsLimit: 1, playsUsed: 0, maxScore: null, available: false, inProgress: false, lastResult: null },
-  { gameId: "quiz-board", playsLimit: 1, playsUsed: 0, maxScore: 1800, available: false, inProgress: false, lastResult: null },
+  { gameId: "quiz-board", playsLimit: 1, playsUsed: 0, maxScore: 900, available: false, inProgress: false, lastResult: null },
 ];
 
 const REDEEM_ERRORS: Record<string, PartnerTransportResponse> = {

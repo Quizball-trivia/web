@@ -15,6 +15,7 @@ import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
+import { labelColon } from "@/lib/i18n/typography";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -229,6 +230,7 @@ export function CareerPathBoard({
   score,
 }: CareerPathBoardProps) {
   const copy = getDailyChallengeCopy();
+  const { locale } = useLocale();
   return (
     <div className="w-full">
     {/* Club path chips — the question itself (no separate prompt card). */}
@@ -255,7 +257,7 @@ export function CareerPathBoard({
     {/* Reveal the answer on a wrong/timeout result (correct uses the splash). */}
     {revealedAnswer !== null && (
       <p className="mt-3 text-center text-white/55" style={{ ...poppins, fontSize: 'clamp(12px, 1.4vw, 16px)' }}>
-        {`${copy.answerPrefix}: ${revealedAnswer}`}
+        {`${copy.answerPrefix}${labelColon(locale)} ${revealedAnswer}`}
       </p>
     )}
 

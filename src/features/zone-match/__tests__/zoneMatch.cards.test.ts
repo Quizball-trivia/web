@@ -7,8 +7,9 @@ const playerAt = (zone: Possession['zone']): Possession => ({ attacker: 'player'
 const right = { player: true, opponent: true };
 
 describe('card list', () => {
-  it('has the 20 artifact cards with their energy costs (five changed after playtesting and the balance sims)', () => {
-    expect(CARDS).toHaveLength(20);
+  it('has the 20 artifact cards plus 8 added after the balance sims, with their energy costs', () => {
+    expect(CARDS).toHaveLength(28);
+    expect(CARDS.slice(20).map((c) => c.id)).toEqual(['nutmeg', 'bicycle-kick', 'high-press', 'time-wasting', 'super-sub', 'feint', 'poker-face', 'screamer']);
     expect(Object.fromEntries(CARDS.map((c) => [c.id, c.energy]))).toMatchObject({
       'first-touch': 2, 'fifty-fifty': 1, 'golden-boot': 2, 'captains-armband': 2, 'second-ball': 1,
       'floodlight-failure': 2, 'muddy-pitch': 2, fog: 1, 'yellow-card': 2, 'offside-trap': 2,
@@ -18,25 +19,21 @@ describe('card list', () => {
     const changed = CARDS.filter((c) => c.originalEnergy !== undefined).map((c) => c.id);
     expect(changed.sort()).toEqual(['counter-attack', 'first-touch', 'floodlight-failure', 'fog', 'second-ball']);
   });
-
-  it('gives every card a short headline that fits on the card', () => {
-    for (const card of CARDS) expect(card.short.length).toBeLessThanOrEqual(18);
-  });
 });
 
 describe('deck building', () => {
   it('caps a loadout at 3 playstyles, 1 sabotage and the 5⚡ budget', () => {
     const sabotage: CardId[] = ['fog'];
-    expect(deckBlocker(sabotage, 'yellow-card')).toMatch(/sabotage/);
-    expect(deckBlocker(['fifty-fifty', 'fog', 'shin-pads'], 'dummy-run')).toMatch(/full/);
+    expect(deckBlocker(sabotage, 'yellow-card')).toBe('deck-sabotage');
+    expect(deckBlocker(['fifty-fifty', 'fog', 'shin-pads'], 'dummy-run')).toBe('deck-full');
     expect(deckBlocker(sabotage, 'tiki-taka')).toBeNull();
     // 3⚡ + 2⚡ fills the budget: two playstyles and done.
     expect(deckBlocker(['goalkeeper-gloves'], 'park-the-bus')).toBeNull();
-    expect(deckBlocker(['goalkeeper-gloves', 'park-the-bus'], 'fifty-fifty')).toMatch(/only 0⚡ left/);
+    expect(deckBlocker(['goalkeeper-gloves', 'park-the-bus'], 'fifty-fifty')).toBe('deck-budget');
     expect(deckFull(['goalkeeper-gloves', 'park-the-bus'])).toBe(true);
     // 1⚡ + 2⚡ + 2⚡ is three within the budget.
     expect(deckBlocker(['fifty-fifty', 'park-the-bus'], 'counter-attack')).toBeNull();
-    expect(deckBlocker(['fifty-fifty', 'park-the-bus'], 'tiki-taka')).toMatch(/Costs 3⚡ — only 2⚡ left/);
+    expect(deckBlocker(['fifty-fifty', 'park-the-bus'], 'tiki-taka')).toBe('deck-budget');
     expect(deckFull(['fifty-fifty'])).toBe(false);
   });
 

@@ -14,6 +14,7 @@ import { ClueBanner, StickyClue } from "./CodenamesSolo";
 import { useCardAlt } from "./codenames.alt";
 import { knownName, suggestNames } from "./codenames.names";
 import { cardArt, cardsLeft, clueOnBoard, foldClue, kindFor, me, myTeamOf, type BoardKind, type CodenamesCommand, type CodenamesRoomView, type RoomPlayer, type Team } from "./codenames.view";
+import { labelColon } from "@/lib/i18n/typography";
 
 const other = (t: Team): Team => (t === 0 ? 1 : 0);
 
@@ -412,7 +413,7 @@ export function CodenamesResult({ view, locale, onRoom, onExit }: { view: Codena
             <p className="mt-1 text-sm font-bold opacity-80">{reason}</p>
             <p data-codenames-cards-left className="mt-2 text-sm font-black tabular-nums" style={poppins}>
               <span className="block text-[11px] font-bold opacity-75">{c.cardsLeftTitle}</span>
-              <span className="whitespace-nowrap">{c.yourTeam}: {cardsLeft(view, myTeam)}</span> · <span className="whitespace-nowrap">{c.rivalTeam}: {cardsLeft(view, other(myTeam))}</span>
+              <span className="whitespace-nowrap">{c.yourTeam}{labelColon(locale)} {cardsLeft(view, myTeam)}</span> · <span className="whitespace-nowrap">{c.rivalTeam}{labelColon(locale)} {cardsLeft(view, other(myTeam))}</span>
             </p>
           </div>
           <CodenamesBoard className="mt-3" cards={cards} mode="end" kinds={c.kinds} cardLabel={c.cardLabel} altOf={altOf} />

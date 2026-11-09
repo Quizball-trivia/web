@@ -619,7 +619,10 @@
     "subtitle": "Otomatik olarak jeton ve xp kazanmak için maç hedeflerini tamamla.",
     "tabDaily": "Günlük",
     "tabWeekly": "Haftalık",
-    "back": "Geri"
+    "back": "Geri",
+    "loading": "Hedefler yükleniyor...",
+    "error": "Hedefler yüklenemedi. Yenilemeyi dene.",
+    "empty": "Kullanılabilir hedef yok."
   },
   "homeDashboard": {
     "dailyObjectives": "Günlük Görevler",
@@ -1499,6 +1502,8 @@
     "readyCopyRoomGameUpTo4": "2-4 oyuncu. Herkes hazır olduğunda oda sahibi başlatabilir.",
     "readyCopyRoomGameUpTo8": "2–8 oyuncu. Herkes hazır olduğunda oda sahibi başlatabilir.",
     "startRoomGame": "Oyunu başlat",
+    "startVsBot": "Bota karşı oyna",
+    "readyCopyVsBot": "Hazır mısın? Bota karşı bir antrenman maçı başlat.",
     "roomTabSharedPlayer": "Ortak Futbolcu (2–6)",
     "roomSharedPlayer": "Ortak Futbolcu · 2-6 oyuncu",
     "roomSharedPlayerDescription": "İki kulüp gösterilir ve herkes ikisinde de oynamış bir futbolcuyu yazmak için yarışır. 2 kişide ilk doğru cevap puanı alır; 3 veya daha fazla kişide ne kadar hızlı cevaplarsan o kadar çok puan. Jeton ya da RP yok.",
@@ -1514,12 +1519,18 @@
     "roomTabDatoFalso": "Hangisi Yanlış? (2–6)",
     "roomDatoFalso": "Hangisi Yanlış? · 2 ila 6 oyuncu",
     "roomDatoFalsoDescription": "Herkes aynı kartı aynı anda görür: bir futbolcu, bir iddia ve beş seçenek, biri yanlış. Onu bul. Maç başına iki joker. Jeton veya RP yok.",
+    "roomTabZoneMatch": "Ranked 2.0 (beta)",
+    "roomZoneMatch": "Ranked 2.0 beta · 1'e 1",
+    "roomZoneMatchDescription": "Yeni ranked: bölge bölge hücum et, soru düellolarını kazan, oyun stillerini kullan ve gol at. Coin ya da RP olmadan test maçı.",
     "roomTabConexiones": "Futbol Connections (1v1)",
     "roomConexiones": "Futbol Connections · 1'e 1",
     "roomConexionesDescription": "16 futbolculu beş tahta. Sırayla dörtlü bir grup bul: herkese bir deneme, tutsa da tutmasa da. Son dört mü? Bağlantıyı söyle, puanı al. Coin ya da RP yok.",
     "roomTabDarts501": "Futbol Dart Oyunu 501",
     "roomDarts501": "Futbol Dart Oyunu 501 · 2–6 oyuncu",
     "roomDarts501Description": "Herkes 501'den başlar. Her ok, leg'in kategorisinden bir futbolcu: onun sayısı düşülür. 0 ile −10 arasında bitir; 180 üstü puan getirmez. 3 leg'de en iyisi. Jeton ya da RP yok.",
+    "roomTabDraft": "Futbol Draftı",
+    "roomDraft": "Futbol Draftı · 2–6 oyuncu",
+    "roomDraftDescription": "Herkes aynı çevirmelerle ilk 11'ini kurar ve alınan oyuncu başkasına kalmaz. Takım takıma eşleşmeler iç saha ve deplasman olmak üzere iki maçta belirlenir. Jeton ya da RP yok.",
     "roomOptionTournament": "Turnuva",
     "roomTournamentRandom": "Rastgele",
     "roomTournamentTooSmall": "Bu turnuva için oyuncu sayısı fazla: daha büyük bir turnuva seç.",
@@ -1903,6 +1914,9 @@
     "finalizingResult": "Sonuç tamamlanıyor..."
   },
   "training": {
+    "demoEndMessage": "Bu, en önemli 1v1 modumuz: sıralamalı oyunda rakibin gerçek bir oyuncu olur.",
+    "demoEndDone": "Tamam",
+    "demoBack": "Demolara dön",
     "loadError": "Öğretici soruları yüklenemedi. Lütfen tekrar deneyin.",
     "retryLoading": "Tekrar dene",
     "exitLoading": "Öğreticiden çık",
@@ -2624,7 +2638,11 @@
     "rewardEntryRule": "Katılım ücretsizdir. Sıralamalı maçlarda gereken QP’yi kazan, kaydol ve başlangıçtan önce hazır olduğunu onayla.",
     "rewardScoringRule": "Kazananları final sıralaması belirler: önce puan, ardından toplam yanıt süresi. Adil oyun kontrolü uygulanır. Sıralama yalnızca gerçek oyuncular arasında yapılır; botlar ödül almaz.",
     "rewardNonCash": "Yalnızca oyun içi ödüller. Nakit, kupon veya hediye kartı verilmez. Eşyalar ve jetonlar satılamaz, devredilemez ve paraya çevrilemez.",
-    "rewardContact": "Ödüllerin hakkında soruların mı var? Yardım/Geri Bildirim üzerinden Quizball’a etkinlik tarihini ve kullanıcı adını ilet."
+    "rewardContact": "Ödüllerin hakkında soruların mı var? Yardım/Geri Bildirim üzerinden Quizball’a etkinlik tarihini ve kullanıcı adını ilet.",
+    "statusChampion": "Şampiyon sensin!",
+    "statusWrapped": "Hafta sonu sona erdi",
+    "statusFinished": "#{rank}. sırada bitirdin.",
+    "statusSeeYou": "Gelecek hafta sonu görüşürüz."
   },
   "wlAward": {
     "title1": "Weekend League Şampiyonu",

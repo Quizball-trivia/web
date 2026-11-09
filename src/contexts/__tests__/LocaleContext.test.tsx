@@ -10,7 +10,9 @@ import { loadLocaleMessages } from '@/lib/i18n/client-messages';
 const mocks = vi.hoisted(() => ({
   pathname: '/play',
   preferredLanguage: 'ka' as string | null | undefined,
-  inferredLocale: 'en' as 'en' | 'ka',
+  inferredLocale: 'en' as 'en' | 'ka' | 'fr',
+  onboardingComplete: true,
+  favoriteClub: null as string | null,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -18,11 +20,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/stores/auth.store', () => ({
-  useAuthStore: (selector?: (state: { user: { preferred_language: string | null } | null }) => unknown) => {
+  useAuthStore: (selector?: (state: { user: { preferred_language: string | null; onboarding_complete: boolean; favorite_club: string | null } | null }) => unknown) => {
     const state = {
       user: mocks.preferredLanguage === undefined
         ? null
-        : { preferred_language: mocks.preferredLanguage },
+        : { preferred_language: mocks.preferredLanguage, onboarding_complete: mocks.onboardingComplete, favorite_club: mocks.favoriteClub },
     };
     return selector ? selector(state) : state;
   },
@@ -45,6 +47,8 @@ describe('LocaleProvider', () => {
     mocks.pathname = '/play';
     mocks.preferredLanguage = 'ka';
     mocks.inferredLocale = 'en';
+    mocks.onboardingComplete = true;
+    mocks.favoriteClub = null;
   });
 
   it.each(['es', 'ka', 'tr'] as const)('renders seeded %s copy on the server before any dictionary effect', locale => {
@@ -124,6 +128,19 @@ describe('LocaleProvider', () => {
     await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('ka'));
   });
 
+  it.each(['fr', 'de'] as const)('keeps %s for a guest with no saved language who leaves a language page for the app', async (locale) => {
+    mocks.preferredLanguage = undefined;
+    mocks.pathname = `/${locale}/about`;
+    const view = render(<LocaleProvider initialLocale={locale}><LocaleProbe /></LocaleProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    mocks.pathname = '/play';
+    view.rerender(<LocaleProvider initialLocale={locale}><LocaleProbe /></LocaleProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    await waitFor(() => expect(screen.getByTestId('locale').textContent).toBe(locale));
+  });
+
   it('does not persist a URL locale over the stored app locale', async () => {
     mocks.preferredLanguage = undefined;
     localStorage.setItem('quizball_locale', JSON.stringify('ka'));
@@ -169,6 +186,181 @@ describe('LocaleProvider', () => {
 
     await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('ka'));
     await waitFor(() => expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('ka')));
+  });
+
+  it('keeps the language a guest arrived in across a reload, whatever the browser says', async () => {
+    mocks.preferredLanguage = undefined;
+    mocks.inferredLocale = 'en';
+    mocks.pathname = '/fr';
+    const { rerender, unmount } = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('fr'));
+    expect(localStorage.getItem('quizball_locale')).toBeNull();
+
+    mocks.pathname = '/leaderboard';
+    rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('fr')));
+    expect(screen.getByTestId('locale')).toHaveTextContent('fr');
+
+    unmount();
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('fr'));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(screen.getByTestId('locale')).toHaveTextContent('fr');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('fr'));
+  });
+
+  const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+  const pendingSignup = (locale: string) => localStorage.setItem('quizball_signup_locale', JSON.stringify({ locale, at: Date.now() }));
+  const newAccount = () => { mocks.preferredLanguage = 'en'; mocks.onboardingComplete = false; mocks.favoriteClub = null; };
+
+  it.each(['fr', 'de'] as const)('a new signup from /%s starts onboarding in that language, whatever the browser held', async (locale) => {
+    newAccount();
+    mocks.inferredLocale = 'en';
+    pendingSignup(locale);
+    localStorage.setItem('quizball_locale', JSON.stringify('en'));
+    mocks.pathname = '/onboarding';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent(locale));
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent(locale);
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify(locale));
+    expect(localStorage.getItem('quizball_signup_locale')).toBeNull();
+  });
+
+  it('an email signup that stays on /fr keeps French on the way to onboarding', async () => {
+    newAccount();
+    pendingSignup('fr');
+    localStorage.setItem('quizball_locale', JSON.stringify('en'));
+    mocks.pathname = '/fr';
+    const { rerender } = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await settle();
+    expect(localStorage.getItem('quizball_signup_locale')).not.toBeNull();
+    mocks.pathname = '/onboarding';
+    rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('fr');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('fr'));
+  });
+
+  it('resuming onboarding with a saved German profile keeps German on a French browser', async () => {
+    mocks.preferredLanguage = 'de';
+    mocks.onboardingComplete = false;
+    mocks.inferredLocale = 'fr';
+    mocks.pathname = '/onboarding';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('de'));
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('de');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('de'));
+  });
+
+  it('resuming onboarding with a saved German profile beats the Georgian another account left in this browser', async () => {
+    mocks.preferredLanguage = 'de';
+    mocks.onboardingComplete = false;
+    localStorage.setItem('quizball_locale', JSON.stringify('ka'));
+    mocks.pathname = '/onboarding';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('de'));
+    await settle();
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('de'));
+  });
+
+  it('a saved English profile with onboarding unfinished is a choice: it has the club the same request saved', async () => {
+    mocks.preferredLanguage = 'en';
+    mocks.onboardingComplete = false;
+    mocks.favoriteClub = 'Northwick Rovers';
+    mocks.inferredLocale = 'fr';
+    localStorage.setItem('quizball_locale', JSON.stringify('fr'));
+    pendingSignup('fr');
+    mocks.pathname = '/onboarding';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('en'));
+    expect(localStorage.getItem('quizball_signup_locale')).toBeNull();
+  });
+
+  it.each([
+    ['saved German', 'de'],
+    ['no saved language', null],
+    ['another account\'s Georgian', 'ka'],
+  ] as const)('a completed German account signing in on /fr with %s lands on /play in German', async (_label, stored) => {
+    mocks.preferredLanguage = undefined;
+    if (stored) localStorage.setItem('quizball_locale', JSON.stringify(stored));
+    pendingSignup('fr');
+    mocks.pathname = '/fr';
+    const { rerender } = render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('fr');
+    mocks.preferredLanguage = 'de';
+    rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await settle();
+    expect(localStorage.getItem('quizball_signup_locale')).toBeNull();
+    mocks.pathname = '/play';
+    rerender(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('de'));
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('de');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('de'));
+  });
+
+  it('a saved English profile beats the French this browser stored, once queued updates settle', async () => {
+    mocks.preferredLanguage = 'en';
+    mocks.onboardingComplete = false;
+    mocks.favoriteClub = 'Northwick Rovers';
+    localStorage.setItem('quizball_locale', JSON.stringify('fr'));
+    mocks.pathname = '/onboarding';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await settle();
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('en');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('en'));
+  });
+
+  it('picking a language while a signup waits for its confirmation drops the signup language', async () => {
+    mocks.preferredLanguage = undefined;
+    pendingSignup('fr');
+    localStorage.setItem('quizball_locale', JSON.stringify('en'));
+    mocks.pathname = '/play';
+    function Picker() {
+      const { setLocale } = useLocale();
+      return <button type="button" onClick={() => setLocale('ka')}>pick</button>;
+    }
+    const { rerender } = render(<LocaleProvider><Picker /><LocaleProbe /></LocaleProvider>);
+    await settle();
+    act(() => screen.getByRole('button', { name: 'pick' }).click());
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('ka'));
+    expect(localStorage.getItem('quizball_signup_locale')).toBeNull();
+
+    newAccount();
+    mocks.pathname = '/onboarding';
+    rerender(<LocaleProvider><Picker /><LocaleProbe /></LocaleProvider>);
+    await settle();
+    expect(screen.getByTestId('locale')).toHaveTextContent('ka');
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('ka'));
+  });
+
+  it('a signed-in account renders even when storage refuses every call', async () => {
+    mocks.preferredLanguage = 'de';
+    mocks.pathname = '/play';
+    const denied = () => { throw new DOMException('denied', 'SecurityError'); };
+    const spies = [vi.spyOn(Storage.prototype, 'getItem').mockImplementation(denied), vi.spyOn(Storage.prototype, 'setItem').mockImplementation(denied), vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(denied)];
+    try {
+      render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+      await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('de'));
+    } finally {
+      spies.forEach((spy) => spy.mockRestore());
+    }
+  });
+
+  it('a pending signup language does nothing while signed out', async () => {
+    mocks.preferredLanguage = undefined;
+    localStorage.setItem('quizball_locale', JSON.stringify('de'));
+    pendingSignup('fr');
+    mocks.pathname = '/play';
+    render(<LocaleProvider><LocaleProbe /></LocaleProvider>);
+    await waitFor(() => expect(screen.getByTestId('locale')).toHaveTextContent('de'));
+    await settle();
+    expect(localStorage.getItem('quizball_locale')).toBe(JSON.stringify('de'));
+    expect(localStorage.getItem('quizball_signup_locale')).not.toBeNull();
   });
 
   it('does not override an explicit saved locale with the inferred browser locale', async () => {

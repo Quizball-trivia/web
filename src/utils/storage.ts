@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
 
   // User
   LOCALE: 'quizball_locale',
+  // The language a visitor was reading when they started signing up; see signupLocale.ts.
+  SIGNUP_LOCALE: 'quizball_signup_locale',
   ONBOARDING_COMPLETE: 'quizball_onboarding_complete',
   // Auth method (google/facebook/email/phone) the user last started auth with.
   // Carried from the auth tap to onboarding_completed so that event is method-aware.

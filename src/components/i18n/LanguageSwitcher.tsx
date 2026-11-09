@@ -18,6 +18,7 @@ import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/locale-config";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/CountryFlag";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
+import { clearSignupLocale } from "@/lib/i18n/signupLocale";
 
 const PublicLanguageLink = dynamic(() => import("./PublicLanguageLink").then((module) => module.PublicLanguageLink), {
   ssr: false,
@@ -133,7 +134,7 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
             // An explicit choice: persisted so leaving the localized pages
             // (creating a room, opening a game) keeps this language instead
             // of falling back to an earlier inferred one.
-            onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect?.(code); }}
+            onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); clearSignupLocale(); onSelect?.(code); }}
             className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
           >
             <ItemBody option={option} active={active} />

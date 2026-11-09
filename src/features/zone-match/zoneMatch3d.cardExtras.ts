@@ -142,7 +142,13 @@ export class CardExtras {
   private busParts: THREE.MeshStandardMaterial[] = [];
   private busStripe: THREE.MeshStandardMaterial;
   private busWheels: THREE.Mesh[] = [];
+  private busGlass!: THREE.MeshStandardMaterial;
   private busIn = 0;
+  /** The side standing behind its bus right now, or null; where (world, on the ground), and how far it has stepped
+   * there (0–1, with the bus driving in). */
+  busRider: ZoneSide | null = null;
+  readonly busSeat = new THREE.Vector3();
+  busStandK = 1;
 
   private arcDots: THREE.Sprite[] = [];
   private offsideDashes = new THREE.Group();
@@ -209,13 +215,18 @@ export class CardExtras {
     this.stopIcon = this.sprite(b.texture(emojiTexture('⛔')), 22);
     this.root.add(this.swapRing);
 
-    // Park the Bus: a simple low-poly bus.
-    const yellow = b.material(new THREE.MeshStandardMaterial({ color: '#FFC21A', roughness: 0.55, transparent: true }));
-    const roof = b.material(new THREE.MeshStandardMaterial({ color: '#FFE27A', roughness: 0.6, transparent: true }));
-    const glass = b.material(new THREE.MeshStandardMaterial({ color: '#16233A', roughness: 0.2, metalness: 0.3, transparent: true }));
+    // Park the Bus: the blue team coach from the card (nose along +x): lower body, a glass band with pillars, roof,
+    // windscreen, a white stripe, the badge, headlights.
+    const blue = b.material(new THREE.MeshStandardMaterial({ color: '#1645FF', roughness: 0.45, transparent: true }));
+    const roof = b.material(new THREE.MeshStandardMaterial({ color: '#3B74FF', roughness: 0.5, transparent: true }));
+    const glass = b.material(new THREE.MeshStandardMaterial({ color: '#5FD3FF', roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false }));
+    const white = b.material(new THREE.MeshStandardMaterial({ color: '#F4F6F8', roughness: 0.6, transparent: true }));
+    const yellow = b.material(new THREE.MeshStandardMaterial({ color: '#FFE500', roughness: 0.4, emissive: '#FFE500', emissiveIntensity: 0.25, transparent: true }));
     this.busStripe = b.material(new THREE.MeshStandardMaterial({ color: '#1CB0F6', roughness: 0.5, transparent: true }));
     const tyre = b.material(new THREE.MeshStandardMaterial({ color: '#15171C', roughness: 0.9, transparent: true }));
-    this.busParts = [yellow, roof, glass, this.busStripe, tyre];
+    const hub = b.material(new THREE.MeshStandardMaterial({ color: '#C9D1DA', roughness: 0.4, transparent: true }));
+    this.busParts = [blue, roof, white, yellow, this.busStripe, tyre, hub];
+    this.busGlass = glass;
     const box = (w: number, h: number, d: number, m: THREE.Material, x: number, y: number, z: number) => {
       const mesh = new THREE.Mesh(b.geometry(new THREE.BoxGeometry(w, h, d)), m);
       mesh.position.set(x, y, z);
@@ -223,16 +234,26 @@ export class CardExtras {
       this.bus.add(mesh);
       return mesh;
     };
-    box(4.8, 1.55, 1.6, yellow, 0, 1.05, 0);
-    box(4.6, 0.18, 1.5, roof, 0, 1.92, 0);
-    box(4.2, 0.55, 1.64, glass, 0.15, 1.38, 0);
-    box(0.06, 0.55, 1.3, glass, 2.42, 1.38, 0);
-    box(4.82, 0.2, 1.62, this.busStripe, 0, 0.78, 0);
-    const wheel = b.geometry(new THREE.CylinderGeometry(0.36, 0.36, 0.28, 18));
-    for (const [x, z] of [[-1.55, 0.78], [1.55, 0.78], [-1.55, -0.78], [1.55, -0.78]]) {
+    const L = 5.2;
+    const W = 1.95;
+    box(L, 0.95, W, blue, 0, 0.82, 0);
+    box(L + 0.02, 0.16, W + 0.02, white, 0, 1.12, 0);
+    box(L, 0.86, W - 0.04, glass, 0, 1.72, 0);
+    // Pillars between the windows, front and back posts.
+    for (const x of [-2.55, -1.55, -0.5, 0.55, 1.45, 2.55]) for (const z of [-W / 2 + 0.05, W / 2 - 0.05]) box(0.14, 0.86, 0.1, blue, x, 1.72, z);
+    box(L, 0.24, W, roof, 0, 2.27, 0);
+    // A sign in the owner's colour on the roof, over the cab.
+    box(0.5, 0.22, 1.2, this.busStripe, L / 2 - 0.4, 2.48, 0);
+    // Headlights and the badge on each side.
+    for (const z of [-0.65, 0.65]) box(0.06, 0.2, 0.36, yellow, L / 2 + 0.01, 0.62, z);
+    for (const z of [-W / 2 - 0.01, W / 2 + 0.01]) box(0.42, 0.42, 0.02, yellow, -0.6, 0.7, z);
+    const wheel = b.geometry(new THREE.CylinderGeometry(0.42, 0.42, 0.3, 20));
+    const cap = b.geometry(new THREE.CylinderGeometry(0.18, 0.18, 0.32, 12));
+    for (const [x, z] of [[-1.7, 0.86], [1.7, 0.86], [-1.7, -0.86], [1.7, -0.86]]) {
       const w = new THREE.Mesh(wheel, tyre);
       w.rotation.x = Math.PI / 2;
-      w.position.set(x, 0.36, z);
+      w.position.set(x, 0.42, z);
+      w.add(new THREE.Mesh(cap, hub));
       this.bus.add(w);
       this.busWheels.push(w);
     }
@@ -513,23 +534,51 @@ export class CardExtras {
     const owner = fx.bus;
     if (!scripted && !owner) {
       this.bus.visible = false;
+      this.busRider = null;
       return;
     }
     const spots = this.director.spots;
     const d = spots.dir;
     const x = scripted?.x ?? (spots.keeper ? spots.ball.x + d * 3.6 : spots.attacker.x + d * 2.9);
-    const z = scripted?.z ?? spots.ball.z;
+    const parkZ = scripted?.z ?? spots.ball.z;
+    // Out on the pitch the bus waits on the far side until the attacker goes, then drives across his path; across a
+    // shot it is parked in front of goal at once.
+    const waitZ = parkZ - 7;
+    let z: number;
+    let moving: number;
+    if (spots.keeper || (scripted && scripted.enter === undefined)) {
+      const roll = this.reduced ? 1 : smooth((now - this.busIn) / 0.9);
+      z = parkZ + (1 - roll) * 14;
+      moving = 1 - roll;
+    } else if (scripted) {
+      const e = scripted.enter ?? 1;
+      z = waitZ + (parkZ - waitZ) * e;
+      moving = e > 0 && e < 1 ? 1 : 0;
+    } else {
+      const roll = this.reduced ? 1 : smooth((now - this.busIn) / 1.2);
+      z = waitZ - (1 - roll) * 12;
+      moving = 1 - roll;
+    }
     const burst = scripted?.burst ?? 0;
-    // Rolls in from the near touchline on activation, then parks across the attack, angled to show its side.
-    const roll = this.reduced ? 1 : smooth((now - this.busIn) / 0.9);
     this.bus.visible = true;
-    this.bus.position.set(x + d * burst * 3, 0, z + (1 - roll) * 14);
-    this.bus.rotation.set(0, Math.PI / 2 - 0.55 * d, burst * 0.9 * d);
-    for (const w of this.busWheels) w.rotation.y = (1 - roll) * 14;
-    this.busStripe.color.set(SIDE_COLOR[owner ?? otherZoneSide(spots.dir > 0 ? 'player' : 'opponent')]);
+    this.bus.scale.setScalar(0.8);
+    this.bus.position.set(x + d * burst * 3, 0, z);
+    // Nose towards the camera (it drives in from the far side), turned a little to show its side; a rock as it brakes.
+    const brake = scripted?.enter !== undefined ? Math.sin(Math.PI * Math.min(1, Math.max(0, ((scripted.enter ?? 1) - 0.85) / 0.15))) : 0;
+    this.bus.rotation.set(0, -Math.PI / 2 - 0.5 * d, burst * 0.9 * d + 0.06 * brake);
+    for (const w of this.busWheels) w.rotation.y += moving * 0.5;
+    const tint = owner ?? otherZoneSide(spots.dir > 0 ? 'player' : 'opponent');
+    this.busStripe.color.set(SIDE_COLOR[tint]);
     const opacity = 1 - burst;
     for (const m of this.busParts) m.opacity = opacity;
-    if (roll < 1 || (burst > 0 && burst < 1)) this.busy = true;
+    this.busGlass.opacity = 0.38 * opacity;
+    // When the bus blocks the attack (the held duel's script), the defender steps across behind it — the bus between
+    // him and the attacker — as it drives in. (In front of goal the keeper stays on his line.)
+    const attacker: ZoneSide = d > 0 ? 'player' : 'opponent';
+    this.busRider = scripted && !spots.keeper && burst < 0.3 ? otherZoneSide(attacker) : null;
+    this.busStandK = scripted?.enter ?? 1;
+    if (this.busRider) this.busSeat.set(x + d * 2.0, 0, z - 0.4);
+    if (moving > 0 || (burst > 0 && burst < 1)) this.busy = true;
   }
 
   private updateArc() {

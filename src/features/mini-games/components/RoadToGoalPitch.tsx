@@ -16,6 +16,7 @@ import { FOOTBALL_STYLES, type FootballStyle } from '../lib/footballActions';
 import { RoadGoal, RoadKeeper } from './RoadGoal';
 import { RoadAdvertisingBoards } from './RoadAdvertisingBoards';
 import { useMatchBallTexture, useMatchBallGeometry, usePitchTurf, useStadiumArtwork } from './footballVisuals';
+import { useLocale } from "@/contexts/LocaleContext";
 
 /** WebGL/three failures must degrade to the 2D fallback (via onFailure), not
  *  crash the game route — R3F throws outward when context creation fails. */
@@ -49,6 +50,8 @@ interface RoadPitchState {
 
 interface RoadToGoalPitchProps extends RoadPitchState {
   onFailure?: () => void;
+  /** Measure the unscaled box (offsetWidth), so a zoomed ancestor does not shrink the canvas twice. */
+  zoomSafe?: boolean;
   actionStyle?: FootballStyle;
 }
 
@@ -555,17 +558,18 @@ function RoadScene({ progress, phase, actionStyle }: Omit<RoadPitchState, 'label
   );
 }
 
-export function RoadToGoalPitch({ progress, phase, labels, onFailure, actionStyle = 'power' }: RoadToGoalPitchProps) {
+export function RoadToGoalPitch({ progress, phase, labels, onFailure, actionStyle = 'power', zoomSafe = false }: RoadToGoalPitchProps) {
+  const { t: tGame } = useLocale();
   return (
     <div className="relative w-full overflow-hidden rounded-[16px] border border-white/10 bg-game-pitch-edge shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_36px_rgba(0,0,0,0.3)] sm:rounded-[20px] lg:rounded-[26px] lg:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_rgba(0,0,0,0.32)]">
       <div className="relative aspect-[4/3] sm:aspect-[16/9]">
       <CanvasFailureBoundary onFailure={onFailure}>
-        <Canvas dpr={[1, 1.6]} shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
+        <Canvas resize={zoomSafe ? { offsetSize: true } : undefined} dpr={[1, 1.6]} shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
           <Suspense fallback={null}><RoadScene progress={progress} phase={phase} actionStyle={actionStyle} /></Suspense>
         </Canvas>
       </CanvasFailureBoundary>
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-center justify-between sm:inset-x-5 sm:top-4">
-        <div className="flex items-center gap-3"><Image src="/assets/brand/quizball-logo.webp" alt="Quizball" width={179} height={148} className="h-8 w-auto" /><span className="hidden h-7 w-px bg-white/20 sm:block" /><span className="font-poppins text-xs font-semibold text-white sm:text-sm">Road to Goal</span></div>
+        <div className="flex items-center gap-3"><Image src="/assets/brand/quizball-logo.webp" alt="Quizball" width={179} height={148} className="h-8 w-auto" /><span className="hidden h-7 w-px bg-white/20 sm:block" /><span className="font-poppins text-xs font-semibold text-white sm:text-sm">{tGame("play.roadToGoalTitle")}</span></div>
         <span className="rounded-full border border-white/15 bg-game-pitch-sky/75 px-3 py-1.5 text-[10px] font-semibold tabular-nums text-slate-200">{Math.min(progress + 1, MULTIPLIERS.length)} / {MULTIPLIERS.length}</span>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-game-pitch-shade/65 to-transparent sm:h-12 lg:h-16" />

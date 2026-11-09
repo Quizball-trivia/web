@@ -40,7 +40,7 @@ export interface BuscaminasCard {
 export interface BuscaminasRound {
   id: string;
   difficulty: Difficulty;
-  prompt: { es: string; en: string; pt?: string; de?: string; ka?: string; tr?: string };
+  prompt: { es: string; en: string; pt?: string; de?: string; fr?: string; ka?: string; tr?: string };
   cards: BuscaminasCard[];
 }
 

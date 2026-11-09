@@ -26,6 +26,7 @@ import { encodePistasShare } from "./pistas.share";
 import { PistasLeaderboard } from "./PistasLeaderboard";
 import { PlayWithFriendButton } from "@/features/duel/PlayWithFriendButton";
 import { trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./pistas.analytics";
+import { decimalText } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 type View = "intro" | "play" | "end" | "archive";
@@ -643,7 +644,7 @@ export function EndScreen({ locale, day, today, state, days, versions, boardRefr
   const results = state.results;
   const score = state.score;
   const solved = results.filter((r) => r.outcome === "solved");
-  const avgClues = solved.length ? (solved.reduce((sum, r) => sum + r.clues, 0) / solved.length).toFixed(1) : "–";
+  const avgClues = solved.length ? decimalText(solved.reduce((sum, r) => sum + r.clues, 0) / solved.length, 1, locale) : "–";
   const number = puzzleNumber(day);
   const grid = resultGrid(results);
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));

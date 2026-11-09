@@ -1,3 +1,4 @@
+import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNumericQuestions';
 import { describe, expect, it } from 'vitest';
 import type { GameQuestion } from '@/lib/domain';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
@@ -28,7 +29,7 @@ const questions: GameQuestion[] = Array.from({ length: 60 }, (_, i) => ({
   options: ['A', 'B', 'C', 'D'],
   correctIndex: i % 4,
 }));
-const content: Content = { mcqByCategory: {}, fallbackMcqs: questions };
+const content: Content = { mcqByCategory: {}, fallbackMcqs: questions, numerics: SAMPLE_NUMERIC_QUESTIONS };
 const sides: DuelSide[] = ['player', 'opponent'];
 const pick = <T,>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
@@ -40,6 +41,10 @@ function move(s: MatchState, side: DuelSide, now: number): Action | null {
   }
   if (s.numeric && !s.numeric.result && s.numeric.guesses[side].value === null && Math.random() < 0.9) {
     return { type: 'GUESS', side, value: Math.round(s.numeric.question.value * (0.5 + Math.random())), now };
+  }
+  // Penalties: just the question, no cards.
+  if (s.stage === 'shootout' && s.battleStep === 'mcq' && s.mcq && s.mcq.answers[side] === null) {
+    return { type: 'ANSWER', side, index: pick([0, 1, 2, 3]), now: now + Math.floor(Math.random() * 8000) };
   }
   if (s.stage !== 'play') return null;
   if (s.battleStep === 'cards' && s.choice[side] === undefined) {
@@ -92,13 +97,13 @@ function playMatch(windowMode: CardWindowMode, trace?: MatchTrace) {
     if (s.advanceAt !== null) {
       // The stakes row must predict exactly what settlement then does with the real answers.
       let predicted: BattleOutcome | null = null;
-      if (s.battleStep === 'mcqReveal' && s.mcq) {
+      if (s.stage === 'play' && s.battleStep === 'mcqReveal' && s.mcq) {
         const right = (side: DuelSide) => s.mcq!.answers[side] === s.mcq!.question.correctIndex;
         const stakes = duelStakes(s);
         if (right('player') && !right('opponent')) predicted = stakes.win;
         else if (!right('player') && right('opponent')) predicted = stakes.lose;
         else if (!right('player') && !right('opponent')) predicted = stakes.bothWrong;
-      } else if (s.battleStep === 'numericReveal' && s.numeric?.result) {
+      } else if (s.stage === 'play' && s.battleStep === 'numericReveal' && s.numeric?.result) {
         const stakes = duelStakes(s);
         predicted = s.numeric.result.winner === 'player' ? stakes.win : stakes.lose;
       }
@@ -173,6 +178,7 @@ const mcqFor = (answers: Record<DuelSide, number | null>) => ({
   categoryName: 'Category 0',
   offCategory: false,
   answers,
+  answeredAt: { player: null, opponent: null },
   firstMiss: { player: null, opponent: null },
   startedAt: 0,
   deadline: 10_000,
@@ -233,7 +239,7 @@ describe('reactions', () => {
 
   it('keeps Shin Pads off anything but sabotage', () => {
     const s = revealing('tiki-taka', { deck: { player: ['shin-pads', 'home-advantage', 'fog', 'dummy-run', 'fifty-fifty'], opponent: ['tiki-taka', 'yellow-card', 'var-review', 'dummy-run', 'fifty-fifty'] } });
-    expect(reactionBlocker(s, 'player', 'shin-pads')).toMatch(/only stop sabotage/);
+    expect(reactionBlocker(s, 'player', 'shin-pads')).toBe('shin-pads-sabotage-only');
     expect(reducer(s, { type: 'PLAY_REACTION', side: 'player', card: 'shin-pads', now: 0 })).toBe(s);
   });
 
@@ -395,7 +401,7 @@ describe('robustness', () => {
     const s = reducer(inPlay({ stage: 'lineup', kickoff: 'player', usedCategories: { player: [], opponent: [] }, deck: noCards }), { type: 'ADVANCE', content, now: 0 });
     const picked = reducer(s, { type: 'PICK_CATEGORY', side: 'player', categoryId: 'c0', content, now: 0 });
     expect(picked.mcq?.offCategory).toBe(true);
-    const real: Content = { mcqByCategory: { c0: questions.slice(0, 5) }, fallbackMcqs: questions };
+    const real: Content = { mcqByCategory: { c0: questions.slice(0, 5) }, fallbackMcqs: questions, numerics: SAMPLE_NUMERIC_QUESTIONS };
     const kicked = reducer(inPlay({ stage: 'lineup', kickoff: 'player', usedCategories: { player: [], opponent: [] }, deck: noCards }), { type: 'ADVANCE', content: real, now: 0 });
     const withPool = reducer(kicked, { type: 'PICK_CATEGORY', side: 'player', categoryId: 'c0', content: real, now: 0 });
     expect(withPool.mcq?.offCategory).toBe(false);
@@ -423,18 +429,20 @@ describe('card edge cases', () => {
 
   it('blocks Home Advantage once every category has been used', () => {
     const spent = inPlay({ usedCategories: { player: ['c0', 'c1', 'c2', 'c3', 'c4'], opponent: [] } });
-    expect(cardBlocker(spent, 'player', 'home-advantage', 'blind')).toBe('No categories left to pick');
+    expect(cardBlocker(spent, 'player', 'home-advantage', 'blind')).toBe('no-categories');
     expect(cardBlocker({ ...spent, usedCategories: { player: ['c0'], opponent: [] } }, 'player', 'home-advantage', 'blind')).toBeNull();
   });
 
   it('keeps turns alternating after a steal-and-score, the final round included', () => {
     const stolen: BattleOutcome = { kind: 'goal', scorer: 'player', stolen: true, next: { attacker: 'player', zone: 'centre' }, roundOver: true };
-    const after = (round: number) =>
-      reducer(inPlay({ battleStep: 'outcome', round, outcome: stolen, outcomeFrom: { attacker: 'opponent', zone: 'own' }, possession: stolen.next }), { type: 'ADVANCE', content, now: 0 });
+    const after = (round: number, score = { player: 1, opponent: 0 }) =>
+      reducer(inPlay({ battleStep: 'outcome', round, score, outcome: stolen, outcomeFrom: { attacker: 'opponent', zone: 'own' }, possession: stolen.next }), { type: 'ADVANCE', content, now: 0 });
     // Round 9 of 10: the scorer attacks the last round from the centre; nothing is skipped.
     expect(after(MATCH_ROUNDS - 2)).toMatchObject({ round: MATCH_ROUNDS - 1, possession: { attacker: 'player', zone: 'centre' } });
     // Round 10: the match ends there, no extra possession for anyone.
     expect(after(MATCH_ROUNDS - 1)).toMatchObject({ stage: 'fulltime', round: MATCH_ROUNDS });
+    // Level at the end: penalties instead.
+    expect(after(MATCH_ROUNDS - 1, { player: 1, opponent: 1 })).toMatchObject({ stage: 'shootout', shootout: { step: 'intro', kicks: [] } });
   });
 
   it('logs an expired Second Ball retry as a wrong answer', () => {
@@ -481,7 +489,7 @@ describe('cards firing', () => {
     expect(stopped.cardEvents.at(-1)).toMatchObject({
       side: 'player',
       card: 'park-the-bus',
-      effect: "stopped {their} Captain's Armband",
+      effect: 'bus-stopped',
       against: { side: 'opponent', card: 'captains-armband' },
     });
   });
@@ -547,7 +555,7 @@ describe('cards firing', () => {
     expect(blocked.cardEvents.at(-1)).toMatchObject({
       side: 'player',
       card: 'shin-pads',
-      effect: 'blocked Yellow Card',
+      effect: 'shin-pads-blocked',
       against: { side: 'opponent', card: 'yellow-card' },
     });
 
@@ -600,5 +608,50 @@ describe('stakes during the reveal', () => {
       played: { player: ['tiki-taka'], opponent: [] },
     });
     expect(duelStakes(tiki).win.kind).toBe('goal');
+  });
+});
+
+describe('penalty shootout', () => {
+  it('ends early once one side cannot catch up (3–0 after three kicks each)', () => {
+    let s = reducer(IDLE, { type: 'LAB_SHOOTOUT', categoryPool: categories, opener: 'player', now: 0 });
+    expect(s.stage).toBe('shootout');
+    let now = 0;
+    for (let guard = 0; guard < 200 && s.stage === 'shootout'; guard += 1) {
+      now = (s.advanceAt ?? now) + 1;
+      if (s.shootout?.step === 'mcq' && s.mcq) {
+        // The player scores every kick; the player in goal saves every one (right and faster).
+        const shooter = s.possession.attacker;
+        const right = s.mcq.question.correctIndex;
+        const wrong = (right + 1) % s.mcq.question.options.length;
+        s = reducer(s, { type: 'ANSWER', side: shooter, index: shooter === 'player' ? right : right, now: s.mcq!.startedAt + (shooter === 'player' ? 600 : 3000) });
+        s = reducer(s, { type: 'ANSWER', side: otherZoneSide(shooter), index: shooter === 'player' ? wrong : right, now: s.mcq!.startedAt + 700 });
+      }
+      s = reducer(s, { type: 'ADVANCE', content, now });
+    }
+    expect(s.stage).toBe('fulltime');
+    expect(s.shootout?.winner).toBe('player');
+    expect(s.shootout?.kicks.map((k) => k.result)).toEqual(['goal', 'saved', 'goal', 'saved', 'goal', 'saved']);
+  });
+
+  it('a saved kick in sudden death decides it', () => {
+    let s = reducer(IDLE, { type: 'LAB_SHOOTOUT', categoryPool: categories, opener: 'player', now: 0 });
+    let now = 0;
+    let kick = 0;
+    for (let guard = 0; guard < 400 && s.stage === 'shootout'; guard += 1) {
+      now = (s.advanceAt ?? now) + 1;
+      if (s.shootout?.step === 'mcq' && s.mcq) {
+        const shooter = s.possession.attacker;
+        const right = s.mcq.question.correctIndex;
+        // Everyone scores until kick 11 (sudden death, player shoots) scores and kick 12 (opponent) is saved.
+        const opponentSaved = kick === 11;
+        s = reducer(s, { type: 'ANSWER', side: shooter, index: right, now: s.mcq.startedAt + (opponentSaved ? 900 : 600) });
+        s = reducer(s, { type: 'ANSWER', side: otherZoneSide(shooter), index: opponentSaved ? right : (right + 1) % s.mcq!.question.options.length, now: s.mcq!.startedAt + 600 });
+        kick += 1;
+      }
+      s = reducer(s, { type: 'ADVANCE', content, now });
+    }
+    expect(s.stage).toBe('fulltime');
+    expect(s.shootout?.winner).toBe('player');
+    expect(s.shootout?.kicks).toHaveLength(12);
   });
 });

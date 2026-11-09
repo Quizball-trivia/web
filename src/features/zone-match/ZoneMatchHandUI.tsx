@@ -18,6 +18,8 @@ import { SIDE_COLOR } from './zoneMatch3d.layout';
 import { CardInspector, OpponentDeckSheet, handBlocker } from './ZoneMatchCards';
 import { PlaystyleBadge } from './ZoneMatchCardFace';
 import { TYPE_INK } from './ZoneMatchPlaystyleRow';
+import { counted, fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -26,17 +28,18 @@ const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as cons
  * in with the Play button. A tile that can't be played now says why.
  */
 export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onChoose: (card: CardId) => void }) {
+  const { c } = useZoneCopy();
   // The selection belongs to this duel's window.
   const [picked, setPicked] = useState<{ duel: number; id: CardId } | null>(null);
   const selected = picked && picked.duel === state.duelNo ? picked.id : null;
   const blockers = state.deck.player.map((id) => handBlocker(state, id, 'blind'));
-  const selectedCard = selected ? CARD_BY_ID[selected] : null;
 
   return (
     <div className="mt-3 flex flex-col gap-2" data-zm-choices>
       <div className="grid grid-cols-3 gap-2">
         {state.deck.player.map((id, i) => {
           const card = CARD_BY_ID[id];
+          const text = c.cards[id];
           const blocker = blockers[i];
           const used = state.used.player.includes(id);
           const on = selected === id;
@@ -48,7 +51,7 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
               onClick={() => setPicked(on ? null : { duel: state.duelNo, id })}
               whileTap={blocker === null ? { scale: 0.96 } : undefined}
               aria-pressed={on}
-              aria-label={`${card.name}: ${card.short}${blocker ? ` (${blocker})` : ''}`}
+              aria-label={`${text.name}: ${text.short}${blocker ? ` (${c.blockers[blocker]})` : ''}`}
               className={cn(
                 'relative flex min-h-[44px] flex-col items-center gap-1 rounded-2xl border-2 px-1.5 pb-2 pt-1.5 text-center transition-colors',
                 on ? 'border-brand-yellow bg-brand-yellow/15' : 'border-white/10 bg-white/[0.05]',
@@ -58,14 +61,14 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
             >
               <PlaystyleBadge id={id} size={46} showName={false} showCost={false} playable={blocker === null} selected={on} used={used} dimmed={blocker !== null && !used} />
               <span className="flex items-center gap-1">
-                <span className="text-[11px] uppercase leading-tight text-white sm:text-xs" style={poppins}>{card.name}</span>
+                <span className="text-[11px] uppercase leading-tight text-white [overflow-wrap:anywhere] sm:text-xs" style={poppins}>{text.name}</span>
               </span>
               <span className="line-clamp-2 text-[10px] uppercase leading-tight sm:text-[11px]" style={{ ...poppins, color: TYPE_INK[card.type] }}>
-                {card.short}
+                {text.short}
               </span>
               {blocker && (
                 <span className="text-[9px] uppercase leading-tight text-white/60 sm:text-[10px]" style={poppins}>
-                  {used ? 'Used' : blocker}
+                  {used ? c.common.used : c.blockers[blocker]}
                 </span>
               )}
               {on && (
@@ -78,7 +81,7 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
         })}
       </div>
       <AnimatePresence initial={false}>
-        {selectedCard && selected && (
+        {selected && (
           <motion.button
             key={selected}
             type="button"
@@ -86,11 +89,11 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
             initial={{ opacity: 0, y: 6, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 48 }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand-green text-base uppercase text-white shadow-[0_4px_0_#2D950B] hover:bg-brand-green-deep active:translate-y-0.5 active:shadow-none"
+            className="flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand-green text-base uppercase text-white hover:bg-brand-green-deep"
             style={poppins}
             data-zm-confirm
           >
-            Play {selectedCard.name}
+            {fill(c.common.playCard, { card: c.cards[selected].name })}
           </motion.button>
         )}
       </AnimatePresence>
@@ -100,6 +103,7 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
 
 /** During the question: the live cards you can play now, as chips; tap one, then confirm, and it fires. */
 export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (card: CardId) => void }) {
+  const { c } = useZoneCopy();
   const [armed, setArmed] = useState<{ key: number; id: CardId } | null>(null);
   const key = state.mcq?.key ?? -1;
   const playable = state.deck.player.filter((id) => CARD_BY_ID[id].phase === 'live' && handBlocker(state, id, 'live') === null);
@@ -107,13 +111,13 @@ export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (c
   const current = armed && armed.key === key ? armed.id : null;
   return (
     <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 border-t border-white/10 pt-2.5" data-zm-live-chips>
-      <span className="text-[10px] uppercase tracking-[0.12em] text-white/50" style={poppins}>Live card</span>
+      <span className="text-[10px] uppercase tracking-[0.12em] text-white/50" style={poppins}>{c.hand.liveCard}</span>
       {playable.map((id) => {
-        const card = CARD_BY_ID[id];
+        const name = c.cards[id].name;
         if (current === id) {
           return (
             <span key={id} className="flex items-center gap-1 rounded-full bg-brand-yellow/15 p-1 pl-2.5 ring-2 ring-brand-yellow">
-              <span className="text-[11px] uppercase text-white" style={poppins}>Play {card.name}?</span>
+              <span className="text-[11px] uppercase text-white" style={poppins}>{fill(c.hand.playConfirm, { card: name })}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -122,16 +126,16 @@ export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (c
                 }}
                 className="flex h-9 min-w-[44px] items-center justify-center gap-1 rounded-full bg-brand-green px-3 text-xs uppercase text-white"
                 style={poppins}
-                aria-label={`Confirm: play ${card.name}`}
+                aria-label={fill(c.hand.confirmPlay, { card: name })}
                 data-zm-live-confirm={id}
               >
-                <Check className="size-4" strokeWidth={3} /> Play
+                <Check className="size-4" strokeWidth={3} /> {c.common.play}
               </button>
               <button
                 type="button"
                 onClick={() => setArmed(null)}
                 className="grid size-9 place-items-center rounded-full bg-white/10 text-white"
-                aria-label="Cancel"
+                aria-label={c.common.cancel}
               >
                 <X className="size-4" />
               </button>
@@ -149,7 +153,7 @@ export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (c
             data-zm-live-chip={id}
           >
             <PlaystyleBadge id={id} size={30} showName={false} showCost={false} playable />
-            Play {card.name}
+            {fill(c.common.playCard, { card: name })}
           </motion.button>
         );
       })}
@@ -171,6 +175,7 @@ function SideLoadout({
   align: 'left' | 'right';
   onOpen: (id: CardId) => void;
 }) {
+  const { c } = useZoneCopy();
   return (
     <div className={cn('flex items-center gap-1.5', align === 'right' && 'flex-row-reverse')} data-zm-loadout={side}>
       {deck.map((id) => {
@@ -181,7 +186,7 @@ function SideLoadout({
             type="button"
             onClick={() => onOpen(id)}
             className={cn('relative grid place-items-center rounded-lg', spent && 'opacity-45 grayscale')}
-            aria-label={`${side === 'player' ? 'Your' : 'Their'} ${CARD_BY_ID[id].name}${spent ? ' (used)' : ''}`}
+            aria-label={fill(side === 'player' ? (spent ? c.hand.yourCardUsed : c.hand.yourCard) : spent ? c.hand.theirCardUsed : c.hand.theirCard, { card: c.cards[id].name })}
             data-zm-loadout-card={id}
           >
             {/* Greyed (not the badge's own USED stamp, too busy at this size) with a tick. */}
@@ -252,20 +257,21 @@ export function HudLoadouts({
  * side's colour, and the line under them says how many are left.
  */
 export function AttackCounter({ state, side }: { state: MatchState; side: 'player' | 'opponent' }) {
+  const { c, locale } = useZoneCopy();
   const left = attacksLeft(state, side);
   const done = ATTACKS_EACH - left;
   const result = state.battleStep === 'outcome';
   const attacker = result && state.outcomeFrom ? state.outcomeFrom.attacker : state.possession.attacker;
   // The attack in progress still counts as left until its round is over.
   const live = state.stage === 'play' && left > 0 && attacker === side && !(result && state.outcome?.roundOver);
-  const label = left === 0 ? 'No attacks left' : live ? (left === 1 ? 'Last attack!' : `Attack ${done + 1} of ${ATTACKS_EACH}`) : left === 1 ? '1 attack left' : `${left} attacks left`;
+  const label = left === 0 ? c.hand.noAttacksLeft : live ? (left === 1 ? c.hand.lastAttack : fill(c.hand.attackOf, { n: done + 1, total: ATTACKS_EACH })) : counted(locale, c.hand.attacksLeft, left);
   // Phones have under 50px beside the clock: the count only (the pulsing ball marks the attack under way).
-  const short = left === 0 ? 'None left' : live && left === 1 ? 'Last one' : `${left} left`;
+  const short = left === 0 ? c.hand.noneLeft : live && left === 1 ? c.hand.lastOne : fill(c.hand.nLeft, { n: left });
   const right = side === 'opponent';
   return (
     <div
       className={cn('mt-0.5 flex flex-col gap-0.5', right ? 'items-end' : 'items-start')}
-      title={`${side === 'player' ? 'You have' : 'They have'} ${left} of ${ATTACKS_EACH} attacks left`}
+      title={fill(side === 'player' ? c.hand.youHaveAttacks : c.hand.theyHaveAttacks, { left, total: ATTACKS_EACH })}
       data-zm-attacks={side}
       data-zm-attacks-left={left}
     >

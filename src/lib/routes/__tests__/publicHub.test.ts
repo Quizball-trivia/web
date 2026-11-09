@@ -8,7 +8,8 @@ describe("public hub paths", () => {
     expect(hubLocaleOf("/en")).toBe("en");
     expect(hubLocaleOf("/ka/")).toBe("ka");
     expect(hubLocaleOf("/en/about")).toBeNull();
-    expect(hubLocaleOf("/fr")).toBeNull();
+    expect(hubLocaleOf("/fr")).toBe("fr");
+    expect(hubLocaleOf("/it")).toBeNull();
   });
   it("recognises public game pages by their locale folder only", () => {
     expect(isPublicGamePath("/en/football-games/auction")).toBe(true);

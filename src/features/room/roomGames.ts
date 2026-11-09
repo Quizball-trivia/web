@@ -3,10 +3,12 @@ import { codenamesRoomRules } from "@/features/codenames/codenames.server";
 import { conexionesRoomRules } from "@/features/conexiones/conexiones.server";
 import { d501RoomRules } from "@/features/darts501/d501.view";
 import { datoFalsoRoomRules } from "@/features/dato-falso/datoFalso.server";
+import { draftRoomRules } from "@/features/draft/draft.room";
 import { footballRaceRoomRules } from "@/features/football-race/race.server";
 import { nameChainRoomRules } from "@/features/name-chain/nameChain.view";
 import { sharedPlayerRoomRules } from "@/features/shared-player/sharedPlayer.view";
 import { tenableRoomRules } from "@/features/tenable/tenable.view";
+import { zoneMatchRoomRules } from "@/features/zone-match/ZoneMatchRoom";
 import { CLIENT_GAME_VERSIONS } from "@/lib/realtime/clientGames";
 import type { RoomClientRules } from "./useRoomConnection";
 
@@ -21,6 +23,8 @@ const RULES: Record<string, RoomClientRules<never>> = {
   dato_falso: datoFalsoRoomRules as RoomClientRules<never>,
   conexiones: conexionesRoomRules as RoomClientRules<never>,
   darts501: d501RoomRules as RoomClientRules<never>,
+  draft: draftRoomRules as RoomClientRules<never>,
+  zone_match: zoneMatchRoomRules as RoomClientRules<never>,
 };
 
 export const roomClientRulesFor = (game: string): RoomClientRules<unknown> | null => (RULES[game] as RoomClientRules<unknown> | undefined) ?? null;

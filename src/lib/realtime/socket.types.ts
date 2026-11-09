@@ -19,7 +19,7 @@ export interface LobbySeenGame {
 
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel' | 'room_game';
 /** Games for 2–6 players in one friend room (lobby game mode 'room_game'). */
-export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones' | 'darts501';
+export type RoomGameId = 'aproximado' | 'shared_player' | 'name_chain' | 'tenable' | 'football_race' | 'codenames' | 'dato_falso' | 'conexiones' | 'darts501' | 'draft' | 'zone_match';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
 export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**
@@ -826,7 +826,7 @@ export interface PublicAuctionFootballer {
   startingPrice: number;
   clues?: readonly string[];
   /** Same steps as `clues` per content locale; the client shows its own language. */
-  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de', readonly string[]>>;
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
@@ -944,7 +944,7 @@ export interface PublicAuctionPlayerRanking {
 export interface PublicAuctionMatchState {
   matchId: string;
   version: number;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   phase: AuctionMatchPhase;
   formation: AuctionFormationName;
   seats: PublicAuctionPlayer[];
@@ -959,12 +959,12 @@ export interface PublicAuctionMatchState {
 
 export interface AuctionStartAiMatchPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
 }
 
 export interface AuctionSearchStartPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
 }
 
 export type FootballGridDifficulty = 'easy' | 'normal' | 'hard';
@@ -1009,6 +1009,7 @@ export interface FootballGridCriterionView {
   labelRu?: string | null;
   labelPt?: string | null;
   labelDe?: string | null;
+  labelFr?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }
@@ -1110,7 +1111,7 @@ export interface FootballGridOptionsPayload {
 }
 
 export interface FootballGridSearchStartPayload {
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   /** League pack to queue for; server defaults to 'european'. */
   theme?: string;
 }
@@ -1124,9 +1125,20 @@ export interface FootballGridVersionedCommandPayload {
 export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
   cellIndex: number;
   text: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   /** Pick-from-four: the footballer picked. */
   optionPlayerId?: string;
+}
+
+/** Zone match (Ranked 2.0 beta) queue: searching -> matched (the match itself arrives as room:found). */
+export interface ZoneMatchSearchStatePayload {
+  state: 'idle' | 'searching' | 'matched';
+  searchId: string | null;
+  queuedAt?: string;
+  fallbackAt?: string;
+  matchId?: string;
+  lobbyId?: string;
+  vsBot?: boolean;
 }
 
 export interface FootballGridSearchStatePayload {
@@ -1228,7 +1240,7 @@ export interface AuctionUiReadyPayload {
 
 export interface AuctionSearchStartedPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1239,7 +1251,7 @@ export interface AuctionSearchStartedPayload {
 
 export interface AuctionSearchStatusPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1269,7 +1281,7 @@ export interface AuctionMatchFoundPayload {
   /** joinDelayMs: ms after receipt when each bot pops into the lineup —
    *  bots arrive staggered like a real queue (absent = show immediately). */
   botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   formation: AuctionFormationName;
   /** Server clock used to compensate for local clock skew. Optional during a
    * rolling deploy; older backends only sent countdownEndsAt. */
@@ -1285,7 +1297,7 @@ export interface AuctionMatchFoundPayload {
 
 export interface AuctionMatchStartedPayload {
   matchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
   state: PublicAuctionMatchState;
   serverNow?: string;
 }
@@ -1519,6 +1531,8 @@ export interface SessionBlockedPayload {
     | "TRANSITION_IN_PROGRESS"
     | "INVALID_INVITE"
     | "LOBBY_NOT_FOUND"
+    | "LOBBY_GAME_STARTED"
+    | "LOBBY_ENDED"
     | "QUEUE_UNAVAILABLE";
   message: string;
   operation?: string;
@@ -1559,6 +1573,8 @@ export type LobbyJoinByCodeResult =
         | "RATE_LIMITED"
         | "ALREADY_IN_LOBBY"
         | "LOBBY_NOT_FOUND"
+        | "LOBBY_GAME_STARTED"
+        | "LOBBY_ENDED"
         | "LOBBY_FULL"
         | "TRANSITION_IN_PROGRESS"
         | "INVALID_INVITE"
@@ -1822,7 +1838,7 @@ export interface ClientToServerEvents {
     friendlyCategoryBId?: string | null;
     isPublic?: boolean;
   }) => void;
-  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' }) => void;
+  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' }) => void;
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;
@@ -1850,6 +1866,8 @@ export interface ClientToServerEvents {
   /** Where this player stands in their room's match: answered with room:active + room:sitting_out. */
   'room:pointer': () => void;
   'grid:search_start': (data?: FootballGridSearchStartPayload) => void;
+  'zone:search_start': () => void;
+  'zone:search_cancel': (data: { searchId: string }) => void;
   /** Guest "Play now" (public Tic Tac Toe page): immediate bot pairing, no queue, no rewards. */
   'grid:practice_bot_start': (data?: FootballGridSearchStartPayload) => void;
   'grid:search_cancel': (data: { searchId: string }) => void;
@@ -2155,6 +2173,7 @@ export interface ServerToClientEvents {
   'auction:match_finished': (data: AuctionMatchFinishedPayload) => void;
   'grid:error': (data: ErrorPayload) => void;
   'grid:search_state': (data: FootballGridSearchStatePayload) => void;
+  'zone:search_state': (data: ZoneMatchSearchStatePayload) => void;
   'duel:found': (data: DuelFoundPayload) => void;
   /** Sent on every connect: the player's live duel, or null (a remembered duel has ended). */
   'duel:active': (data: DuelFoundPayload | null) => void;

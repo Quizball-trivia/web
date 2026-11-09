@@ -57,6 +57,13 @@ const COPY = {
     thanks: "Danke! Wir lesen jede Antwort.", stars: (n: number) => `${n} von 5 Sternen`,
     error: "Senden fehlgeschlagen. Bitte versuch es erneut.", sending: "Wird gesendet…",
   },
+  fr: {
+    title: (game: string) => `${game} : qu’en as-tu pensé ?`,
+    online: "Y jouerais-tu en ligne contre un adversaire au hasard, comme en Duel classé ou au Morpion foot ?",
+    yes: "Oui", no: "Non", comment: "Quelque chose à nous dire ? (facultatif)", send: "Envoyer", later: "Pas maintenant", close: "Fermer",
+    thanks: "Merci ! Nous lisons toutes les réponses.", stars: (n: number) => `${n} ${n < 2 ? "étoile" : "étoiles"} sur 5`,
+    error: "Échec de l’envoi. Réessaie.", sending: "Envoi en cours…",
+  },
 } as const;
 
 const copyFor = (locale: string) => COPY[(locale in COPY ? locale : "en") as keyof typeof COPY];

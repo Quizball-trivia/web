@@ -1,6 +1,6 @@
 /** Copy of the word games' screens (played for both, name chain). The lobby and SEO pages keep their own strings. */
-export type WordLocale = "tr" | "en" | "es" | "ka" | "ru" | "pt" | "de";
-export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en");
+export type WordLocale = "tr" | "en" | "es" | "ka" | "ru" | "pt" | "de" | "fr";
+export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" ? locale : "en");
 
 /** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
 export const russianPlural = (n: number, one: string, few: string, many: string) =>
@@ -31,6 +31,12 @@ const shared = {
     youWon: "Du hast gewonnen!", tieFirst: "Geteilte Führung!", youPlace: (n: number) => `Du bist auf Platz ${n}`, left: "Verlassen", away: "Getrennt", backToRoom: "Zurück zum Raum",
     rivalLeft: "Dein Gegner hat das Match verlassen.", offline: "Keine Verbindung: Verbindung wird wiederhergestellt…", leave: "Match verlassen", leaveConfirm: "Match verlassen? Du kannst nicht zurückkehren.", leaveYes: "Verlassen", leaveNo: "Weiterspielen",
     iWasRight: "Meine Antwort war richtig", reported: "Danke, wir prüfen das.", startsIn: "Startet",
+  },
+  fr: {
+    exit: "Quitter", you: "Tu", rival: "Adversaire", placeholder: "Saisis un joueur", say: "Envoyer", won: "Tu as gagné le match !", lost: "Tu as perdu le match", draw: "Match nul",
+    youWon: "Tu as gagné !", tieFirst: "Égalité en tête !", youPlace: (n: number) => `Tu es à la ${n}${n === 1 ? "re" : "e"} place`, left: "A quitté", away: "Déconnecté", backToRoom: "Retour au salon",
+    rivalLeft: "Ton adversaire a quitté le match.", offline: "Pas de connexion : reconnexion…", leave: "Quitter le match", leaveConfirm: "Quitter le match ? Tu ne pourras pas revenir.", leaveYes: "Quitter", leaveNo: "Continuer à jouer",
+    iWasRight: "J’avais la bonne réponse", reported: "Merci, on va vérifier.", startsIn: "Début",
   },
   en: {
     exit: "Exit", you: "You", rival: "Rival", placeholder: "Type a footballer", say: "Send", won: "You won the match!", lost: "You lost the match", draw: "Draw",
@@ -100,6 +106,18 @@ const sharedPlayer = {
     answers: (n: number) => `Richtige Antworten (${n})`, more: (n: number) => `+${n} mehr`, next: "Nächstes Paar folgt…",
     answeredCount: (n: number, of: number) => `Spieler mit Treffer: ${n}/${of}`, firstWas: (name: string) => `Erster Treffer: ${name}`, youFirst: "Du warst zuerst!", noAnswer: "keine Antwort",
     foundStat: "Gefunden", foundDetail: (n: number, of: number) => `Paare gefunden: ${n}/${of}`, summary: "Paare",
+  },
+  fr: {
+    brand: ["JOUEUR EN", "COMMUN"] as const,
+    rules: ["Deux clubs sont révélés en même temps.", "Saisis le nom d’un joueur qui a joué pour les deux clubs. Les prêts comptent aussi.", "Une mauvaise réponse te bloque pendant 1 seconde."],
+    duelRule: "La première bonne réponse rapporte le point. Le premier à atteindre 3 points l’emporte.", partyRule: "8 manches. La première bonne réponse rapporte 3 points, la deuxième 2, et les autres bonnes réponses 1.",
+    prompt: "Saisis le nom d’un joueur qui a joué pour les deux clubs", round: (n: number, of: number) => `Manche ${n} / ${of}`, roundOpen: (n: number) => `Manche ${n}`,
+    wrong: (text: string) => `« ${text} » n’a pas joué pour les deux clubs`, locked: (s: number) => `Mauvaise réponse ! Attends ${s} s`, got: (name: string) => `Bonne réponse : ${name} !`,
+    waitRival: "Ta réponse est enregistrée…", lockedIn: "Ta réponse est enregistrée. On attend les autres…", sending: "Envoi…",
+    pointYou: "Point pour toi !", pointRival: "Point pour ton adversaire", pointBoth: "Point partagé", nobody: "Personne n’a trouvé de réponse",
+    answers: (n: number) => `Réponses valides (${n})`, more: (n: number) => `+${n} de plus`, next: "Prochaine paire…",
+    answeredCount: (n: number, of: number) => `Joueurs ayant trouvé une réponse : ${n}/${of}`, firstWas: (name: string) => `Premier à trouver : ${name}`, youFirst: "Tu as trouvé en premier !", noAnswer: "aucune réponse",
+    foundStat: "Trouvés", foundDetail: (n: number, of: number) => `Paires trouvées : ${n}/${of}`, summary: "Paires",
   },
   en: {
     brand: ["PLAYED FOR", "BOTH"] as const,
@@ -180,6 +198,16 @@ const nameChain = {
     out: "Ausgeschieden", youOut: "Du bist in dieser Runde ausgeschieden. Warte auf die nächste.", knocked: (name: string) => `${name} ist ausgeschieden`, roundTo: (name: string) => `${name} hat die Runde gewonnen`, lastStanding: "Letzter Spieler",
     answersStat: "Antworten", answersDetail: (n: number) => `Richtige Antworten: ${n}`, chainTitle: "Kette",
   },
+  fr: {
+    brand: ["LA DERNIÈRE", "LETTRE"] as const,
+    yourTurn: (letter: string) => `À toi : cite un joueur qui commence par ${letter}`, seatTurn: (name: string, letter: string) => `${name} écrit : lettre ${letter}`,
+    nextLetter: "Lettre suivante", round: (n: number) => `Manche ${n}`, supplied: "Choisi par le jeu", fresh: "Il n’y avait plus de joueur pour cette lettre. Le jeu en a proposé un autre.",
+    unknown: (text: string) => `« ${text} » n’est pas dans la liste, réessaie`, letter: (name: string, starts: string, need: string) => `${name} commence par ${starts}, il te faut ${need}`, repeat: (name: string) => `${name} a déjà été cité`,
+    roundWon: "La manche est à toi !", roundLost: "Tu as perdu la manche", time: "Temps écoulé", passed: "A abandonné", leftTurn: "A quitté le match", giveUp: "Abandonner",
+    could: (letter: string) => `Joueurs dont le nom commence par ${letter}`, nextRound: "La prochaine manche commence…", waiting: "Ton adversaire écrit…", sending: "Envoi…",
+    out: "Éliminé", youOut: "Tu es éliminé de cette manche. Attends la suivante.", knocked: (name: string) => `${name} est éliminé`, roundTo: (name: string) => `${name} a remporté la manche`, lastStanding: "Dernier joueur encore en jeu",
+    answersStat: "Réponses", answersDetail: (n: number) => `${n} ${n === 0 || n === 1 ? "bonne réponse" : "bonnes réponses"}`, chainTitle: "Chaîne",
+  },
   en: {
     brand: ["NAME", "CHAIN"] as const,
     yourTurn: (letter: string) => `Your turn: a footballer starting with ${letter}`, seatTurn: (name: string, letter: string) => `${name} is typing: letter ${letter}`,
@@ -249,6 +277,15 @@ const daily = {
     share: "Teilen", copy: "Kopieren", copied: "Kopiert", friends: "Mit Freunden spielen (2–6)", friendsSignIn: "Melde dich an, um mit Freunden zu spielen", points: "Pkt.",
     board: { title: "Heutige Rangliste", players: (n: number) => `${n} Spieler`, empty: "Heute ist noch niemand fertig. Sei der Erste.", join: "Registriere dich für die Rangliste.", joinButton: "Registrieren" },
   },
+  fr: {
+    loading: "Chargement…", loadError: "Impossible de charger le jeu.", retry: "Réessayer", exit: "Quitter", soon: "Le premier jour sera bientôt disponible.", back: "Retour",
+    play: "Jouer", resume: "Continuer", seeResult: "Voir le résultat", archive: "Jours précédents", archiveTitle: "Jours précédents", today: "Aujourd’hui", next: "Suivant",
+    guestPast: "Tu joues un jour précédent en tant qu’invité. Il ne compte pas pour le classement.", guestToday: "Un compte est nécessaire pour jouer aujourd’hui. En tant qu’invité, tu peux jouer aux jours précédents.",
+    playToday: "Inscris-toi pour jouer aujourd’hui", practice: "Ce jour ne compte pas pour le classement (entraînement).", rank: (n: number) => `Ton rang aujourd’hui : ${n}`,
+    notices: { dayOver: "La journée est terminée. Un nouveau jour est disponible.", guestToday: "Un compte est nécessaire pour jouer aujourd’hui.", maintenance: "Courte maintenance. Réessaie dans un instant.", restarted: "Le contenu du jour a été mis à jour ; tu recommences.", sessionChanged: "Ta session a changé. Recommence.", actionError: "Une erreur s’est produite. Réessaie.", connection: "Pas de connexion : reconnexion…" },
+    share: "Partager", copy: "Copier", copied: "Copié", friends: "Jouer entre amis (2–6)", friendsSignIn: "Connecte-toi pour jouer entre amis", points: "pts",
+    board: { title: "Classement du jour", players: (n: number) => `${n} ${n === 0 || n === 1 ? "joueur" : "joueurs"}`, empty: "Personne n’a encore terminé aujourd’hui. Sois le premier.", join: "Inscris-toi pour apparaître au classement.", joinButton: "S’inscrire" },
+  },
   en: {
     loading: "Loading…", loadError: "The game could not be loaded.", retry: "Try again", exit: "Exit", soon: "The first day opens soon.", back: "Back",
     play: "Play", resume: "Continue", seeResult: "See the result", archive: "Past days", archiveTitle: "Past days", today: "Today", next: "Next",
@@ -311,6 +348,14 @@ const sharedPlayerDaily = {
     endTitle: "Für heute fertig", result: (n: number, of: number) => `Gefundene Paare: ${n}/${of}`, summary: "Paare", notFound: "nicht gefunden", late: "Die Zeit war abgelaufen. Die Antwort zählt nicht.",
     shareText: (number: number, score: number, of: number) => `Spieler für beide Vereine #${number}: ${score}/${of}`, speedLabel: "Tempo",
   },
+  fr: {
+    title: "Joueur en commun", tag: "Dix paires par jour",
+    lines: (seconds: number) => ["Dix paires de clubs chaque jour.", `Pour chaque paire, saisis le nom d’un joueur qui a joué pour les deux clubs : tu as ${seconds} secondes.`, "Chaque paire trouvée rapporte 1 point. Plus tu réponds vite, mieux tu es classé."],
+    pair: (n: number, of: number) => `Paire ${n}/${of}`, found: "Bonne réponse !", missed: "Temps écoulé", yourAnswer: (name: string) => `Ta réponse : ${name}`,
+    answersTomorrow: (n: number) => `Réponses valides : ${n}. Les noms s’afficheront à la fin de la journée.`, nextPair: "Paire suivante", finish: "Voir le résultat", othersFound: "Autres joueurs qui ont joué pour les deux clubs", othersMissed: "Tu aurais pu répondre",
+    endTitle: "Terminé pour aujourd’hui", result: (n: number, of: number) => `Paires trouvées : ${n}/${of}`, summary: "Paires", notFound: "introuvable", late: "Le temps était écoulé ; la réponse n’a pas été comptée.",
+    shareText: (number: number, score: number, of: number) => `Joueur en commun #${number} : ${score}/${of}`, speedLabel: "Vitesse",
+  },
   en: {
     title: "Played for Both", tag: "Ten pairs a day",
     lines: (seconds: number) => ["Ten club pairs every day.", `For each pair, type a footballer who played for both: you have ${seconds} seconds.`, "Every pair you find is 1 point. Faster players rank higher."],
@@ -369,6 +414,14 @@ const nameChainDaily = {
     chainOver: "Kette vorbei", capped: "Kette komplett!", soFar: (n: number) => `Bisher: ${n} Spieler`, nextChain: "Nächste Kette", finish: "Ergebnis anzeigen",
     endTitle: "Für heute fertig", footballers: (n: number) => `${n} Fußballer`, longest: (n: number) => `Längste Kette: ${n}`, chains: "Ketten", longestLabel: "Längste",
     shareText: (number: number, score: number, chains: string) => `Fußballer-Wortkette #${number}: ${score} Fußballer (${chains})`,
+  },
+  fr: {
+    title: "La dernière lettre", tag: "Trois chaînes par jour",
+    lines: ["Nous te donnons le nom d’un joueur. Cite un autre joueur dont le nom commence par la dernière lettre de ce nom.", "Le prénom ou le nom de famille convient : Anthony Martial compte pour A et M.", "Tu as 10 secondes par réponse ; le chrono raccourcit à mesure que la chaîne s’allonge. Trois chaînes par jour : combien de joueurs au total ?"],
+    chainOf: (n: number, of: number) => `Chaîne ${n}/${of}`, tooFast: "Trop vite ! Attends un instant.", late: "Le temps était écoulé ; la réponse n’a pas été comptée.",
+    chainOver: "Fin de la chaîne", capped: "Chaîne complète !", soFar: (n: number) => `${n} joueur${n === 0 || n === 1 ? "" : "s"} pour l’instant`, nextChain: "Chaîne suivante", finish: "Voir le résultat",
+    endTitle: "Terminé pour aujourd’hui", footballers: (n: number) => `${n} joueur${n === 0 || n === 1 ? "" : "s"}`, longest: (n: number) => `Chaîne la plus longue : ${n}`, chains: "Chaînes", longestLabel: "La plus longue",
+    shareText: (number: number, score: number, chains: string) => `La dernière lettre #${number} : ${score} joueur${score === 0 || score === 1 ? "" : "s"} (${chains})`,
   },
   en: {
     title: "Football Name Chain", tag: "Three chains a day",

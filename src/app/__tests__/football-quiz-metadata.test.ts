@@ -11,12 +11,14 @@ import { generateMetadata as generateSpanishMetadata } from '@/app/[locale]/quiz
 import { generateMetadata as generateRussianMetadata } from '@/app/[locale]/futbolnaya-viktorina/page';
 import { generateMetadata as generatePortugueseMetadata } from '@/app/[locale]/quiz-de-futebol/page';
 import { generateMetadata as generateGermanMetadata } from '@/app/[locale]/fussball-quiz/page';
+import { generateMetadata as generateTurkishMetadata } from '@/app/[locale]/futbol-bilgi-yarismasi/page';
+import { generateMetadata as generateFrenchMetadata } from '@/app/[locale]/quiz-foot/page';
 
 const clubBadges = { slug: 'club-badges', locale_mode: 'en_only', category: 'quiz_type', breadcrumb_label: 'Club badges' };
 
-// No quiz has a pt or de edition unless a test says so: those catalogs are then empty.
+// No quiz has a ka, pt, de, tr or fr edition unless a test says so: those catalogs are then empty.
 const withEditions = (...editions: string[]) => async (locale: string) =>
-  (locale !== 'pt' && locale !== 'de') || editions.includes(locale) ? [clubBadges] : [];
+  !['ka', 'pt', 'de', 'tr', 'fr'].includes(locale) || editions.includes(locale) ? [clubBadges] : [];
 beforeEach(() => {
   listCampaignQuizPagesMock.mockReset().mockImplementation(withEditions());
 });
@@ -173,5 +175,81 @@ describe('German football quiz hub metadata', () => {
     });
     await expect(generateGermanMetadata({ params: Promise.resolve({ locale: 'de' }) })).resolves.toEqual({});
     await expect(generateGermanMetadata({ params: Promise.resolve({ locale: 'en' }) })).resolves.toEqual({});
+  });
+});
+
+describe('French football quiz hub metadata', () => {
+  it('leads with quiz foot, says football once in the title and links every open edition', async () => {
+    listCampaignQuizPagesMock.mockImplementation(withEditions('fr'));
+    const metadata = await generateFrenchMetadata({ params: Promise.resolve({ locale: 'fr' }) });
+
+    expect(metadata.title).toEqual({ absolute: expect.stringMatching(/^Quiz foot\u00a0: .*football/) });
+    expect(metadata.alternates).toEqual({
+      canonical: 'https://quizball.io/fr/quiz-foot',
+      languages: {
+        en: 'https://quizball.io/en/football-quiz',
+        es: 'https://quizball.io/es/quiz-de-futbol',
+        ru: 'https://quizball.io/ru/futbolnaya-viktorina',
+        fr: 'https://quizball.io/fr/quiz-foot',
+        'x-default': 'https://quizball.io/en/football-quiz',
+      },
+    });
+    expect(metadata.openGraph).toMatchObject({ locale: 'fr_FR', alternateLocale: ['en_GB', 'es_ES', 'ru_RU'] });
+  });
+
+  it('has no metadata before a French edition exists, nor on another locale', async () => {
+    await expect(generateFrenchMetadata({ params: Promise.resolve({ locale: 'fr' }) })).resolves.toEqual({});
+    listCampaignQuizPagesMock.mockImplementation(withEditions('fr'));
+    await expect(generateFrenchMetadata({ params: Promise.resolve({ locale: 'en' }) })).resolves.toEqual({});
+    const english = await generateMetadata({ params: Promise.resolve({ locale: 'en' }) });
+    expect(english.alternates?.languages).toHaveProperty('fr', 'https://quizball.io/fr/quiz-foot');
+  });
+});
+
+describe('Georgian and Turkish football quiz hub metadata', () => {
+  it('leads the Turkish hub with the searched phrase and links every open edition', async () => {
+    listCampaignQuizPagesMock.mockImplementation(withEditions('tr', 'ka'));
+    const metadata = await generateTurkishMetadata({ params: Promise.resolve({ locale: 'tr' }) });
+
+    expect(metadata.title).toEqual({ absolute: expect.stringMatching(/^Futbol Bilgi Yarışması/) });
+    expect(metadata.alternates).toEqual({
+      canonical: 'https://quizball.io/tr/futbol-bilgi-yarismasi',
+      languages: {
+        en: 'https://quizball.io/en/football-quiz',
+        ka: 'https://quizball.io/ka/football-quiz',
+        es: 'https://quizball.io/es/quiz-de-futbol',
+        ru: 'https://quizball.io/ru/futbolnaya-viktorina',
+        tr: 'https://quizball.io/tr/futbol-bilgi-yarismasi',
+        'x-default': 'https://quizball.io/en/football-quiz',
+      },
+    });
+    expect(metadata.openGraph).toMatchObject({ locale: 'tr_TR', alternateLocale: ['en_GB', 'ka_GE', 'es_ES', 'ru_RU'] });
+  });
+
+  it('withholds a language until its catalog has an edition, and a rejected catalog means no hub', async () => {
+    await expect(generateTurkishMetadata({ params: Promise.resolve({ locale: 'tr' }) })).resolves.toEqual({});
+    await expect(generateMetadata({ params: Promise.resolve({ locale: 'ka' }) })).resolves.toEqual({});
+    const english = await generateMetadata({ params: Promise.resolve({ locale: 'en' }) });
+    expect(english.alternates?.languages).not.toHaveProperty('tr');
+    expect(english.alternates?.languages).not.toHaveProperty('ka');
+
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'tr') throw new Error('400');
+      return [clubBadges];
+    });
+    await expect(generateTurkishMetadata({ params: Promise.resolve({ locale: 'tr' }) })).resolves.toEqual({});
+  });
+
+  it('opens the Georgian hub from the ka catalog, not from locale_mode alone', async () => {
+    listCampaignQuizPagesMock.mockImplementation(async (locale: string) => {
+      if (locale === 'ka') return [];
+      return [{ ...clubBadges, locale_mode: 'en_ka' }];
+    });
+    await expect(generateMetadata({ params: Promise.resolve({ locale: 'ka' }) })).resolves.toEqual({});
+
+    listCampaignQuizPagesMock.mockImplementation(withEditions('ka'));
+    const metadata = await generateMetadata({ params: Promise.resolve({ locale: 'ka' }) });
+    expect(metadata.alternates?.canonical).toBe('https://quizball.io/ka/football-quiz');
+    expect(metadata.alternates?.languages).toHaveProperty('ka', 'https://quizball.io/ka/football-quiz');
   });
 });

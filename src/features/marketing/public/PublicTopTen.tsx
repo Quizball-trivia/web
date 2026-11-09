@@ -15,6 +15,7 @@ const TITLE: Record<string, Record<Board, string>> = {
   ru: { ranked: "Топ-10 — Рейтинговый", grid: "Топ-10 — Футбольные крестики-нолики", auction: "Топ-10 — Аукцион" },
   pt: { ranked: "Top 10 — Ranqueado", grid: "Top 10 — Jogo da Velha do Futebol", auction: "Top 10 — Leilão" },
   de: { ranked: "Top 10 — Ranked", grid: "Top 10 — Fußball Tic Tac Toe", auction: "Top 10 — Fußball-Auktion" },
+  fr: { ranked: "Top 10 — Duel classé", grid: "Top 10 — Morpion foot", auction: "Top 10 — Enchères foot" },
 };
 
 /** The same rows the leaderboard tab shows, ten of them, read from the public board endpoints. */

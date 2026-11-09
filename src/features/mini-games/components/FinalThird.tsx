@@ -48,6 +48,7 @@ import {
 import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.analytics';
 import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 import { answerSecondsForQuestion, liveAnswerSeconds } from '../lib/freeKicksTiming';
+import { decimalText, percentText } from "@/lib/i18n/typography";
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -107,10 +108,11 @@ const CROWD_NAMES = [
 
 type Beat = 'bet' | 'decide' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cashed';
 
-const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
+const fmt = (v: number, locale: string) => (Number.isInteger(v) ? String(v) : decimalText(v, 2, locale));
 
 /** Rolls a number from its previous value to the new one (win "fill up"). */
 function AnimatedNumber({ value, decimals = 0, className }: { value: number; decimals?: number; className?: string }) {
+  const locale = useMiniLocale();
   const [display, setDisplay] = useState(value);
   const prevRef = useRef(value);
   useEffect(() => {
@@ -124,7 +126,7 @@ function AnimatedNumber({ value, decimals = 0, className }: { value: number; dec
     });
     return () => controls.stop();
   }, [value]);
-  const shown = decimals > 0 ? display.toFixed(decimals) : String(Math.round(display));
+  const shown = decimals > 0 ? decimalText(display, decimals, locale) : String(Math.round(display));
   return <span className={className}>{shown}</span>;
 }
 
@@ -1010,7 +1012,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             className={`font-poppins font-black tabular-nums leading-none text-brand-green ${big ? 'text-2xl' : 'text-base'}`}
           >
-            ×{fmt(Math.max(1, runMult))} <span className="text-white/35">→</span> ×{fmt(Math.round(Math.max(1, runMult) * mult * 100) / 100)}
+            ×{fmt(Math.max(1, runMult), miniLocale)} <span className="text-white/35">→</span> ×{fmt(Math.round(Math.max(1, runMult) * mult * 100) / 100, miniLocale)}
           </motion.span>
         ) : (
           <span className={`font-poppins font-black leading-none text-white/40 ${big ? 'text-2xl' : 'text-base'}`}>—</span>
@@ -1067,8 +1069,8 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                 transition={{ duration: 0.35 }}
                 className="absolute right-0 top-0 truncate font-poppins text-[10px] font-bold text-white/60"
               >
-                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)}</span>{' '}
-                <span className="text-white/40">×{ticker[0].mult}</span>
+                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount, miniLocale)}</span>{' '}
+                <span className="text-white/40">×{fmt(ticker[0].mult, miniLocale)}</span>
               </motion.span>
             )}
           </AnimatePresence>
@@ -1095,7 +1097,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                     : 'bg-white/[0.03] text-white/35'
               }`}
             >
-              {k} · {Math.round(((k - 1) / k) * 100)}%
+              {k} · {percentText(Math.round(((k - 1) / k) * 100), miniLocale)}
             </div>
           );
         })}
@@ -1154,7 +1156,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
             <motion.div key="bet" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {lastTake != null && (
                 <div className="inline-flex items-center justify-center gap-1.5 text-center font-poppins text-lg font-black text-brand-gold">
-                  <MoneyStack /> {t('Cashed out {amount}!', { amount: fmt(lastTake) })}
+                  <MoneyStack /> {t('Cashed out {amount}!', { amount: fmt(lastTake, miniLocale) })}
                 </div>
               )}
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
@@ -1296,7 +1298,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                   onClick={() => setBeat('shoot')}
                   className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-green font-poppins text-sm font-black uppercase tracking-wide text-white active:scale-[0.98]"
                 >
-                  {t('Shoot · {pot} → {next}', { pot: fmt(pot), next: fmt(potential) })}
+                  {t('Shoot · {pot} → {next}', { pot: fmt(pot, miniLocale), next: fmt(potential, miniLocale) })}
                 </button>
               </div>
               <p className="font-poppins text-[11px] font-semibold text-white/45">
@@ -1398,7 +1400,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                 {t('{k} zones open · 1 keeper hidden · {pct}% goal', { k: openCount, pct: goalPct })}
               </p>
               <p className="font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow">
-                {t('Pick your angle and shoot · {pot} → {next}', { pot: fmt(pot), next: fmt(potential) })}
+                {t('Pick your angle and shoot · {pot} → {next}', { pot: fmt(pot, miniLocale), next: fmt(potential, miniLocale) })}
               </p>
             </motion.div>
           )}
@@ -1428,7 +1430,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                   className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
-                  <span>{t('TAKE {amount}', { amount: fmt(pot) })}</span>
+                  <span>{t('TAKE {amount}', { amount: fmt(pot, miniLocale) })}</span>
                   <span className="inline-flex shrink-0 items-center">
                     <CoinIcon size={16} />
                   </span>
@@ -1476,7 +1478,7 @@ export function FinalThird({ backHref, live = false, sample, onPractice }: {
                 transition={{ type: 'spring', stiffness: 320, damping: 15 }}
                 className="inline-flex items-center gap-1.5 font-poppins text-3xl font-black text-brand-gold drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]"
               >
-                <MoneyStack count={4} /> +{fmt(lastTake ?? 0)}
+                <MoneyStack count={4} /> +{fmt(lastTake ?? 0, miniLocale)}
               </motion.div>
               <button
                 type="button"

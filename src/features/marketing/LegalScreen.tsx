@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import type { LegalCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locale";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { AdvertisingPrivacyNotice } from '@/features/ads/AdvertisingPrivacyNotice';
 
 interface LegalScreenProps {
   copy: LegalCopy;
@@ -22,7 +23,7 @@ const ICONS: Record<LegalScreenProps["variant"], { icon: LucideIcon; tint: strin
   "about-legal": { icon: Info, tint: "bg-brand-cyan/15", text: "text-brand-cyan" },
 };
 
-const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver", tr: "Geri", ru: "Назад", pt: "Voltar", de: "Zurück" };
+const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver", tr: "Geri", ru: "Назад", pt: "Voltar", de: "Zurück", fr: "Retour" };
 
 export function LegalScreen({ copy, locale, variant }: LegalScreenProps) {
   const router = useRouter();
@@ -99,6 +100,7 @@ export function LegalScreen({ copy, locale, variant }: LegalScreenProps) {
                   )}
                 </section>
               ))}
+              {variant === 'privacy' && <AdvertisingPrivacyNotice />}
             </div>
           </div>
         </motion.div>

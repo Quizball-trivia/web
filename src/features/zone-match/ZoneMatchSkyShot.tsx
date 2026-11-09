@@ -17,6 +17,8 @@ import type { DuelReason, DuelSide } from '@/features/numeric-question/numericDu
 import { CUTOUT_BASE, SKY_KICK_AT } from './zoneMatch3d.director';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
 import type { NumericDuel } from './zoneMatch.machine';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 700 } as const;
 const SIDES = ['player', 'opponent'] as const;
@@ -40,8 +42,6 @@ const REASON_KEY = {
   onlyAnswer: 'numericDraft.reasonOnlyAnswer',
   coinFlip: 'numericDraft.reasonCoinFlip',
 } as const satisfies Record<DuelReason, string>;
-
-const STAMP: Record<DuelReason, string> = { closer: 'Closer!', faster: 'Faster!', onlyAnswer: 'Only answer', coinFlip: 'Lucky!' };
 
 type Result = NonNullable<NumericDuel['result']>;
 
@@ -122,6 +122,7 @@ export function SkyShot({
   /** The sky's ceiling: just under the HUD. */
   top: number;
 }) {
+  const { c } = useZoneCopy();
   const { t: translate, locale } = useLocale();
   const fmt = (value: number, withUnit = false) => formatValue(value, withUnit ? unit : '', precision, locale).trim();
   const scale = skyScale(result, precision);
@@ -165,21 +166,23 @@ export function SkyShot({
   for (let v = Math.ceil(scale.bottom / scale.step) * scale.step; v <= scale.top + 1e-9; v += scale.step) ticks.push(v);
   const mid = (left + right) / 2;
   const winner = result.winner;
-  const winnerName = winner === 'player' ? 'You win the duel' : `${opponentName} wins the duel`;
+  const winnerName = winner === 'player' ? c.sky.youWin : fill(c.sky.themWin, { name: opponentName });
+  const stamp: Record<DuelReason, string> = { closer: c.sky.closer, faster: c.sky.faster, onlyAnswer: c.sky.onlyAnswer, coinFlip: c.sky.lucky };
   // The settled guesses, read out with the verdict (the flying numbers are hidden from screen readers).
   const guessLine = (side: DuelSide) => {
-    const who = side === 'player' ? 'You' : opponentName;
+    const who = side === 'player' ? c.common.you : opponentName;
     const guess = result.guesses[side];
     const diff = result.diffs[side];
-    if (guess === null) return `${who}: no answer.`;
-    return `${who}: ${fmt(guess, true)}${diff === null ? '' : diff === 0 ? ', spot on' : `, ${fmt(diff)} off`}.`;
+    if (guess === null) return fill(c.sky.guessNone, { who });
+    if (diff === null) return fill(c.sky.guess, { who, guess: fmt(guess, true) });
+    return diff === 0 ? fill(c.sky.guessExact, { who, guess: fmt(guess, true) }) : fill(c.sky.guessOff, { who, guess: fmt(guess, true), off: fmt(diff) });
   };
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[38] overflow-hidden" data-zm-skyshot>
       {/* Screen readers hear the verdict once; the running numbers below are decoration. */}
       <div className="sr-only" aria-live="polite">
-        {showVerdict ? `${winnerName}. ${translate(REASON_KEY[result.reason])}. Answer ${fmt(result.answer, true)}. ${SIDES.map(guessLine).join(' ')}` : ''}
+        {showVerdict ? `${winnerName}. ${translate(REASON_KEY[result.reason])}. ${fill(c.sky.answerIs, { value: fmt(result.answer, true) })} ${SIDES.map(guessLine).join(' ')}` : ''}
       </div>
       <div aria-hidden className="absolute inset-0">
         {/* Night falls over the stands so the flight reads. */}
@@ -230,7 +233,7 @@ export function SkyShot({
           style={{ ...poppins, left: mid, top: answerY, background: GOLD, color: INK, opacity: clamp01(t / 0.4), transform: `translate(-50%, -50%) scale(${flare ? 1.12 : 1})`, maxWidth: Math.max(64, right - left - 56) }}
           data-zm-sky-answer
         >
-          <span className="text-[8px] uppercase leading-none tracking-[0.12em] opacity-75">Answer</span>
+          <span className="text-[8px] uppercase leading-none tracking-[0.12em] opacity-75">{c.sky.answer}</span>
           <span className="text-sm leading-tight">{fmt(result.answer)}</span>
         </div>
 
@@ -303,7 +306,7 @@ export function SkyShot({
                     marginTop: Math.abs(answerY - y) < 40 ? 30 : 0,
                   }}
                 >
-                  {diff === 0 ? 'Spot on' : `${fmt(diff)} off`}
+                  {diff === 0 ? c.sky.spotOn : fill(c.sky.off, { off: fmt(diff) })}
                 </span>
               )}
               {/* The ball, spinning as it climbs; the winner's flares, the other's fades. */}
@@ -349,8 +352,8 @@ export function SkyShot({
                     opacity: lost ? 0.6 : 1,
                   }}
                 >
-                  <div className="text-[9px] uppercase leading-tight opacity-80">{side === 'player' ? 'You' : opponentName}</div>
-                  <div className="text-base leading-tight sm:text-lg">{f.guess === null ? 'No answer' : fmt(f.value)}</div>
+                  <div className="text-[9px] uppercase leading-tight opacity-80">{side === 'player' ? c.common.you : opponentName}</div>
+                  <div className="text-base leading-tight sm:text-lg">{f.guess === null ? c.sky.noAnswer : fmt(f.value)}</div>
                 </div>
               )}
               {won && (
@@ -365,7 +368,7 @@ export function SkyShot({
                   }}
                   data-zm-sky-stamp
                 >
-                  {STAMP[result.reason]}
+                  {stamp[result.reason]}
                 </span>
               )}
             </div>
@@ -386,7 +389,7 @@ export function SkyShot({
           >
             <div className="text-lg uppercase leading-tight text-white sm:text-xl" style={poppins}>{winnerName}</div>
             <div className="text-[10px] uppercase tracking-[0.1em] text-white/85" style={poppins}>
-              {translate(REASON_KEY[result.reason])} · answer {fmt(result.answer, true)}
+              {translate(REASON_KEY[result.reason])} · {fill(c.sky.answerInline, { value: fmt(result.answer, true) })}
             </div>
           </div>
         )}
