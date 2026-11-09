@@ -6,7 +6,7 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { Bomb, Check, Clock3, Crosshair, Eye, EyeOff, Flag, Gamepad2, Gavel, Grid3X3, Hourglass, KeyRound, Lightbulb, Link2, ListOrdered, Lock, type LucideIcon, Network, PartyPopper, Search, SearchX, Shield, Shirt, Shuffle, Swords, Target, Trophy, Users } from "lucide-react";
+import { Bomb, Check, ClipboardList, Clock3, Crosshair, Eye, EyeOff, Flag, Gamepad2, Gavel, Grid3X3, Hourglass, KeyRound, Lightbulb, Link2, ListOrdered, Lock, type LucideIcon, Network, PartyPopper, Search, SearchX, Shield, Shirt, Shuffle, Swords, Target, Trophy, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -98,6 +98,7 @@ const ROOM_GAME_ICONS: Record<RoomGameId, LucideIcon> = {
   dato_falso: SearchX,
   conexiones: Network,
   darts501: Target,
+  draft: ClipboardList,
   zone_match: Shield,
 };
 

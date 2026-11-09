@@ -790,6 +790,21 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             </motion.section>
           )}
 
+          {ticketPacksLoading && (
+            <section aria-busy="true" aria-label={t("store.ticketsTitle")}>
+              <SectionHeader title={t("store.ticketsTitle")} />
+              <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:grid-cols-3 sm:gap-4 sm:gap-y-6 lg:grid-cols-4">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div
+                    key={i}
+                    data-testid="ticket-pack-placeholder"
+                    className="aspect-[4/5] min-h-[218px] animate-pulse rounded-[16px] bg-store-card sm:min-h-[270px] sm:rounded-[20px]"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {showTickets && <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

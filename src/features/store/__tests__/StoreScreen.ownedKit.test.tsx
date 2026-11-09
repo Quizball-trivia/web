@@ -171,12 +171,13 @@ describe("StoreScreen: filters", () => {
     expect(screen.queryByText("store.noResults")).toBeNull();
   });
 
-  it("does not say 'nothing matches' on the Tickets tab while the packs load", () => {
+  it("shows placeholders, not 'nothing matches', on the Tickets tab while the packs load", () => {
     mocks.productsPending = true;
     mocks.searchParams = new URLSearchParams("tab=tickets");
     try {
       renderStore();
       expect(screen.queryByText("store.noResults")).toBeNull();
+      expect(screen.getAllByTestId("ticket-pack-placeholder").length).toBeGreaterThan(0);
     } finally {
       mocks.productsPending = false;
       mocks.searchParams = new URLSearchParams();
