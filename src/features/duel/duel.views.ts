@@ -51,6 +51,8 @@ export interface UltimoDuelView {
   difficulty: "easy" | "medium" | "hard";
   title: string;
   hint: string;
+  /** Who suggested the category; absent from older servers, null when nobody is credited. */
+  credit?: string | null;
   total: number;
   turn: Seat;
   starter: Seat;
