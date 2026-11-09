@@ -14,10 +14,18 @@ const todayInBuenosAires = () => new Date(Date.now() - 3 * 3_600_000).toISOStrin
 export function DraftBoardPage({ locale }: { locale: string }) {
   const [variant, setVariant] = useState<Variant>("budget");
   const [rows, setRows] = useState<BoardRow[]>([]);
+  const [day, setDay] = useState(todayInBuenosAires);
+  // A page left open past midnight shows the new day's board when the visitor comes back to it.
+  useEffect(() => {
+    const check = () => { if (document.visibilityState === "visible") setDay(todayInBuenosAires()); };
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", check);
+    return () => { document.removeEventListener("visibilitychange", check); window.removeEventListener("focus", check); };
+  }, []);
   useEffect(() => {
     let live = true;
-    void withRetry(() => draftApi.leaderboard(variant, todayInBuenosAires(), locale)).then((board) => { if (live) setRows(boardRowsOf(board.top).slice(0, 10)); }).catch(() => { if (live) setRows([]); });
+    void withRetry(() => draftApi.leaderboard(variant, day, locale)).then((board) => { if (live) setRows(boardRowsOf(board.top).slice(0, 10)); }).catch(() => { if (live) setRows([]); });
     return () => { live = false; };
-  }, [variant, locale]);
+  }, [variant, locale, day]);
   return <DraftLeaderboard locale={locale} rows={rows} variant={variant} onVariant={setVariant} compact={false} />;
 }
