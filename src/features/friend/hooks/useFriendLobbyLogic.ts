@@ -950,8 +950,9 @@ export function useFriendLobbyLogic({
     if (!game) return undefined;
     // Codenames' board (pictures or words) is part of what a Ready agrees to: one pressed on the old board is refused.
     // The board shown is the room's stored one (its picker appears once the room is on Codenames); otherwise Pictures.
-    if (game.gameMode !== "room_game" || game.roomGame !== "codenames") return game;
-    const options = settings?.gameMode === "room_game" && settings.roomGame === "codenames" ? settings.roomOptions ?? null : null;
+    // Football Draft's version, league, era and formation are agreed the same way.
+    if (game.gameMode !== "room_game" || (game.roomGame !== "codenames" && game.roomGame !== "draft")) return game;
+    const options = settings?.gameMode === "room_game" && settings.roomGame === game.roomGame ? settings.roomOptions ?? null : null;
     return { ...game, roomOptions: roomOptionsKey(options) };
   };
 

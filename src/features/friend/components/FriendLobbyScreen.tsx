@@ -63,6 +63,11 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
   // A game change the server never answered counts as refused: it bumps this, which rolls the settings screen back.
   const [abandonedVersion, setAbandonedVersion] = useState(0);
   const rollbackVersion = settingsErrorVersion + abandonedVersion;
+  // The same for a room game's own options (Football Draft) that the server never answered.
+  const handleSettingsAbandoned = useCallback(() => {
+    setAbandonedVersion((version) => version + 1);
+    toast.error(t("friend.toastLobbyError"));
+  }, [t]);
   // What the settings screen shows and whether it still has changes on their way (see LobbySettings).
   const [shownGame, setShownGame] = useState<ShownGame | null>(null);
   const [settingsBusy, setSettingsBusy] = useState(false);
@@ -342,6 +347,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
             settingsErrorVersion={rollbackVersion}
             settingsRefusedVersion={settingsRefusedVersion}
             onSavingChange={handleSettingsBusy}
+            onSettingsAbandoned={handleSettingsAbandoned}
             onGameShown={handleGameShown}
           />
         </div>

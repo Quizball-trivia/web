@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { FORMATIONS, type Era, type FormationId, type Variant } from "@/features/draft/draft.rules";
@@ -20,13 +21,43 @@ export function readDraftOptions(raw: Record<string, unknown> | null | undefined
   };
 }
 
+const sameChoice = (a: DraftRoomChoice, b: DraftRoomChoice) => a.leagueId === b.leagueId && a.era === b.era && a.formation === b.formation && a.variant === b.variant;
+
 const chip = (selected: boolean, canEdit: boolean) => cn("min-h-9 rounded-full px-3 text-xs font-bold transition-colors", selected ? "bg-brand-blue text-white" : "bg-white/[0.07] text-white/75", canEdit && !selected && "hover:bg-white/[0.12]", !canEdit && !selected && "opacity-45");
 
-export function DraftRoomOptions({ options, canEdit, onChange, hostOnly }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string }) {
+export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange, onAbandoned, refusedVersion = 0 }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void; onAbandoned?: () => void; refusedVersion?: number }) {
   const { locale } = useLocale();
   const c = draftCopy(locale);
-  const value = readDraftOptions(options);
-  const set = (patch: Partial<DraftRoomChoice>) => { if (canEdit) onChange({ ...value, ...patch }); };
+  const server = readDraftOptions(options);
+  // Quick taps must not undo each other: until the room echoes what was sent, the next tap builds on what was sent,
+  // not on the older settings the room still shows. Once the room confirms it (or 3 s pass, or editing is no longer
+  // allowed) the room's own value is shown again.
+  const [sent, setSent] = useState<DraftRoomChoice | null>(null);
+  if (sent && (!canEdit || sameChoice(sent, server))) setSent(null);
+  // The lobby rolled its settings back (a refusal it already reported): the change on its way is over, and so is its wait.
+  const [seenRefusal, setSeenRefusal] = useState(refusedVersion);
+  if (refusedVersion !== seenRefusal) {
+    setSeenRefusal(refusedVersion);
+    if (sent) setSent(null);
+  }
+  const pending = canEdit && sent && !sameChoice(sent, server) ? sent : null;
+  const value = pending ?? server;
+  // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
+  useEffect(() => { onPendingChange?.(pending !== null); }, [pending, onPendingChange]);
+  useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
+  // No answer in 3 s counts as refused, like any lobby setting: the room's value returns and a held Ready is dropped.
+  // A newer tap restarts the wait; the room's confirmation ends it.
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => { setSent(null); onAbandoned?.(); }, 3_000);
+    return () => clearTimeout(timer);
+  }, [pending, onAbandoned]);
+  const set = (patch: Partial<DraftRoomChoice>) => {
+    if (!canEdit) return;
+    const next = { ...value, ...patch };
+    setSent(next);
+    onChange(next);
+  };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
     <div>
       <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-white/55">{label}</p>
