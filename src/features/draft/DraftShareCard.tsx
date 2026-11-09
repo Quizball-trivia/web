@@ -148,10 +148,20 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [names, setNames] = useState(defaultNames);
   const [copied, setCopied] = useState(false);
-  useEffect(() => { if (canvas.current) void drawShareCard(canvas.current, data, names); }, [data, names]);
+  // The image is made as soon as it is drawn: Share must reach the system sheet without waiting, or the browser
+  // treats the tap as expired and refuses it.
+  const ready = useRef<Blob | null>(null);
+  useEffect(() => {
+    let live = true;
+    ready.current = null;
+    const el = canvas.current;
+    if (!el) return;
+    void drawShareCard(el, data, names).then(() => { if (live) el.toBlob((b) => { if (live) ready.current = b; }, "image/png"); });
+    return () => { live = false; };
+  }, [data, names]);
 
   const [failed, setFailed] = useState(false);
-  const blob = () => new Promise<Blob | null>((resolve) => { if (canvas.current) canvas.current.toBlob(resolve, "image/png"); else resolve(null); });
+  const blob = () => new Promise<Blob | null>((resolve) => { if (ready.current) resolve(ready.current); else if (canvas.current) canvas.current.toBlob(resolve, "image/png"); else resolve(null); });
   const save = async () => {
     try {
       const b = await blob();
@@ -171,7 +181,7 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   };
   const share = async () => {
     try {
-      const b = await blob();
+      const b = ready.current ?? (await blob());
       const file = b ? new File([b], "football-draft.png", { type: "image/png" }) : null;
       if (!file) { setFailed(true); return; }
       if (navigator.canShare?.({ files: [file] })) {
@@ -183,7 +193,10 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
       await save();
     } catch (e) {
       // Closing the system sheet is a choice, not a failure.
-      if (!(e instanceof DOMException && e.name === "AbortError")) setFailed(true);
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      // The browser refused the system sheet (no gesture left, or not allowed here): the image is saved instead.
+      if (e instanceof DOMException && e.name === "NotAllowedError") { await save(); return; }
+      setFailed(true);
     }
   };
   const copy = async () => {
