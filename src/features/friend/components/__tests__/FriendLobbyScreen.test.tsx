@@ -160,3 +160,50 @@ describe("FriendLobbyScreen duel rooms", () => {
     expect(mocks.useFriendLobbyLogic).toHaveBeenCalledWith(expect.objectContaining({ roomCode: "new", newRoomDuelGame: "pistas" }));
   });
 });
+
+describe("FriendLobbyScreen Mentalista rooms", () => {
+  const member = (userId: string, isHost: boolean, isReady: boolean) => ({
+    userId, username: userId, avatarUrl: null, isReady, isHost,
+  });
+  function mentalistaRoom(members: ReturnType<typeof member>[]) {
+    const settings = { gameMode: "room_game" as const, roomGame: "mentalista" as const };
+    const lobby = {
+      lobbyId: "lobby-m", mode: "friendly", status: "waiting", inviteCode: "MENTA1", displayName: "Room", isPublic: false,
+      hostUserId: "host",
+      settings,
+      members,
+    };
+    return {
+      ...makeHookResult({ inviteCode: "MENTA1", reasonCode: "", messageKey: "friend.toastJoinFailed", retryable: false }),
+      inviteJoinFailure: null,
+      lobby,
+      isDuelLobby: false,
+      isAuctionLobby: false,
+      isFootballGridLobby: false,
+      members,
+      me: members[0],
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows waitingMorePlayers and disabled Start when only 2 ready players are in a Mentalista room", () => {
+    mocks.useFriendLobbyLogic.mockReturnValue(
+      mentalistaRoom([member("host", true, true), member("p2", false, true)]),
+    );
+    render(<FriendLobbyScreen roomCode="MENTA1" isHost />);
+    expect(screen.getByText("friend.waitingMorePlayers")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "friend.startRoomGame" })).toBeDisabled();
+  });
+
+  it("shows readyCopyMentalista and enabled Start when 3 ready players are in a Mentalista room", () => {
+    mocks.useFriendLobbyLogic.mockReturnValue(
+      mentalistaRoom([member("host", true, true), member("p2", false, true), member("p3", false, true)]),
+    );
+    render(<FriendLobbyScreen roomCode="MENTA1" isHost />);
+    expect(screen.getByText("friend.readyCopyMentalista")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "friend.startRoomGame" })).toBeEnabled();
+  });
+});

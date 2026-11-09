@@ -120,7 +120,7 @@ export function GamesPlayground() {
   };
   useEffect(() => () => player?.stop(), [player]);
 
-  const events = SOUND_EVENTS[game.id][mode] ?? [];
+  const events = SOUND_EVENTS[game.id]?.[mode] ?? [];
 
   return (
     <div className="flex h-dvh bg-surface-page-deep text-white">

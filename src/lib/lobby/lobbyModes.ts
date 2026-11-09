@@ -29,12 +29,22 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   room_game: { capacity: 8, playable: 8, guestAllowed: true, hostStart: { min: 2, max: 8 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso", "conexiones", "darts501", "draft", "zone_match"];
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado", "shared_player", "name_chain", "tenable", "football_race", "codenames", "dato_falso", "conexiones", "darts501", "draft", "zone_match", "mentalista"];
 
 /** Seats of a room game without its own cap (the room mode holds eight; only Football Codenames uses them). */
 const ROOM_GAME_DEFAULT_SEATS = 6;
-/** Room games with their own seat cap (mirrors the backend's ROOM_GAME_MAX_SEATS). */
-const ROOM_GAME_MAX_SEATS: Partial<Record<RoomGameId, number>> = { football_race: 4, codenames: 8, conexiones: 2, zone_match: 2 };
+/** Room games with their own seat cap (mirrors the backend's ROOM_GAME_MAX_SEATS). Mentalista caps at six. */
+const ROOM_GAME_MAX_SEATS: Partial<Record<RoomGameId, number>> = { football_race: 4, codenames: 8, conexiones: 2, zone_match: 2, mentalista: 6 };
+
+/**
+ * Fewest members a room game needs to start. Every game starts at the mode's own minimum (2) except Mentalista, which
+ * needs a chooser plus at least two readers — 3 — so a hidden pick is never a coin-flip between a single predictor.
+ * Mirrors the backend's per-game ROOM_GAME_MIN_SEATS; the server stays authoritative.
+ */
+const ROOM_GAME_MIN_SEATS: Partial<Record<RoomGameId, number>> = { mentalista: 3 };
+export function roomGameMinSeats(roomGame: RoomGameId | null | undefined, modeMin: number): number {
+  return Math.max(modeMin, (roomGame && ROOM_GAME_MIN_SEATS[roomGame]) ?? 0);
+}
 
 /** Members a mode choice can play: a room game may seat fewer than its mode. */
 export function choicePlayable(choice: { gameMode: LobbyGameMode; roomGame?: RoomGameId | null }): number {
@@ -56,6 +66,7 @@ export const ROOM_GAME_LABEL_KEYS: Readonly<Record<RoomGameId, { tab: MessageKey
   darts501: { tab: "friend.roomTabDarts501", title: "friend.roomDarts501", description: "friend.roomDarts501Description" },
   draft: { tab: "friend.roomTabDraft", title: "friend.roomDraft", description: "friend.roomDraftDescription" },
   zone_match: { tab: "friend.roomTabZoneMatch", title: "friend.roomZoneMatch", description: "friend.roomZoneMatchDescription" },
+  mentalista: { tab: "friend.roomTabMentalista", title: "friend.roomMentalista", description: "friend.roomMentalistaDescription" },
 };
 
 /** Labels of a room game, or null for one this build does not know (a lobby set up by a newer client). */
@@ -90,8 +101,11 @@ export function isDuelGameEnabled(value: unknown, enabled: readonly DuelGameId[]
 
 export function canHostStart(mode: LobbyGameMode | null | undefined, memberCount: number, roomGame?: RoomGameId | null): boolean {
   const shape = lobbyModeCapabilities(mode).hostStart;
-  const max = mode === "room_game" ? Math.min(shape?.max ?? 0, choicePlayable({ gameMode: mode, roomGame })) : shape?.max ?? 0;
-  return shape !== null && memberCount >= shape.min && memberCount <= max;
+  if (shape === null) return false;
+  const max = mode === "room_game" ? Math.min(shape.max, choicePlayable({ gameMode: mode, roomGame })) : shape.max;
+  // A room game may ask for more members than the mode's floor (Mentalista needs 3); every other game keeps its floor.
+  const min = mode === "room_game" ? roomGameMinSeats(roomGame, shape.min) : shape.min;
+  return memberCount >= min && memberCount <= max;
 }
 
 /** One entry of the room's mode picker: a duel is one choice per game, and so is a room game. */

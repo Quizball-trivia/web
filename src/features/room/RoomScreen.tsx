@@ -19,6 +19,8 @@ import type { CxCommand } from "@/features/conexiones/conexiones.server";
 import type { DfCommand } from "@/features/dato-falso/datoFalso.view";
 import { footballRaceScreens } from "@/features/football-race/FootballRaceRoom";
 import type { FootballRaceCommand } from "@/features/football-race/race.server";
+import { mentalistaScreens } from "@/features/mentalista/MentalistaRoom";
+import type { MvCommand } from "@/features/mentalista/mentalista.server";
 import { nameChainScreens } from "@/features/name-chain/NameChainRoom";
 import type { NameChainCommand } from "@/features/name-chain/nameChain.view";
 import { tenableScreens } from "@/features/tenable/TenableRoom";
@@ -55,6 +57,7 @@ function Room({ matchId }: { matchId: string }) {
   if (game === "darts501") return <RoomGameShell room={room as Connection<D501Command>} screens={d501Screens} />;
   if (game === "draft") return <RoomGameShell room={room as Connection<DraftRoomCommand>} screens={draftScreens} />;
   if (game === "zone_match") return <RoomGameShell room={room as Connection<ZoneMatchCommand>} screens={zoneMatchScreens} />;
+  if (game === "mentalista") return <RoomGameShell room={room as Connection<MvCommand>} screens={mentalistaScreens} />;
   return <Outdated />;
 }
 
