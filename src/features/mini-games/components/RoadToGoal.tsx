@@ -542,6 +542,8 @@ interface RoadSceneProps {
   progress: number;
   phase: Phase;
   labels: { liveRoute: string; safe: string; target: string };
+  /** The partner frame can scale the page (CSS zoom): the pitch must measure its unscaled size. */
+  zoomSafe?: boolean;
 }
 
 function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
@@ -1447,6 +1449,7 @@ export function RoadToGoal({
             progress={progress}
             phase={phase}
             labels={{ liveRoute: copy.liveRoute, safe: copy.safe, target: copy.target }}
+            zoomSafe={hasPartner}
           />
         </div>
 
