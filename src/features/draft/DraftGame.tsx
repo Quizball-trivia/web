@@ -79,8 +79,10 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   const [openRival, setOpenRival] = useState<(BoardRow & { picks: (Pick | null)[] }) | null>(null);
   const [tie, setTie] = useState<(TieResponse & { rivalName: string }) | null>(null);
   const [seenTies, setSeenTies] = useState<string[]>([]);
-  const [linkNote, setLinkNote] = useState<string | null>(null);
-  const [challengeLink, setChallengeLink] = useState<string | null>(null);
+  // The link belongs to the run it was made for, and "copied" to the exact link copied: a late reply cannot show either on another run.
+  const [challengeLink, setChallengeLink] = useState<{ run: string; url: string } | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const linkRequest = useRef(0);
   const started = useRef(false);
   const starting = useRef(false);
   const [resumable, setResumable] = useState<string | null>(null);
@@ -126,7 +128,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
 
   const resume = useCallback(async () => {
     if (!resumable) return;
-    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
+    setChallengeCode(null); setChallenge(null); linkRequest.current++; setChallengeLink(null); setCopiedUrl(null);
     try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { setProblem(c.loadFailed); }
   }, [resumable, locale, adopt, c.loadFailed]);
 
@@ -167,7 +169,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if (!today || starting.current) return;
     starting.current = true;
     setPending(true);
-    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
+    setChallengeCode(null); setChallenge(null); linkRequest.current++; setChallengeLink(null); setCopiedUrl(null);
     try {
       // A guest opens yesterday from today's entry, and a closed day chosen from the address as it is.
       const day = today.guest && today.day >= today.live ? today.practiceDay : today.day;
@@ -185,7 +187,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if (starting.current) return;
     starting.current = true;
     setPending(true);
-    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
+    setChallengeCode(null); setChallenge(null); linkRequest.current++; setChallengeLink(null); setCopiedUrl(null);
     try {
       const next = await draftApi.startFree({ leagueId: setup.leagueId, era: setup.era, formation: setup.formation, variant: setup.variant }, locale);
       beginTracked();
@@ -195,7 +197,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   }, [setup, locale, adopt, beginTracked, c.loadFailed, c.noSuchEra]);
 
   const acceptChallenge = useCallback(async () => {
-    setChallengeLink(null); setLinkNote(null);
+    linkRequest.current++; setChallengeLink(null); setCopiedUrl(null);
     if (!challengeCode || starting.current) return;
     starting.current = true;
     setPending(true);
@@ -307,27 +309,33 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   /** A link a friend opens on the same draw. */
   const challengeFriend = useCallback(async () => {
     if (!env) return;
+    const request = ++linkRequest.current;
+    const run = env.run.id;
     let url: string;
     try {
-      const body = "daily" in kind && runDay ? { variant: kind.daily, day: runDay } : { runId: env.run.id };
+      const body = "daily" in kind && runDay ? { variant: kind.daily, day: runDay } : { runId: run };
       const { code } = await draftApi.challengeCreate(body, locale);
       url = `${window.location.origin}/football-draft?challenge=${code}`;
     } catch {
-      setProblem(c.loadFailed);
+      if (request === linkRequest.current) setProblem(c.loadFailed);
       return;
     }
+    if (request !== linkRequest.current) return;
     setProblem(null);
-    setChallengeLink(url);
+    setChallengeLink({ run, url });
+    setCopiedUrl(null);
     // After the network wait the browser may refuse to share or copy (no user gesture left): the link stays on screen with its own Copy.
     try {
       if (navigator.share) await navigator.share({ url, text: c.challengeShare });
-      else { await navigator.clipboard.writeText(url); setLinkNote(c.shareCopied); }
+      else { await navigator.clipboard.writeText(url); if (request === linkRequest.current) setCopiedUrl(url); }
     } catch { /* cancelled or refused */ }
   }, [env, kind, runDay, locale, c]);
+  const shownLink = challengeLink && env && challengeLink.run === env.run.id ? challengeLink.url : null;
   const copyChallengeLink = useCallback(async () => {
-    if (!challengeLink) return;
-    try { await navigator.clipboard.writeText(challengeLink); setLinkNote(c.shareCopied); } catch { /* the field stays selectable */ }
-  }, [challengeLink, c]);
+    if (!shownLink) return;
+    const request = linkRequest.current;
+    try { await navigator.clipboard.writeText(shownLink); if (request === linkRequest.current) setCopiedUrl(shownLink); } catch { /* the field stays selectable */ }
+  }, [shownLink]);
 
   const notice = (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoney : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
   const target: ChallengeTarget | null = challenge ? { from: challenge.from, seed: "", leagueId: "", era: challenge.era, formation: challenge.formation, variant: challenge.variant, respins: 2, ...challenge.record, picks: challenge.picks ?? Array(11).fill(null) } : null;
@@ -364,13 +372,13 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} nextDaily={boardDay ? nextDaily : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
             leaderboard={boardDay ? <DraftLeaderboard locale={locale} rows={board} variant={boardVariant} onVariant={(v) => { setVariant(v); setScreen("intro"); }} onOpen={(row) => void openTeam(row)} /> : undefined}
             onShare={() => undefined} onAgain={() => { setSetup((x) => ({ ...x, variant: state.variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
-          {challengeLink && (
+          {shownLink && (
             <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface-card p-2">
-              <input readOnly value={challengeLink} aria-label={c.challengeFriend} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white/90 outline-none" />
-              <button type="button" onClick={() => void copyChallengeLink()} className="shrink-0 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-black uppercase text-white">{linkNote ? c.shareCopied : c.shareCopy}</button>
+              <input readOnly value={shownLink} aria-label={c.challengeFriend} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white/90 outline-none" />
+              <button type="button" onClick={() => void copyChallengeLink()} className="shrink-0 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-black uppercase text-white">{copiedUrl === shownLink ? c.shareCopied : c.shareCopy}</button>
             </div>
           )}
-          {linkNote && !challengeLink && <p role="status" className="mt-2 text-center text-xs font-semibold text-brand-green-light">{linkNote}</p>}
+          <p role="status" aria-live="polite" className="sr-only">{shownLink && copiedUrl === shownLink ? c.shareCopied : ""}</p>
           {openRival && <TeamSheet c={c} name={openRival.name} slots={slots} picks={openRival.picks} onPlay={() => void playRival()} onClose={() => setOpenRival(null)} />}
         </>
       ) : null}
