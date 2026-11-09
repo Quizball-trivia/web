@@ -107,7 +107,7 @@ const en: LocaleCopy = {
     sections: [
       {
         title: "1. Introduction",
-        body: 'QuizBall ("us", "we", or "our") operates the quizball.com website and mobile application (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.',
+        body: 'QuizBall ("us", "we", or "our") operates the quizball.io website and mobile application (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.',
       },
       {
         title: "2. Information Collection and Use",
@@ -220,7 +220,7 @@ const ka: LocaleCopy = {
     sections: [
       {
         title: "1. შესავალი",
-        body: "QuizBall („ჩვენ“, „ჩვენი“ ან „ჩვენს“) მართავს quizball.com ვებსაიტს და მობილურ აპლიკაციას („მომსახურება“). ეს გვერდი გაწვდით ინფორმაციას ჩვენი პოლიტიკის შესახებ, რომელიც ეხება პერსონალური მონაცემების შეგროვებას, გამოყენებასა და გამჟღავნებას ჩვენი მომსახურებით სარგებლობისას, ასევე იმ არჩევანის შესახებ, რომელიც თქვენ გაქვთ ამ მონაცემებთან დაკავშირებით.",
+        body: "QuizBall („ჩვენ“, „ჩვენი“ ან „ჩვენს“) მართავს quizball.io ვებსაიტს და მობილურ აპლიკაციას („მომსახურება“). ეს გვერდი გაწვდით ინფორმაციას ჩვენი პოლიტიკის შესახებ, რომელიც ეხება პერსონალური მონაცემების შეგროვებას, გამოყენებასა და გამჟღავნებას ჩვენი მომსახურებით სარგებლობისას, ასევე იმ არჩევანის შესახებ, რომელიც თქვენ გაქვთ ამ მონაცემებთან დაკავშირებით.",
       },
       {
         title: "2. ინფორმაციის შეგროვება და გამოყენება",
@@ -444,7 +444,7 @@ const tr: LocaleCopy = {
     sections: [
       {
         title: "1. Giriş",
-        body: 'QuizBall ("biz" veya "bizim"), quizball.com web sitesini ve mobil uygulamasını ("Hizmet") işletir. Bu sayfa, Hizmet\'i kullandığında kişisel verilerin toplanması, kullanılması ve paylaşılmasına ilişkin politikalarımız ve bu verilerle ilgili seçeneklerin hakkında seni bilgilendirir.',
+        body: 'QuizBall ("biz" veya "bizim"), quizball.io web sitesini ve mobil uygulamasını ("Hizmet") işletir. Bu sayfa, Hizmet\'i kullandığında kişisel verilerin toplanması, kullanılması ve paylaşılmasına ilişkin politikalarımız ve bu verilerle ilgili seçeneklerin hakkında seni bilgilendirir.',
       },
       {
         title: "2. Bilgi Toplama ve Kullanma",
@@ -556,7 +556,7 @@ const ru: LocaleCopy = {
     sections: [
       {
         title: "1. Введение",
-        body: 'QuizBall («мы», «нас» или «наш») управляет сайтом quizball.com и мобильным приложением (далее — «Сервис»). На этой странице мы рассказываем, как собираем, используем и раскрываем персональные данные при использовании Сервиса, а также какие у тебя есть возможности распоряжаться этими данными.',
+        body: 'QuizBall («мы», «нас» или «наш») управляет сайтом quizball.io и мобильным приложением (далее — «Сервис»). На этой странице мы рассказываем, как собираем, используем и раскрываем персональные данные при использовании Сервиса, а также какие у тебя есть возможности распоряжаться этими данными.',
       },
       {
         title: "2. Сбор и использование информации",
@@ -668,7 +668,7 @@ const pt: LocaleCopy = {
     sections: [
       {
         title: "1. Introdução",
-        body: 'O QuizBall ("nós", "nosso" ou "nossa") opera o site quizball.com e o aplicativo móvel (o "Serviço"). Esta página informa sobre nossas políticas relativas à coleta, ao uso e à divulgação de dados pessoais quando você usa nosso Serviço, bem como sobre as opções disponíveis para você relacionadas a esses dados.',
+        body: 'O QuizBall ("nós", "nosso" ou "nossa") opera o site quizball.io e o aplicativo móvel (o "Serviço"). Esta página informa sobre nossas políticas relativas à coleta, ao uso e à divulgação de dados pessoais quando você usa nosso Serviço, bem como sobre as opções disponíveis para você relacionadas a esses dados.',
       },
       {
         title: "2. Coleta e Uso de Informações",
@@ -780,7 +780,7 @@ const de: LocaleCopy = {
     sections: [
       {
         title: "1. Einleitung",
-        body: 'QuizBall („wir“, „uns“ oder „unser“) betreibt die Website quizball.com und die mobile App („der Dienst“). Auf dieser Seite informieren wir dich über unsere Richtlinien zur Erfassung, Verwendung und Offenlegung personenbezogener Daten, wenn du unseren Dienst nutzt, sowie über deine Wahlmöglichkeiten in Bezug auf diese Daten.',
+        body: 'QuizBall („wir“, „uns“ oder „unser“) betreibt die Website quizball.io und die mobile App („der Dienst“). Auf dieser Seite informieren wir dich über unsere Richtlinien zur Erfassung, Verwendung und Offenlegung personenbezogener Daten, wenn du unseren Dienst nutzt, sowie über deine Wahlmöglichkeiten in Bezug auf diese Daten.',
       },
       {
         title: "2. Erfassung und Verwendung von Informationen",
@@ -892,7 +892,7 @@ const fr: LocaleCopy = {
     sections: [
       {
         title: "1. Introduction",
-        body: 'QuizBall (« nous », « notre » ou « nos ») exploite le site quizball.com et l’application mobile (« le Service »). Cette page t’informe de nos règles concernant la collecte, l’utilisation et la divulgation de données personnelles lorsque tu utilises notre Service, ainsi que des choix qui s’offrent à toi concernant ces données.',
+        body: 'QuizBall (« nous », « notre » ou « nos ») exploite le site quizball.io et l’application mobile (« le Service »). Cette page t’informe de nos règles concernant la collecte, l’utilisation et la divulgation de données personnelles lorsque tu utilises notre Service, ainsi que des choix qui s’offrent à toi concernant ces données.',
       },
       {
         title: "2. Collecte et utilisation des informations",

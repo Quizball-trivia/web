@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import type { LegalCopy } from "@/lib/i18n/copy";
 import type { Locale } from "@/lib/i18n/locale";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { AdvertisingPrivacyNotice } from '@/features/ads/AdvertisingPrivacyNotice';
 
 interface LegalScreenProps {
   copy: LegalCopy;
@@ -99,6 +100,7 @@ export function LegalScreen({ copy, locale, variant }: LegalScreenProps) {
                   )}
                 </section>
               ))}
+              {variant === 'privacy' && <AdvertisingPrivacyNotice />}
             </div>
           </div>
         </motion.div>

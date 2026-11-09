@@ -368,6 +368,7 @@ interface ModeSelectionScreenProps {
   rankedProfileLoading?: boolean;
   /** Server-rendered content the public hub places between the cards and the footer. */
   beforeFooter?: React.ReactNode;
+  adSlot?: React.ReactNode;
 }
 
 
@@ -387,6 +388,7 @@ export function ModeSelectionScreen({
   rankedProfile,
   rankedProfileLoading = false,
   beforeFooter,
+  adSlot,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const tierLabelOf = useTierLabel();
@@ -1118,6 +1120,7 @@ export function ModeSelectionScreen({
         <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />
       )}
       {beforeFooter}
+      {!rankedDemoOpen && adSlot}
       <SiteFooter />
     </motion.div>
   );

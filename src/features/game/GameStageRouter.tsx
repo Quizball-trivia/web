@@ -9,6 +9,7 @@ import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
+import { ManualAdSlot } from '@/features/ads/ManualAdSlot';
 import type { MatchResultSummary } from "./results/results.types";
 import { CancelledMatchScreen } from "./CancelledMatchScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
@@ -811,6 +812,7 @@ export function GameStageRouter({ partner }: { partner?: GameStageRouterPartnerM
 
       return (
         <RealtimeResultsScreen
+          afterActionsSlot={<ManualAdSlot placement="results" />}
           {...matchSummary}
           matchType={matchType}
           cancelledNoContest={final?.cancelledNoContest === true}
