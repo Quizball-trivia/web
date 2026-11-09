@@ -18,7 +18,6 @@ const NEXT_UP_SLUGS = [
   "daily-passChain",
   "daily-cardDetective",
   "mini-guess-the-goal",
-  "mini-final-third",
   "daily-trueFalse",
 ];
 
@@ -27,7 +26,6 @@ const MODE_BY_SLUG = new Map(ALL_DEMO_MODES.map((mode) => [mode.slug, mode]));
 function hrefFor(mode: DemoModeCard): string {
   if (mode.dailyType) return dailyChallengePlayPath(mode.dailyType);
   const real: Record<string, string> = {
-    "mini-final-third": "/free-kicks",
     "mini-guess-the-goal": "/guess-the-goal",
   };
   return real[mode.slug] ?? `/demos/${mode.slug}?from=/play`;

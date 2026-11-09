@@ -26,20 +26,18 @@ export const DAILY_CHALLENGE_SLUGS = [
   // A quick warm-up rather than a headline game: it stays last.
   "daily-trueFalse",
 ];
-export const PLAY_WITH_COINS_SLUGS = [
-  "mini-final-third",
-  "mini-squad-spin",
-];
-
 /**
  * Off the Play page per the 2026-11 game review; every route still opens directly (links, shares, rooms, partners).
  * - Cut: Road to Goal and Trivia Mines (chance outweighs knowledge), Higher or Lower (all-or-nothing rounds).
+ * - Cut with the "Play with coins" row (owner, 2026-11): Free Kicks and Squad Spin.
  * - Folded into a stronger game: Who Am I? (Football Clues), solo Last Answer Standing (Countdown; the friend
  *   room stays), Imposter (Odd One Out), Football Logic.
  */
 export const RETIRED_PLAY_SLUGS = [
   "mini-road-to-goal",
   "mini-trivia-mines",
+  "mini-final-third",
+  "mini-squad-spin",
   "daily-highLow",
   "daily-clues",
   "ultimo",
@@ -101,18 +99,16 @@ export function parsePlayPopularity(body: unknown): PlayPopularity | null {
 
 /** What the Play page is drawn from: each row's order, and the games to mark as new. */
 export interface PlayOrder {
-  /** Null when there were no numbers for that row: it keeps its hand-made order. */
+  /** Null when there were no numbers for the row: it keeps its hand-made order. */
   daily: string[] | null;
-  coins: string[] | null;
   newSlugs: string[];
 }
 
 export function playOrderFrom(popularity: PlayPopularity | null, now: Date): PlayOrder {
-  const everySlug = [...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS];
-  const newSlugs = everySlug.filter((slug) => isNewPlayGame(PLAY_RELEASED_ON[slug], now));
-  if (!popularity) return { daily: null, coins: null, newSlugs };
+  const newSlugs = DAILY_CHALLENGE_SLUGS.filter((slug) => isNewPlayGame(PLAY_RELEASED_ON[slug], now));
+  if (!popularity) return { daily: null, newSlugs };
   const stats: Record<string, PlayGameStats> = {};
-  for (const slug of everySlug) {
+  for (const slug of DAILY_CHALLENGE_SLUGS) {
     const row = popularity.games[playPopularityKey(slug)];
     if (row) stats[slug] = { players7d: row.players_7d, players3d: row.players_3d };
   }
@@ -120,7 +116,7 @@ export function playOrderFrom(popularity: PlayPopularity | null, now: Date): Pla
   const ranked = (slugs: string[]) =>
     slugs.some((slug) => stats[slug]) ? rankPlayGames(slugs, stats, PLAY_RELEASED_ON, now).map((row) => row.slug) : null;
   const daily = ranked(DAILY_CHALLENGE_SLUGS);
-  return { daily: daily && pinLast(daily), coins: ranked(PLAY_WITH_COINS_SLUGS), newSlugs };
+  return { daily: daily && pinLast(daily), newSlugs };
 }
 
 /** Warm-ups that stay at the end of their row whatever their numbers say. */

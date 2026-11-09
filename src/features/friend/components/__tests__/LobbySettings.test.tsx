@@ -63,6 +63,13 @@ function renderSettings(lobby: LobbyState) {
 }
 
 describe("LobbySettings auction mode", () => {
+  it("describes each mode card with how many can play", () => {
+    renderSettings(makeLobby("friendly_possession"));
+
+    expect(screen.getByRole("button", { name: "friend.classic" })).toHaveAccessibleDescription("friend.playersOneVsOne");
+    expect(screen.getByRole("button", { name: "friend.auction" })).toHaveAccessibleDescription(/friend\.playersRange/);
+  });
+
   it("renders auction as a selectable mode tab", () => {
     renderSettings(makeLobby("friendly_possession"));
 

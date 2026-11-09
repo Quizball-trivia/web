@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { ZONE_BOT_ENABLED } from "@/lib/config";
-import { CheckCircle2, Loader2, LogOut, RotateCw } from "lucide-react";
+import { CheckCircle2, Copy, Loader2, LogOut, RotateCw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
 import { type FriendLobbyInviteSource, useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
+import { useRoomInvite } from "../hooks/useRoomInvite";
 import { InviteFailureScreen } from "./InviteFailureScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DuelGameId, LobbySeenGame, RoomGameId } from "@/lib/realtime/socket.types";
@@ -59,6 +60,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
   } = useFriendLobbyLogic({ roomCode, isHost, inviteSource, newRoomDuelGame, newRoomRoomGame, newRoomGameMode });
   const displayedReady = optimisticReady ?? me?.isReady ?? false;
   const lobbyId = lobby?.lobbyId ?? null;
+  const invite = useRoomInvite(lobbyCode, lobbyId);
   const serverChoiceKey = settingsChoiceKey(lobby?.settings);
   // A game change the server never answered counts as refused: it bumps this, which rolls the settings screen back.
   const [abandonedVersion, setAbandonedVersion] = useState(0);
@@ -154,6 +156,9 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
   // A host alone in a zone-match room may start against the server bot (flag-gated; the server enforces it too).
   const soloVsBot =
     ZONE_BOT_ENABLED && settings?.gameMode === "room_game" && settings?.roomGame === "zone_match" && members.length === 1;
+  // Only where a second player is really needed: auction fills seats with bots, and zone match can start vs the bot.
+  const isAlone = Boolean(lobby) && lobby?.status === "waiting" && members.length <= 1 && !isSittingOutRoomGame
+    && !soloVsBot && !canHostStart(settings?.gameMode, 1, settings?.roomGame);
   const readyCopy = soloVsBot
     ? t("friend.readyCopyVsBot")
     : isAuctionLobby
@@ -325,6 +330,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       <LobbyHeader
         lobbyName={lobby?.displayName}
         lobbyCode={lobbyCode}
+        lobbyId={lobbyId}
         me={me}
         members={members}
         h2hSummary={h2hSummary}
@@ -368,6 +374,21 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
               >
                 {readyCopy}
               </p>
+
+              {isAlone && (
+                <div className="space-y-3 rounded-[16px] bg-black/25 p-4">
+                  <p className="text-sm font-medium leading-snug text-white">{t("friend.aloneHint")}</p>
+                  <button
+                    type="button"
+                    onClick={() => void (invite.canShare ? invite.share() : invite.copyLink())}
+                    disabled={!invite.inviteUrl}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-brand-yellow text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 disabled:opacity-40 active:scale-[0.98]"
+                  >
+                    {invite.canShare ? <Share2 className="size-4" /> : <Copy className="size-4" />}
+                    {t("friend.inviteTitle")}
+                  </button>
+                </div>
+              )}
 
               <button
                 onClick={handleReadyClick}
@@ -442,13 +463,24 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
                   </span>
                 </div>
               )}
-
+              <div className="py-1 text-center">
+                <span
+                  className={cn(
+                    "uppercase",
+                    allReady ? "text-brand-green-light" : "text-white/80"
+                  )}
+                  style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
+                >
+                  {statusCopy}
+                </span>
+              </div>
+              {/* Quiet on purpose: leaving is always one tap away but never competes with Ready / Start. */}
               <button
+                type="button"
                 onClick={actions.handleLeaveLobby}
                 disabled={!lobby || isLeaving}
                 aria-busy={isLeaving}
-                className="w-full h-12 rounded-[20px] bg-brand-red text-white uppercase transition-all hover:bg-brand-red/90 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
-                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-[14px] text-sm font-semibold text-white/70 transition-colors hover:bg-black/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLeaving ? (
                   <>
@@ -462,18 +494,6 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
                   </>
                 )}
               </button>
-
-              <div className="py-1 text-center">
-                <span
-                  className={cn(
-                    "uppercase",
-                    allReady ? "text-brand-green-light" : "text-white/80"
-                  )}
-                  style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
-                >
-                  {statusCopy}
-                </span>
-              </div>
             </div>
           </div>
         </div>

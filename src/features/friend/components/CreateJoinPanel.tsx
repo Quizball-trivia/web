@@ -48,8 +48,10 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
     if (onActionTriggered) onActionTriggered('create');
     setCreatePressed(true);
     createTimerRef.current = setTimeout(() => setCreatePressed(false), 600);
-    toast.info(t("friend.creatingRoom"));
+    // Dismissed once the create resolves: on success the room screen is already up and says so itself.
+    const creatingToast = toast.info(t("friend.creatingRoom"));
     void createLobby({ mode: "friendly", isPublic }).then((result) => {
+      toast.dismiss(creatingToast);
       if (!result || result.ok) return;
       toast.error(result.message);
     });
@@ -86,7 +88,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   }, [lobby?.lobbyId, lobby?.inviteCode, lobby, reset]);
 
   return (
-    <div className="grid items-stretch gap-6 md:grid-cols-2 max-w-4xl">
+    <div className="grid items-stretch gap-6 md:grid-cols-2">
       <div
         className="relative flex h-full flex-col overflow-hidden rounded-[20px] p-6 sm:p-7"
         style={cardSurfaceStyle}

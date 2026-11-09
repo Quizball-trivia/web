@@ -3,6 +3,7 @@
 import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle, tunedFrontHairPercent } from "@/lib/avatars/usePartTuning";
 import Image from "next/image";
 import { motion } from "motion/react";
+import { Check } from "lucide-react";
 import { CoinIcon } from "./CoinIcon";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import type { AvatarCustomization } from "@/types/game";
@@ -27,8 +28,10 @@ export interface ItemCardProps {
   /** Optional bigger image rendering (use for items rendered as flat asset, e.g. jerseys). */
   imageSize?: "sm" | "md" | "lg";
   onBuy?: () => void;
-  /** Already owned/unlocked — show an "Owned" pill instead of price. */
+  /** Already owned/unlocked — show an "Equip" button instead of the price. */
   owned?: boolean;
+  /** Currently worn by the player — shows a non-interactive "Equipped" state. */
+  equipped?: boolean;
   /** When provided, card renders a composite avatar preview instead of the flat asset. */
   previewCustomization?: AvatarCustomization;
   /** When provided, card renders a mannequin head with this part overlaid (for hair/glasses/facialHair). */
@@ -134,6 +137,7 @@ export function ItemCard({
   imageSize = "md",
   onBuy,
   owned,
+  equipped,
   previewCustomization,
   mannequinPart,
 }: ItemCardProps) {
@@ -147,8 +151,13 @@ export function ItemCard({
     >
       <div
         className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
-        style={{ backgroundColor: CARD_BG, borderColor: PURPLE }}
+        style={{ backgroundColor: CARD_BG, borderColor: equipped ? "#58CC02" : PURPLE }}
       >
+        {equipped && (
+          <span className="absolute -top-2.5 -right-2.5 z-10 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-black shadow-md">
+            <Check className="size-4" strokeWidth={3.5} aria-hidden />
+          </span>
+        )}
         {/* Title */}
         <div
           className="line-clamp-2 min-h-[2.3em] min-w-0 break-words text-center text-[11px] uppercase leading-[1.15] text-white sm:text-[16px]"
@@ -184,15 +193,24 @@ export function ItemCard({
           )}
         </div>
 
-        {/* Price pill / Owned */}
-        {owned ? (
+        {/* Equipped (worn) / Equip (owned) / price (buy) */}
+        {equipped ? (
+          <div
+            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-[16px] border-2 border-brand-green-light text-[11px] uppercase text-brand-green-light sm:h-[44px] sm:rounded-[20px] sm:text-[14px]"
+            style={poppins}
+          >
+            <Check className="size-4" strokeWidth={3} aria-hidden />
+            {t("store.equippedBadge")}
+          </div>
+        ) : owned ? (
           <button
             type="button"
             onClick={onBuy}
-            className="flex h-9 w-full items-center justify-center rounded-[16px] border-2 text-[11px] uppercase text-white/80 transition-colors hover:bg-white/5 sm:h-[44px] sm:rounded-[20px] sm:text-[14px]"
-            style={{ ...poppins, borderColor: "rgba(255,255,255,0.15)" }}
+            aria-label={`${name} — ${t("store.equip")}`}
+            className="flex h-9 w-full items-center justify-center rounded-[16px] border-2 border-white/40 text-[11px] uppercase text-white transition-colors hover:bg-white/10 sm:h-[44px] sm:rounded-[20px] sm:text-[14px]"
+            style={poppins}
           >
-            {t("store.owned")}
+            {t("store.equip")}
           </button>
         ) : (
           <button

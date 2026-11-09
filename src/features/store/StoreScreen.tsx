@@ -1,9 +1,14 @@
+import { SHOW_TICKETS } from "@/lib/tickets";
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
 import { affordabilityAllowsConfirm, type BuyModalMode } from "./lib/modalAffordability";
 import { BundleCard, type BundleProps } from "./components/BundleCard";
-import { ItemCard } from "./components/ItemCard";
 import { PurchaseConfirmModal } from "./components/PurchaseConfirmModal";
 import { CoinIcon } from "./components/CoinIcon";
+import { EarnCoinsSheet } from "./components/EarnCoinsSheet";
+import { StoreHeader } from "./components/StoreHeader";
+import { StoreCategoryNav, isStoreCategory, type StoreCategory } from "./components/StoreCategoryNav";
+import { StorePartSections } from "./components/StorePartSections";
+import { TICKET_CAP, nextTicketRefillAt, secondsUntilTicketRefill } from "./lib/ticketRefill";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -23,11 +28,6 @@ import {
 import { useLocale } from "@/contexts/LocaleContext";
 import { translatePartName as translateSharedPartName } from "@/lib/avatars/partNames";
 import {
-  EXTRA_PARTS,
-  HAIR_PARTS,
-  GLASSES_PARTS,
-  FACIAL_HAIR_PARTS,
-  JERSEY_DESIGN_PARTS,
   ALL_AVATAR_PARTS,
   SKIN_PARTS,
   type AvatarPart,
@@ -61,9 +61,9 @@ function formatRemaining(totalSeconds: number): string {
   return "<1m";
 }
 
-/** Live wallet ticket cap — mirrors backend MAX_TICKETS (economy v3). */
-const TICKET_CAP = 5;
-/** Daily purchase allowance in TICKETS per rolling 24h — mirrors backend
+/** Delay after a refill tick before re-reading the wallet (the cron grants the ticket). */
+const REFILL_CRON_LAG_MS = 15_000;
+/** Daily purchase allowance in TICKETS per fixed Georgia day — mirrors backend
  * TICKET_PURCHASE_MAX_TICKETS_PER_WINDOW. Used only as a fallback when the
  * wallet response predates ticketsRemainingInWindow. */
 const TICKET_PURCHASE_DAILY_CAP = 5;
@@ -78,12 +78,15 @@ interface TicketPackItem {
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
-  /** Why the pack is disabled — drives both the button label and the tap toast. */
-  disabledReason?: "full" | "cooldown";
+  /** Why the pack is disabled — drives both the button label and the tap toast.
+   *  "full": wallet at the cap. "noRoom": this pack is bigger than the free space. */
+  disabledReason?: "full" | "noRoom" | "cooldown";
   /** Button label shown when disabled by the daily limit, e.g. "Unlocks in 4h". */
   disabledLabel?: string;
   /** Number of tickets this pack grants — drives the stacked-icon visual. */
   ticketCount: number;
+  /** Lowest coin price per ticket among multi-ticket packs. */
+  bestValue?: boolean;
 }
 
 interface BuyModalState {
@@ -182,6 +185,11 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
         className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
         style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
       >
+        {pack.bestValue && (
+          <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-yellow px-2.5 py-1 text-[10px] font-bold uppercase leading-none text-black sm:text-[11px]">
+            {t("store.bestValue")}
+          </span>
+        )}
         {/* Top: title + subtitle (centered) */}
         <div className="text-center">
           <div
@@ -190,10 +198,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           >
             {pack.title}
           </div>
-          <div
-            className="mt-1 text-[7px] uppercase tracking-[0.04em] text-white/50 leading-snug sm:mt-1.5 sm:text-[10px]"
-            style={POPPINS_HEADER}
-          >
+          <div className="mt-1 text-[11px] leading-snug text-white/60 tabular-nums sm:mt-1.5 sm:text-[13px]">
             {pack.description}
           </div>
         </div>
@@ -214,13 +219,15 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           disabled={pack.disabled}
           className={cn(
             "flex h-9 w-full items-center justify-center gap-1 rounded-[16px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 disabled:cursor-not-allowed sm:h-[44px] sm:gap-2 sm:rounded-[20px]",
-            pack.disabledReason === "cooldown" ? "text-[10px] sm:text-[14px]" : "text-[12px] sm:text-[18px]",
+            pack.disabledReason === "cooldown" || pack.disabledReason === "noRoom" ? "text-[10px] sm:text-[14px]" : "text-[12px] sm:text-[18px]",
           )}
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
           <span className="tabular-nums">
             {pack.disabledReason === "full"
               ? t("store.full")
+              : pack.disabledReason === "noRoom"
+              ? pack.disabledLabel
               : pack.disabledReason === "cooldown"
               ? pack.disabledLabel ?? t("store.ticketLimitReached")
               : pack.price}
@@ -232,12 +239,16 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
   );
 }
 
+const SECTION_SPRING = { type: "spring", stiffness: 200, damping: 20 } as const;
+
 // Map of static English part names → translation keys. Football-related
 // proper nouns (Ramos, Real Madrid, Liverpool, etc.) intentionally stay
 // untranslated since they're brand names.
 export interface LocalStorePreview {
-  category?: string;
+  category?: StoreCategory;
   search?: string;
+  /** Mock ticket balance so the preview can show ticket-pack states. */
+  tickets?: number;
   customization: AvatarCustomization;
   ownedPartIds: readonly string[];
   coins: number;
@@ -245,20 +256,45 @@ export interface LocalStorePreview {
   onPurchase: (productSlug: string) => void;
 }
 
+/** Mock ticket packs for the /dev/store-examples preview (live catalogue values, economy v3). */
+const PREVIEW_TICKET_PRODUCTS = [
+  { slug: "ticket_pack_1", tickets: 1, priceCents: 2_000 },
+  { slug: "ticket_pack_3", tickets: 3, priceCents: 4_000 },
+  { slug: "ticket_pack_5", tickets: 5, priceCents: 5_000 },
+].map((p) => ({ slug: p.slug, type: "ticket_pack" as const, priceCents: p.priceCents, metadata: { tickets: p.tickets } }));
+
 export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview } = {}) {
   const { t } = useLocale();
   const isLocalPreview = Boolean(localPreview);
-  const showCategory = (category: string) => !localPreview?.category || localPreview.category === "all" || localPreview.category === category;
-  const normalizeSearch = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase();
-  const matchesSearch = (part: AvatarPart) => !localPreview?.search || normalizeSearch(part.name).includes(normalizeSearch(localPreview.search.trim()));
   const translatePartName = (name: string) => translateSharedPartName(name, t);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
+  // Category + search: the live store owns them (category mirrored to ?tab=
+  // so other screens can deep-link, e.g. /store?tab=tickets); the dev preview
+  // drives them from its own controls.
+  const tabParam = searchParams.get("tab");
+  // Derived from the URL (not copied into state) so same-route navigation —
+  // e.g. the navbar coin pill linking to plain /store — resets the tab.
+  // Tickets are switched off for free Ranked 2.0: an old ?tab=tickets link lands on everything else.
+  const ownCategory: StoreCategory = isStoreCategory(tabParam) && (SHOW_TICKETS || tabParam !== "tickets") ? tabParam : "all";
+  const [ownSearch, setOwnSearch] = useState("");
+  const [affordableOnly, setAffordableOnly] = useState(false);
+  const [earnOpen, setEarnOpen] = useState(false);
+  const category: StoreCategory = localPreview ? localPreview.category ?? "all" : ownCategory;
+  const search = (localPreview ? localPreview.search ?? "" : ownSearch).trim();
+  const showCategory = (id: StoreCategory) => category === "all" || category === id;
+  const changeCategory = (next: StoreCategory) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "all") params.delete("tab");
+    else params.set("tab", next);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
   const { data: productsData } = useStoreProducts(!localPreview);
   const { data: remoteWallet } = useStoreWallet({ enabled: !localPreview });
-  const wallet = localPreview ? { coins: localPreview.coins, tickets: 0, ticketPurchaseCooldown: undefined } : remoteWallet;
+  const wallet = localPreview ? { coins: localPreview.coins, tickets: localPreview.tickets ?? 0, ticketPurchaseCooldown: undefined } : remoteWallet;
   const { data: inventoryData } = useStoreInventory(!localPreview);
   const authUser = useAuthStore((state) => state.user);
   // Dev-allowlist accounts: the backend skips every store economy limit for
@@ -493,10 +529,10 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
       ? Number.POSITIVE_INFINITY
       : Math.max(0, TICKET_CAP - currentTickets);
 
-    const ticketPacks = (productsData?.items ?? []).filter(
-      (p) => p.type === "ticket_pack",
-    );
-    return ticketPacks
+    const ticketPacks = localPreview
+      ? PREVIEW_TICKET_PRODUCTS
+      : (productsData?.items ?? []).filter((p) => p.type === "ticket_pack");
+    const packs = ticketPacks
       .map((product) => {
         const ticketCount =
           typeof product.metadata === "object" &&
@@ -504,17 +540,20 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
           typeof (product.metadata as { tickets?: unknown }).tickets === "number"
             ? ((product.metadata as { tickets: number }).tickets)
             : 1;
-        const isFull = ticketCount > availableSpace;
+        // "Full" only when the wallet is at the cap; a pack that is merely
+        // bigger than the free space says how many still fit.
         const overDailyAllowance = ticketCount > ticketsRemainingInWindow;
-        const disabledReason: TicketPackItem["disabledReason"] = isFull
+        const disabledReason: TicketPackItem["disabledReason"] = availableSpace <= 0
           ? "full"
+          : ticketCount > availableSpace
+          ? "noRoom"
           : overDailyAllowance
           ? "cooldown"
           : undefined;
         return {
           id: product.slug,
           title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
-          description: product.description?.en ?? t("store.topUpTicketsDesc"),
+          description: t("store.perTicket", { price: Math.round(product.priceCents / Math.max(1, ticketCount)).toLocaleString() }),
           // Ticket packs are coin-priced: priceCents holds the coin amount.
           price: product.priceCents.toLocaleString(),
           priceCoinsValue: product.priceCents,
@@ -523,28 +562,55 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
           disabled: disabledReason != null,
           disabledReason,
           disabledLabel:
-            disabledReason === "cooldown" && cooldownSeconds > 0
+            disabledReason === "noRoom"
+              ? t("store.roomFor", { count: availableSpace })
+              : disabledReason === "cooldown" && cooldownSeconds > 0
               ? t("store.ticketUnlocksIn", { time: formatRemaining(cooldownSeconds) })
               : undefined,
           ticketCount,
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, ticketsRemainingInWindow, cooldownSeconds, isUnlimited, t]);
+    const perTicket = (pack: TicketPackItem) => pack.priceCoinsValue / Math.max(1, pack.ticketCount);
+    const multi = packs.filter((pack) => pack.ticketCount > 1);
+    const cheapest = multi.length > 1 ? Math.min(...multi.map(perTicket)) : null;
+    return packs.map((pack) => (cheapest != null && pack.ticketCount > 1 && perTicket(pack) === cheapest ? { ...pack, bestValue: true } : pack));
+  }, [productsData, localPreview, wallet?.tickets, ticketsRemainingInWindow, cooldownSeconds, isUnlimited, t]);
+
+  const walletTickets = wallet?.tickets ?? null;
+  const awaitingRefill = walletTickets != null && walletTickets < TICKET_CAP;
+  const nextFreeTicketIn = awaitingRefill ? formatRemaining(secondsUntilTicketRefill(nowMs)) : null;
+
+  // The wallet query doesn't poll, so re-read it just after each refill tick
+  // (the cron grants the ticket server-side); otherwise the header would show
+  // the old count with a fresh 4h countdown.
+  // Derived from (now - lag) so the target only moves on once its refresh has
+  // run: a minute tick landing between the boundary and boundary+lag must not
+  // cancel the pending refresh and reschedule it four hours later.
+  const refillRefreshAtMs = nextTicketRefillAt(nowMs - REFILL_CRON_LAG_MS) + REFILL_CRON_LAG_MS;
+  useEffect(() => {
+    if (!SHOW_TICKETS || isLocalPreview || !awaitingRefill) return;
+    const id = window.setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    }, Math.max(0, refillRefreshAtMs - Date.now()));
+    return () => window.clearTimeout(id);
+  }, [isLocalPreview, awaitingRefill, refillRefreshAtMs, queryClient]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
   /** Persist structured customization to the backend. */
-  const persistCustomization = async (next: AvatarCustomization) => {
+  const persistCustomization = async (next: AvatarCustomization): Promise<boolean> => {
     try {
-      if (localPreview) { localPreview.onEquip(next); return; }
+      if (localPreview) { localPreview.onEquip(next); return true; }
       const updated = await updateMe({ avatar_customization: next });
       updateStats({ avatarCustomization: next });
       if (authUser) {
         setAuthenticated({ ...authUser, avatar_customization: updated.avatar_customization ?? next });
       }
+      return true;
     } catch {
       toast.error(t("store.couldNotSaveAvatar"));
+      return false;
     }
   };
 
@@ -592,7 +658,11 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
     if (localPreview) {
-      if (!buyModal.avatarPart) return;
+      if (!buyModal.avatarPart) {
+        toast.message(t("store.notPurchasableYet"));
+        setBuyModal(null);
+        return;
+      }
       try {
         if (buyModal.mode === "coins" && buyModal.productSlug) localPreview.onPurchase(buyModal.productSlug);
         localPreview.onEquip({ ...currentCustomization, [buyModal.avatarPart.slot]: buyModal.avatarPart.id });
@@ -603,10 +673,13 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
     }
     if (buyModal.mode === "equip" && buyModal.avatarPart) {
       const part = buyModal.avatarPart;
-      void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
-      trackAvatarPartEquipped(part.slot, part.id);
-      toast.success(t("store.equipped", { name: translatePartName(part.name) }));
       setBuyModal(null);
+      // Confirm only once the save lands — a failed save shows its own error.
+      void persistCustomization({ ...currentCustomization, [part.slot]: part.id }).then((saved) => {
+        if (!saved) return;
+        trackAvatarPartEquipped(part.slot, part.id);
+        toast.success(t("store.equipped", { name: translatePartName(part.name) }));
+      });
       return;
     }
     if (!buyModal.productSlug || buyModal.mode === "none") {
@@ -637,16 +710,43 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
     });
   };
 
+  const spring = SECTION_SPRING;
+
+  // Search only targets avatar items; "Can afford" keeps the buyable packs.
+  const visibleTicketPacks = affordableOnly
+    ? ticketPacks.filter((pack) => !pack.disabled && canAffordCoins(pack.priceCoinsValue))
+    : ticketPacks;
+  const showTickets = SHOW_TICKETS && showCategory("tickets") && !search && visibleTicketPacks.length > 0;
+
   return (
     <div className="min-h-screen pb-20 flex flex-col">
-      <div className="flex-1 overflow-auto">
-        <div className="container mx-auto max-w-5xl py-8 space-y-14 px-4 md:px-0">
+      <div className="flex-1">
+        <div className="container mx-auto max-w-5xl px-4 py-6 sm:py-8">
+          <StoreHeader
+            coins={wallet?.coins ?? null}
+            tickets={walletTickets}
+            nextFreeTicketIn={nextFreeTicketIn}
+            onHowToEarn={() => setEarnOpen(true)}
+          />
 
+          {!localPreview && (
+              <StoreCategoryNav
+                className="mt-5"
+                category={ownCategory}
+                onCategoryChange={changeCategory}
+                search={ownSearch}
+                onSearchChange={setOwnSearch}
+                affordableOnly={affordableOnly}
+                onAffordableOnlyChange={setAffordableOnly}
+              />
+          )}
+
+          <div className="mt-8 space-y-14">
           {STRIPE_PURCHASES_ENABLED && (
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              transition={spring}
             >
               <FeaturedBundleCard
                 onBuy={() => {
@@ -670,7 +770,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
+              transition={{ ...spring, delay: 0.1 }}
             >
               <SectionHeader title={t("store.coinsTitle")} subtitle={t("store.coinsSubtitle")} />
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
@@ -679,7 +779,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
                     key={bundle.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 + i * 0.05 }}
+                    transition={{ ...spring, delay: 0.1 + i * 0.05 }}
                   >
                     <BundleCard {...bundle} />
                   </motion.div>
@@ -688,25 +788,24 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             </motion.section>
           )}
 
-
-          {!localPreview && <motion.section
+          {showTickets && <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
+            transition={{ ...spring, delay: 0.1 }}
           >
             <SectionHeader title={t("store.ticketsTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {ticketPacks.map((pack, i) => (
+            <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:grid-cols-3 sm:gap-4 sm:gap-y-6 lg:grid-cols-4">
+              {visibleTicketPacks.map((pack, i) => (
                 <motion.div
                   key={pack.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 + i * 0.05 }}
+                  transition={{ ...spring, delay: 0.1 + i * 0.05 }}
                 >
                   <TicketCard
                     pack={pack}
                     onBuy={(b) => {
-                      if (b.disabledReason === "full") {
+                      if (b.disabledReason === "full" || b.disabledReason === "noRoom") {
                         toast.message(t("store.notEnoughTicketSpace"));
                         return;
                       }
@@ -721,7 +820,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
                         );
                         return;
                       }
-                      if (b.productSlug) {
+                      if (b.productSlug && !localPreview) {
                         trackPurchaseModalOpened(b.productSlug, "coins", {
                           affordable: canAffordCoins(b.priceCoinsValue),
                         });
@@ -741,126 +840,21 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             </div>
           </motion.section>}
 
-          {/* Kits are the headline items: straight after tickets, before the smaller cosmetics. */}
-          <motion.section hidden={!showCategory("jerseys")}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 }}
-          >
-            <SectionHeader title={t("store.jerseysTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {JERSEY_DESIGN_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 + i * 0.04 }}
-                >
-                  <ItemCard
-                    name={translatePartName(part.name)}
-                    asset={part.asset}
-                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
-                    imageSize="lg"
-                    owned={ownedPartIds.has(part.id)}
-                    onBuy={() => openAvatarPartModal(part)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          <motion.section hidden={!showCategory("hair")}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
-          >
-            <SectionHeader title={t("store.hairTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {HAIR_PARTS.filter((p) => !p.free && (localPreview || !p.localOnly)).filter(matchesSearch).map((part, i) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 + i * 0.04 }}
-                >
-                  <ItemCard
-                    name={translatePartName(part.name)}
-                    asset={part.asset}
-                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
-                    mannequinPart={part}
-                    owned={ownedPartIds.has(part.id)}
-                    onBuy={() => openAvatarPartModal(part)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          {['headwear', 'accessories'].map(category => (
-            <section key={category} id={category} hidden={!showCategory(category)}>
-              <SectionHeader title={category === 'headwear' ? t('store.headwearTitle') : t('store.accessoriesTitle')} />
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                {EXTRA_PARTS.filter(part => category === 'headwear' ? part.slot === 'headwear' : part.slot !== 'headwear').filter(matchesSearch).map(part => (
-                  <ItemCard key={part.id} name={translatePartName(part.name)} asset={part.asset} price={(partPriceCoins(part) ?? 0).toLocaleString()} owned={ownedPartIds.has(part.id)}
-                    mannequinPart={part} onBuy={() => openAvatarPartModal(part)} />
-                ))}
-              </div>
-            </section>
-          ))}
-
-          <motion.section hidden={!showCategory("glasses")}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
-          >
-            <SectionHeader title={t("store.glassesTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {GLASSES_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 + i * 0.04 }}
-                >
-                  <ItemCard
-                    name={translatePartName(part.name)}
-                    asset={part.asset}
-                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
-                    mannequinPart={part}
-                    owned={ownedPartIds.has(part.id)}
-                    onBuy={() => openAvatarPartModal(part)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          <motion.section hidden={!showCategory("facialHair")}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
-          >
-            <SectionHeader title={t("store.facialHairTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {FACIAL_HAIR_PARTS.filter(p => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 + i * 0.04 }}
-                >
-                  <ItemCard
-                    name={translatePartName(part.name)}
-                    asset={part.asset}
-                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
-                    mannequinPart={part}
-                    owned={ownedPartIds.has(part.id)}
-                    onBuy={() => openAvatarPartModal(part)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
+          <StorePartSections
+            category={category}
+            search={search}
+            affordableOnly={affordableOnly}
+            includeLocalOnly={isLocalPreview}
+            ownedPartIds={ownedPartIds}
+            customization={currentCustomization}
+            priceFor={partPriceCoins}
+            canAfford={canAffordCoins}
+            translateName={translatePartName}
+            onSelect={openAvatarPartModal}
+            showEmptyState={!showTickets}
+            onClearFilters={isLocalPreview || (!search && !affordableOnly) ? undefined : () => { setOwnSearch(""); setAffordableOnly(false); }}
+          />
+          </div>
 
           <PurchaseConfirmModal
             open={!!buyModal}
@@ -887,8 +881,12 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             previewCustomization={buyModal?.previewCustomization}
             confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
             affordable={modalCanConfirm}
+            balance={isUnlimited || buyModal?.mode !== "coins" ? null : wallet?.coins ?? null}
+            priceCoins={modalPriceCoins}
+            onEarnMore={() => { setBuyModal(null); setEarnOpen(true); }}
           />
 
+          <EarnCoinsSheet open={earnOpen} onOpenChange={setEarnOpen} />
         </div>
       </div>
     </div>

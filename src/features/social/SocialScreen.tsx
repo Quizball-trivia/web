@@ -18,6 +18,7 @@ import {
   Search,
   Swords,
   UserCheck,
+  UserMinus,
   UserPlus,
   Users,
   X,
@@ -39,6 +40,16 @@ import {
   type SocialPlayer,
 } from "@/lib/queries/social.queries";
 import { removeFriend } from "@/lib/repositories/social.repo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useFriendRequestMutations } from "@/features/social/hooks/useFriendRequestMutations";
 
 type Tab = "friends" | "find";
@@ -236,6 +247,7 @@ function PlayerCard({
   const { t } = useLocale();
   const isPendingDeletion = player.pendingDeletion === true;
   const variant = isPendingDeletion ? "alert" : "default";
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
   return (
     <CardShell variant={variant} index={index}>
@@ -255,15 +267,42 @@ function PlayerCard({
         )}
 
         {onRemove && player.friendStatus === "friends" && (
-          <button
-            type="button"
-            onClick={() => onRemove(player.id)}
-            disabled={isRemoving}
-            className={`${PILL_BASE} bg-brand-red sm:w-9! sm:px-0!`}
-            title={t("socialScreen.removeFriend")}
-          >
-            {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
-          </button>
+          <>
+            {/* Neutral and confirmed: it sits next to Challenge, so a mis-tap must not cost a friendship. */}
+            <button
+              type="button"
+              onClick={() => setConfirmRemoveOpen(true)}
+              disabled={isRemoving}
+              className={`${PILL_BASE} w-9! px-0! border border-white/15 bg-transparent text-white/55 hover:bg-white/[0.06] hover:text-white`}
+              title={t("socialScreen.removeFriend")}
+              aria-label={t("socialScreen.removeFriend")}
+            >
+              {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <UserMinus className="size-4" />}
+            </button>
+            <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+              <AlertDialogContent className="w-[92vw] max-w-sm rounded-[24px] border border-white/10 bg-surface-deep p-6 font-poppins shadow-none sm:p-8">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-center font-poppins text-lg font-semibold text-white">
+                    {t("socialScreen.removeFriendTitle", { name: player.nickname ?? "" })}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="mt-2 text-center font-poppins text-sm leading-snug text-white/65">
+                    {t("socialScreen.removeFriendDescription")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="mt-5 flex-col gap-2 sm:flex-col sm:space-x-0">
+                  <AlertDialogAction
+                    onClick={() => onRemove(player.id)}
+                    className="w-full rounded-[14px] border-0 bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold text-white shadow-none hover:bg-brand-red-soft/90 focus-visible:ring-0"
+                  >
+                    {t("socialScreen.removeFriendConfirm")}
+                  </AlertDialogAction>
+                  <AlertDialogCancel className="mt-0 w-full rounded-[14px] border-0 bg-white/10 px-3 py-3 font-poppins text-sm font-semibold text-white shadow-none hover:bg-white/20 hover:text-white focus-visible:ring-0">
+                    {t("common.cancel")}
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
 
         {player.friendStatus === "none" && onSendRequest && (

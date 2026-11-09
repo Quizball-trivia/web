@@ -842,9 +842,11 @@ export function ProfileWeb({
                   </div>
 
                   {/* Language */}
-                  <div className="flex items-center justify-between py-3.5">
+                  {/* Label on its own line and pills wrap: seven languages don't fit
+                      one row beside the label in this column (they spilled past the card). */}
+                  <div className="flex flex-col gap-3 py-3.5">
                     <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t("profileScreen.language")}</span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("profileScreen.language")}>
                       {LOCALES.map((language) => (
                         <button
                           key={language.code}

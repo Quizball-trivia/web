@@ -3,7 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { PlayOrder } from "./playCatalog";
 
-const NO_ORDER: PlayOrder = { daily: null, coins: null, newSlugs: [] };
+const NO_ORDER: PlayOrder = { daily: null, newSlugs: [] };
 const PlayOrderContext = createContext<PlayOrder>(NO_ORDER);
 
 /** Hands the server's order and new marks to the Play page's game rows. */

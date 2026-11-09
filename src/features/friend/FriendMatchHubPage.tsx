@@ -216,6 +216,7 @@ export function FriendMatchHubPage() {
                <LobbyBrowsePanel
                   onJoin={handleJoinPublic}
                   isJoiningCode={isJoiningCode}
+                  onCreateRoom={() => setActiveTab('create')}
                />
             </div>
          ) : (

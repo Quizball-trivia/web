@@ -90,4 +90,18 @@ describe("PurchaseConfirmModal", () => {
     renderModal({ price: "" });
     expect(screen.queryByText("profile.purchase.price")).toBeNull();
   });
+
+  it("turns an unaffordable item into an earn path with the shortfall", () => {
+    const onEarnMore = vi.fn();
+    renderModal({ affordable: false, balance: 6_550, priceCoins: 10_000, onEarnMore });
+    expect(screen.getByText("store.needMoreAmount")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "store.needMoreCoins" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "store.howToEarnCoins" }));
+    expect(onEarnMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the balance after purchase when affordable", () => {
+    renderModal({ affordable: true, balance: 12_000, priceCoins: 10_000 });
+    expect(screen.getByText("store.balanceAfter")).toBeInTheDocument();
+  });
 });
