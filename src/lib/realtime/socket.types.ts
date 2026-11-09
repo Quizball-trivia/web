@@ -1531,6 +1531,8 @@ export interface SessionBlockedPayload {
     | "TRANSITION_IN_PROGRESS"
     | "INVALID_INVITE"
     | "LOBBY_NOT_FOUND"
+    | "LOBBY_GAME_STARTED"
+    | "LOBBY_ENDED"
     | "QUEUE_UNAVAILABLE";
   message: string;
   operation?: string;
@@ -1571,6 +1573,8 @@ export type LobbyJoinByCodeResult =
         | "RATE_LIMITED"
         | "ALREADY_IN_LOBBY"
         | "LOBBY_NOT_FOUND"
+        | "LOBBY_GAME_STARTED"
+        | "LOBBY_ENDED"
         | "LOBBY_FULL"
         | "TRANSITION_IN_PROGRESS"
         | "INVALID_INVITE"
