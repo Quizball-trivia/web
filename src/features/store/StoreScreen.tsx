@@ -246,7 +246,7 @@ export interface LocalStorePreview {
 }
 
 export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview } = {}) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isLocalPreview = Boolean(localPreview);
   const showCategory = (category: string) => !localPreview?.category || localPreview.category === "all" || localPreview.category === category;
   const normalizeSearch = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase();
@@ -514,7 +514,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
         return {
           id: product.slug,
           title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
-          description: product.description?.en ?? t("store.topUpTicketsDesc"),
+          description: (product.description as Record<string, string | undefined> | undefined)?.[locale] ?? product.description?.en ?? t("store.topUpTicketsDesc"),
           // Ticket packs are coin-priced: priceCents holds the coin amount.
           price: product.priceCents.toLocaleString(),
           priceCoinsValue: product.priceCents,
@@ -530,7 +530,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, ticketsRemainingInWindow, cooldownSeconds, isUnlimited, t]);
+  }, [productsData, wallet?.tickets, ticketsRemainingInWindow, cooldownSeconds, isUnlimited, t, locale]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
