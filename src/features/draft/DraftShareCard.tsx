@@ -164,16 +164,28 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
       if (mine !== drawing.current) { resolve(null); return; }
       el.width = off.width; el.height = off.height;
       el.getContext("2d")?.drawImage(off, 0, 0);
-      off.toBlob((b) => { if (mine === drawing.current) ready.current = b; resolve(b); }, "image/png");
+      off.toBlob((b) => { const newest = mine === drawing.current; if (newest) ready.current = b; resolve(newest ? b : null); }, "image/png");
     }));
     return () => { drawing.current += 1; };
   }, [data, names]);
 
   const [failed, setFailed] = useState(false);
-  const blob = (): Promise<Blob | null> => (ready.current ? Promise.resolve(ready.current) : pending.current);
+  // Waits for the newest image: a draw replaced while waiting hands over to its replacement. Null once the sheet is gone.
+  const open = useRef(true);
+  useEffect(() => { open.current = true; return () => { open.current = false; }; }, []);
+  const blob = async (): Promise<Blob | null> => {
+    for (let tries = 0; tries < 8 && open.current; tries++) {
+      if (ready.current) return ready.current;
+      const mine = drawing.current;
+      const b = await pending.current;
+      if (b && mine === drawing.current) return b;
+    }
+    return null;
+  };
   const save = async () => {
     try {
       const b = await blob();
+      if (!open.current) return;
       if (!b) { setFailed(true); return; }
       setFailed(false);
       const url = URL.createObjectURL(b);
@@ -191,6 +203,7 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   const share = async () => {
     try {
       const b = ready.current ?? (await blob());
+      if (!open.current) return;
       const file = b ? new File([b], "football-draft.png", { type: "image/png" }) : null;
       if (!file) { setFailed(true); return; }
       if (navigator.canShare?.({ files: [file] })) {
