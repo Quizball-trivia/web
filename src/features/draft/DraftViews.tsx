@@ -311,7 +311,7 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
   const academySlot = maxPrice === null ? null : openSlots.find((x) => x.id === target) ?? openSlots.find((x) => x.pos === pos) ?? openSlots[0] ?? null;
   const academyRow = academySlot && onAcademy && (
     <li key="academy">
-      <button type="button" onClick={() => onAcademy(academySlot.id)} className={cn("flex w-full items-center gap-2.5 rounded-xl border border-dashed border-white/25 bg-surface-card/60 px-2.5 text-left hover:bg-brand-blue/25", phone ? "py-1" : "py-1.5")}>
+      <button type="button" disabled={disabled} onClick={() => onAcademy(academySlot.id)} className={cn("flex w-full items-center gap-2.5 rounded-xl border border-dashed border-white/25 bg-surface-card/60 px-2.5 text-left hover:bg-brand-blue/25", phone ? "py-1" : "py-1.5")}>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/20 text-sm font-black tabular-nums" style={poppins}>{ACADEMY_RATING}</span>
         <span className="min-w-0 flex-1 truncate text-sm font-bold">{c.academyKid}</span>
         <span className="flex shrink-0 flex-col items-end gap-0.5"><span className="text-xs font-black text-brand-green-light" style={poppins}>{c.free}</span><span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-black text-white/80" style={poppins}>→ {academySlot.label}</span></span>
@@ -476,7 +476,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
           )}
           <div className={cn("lg:hidden", armed && "hidden")}>
             <p className={cn("mb-1.5 text-center text-[11px] font-semibold text-white/70", short && "hidden")} aria-live="polite">{hint}</p>
-            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} onAcademy={onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }}
+            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }}
               target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
           </div>
           {!shared && !armed && (
@@ -504,7 +504,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
             <h2 className="text-sm font-black uppercase" style={poppins}>{c.squad}</h2>
             <p className="text-xs text-white/70">{hint}</p>
           </div>
-          <SquadList budget={budget} onAcademy={onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
+          <SquadList budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
         </div>
       </div>
       {/* No exit animation: a button still fading out could be pressed after the next squad is on screen. */}
@@ -579,8 +579,10 @@ export function TeamSheet({ c, name, slots, picks, hidden, seconds, onPlay, onCl
 }
 
 /** The XI complete, before the season: a moment to look at it, take back the last signing, and press play. */
-export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPlay, onExit, budget = BUDGET.total, prediction = null }: {
+export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPlay, onExit, budget = BUDGET.total, prediction = null, notice = null }: {
   locale: string; slots: Slot[]; picks: (Pick | null)[]; variant: Variant; undoName?: string | null; onUndo?: () => void; onPlay: () => void; onExit: () => void; budget?: number;
+  /** Why the XI is complete when the last squads had nobody to sign and academy kids filled it. */
+  notice?: string | null;
   /** Not in Ball Knowledge: it would give the hidden ratings away. */
   prediction?: Prediction | null;
 }) {
@@ -591,6 +593,7 @@ export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPla
     <div className="flex flex-1 flex-col">
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap />
       <h2 className={cn("text-center font-black uppercase", short ? "mt-2 text-xl" : "mt-4 text-2xl")} style={poppins}>{c.xiReady}</h2>
+      {notice && <p role="status" className="mt-2 rounded-xl bg-surface-card px-3 py-2 text-center text-xs font-semibold text-white ring-1 ring-brand-yellow/60">{notice}</p>}
       <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
         <DraftPitch slots={slots} picks={picks} hideRatings={hidden} academy={c.academy} tight={short} className={short ? "h-[14.5rem]" : "aspect-[4/3.6]"} />
         {!hidden && <LineBars c={c} team={lines(slots, picks)} />}
