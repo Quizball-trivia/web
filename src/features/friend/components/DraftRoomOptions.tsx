@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { FORMATIONS, type Era, type FormationId, type Variant } from "@/features/draft/draft.rules";
@@ -29,45 +29,37 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   const { locale } = useLocale();
   const c = draftCopy(locale);
   const server = readDraftOptions(options);
-  const serverKey = `${server.variant}|${server.leagueId}|${server.era}|${server.formation}`;
   // Quick taps must not undo each other, on the screen or on the server. The screen shows the newest choice at once;
   // the server gets one change at a time (the room applies each under a lock, so two in flight could land out of
-  // order), and the newest choice goes out once the room has confirmed the one before. When the room shows the newest
-  // choice, or editing is no longer allowed, the room's own value is shown again.
-  const [sent, setSent] = useState<DraftRoomChoice | null>(null);
-  if (sent && (!canEdit || sameChoice(sent, server))) setSent(null);
-  // The lobby rolled its settings back (a refusal it already reported): the change on its way is over, and so is its wait.
+  // order). `want` is the newest choice, `inFlight` the one sent and not yet confirmed by the room.
+  const [q, setQ] = useState<{ want: DraftRoomChoice | null; inFlight: DraftRoomChoice | null }>({ want: null, inFlight: null });
   const [seenRefusal, setSeenRefusal] = useState(refusedVersion);
-  if (refusedVersion !== seenRefusal) {
-    setSeenRefusal(refusedVersion);
-    if (sent) setSent(null);
-  }
-  const pending = canEdit && sent && !sameChoice(sent, server) ? sent : null;
-  const value = pending ?? server;
-  const inFlight = useRef<DraftRoomChoice | null>(null);
-  useEffect(() => { inFlight.current = null; }, [refusedVersion, canEdit]);
-  useEffect(() => {
-    if (inFlight.current && !sameChoice(inFlight.current, server)) return;
-    inFlight.current = null;
-    if (!pending) return;
-    inFlight.current = pending;
-    onChange({ ...pending });
-    // serverKey stands for server; onChange is the lobby's stable sender.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serverKey, pending]);
+  let next = q;
+  // Editing no longer allowed, or the lobby rolled its settings back (a refusal it already reported): all of it is over.
+  if ((!canEdit || refusedVersion !== seenRefusal) && (next.want || next.inFlight)) next = { want: null, inFlight: null };
+  // The room confirmed what was in flight.
+  if (next.inFlight && sameChoice(next.inFlight, server)) next = { ...next, inFlight: null };
+  // Nothing in flight: the newest choice goes out if the room does not show it yet, or is done if it does.
+  if (!next.inFlight && next.want) next = sameChoice(next.want, server) ? { want: null, inFlight: null } : { ...next, inFlight: next.want };
+  if (refusedVersion !== seenRefusal) setSeenRefusal(refusedVersion);
+  if (next !== q) setQ(next);
+  const pending = next.want !== null || next.inFlight !== null;
+  const value = next.want ?? server;
+  // Each change put in flight is sent once.
+  useEffect(() => { if (q.inFlight) onChange({ ...q.inFlight }); }, [q.inFlight]); // eslint-disable-line react-hooks/exhaustive-deps
   // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
-  useEffect(() => { onPendingChange?.(pending !== null); }, [pending, onPendingChange]);
+  useEffect(() => { onPendingChange?.(pending); }, [pending, onPendingChange]);
   useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
-  // No answer in 3 s counts as refused, like any lobby setting: the room's value returns and a held Ready is dropped.
-  // Each tap and each confirmation restarts the wait.
+  // A change the room does not confirm within 3 s counts as refused, like any lobby setting: the room's value returns
+  // and a held Ready is dropped. The wait belongs to the change in flight; changes from elsewhere do not extend it.
   useEffect(() => {
-    if (!pending) return;
-    const timer = setTimeout(() => { inFlight.current = null; setSent(null); onAbandoned?.(); }, 3_000);
+    if (!q.inFlight) return;
+    const timer = setTimeout(() => { setQ({ want: null, inFlight: null }); onAbandoned?.(); }, 3_000);
     return () => clearTimeout(timer);
-  }, [pending, serverKey, onAbandoned]);
+  }, [q.inFlight, onAbandoned]);
   const set = (patch: Partial<DraftRoomChoice>) => {
     if (!canEdit) return;
-    setSent({ ...value, ...patch });
+    setQ((current) => ({ ...current, want: { ...(current.want ?? server), ...patch } }));
   };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
     <div>
