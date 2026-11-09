@@ -107,6 +107,7 @@ function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = nu
     'https://*.doubleclick.net',
     'https://*.googleadservices.com',
     'https://www.google.com',
+    'https://fundingchoicesmessages.google.com',
   ] : [];
   const connectSrc = Array.from(new Set([
     "'self'",

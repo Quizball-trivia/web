@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { reopenAdPrivacyChoices, whenConsentReady } from './googleConsent';
 
 const CLIENT = 'ca-pub-8572537761531435';
 const SLOTS = { lobby: '2443345758', results: '1130264086' } as const;
@@ -24,9 +25,11 @@ function DisplayAd({ slot }: { slot: string }) {
     const ad = adRef.current;
     if (!ad) return;
     let active = true;
+    let consentReady = false;
     const requestAd = () => {
       // A script can finish loading after navigation or a match-stage change.
       if (!active || !ad.isConnected || requested.current || ad.clientWidth === 0) return;
+      if (!consentReady) return;
       if (document.getElementById(SCRIPT_ID)?.dataset.loaded !== 'true') return;
       requested.current = true;
       try {
@@ -36,6 +39,11 @@ function DisplayAd({ slot }: { slot: string }) {
         // Blocked or unavailable ads must never interrupt the game.
       }
     };
+
+    const stopWaitingForConsent = whenConsentReady(() => {
+      consentReady = true;
+      requestAd();
+    });
 
     let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
     if (!script) {
@@ -57,6 +65,7 @@ function DisplayAd({ slot }: { slot: string }) {
     observer.observe(ad);
     return () => {
       active = false;
+      stopWaitingForConsent();
       observer.disconnect();
       script.removeEventListener('load', onLoad);
     };
@@ -74,6 +83,9 @@ function DisplayAd({ slot }: { slot: string }) {
         data-ad-format="horizontal"
         data-full-width-responsive="true"
       />
+      <button type="button" onClick={reopenAdPrivacyChoices} className="mx-auto mt-3 block text-xs text-white/50 underline underline-offset-4 hover:text-white">
+        Privacy and cookie settings
+      </button>
     </section>
   );
 }

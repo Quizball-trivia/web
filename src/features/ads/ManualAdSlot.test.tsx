@@ -1,5 +1,5 @@
 import { StrictMode } from 'react';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ManualAdSlot } from './ManualAdSlot';
 
@@ -8,6 +8,15 @@ vi.mock('next/navigation', () => ({ usePathname: () => route.pathname }));
 
 let resize: () => void;
 const adWindow = window as Window & { adsbygoogle?: object[] };
+const consentWindow = window as Window & { googlefc?: {
+  callbackQueue: Array<{ CONSENT_DATA_READY: () => void } | (() => void)>;
+  showRevocationMessage?: () => void;
+} };
+const consentReady = () => act(() => {
+  consentWindow.googlefc?.callbackQueue.forEach(callback => {
+    if (typeof callback !== 'function') callback.CONSENT_DATA_READY();
+  });
+});
 const loadScript = () => act(() => {
   document.getElementById('quizball-adsense')?.dispatchEvent(new Event('load'));
 });
@@ -28,6 +37,7 @@ afterEach(() => {
   cleanup();
   document.getElementById('quizball-adsense')?.remove();
   delete adWindow.adsbygoogle;
+  delete consentWindow.googlefc;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -48,6 +58,7 @@ describe('manual ad lifecycle', () => {
     render(<StrictMode><ManualAdSlot placement="lobby" /></StrictMode>);
     expect(adWindow.adsbygoogle).toHaveLength(0);
     loadScript();
+    consentReady();
     act(() => { resize(); resize(); });
     expect(adWindow.adsbygoogle).toHaveLength(1);
     expect(document.querySelector('ins')).toHaveAttribute('data-ad-slot', '2443345758');
@@ -63,10 +74,12 @@ describe('manual ad lifecycle', () => {
     expect(document.querySelector('ins')).toHaveAttribute('data-ad-slot', '1130264086');
     view.rerender(<Game results={false} />);
     loadScript();
+    consentReady();
     expect(screen.queryByLabelText('Advertisement')).toBeNull();
     expect(adWindow.adsbygoogle).toHaveLength(0);
     // The SDK may finish while a question is displayed. Results can use it later.
     view.rerender(<Game results />);
+    consentReady();
     expect(adWindow.adsbygoogle).toHaveLength(1);
     view.rerender(<Game results={false} />);
     expect(document.querySelector('ins')).toBeNull();
@@ -76,9 +89,24 @@ describe('manual ad lifecycle', () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(0);
     render(<ManualAdSlot placement="lobby" />);
     loadScript();
+    consentReady();
     expect(adWindow.adsbygoogle).toHaveLength(0);
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(390);
     act(() => resize());
     expect(adWindow.adsbygoogle).toHaveLength(1);
+  });
+
+  it('waits for consent data and lets users reopen their choices', () => {
+    render(<ManualAdSlot placement="lobby" />);
+    loadScript();
+    expect(adWindow.adsbygoogle).toHaveLength(0);
+    consentReady();
+    expect(adWindow.adsbygoogle).toHaveLength(1);
+    const showChoices = vi.fn();
+    consentWindow.googlefc!.showRevocationMessage = showChoices;
+    fireEvent.click(screen.getByRole('button', { name: 'Privacy and cookie settings' }));
+    const callback = consentWindow.googlefc!.callbackQueue.at(-1);
+    if (typeof callback === 'function') callback();
+    expect(showChoices).toHaveBeenCalledOnce();
   });
 });
