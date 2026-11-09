@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { PartnerGameTile } from "../api/partnerApi.types";
 import { partnerCopy, type PartnerLocale } from "../partnerCopy";
 import { PARTNER_GAME_DEMO_SLUG, partnerGamePath } from "../partnerGames";
-import { partnerTileState } from "./PartnerGameCard";
+import { formatPartnerPoints, partnerTileState } from "./PartnerGameCard";
 import { usePartnerRankedResume } from "../games/ranked/usePartnerRankedResume";
 import { rankedCopy } from "../games/ranked/rankedCopy";
 
@@ -69,6 +69,12 @@ export function PartnerRankedCard({
     <p />
   );
 
+  const lastMatch = tile.lastResult ? (
+    <p className="mt-1 font-poppins text-xs font-semibold text-brand-yellow" data-testid="partner-ranked-last">
+      {copy.lastMatchPoints(formatPartnerPoints(tile.lastResult.score, locale))}
+    </p>
+  ) : null;
+
   const sectionProps = {
     "data-testid": "partner-ranked-card",
     "data-state": state,
@@ -87,6 +93,7 @@ export function PartnerRankedCard({
           <div className="min-w-0">
             {title("text-[19px]")}
             <p className="mt-0.5 font-poppins text-[11px] text-white/70">{copy.rankedSubtitle}</p>
+            {lastMatch}
           </div>
           <div className="shrink-0 text-right">
             <p className="font-poppins text-[10px] font-semibold uppercase tracking-wide text-white/60">{copy.playsLeftToday}</p>
@@ -111,6 +118,7 @@ export function PartnerRankedCard({
         <div className="min-w-0">
           {title("text-[17px]")}
           <p className="mt-0.5 font-poppins text-[11px] text-white/70">{copy.rankedSubtitle}</p>
+            {lastMatch}
         </div>
         <div className="shrink-0 text-right">
           <p className="font-poppins text-[10px] font-semibold uppercase tracking-wide text-white/60">{copy.playsLeftToday}</p>

@@ -62,7 +62,8 @@ export function PartnerGameIntro({
         className="overflow-hidden rounded-2xl bg-brand-blue lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
       >
         {/* Capped on short phones so Start stays near the top of the screen. */}
-        <div className="relative aspect-video max-h-[32dvh] w-full overflow-hidden lg:aspect-auto lg:h-full lg:max-h-none lg:min-h-[320px]">
+        {/* Cover, not the art's default contain: this box is taller than the image, which left dark bands beside the rules. */}
+        <div className="relative aspect-video max-h-[32dvh] w-full overflow-hidden lg:aspect-auto lg:h-full lg:max-h-none lg:min-h-[320px] [&_img]:object-cover">
           <DemoModeArt slug={PARTNER_GAME_DEMO_SLUG[gameId]} className="absolute inset-0 size-full" />
         </div>
         {/* Phones: Start right under the title, so a long rules list never pushes it off a short screen. */}

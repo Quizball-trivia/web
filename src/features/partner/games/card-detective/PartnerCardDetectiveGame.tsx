@@ -266,7 +266,7 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
   const boardData = shown?.card ?? (current ? boardCard(current) : null);
 
   return (
-    <div className="mx-auto flex max-w-md flex-col pb-6">
+    <div className="mx-auto flex max-w-md flex-col pb-6 lg:max-w-3xl">
       <div className="mb-2 mt-2 flex items-center justify-between gap-3">
         <button type="button" aria-label={copy.quit} onClick={() => setShowQuit(true)} className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
           <X className="size-5" aria-hidden />
@@ -292,11 +292,14 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
             exit={{ opacity: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 22 }}
             style={{ transformPerspective: 900 }}
+            className="lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-center lg:gap-x-8"
           >
-            <div className="mb-2 flex items-center justify-between font-poppins text-[11px] font-semibold uppercase tracking-wider text-white/55">
+            <div className="mb-2 flex items-center justify-between font-poppins text-[11px] font-semibold uppercase tracking-wider text-white/55 lg:col-span-2">
               <span>{shown ? (shown.solved ? t("Solved") : t("Revealed")) : t("Tap a lock to buy that clue")}</span>
               {!shown && current && <span className="text-brand-yellow" data-testid="cd-card-points">{copy.cardPoints(current.points)}</span>}
             </div>
+            {/* Wide frames: the guess sits beside the card; a short frame scales the card so it all stays in view. */}
+            <div className="[@media(min-width:1024px)_and_(min-height:641px)_and_(max-height:700px)]:[zoom:0.94] [@media(min-width:1024px)_and_(min-height:601px)_and_(max-height:640px)]:[zoom:0.82] [@media(min-width:1024px)_and_(min-height:521px)_and_(max-height:600px)]:[zoom:0.76] [@media(min-width:1024px)_and_(max-height:520px)]:[zoom:0.66]">
             <DetectiveCard
               card={boardData}
               costs={play?.clueCosts}
@@ -306,7 +309,8 @@ export function PartnerCardDetectiveGame({ api, onFinished, onExit }: PartnerGam
               solved={shown?.solved ?? false}
               onReveal={reveal}
             />
-            <div className="mt-4">
+            </div>
+            <div className="mt-4 lg:mt-0">
               {shown ? (
                 <p className="text-center font-poppins text-sm font-semibold text-white/75">
                   {shown.solved ? copy.solvedFor(shown.points) : t("It was {name}", { name: shown.card.name })}

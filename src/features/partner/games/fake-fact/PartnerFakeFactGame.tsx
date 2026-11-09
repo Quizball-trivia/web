@@ -217,7 +217,8 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   const verdictCopy = { ...df, right: copy.right };
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col pb-6 pt-2 lg:max-w-4xl">
+    // A short wide frame scales the card and its verdict down together, so the way on is never below the fold.
+    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col pb-6 pt-2 lg:max-w-4xl [&_ul_span.min-w-0]:hyphens-auto [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul]:gap-1 [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul_button]:py-1 [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul_span.size-12]:size-8 [@media(max-width:1023px)_and_(max-height:720px)]:pb-1 [&_ul_span.min-w-0]:[overflow-wrap:anywhere] [@media(min-width:1024px)_and_(min-height:621px)_and_(max-height:720px)]:[zoom:0.92] [@media(min-width:1024px)_and_(max-height:620px)]:max-w-[640px] [@media(min-width:1024px)_and_(max-height:620px)]:pb-0 [@media(min-width:1024px)_and_(max-height:620px)]:[zoom:0.82]">
       <TopBar
         wrap
         brand={df.brand}

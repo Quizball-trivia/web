@@ -251,14 +251,17 @@ export function QuizBoardPartner({ gameId, api, onFinished, onExit }: PartnerGam
             />
           }
         >
-          <QuizBoardGrid
-            variant="partner"
-            categories={view.categories}
-            tiles={view.tiles.map((tile) => ({ tile: tile.tile, value: tile.value, owner: owners.get(tile.tile) ?? null }))}
-            activeTile={activeTile}
-            canPick={canPick}
-            onPick={pick}
-          />
+          {/* A phone hands the screen to the open question: under the board its answers would be below the fold. */}
+          <div className={reveal || view.phase === "answer" ? "max-lg:hidden" : undefined}>
+            <QuizBoardGrid
+              variant="partner"
+              categories={view.categories}
+              tiles={view.tiles.map((tile) => ({ tile: tile.tile, value: tile.value, owner: owners.get(tile.tile) ?? null }))}
+              activeTile={activeTile}
+              canPick={canPick}
+              onPick={pick}
+            />
+          </div>
           <AnimatePresence mode="wait">
             {reveal ? (
               <motion.div key={`question-${reveal.question.tile}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>

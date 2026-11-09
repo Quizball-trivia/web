@@ -25,7 +25,7 @@ interface QuizBoardCopy {
 const COPY: Record<PartnerLocale, QuizBoardCopy> = {
   en: {
     subtitle: "Pick tiles and answer — a right answer earns the tile's points",
-    rules: "9 tiles · 20 seconds per question · 100, 200 or 300 points per right answer",
+    rules: "9 tiles · 20 seconds per question · 50, 100 or 150 points per right answer",
     start: "Start",
     starting: "Setting up your board…",
     pointsLabel: "Points",
@@ -34,7 +34,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "Time's up",
     completedTitle: "Board complete",
     endedTitle: "Game over",
-    finalScore: (p) => `You earned ${p} of 1,800 points.`,
+    finalScore: (p) => `You earned ${p} of 900 points.`,
     seePoints: "See my points",
     cancelledTitle: "This game was cancelled",
     cancelledBody: "No points were sent for it.",
@@ -46,7 +46,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
   },
   ka: {
     subtitle: "აირჩიე უჯრები და უპასუხე — სწორი პასუხი უჯრის ქულას მოგიტანს",
-    rules: "9 უჯრა · თითო კითხვაზე 20 წამი · სწორ პასუხზე 100, 200 ან 300 ქულა",
+    rules: "9 უჯრა · თითო კითხვაზე 20 წამი · სწორ პასუხზე 50, 100 ან 150 ქულა",
     start: "დაწყება",
     starting: "დაფას ვამზადებთ…",
     pointsLabel: "ქულა",
@@ -55,7 +55,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "დრო ამოიწურა",
     completedTitle: "დაფა დასრულდა",
     endedTitle: "თამაში დასრულდა",
-    finalScore: (p) => `შენ მოიგე ${p} ქულა 1 800-დან.`,
+    finalScore: (p) => `შენ მოიგე ${p} ქულა 900-დან.`,
     seePoints: "ჩემი ქულები",
     cancelledTitle: "ეს თამაში გაუქმდა",
     cancelledBody: "ამ თამაშისთვის ქულები არ გაიგზავნა.",
@@ -67,7 +67,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
   },
   ru: {
     subtitle: "Выбирай клетки и отвечай — за правильный ответ получишь очки клетки",
-    rules: "9 клеток · 20 секунд на вопрос · 100, 200 или 300 очков за правильный ответ",
+    rules: "9 клеток · 20 секунд на вопрос · 50, 100 или 150 очков за правильный ответ",
     start: "Начать",
     starting: "Готовим доску…",
     pointsLabel: "Очки",
@@ -76,7 +76,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "Время вышло",
     completedTitle: "Доска пройдена",
     endedTitle: "Игра окончена",
-    finalScore: (p) => `Ты набрал ${p} из 1 800 очков.`,
+    finalScore: (p) => `Ты набрал ${p} из 900 очков.`,
     seePoints: "Мои очки",
     cancelledTitle: "Эта игра отменена",
     cancelledBody: "Очки за неё не начислены.",

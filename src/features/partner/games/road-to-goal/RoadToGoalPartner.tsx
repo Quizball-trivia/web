@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { RoadToGoal } from "@/features/mini-games/components/RoadToGoal";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useLocale } from "@/contexts/LocaleContext";
 import { toPartnerLocale } from "../../partnerCopy";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
@@ -19,14 +20,18 @@ export function RoadToGoalPartner({
   // A play cancelled by a block has no result: leave for the home, which shows the account state.
   useEffect(() => client.onCancelled(onExit), [client, onExit]);
   const text = PARTNER_ROAD_TO_GOAL_COPY[toPartnerLocale(locale)];
+  const isDesktop = useIsDesktop();
 
   return (
     // The game shell's own header sits at z-90; isolating it keeps the sticky Freecroco header on top when scrolled.
-    <div className="isolate">
+    // The shared shell is full-page height (min-h-dvh); under the partner header that alone made the frame scroll.
+    <div className="isolate flex flex-1 flex-col [&>div]:min-h-0 [&>div]:flex-1 max-sm:[&_.aspect-\[4\/3\]]:aspect-[16/7] [@media(max-width:1023px)_and_(max-height:720px)]:[&_.aspect-\[4\/3\]]:aspect-[16/5]">
       <RoadToGoal
         partner={{
           client,
           ...text,
+          // A phone needs the height for the question: no tagline under the title.
+          copy: isDesktop ? text.copy : { ...text.copy, subtitle: "" },
           onFinished: () => {
             const run = client.last();
             // Only a scored run has a score event; a cancelled one is never reported as points.
