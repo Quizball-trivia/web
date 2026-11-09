@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ManualAdSlot } from '@/features/ads/ManualAdSlot';
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useEffect, useState } from "react";
@@ -268,6 +269,7 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
           rankedProfile={rankedProfile ?? null}
           rankedProfileLoading={rankedProfileLoading}
           beforeFooter={beforeFooter}
+          adSlot={<ManualAdSlot placement="lobby" />}
           trainingOffer={{ shouldOffer: shouldOfferTraining, onPlayTraining: startTraining, onSkip: skipTraining }}
           auctionTraining={{ shouldOffer: shouldOfferAuctionTraining, onPlay: startAuctionTraining, onSkip: skipAuctionTraining }}
           gridTraining={{ shouldOffer: shouldOfferGridTraining, onPlay: startGridTraining, onSkip: skipGridTraining }}

@@ -102,6 +102,12 @@ function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = nu
   const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
   const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
   const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
+  const adOrigins = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === 'true' ? [
+    'https://*.googlesyndication.com',
+    'https://*.doubleclick.net',
+    'https://*.googleadservices.com',
+    'https://www.google.com',
+  ] : [];
   const connectSrc = Array.from(new Set([
     "'self'",
     apiOrigin,
@@ -115,6 +121,7 @@ function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = nu
     "https://graph.facebook.com",
     "https://api-js.mixpanel.com",
     "https://vitals.vercel-insights.com",
+    ...adOrigins,
     "wss:",
     "ws:",
   ].filter(Boolean)));
@@ -141,7 +148,7 @@ function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = nu
     "style-src 'self' 'unsafe-inline'",
     `script-src ${scriptSrc.join(" ")}`,
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com https://www.youtube-nocookie.com",
+    ["frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com https://www.youtube-nocookie.com", ...adOrigins].join(' '),
     "worker-src 'self' blob:",
     "media-src 'self' blob: data: https:",
     "manifest-src 'self'",
