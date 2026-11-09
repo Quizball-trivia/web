@@ -30,7 +30,12 @@ function useFitFrameHeight(enabled: boolean) {
         if (!root) return;
         let zoom = 1;
         for (let attempt = 0; attempt < 6 && zoom > MIN_FIT_ZOOM; attempt += 1) {
-          const overflow = root.scrollHeight - window.innerHeight;
+          // Full-screen games scroll inside their own box, not the page: count that overflow too.
+          let overflow = root.scrollHeight - window.innerHeight;
+          for (const box of el.querySelectorAll<HTMLElement>("*")) {
+            const y = getComputedStyle(box).overflowY;
+            if ((y === "auto" || y === "scroll") && box.clientHeight > 80) overflow = Math.max(overflow, box.scrollHeight - box.clientHeight);
+          }
           if (overflow <= 0) break;
           const shown = el.getBoundingClientRect().height;
           zoom = Math.max(MIN_FIT_ZOOM, zoom * (shown / (shown + overflow)));

@@ -346,7 +346,7 @@ export function QuizBoardPartner({ gameId, api, onFinished, onExit }: PartnerGam
                   {view.result.endReason === "completed" ? copy.completedTitle : copy.endedTitle}
                 </p>
                 <p className="font-poppins text-sm font-semibold text-brand-yellow" data-testid="quiz-board-final-score">
-                  {copy.finalScore(money(view.result.score))}
+                  {copy.finalScore(money(view.result.score), money(view.tiles.reduce((sum, tile) => sum + tile.value, 0)))}
                 </p>
                 <button
                   type="button"

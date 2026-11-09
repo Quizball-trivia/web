@@ -11,7 +11,7 @@ interface QuizBoardCopy {
   timesUp: string;
   completedTitle: string;
   endedTitle: string;
-  finalScore: (points: string) => string;
+  finalScore: (points: string, max: string) => string;
   seePoints: string;
   cancelledTitle: string;
   cancelledBody: string;
@@ -34,7 +34,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "Time's up",
     completedTitle: "Board complete",
     endedTitle: "Game over",
-    finalScore: (p) => `You earned ${p} of 900 points.`,
+    finalScore: (p, max) => `You earned ${p} of ${max} points.`,
     seePoints: "See my points",
     cancelledTitle: "This game was cancelled",
     cancelledBody: "No points were sent for it.",
@@ -55,7 +55,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "დრო ამოიწურა",
     completedTitle: "დაფა დასრულდა",
     endedTitle: "თამაში დასრულდა",
-    finalScore: (p) => `შენ მოიგე ${p} ქულა 900-დან.`,
+    finalScore: (p, max) => `შენ მოიგე ${p} ქულა ${max}-დან.`,
     seePoints: "ჩემი ქულები",
     cancelledTitle: "ეს თამაში გაუქმდა",
     cancelledBody: "ამ თამაშისთვის ქულები არ გაიგზავნა.",
@@ -76,7 +76,7 @@ const COPY: Record<PartnerLocale, QuizBoardCopy> = {
     timesUp: "Время вышло",
     completedTitle: "Доска пройдена",
     endedTitle: "Игра окончена",
-    finalScore: (p) => `Ты набрал ${p} из 900 очков.`,
+    finalScore: (p, max) => `Ты набрал ${p} из ${max} очков.`,
     seePoints: "Мои очки",
     cancelledTitle: "Эта игра отменена",
     cancelledBody: "Очки за неё не начислены.",

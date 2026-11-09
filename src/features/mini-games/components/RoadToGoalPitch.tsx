@@ -562,7 +562,7 @@ export function RoadToGoalPitch({ progress, phase, labels, onFailure, actionStyl
     <div className="relative w-full overflow-hidden rounded-[16px] border border-white/10 bg-game-pitch-edge shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_36px_rgba(0,0,0,0.3)] sm:rounded-[20px] lg:rounded-[26px] lg:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_rgba(0,0,0,0.32)]">
       <div className="relative aspect-[4/3] sm:aspect-[16/9]">
       <CanvasFailureBoundary onFailure={onFailure}>
-        <Canvas resize={{ offsetSize: true }} dpr={[1, 1.6]} shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
+        <Canvas dpr={[1, 1.6]} shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
           <Suspense fallback={null}><RoadScene progress={progress} phase={phase} actionStyle={actionStyle} /></Suspense>
         </Canvas>
       </CanvasFailureBoundary>

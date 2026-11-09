@@ -13,7 +13,7 @@ afterEach(() => {
 
 const tiles = (owners: Record<number, "player" | "none"> = {}) =>
   Array.from({ length: 9 }, (_, tile) => ({
-    tile, category: Math.floor(tile / 3), row: tile % 3, value: (tile % 3 + 1) * 100, owner: owners[tile] ?? null,
+    tile, category: Math.floor(tile / 3), row: tile % 3, value: (tile % 3 + 1) * 50, owner: owners[tile] ?? null,
   }));
 
 const board = (over: Partial<QuizBoardView> = {}): QuizBoardView => ({
@@ -23,7 +23,7 @@ const board = (over: Partial<QuizBoardView> = {}): QuizBoardView => ({
   ...over,
 });
 
-const question = { tile: 2, value: 300, prompt: "Who won the 2005 final?", image: null, options: ["A", "B", "C", "D"] };
+const question = { tile: 2, value: 150, prompt: "Who won the 2005 final?", image: null, options: ["A", "B", "C", "D"] };
 const ev = (seq: number, e: Partial<QuizBoardEvent>): QuizBoardEvent => ({
   seq, actor: "player", kind: "pick", tile: null, correct: null, choice: null, points: 0, ...e,
 });
@@ -77,8 +77,8 @@ describe("Quiz Board partner screen (solo)", () => {
       deadlineAt: new Date(Date.now() + 20_000).toISOString(),
     });
     const answered = board({
-      turn: 2, playerScore: 300, tiles: tiles({ 2: "player" }),
-      events: [ev(1, { tile: 2 }), ev(2, { kind: "answer", tile: 2, correct: true, choice: 1, correctIndex: 1, points: 300 })],
+      turn: 2, playerScore: 150, tiles: tiles({ 2: "player" }),
+      events: [ev(1, { tile: 2 }), ev(2, { kind: "answer", tile: 2, correct: true, choice: 1, correctIndex: 1, points: 150 })],
     });
     const { api } = renderWith(board(), { pick: picked, answer: answered });
     fireEvent.click(await screen.findByTestId("quiz-board-tile-2"));
@@ -94,8 +94,8 @@ describe("Quiz Board partner screen (solo)", () => {
     // The tile stays disabled while the answer is shown.
     expect((screen.getByTestId("quiz-board-tile-0") as HTMLButtonElement).disabled).toBe(true);
     await waitFor(() => expect(screen.getByTestId("quiz-board-tile-2").dataset.owner).toBe("player"), { timeout: 3_000 });
-    expect(screen.getByTestId("quiz-board-tile-2").textContent).toBe("+300");
-    expect(screen.getByTestId("quiz-board-score").textContent).toBe("300");
+    expect(screen.getByTestId("quiz-board-tile-2").textContent).toBe("+150");
+    expect(screen.getByTestId("quiz-board-score").textContent).toBe("150");
     expect((screen.getByTestId("quiz-board-tile-0") as HTMLButtonElement).disabled).toBe(false);
   });
 

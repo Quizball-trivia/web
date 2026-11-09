@@ -322,7 +322,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
           <div className="lg:sticky lg:top-4">
             <AnimatePresence>
               {state.phase === "question" && state.question && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={cn("mt-4 rounded-[20px] bg-brand-blue p-4 text-white lg:mt-0", partner && "max-lg:fixed max-lg:inset-x-2 max-lg:bottom-2 max-lg:z-40 max-lg:mt-0")} style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={cn("mt-4 rounded-[20px] bg-brand-blue p-4 text-white lg:mt-0", partner && "max-lg:fixed max-lg:inset-x-2 max-lg:bottom-2 max-lg:z-40 max-lg:mt-0 max-lg:max-h-[85dvh] max-lg:overflow-y-auto")} style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
                   <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/70" style={poppins}>
                     <span>{t("triviaMines.scoutQuestion")}</span><span className={cn("tabular-nums", qLeft <= 3 && "text-brand-red-soft")}>{secondsShort(qLeft, locale)}</span>
                   </div>
