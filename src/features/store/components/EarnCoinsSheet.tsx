@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useObjectivesEnabled } from "@/lib/hooks/useObjectivesEnabled";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { SHOW_TICKETS } from "@/lib/tickets";
+import { STORE_SELLS_TICKETS } from "@/lib/tickets";
 import { TICKET_CAP } from "../lib/ticketRefill";
 
 /** quizball-backend `ranked/season-rp-formula.ts` RANKED_WIN_COINS / RANKED_LOSS_COINS (humans only). */
@@ -71,7 +71,7 @@ export function EarnCoinsSheet({ open, onOpenChange }: EarnCoinsSheetProps) {
   const body = (
     <div className="font-poppins text-white">
       <h2 className="max-w-[calc(100%-64px)] text-[22px] font-semibold uppercase leading-tight sm:text-[26px]">
-        {t(SHOW_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}
+        {t(STORE_SELLS_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}
       </h2>
 
       <ul className="mt-5 flex flex-col gap-2">
@@ -95,7 +95,7 @@ export function EarnCoinsSheet({ open, onOpenChange }: EarnCoinsSheetProps) {
         ))}
       </ul>
 
-      {SHOW_TICKETS && <div className="mt-4 flex gap-3 rounded-2xl border border-white/10 p-3">
+      {STORE_SELLS_TICKETS && <div className="mt-4 flex gap-3 rounded-2xl border border-white/10 p-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-green-light/15 text-brand-green-light">
           <Ticket className="size-5" aria-hidden />
         </span>
@@ -116,7 +116,7 @@ export function EarnCoinsSheet({ open, onOpenChange }: EarnCoinsSheetProps) {
           <div className="absolute top-5 right-5 z-30">
             <ModalCloseButton onClose={close} className="!static" />
           </div>
-          <SheetTitle className="sr-only">{t(SHOW_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}</SheetTitle>
+          <SheetTitle className="sr-only">{t(STORE_SELLS_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}</SheetTitle>
           <SheetDescription className="sr-only">{t("store.earnRankedTitle")}</SheetDescription>
           {body}
         </SheetContent>
@@ -130,7 +130,7 @@ export function EarnCoinsSheet({ open, onOpenChange }: EarnCoinsSheetProps) {
         <div className="absolute top-6 right-6 z-30">
           <ModalCloseButton onClose={close} className="!static" />
         </div>
-        <DialogTitle className="sr-only">{t(SHOW_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}</DialogTitle>
+        <DialogTitle className="sr-only">{t(STORE_SELLS_TICKETS ? "store.earnTitle" : "store.howToEarnCoins")}</DialogTitle>
         <DialogDescription className="sr-only">{t("store.earnRankedTitle")}</DialogDescription>
         {body}
       </DialogContent>

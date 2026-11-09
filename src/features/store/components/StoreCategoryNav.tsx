@@ -6,7 +6,7 @@
 
 import { Search, X } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
-import { SHOW_TICKETS } from "@/lib/tickets";
+import { STORE_SELLS_TICKETS } from "@/lib/tickets";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,7 @@ export function StoreCategoryNav({
       className={cn("z-20 -mx-4 border-b border-white/10 bg-background/95 px-4 py-3 backdrop-blur xl:sticky xl:top-0", className)}
     >
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-        {categories.filter((id) => SHOW_TICKETS || id !== "tickets").map((id) => (
+        {categories.filter((id) => STORE_SELLS_TICKETS || id !== "tickets").map((id) => (
           <button
             key={id}
             type="button"

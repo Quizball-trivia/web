@@ -1,4 +1,4 @@
-import { SHOW_TICKETS } from "@/lib/tickets";
+import { STORE_SELLS_TICKETS } from "@/lib/tickets";
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
 import { affordabilityAllowsConfirm, type BuyModalMode } from "./lib/modalAffordability";
 import { BundleCard, type BundleProps } from "./components/BundleCard";
@@ -278,7 +278,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
   // Derived from the URL (not copied into state) so same-route navigation —
   // e.g. the navbar coin pill linking to plain /store — resets the tab.
   // Tickets are switched off for free Ranked 2.0: an old ?tab=tickets link lands on everything else.
-  const ownCategory: StoreCategory = isStoreCategory(tabParam) && (SHOW_TICKETS || tabParam !== "tickets") ? tabParam : "all";
+  const ownCategory: StoreCategory = isStoreCategory(tabParam) && (STORE_SELLS_TICKETS || tabParam !== "tickets") ? tabParam : "all";
   const [ownSearch, setOwnSearch] = useState("");
   const [affordableOnly, setAffordableOnly] = useState(false);
   const [earnOpen, setEarnOpen] = useState(false);
@@ -589,7 +589,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
   // cancel the pending refresh and reschedule it four hours later.
   const refillRefreshAtMs = nextTicketRefillAt(nowMs - REFILL_CRON_LAG_MS) + REFILL_CRON_LAG_MS;
   useEffect(() => {
-    if (!SHOW_TICKETS || isLocalPreview || !awaitingRefill) return;
+    if (!STORE_SELLS_TICKETS || isLocalPreview || !awaitingRefill) return;
     const id = window.setTimeout(() => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
     }, Math.max(0, refillRefreshAtMs - Date.now()));
@@ -716,7 +716,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
   const visibleTicketPacks = affordableOnly
     ? ticketPacks.filter((pack) => !pack.disabled && canAffordCoins(pack.priceCoinsValue))
     : ticketPacks;
-  const showTickets = SHOW_TICKETS && showCategory("tickets") && !search && visibleTicketPacks.length > 0;
+  const showTickets = STORE_SELLS_TICKETS && showCategory("tickets") && !search && visibleTicketPacks.length > 0;
 
   return (
     <div className="min-h-screen pb-20 flex flex-col">

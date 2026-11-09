@@ -7,7 +7,7 @@
 import Image from "next/image";
 import { CircleHelp } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
-import { SHOW_TICKETS } from "@/lib/tickets";
+import { STORE_SELLS_TICKETS } from "@/lib/tickets";
 import { TICKET_CAP } from "../lib/ticketRefill";
 
 interface StoreHeaderProps {
@@ -49,7 +49,7 @@ export function StoreHeader({ coins, tickets, nextFreeTicketIn, onHowToEarn }: S
           </div>
         </div>
 
-        {SHOW_TICKETS && <div className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-store-card px-3 py-2.5 sm:min-w-[220px] sm:px-4">
+        {STORE_SELLS_TICKETS && <div className="flex min-w-0 items-center gap-2.5 rounded-2xl bg-store-card px-3 py-2.5 sm:min-w-[220px] sm:px-4">
           <Image src="/assets/ticket-1.png" alt="" width={26} height={26} className="size-[26px] shrink-0" />
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-[0.04em] text-white/60">{t("store.ticketsTitle")}</div>

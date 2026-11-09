@@ -25,7 +25,7 @@ const ticketPack = (tickets: number, priceCents: number) => ({
   id: `ticket_pack_${tickets}`, slug: `ticket_pack_${tickets}`, type: "ticket_pack" as const, name: {}, description: {}, priceCents, currency: "coins", metadata: { tickets }, displayAmount: priceCents,
 });
 
-vi.mock("@/lib/tickets", () => ({ get SHOW_TICKETS() { return mocks.showTickets; } }));
+vi.mock("@/lib/tickets", () => ({ get STORE_SELLS_TICKETS() { return mocks.showTickets; } }));
 vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ locale: "en", setLocale: vi.fn(), t: (key: string) => key }) }));
 vi.mock("motion/react", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
