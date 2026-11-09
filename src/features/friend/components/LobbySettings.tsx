@@ -1075,7 +1075,7 @@ export function LobbySettings({
               <CodenamesRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
             )}
             {roomGame === 'draft' && roomGame === serverRoomGame && (
-              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} onPendingChange={onRoomOptionsPending} onAbandoned={onSettingsAbandoned} />
+              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} onPendingChange={onRoomOptionsPending} onAbandoned={onSettingsAbandoned} refusedVersion={settingsErrorVersion} />
             )}
             {roomGame === 'football_race' && roomGame === serverRoomGame && (
               <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

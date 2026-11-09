@@ -25,7 +25,7 @@ const sameChoice = (a: DraftRoomChoice, b: DraftRoomChoice) => a.leagueId === b.
 
 const chip = (selected: boolean, canEdit: boolean) => cn("min-h-9 rounded-full px-3 text-xs font-bold transition-colors", selected ? "bg-brand-blue text-white" : "bg-white/[0.07] text-white/75", canEdit && !selected && "hover:bg-white/[0.12]", !canEdit && !selected && "opacity-45");
 
-export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange, onAbandoned }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void; onAbandoned?: () => void }) {
+export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange, onAbandoned, refusedVersion = 0 }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void; onAbandoned?: () => void; refusedVersion?: number }) {
   const { locale } = useLocale();
   const c = draftCopy(locale);
   const server = readDraftOptions(options);
@@ -34,6 +34,12 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   // allowed) the room's own value is shown again.
   const [sent, setSent] = useState<DraftRoomChoice | null>(null);
   if (sent && (!canEdit || sameChoice(sent, server))) setSent(null);
+  // The lobby rolled its settings back (a refusal it already reported): the change on its way is over, and so is its wait.
+  const [seenRefusal, setSeenRefusal] = useState(refusedVersion);
+  if (refusedVersion !== seenRefusal) {
+    setSeenRefusal(refusedVersion);
+    if (sent) setSent(null);
+  }
   const pending = canEdit && sent && !sameChoice(sent, server) ? sent : null;
   const value = pending ?? server;
   // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
