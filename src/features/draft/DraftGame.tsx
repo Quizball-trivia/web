@@ -331,7 +331,11 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     } catch { /* cancelled or refused */ }
   }, [env, kind, runDay, locale, c]);
   // Leaving the result (another screen, version or run) cancels a challenge still on its way: a late reply neither shares nor shows an error.
-  useEffect(() => { linkRequest.current++; }, [screen, variant, env?.run.id]);
+  useEffect(() => {
+    const requests = linkRequest;
+    requests.current++;
+    return () => { requests.current++; };
+  }, [screen, variant, env?.run.id]);
   const shownLink = challengeLink && env && challengeLink.run === env.run.id ? challengeLink.url : null;
   const copyChallengeLink = useCallback(async () => {
     if (!shownLink) return;
