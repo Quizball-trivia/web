@@ -12,14 +12,15 @@ import { draftCopy, type DraftText } from "./draft.copy";
 import type { ChallengeTarget } from "./draft.engine";
 import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
-  ACADEMY_RATING, BUDGET, FORMATIONS, XI, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
+  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
   type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Prediction, type Pos, type SeasonResult, type Slot, type Variant,
 } from "./draft.rules";
 
 const surname = (name: string) => name.split(" ").slice(1).join(" ") || name;
 const VARIANTS = ["budget", "classic", "knowledge"] as const;
 const variantName = (c: DraftText, v: Variant) => (v === "knowledge" ? c.knowledge : v === "budget" ? c.budget : c.classic);
-const variantHint = (c: DraftText, v: Variant) => (v === "knowledge" ? c.knowledgeHint : v === "budget" ? c.budgetHint(BUDGET.total) : c.classicHint);
+// Legends play with a smaller budget: the hint names the money the run will really have.
+const variantHint = (c: DraftText, v: Variant, era: Era = "all") => (v === "knowledge" ? c.knowledgeHint : v === "budget" ? c.budgetHint(budgetFor(era)) : c.classicHint);
 const euros = (m: number) => `€${m}M`;
 
 /** A phone with the browser's bars showing: the pick screen tightens so everything still fits without scrolling. */
@@ -139,7 +140,7 @@ export function DraftSetup({ locale, leagues, values, friends, onChange, onStart
             {VARIANTS.map((m) => (
               <button key={m} type="button" aria-pressed={values.variant === m} onClick={() => set({ variant: m })} className={cn("min-w-0 rounded-2xl px-2 py-2 text-left transition-colors", chipTone(values.variant === m))}>
                 <span className="block text-[13px] font-black leading-tight" style={poppins}>{variantName(c, m)}</span>
-                <span className="mt-0.5 block text-[11px] font-medium leading-tight text-white/70">{variantHint(c, m)}</span>
+                <span className="mt-0.5 block text-[11px] font-medium leading-tight text-white/70">{variantHint(c, m, values.era)}</span>
               </button>
             ))}
           </div>
@@ -447,7 +448,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
   const status = short && shared ? (waitingFor ? hint : feed) : feed;
   return (
     <div className={cn("flex flex-1 flex-col", short && "-mb-3")}>
-      <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} seconds={seconds ?? null}
+      <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap seconds={seconds ?? null}
         right={<span className="flex shrink-0 flex-col items-end text-xs font-bold leading-tight text-white/70 tabular-nums" style={poppins}>
           {purse && <span className="text-sm font-black text-brand-yellow">{euros(purse.left)}{short && <span className="ml-1 text-[10px] font-bold text-white/70">{c.eachPlace(purse.each)}</span>}</span>}
           {shared ? c.round(round + 1) : c.pickN(Math.min(XI, round + 1), XI)}

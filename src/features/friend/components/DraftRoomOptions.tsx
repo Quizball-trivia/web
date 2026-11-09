@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { FORMATIONS, type Era, type FormationId, type Variant } from "@/features/draft/draft.rules";
@@ -20,13 +21,25 @@ export function readDraftOptions(raw: Record<string, unknown> | null | undefined
   };
 }
 
+const sameChoice = (a: DraftRoomChoice, b: DraftRoomChoice) => a.leagueId === b.leagueId && a.era === b.era && a.formation === b.formation && a.variant === b.variant;
+
 const chip = (selected: boolean, canEdit: boolean) => cn("min-h-9 rounded-full px-3 text-xs font-bold transition-colors", selected ? "bg-brand-blue text-white" : "bg-white/[0.07] text-white/75", canEdit && !selected && "hover:bg-white/[0.12]", !canEdit && !selected && "opacity-45");
 
 export function DraftRoomOptions({ options, canEdit, onChange, hostOnly }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string }) {
   const { locale } = useLocale();
   const c = draftCopy(locale);
-  const value = readDraftOptions(options);
-  const set = (patch: Partial<DraftRoomChoice>) => { if (canEdit) onChange({ ...value, ...patch }); };
+  const server = readDraftOptions(options);
+  // Quick taps must not undo each other: until the room echoes what was sent, the next tap builds on what was sent,
+  // not on the older settings the room still shows. The room's own value wins again once it matches, or after 3 s.
+  const [sent, setSent] = useState<DraftRoomChoice | null>(null);
+  const value = sent && !sameChoice(sent, server) ? sent : server;
+  const set = (patch: Partial<DraftRoomChoice>) => {
+    if (!canEdit) return;
+    const next = { ...value, ...patch };
+    setSent(next);
+    setTimeout(() => setSent((current) => (current === next ? null : current)), 3_000);
+    onChange(next);
+  };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
     <div>
       <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-white/55">{label}</p>
