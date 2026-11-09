@@ -80,6 +80,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   const [tie, setTie] = useState<(TieResponse & { rivalName: string }) | null>(null);
   const [seenTies, setSeenTies] = useState<string[]>([]);
   const [linkNote, setLinkNote] = useState<string | null>(null);
+  const [challengeLink, setChallengeLink] = useState<string | null>(null);
   const started = useRef(false);
   const starting = useRef(false);
   const [resumable, setResumable] = useState<string | null>(null);
@@ -125,7 +126,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
 
   const resume = useCallback(async () => {
     if (!resumable) return;
-    setChallengeCode(null); setChallenge(null);
+    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
     try { adopt(await draftApi.currentFree(resumable, locale), { free: true }); } catch { setProblem(c.loadFailed); }
   }, [resumable, locale, adopt, c.loadFailed]);
 
@@ -166,7 +167,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if (!today || starting.current) return;
     starting.current = true;
     setPending(true);
-    setChallengeCode(null); setChallenge(null);
+    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
     try {
       // A guest opens yesterday from today's entry, and a closed day chosen from the address as it is.
       const day = today.guest && today.day >= today.live ? today.practiceDay : today.day;
@@ -184,7 +185,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
     if (starting.current) return;
     starting.current = true;
     setPending(true);
-    setChallengeCode(null); setChallenge(null);
+    setChallengeCode(null); setChallenge(null); setChallengeLink(null); setLinkNote(null);
     try {
       const next = await draftApi.startFree({ leagueId: setup.leagueId, era: setup.era, formation: setup.formation, variant: setup.variant }, locale);
       beginTracked();
@@ -194,6 +195,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   }, [setup, locale, adopt, beginTracked, c.loadFailed, c.noSuchEra]);
 
   const acceptChallenge = useCallback(async () => {
+    setChallengeLink(null); setLinkNote(null);
     if (!challengeCode || starting.current) return;
     starting.current = true;
     setPending(true);
@@ -305,16 +307,27 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   /** A link a friend opens on the same draw. */
   const challengeFriend = useCallback(async () => {
     if (!env) return;
+    let url: string;
     try {
       const body = "daily" in kind && runDay ? { variant: kind.daily, day: runDay } : { runId: env.run.id };
       const { code } = await draftApi.challengeCreate(body, locale);
-      const url = `${window.location.origin}/football-draft?challenge=${code}`;
+      url = `${window.location.origin}/football-draft?challenge=${code}`;
+    } catch {
+      setProblem(c.loadFailed);
+      return;
+    }
+    setProblem(null);
+    setChallengeLink(url);
+    // After the network wait the browser may refuse to share or copy (no user gesture left): the link stays on screen with its own Copy.
+    try {
       if (navigator.share) await navigator.share({ url, text: c.challengeShare });
       else { await navigator.clipboard.writeText(url); setLinkNote(c.shareCopied); }
-    } catch (error) {
-      if (!(error instanceof DOMException && error.name === "AbortError")) setProblem(c.loadFailed);
-    }
+    } catch { /* cancelled or refused */ }
   }, [env, kind, runDay, locale, c]);
+  const copyChallengeLink = useCallback(async () => {
+    if (!challengeLink) return;
+    try { await navigator.clipboard.writeText(challengeLink); setLinkNote(c.shareCopied); } catch { /* the field stays selectable */ }
+  }, [challengeLink, c]);
 
   const notice = (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoney : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
   const target: ChallengeTarget | null = challenge ? { from: challenge.from, seed: "", leagueId: "", era: challenge.era, formation: challenge.formation, variant: challenge.variant, respins: 2, ...challenge.record, picks: challenge.picks ?? Array(11).fill(null) } : null;
@@ -351,7 +364,13 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} nextDaily={boardDay ? nextDaily : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
             leaderboard={boardDay ? <DraftLeaderboard locale={locale} rows={board} variant={boardVariant} onVariant={(v) => { setVariant(v); setScreen("intro"); }} onOpen={(row) => void openTeam(row)} /> : undefined}
             onShare={() => undefined} onAgain={() => { setSetup((x) => ({ ...x, variant: state.variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
-          {linkNote && <p role="status" className="mt-2 text-center text-xs font-semibold text-brand-green-light">{linkNote}</p>}
+          {challengeLink && (
+            <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface-card p-2">
+              <input readOnly value={challengeLink} aria-label={c.challengeFriend} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white/90 outline-none" />
+              <button type="button" onClick={() => void copyChallengeLink()} className="shrink-0 rounded-lg bg-brand-blue px-3 py-1.5 text-xs font-black uppercase text-white">{linkNote ? c.shareCopied : c.shareCopy}</button>
+            </div>
+          )}
+          {linkNote && !challengeLink && <p role="status" className="mt-2 text-center text-xs font-semibold text-brand-green-light">{linkNote}</p>}
           {openRival && <TeamSheet c={c} name={openRival.name} slots={slots} picks={openRival.picks} onPlay={() => void playRival()} onClose={() => setOpenRival(null)} />}
         </>
       ) : null}
