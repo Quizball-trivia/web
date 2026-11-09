@@ -21,8 +21,8 @@ describe("French game pages", () => {
     expect(DAILY_COLLECTION_SLUG.fr).toBe("jeux-quotidiens");
   });
 
-  it("gives all 34 games a lowercase ASCII slug of its own", () => {
-    expect(GAME_PAGES).toHaveLength(34);
+  it("gives all 35 games a lowercase ASCII slug of its own", () => {
+    expect(GAME_PAGES).toHaveLength(35);
     const slugs = GAME_PAGES.map((entry) => gamePageSlug(entry, "fr"));
     expect(new Set(slugs).size).toBe(slugs.length);
     for (const slug of slugs) expect(slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);

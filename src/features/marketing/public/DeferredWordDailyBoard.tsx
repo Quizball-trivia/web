@@ -16,8 +16,9 @@ const CodenamesBoard = dynamic(() => import("@/features/wordgames/daily/WordDail
 const DatoFalsoBoard = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.DatoFalsoDailyBoard), { ssr: false, loading: BoardPlaceholder });
 const ConexionesBoard = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.ConexionesDailyBoard), { ssr: false, loading: BoardPlaceholder });
 const Darts501Board = dynamic(() => import("@/features/wordgames/daily/WordDailyPageBoards").then((m) => m.Darts501DailyBoard), { ssr: false, loading: BoardPlaceholder });
+const DraftBoard = dynamic(() => import("@/features/draft/DraftBoardPage").then((m) => m.DraftBoardPage), { ssr: false, loading: BoardPlaceholder });
 
-export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: "sharedPlayer" | "nameChain" | "tenable" | "footballRace" | "codenames" | "datoFalso" | "conexiones" | "darts501"; locale: string; className?: string }) {
+export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: "sharedPlayer" | "nameChain" | "tenable" | "footballRace" | "codenames" | "datoFalso" | "conexiones" | "darts501" | "draft"; locale: string; className?: string }) {
   const container = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -38,7 +39,7 @@ export function DeferredWordDailyBoard({ modeId, locale, className }: { modeId: 
 
   return (
     <div ref={container} className={className}>
-      {!visible ? <BoardPlaceholder /> : modeId === "sharedPlayer" ? <SharedPlayerBoard locale={locale} /> : modeId === "tenable" ? <TenableBoard locale={locale} /> : modeId === "footballRace" ? <FootballRaceBoard locale={locale} /> : modeId === "codenames" ? <CodenamesBoard locale={locale} /> : modeId === "datoFalso" ? <DatoFalsoBoard locale={locale} /> : modeId === "conexiones" ? <ConexionesBoard locale={locale} /> : modeId === "darts501" ? <Darts501Board locale={locale} /> : <NameChainBoard locale={locale} />}
+      {!visible ? <BoardPlaceholder /> : modeId === "sharedPlayer" ? <SharedPlayerBoard locale={locale} /> : modeId === "tenable" ? <TenableBoard locale={locale} /> : modeId === "footballRace" ? <FootballRaceBoard locale={locale} /> : modeId === "codenames" ? <CodenamesBoard locale={locale} /> : modeId === "datoFalso" ? <DatoFalsoBoard locale={locale} /> : modeId === "conexiones" ? <ConexionesBoard locale={locale} /> : modeId === "darts501" ? <Darts501Board locale={locale} /> : modeId === "draft" ? <DraftBoard locale={locale} /> : <NameChainBoard locale={locale} />}
     </div>
   );
 }

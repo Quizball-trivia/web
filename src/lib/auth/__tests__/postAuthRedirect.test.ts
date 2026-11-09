@@ -84,4 +84,10 @@ describe('post-auth redirect helpers', () => {
     expect(getPostAuthEntryRoute(completeUser)).toBe('/friend/room/ABC123');
     expect(getPostAuthEntryRoute(completeUser)).toBe('/play');
   });
+  it("keeps a Football Draft challenge or past day, and nothing else in a query", () => {
+    expect(normalizePostAuthRedirect("/football-draft?challenge=abc123XY")).toBe("/football-draft?challenge=abc123XY");
+    expect(normalizePostAuthRedirect("/football-draft?dia=2026-11-01")).toBe("/football-draft?dia=2026-11-01");
+    expect(normalizePostAuthRedirect("/football-draft?next=https://evil.example")).toBe("/football-draft");
+    expect(normalizePostAuthRedirect("/football-draft?challenge=../../x")).toBe("/football-draft");
+  });
 });

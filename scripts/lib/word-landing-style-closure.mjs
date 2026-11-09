@@ -26,12 +26,14 @@ export const WORD_LANDING_ROOTS = [
     "futbolnye-igry/futbolnye-svyazi",
     "football-games/football-darts-501", "juegos-de-futbol/dardos-futboleros-501", "futbol-oyunlari/futbol-dart-oyunu",
     "futbolnye-igry/futbolnyy-darts-501",
+    "football-games/football-draft-game", "juegos-de-futbol/draft-de-futbol", "futbol-oyunlari/futbol-draft-oyunu",
+    "futbolnye-igry/futbolnyy-draft",
     "jogos-de-futebol/jogo-da-ultima-letra", "jogos-de-futebol/jogador-em-comum", "jogos-de-futebol/corrida-das-selecoes",
-    "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira", "jogos-de-futebol/conexoes-do-futebol", "jogos-de-futebol/dardos-com-jogadores-de-futebol",
+    "jogos-de-futebol/codenames-futebol", "jogos-de-futebol/qual-e-a-mentira", "jogos-de-futebol/conexoes-do-futebol", "jogos-de-futebol/dardos-com-jogadores-de-futebol", "jogos-de-futebol/draft-de-futebol",
     "fussballspiele/fussballer-wortkette", "fussballspiele/spieler-fuer-beide-vereine", "fussballspiele/nationen-rennen",
-    "fussballspiele/fussball-codenames", "fussballspiele/welche-aussage-ist-falsch", "fussballspiele/fussball-connections", "fussballspiele/fussball-darts-501",
+    "fussballspiele/fussball-codenames", "fussballspiele/welche-aussage-ist-falsch", "fussballspiele/fussball-connections", "fussballspiele/fussball-darts-501", "fussballspiele/fussball-draft-spiel",
     "jeux-de-foot/jeu-de-la-derniere-lettre", "jeux-de-foot/joueur-en-commun", "jeux-de-foot/course-des-nations",
-    "jeux-de-foot/codenames-foot", "jeux-de-foot/trouve-le-faux", "jeux-de-foot/connections-foot", "jeux-de-foot/flechettes-foot-501",
+    "jeux-de-foot/codenames-foot", "jeux-de-foot/trouve-le-faux", "jeux-de-foot/connections-foot", "jeux-de-foot/flechettes-foot-501", "jeux-de-foot/draft-de-foot",
   ].map((route) => `src/app/[locale]/(hub)/(word-shell)/${route}/page.tsx`),
 ];
 
@@ -67,11 +69,12 @@ export const WORD_DYNAMIC_BOUNDARIES = Object.fromEntries([
   ...[
     "./GuestDailyPlay", "@/features/buscaminas/BuscaminasGame", "@/features/pistas/PistasGame",
     "@/features/minuto/MinutoGame", "@/features/ultimo/UltimoGame", "@/features/mini-games/components/GuessTheGoalGuest",
-    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily", "@/features/codenames/CodenamesDaily", "@/features/dato-falso/DatoFalsoDaily", "@/features/conexiones/ConexionesDaily", "@/features/darts501/D501Daily",
+    "@/features/shared-player/SharedPlayerDaily", "@/features/name-chain/NameChainDaily", "@/features/tenable/TenableDaily", "@/features/football-race/FootballRaceDaily", "@/features/codenames/CodenamesDaily", "@/features/dato-falso/DatoFalsoDaily", "@/features/conexiones/ConexionesDaily", "@/features/darts501/D501Daily", "@/features/draft/DraftGame",
     "./StatSniperPublicPlay", "@/features/demos/DemoModeView",
   ].map((specifier) => boundary("src/features/marketing/public/PublicGameEmbed.tsx", specifier, "play-only", "Every engine is gated by playing; word engines import application CSS.")),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/wordgames/daily/WordDailyPageBoards", "pre-play", "Scrolling can mount rankings without Play."),
   boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/football-race/FootballRaceDailyBoard", "pre-play", "Scrolling can mount rankings without Play."),
+  boundary("src/features/marketing/public/DeferredWordDailyBoard.tsx", "@/features/draft/DraftBoardPage", "pre-play", "Scrolling can mount rankings without Play."),
   boundary("src/features/wordgames/daily/WordDailyLeaderboardRows.tsx", "./WordDailyLeaderboardTable", "pre-play", "A nonempty visible ranking loads its original table before Play; retain every row and failure-state style."),
   ...[
     "./PublicTopTen", "@/features/buscaminas/BuscaminasLeaderboard", "@/features/pistas/PistasLeaderboard",
