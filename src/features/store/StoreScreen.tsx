@@ -292,7 +292,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
-  const { data: productsData } = useStoreProducts(!localPreview);
+  const { data: productsData, isPending: productsPending } = useStoreProducts(!localPreview);
   const { data: remoteWallet } = useStoreWallet({ enabled: !localPreview });
   const wallet = localPreview ? { coins: localPreview.coins, tickets: localPreview.tickets ?? 0, ticketPurchaseCooldown: undefined } : remoteWallet;
   const { data: inventoryData } = useStoreInventory(!localPreview);
@@ -717,6 +717,8 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
     ? ticketPacks.filter((pack) => !pack.disabled && canAffordCoins(pack.priceCoinsValue))
     : ticketPacks;
   const showTickets = STORE_SELLS_TICKETS && showCategory("tickets") && !search && visibleTicketPacks.length > 0;
+  // The packs come from the products query: until it answers, an empty Tickets tab is "loading", not "nothing matches".
+  const ticketPacksLoading = STORE_SELLS_TICKETS && !isLocalPreview && showCategory("tickets") && !search && productsPending;
 
   return (
     <div className="min-h-screen pb-20 flex flex-col">
@@ -851,7 +853,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             canAfford={canAffordCoins}
             translateName={translatePartName}
             onSelect={openAvatarPartModal}
-            showEmptyState={!showTickets}
+            showEmptyState={!showTickets && !ticketPacksLoading}
             onClearFilters={isLocalPreview || (!search && !affordableOnly) ? undefined : () => { setOwnSearch(""); setAffordableOnly(false); }}
           />
           </div>

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   updateStats: vi.fn(),
   searchParams: new URLSearchParams(),
   showTickets: true,
+  productsPending: false,
   customization: { skin: "skin_male_white", jersey: "jersey_green" } as Record<string, string>,
 }));
 
@@ -56,7 +57,7 @@ vi.mock("@/contexts/PlayerContext", () => ({
 }));
 vi.mock("@/lib/analytics/game-events", () => ({ trackAvatarPartEquipped: vi.fn(), trackItemPurchased: vi.fn(), trackPurchaseCancelled: vi.fn(), trackPurchaseModalOpened: vi.fn(), trackStoreViewed: vi.fn(),  }));
 vi.mock("@/lib/queries/store.queries", () => ({
-  useStoreProducts: () => ({ data: { items: [
+  useStoreProducts: () => (mocks.productsPending ? { data: undefined, isPending: true } : { isPending: false, data: { items: [
     product("avatar_jersey_real", 5_000), product("avatar_jersey_barcelona", 5_000),
     ticketPack(1, 2_000), ticketPack(3, 4_000), ticketPack(5, 5_000),
   ] } }),
@@ -168,6 +169,18 @@ describe("StoreScreen: filters", () => {
     fireEvent.click(screen.getByRole("button", { name: "store.canAfford" }));
     expect(screen.getByRole("heading", { name: "store.ticketsTitle" })).toBeInTheDocument();
     expect(screen.queryByText("store.noResults")).toBeNull();
+  });
+
+  it("does not say 'nothing matches' on the Tickets tab while the packs load", () => {
+    mocks.productsPending = true;
+    mocks.searchParams = new URLSearchParams("tab=tickets");
+    try {
+      renderStore();
+      expect(screen.queryByText("store.noResults")).toBeNull();
+    } finally {
+      mocks.productsPending = false;
+      mocks.searchParams = new URLSearchParams();
+    }
   });
 
   it("follows ?tab= on same-route navigation", () => {
