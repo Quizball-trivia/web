@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Category images are runtime CMS URLs. */
 
+import { DraftRoomOptions } from './DraftRoomOptions';
 import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
@@ -1063,6 +1064,9 @@ export function LobbySettings({
             )}
             {roomGame === 'codenames' && roomGame === serverRoomGame && (
               <CodenamesRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
+            )}
+            {roomGame === 'draft' && roomGame === serverRoomGame && (
+              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} />
             )}
             {roomGame === 'football_race' && roomGame === serverRoomGame && (
               <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

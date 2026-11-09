@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   retryFailureJoinCount: 0,
   authUserId: 'user-1' as string,
   openRoomJoins: 0,
+  missingCode: 'LOBBY_NOT_FOUND',
 }));
 
 vi.mock('next/navigation', () => ({
@@ -122,6 +123,7 @@ describe('useFriendLobbyLogic invite links', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.retryFailureJoinCount = 0;
+    mocks.missingCode = 'LOBBY_NOT_FOUND';
     mocks.socketEmit.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
       if (typeof ack !== 'function') return;
       const correlationId =
@@ -168,7 +170,7 @@ describe('useFriendLobbyLogic invite links', () => {
           // Not found, but the player still has an open room (its own active room, or some other room).
           ack({
             ok: false,
-            code: 'LOBBY_NOT_FOUND',
+            code: mocks.missingCode,
             message: 'Invalid invite code',
             retryable: false,
             correlationId,
@@ -306,6 +308,17 @@ describe('useFriendLobbyLogic invite links', () => {
     const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'OPEN01', isHost: false }));
     await waitFor(() => expect(mocks.openRoomJoins).toBe(2));
     expect(result.current.inviteJoinFailure).toBeNull();
+  });
+
+  it('a returning participant is not shown a started-game refusal while its own room hydrates', async () => {
+    mocks.missingCode = 'LOBBY_GAME_STARTED';
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'MINE01', isHost: false }));
+    await waitFor(() => expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', expect.objectContaining({ inviteCode: 'MINE01' }), expect.any(Function)));
+    act(() => useRealtimeMatchStore.getState().setLobby({ ...makeLobby('MINE01'), status: 'active' }));
+    await new Promise(resolve => setTimeout(resolve, 2700));
+    expect(result.current.inviteJoinFailure).toBeNull();
+    expect(mocks.trackInviteJoinFailed).not.toHaveBeenCalled();
+    expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
   it('after signing up on a refused invite, the new identity joins again (no stale failure)', async () => {

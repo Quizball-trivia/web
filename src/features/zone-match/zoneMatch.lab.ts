@@ -27,6 +27,7 @@ import {
   strikePose,
   type FullBodyPose,
 } from './zoneMatch.fullBody';
+import { zoneMatchCopy } from './zoneMatch.copy';
 
 export type LabGroup = 'duel' | 'outcome' | 'goal' | 'card' | 'question' | 'body' | 'celebration';
 
@@ -248,7 +249,7 @@ const CARD_ENTRIES: LabEntry[] = CARDS.map((card): LabEntry => ({
   id: `card-${card.id}`,
   group: 'card',
   label: `${card.icon} ${card.name}`,
-  about: `${card.type} · ${card.effect}`,
+  about: `${card.type} · ${zoneMatchCopy('en').cards[card.id].effect}`,
   source: 'CardEffectsEngine.takeMoment · CardExtras.onMoment / update',
   // The attacking toggle picks who plays the card; sabotage lands on the other side.
   scene: (A) => cardScene(card.id, A),

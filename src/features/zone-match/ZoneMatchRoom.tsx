@@ -9,6 +9,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
+import { fill, zoneMatchCopy } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 import type { RoomClientRules } from '@/features/room/useRoomConnection';
 import type { RoomConnection, RoomGameScreens } from '@/features/wordgames/RoomGameShell';
 import type { RoomStatePayload } from '@/lib/realtime/socket.types';
@@ -116,6 +118,7 @@ function useServerNow(room: RoomConnection<ZoneMatchCommand>) {
 }
 
 function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: RoomStatePayload; room: RoomConnection<ZoneMatchCommand> }) {
+  const { c } = useZoneCopy();
   const now = useServerNow(room);
   const seats = useMemo(() => seatsOf(snapshot, view.you), [snapshot, view.you]);
   const [deck, setDeck] = useState<CardId[]>([]);
@@ -197,9 +200,9 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
           {loadoutInYou ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
               <div className="text-2xl uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}>
-                {view.loadoutIn.them ? 'Kick-off!' : `Waiting for ${seats.opponent.name}…`}
+                {view.loadoutIn.them ? c.room.kickOff : fill(c.room.waitingFor, { name: seats.opponent.name })}
               </div>
-              <div className="text-sm text-white/60">Their playstyles are revealed at the showdown · {secondsLeft}s</div>
+              <div className="text-sm text-white/60">{fill(c.room.revealedAtShowdown, { s: secondsLeft })}</div>
             </div>
           ) : (
             <PlaystylePicker
@@ -341,7 +344,7 @@ function Results({ view, snapshot, onRoom, onExit }: { view: ZoneMatchServerView
 }
 
 export const zoneMatchScreens: RoomGameScreens<ZoneMatchServerView, ZoneMatchCommand> = {
-  brand: () => ['Ranked 2.0', 'Beta'] as const,
+  brand: (locale) => zoneMatchCopy(locale).brand,
   Board: ({ view, snapshot, room }) => <Board view={view} snapshot={snapshot} room={room} />,
   Results: (props) => <Results {...props} />,
   wide: () => true,

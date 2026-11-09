@@ -13,7 +13,10 @@ import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import { otherZoneSide, type AttackZone, type Possession } from './zoneMatch.rules';
 import { CARDS, CARD_BY_ID, DECK_SIZE, FLOODLIGHT_MS, type CardId } from './zoneMatch.cards';
 import { cardBlocker, sabotageOn, unusedCategories, type Action, type Content, type MatchState } from './zoneMatch.machine';
-import { CARD_TYPE_THEME, CardFace, PHASE_INFO, PlaystyleBadge, ROLE_INFO } from './ZoneMatchCardFace';
+import { CARD_TYPE_THEME, CardFace, PlaystyleBadge } from './ZoneMatchCardFace';
+import { zoneMatchCopy } from './zoneMatch.copy';
+
+const EN = zoneMatchCopy('en');
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -142,7 +145,7 @@ export const LAB_TOUR: TourCase[] = [
   { title: 'Goal', note: 'Your shot: strike, the keeper dives the wrong way, net ripples, celebration', card: null, owner: 'player', situation: 'attack-shot', ownerAnswer: 'right', otherAnswer: 'wrong' },
   { title: 'Shot saved', note: 'Your shot, you wrong and they right: the keeper saves and carries it up to the centre', card: null, owner: 'player', situation: 'attack-shot', ownerAnswer: 'wrong', otherAnswer: 'right' },
   { title: 'You concede', note: 'Their shot, they right and you wrong: you are in goal and they score', card: null, owner: 'opponent', situation: 'attack-shot', ownerAnswer: 'right', otherAnswer: 'wrong' },
-  ...CARDS.map((card) => ({ ...labDefaults(card.id), title: card.name, note: `${CARD_LOOK[card.id]} · ${card.effect}` })),
+  ...CARDS.map((card) => ({ ...labDefaults(card.id), title: card.name, note: `${CARD_LOOK[card.id]} · ${EN.cards[card.id].effect}` })),
 ];
 
 /** Where the card can be played from, given its role. */
@@ -352,9 +355,9 @@ export function LabPicker({
             <div>
               <div className="text-xl uppercase" style={poppins}>{card.name}</div>
               <div className="text-[10px] font-black uppercase tracking-wide" style={{ color: CARD_TYPE_THEME[card.type].color }}>
-                {CARD_TYPE_THEME[card.type].label} · {PHASE_INFO[card.phase].long} · {ROLE_INFO[card.role].long}
+                {EN.cardTypes[card.type]} · {EN.phases[card.phase].long} · {EN.roles[card.role].long}
               </div>
-              <p className="mt-1 text-sm text-white/80">{card.effect}</p>
+              <p className="mt-1 text-sm text-white/80">{EN.cards[card.id].effect}</p>
             </div>
             <Choice label="Played by" value={setup.owner} options={[['player', 'You'], ['opponent', 'Opponent']]} onChange={(owner) => setSetup({ ...setup, owner })} />
             <Choice

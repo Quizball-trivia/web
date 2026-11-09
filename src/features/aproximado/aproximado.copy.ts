@@ -1,6 +1,6 @@
 import type { AproximadoQuestion } from "./aproximado.rules";
 
-type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de";
+type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr";
 type Kind = AproximadoQuestion["kind"];
 
 const es = {
@@ -154,6 +154,8 @@ const en: Copy = {
 
 const ka: Copy = {
   ...en,
+  scoringPodium: "პოდიუმი (3-2-1)",
+  scoringClosest: "მხოლოდ ყველაზე ახლოს მყოფი",
   // Same names as the live daily (messages play.statSniperTitle).
   brandA: "სტატ",
   brandB: "სნაიპერი",
@@ -516,18 +518,92 @@ const de: Copy = {
   finishedText: "Dieses Match ist bereits beendet.",
 };
 
-const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt, de };
+const fr: Copy = {
+  ...en,
+  brandA: "Au plus",
+  brandB: "proche",
+  round: (n, total) => `Manche ${n}/${total}`,
+  kinds: { fee: "Indemnité de transfert", value: "Valeur marchande", goals: "Buts", attendance: "Affluence", height: "Taille", apps: "Matchs", age: "Âge" },
+  inputLabel: "Ton nombre",
+  inputHint: "Le plus proche marque des points. Exact : +1.",
+  invalid: "Saisis un nombre.",
+  confirm: "Valider",
+  you: "Toi",
+  answered: "A répondu",
+  thinking: "Réfléchit…",
+  away: "Déconnecté",
+  withdrawn: "A quitté le match",
+  idle: "Absent",
+  waiting: (n) => (n <= 1 ? `En attente de ${n} joueur…` : `En attente de ${n} joueurs…`),
+  revealing: "Tout le monde a répondu ! Révélation…",
+  yourGuess: (v) => `Ta réponse : ${v}`,
+  itWas: "La réponse était",
+  off: (v) => `${v} d’écart`,
+  exact: "Exact !",
+  noGuess: "Pas de réponse",
+  roundWinner: (name) => `${name} remporte la manche`,
+  youWonRound: "Tu remportes la manche !",
+  roundTie: "Égalité en tête",
+  nobody: "Personne n’a répondu",
+  introTitle: (n) => (n === 2 ? "1 contre 1" : `${n} joueur${n > 1 ? "s" : ""}`),
+  introRules: (top) => [
+    "10 questions sur les chiffres du foot : transferts, buts, affluence…",
+    "Saisis ton nombre avant la fin du chrono. Personne ne verra ta réponse avant la fin de la manche.",
+    top === 1 ? "Le plus proche marque 1 point. Exact : +1." : `Le plus proche marque ${top} points, le suivant ${top - 1}… Exact : +1.`,
+  ],
+  startsIn: (s) => `Début dans ${s}`,
+  finalTitle: "Résultat final",
+  youWon: "Tu as gagné !",
+  youPlace: (p) => `Tu termines au rang ${p}`,
+  tieFirst: "Égalité à la première place !",
+  colPoints: "Pts",
+  colWins: "Manches gagnées",
+  resultDetail: (wins, error) => `${wins} ${wins <= 1 ? "manche gagnée" : "manches gagnées"} · erreur moyenne ${error} %`,
+  colError: "Erreur moyenne",
+  backToRoom: "Retour au salon",
+  exit: "Quitter",
+  scoringPodium: "Podium (3-2-1)",
+  scoringClosest: "Plus proche uniquement",
+  colPlayer: "Joueur",
+  cancelledTitle: "Match annulé",
+  cancelledText: "Il ne restait pas assez de joueurs pour jouer.",
+  hurry: "Plus que 5 secondes !",
+  answeredOf: (a, b) => (a <= 1 ? `${a} joueur sur ${b} a répondu` : `${a} joueurs sur ${b} ont répondu`),
+  willSend: (v) => `Tu vas envoyer ${v}`,
+  sending: "Envoi…",
+  waitingClock: "En attente de la fin du chrono…",
+  leave: "Quitter le match",
+  leaveConfirm: "Quitter le match ? Tu ne pourras pas revenir.",
+  leaveYes: "Quitter",
+  leaveNo: "Continuer à jouer",
+  offline: "Connexion perdue : reconnexion… Tu pourras encore répondre à ton retour si la question est toujours ouverte.",
+  errors: { stale_round: "Cette question est terminée.", excluded: "Le match a commencé sans toi.", not_active: "Le match n’est pas en cours.", rate_limited: "Trop vite. Attends un instant.", room_not_found: "Ce match n’existe pas ou est terminé.", not_in_match: "Tu ne participes pas à ce match.", not_open: "Cette question est fermée.", already_answered: "Tu as déjà répondu à cette question.", withdrawn: "Tu as déjà quitté le match.", invalid: "Ce nombre ne convient pas à cette question.", default: "Envoi impossible. Réessaie." },
+  youLeftTitle: "Tu as quitté le match",
+  youLeftText: "Tes réponses comptent, mais tu seras classé après ceux qui ont terminé.",
+  excludedTitle: "Le match a commencé sans toi",
+  excludedText: "Tu n’as pas confirmé à temps. Attends le prochain match dans le salon.",
+  gateTitle: "En attente de l’arrivée de tout le monde…",
+  gateReady: "Prêt",
+  gateWaiting: "Arrivée…",
+  connecting: "Connexion…",
+  retry: "Réessayer",
+  finishedTitle: "Match terminé",
+  finishedText: "Ce match est déjà terminé.",
+};
+
+const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt, de, fr };
 export const aproximadoCopy = (locale: string): Copy => COPY[(locale in COPY ? locale : "en") as Locale];
 export type AproximadoCopy = Copy;
 
-const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR", de: "de-DE" };
+const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR", de: "de-DE", fr: "fr-FR" };
 /** "85,5 M€", "74.500 espectadores": the number in the reader's locale with the question's unit. */
-/** es/en/pt/de pool units take a singular after exactly 1 ("1 gol"); ka and tr keep the singular after any number. */
+/** es/en/pt/de pool units take a singular after exactly 1; fr after 0 or 1; ka and tr keep the singular after any number. */
 const SINGULAR_UNIT: Record<string, string> = {
   goles: "gol", partidos: "partido", espectadores: "espectador", años: "año", socios: "socio",
   gols: "gol", partidas: "partida", anos: "ano", sócios: "sócio", torcedores: "torcedor", membros: "membro",
   goals: "goal", games: "game", spectators: "spectator", years: "year", fans: "fan", members: "member",
   Tore: "Tor", Spiele: "Spiel", Jahre: "Jahr", Mitglieder: "Mitglied", Fans: "Fan",
+  buts: "but", matchs: "match", spectateurs: "spectateur", ans: "an", années: "année", supporters: "supporter", membres: "membre",
 };
 
 /** The Intl locale numbers are written in for an app locale ("es" → "es-AR"). */
@@ -535,8 +611,12 @@ export function intlNumberLocale(locale: string): string {
   return NUMBER_LOCALE[(locale in NUMBER_LOCALE ? locale : "en") as Locale];
 }
 
-export function formatValue(value: number, unit: string, precision: number, locale: string): string {
+/** A French reader writes M€; content can still carry the English form. */
+export const displayUnit = (unit: string, locale: string): string => (locale === "fr" && unit === "€M" ? "M€" : unit);
+
+export function formatValue(value: number, rawUnit: string, precision: number, locale: string): string {
+  const unit = displayUnit(rawUnit, locale);
   const n = new Intl.NumberFormat(intlNumberLocale(locale), { maximumFractionDigits: precision, minimumFractionDigits: 0 }).format(value);
-  const shown = Number(value.toFixed(precision)) === 1 && SINGULAR_UNIT[unit] ? SINGULAR_UNIT[unit] : unit;
+  const shown = (Number(value.toFixed(precision)) === 1 || (locale === "fr" && Number(value.toFixed(precision)) === 0)) && SINGULAR_UNIT[unit] ? SINGULAR_UNIT[unit] : unit;
   return shown ? `${n} ${shown}` : n;
 }

@@ -19,9 +19,12 @@ import { PlaystyleRules, TYPE_INK } from '../ZoneMatchPlaystyleRow';
 import { FutCard, reactionFor, type FutReaction, type FutSeat } from '../ZoneMatchFutCard';
 import { useMediaQuery } from '../ZoneMatchCards';
 import { isPlaystyleUnlocked } from '../zoneMatch.playtest';
+import { deckBlockerText, zoneMatchCopy } from '../zoneMatch.copy';
+import { useZoneCopy } from '../useZoneCopy';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 const TYPES: CardType[] = ['boost', 'sabotage', 'defense', 'tactical'];
+/** Only the dev lab's own seat (an unnamed seat in the match flow is the player's). */
 const SEAT: FutSeat = { name: 'You', avatarCustomization: { skin: 'skin_male_white', jersey: 'jersey_green', hair: 'hair_boy_basic' } as AvatarCustomization, rankPoints: 250 };
 
 /* ── shared loadout state ─────────────────────────────────────────────── */
@@ -80,6 +83,8 @@ type Loadout = ReturnType<typeof useLoadout>;
 
 /** A compact tile: badge with its cost, name, the effect in two words. Selected: yellow ring; can't join: dimmed. */
 function Tile({ card, loadout, onOpen, size = 52, wide = false }: { card: CardDef; loadout: Loadout; onOpen: () => void; size?: number; wide?: boolean }) {
+  const { c } = useZoneCopy();
+  const text = c.cards[card.id];
   const selected = loadout.deck.includes(card.id);
   const blocked = !selected && loadout.blocker(card.id) !== null;
   return (
@@ -94,11 +99,11 @@ function Tile({ card, loadout, onOpen, size = 52, wide = false }: { card: CardDe
       )}
     >
       <PlaystyleBadge id={card.id} size={size} showName={false} selected={selected} unaffordable={blocked && card.energy > loadout.left} />
-      <span className="line-clamp-2 min-h-[2.2em] text-[10px] uppercase leading-tight text-white" style={poppins}>
-        {card.name}
+      <span className="line-clamp-2 min-h-[2.2em] w-full text-[10px] uppercase leading-tight text-white [overflow-wrap:anywhere]" style={poppins}>
+        {text.name}
       </span>
-      <span className="line-clamp-1 text-[8.5px] font-black uppercase leading-none" style={{ color: TYPE_INK[card.type] }}>
-        {card.short}
+      <span className="line-clamp-2 min-h-[2.1em] text-[8.5px] font-black uppercase leading-[1.05]" style={{ color: TYPE_INK[card.type] }}>
+        {text.short}
       </span>
       {selected && <span className="absolute right-1 top-1 rounded-full bg-brand-yellow px-1 text-[9px] font-black text-surface-page">✓</span>}
     </button>
@@ -107,6 +112,7 @@ function Tile({ card, loadout, onOpen, size = 52, wide = false }: { card: CardDe
 
 /** Bottom sheet: the full rule, and Add / Remove / Swap (or why it can't join). */
 function DetailSheet({ id, loadout, onClose }: { id: CardId | null; loadout: Loadout; onClose: () => void }) {
+  const { c } = useZoneCopy();
   const card = id ? CARD_BY_ID[id] : null;
   return (
     <AnimatePresence>
@@ -120,7 +126,7 @@ function DetailSheet({ id, loadout, onClose }: { id: CardId | null; loadout: Loa
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 36 }}
           >
-            <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-full bg-white/10 p-1.5" aria-label="Close">
+            <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-full bg-white/10 p-1.5" aria-label={c.common.close}>
               <X className="size-4" />
             </button>
             <SheetBody card={card} loadout={loadout} onDone={onClose} />
@@ -132,6 +138,8 @@ function DetailSheet({ id, loadout, onClose }: { id: CardId | null; loadout: Loa
 }
 
 function SheetBody({ card, loadout, onDone }: { card: CardDef; loadout: Loadout; onDone: () => void }) {
+  const { c } = useZoneCopy();
+  const text = c.cards[card.id];
   const selected = loadout.deck.includes(card.id);
   const blocker = loadout.blocker(card.id);
   const swaps = !selected && blocker ? loadout.swapsFor(card.id) : [];
@@ -142,13 +150,13 @@ function SheetBody({ card, loadout, onDone }: { card: CardDef; loadout: Loadout;
         <PlaystyleBadge id={card.id} size={84} showName={false} selected={selected} />
         <div className="min-w-0">
           <div className="text-[11px] font-black uppercase tracking-[0.15em]" style={{ color: theme.color }}>
-            {theme.label}
+            {c.cardTypes[card.type]}
           </div>
           <div className="text-2xl uppercase leading-tight" style={poppins}>
-            {card.name}
+            {text.name}
           </div>
           <div className="mt-0.5 flex items-center gap-1 text-sm font-black uppercase" style={{ color: TYPE_INK[card.type] }}>
-            {card.short} · <Zap className="size-3.5 fill-brand-yellow text-brand-yellow" />
+            {text.short} · <Zap className="size-3.5 fill-brand-yellow text-brand-yellow" />
             <span className="text-brand-yellow">{card.energy}</span>
           </div>
         </div>
@@ -156,24 +164,24 @@ function SheetBody({ card, loadout, onDone }: { card: CardDef; loadout: Loadout;
       <PlaystyleRules card={card} className="rounded-2xl bg-white/[0.05] p-3 text-sm" />
       {selected ? (
         <button type="button" onClick={() => (loadout.remove(card.id), onDone())} className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-white/10 uppercase hover:bg-white/15" style={poppins}>
-          <Trash2 className="size-4" /> Remove from loadout
+          <Trash2 className="size-4" /> {c.loadout.removeFromLoadout}
         </button>
       ) : !blocker ? (
         <button type="button" onClick={() => (loadout.add(card.id), onDone())} className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-brand-green uppercase hover:bg-brand-green-deep" style={poppins}>
-          <Plus className="size-5" strokeWidth={3} /> Add to loadout
+          <Plus className="size-5" strokeWidth={3} /> {c.loadout.addToLoadout}
         </button>
       ) : (
         <div className="flex flex-col gap-2">
-          <div className="text-center text-xs text-white/60">{blocker}</div>
+          <div className="text-center text-xs text-white/60">{deckBlockerText(c, loadout.deck, card.id, blocker)}</div>
           {swaps.length > 0 && (
             <>
-              <div className="text-[11px] font-black uppercase tracking-wide text-white/50">Swap it in for</div>
+              <div className="text-[11px] font-black uppercase tracking-wide text-white/50">{c.loadout.swapFor}</div>
               <div className="grid grid-cols-3 gap-2">
                 {swaps.map((out) => (
                   <button key={out} type="button" onClick={() => (loadout.swap(out, card.id), onDone())} className="flex flex-col items-center gap-1 rounded-2xl bg-white/[0.06] p-2 ring-1 ring-white/10 hover:bg-white/10">
                     <PlaystyleBadge id={out} size={40} showName={false} />
                     <span className="flex items-center gap-1 text-[10px] uppercase" style={poppins}>
-                      <Repeat className="size-3" /> {CARD_BY_ID[out].name}
+                      <Repeat className="size-3" /> {c.cards[out].name}
                     </span>
                   </button>
                 ))}
@@ -221,12 +229,13 @@ function SlotRow({ loadout, onOpen, size = 46 }: { loadout: Loadout; onOpen: (id
 }
 
 function FindBar({ loadout, onFindMatch, loading = false }: { loadout: Loadout; onFindMatch?: () => void; loading?: boolean }) {
+  const { c } = useZoneCopy();
   const ready = loadout.deck.length > 0;
   return (
     <div className="sticky bottom-0 z-30 -mx-4 mt-auto border-t border-white/10 bg-surface-page/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur">
       <div className="flex gap-2">
         <button type="button" onClick={() => loadout.set([])} className="rounded-[14px] bg-white/10 px-4 text-sm uppercase hover:bg-white/15" style={poppins}>
-          Auto
+          {c.loadout.auto}
         </button>
         <button
           type="button"
@@ -236,13 +245,13 @@ function FindBar({ loadout, onFindMatch, loading = false }: { loadout: Loadout; 
           style={poppins}
         >
           {loading ? (
-            'Loading…'
+            c.common.loading
           ) : ready ? (
             <>
-              Find match <ArrowRight className="size-5" strokeWidth={3} />
+              {c.common.findMatch} <ArrowRight className="size-5" strokeWidth={3} />
             </>
           ) : (
-            'Pick a playstyle'
+            c.common.pickPlaystyle
           )}
         </button>
       </div>
@@ -251,6 +260,7 @@ function FindBar({ loadout, onFindMatch, loading = false }: { loadout: Loadout; 
 }
 
 function Filters({ value, onChange }: { value: CardType | 'all'; onChange: (v: CardType | 'all') => void }) {
+  const { c } = useZoneCopy();
   return (
     <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none]">
       {(['all', ...TYPES] as const).map((t) => (
@@ -261,7 +271,7 @@ function Filters({ value, onChange }: { value: CardType | 'all'; onChange: (v: C
           className={cn('shrink-0 rounded-full px-3 py-1.5 text-[11px] font-black uppercase', value === t ? 'bg-white text-surface-page' : 'bg-white/10 text-white/80')}
           style={t !== 'all' && value !== t ? { color: TYPE_INK[t] } : undefined}
         >
-          {t === 'all' ? 'All' : CARD_TYPE_THEME[t].label}
+          {t === 'all' ? c.common.all : c.cardTypes[t]}
         </button>
       ))}
     </div>
@@ -280,6 +290,7 @@ function Grid({ loadout, onOpen, filter = 'all', cols = 4 }: { loadout: Loadout;
 }
 
 function Presets({ loadout }: { loadout: Loadout }) {
+  const { c } = useZoneCopy();
   return (
     <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
       {STARTER_DECKS.map((p) => (
@@ -291,9 +302,9 @@ function Presets({ loadout }: { loadout: Loadout }) {
           </div>
           <div>
             <div className="text-[11px] uppercase leading-tight" style={poppins}>
-              {p.name}
+              {c.starterDecks[p.id].name}
             </div>
-            <div className="text-[9.5px] text-white/50">{p.tagline}</div>
+            <div className="text-[9.5px] text-white/50">{c.starterDecks[p.id].tagline}</div>
           </div>
         </button>
       ))}
@@ -349,7 +360,7 @@ function VariantRows() {
         <section key={type} className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between">
             <span className="text-sm uppercase" style={{ ...poppins, color: CARD_TYPE_THEME[type].color }}>
-              {CARD_TYPE_THEME[type].label}
+              {zoneMatchCopy('en').cardTypes[type]}
             </span>
             <span className="text-[10px] uppercase text-white/40">swipe →</span>
           </div>
@@ -563,6 +574,7 @@ export function PlaystylePicker({
   /** Shown under the presets (rule chips / how it works). */
   rules?: ReactNode;
 }) {
+  const { c } = useZoneCopy();
   const loadout = useLoadout(deck && onDeckChange ? { deck, setDeck: onDeckChange } : undefined);
   const [open, setOpen] = useState<CardId | null>(null);
   const [filter, setFilter] = useState<CardType | 'all'>('all');
@@ -574,13 +586,13 @@ export function PlaystylePicker({
         <FutCard seat={seat} width={wide ? 200 : 118} slots={loadout.slots} reaction={loadout.reaction} shineKey={loadout.shine} />
         <div className="flex min-w-0 flex-1 flex-col gap-2 pt-1">
           <h1 className={cn('uppercase leading-tight', wide ? 'text-3xl' : 'text-lg')} style={poppins}>
-            Pick your playstyles
+            {c.common.pickYourPlaystyles}
           </h1>
           <Budget loadout={loadout} />
           <SlotRow loadout={loadout} onOpen={setOpen} size={wide ? 58 : 42} />
           {loadout.deck.length > 0 && (
             <button type="button" onClick={loadout.clear} className="self-start text-[11px] uppercase text-white/50 underline">
-              Clear
+              {c.loadout.clear}
             </button>
           )}
         </div>

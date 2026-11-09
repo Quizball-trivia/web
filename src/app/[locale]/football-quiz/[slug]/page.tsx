@@ -2,9 +2,9 @@ import "@/styles/application-utilities.css";
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { CampaignQuizLanding } from '@/features/campaign-quiz/CampaignQuizLanding';
-import { hasGermanEdition, hasPortugueseEdition, hasRussianEdition } from '@/features/campaign-quiz/CampaignQuizServerPage';
+import { campaignOpenSlugs, campaignQuizEditions, campaignQuizLanguages, hasCampaignEdition } from '@/features/campaign-quiz/CampaignQuizServerPage';
 import {
   CAMPAIGN_QUIZ_SLUGS,
   getCampaignQuizContent,
@@ -44,7 +44,8 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
     const quiz = await loadQuiz(slug, preview, locale);
     const content = getCampaignQuizContent(slug, quiz.page, locale);
     if (!content) return {};
-    if (locale === 'ka' && content.localeMode !== 'en_ka') return {};
+    const editions = await campaignQuizEditions(slug, quiz);
+    if (locale === 'ka' && !preview && !editions.includes('ka')) return {};
 
     const isGeorgian = locale === 'ka';
     const title = isGeorgian ? (content.kaMetadataTitle ?? content.metadataTitle) : content.metadataTitle;
@@ -52,27 +53,13 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
     const pageUrl = `${SITE_URL}/${locale}/football-quiz/${content.slug}`;
     const ogImage = content.ogImage ?? content.heroImage;
     const ogAlt = content.ogImageAlt ?? content.heroImageAlt;
-    const languages = content.localeMode === 'en_ka'
-      ? {
-          en: `${SITE_URL}/en/football-quiz/${content.slug}`,
-          ka: `${SITE_URL}/ka/football-quiz/${content.slug}`,
-          'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
-        }
-      : { en: `${SITE_URL}/en/football-quiz/${content.slug}` };
-    const localizedLanguages = {
-      ...languages,
-      es: `${SITE_URL}${campaignQuizPath(content.slug, 'es')}`,
-      ...(await hasRussianEdition(slug, quiz) ? { ru: `${SITE_URL}${campaignQuizPath(content.slug, 'ru')}` } : {}),
-      ...(await hasPortugueseEdition(slug, quiz) ? { 'pt-BR': `${SITE_URL}${campaignQuizPath(content.slug, 'pt')}` } : {}),
-      ...(await hasGermanEdition(slug, quiz) ? { de: `${SITE_URL}${campaignQuizPath(content.slug, 'de')}` } : {}),
-      'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
-    };
+    const languages = campaignQuizLanguages(content.slug, editions);
 
     return {
       title: { absolute: title },
       description,
       robots: preview ? { index: false, follow: false } : undefined,
-      alternates: { canonical: pageUrl, languages: localizedLanguages },
+      alternates: { canonical: pageUrl, languages },
       openGraph: {
         type: 'website',
         siteName: SITE_NAME,
@@ -106,6 +93,8 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   if (locale === 'ru') permanentRedirect(withPreview(campaignQuizPath(slug, 'ru'), preview));
   if (locale === 'pt') permanentRedirect(withPreview(campaignQuizPath(slug, 'pt'), preview));
   if (locale === 'de') permanentRedirect(withPreview(campaignQuizPath(slug, 'de'), preview));
+  if (locale === 'tr') permanentRedirect(withPreview(campaignQuizPath(slug, 'tr'), preview));
+  if (locale === 'fr') permanentRedirect(withPreview(campaignQuizPath(slug, 'fr'), preview));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;
@@ -122,7 +111,8 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
 
   const content = getCampaignQuizContent(slug, quiz.page, locale);
   if (!content) notFound();
-  if (locale === 'ka' && content.localeMode !== 'en_ka') permanentRedirect(withPreview(`/en/football-quiz/${content.slug}`, preview));
+  // Temporary: a Georgian edition closes while a question is being retranslated and opens again.
+  if (locale === 'ka' && !preview && !(await hasCampaignEdition(slug, quiz, 'ka'))) redirect(`/en/football-quiz/${content.slug}`);
 
   const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;
@@ -183,7 +173,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   return (
     <>
       <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} russianEdition={await hasRussianEdition(slug, quiz)} portugueseEdition={await hasPortugueseEdition(slug, quiz)} germanEdition={await hasGermanEdition(slug, quiz)} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} editions={await campaignQuizEditions(slug, quiz)} openSlugs={await campaignOpenSlugs(locale)} />
     </>
   );
 }

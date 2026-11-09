@@ -48,6 +48,7 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 import { WlFinalRewards } from '../rewards/WlFinalRewards';
 import { rewardSession } from '../rewards/rewardSession';
+import { labelColon } from "@/lib/i18n/typography";
 
 const WHO_AM_I_CLUES = 5;
 // Ranked-parity scoring (2026-08-25): the puzzle is worth one ranked
@@ -1714,7 +1715,7 @@ export function BoardStrip({
   /** Real rank when you're beyond the truncated board (server-provided). */
   yourRankFallback?: number | null;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   if (board.length === 0) return null;
   const top = board.slice(0, rows);
   const you = selfUserId ? board.find((r) => r.user_id === selfUserId) ?? null : null;
@@ -1736,7 +1737,7 @@ export function BoardStrip({
       </div>
       {you == null && selfUserId != null && (
         <div className="mt-2 text-center font-poppins text-[13px] font-black uppercase text-white/80">
-          {t('weekendLeague.gYourRank')}:{' '}
+          {t('weekendLeague.gYourRank')}{labelColon(locale)}{' '}
           <span className="tabular-nums text-brand-yellow">
             {yourRankFallback != null ? `#${yourRankFallback}` : '24+'}
           </span>

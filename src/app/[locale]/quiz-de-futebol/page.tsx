@@ -2,7 +2,7 @@ import "@/styles/application-utilities.css";
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { CampaignQuizHub } from '@/features/campaign-quiz/CampaignQuizHub';
-import { hasGermanCampaignHub, hasPortugueseCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
+import { campaignHubAlternates, hasCampaignHub } from '@/features/campaign-quiz/campaignQuiz.editions';
 import {
   SITE_NAME,
   SITE_OG_IMAGE_ALT,
@@ -18,22 +18,15 @@ const DESCRIPTION = 'Quiz de futebol online e grátis: perguntas e respostas sob
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (locale !== 'pt') return {};
-  if (!(await hasPortugueseCampaignHub())) return {};
+  if (!(await hasCampaignHub('pt'))) return {};
   const canonical = `${SITE_URL}/pt/quiz-de-futebol`;
-  const german = await hasGermanCampaignHub();
+  const { languages, alternateLocale } = await campaignHubAlternates('pt');
   return {
     title: { absolute: TITLE },
     description: DESCRIPTION,
     alternates: {
       canonical,
-      languages: {
-        en: `${SITE_URL}/en/football-quiz`,
-        es: `${SITE_URL}/es/quiz-de-futbol`,
-        ru: `${SITE_URL}/ru/futbolnaya-viktorina`,
-        'pt-BR': canonical,
-        ...(german ? { de: `${SITE_URL}/de/fussball-quiz` } : {}),
-        'x-default': `${SITE_URL}/en/football-quiz`,
-      },
+      languages,
     },
     openGraph: {
       type: 'website',
@@ -42,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: DESCRIPTION,
       url: canonical,
       locale: 'pt_BR',
-      alternateLocale: ['en_GB', 'es_ES', 'ru_RU', ...(german ? ['de_DE'] : [])],
+      alternateLocale,
       images: [{
         url: SITE_OG_IMAGE_PATH,
         width: 1200,
@@ -63,6 +56,6 @@ export default async function PortugueseFootballQuizHubPage({ params }: { params
   const { locale } = await params;
   if (locale !== 'pt') redirect('/en/football-quiz');
   // No quiz has a complete pt edition yet: no hub either (an empty page under a Portuguese address).
-  if (!(await hasPortugueseCampaignHub())) notFound();
+  if (!(await hasCampaignHub('pt'))) notFound();
   return <CampaignQuizHub locale="pt" />;
 }

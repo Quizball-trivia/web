@@ -917,10 +917,10 @@ export function buildScript(from: Possession, outcome: BattleOutcome, seed: numb
   const glovesSave = cards.note === GLOVES_SAVE_NOTE;
   switch (outcome.kind) {
     case 'advance':
-      if (cards.note === 'Long Ball lands') return longBallScript(from, outcome.next, true);
+      if (cards.note === 'long-ball-lands') return longBallScript(from, outcome.next, true);
       return advanceScript(from, outcome.next, {
         sprint: hasResult(cards, 'captains-armband', A) !== null,
-        flick: cards.note === 'First Touch',
+        flick: cards.note === 'first-touch',
         tiki: hasResult(cards, 'tiki-taka', A) !== null,
       });
     case 'goal': {
@@ -930,13 +930,13 @@ export function buildScript(from: Possession, outcome: BattleOutcome, seed: numb
         golden: golden !== null || cards.goldenBoot,
         throughBus: golden?.against === 'park-the-bus',
         throughGloves: (golden !== null || cards.goldenBoot) && cards.keeperGloves && shot,
-        lob: cards.note === 'Long Ball lands',
+        lob: cards.note === 'long-ball-lands',
         sprint: !shot && hasResult(cards, 'captains-armband', A) !== null,
       });
     }
     case 'turnover':
-      if (cards.note === 'Offside trap!') return offsideScript(from);
-      if (cards.note === 'Long Ball cut out') return longBallScript(from, outcome.next, false);
+      if (cards.note === 'offside-trap') return offsideScript(from);
+      if (cards.note === 'long-ball-cut') return longBallScript(from, outcome.next, false);
       if (shot) return shotScript(from, 'save', seed, { lead: glovesSave ? GLOVES_LEAD : 0, gloves: glovesSave || cards.keeperGloves });
       return tackleScript(from, { counter: hasResult(cards, 'counter-attack', D) !== null });
     case 'bothWrong':

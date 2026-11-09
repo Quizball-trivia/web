@@ -49,9 +49,9 @@ describe('inferLocaleFromSignals', () => {
 
   it('falls back to English for unsupported browser languages and timezones', () => {
     expect(inferLocaleFromSignals({
-      languages: ['fr-FR'],
-      language: 'fr-FR',
-      timeZone: 'Europe/Paris',
+      languages: ['it-IT'],
+      language: 'it-IT',
+      timeZone: 'Europe/Rome',
     })).toBe('en');
   });
 
@@ -62,6 +62,19 @@ describe('inferLocaleFromSignals', () => {
   it('uses German for German, Austrian and Swiss browser language tags', () => {
     for (const tag of ['de', 'de-DE', 'de-AT', 'de-CH', 'de_CH', 'DE-de']) expect(inferLocaleFromSignals({ languages: [tag], language: tag })).toBe('de');
     expect(inferLocaleFromSignals({ languages: ['de-DE', 'pt-BR'], language: 'de-DE' })).toBe('de');
+  });
+
+  it('uses French for French, Belgian, Swiss, Canadian and African browser language tags', () => {
+    for (const tag of ['fr', 'fr-FR', 'fr-BE', 'fr-CH', 'fr-CA', 'fr-MA', 'fr-SN', 'fr-CI', 'fr_BE', 'FR-fr']) expect(inferLocaleFromSignals({ languages: [tag], language: tag })).toBe('fr');
+    expect(inferLocaleFromSignals({ languages: ['fr-FR', 'de-DE'], language: 'fr-FR' })).toBe('fr');
+    expect(inferLocaleFromSignals({ languages: ['de-DE', 'fr-FR'], language: 'de-DE' })).toBe('de');
+    expect(inferLocaleFromSignals({ languages: ['en-US', 'fr-FR'], language: 'en-US' })).toBe('fr');
+  });
+
+  it('Georgian rules still come before a French browser', () => {
+    expect(inferLocaleFromSignals({ languages: ['fr-FR'], language: 'fr-FR', country: 'GE' })).toBe('ka');
+    expect(inferLocaleFromSignals({ languages: ['fr-FR', 'ka'], language: 'fr-FR' })).toBe('ka');
+    expect(inferLocaleFromSignals({ languages: ['fr-FR'], language: 'fr-FR', timeZone: 'Asia/Tbilisi' })).toBe('ka');
   });
 
   it('follows the browser order between the languages we offer', () => {

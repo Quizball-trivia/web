@@ -6,6 +6,7 @@ import * as enRace from "@/app/[locale]/(hub)/(word-shell)/football-games/footba
 import * as enCodenames from "@/app/[locale]/(hub)/(word-shell)/football-games/football-codenames/page";
 import * as enConnections from "@/app/[locale]/(hub)/(word-shell)/football-games/football-connections/page";
 import * as enDarts from "@/app/[locale]/(hub)/(word-shell)/football-games/football-darts-501/page";
+import * as enDraft from "@/app/[locale]/(hub)/(word-shell)/football-games/football-draft-game/page";
 import * as enOddOneOut from "@/app/[locale]/(hub)/(word-shell)/football-games/football-odd-one-out/page";
 import * as enShared from "@/app/[locale]/(hub)/(word-shell)/football-games/played-for-both-clubs/page";
 import * as esChain from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/cadena-de-futbolistas/page";
@@ -13,6 +14,7 @@ import * as esRace from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/carr
 import * as esCodenames from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/codenames-futbolero/page";
 import * as esConexiones from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/conexiones-futboleras/page";
 import * as esDardos from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/dardos-futboleros-501/page";
+import * as esDraft from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/draft-de-futbol/page";
 import * as esDatoFalso from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/dato-falso-futbolero/page";
 import * as esShared from "@/app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page";
 import * as trChain from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/son-harfle-futbolcu/page";
@@ -20,6 +22,7 @@ import * as trRace from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbo
 import * as trCodenames from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-codenames/page";
 import * as trConnections from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-connections/page";
 import * as trDart from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-dart-oyunu/page";
+import * as trDraft from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/futbol-draft-oyunu/page";
 import * as trHangisi from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/hangisi-yanlis/page";
 import * as trShared from "@/app/[locale]/(hub)/(word-shell)/futbol-oyunlari/ortak-futbolcu-oyunu/page";
 import { findPublishedGame } from "@/lib/seo/public-games";
@@ -51,6 +54,9 @@ const routes = [
   { folder: "football-games", slug: "football-darts-501", module: enDarts },
   { folder: "juegos-de-futbol", slug: "dardos-futboleros-501", module: esDardos },
   { folder: "futbol-oyunlari", slug: "futbol-dart-oyunu", module: trDart },
+  { folder: "football-games", slug: "football-draft-game", module: enDraft },
+  { folder: "juegos-de-futbol", slug: "draft-de-futbol", module: esDraft },
+  { folder: "futbol-oyunlari", slug: "futbol-draft-oyunu", module: trDraft },
 ];
 const modeOf: Record<string, string> = {
   "football-name-chain": "nameChain", "cadena-de-futbolistas": "nameChain", "son-harfle-futbolcu": "nameChain",
@@ -59,8 +65,9 @@ const modeOf: Record<string, string> = {
   "football-odd-one-out": "datoFalso", "dato-falso-futbolero": "datoFalso", "hangisi-yanlis": "datoFalso",
   "football-connections": "conexiones", "conexiones-futboleras": "conexiones", "futbol-connections": "conexiones",
   "football-darts-501": "darts501", "dardos-futboleros-501": "darts501", "futbol-dart-oyunu": "darts501",
+  "football-draft-game": "draft", "draft-de-futbol": "draft", "futbol-draft-oyunu": "draft",
 };
-const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", codenames: "football-codenames", datoFalso: "dato-falso-futbolero", conexiones: "conexiones-futboleras", darts501: "football-darts-501", sharedPlayer: "shared-player" };
+const demoOf: Record<string, string> = { nameChain: "name-chain", footballRace: "football-horserace", codenames: "football-codenames", datoFalso: "dato-falso-futbolero", conexiones: "conexiones-futboleras", darts501: "football-darts-501", draft: "football-draft", sharedPlayer: "shared-player" };
 const key = ({ locale, slug }: { locale: string; slug: string }) => `${locale}/${slug}`;
 
 describe("fixed word landing route parity", () => {
@@ -75,7 +82,7 @@ describe("fixed word landing route parity", () => {
     expect(fixed.every((params) => !dynamic.some((other) => key(other) === key(params)))).toBe(true);
   });
 
-  it("enumerates exactly twenty-eight word landings (Football Horserace, Football Codenames, Football Odd One Out, Football Connections and Football Darts 501 included) with unchanged metadata and rendering props", async () => {
+  it("enumerates exactly thirty-two word landings (Football Horserace, Football Codenames, Football Odd One Out, Football Connections, Football Darts 501 and Football Draft included) with unchanged metadata and rendering props", async () => {
     let count = 0;
     for (const route of routes) {
       expect(route.module.dynamicParams).toBe(false);
@@ -94,7 +101,7 @@ describe("fixed word landing route parity", () => {
         expect(await element.props.params).toEqual({ locale, slug: route.slug });
       }
     }
-    expect(count).toBe(28);
+    expect(count).toBe(32);
   });
 
   it("keeps wrong-folder locales unavailable", async () => {

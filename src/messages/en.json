@@ -619,7 +619,10 @@
     "subtitle": "Complete match goals to earn coins and xp automatically.",
     "tabDaily": "Daily",
     "tabWeekly": "Weekly",
-    "back": "Back"
+    "back": "Back",
+    "loading": "Loading objectives...",
+    "error": "Could not load objectives. Try refreshing.",
+    "empty": "No objectives available."
   },
   "homeDashboard": {
     "dailyObjectives": "Daily Objectives",
@@ -1525,6 +1528,9 @@
     "roomTabDarts501": "Football Darts 501",
     "roomDarts501": "Football Darts 501 · 2–6 players",
     "roomDarts501Description": "Everyone starts on 501. Each dart is a footballer from the leg's category, and his number comes off. Check out between 0 and −10; over 180 scores nothing. Best of 3 legs. No coins or RP at stake.",
+    "roomTabDraft": "Football Draft",
+    "roomDraft": "Football Draft · 2–6 players",
+    "roomDraftDescription": "Everyone drafts an XI from the same spins, and a player taken is gone. Team against team is decided over two legs, home and away. No coins or RP at stake.",
     "roomOptionTournament": "Tournament",
     "roomTournamentRandom": "Random",
     "roomTournamentTooSmall": "Too many players for this tournament: pick a bigger one.",
@@ -1908,6 +1914,9 @@
     "finalizingResult": "Finalizing result..."
   },
   "training": {
+    "demoEndMessage": "That's our flagship 1v1 mode — in ranked play the opponent is a real player.",
+    "demoEndDone": "Done",
+    "demoBack": "Back to demos",
     "loadError": "Could not load the tutorial questions. Please try again.",
     "retryLoading": "Try again",
     "exitLoading": "Exit tutorial",
@@ -2629,7 +2638,11 @@
     "rewardEntryRule": "Free to enter. Earn the event’s QP target by playing Ranked, register and check in before kickoff.",
     "rewardScoringRule": "Final standings decide the winners: score first, then total response time. Fair-play checks apply. Places count real players only: bots never take a reward.",
     "rewardNonCash": "In-game rewards only. No cash, vouchers or gift cards. Items and coins cannot be traded, transferred or redeemed for money.",
-    "rewardContact": "Questions about your rewards? Contact Quizball through Help/Feedback with the event date and your nickname."
+    "rewardContact": "Questions about your rewards? Contact Quizball through Help/Feedback with the event date and your nickname.",
+    "statusChampion": "You're the champion!",
+    "statusWrapped": "Weekend wrapped",
+    "statusFinished": "You finished #{rank}.",
+    "statusSeeYou": "See you next weekend."
   },
   "wlAward": {
     "title1": "Weekend League Champion",

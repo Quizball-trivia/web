@@ -42,6 +42,7 @@ import {
 } from './zoneMatch.fullBody';
 import { CARD_REACTION_S } from './zoneMatch.reveal';
 import { feintMove, highPressMove, nutmegMove, pokerFaceMove, screamerMove, superSubMove, timeWastingMove } from './zoneMatch.cardMoves';
+import { useZoneCopy } from './useZoneCopy';
 
 /** A ball the avatar plays with, in the figure's own art units (it moves with the figure): centre, spin, and a soft
  * ring 0–1 as a touch kills its pace. */
@@ -1206,6 +1207,7 @@ const POP_TIMES = [0, 0.15, 0.25, 0.85, 1];
  * full-card overlays (blackout, flash, fog) to the frame's outline.
  */
 function CardReactionFxInner({ card, customization, frameMask, mirror, duet = false }: { card: CardId; customization: AvatarCustomization | null; frameMask: React.CSSProperties; mirror: boolean; duet?: boolean }) {
+  const { c } = useZoneCopy();
   const len = CARD_REACTION_S[card];
   const overlay = (node: React.ReactNode) => (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" style={frameMask}>
@@ -1658,7 +1660,7 @@ function CardReactionFxInner({ card, customization, frameMask, mirror, duet = fa
               animate={{ opacity: [0, 1, 0], y: [0, -8] }}
               transition={{ duration: 0.7, delay: 1.25 }}
             >
-              DECOY!
+              {c.fx.decoy}
             </motion.span>
           </>
         );
@@ -1687,8 +1689,8 @@ function CardReactionFxInner({ card, customization, frameMask, mirror, duet = fa
               animate={{ y: [30, 0, 0, -10], opacity: [0, 1, 1, 0] }}
               transition={{ duration: 1.4, times: [0, 0.2, 0.75, 1] }}
             >
-              <span className="block text-[#58CC02]">▲ IN</span>
-              <span className="block text-[#FF4B4B]">▼ OUT</span>
+              <span className="block text-[#58CC02]">▲ {c.fx.subIn}</span>
+              <span className="block text-[#FF4B4B]">▼ {c.fx.subOut}</span>
             </motion.div>
             {Array.from({ length: 6 }, (_, i) => {
               const a = (i / 6) * Math.PI * 2;

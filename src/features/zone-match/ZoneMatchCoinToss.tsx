@@ -16,6 +16,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
 import type { RevealSeat } from './ZoneMatchCards';
+import { fill } from './zoneMatch.copy';
+import { useZoneCopy } from './useZoneCopy';
 
 type Face = 'heads' | 'tails';
 
@@ -25,7 +27,6 @@ const CALL_MS = 4000;
 const FLIP_MS = 2400;
 const COIN = 168;
 const EDGE = 12;
-const FACE_LABEL: Record<Face, string> = { heads: 'Heads', tails: 'Tails' };
 const other = (face: Face): Face => (face === 'heads' ? 'tails' : 'heads');
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -59,6 +60,7 @@ function Coin3D() {
 }
 
 export function CoinToss({ kickoff, seats, timeLeft }: { kickoff: DuelSide; seats: Record<DuelSide, RevealSeat>; timeLeft: number | null }) {
+  const { c } = useZoneCopy();
   const [call, setCall] = useState<Face | null>(null);
   const [auto, setAuto] = useState(false);
   useEffect(() => {
@@ -86,14 +88,14 @@ export function CoinToss({ kickoff, seats, timeLeft }: { kickoff: DuelSide; seat
   return (
     <div className="flex min-h-[calc(100dvh-3rem)] flex-col items-center justify-center gap-6 py-6 text-center text-white" data-zm-coin-toss>
       <div>
-        <div className="text-xs font-black uppercase tracking-[0.25em] text-brand-yellow">Coin toss</div>
+        <div className="text-xs font-black uppercase tracking-[0.25em] text-brand-yellow">{c.coin.title}</div>
         <h1 className="mt-1 text-3xl uppercase sm:text-4xl" style={poppins}>
-          {!call ? 'Call it!' : !settled ? 'Flipping…' : youStart ? 'You kick off' : `${seats.opponent.name} kicks off`}
+          {!call ? c.coin.callIt : !settled ? c.coin.flipping : youStart ? c.coin.youKickOff : fill(c.coin.themKickOff, { name: seats.opponent.name })}
         </h1>
         <p className="mt-1 text-sm text-white/60">
           {!call
-            ? 'Heads or tails — your opponent gets the other side'
-            : `${auto ? 'Called for you: ' : 'You called '}${FACE_LABEL[call]} · ${seats.opponent.name}: ${FACE_LABEL[other(call)]}`}
+            ? c.coin.callHint
+            : fill(auto ? c.coin.calledForYou : c.coin.youCalled, { face: c.coin[call], name: seats.opponent.name, other: c.coin[other(call)] })}
         </p>
       </div>
 
@@ -132,14 +134,14 @@ export function CoinToss({ kickoff, seats, timeLeft }: { kickoff: DuelSide; seat
                 style={poppins}
               >
                 <img src={face === 'heads' ? '/assets/brand/ball.webp' : '/assets/brand/ucl-trophy.webp'} alt="" className="size-6 object-contain" draggable={false} />
-                {FACE_LABEL[face]}
+                {c.coin[face]}
               </button>
             ))}
           </motion.div>
         ) : settled ? (
           <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-2">
             <div className={cn('rounded-full px-4 py-1.5 text-sm font-black uppercase', youStart ? 'bg-brand-blue text-white' : 'bg-brand-red-soft text-white')}>
-              {FACE_LABEL[landed!]} — {youStart ? 'you attack first' : `${seats.opponent.name} attacks first`}
+              {youStart ? fill(c.coin.youFirst, { face: c.coin[landed!] }) : fill(c.coin.themFirst, { face: c.coin[landed!], name: seats.opponent.name })}
             </div>
             {timeLeft !== null && timeLeft <= 3 && (
               <motion.div key={timeLeft} initial={{ scale: 1.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl text-brand-yellow" style={poppins}>

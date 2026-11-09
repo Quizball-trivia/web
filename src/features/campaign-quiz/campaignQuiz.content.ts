@@ -292,6 +292,28 @@ export function campaignMetadataTitle(
   return page.seo_title;
 }
 
+const PLAY_HEADING: Record<CampaignQuizLocale, (label: string) => string> = {
+  en: (label) => `Kick off the ${label}`,
+  ka: (label) => `${label}: დაიწყე`,
+  es: (label) => `Empieza ${label}`,
+  ru: (label) => `${label}: начинаем`,
+  pt: (label) => `${label}: vamos começar`,
+  de: (label) => `${label}: Los geht’s`,
+  tr: (label) => `${label}: Hemen Başla`,
+  fr: (label) => `${label} : c’est parti`,
+};
+
+const ABOUT_EYEBROW: Record<CampaignQuizLocale, string> = {
+  en: 'The story behind the questions',
+  ka: 'ისტორია კითხვების მიღმა',
+  es: 'La historia detrás de las preguntas',
+  ru: 'История за вопросами',
+  pt: 'A história por trás das perguntas',
+  de: 'Die Geschichte hinter den Fragen',
+  tr: 'Soruların ardındaki hikâye',
+  fr: 'L’histoire derrière les questions',
+};
+
 export function getCampaignQuizContent(
   slug: string,
   page?: CampaignQuizPage | null,
@@ -314,28 +336,8 @@ export function getCampaignQuizContent(
     heroLead: heading.heroLead,
     heroHighlight: heading.heroHighlight,
     lede: page.lede,
-    playHeading: locale === 'ka'
-      ? `დაიწყე ${page.breadcrumb_label}`
-      : locale === 'es'
-        ? `Empieza ${page.breadcrumb_label}`
-        : locale === 'ru'
-          ? `${page.breadcrumb_label}: начинаем`
-          : locale === 'pt'
-            ? `${page.breadcrumb_label}: vamos começar`
-            : locale === 'de'
-              ? `${page.breadcrumb_label}: Los geht’s`
-              : `Kick off the ${page.breadcrumb_label}`,
-    aboutEyebrow: locale === 'ka'
-      ? 'ისტორია კითხვების მიღმა'
-      : locale === 'es'
-        ? 'La historia detrás de las preguntas'
-        : locale === 'ru'
-          ? 'История за вопросами'
-          : locale === 'pt'
-            ? 'A história por trás das perguntas'
-            : locale === 'de'
-              ? 'Die Geschichte hinter den Fragen'
-              : 'The story behind the questions',
+    playHeading: PLAY_HEADING[locale](page.breadcrumb_label),
+    aboutEyebrow: ABOUT_EYEBROW[locale],
     aboutHeading: page.about_heading,
     aboutParagraphs: paragraphs,
     aboutBlocks: page.about_blocks,

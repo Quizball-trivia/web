@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { timeoutSignal } from "@/lib/timeoutSignal";
 import type { FigureUnit } from "./tenable.figures";
 
-type Localized = { es: string; en: string; ka: string; tr: string; ru?: string; pt?: string; de?: string };
+type Localized = { es: string; en: string; ka: string; tr: string; ru?: string; pt?: string; de?: string; fr?: string };
 export type EntityKind = "player" | "manager" | "club" | "nation";
 
 /** Server-held run state (backend tenable-daily.rules PublicRunState). */
@@ -30,7 +30,7 @@ export const fetchTenablePractice = (locale: string) => tenableCall<{ days: stri
 /** The after-game card, from the solo daily or a room match. */
 export const sendTenableFeedback = (mode: "solo" | "room", answer: GameFeedbackAnswer, locale: string) =>
   tenableCall<null>("/feedback", "POST", {
-    mode, rating: answer.rating, wantsOnline: answer.wantsOnline, locale: ["en", "ka", "es", "tr", "ru", "pt", "de"].includes(locale) ? locale : "en",
+    mode, rating: answer.rating, wantsOnline: answer.wantsOnline, locale: ["en", "ka", "es", "tr", "ru", "pt", "de", "fr"].includes(locale) ? locale : "en",
     ...(answer.comment ? { comment: answer.comment } : {}),
   }, locale);
 
@@ -41,7 +41,7 @@ export interface Suggestion { eid: string; label: string; qualifier: string | nu
 export const ANSWER_MAX_LENGTH = 60;
 
 /** Languages the server labels clubs and nations in (other pages get the release's own names). */
-const LABEL_LOCALES = ["pt", "de"];
+const LABEL_LOCALES = ["pt", "de", "fr"];
 
 /** Throws when the lookup failed (rate limit, outage): a failure must not be kept as "no names". */
 export async function fetchSuggestions(kind: EntityKind, release: string, q: string, locale?: string): Promise<Suggestion[]> {

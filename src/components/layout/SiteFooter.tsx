@@ -18,6 +18,7 @@ const SECTION: Record<Locale, { games: string; daily: string; company: string; m
   ru: { games: 'Режимы игры', daily: 'Ежедневные испытания', company: 'QuizBall', methodology: 'Редакционная методология', press: 'Пресса', index: 'Индекс знаний о футболе' },
   pt: { games: 'Modos de jogo', daily: 'Desafios diários', company: 'QuizBall', methodology: 'Metodologia editorial', press: 'Imprensa', index: 'Índice de conhecimento sobre futebol' },
   de: { games: 'Spielmodi', daily: 'Tages-Challenges', company: 'QuizBall', methodology: 'Redaktionelle Methodik', press: 'Presse', index: 'Fußball-Wissensindex' },
+  fr: { games: 'Modes de jeu', daily: 'Défis du jour', company: 'QuizBall', methodology: 'Méthodologie éditoriale', press: 'Presse', index: 'Index des connaissances footballistiques' },
 };
 
 /**

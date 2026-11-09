@@ -12,7 +12,7 @@ export interface PracticeBoard {
 
 const call = createDailyGameCall("/api/v1/codenames");
 
-export const PRACTICE_LANGS = ["en", "es", "tr", "ru", "ka"] as const;
+export const PRACTICE_LANGS = ["en", "es", "tr", "ru", "ka", "pt", "de", "fr"] as const;
 
 /** The word deck a reader plays: their language's, or English for a language without word boards. */
 export const wordDeckLang = (locale: string): string => ((PRACTICE_LANGS as readonly string[]).includes(locale) ? locale : "en");

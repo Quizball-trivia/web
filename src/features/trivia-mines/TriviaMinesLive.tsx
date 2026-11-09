@@ -18,6 +18,7 @@ import { MoneyFlight, flightFrom, type MoneyFlightSpec } from "@/features/mini-g
 import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { triviaMinesApi, TriviaMinesApiError, type TriviaMinesState } from "@/lib/repositories/triviaMines.repo";
 import { createRealtimeCommandId } from "@/lib/realtime/command-id";
+import { decimalText } from "@/lib/i18n/typography";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const STAKES = [50, 100, 250];
@@ -26,7 +27,7 @@ const MAX_STAKE = 500;
 const HEARTBEAT_MS = 10_000;
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string; pt?: string; de?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "pt" ? value.pt ?? value.en : locale === "de" ? value.de ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
+const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "pt" ? value.pt ?? value.en : locale === "de" ? value.de ?? value.en : locale === "fr" ? value.fr ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
 
 /** Partner play (Freecroco): free, start 100 points, no wallet, coins or live feeds; the host shows the result. */
 export interface TriviaMinesPartnerMode {
@@ -267,7 +268,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
               </div>
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("triviaMines.multiplier")}</div>
-                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{(state.mult_bp / 10000).toFixed(2)}×</div>
+                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{decimalText(state.mult_bp / 10000, 2, locale)}×</div>
                 {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString()}</div>}
               </div>
             </div>

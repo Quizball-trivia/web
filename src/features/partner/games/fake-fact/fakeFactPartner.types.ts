@@ -1,5 +1,5 @@
 /** Backend partner fake-fact.service FakeFactState: an open card never carries its fake or explanation. */
-type Label = { en: string; es: string; tr: string; ru: string; pt?: string; de?: string; ka: string };
+type Label = { en: string; es: string; tr: string; ru: string; pt?: string; de?: string; fr?: string; ka: string };
 type ServerArt =
   | { kind: "crest" | "flag"; src: string }
   | { kind: "trophy"; src?: string }

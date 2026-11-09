@@ -51,6 +51,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     playAgainHint = null,
     winStreakCount = null,
     qpToastSlot,
+    afterActionsSlot,
     onPlayAgain,
     onMainMenu,
   } = props;
@@ -281,6 +282,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         }}
         onMainMenu={onMainMenu}
       />
+      {afterActionsSlot}
     </ResultsScreenFrame>
   );
 }

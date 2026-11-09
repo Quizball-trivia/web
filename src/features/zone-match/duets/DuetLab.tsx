@@ -18,6 +18,7 @@ import { CARD_TYPE_THEME, CardArt } from '../ZoneMatchCardFace';
 import type { FutSeat } from '../ZoneMatchFutCard';
 import { useElementWidth } from '../ZoneMatchCards';
 import { DuetStage } from './DuetStage';
+import { zoneMatchCopy } from '../zoneMatch.copy';
 
 const SEATS: Record<DuelSide, FutSeat> = {
   player: { name: 'You', avatarCustomization: { skin: 'skin_male_white', jersey: 'jersey_green', hair: 'hair_boy_basic' } as AvatarCustomization, rankPoints: 640 },
@@ -28,6 +29,7 @@ const NEW_CARDS: CardId[] = ['nutmeg', 'bicycle-kick', 'high-press', 'time-wasti
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
 const actorLength = (a: DuetActor) => ('card' in a ? CARD_REACTION_S[a.card] : DUET_MOVE_S[a.move]);
+const EN = zoneMatchCopy('en');
 const actorLabel = (a: DuetActor) => ('card' in a ? `${CARD_BY_ID[a.card].name} reaction` : a.move.replace('-', ' '));
 
 export function DuetLab() {
@@ -102,7 +104,7 @@ export function DuetLab() {
                     <span className="text-lg uppercase" style={poppins}>{CARD_BY_ID[card].name}</span>
                     {NEW_CARDS.includes(card) && <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase text-surface-page">New</span>}
                   </div>
-                  <div className="text-xs text-white/55">{CARD_BY_ID[card].effect}</div>
+                  <div className="text-xs text-white/55">{EN.cards[card].effect}</div>
                 </div>
               </div>
               <p className="mt-3 text-base text-white" style={poppins}>{solo ? 'Today: only the owner’s card reacts.' : duet.line}</p>
@@ -131,7 +133,7 @@ export function DuetLab() {
               return (
                 <div key={type} className="mb-4">
                   <div className="mb-1.5 flex items-center gap-1.5 text-xs font-black uppercase tracking-wide" style={{ color: theme.color }}>
-                    <theme.Icon className="size-3.5" /> {theme.label}
+                    <theme.Icon className="size-3.5" /> {EN.cardTypes[type]}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-2">
                     {CARDS.filter((c) => c.type === type).map((c) => (

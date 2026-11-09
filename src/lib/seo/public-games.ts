@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n/locale";
-import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { campaignHubPath, campaignPublicSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
 import { GAME_PAGE_DETAILS } from "./game-page-details";
 export { engineEmitsEvents, FULL_GAME_DEMO_SLUGS, isFullGameDemo, SIGN_IN_PATH } from "./public-game-runtime";
@@ -70,6 +70,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "datoFalso", slug: "football-odd-one-out", group: "daily", guest: "demo", demoSlug: "dato-falso-futbolero", page: true, card: true, destination: { kind: "page" }, related: ["codenames", "sharedPlayer", "tenable"], order: -0.76 },
   { modeId: "conexiones", slug: "football-connections", group: "daily", guest: "demo", demoSlug: "conexiones-futboleras", page: true, card: true, destination: { kind: "page" }, related: ["datoFalso", "codenames", "tenable"], order: -0.74 },
   { modeId: "darts501", slug: "football-darts-501", group: "daily", guest: "demo", demoSlug: "football-darts-501", page: true, card: true, destination: { kind: "page" }, related: ["conexiones", "datoFalso", "tenable"], order: -0.72 },
+  { modeId: "draft", slug: "football-draft-game", group: "daily", guest: "demo", demoSlug: "football-draft", page: true, card: true, destination: { kind: "page" }, related: ["darts501", "auction", "tenable"], order: -0.7 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
   { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
   { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },
@@ -120,7 +121,8 @@ const BY_DEMO_SLUG = new Map(PUBLIC_GAMES.filter((game) => game.demoSlug).map((g
  * sent to the public page / owning quiz instead of an account-only route.
  */
 export function findPublicGameForCard(card: { slug: string; dailyType?: string | null }): PublicGame | null {
-  return BY_DEMO_SLUG.get(card.slug) ?? (card.dailyType ? BY_MODE_ID.get(card.dailyType) ?? null : null);
+  // The Play card of Guess the Goal keeps its old prototype slug; the public page runs the live game.
+  return BY_DEMO_SLUG.get(card.slug === "mini-guess-the-goal" ? "guess-the-goal" : card.slug) ?? (card.dailyType ? BY_MODE_ID.get(card.dailyType) ?? null : null);
 }
 
 /** Where a signed-out visitor goes from a Play card; null = the card needs an account (sign-in dialog). */
@@ -156,13 +158,11 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 
 /** Where a card links: its page, the established quiz page, or the app. */
 /**
- * Campaign quiz pages have English, Spanish, Russian, Brazilian Portuguese and German editions; the Georgian edition
- * is per page, so ka links to English. pt and de pages appear only once their content is complete: ship the pt / de
- * web after that campaign content is on the target (scripts/campaign-quizzes-pt.ts, scripts/campaign-quizzes-de.ts),
- * or these links 404.
+ * Campaign quiz pages have an edition in every locale. This cannot know which are open (it runs in client bundles too),
+ * so the destination decides: closed ka, tr and fr pages redirect to English (CampaignQuizServerPage). Closed pt and de pages
+ * answer 404, so ship those webs after their content is on the target.
  */
-export const campaignLocaleOf = (locale: Locale): "en" | "es" | "ru" | "pt" | "de" =>
-  (locale === "es" || locale === "ru" || locale === "pt" || locale === "de" ? locale : "en");
+export const campaignLocaleOf = (locale: Locale): CampaignQuizLocale => locale;
 
 /** Locales in which this game's public page exists (page flag + a written body). */
 export function publishedLocalesOf(game: PublicGame): SeoPageLocale[] {

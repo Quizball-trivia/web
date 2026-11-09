@@ -1,4 +1,5 @@
 import { ULTIMO_SOUNDS } from "@/features/ultimo/ultimo.sounds";
+import { DRAFT_SOUNDS } from "@/features/draft/draft.sounds";
 import type { GameId, PlayMode } from "./types";
 
 /**
@@ -70,6 +71,23 @@ export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>
       { moment: "Wrong guess", sound: "wrongAnswer", where: "PistasGame guess" },
     ],
     duel: [{ moment: "Any duel moment", sound: null, where: "duels play no sounds yet" }],
+  },
+  draft: {
+    solo: [
+      { moment: "Reels start rolling", sound: DRAFT_SOUNDS.spin, where: "draft.sounds.ts spin" },
+      { moment: "Reels land on a club + season", sound: DRAFT_SOUNDS.land, where: "draft.sounds.ts land" },
+      { moment: "Player signed", sound: DRAFT_SOUNDS.sign, where: "draft.sounds.ts sign" },
+      { moment: "Season kicks off / full time", sound: DRAFT_SOUNDS.kickoff, where: "draft.sounds.ts kickoff, fullTime" },
+      { moment: "Perfect season or title", sound: DRAFT_SOUNDS.glory, where: "draft.sounds.ts glory" },
+      { moment: "Europe / mid-table", sound: DRAFT_SOUNDS.result, where: "draft.sounds.ts result" },
+      { moment: "Relegated", sound: DRAFT_SOUNDS.defeat, where: "draft.sounds.ts defeat" },
+    ],
+    duel: [
+      { moment: "5 s left on your pick", sound: DRAFT_SOUNDS.hurry, where: "draft.sounds.ts hurry" },
+      { moment: "Match day won", sound: DRAFT_SOUNDS.matchWin, where: "draft.sounds.ts matchWin" },
+      { moment: "Match day lost", sound: DRAFT_SOUNDS.defeat, where: "draft.sounds.ts defeat" },
+    ],
+    room: [{ moment: "Room won / lost", sound: DRAFT_SOUNDS.glory, where: "draft.sounds.ts glory / defeat" }],
   },
   football501: {
     solo: [{ moment: "Any solo moment", sound: null, where: "prototype: sounds to pick (dart thud, checkout, bust)" }],

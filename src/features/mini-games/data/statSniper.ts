@@ -6,7 +6,8 @@
 
 import type { MiniLocale } from '../lib/i18n';
 
-type BilingualText = Record<MiniLocale | 'pt' | 'de', string>;
+// This bank holds real figures, so it stays out of French: fr reads English.
+type BilingualText = Record<Exclude<MiniLocale, 'fr'> | 'pt' | 'de', string> & { fr?: string };
 
 export interface SniperRound {
   id: string;
@@ -87,7 +88,7 @@ const BANK: BilingualRound[] = [
 ];
 
 export function getSniperRounds(locale: MiniLocale | 'pt' | 'de'): SniperRound[] {
-  return BANK.map((r) => ({ ...r, prompt: r.prompt[locale], unit: r.unit[locale] }));
+  return BANK.map((r) => ({ ...r, prompt: r.prompt[locale] ?? r.prompt.en, unit: r.unit[locale] ?? r.unit.en }));
 }
 
 /** Proximity score: 100 at spot-on, fading to 0 at a quarter of the span away.

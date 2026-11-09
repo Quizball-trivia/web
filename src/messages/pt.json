@@ -619,7 +619,10 @@
     "subtitle": "Complete objetivos da partida para ganhar moedas e XP automaticamente.",
     "tabDaily": "Diário",
     "tabWeekly": "Semanal",
-    "back": "Voltar"
+    "back": "Voltar",
+    "loading": "Carregando objetivos...",
+    "error": "Não foi possível carregar os objetivos. Tente atualizar.",
+    "empty": "Nenhum objetivo disponível."
   },
   "homeDashboard": {
     "dailyObjectives": "Objetivos diários",
@@ -1525,6 +1528,9 @@
     "roomTabDarts501": "Dardos de futebol 501",
     "roomDarts501": "Dardos de futebol 501 · 2–6 jogadores",
     "roomDarts501Description": "Todos começam no 501. Cada dardo é um jogador da categoria do leg, e o número dele sai. Feche entre 0 e −10; mais de 180 não pontua. Melhor de 3 legs. Sem moedas nem RP em jogo.",
+    "roomTabDraft": "Draft de futebol",
+    "roomDraft": "Draft de futebol · 2–6 jogadores",
+    "roomDraftDescription": "Todos montam o time com os mesmos giros, e um jogador escolhido sai da disputa. Time contra time se decide em dois jogos, ida e volta. Sem moedas nem RP em jogo.",
     "roomOptionTournament": "Torneio",
     "roomTournamentRandom": "Aleatório",
     "roomTournamentTooSmall": "Este torneio não comporta tantos jogadores: escolha um maior.",
@@ -1908,6 +1914,9 @@
     "finalizingResult": "Finalizando resultado..."
   },
   "training": {
+    "demoEndMessage": "Este é o nosso principal modo 1v1: no ranqueado, o adversário é um jogador de verdade.",
+    "demoEndDone": "Concluir",
+    "demoBack": "Voltar às demos",
     "loadError": "Não foi possível carregar as perguntas do tutorial. Tente novamente.",
     "retryLoading": "Tentar novamente",
     "exitLoading": "Sair do tutorial",
@@ -2629,7 +2638,11 @@
     "rewardEntryRule": "Inscrição grátis. Ganhe a quantidade de QP exigida pelo evento jogando no Ranqueado, inscreva-se e confirme presença antes do apito inicial.",
     "rewardScoringRule": "A classificação final define os vencedores: primeiro, pela pontuação; depois, pelo tempo total de resposta. Valem as verificações de jogo limpo. Só jogadores reais contam na classificação: bots não ganham recompensas.",
     "rewardNonCash": "Recompensas apenas no jogo. Sem dinheiro, vales ou cartões-presente. Itens e moedas não podem ser negociados, transferidos ou trocados por dinheiro.",
-    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido."
+    "rewardContact": "Dúvidas sobre suas recompensas? Fale com o Quizball por Ajuda/Feedback e informe a data do evento e seu apelido.",
+    "statusChampion": "Você é o campeão!",
+    "statusWrapped": "Fim de semana encerrado",
+    "statusFinished": "Você terminou em #{rank}º lugar.",
+    "statusSeeYou": "Até o próximo fim de semana."
   },
   "wlAward": {
     "title1": "Campeão da Weekend League",

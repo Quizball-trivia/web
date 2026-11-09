@@ -564,13 +564,87 @@ const de: UltimoCopy = {
   board: { title: "Tagesrangliste", players: (n) => (n === 1 ? "1 Spieler" : `${n} Spieler`), empty: "Heute ist noch niemand fertig. Mach den Anfang!", join: "Melde dich an, um die heutige Challenge zu spielen und in der Rangliste zu erscheinen.", joinButton: "Anmelden" },
 };
 
-const COPY: Record<string, UltimoCopy> = { es, en, ka, tr, ru, pt, de };
+const fr: UltimoCopy = {
+  brandA: "Cite-les",
+  brandB: "tous !",
+  loading: "Chargement…",
+  loadError: "Impossible de charger les catégories. Réessaie.",
+  retry: "Réessayer",
+  exit: "Quitter",
+  soon: "Les premières catégories arrivent bientôt.",
+  guestYesterday: "Connecte-toi pour jouer au défi du jour et apparaître au classement. En attendant, joue les jours précédents.",
+  playToday: "Jouer au défi du jour",
+  dayOver: "Ce jour est terminé. Redirection vers le défi du jour.",
+  maintenance: "Nous effectuons une petite mise à jour. Réessaie bientôt.",
+  actionError: "Une erreur s’est produite. Réessaie.",
+  connection: "Connexion instable : récupération de ta partie…",
+  restarted: "Les catégories ont été mises à jour : recommence.",
+  sessionChanged: "Ta session a changé : recommence.",
+  intro: {
+    lines: [
+      "5 catégories par jour, identiques pour tout le monde.",
+      "Enchaîne les réponses sans répéter : le chrono démarre à 20 s et raccourcit à chaque bonne réponse.",
+      "Si le temps est écoulé ou si tu te trompes 3 fois de suite, la catégorie prend fin.",
+      "1 point par réponse et +5 si tu complètes la liste.",
+    ],
+    start: "Jouer",
+    resume: (n) => `Continuer · catégorie ${n}`,
+    finished: "Voir le résultat",
+    past: "Jours précédents",
+    newBoard: "De nouvelles catégories chaque jour à minuit (heure d’Argentine).",
+  },
+  category: (n, total) => `Catégorie ${n} sur ${total}`,
+  perTurn: (s) => `${s} s par tour`,
+  left: (n, total) => `Il en reste ${n} sur ${total}`,
+  begin: "Commencer la catégorie",
+  startsIn: "Début dans…",
+  go: "C’est parti !",
+  turnFirst: "À toi !",
+  turnNext: "Cite-en un autre",
+  errors: "erreurs",
+  placeholder: "Saisis une réponse",
+  say: "Citer",
+  you: "Toi",
+  pts: "pts",
+  feedback: {
+    wrong: (t, n, max) => `✗ « ${t} » ne figure pas dans la liste (${n}/${max})`,
+    repeat: (t, n, max) => `↺ Tu as déjà cité « ${t} » (${n}/${max})`,
+    ambiguous: (t) => `Quel « ${t} » ? Il y en a plusieurs : saisis le nom complet`,
+    late: "Temps écoulé",
+  },
+  catEnd: {
+    time: "Temps écoulé",
+    misses: (max) => `${max} erreurs de suite`,
+    complete: "Tu as tout nommé",
+    titleComplete: "Liste complète !",
+    titleOut: "Tu es éliminé",
+    named: (n, total, pts) => `Tu as cité ${n} sur ${total} · +${pts} pts`,
+    missing: (n) => `Il t’en manque ${n}`,
+    revealLater: "Les réponses manquantes seront révélées à la fin de la journée.",
+    next: "Catégorie suivante",
+    result: "Voir le résultat",
+  },
+  end: {
+    title: "Défi du jour",
+    points: (n) => (n < 2 ? "point" : "points"),
+    answers: (n) => (n < 2 ? `${n} réponse` : `${n} réponses`),
+    rank: (n) => `#${n} aujourd’hui`,
+    share: "Partager",
+    copied: "Copié !",
+    leaderboard: "Classement du jour",
+    noPlayers: "Personne n’a encore terminé aujourd’hui.",
+  },
+  archive: { title: "Jours précédents", back: "Retour", day: (n) => `Jour #${n}`, today: "Aujourd’hui" },
+  board: { title: "Classement du jour", players: (n) => (n < 2 ? `${n} joueur` : `${n} joueurs`), empty: "Personne n’a encore terminé aujourd’hui. Sois le premier !", join: "Connecte-toi pour jouer au défi du jour et apparaître au classement.", joinButton: "Se connecter" },
+};
+
+const COPY: Record<string, UltimoCopy> = { es, en, ka, tr, ru, pt, de, fr };
 
 export const ultimoCopy = (locale: Locale | string): UltimoCopy => COPY[locale] ?? en;
 
-/** Russian, German, and Portuguese content is optional: missing or blank ru, de, and pt text falls back to English; other locales fall back to Spanish. */
+/** Russian, German, French, and Portuguese content is optional: missing or blank ru, de, fr, and pt text falls back to English; other locales fall back to Spanish. */
 export const textFor = (text: LocalizedText | null | undefined, locale: Locale | string): string => {
   if (!text) return "";
   const value = (text as Record<string, string | undefined>)[locale];
-  return value?.trim() ? value : locale === "ru" ? text.en : locale === "pt" ? text.en : locale === "de" ? text.en : text.es;
+  return value?.trim() ? value : locale === "ru" ? text.en : locale === "pt" ? text.en : locale === "de" ? text.en : locale === "fr" ? text.en : text.es;
 };

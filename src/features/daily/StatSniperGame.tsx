@@ -15,6 +15,7 @@ import { PersonalBestNote } from "@/features/daily/components/PersonalBestNote";
 import { StatSniperLeaderboard } from "@/features/daily/StatSniperLeaderboard";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperQuestion, StatSniperSession } from "@/lib/domain/dailyChallenge";
+import { displayUnit } from "@/features/aproximado/aproximado.copy";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -63,7 +64,7 @@ export function StatSniperGame({
   confirmQuit?: boolean;
 }) {
   const { t, locale } = useLocale();
-  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : locale === "ru" ? "ru-RU" : locale === "pt" ? "pt-BR" : locale === "de" ? "de-DE" : "en-GB";
+  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : locale === "ru" ? "ru-RU" : locale === "pt" ? "pt-BR" : locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : "en-GB";
   const questions = session.questions;
   const [index, setIndex] = useState(0);
   const [guess, setGuess] = useState(() => (questions[0] ? midpoint(questions[0]) : 0));
@@ -188,7 +189,7 @@ export function StatSniperGame({
             {/* Guess readout — brand blue */}
             <motion.div key={`${index}-${phase}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-[20px] bg-brand-blue p-4 text-center" style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
               <div className="text-4xl font-black tabular-nums text-white" style={poppins}>{guess.toLocaleString(numberLocale)}</div>
-              <div className="text-[11px] font-bold uppercase tracking-wide text-white/70" style={poppins}>{q.unit}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-white/70" style={poppins}>{displayUnit(q.unit, locale)}</div>
             </motion.div>
 
             {phase === "guessing" ? (
@@ -224,7 +225,7 @@ export function StatSniperGame({
                 {/* You · Answer · Off by (share of the range) → points: the scoring made explicit. */}
                 <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1" style={poppins}>
                   {last && <span className="text-sm font-bold text-white/70">{t("statSniper.yourGuess", { value: last.guess.toLocaleString(numberLocale) })}</span>}
-                  <span className="text-lg font-black text-white">{t("statSniper.answer", { value: q.value.toLocaleString(numberLocale), unit: q.unit })}</span>
+                  <span className="text-lg font-black text-white">{t("statSniper.answer", { value: q.value.toLocaleString(numberLocale), unit: displayUnit(q.unit, locale) })}</span>
                 </div>
                 {last && (
                   <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm font-bold" style={poppins}>

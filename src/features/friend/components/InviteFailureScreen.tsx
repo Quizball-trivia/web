@@ -22,6 +22,8 @@ export function inviteFailureKind(failure: Pick<InviteFailureView, "reasonCode" 
   // The invite is fine: this page is older than the room's game.
   if (failure.reasonCode === "GAME_NEEDS_RELOAD") return "reload";
   if (failure.reasonCode === "LOBBY_FULL") return "full";
+  if (failure.reasonCode === "LOBBY_GAME_STARTED") return "in_progress";
+  if (failure.reasonCode === "LOBBY_ENDED") return "ended";
   if (failure.reasonCode === "LOBBY_NOT_FOUND") {
     if (failure.room?.roomState === "ended") return "ended";
     if (failure.room?.roomState === "in_progress") return "in_progress";
