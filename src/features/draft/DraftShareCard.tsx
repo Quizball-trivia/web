@@ -148,20 +148,29 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [names, setNames] = useState(defaultNames);
   const [copied, setCopied] = useState(false);
-  // The image is made as soon as it is drawn: Share must reach the system sheet without waiting, or the browser
-  // treats the tap as expired and refuses it.
+  // Each version of the card is drawn off screen; only the newest is shown and exported. Its PNG is made at once, so
+  // Share reaches the system sheet without waiting (or the browser treats the tap as expired), and a Share or Save
+  // pressed while a redraw is still running waits for that newest image, never an older one.
   const ready = useRef<Blob | null>(null);
+  const pending = useRef<Promise<Blob | null>>(Promise.resolve(null));
+  const drawing = useRef(0);
   useEffect(() => {
-    let live = true;
-    ready.current = null;
     const el = canvas.current;
     if (!el) return;
-    void drawShareCard(el, data, names).then(() => { if (live) el.toBlob((b) => { if (live) ready.current = b; }, "image/png"); });
-    return () => { live = false; };
+    const mine = ++drawing.current;
+    ready.current = null;
+    const off = document.createElement("canvas");
+    pending.current = drawShareCard(off, data, names).then(() => new Promise<Blob | null>((resolve) => {
+      if (mine !== drawing.current) { resolve(null); return; }
+      el.width = off.width; el.height = off.height;
+      el.getContext("2d")?.drawImage(off, 0, 0);
+      off.toBlob((b) => { if (mine === drawing.current) ready.current = b; resolve(b); }, "image/png");
+    }));
+    return () => { drawing.current += 1; };
   }, [data, names]);
 
   const [failed, setFailed] = useState(false);
-  const blob = () => new Promise<Blob | null>((resolve) => { if (ready.current) resolve(ready.current); else if (canvas.current) canvas.current.toBlob(resolve, "image/png"); else resolve(null); });
+  const blob = (): Promise<Blob | null> => (ready.current ? Promise.resolve(ready.current) : pending.current);
   const save = async () => {
     try {
       const b = await blob();
