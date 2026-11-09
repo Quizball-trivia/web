@@ -36,6 +36,8 @@ interface LobbySettingsProps {
   settingsRefusedVersion?: number;
   /** True while a change of this screen is queued or sent and not echoed by the server yet. */
   onSavingChange?: (saving: boolean) => void;
+  /** A room game's option change the server never answered: treated as refused. */
+  onSettingsAbandoned?: () => void;
   /**
    * The game this screen shows as selected (null once the screen is gone), told at the click and whenever it changes.
    * While it is not the game the server holds, nobody should ready or start from this screen: the room would play
@@ -136,6 +138,7 @@ export function LobbySettings({
   settingsErrorVersion = 0,
   settingsRefusedVersion = 0,
   onSavingChange,
+  onSettingsAbandoned,
   onGameShown,
 }: LobbySettingsProps) {
   const { t } = useLocale();
@@ -1072,7 +1075,7 @@ export function LobbySettings({
               <CodenamesRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
             )}
             {roomGame === 'draft' && roomGame === serverRoomGame && (
-              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} onPendingChange={onRoomOptionsPending} />
+              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} onPendingChange={onRoomOptionsPending} onAbandoned={onSettingsAbandoned} />
             )}
             {roomGame === 'football_race' && roomGame === serverRoomGame && (
               <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />

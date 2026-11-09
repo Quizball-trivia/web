@@ -25,7 +25,7 @@ const sameChoice = (a: DraftRoomChoice, b: DraftRoomChoice) => a.leagueId === b.
 
 const chip = (selected: boolean, canEdit: boolean) => cn("min-h-9 rounded-full px-3 text-xs font-bold transition-colors", selected ? "bg-brand-blue text-white" : "bg-white/[0.07] text-white/75", canEdit && !selected && "hover:bg-white/[0.12]", !canEdit && !selected && "opacity-45");
 
-export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void }) {
+export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange, onAbandoned }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void; onAbandoned?: () => void }) {
   const { locale } = useLocale();
   const c = draftCopy(locale);
   const server = readDraftOptions(options);
@@ -39,11 +39,17 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
   useEffect(() => { onPendingChange?.(pending !== null); }, [pending, onPendingChange]);
   useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
+  // No answer in 3 s counts as refused, like any lobby setting: the room's value returns and a held Ready is dropped.
+  // A newer tap restarts the wait; the room's confirmation ends it.
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => { setSent(null); onAbandoned?.(); }, 3_000);
+    return () => clearTimeout(timer);
+  }, [pending, onAbandoned]);
   const set = (patch: Partial<DraftRoomChoice>) => {
     if (!canEdit) return;
     const next = { ...value, ...patch };
     setSent(next);
-    setTimeout(() => setSent((current) => (current === next ? null : current)), 3_000);
     onChange(next);
   };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
