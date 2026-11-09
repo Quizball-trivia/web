@@ -856,6 +856,31 @@ describe("partner home", () => {
     expect(screen.queryByRole("button", { name: "Scroll right" })).not.toBeInTheDocument();
   });
 
+  it("shows the points of a finished game on its card, and of the last match on Ranked", async () => {
+    const finished = { playId: "play-1", score: 1250 };
+    stubApi({
+      redeem: () => ({ status: 200, body: SESSION }),
+      games: () => ({
+        status: 200,
+        body: {
+          ...GAMES,
+          games: [
+            tile("ranked", { playsLimit: 10, playsUsed: 3, playsLeft: 7, lastResult: { playId: "play-2", score: 150 } }),
+            tile("countdown", { playsLimit: 1, playsUsed: 1, playsLeft: 0, lastResult: finished }),
+            tile("pick-em", { playsLimit: 2, playsUsed: 1, playsLeft: 1, lastResult: finished }),
+          ],
+        },
+      }),
+    });
+    renderShell();
+
+    expect(within(await screen.findByTestId("partner-ranked-card")).getByTestId("partner-ranked-last")).toHaveTextContent("Last match: +150 pts");
+    const [countdown, pickEm] = screen.getAllByTestId("partner-game-card");
+    expect(within(countdown).getByTestId("partner-game-earned")).toHaveTextContent("+1,250 pts");
+    // Plays left: still a game to play, not a result.
+    expect(within(pickEm).queryByTestId("partner-game-earned")).not.toBeInTheDocument();
+  });
+
   it("shows ranked as done when today's plays are used up", async () => {
     stubApi({
       redeem: () => ({ status: 200, body: SESSION }),

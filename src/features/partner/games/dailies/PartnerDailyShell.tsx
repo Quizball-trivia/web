@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Loader2, Play } from "lucide-react";
-import { DemoModeArt } from "@/features/demos/DemoModeArt";
+import { Loader2 } from "lucide-react";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeHeader } from "@/features/daily/components/DailyChallengeHeader";
 import { DailyGameStage } from "@/features/daily/components/DailyGameStage";
 import { ResultSplash } from "@/features/daily/components/ResultSplash";
 import { useResultSplash } from "@/features/daily/components/useResultSplash";
 import { partnerCopy } from "../../partnerCopy";
-import { PARTNER_GAME_DEMO_SLUG, partnerGameDescription, partnerGameTitle } from "../../partnerGames";
+import { partnerGameDescription, partnerGameTitle } from "../../partnerGames";
+import { PartnerGameIntro } from "../../game-kit/PartnerGameIntro";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import { dailyCopy, type PartnerDailyGameId } from "./dailyCopy";
 import type { PartnerDailyPlay } from "./dailyPlay.types";
@@ -106,36 +106,19 @@ export function PartnerDailyShell<Item>({ gameId, api, onFinished, onExit, round
 
   if (status === "intro" || !play || !play.item) {
     return (
-      <div className="mt-4 flex flex-col gap-5" data-testid="partner-daily-intro">
-        <button
-          type="button"
-          onClick={onExit}
-          className="inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white/[0.08] px-3 font-poppins text-xs font-semibold text-white transition-colors hover:bg-white/[0.14]"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          {shellCopy.backToGames}
-        </button>
-        <div className="overflow-hidden rounded-2xl bg-brand-blue">
-          <div className="aspect-video w-full overflow-hidden">
-            <DemoModeArt slug={PARTNER_GAME_DEMO_SLUG[gameId]} className="size-full" />
-          </div>
-          <div className="flex flex-col gap-2 p-4">
-            <h1 className="font-poppins text-lg font-semibold uppercase text-white">{partnerGameTitle(gameId, lang)}</h1>
-            <p className="font-poppins text-sm text-white/70">{partnerGameDescription(gameId, lang)}</p>
-            <p className="font-poppins text-sm font-semibold text-brand-yellow">{copy.rules[gameId]}</p>
-            <p className="font-poppins text-xs text-white/50">{copy.usesPlay}</p>
-            <button
-              type="button"
-              data-testid="partner-daily-start"
-              onClick={() => void controller.start()}
-              className="mt-2 inline-flex h-11 w-fit items-center gap-1.5 rounded-full bg-brand-yellow px-6 font-poppins text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90"
-            >
-              <Play className="size-4" aria-hidden />
-              {copy.start}
-            </button>
-          </div>
-        </div>
-      </div>
+      <PartnerGameIntro
+        gameId={gameId}
+        title={partnerGameTitle(gameId, lang)}
+        description={partnerGameDescription(gameId, lang)}
+        rules={copy.rules[gameId]}
+        note={copy.usesPlay}
+        startLabel={copy.start}
+        backLabel={shellCopy.backToGames}
+        onStart={() => void controller.start()}
+        onBack={onExit}
+        testId="partner-daily-intro"
+        startTestId="partner-daily-start"
+      />
     );
   }
 

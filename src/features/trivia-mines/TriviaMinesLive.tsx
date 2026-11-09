@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { secondsShort } from "@/lib/i18n/secondsShort";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +44,8 @@ export interface TriviaMinesPartnerMode {
   };
   onFinished: (state: TriviaMinesState) => void;
   onExit: () => void;
+  /** The partner's own start screen in place of the start card (it carries its own way back). */
+  renderIntro?: (ctx: { start: () => void; busy: boolean; error: string | null }) => ReactNode;
 }
 
 /** Trivia Mines, live: the board is held server-side; every pick, scout and cash-out is a request. */
@@ -189,19 +191,21 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
     finally { setBusy(false); }
   };
 
+  const intro = !state && partner?.renderIntro ? partner.renderIntro({ start: () => void start(), busy: busy || !resumed, error }) : null;
   const balance = partner ? Number.POSITIVE_INFINITY : sample ? sample.coins : wallet?.coins ?? 0;
   const settled = state && state.status !== "active";
 
   return (
     <div className={partner ? "flex flex-1 flex-col text-white" : "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
       <MoneyFlight flight={flight} />
-      <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pb-28 pt-4 md:pb-8", state ? "max-w-md lg:max-w-4xl" : "max-w-md")}>
-        <div className="mb-3 flex items-center justify-between">
+      <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pt-4 md:pb-8", partner ? "pb-6" : "pb-28", state ? "max-w-md lg:max-w-4xl" : intro ? "px-0 pt-0" : "max-w-md")}>
+        {intro}
+        {!intro && <div className="mb-3 flex items-center justify-between">
           <button type="button" onClick={() => { if (partner) partner.onExit(); else if (sample?.onExit) sample.onExit(); else router.push(backHref); }} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
-        </div>
+        </div>}
 
         {/* Start card — same family as the Guess the Goal card, in brand blue */}
-        {!state && partner && (
+        {!state && partner && !intro && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 rounded-[20px] bg-brand-blue p-4 text-center text-white md:p-5">
             <p className="text-base font-black uppercase tracking-wide text-brand-yellow" style={poppins} data-testid="trivia-mines-start-points">{partner.labels.startPoints}</p>
             {error && <p className="text-xs font-bold text-white" style={poppins}>{error}</p>}
@@ -268,7 +272,8 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
                 {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString()}</div>}
               </div>
             </div>
-            <div className="grid grid-cols-5 gap-2">
+            {/* A partner frame is short: the board shrinks with its height so the buttons under it stay in view. */}
+            <div className={cn("grid grid-cols-5 gap-2", partner && "lg:mx-auto lg:max-w-[max(200px,calc(100dvh_-_380px))] [@media(max-width:1023px)_and_(max-height:720px)]:mx-auto [@media(max-width:1023px)_and_(max-height:720px)]:max-w-[300px]")}>
               {Array.from({ length: state.board_size }).map((_, i) => {
                 const opened = state.opened.includes(i);
                 const flagged = state.flagged.includes(i);
@@ -317,7 +322,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
           <div className="lg:sticky lg:top-4">
             <AnimatePresence>
               {state.phase === "question" && state.question && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 rounded-[20px] bg-brand-blue p-4 text-white lg:mt-0" style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={cn("mt-4 rounded-[20px] bg-brand-blue p-4 text-white lg:mt-0", partner && "max-lg:fixed max-lg:inset-x-2 max-lg:bottom-2 max-lg:z-40 max-lg:mt-0 max-lg:max-h-[85dvh] max-lg:overflow-y-auto")} style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
                   <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-white/70" style={poppins}>
                     <span>{t("triviaMines.scoutQuestion")}</span><span className={cn("tabular-nums", qLeft <= 3 && "text-brand-red-soft")}>{secondsShort(qLeft, locale)}</span>
                   </div>
@@ -342,7 +347,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
 
             {settled && partner && state.status === "expired" && (
               // Left before touching the board: the play was returned, so there are no points and no result to send.
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-[20px] bg-brand-blue px-4 py-3 text-center text-white" data-testid="trivia-mines-play-returned">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-[20px] bg-brand-blue px-4 py-3 text-center text-white lg:col-start-2 lg:row-start-1 lg:mt-0" data-testid="trivia-mines-play-returned">
                 <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{partner.labels.playReturned}</p>
                 <p className="mt-1 text-xs font-semibold text-white/75" style={poppins}>{partner.labels.playReturnedBody}</p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
@@ -356,7 +361,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
               </motion.div>
             )}
             {settled && !(partner && state.status === "expired") && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 rounded-[20px] px-4 py-3 text-center text-white", state.status === "cashed" ? "bg-brand-green" : "bg-brand-blue")}>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 rounded-[20px] px-4 py-3 text-center text-white", partner && "lg:col-start-2 lg:row-start-1 lg:mt-0", state.status === "cashed" ? "bg-brand-green" : "bg-brand-blue")}>
                 <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{state.status === "cashed" ? t("triviaMines.banked") : state.status === "lost" ? t("triviaMines.tackled") : t("triviaMines.refunded")}</p>
                 <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}>{coin(20)}{(state.status === "cashed" ? state.payout_coins ?? 0 : state.status === "expired" ? state.stake_coins : 0).toLocaleString()}</p>
                 <button type="button" data-testid="trivia-mines-finish" onClick={() => { if (partner) partner.onFinished(state); else { setState(null); setError(null); } }} className="font-poppins mt-3 h-12 w-full rounded-[20px] bg-brand-yellow text-[15px] font-black uppercase tracking-wide text-black transition-all active:translate-y-[2px]">

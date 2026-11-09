@@ -56,7 +56,7 @@ function setup(responses: Record<string, unknown>) {
 
 describe("PartnerFakeFactGame", () => {
   it("plays card 1 and the bonus from the server's state and reports the server's score", async () => {
-    const { calls, onFinished } = setup({
+    const { calls } = setup({
       "GET current": { play: null },
       "POST start": base({}),
       "POST answer": base({ step: "between", card: null, score: 100, results: [settled("a", 2, 100)] }),

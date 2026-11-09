@@ -8,6 +8,7 @@ import { localCard } from "@/features/dato-falso/datoFalso.daily";
 import { DfClaim, DfOptions, DfVerdict } from "@/features/dato-falso/DatoFalsoCard";
 import { GreenButton, TopBar, poppins } from "@/features/wordgames/ui";
 import { PartnerApiError } from "../../api/partnerApiClient";
+import { PartnerGameIntro } from "../../game-kit/PartnerGameIntro";
 import { serverOffset } from "../quiz-board/quizBoardApi";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import type { FakeFactState } from "./fakeFactPartner.types";
@@ -189,29 +190,18 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
 
   if (phase === "intro" || !play) {
     return (
-      <div className="mx-auto mt-4 flex max-w-md flex-col gap-4">
-        <div className="rounded-2xl bg-white/[0.06] p-5">
-          <h1 className="font-poppins text-xl font-semibold uppercase text-white">{copy.title}</h1>
-          <ul className="mt-3 space-y-1.5 font-poppins text-sm text-white/75">
-            {copy.rules.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </div>
-        {error && <p className="font-poppins text-sm text-brand-red-soft">{error}</p>}
-        <button
-          type="button"
-          onClick={start}
-          disabled={busy}
-          data-testid="ff-start"
-          className="h-12 rounded-full bg-brand-yellow font-poppins text-base font-semibold uppercase text-black transition-opacity disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="mx-auto size-5 animate-spin" aria-hidden /> : copy.start}
-        </button>
-        <button type="button" onClick={onExit} className="h-10 font-poppins text-sm text-white/60 underline-offset-2 hover:underline">
-          {copy.back}
-        </button>
-      </div>
+      <PartnerGameIntro
+        gameId="fake-fact"
+        title={copy.title}
+        rules={copy.rules}
+        startLabel={copy.start}
+        backLabel={copy.back}
+        busy={busy}
+        error={error}
+        onStart={start}
+        onBack={onExit}
+        startTestId="ff-start"
+      />
     );
   }
 
@@ -227,7 +217,8 @@ export function PartnerFakeFactGame({ api, onFinished, onExit }: PartnerGameScre
   const verdictCopy = { ...df, right: copy.right };
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col pb-6 pt-2">
+    // A short wide frame scales the card and its verdict down together, so the way on is never below the fold.
+    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col pb-6 pt-2 lg:max-w-4xl [&_ul_span.min-w-0]:hyphens-auto [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul]:gap-1 [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul_button]:py-1 [@media(max-width:1023px)_and_(max-height:720px)]:[&_ul_span.size-12]:size-8 [@media(max-width:1023px)_and_(max-height:720px)]:pb-1 [&_ul_span.min-w-0]:[overflow-wrap:anywhere] [@media(min-width:1024px)_and_(min-height:621px)_and_(max-height:720px)]:[zoom:0.92] [@media(min-width:1024px)_and_(max-height:620px)]:max-w-[640px] [@media(min-width:1024px)_and_(max-height:620px)]:pb-0 [@media(min-width:1024px)_and_(max-height:620px)]:[zoom:0.82]">
       <TopBar
         wrap
         brand={df.brand}

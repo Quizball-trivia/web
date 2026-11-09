@@ -3,7 +3,10 @@
 import { useEffect, useMemo } from "react";
 import { TriviaMinesLive, type TriviaMinesPartnerMode } from "@/features/trivia-mines/TriviaMinesLive";
 import { useLocale } from "@/contexts/LocaleContext";
-import { toPartnerLocale, type PartnerLocale } from "../../partnerCopy";
+import { partnerCopy, toPartnerLocale, type PartnerLocale } from "../../partnerCopy";
+import { partnerGameDescription, partnerGameTitle } from "../../partnerGames";
+import { PartnerGameIntro } from "../../game-kit/PartnerGameIntro";
+import { dailyCopy } from "../dailies/dailyCopy";
 import type { PartnerGameScreenProps } from "../../game-kit/types";
 import { createPartnerTriviaMinesClient } from "./partnerTriviaMinesClient";
 
@@ -47,6 +50,8 @@ const LABELS: Record<PartnerLocale, TriviaMinesPartnerMode["labels"]> = {
 /** Freecroco Trivia Mines: the site's live board on the partner endpoints, free and capped at 1,000 points. */
 export function TriviaMinesPartner({ api, onFinished, onExit }: PartnerGameScreenProps) {
   const { locale } = useLocale();
+  const lang = toPartnerLocale(locale);
+  const labels = LABELS[lang];
   const client = useMemo(() => createPartnerTriviaMinesClient(api), [api]);
   // A play cancelled by a block has no result: leave for the home, which shows the account state.
   useEffect(() => client.onCancelled(onExit), [client, onExit]);
@@ -55,7 +60,23 @@ export function TriviaMinesPartner({ api, onFinished, onExit }: PartnerGameScree
     <TriviaMinesLive
       client={client}
       partner={{
-        labels: LABELS[toPartnerLocale(locale)],
+        labels,
+        renderIntro: ({ start, busy, error }) => (
+          <PartnerGameIntro
+            gameId="trivia-mines"
+            title={partnerGameTitle("trivia-mines", lang)}
+            description={partnerGameDescription("trivia-mines", lang)}
+            rules={labels.startPoints}
+            note={dailyCopy(lang).usesPlay}
+            startLabel={labels.play}
+            backLabel={partnerCopy(lang).backToGames}
+            busy={busy}
+            error={error}
+            onStart={start}
+            onBack={onExit}
+            startTestId="trivia-mines-play"
+          />
+        ),
         onFinished: () => {
           const run = client.last();
           // Only a scored run has a score event; a returned or cancelled one is never reported as points.

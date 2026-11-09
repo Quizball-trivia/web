@@ -23,6 +23,8 @@ interface PartnerCopy {
   play: string;
   playsLeft: (count: number) => string;
   upToPoints: (points: string) => string;
+  earnedPoints: (points: string) => string;
+  lastMatchPoints: (points: string) => string;
   doneForToday: string;
   continuePlay: string;
   comeBackTomorrow: string;
@@ -56,6 +58,8 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     play: "Play",
     playsLeft: (count) => (count === 1 ? "1 play left" : `${count} plays left`),
     upToPoints: (points) => `Up to ${points} pts`,
+    earnedPoints: (points) => `+${points} pts`,
+    lastMatchPoints: (points) => `Last match: +${points} pts`,
     doneForToday: "Done for today",
     continuePlay: "Continue",
     comeBackTomorrow: "Come back tomorrow",
@@ -99,6 +103,8 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     play: "თამაში",
     playsLeft: (count) => `დარჩა ${count} თამაში`,
     upToPoints: (points) => `მაქს. ${points} ქულა`,
+    earnedPoints: (points) => `+${points} ქულა`,
+    lastMatchPoints: (points) => `ბოლო მატჩი: +${points} ქულა`,
     doneForToday: "დღეისთვის დასრულდა",
     continuePlay: "გაგრძელება",
     comeBackTomorrow: "დაბრუნდი ხვალ",
@@ -141,6 +147,8 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     play: "Играть",
     playsLeft: (count) => `${russianPlural(count, "Осталась", "Осталось", "Осталось")} ${count} ${russianPlural(count, "игра", "игры", "игр")}`,
     upToPoints: (points) => `До ${points} очков`,
+    earnedPoints: (points) => `+${points} очк.`,
+    lastMatchPoints: (points) => `Последний матч: +${points} очк.`,
     doneForToday: "На сегодня всё",
     continuePlay: "Продолжить",
     comeBackTomorrow: "Возвращайся завтра",
