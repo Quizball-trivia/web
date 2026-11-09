@@ -841,10 +841,10 @@ export function ProfileWeb({
                     </div>
                   </div>
 
-                  {/* Language */}
-                  <div className="flex items-center justify-between py-3.5">
+                  {/* Language: eight languages do not fit beside the label, so they sit under it, four to a row. */}
+                  <div className="flex flex-col gap-2.5 py-3.5">
                     <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t("profileScreen.language")}</span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="grid grid-cols-4 gap-1.5">
                       {LOCALES.map((language) => (
                         <button
                           key={language.code}
@@ -857,7 +857,7 @@ export function ProfileWeb({
                           }}
                           disabled={isUpdating}
                           aria-pressed={preferredLanguage === language.code}
-                          className={`inline-flex h-9 min-w-[64px] items-center justify-center gap-1 rounded-[20px] px-2 font-poppins text-xs font-semibold uppercase transition-colors active:translate-y-[1px] ${
+                          className={`inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-[20px] px-1.5 font-poppins text-xs font-semibold uppercase transition-colors active:translate-y-[1px] ${
                             preferredLanguage === language.code
                               ? 'bg-brand-green text-white'
                               : 'border-2 border-brand-green text-white hover:bg-brand-green/10'
