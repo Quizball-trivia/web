@@ -27,6 +27,8 @@ export interface DuelCopy {
   };
   ul: {
     category: (n: number, total: number) => string;
+    /** Who suggested the category, under its title. */
+    credit: (name: string) => string;
     perTurn: (s: number) => string;
     left: (n: number, total: number) => string;
     starts: (name: string) => string;
@@ -128,6 +130,7 @@ const es: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Categoría ${n} de ${total}`,
+    credit: (name) => `Créditos a ${name}`,
     perTurn: (s) => `${s} s por turno`,
     left: (n, total) => `quedan ${n} de ${total}`,
     starts: (name) => `Arranca ${name}`,
@@ -253,6 +256,7 @@ const en: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Category ${n} of ${total}`,
+    credit: (name) => `Credits to ${name}`,
     perTurn: (s) => `${s} s per turn`,
     left: (n, total) => `${n} of ${total} left`,
     starts: (name) => `${name} starts`,
@@ -378,6 +382,7 @@ const ka: DuelCopy = {
   },
   ul: {
     category: (n, total) => `კატეგორია ${n} / ${total}`,
+    credit: (name) => `იდეის ავტორი: ${name}`,
     perTurn: (s) => `${s} წმ სვლაზე`,
     left: (n, total) => `დარჩა ${n} / ${total}`,
     starts: (name) => `იწყებს ${name}`,
@@ -503,6 +508,7 @@ const tr: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Kategori ${n} / ${total}`,
+    credit: (name) => `Katkı: ${name}`,
     perTurn: (s) => `Tur başına ${s} sn`,
     left: (n, total) => `${total} içinden ${n} kaldı`,
     starts: (name) => `${name} başlıyor`,
@@ -628,6 +634,7 @@ const ru: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Категория ${n} из ${total}`,
+    credit: (name) => `Идея: ${name}`,
     perTurn: (s) => `${s} с на ход`,
     left: (n, total) => `Осталось ${n} из ${total}`,
     starts: (name) => `Начинает ${name}`,
@@ -753,6 +760,7 @@ const pt: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Categoria ${n} de ${total}`,
+    credit: (name) => `Créditos a ${name}`,
     perTurn: (s) => `${s} s por vez`,
     left: (n, total) => `Restantes: ${n}/${total}`,
     starts: (name) => `${name} começa`,
@@ -878,6 +886,7 @@ const de: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Kategorie ${n} von ${total}`,
+    credit: (name) => `Idee von ${name}`,
     perTurn: (s) => `${s} s pro Runde`,
     left: (n, total) => `${n} von ${total} übrig`,
     starts: (name) => `${name} beginnt`,
@@ -1003,6 +1012,7 @@ const fr: DuelCopy = {
   },
   ul: {
     category: (n, total) => `Catégorie ${n} sur ${total}`,
+    credit: (name) => `Crédits\u00a0: ${name}`,
     perTurn: (s) => `${s} s par tour`,
     left: (n, total) => `Il en reste ${n} sur ${total}`,
     starts: (name) => `${name} commence`,

@@ -40,6 +40,7 @@ export function UltimoDuelBoard({ view, mySeat, names, copy, finished, secondsLe
           <span className="flex items-center gap-1"><Timer className="size-3" />{c.perTurn(Math.round(view.turnMs / 1000))}</span>
         </div>
         <h2 className="mt-1 text-lg font-black leading-snug" style={poppins}>{view.title}</h2>
+        {view.credit && <p className="mt-0.5 text-[11px] font-semibold text-white/50">{c.credit(view.credit)}</p>}
         <div className="mt-2 flex items-center gap-2">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
             <motion.div className="h-full rounded-full bg-brand-yellow" animate={{ width: `${(view.said.length / view.total) * 100}%` }} />
