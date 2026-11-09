@@ -107,6 +107,18 @@ describe('Delete Friend Feature', () => {
     );
   }
 
+  it('asks before removing a friend', () => {
+    renderScreen();
+
+    const deleteButton = screen.getAllByRole('button').find((btn) => btn.title === 'Remove friend');
+    fireEvent.click(deleteButton!);
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(socialRepo.removeFriend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(socialRepo.removeFriend).not.toHaveBeenCalled();
+  });
+
   it('renders delete button for friends', () => {
     renderScreen();
 
@@ -123,6 +135,7 @@ describe('Delete Friend Feature', () => {
 
     const deleteButton = screen.getAllByRole('button').find((btn) => btn.title === 'Remove friend');
     fireEvent.click(deleteButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => {
       expect(socialRepo.removeFriend).toHaveBeenCalledWith('friend-id-123');
@@ -143,6 +156,7 @@ describe('Delete Friend Feature', () => {
     expect(deleteButton).not.toBeDisabled();
 
     fireEvent.click(deleteButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => {
       expect(deleteButton).toBeDisabled();
@@ -156,6 +170,7 @@ describe('Delete Friend Feature', () => {
 
     const deleteButton = screen.getAllByRole('button').find((btn) => btn.title === 'Remove friend');
     fireEvent.click(deleteButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith('Friend removed');
@@ -169,6 +184,7 @@ describe('Delete Friend Feature', () => {
 
     const deleteButton = screen.getAllByRole('button').find((btn) => btn.title === 'Remove friend');
     fireEvent.click(deleteButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Network error');
@@ -206,6 +222,7 @@ describe('Delete Friend Feature', () => {
 
     const deleteButton = screen.getAllByRole('button').find((btn) => btn.title === 'Remove friend');
     fireEvent.click(deleteButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => {
       expect(queryClientSpy).toHaveBeenCalled();

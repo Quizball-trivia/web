@@ -131,6 +131,30 @@ describe("FriendLobbyScreen duel rooms", () => {
     vi.clearAllMocks();
   });
 
+  it("asks a lone host to invite a friend when the game needs a second player", () => {
+    mocks.useFriendLobbyLogic.mockReturnValue(duelRoom([member("host", true, false)]));
+    render(<FriendLobbyScreen roomCode="DUEL01" isHost />);
+    expect(screen.getByText("friend.aloneHint")).toBeInTheDocument();
+  });
+
+  it("does not claim a friend is needed in auction, which can start alone", () => {
+    const room = duelRoom([member("host", true, false)]);
+    mocks.useFriendLobbyLogic.mockReturnValue({
+      ...room,
+      isDuelLobby: false,
+      isAuctionLobby: true,
+      lobby: { ...room.lobby, settings: { ...room.lobby.settings, gameMode: "auction", duelGame: null } },
+    });
+    render(<FriendLobbyScreen roomCode="DUEL01" isHost />);
+    expect(screen.queryByText("friend.aloneHint")).not.toBeInTheDocument();
+  });
+
+  it("stops asking once a second player is in the room", () => {
+    mocks.useFriendLobbyLogic.mockReturnValue(duelRoom([member("host", true, false), member("guest", false, false)]));
+    render(<FriendLobbyScreen roomCode="DUEL01" isHost />);
+    expect(screen.queryByText("friend.aloneHint")).not.toBeInTheDocument();
+  });
+
   it("offers the host an enabled Start for a ready two-player duel", () => {
     const result = duelRoom([member("host", true, true), member("guest", false, true)]);
     mocks.useFriendLobbyLogic.mockReturnValue(result);

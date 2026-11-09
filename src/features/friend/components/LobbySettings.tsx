@@ -6,7 +6,7 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Crosshair, Eye, EyeOff, Gavel, Grid3X3, Lock, Search, Shuffle, Swords, Trophy } from "lucide-react";
+import { Bomb, Check, ClipboardList, Clock3, Crosshair, Eye, EyeOff, Flag, Gamepad2, Gavel, Grid3X3, Hourglass, KeyRound, Lightbulb, Link2, ListOrdered, Lock, type LucideIcon, Network, PartyPopper, Search, SearchX, Shield, Shirt, Shuffle, Swords, Target, Trophy, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -77,6 +77,40 @@ function modeTabs(currentDuelGame: DuelGameId | null, currentRoomGame: RoomGameI
     // A game this build does not know (the room was set up from a newer page) gets no tab rather than a crash.
     ...roomGames.flatMap((roomGame): ModeTab[] => { const labels = roomGameLabels(roomGame); return labels ? [{ choice: { gameMode: 'room_game', duelGame: null, roomGame }, labelKey: labels.tab }] : []; }),
   ];
+}
+
+/** Icon of each mode card in the picker. */
+const MODE_ICONS: Partial<Record<LobbyGameMode, LucideIcon>> = {
+  friendly_possession: Swords,
+  friendly_party_quiz: PartyPopper,
+  football_grid: Grid3X3,
+  ranked_sim: Trophy,
+  auction: Gavel,
+};
+const DUEL_ICONS: Record<DuelGameId, LucideIcon> = { buscaminas: Bomb, pistas: Lightbulb, ultimo: Hourglass, minuto: Clock3 };
+const ROOM_GAME_ICONS: Record<RoomGameId, LucideIcon> = {
+  aproximado: Crosshair,
+  shared_player: Shirt,
+  name_chain: Link2,
+  tenable: ListOrdered,
+  football_race: Flag,
+  codenames: KeyRound,
+  dato_falso: SearchX,
+  conexiones: Network,
+  darts501: Target,
+  draft: ClipboardList,
+  zone_match: Shield,
+};
+
+function modeIcon(choice: LobbyModeChoice): LucideIcon {
+  if (choice.gameMode === 'duel' && choice.duelGame) return DUEL_ICONS[choice.duelGame] ?? Gamepad2;
+  if (choice.gameMode === 'room_game' && choice.roomGame) return ROOM_GAME_ICONS[choice.roomGame] ?? Gamepad2;
+  return MODE_ICONS[choice.gameMode] ?? Gamepad2;
+}
+
+/** Fewest players a mode can start with: the host-start minimum (auction fills empty seats with bots). */
+function modeMinPlayers(choice: LobbyModeChoice): number {
+  return LOBBY_MODES[choice.gameMode].hostStart?.min ?? 2;
 }
 
 const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
@@ -735,15 +769,23 @@ export function LobbySettings({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {modeTabs(serverDuelGame, serverRoomGame).map(({ choice, labelKey }) => {
                 const key = modeChoiceKey(choice);
-                const overCapacity = memberCount > choicePlayable(choice);
+                const maxPlayers = choicePlayable(choice);
+                const minPlayers = Math.min(modeMinPlayers(choice), maxPlayers);
+                const overCapacity = memberCount > maxPlayers;
                 const guestLocked = hasGuest && !LOBBY_MODES[choice.gameMode].guestAllowed;
                 const selected = currentChoiceKey === key;
+                const Icon = modeIcon(choice);
+                const playersId = `lobby-mode-players-${key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+                const playersLabel = minPlayers === 2 && maxPlayers === 2
+                  ? t("friend.playersOneVsOne")
+                  : t("friend.playersRange", { min: minPlayers, max: maxPlayers });
                 return (
                   <button
                     key={key}
+                    type="button"
                     onClick={() => {
                       if (guestLocked) {
                         if (principal.kind === 'guest') openAuthPrompt();
@@ -755,22 +797,38 @@ export function LobbySettings({
                     // A guest may always tap a locked mode: the tap opens sign-up, never a settings change.
                     disabled={guestLocked && principal.kind === 'guest' ? overCapacity : !canEdit || overCapacity}
                     aria-pressed={selected}
+                    // The badge row is aria-hidden so the name stays the game's; its player count is read as the description.
+                    aria-describedby={playersId}
                     data-guest-locked={guestLocked || undefined}
                     title={overCapacity ? t("friend.errorModeCapacity") : guestLocked ? t("friend.errorModeRequiresAccount") : undefined}
-                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
                     className={cn(
-                      "py-2.5 rounded-[10px] uppercase transition-colors",
+                      "relative flex min-h-[76px] flex-col items-start justify-between gap-2 rounded-[14px] border p-3 text-left transition-colors",
                       selected
-                        ? "bg-brand-blue text-white"
+                        ? "border-brand-blue bg-brand-blue text-white shadow-[0_6px_20px_rgba(22,69,255,0.35)]"
                         : overCapacity
-                          ? "text-white/25 cursor-not-allowed"
+                          ? "cursor-not-allowed border-white/5 bg-surface-deep/50 text-white/30"
                           : guestLocked
-                            ? "text-white/30"
-                            : "text-white/55 hover:text-white"
+                            ? "border-white/10 bg-surface-deep text-white/40"
+                            : "border-white/10 bg-surface-deep text-white/85 hover:border-white/25 hover:bg-white/[0.06]",
+                      !selected && !canEdit && !guestLocked && !overCapacity && "cursor-default hover:border-white/10 hover:bg-surface-deep",
                     )}
                   >
-                    {guestLocked && <Lock className="mr-1 inline size-3 align-[-1px]" aria-hidden="true" />}
-                    {t(labelKey)}
+                    <span className="flex w-full items-center justify-between gap-2" aria-hidden="true">
+                      <Icon className={cn("size-5", selected ? "text-brand-yellow" : "text-white/60")} strokeWidth={2.25} />
+                      {guestLocked && <Lock className="size-3.5" />}
+                      <span
+                          id={playersId}
+                          className={cn(
+                            guestLocked ? "sr-only" : "inline-flex",
+                            "items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                            selected ? "bg-white/20 text-white" : "bg-white/[0.06] text-white/55",
+                          )}
+                        >
+                          <Users className="size-3" />
+                          {playersLabel}
+                        </span>
+                    </span>
+                    <span className="text-[13px] font-semibold leading-tight">{t(labelKey)}</span>
                   </button>
                 );
               })}

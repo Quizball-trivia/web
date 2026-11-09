@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Curated game sections for the Play page — two hand-picked, ordered rows
- * ("Daily Challenges" and "Play with coins") in a horizontal scroller, each an
+ * Curated games for the Play page — a hand-picked, ordered "Daily Challenges"
+ * row in a horizontal scroller, each an
  * artwork card reusing the /demos hub illustration (DemoModeArt). The order and
  * membership are owner-defined (see the slug arrays below); any mode not listed
  * is intentionally off the Play screen for now.
@@ -42,10 +42,8 @@ import { MissingXiModeModal } from "@/features/missing-xi/components/MissingXiMo
 import { StatSniperModeModal } from "@/features/aproximado/StatSniperModeModal";
 import { ROOM_GAMES_ENABLED } from "@/lib/config";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
-import { CoinIcon } from "@/features/store/components/CoinIcon";
 import type { Locale } from "@/lib/i18n/messages";
-import { isMiniGamesEnabled } from "@/lib/features/playModes";
-import { DAILY_CHALLENGE_SLUGS, PLAY_WITH_COINS_SLUGS } from "@/features/play/playCatalog";
+import { DAILY_CHALLENGE_SLUGS } from "@/features/play/playCatalog";
 import { usePlayOrder } from "@/features/play/PlayOrderProvider";
 
 /** Real in-app destinations for the modes that have shipped a page. */
@@ -133,7 +131,6 @@ const resolveModes = (slugs: string[]): DemoModeCard[] =>
 // Prototype modes (no shipped route yet) stay listed — they are being turned
 // into real games — and open their /demos preview until their route lands.
 const DAILY_CHALLENGE_MODES = resolveModes(DAILY_CHALLENGE_SLUGS);
-const PLAY_WITH_COINS_MODES = isMiniGamesEnabled ? resolveModes(PLAY_WITH_COINS_SLUGS) : [];
 
 /** The row in the server's order; a game the server did not list keeps its hand-made place at the end. */
 function inOrder(modes: DemoModeCard[], order: string[] | null): DemoModeCard[] {
@@ -235,7 +232,7 @@ function DailyDevResetButton({ challengeType, title }: { challengeType: DailyCha
   );
 }
 
-/** The diagonal NEW band across a card's picture. A coin game's COINS pill has the right corner, so its band crosses the left one, below the format pill. */
+/** The diagonal NEW band across a card's picture, across the corner the format pill leaves free. */
 function NewRibbon({ label, beside }: { label: string; beside: "left" | "right" }) {
   return (
     <span
@@ -324,7 +321,7 @@ function GameCard({
     <Link
       href={guestHref ?? hrefFor(mode)}
       onClick={(event) => {
-        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : DAILY_CHALLENGE_SLUGS.includes(mode.slug) ? "daily" : "other";
+        const group = DAILY_CHALLENGE_SLUGS.includes(mode.slug) ? "daily" : "other";
         if (isGuest) {
           // Public page when the mode has one; otherwise the sign-in dialog
           // (never a /demos preview, which production does not serve).
@@ -360,12 +357,6 @@ function GameCard({
         {/* Format badges — same pill as NEW, colour-coded so the three formats
             read at a glance: yellow solo, green multiplayer, orange online.
             Modes that ship in more than one format (Missing XI) show each. */}
-        {PLAY_WITH_COINS_SLUGS.includes(mode.slug) && (
-          <span className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-full bg-brand-yellow shadow-md shadow-black/30 md:size-auto md:gap-1 md:px-2.5 md:py-1" title={t("play.coinsBadge")} aria-label={t("play.coinsBadge")}>
-            <CoinIcon size={16} />
-            <span className="hidden font-poppins text-[11px] font-bold uppercase leading-none tracking-wide text-black md:inline">{t("play.coinsBadge")}</span>
-          </span>
-        )}
         <span className="absolute left-2 top-2 flex items-center gap-1">
           {[format, ...(EXTRA_FORMATS[mode.slug] ?? [])].map((entry) => (
             <span
@@ -381,7 +372,7 @@ function GameCard({
           ))}
         </span>
 
-        {isNew && <NewRibbon label={t("play.newBadge")} beside={PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "left" : "right"} />}
+        {isNew && <NewRibbon label={t("play.newBadge")} beside="right" />}
 
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
@@ -473,19 +464,16 @@ function GameSection({
 }
 
 
-// The finder lists the daily and coin games only, so a solo/multiplayer/online split would carry no information here.
-type FinderFilter = "all" | "new" | "daily" | "coins";
+// The finder lists the daily games only, so a solo/multiplayer/online split would carry no information here.
+type FinderFilter = "all" | "new" | "daily";
 const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
   { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü", ru: "Все", pt: "Todos", de: "Alle", fr: "Tout" },
   { id: "new", en: "New", ka: "ახალი", es: "Nuevos", tr: "Yeni", ru: "Новые", pt: "Novos", de: "Neu", fr: "Nouveaux" },
   { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük", ru: "Ежедневно", pt: "Diários", de: "Täglich", fr: "Du jour" },
-  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton", ru: "Монеты", pt: "Moedas", de: "Münzen", fr: "Pièces" },
 ];
 
-function matchesFilter(section: "daily" | "coins", filter: FinderFilter, isNew: boolean): boolean {
-  if (filter === "all") return true;
-  if (filter === "new") return isNew;
-  return section === filter;
+function matchesFilter(filter: FinderFilter, isNew: boolean): boolean {
+  return filter === "new" ? isNew : true;
 }
 
 // Accent- and case-insensitive so "Gol" finds "Golü" and "sut" finds "Şut" (Turkish ı folds to i).
@@ -630,27 +618,20 @@ export function AllGamesGrid() {
   const playOrder = usePlayOrder();
   const isNew = useCallback((mode: DemoModeCard) => playOrder.newSlugs.includes(mode.slug), [playOrder.newSlugs]);
   const dailyModes = useMemo(() => inOrder(DAILY_CHALLENGE_MODES, playOrder.daily), [playOrder.daily]);
-  const coinModes = useMemo(() => inOrder(PLAY_WITH_COINS_MODES, playOrder.coins), [playOrder.coins]);
   const visibleDaily = useMemo(
-    () => dailyModes.filter((mode) => matchesFilter("daily", filter, isNew(mode)) && matchesQuery(mode, query)),
+    () => dailyModes.filter((mode) => matchesFilter(filter, isNew(mode)) && matchesQuery(mode, query)),
     [dailyModes, filter, isNew, query],
   );
-  const visibleCoins = useMemo(
-    () => coinModes.filter((mode) => matchesFilter("coins", filter, isNew(mode)) && matchesQuery(mode, query)),
-    [coinModes, filter, isNew, query],
-  );
   const counts = useMemo(() => {
-    const all = [...DAILY_CHALLENGE_MODES.map((mode) => ({ mode, section: "daily" as const })), ...PLAY_WITH_COINS_MODES.map((mode) => ({ mode, section: "coins" as const }))]
-      .filter(({ mode }) => matchesQuery(mode, query));
-    const count = (id: FinderFilter) => all.filter(({ mode, section }) => matchesFilter(section, id, isNew(mode))).length;
-    return { all: all.length, new: count("new"), daily: count("daily"), coins: count("coins") };
+    const all = DAILY_CHALLENGE_MODES.filter((mode) => matchesQuery(mode, query));
+    return { all: all.length, new: all.filter(isNew).length, daily: all.length };
   }, [isNew, query]);
-  const nothing = visibleDaily.length === 0 && visibleCoins.length === 0;
+  const nothing = visibleDaily.length === 0;
 
   return (
     <div className="space-y-6 md:space-y-8">
       <GamesFinder query={query} onQuery={setQuery} filter={filter} onFilter={setFilter} counts={counts}
-        hasNewGames={DAILY_CHALLENGE_MODES.some(isNew) || PLAY_WITH_COINS_MODES.some(isNew)} />
+        hasNewGames={DAILY_CHALLENGE_MODES.some(isNew)} />
       <MissingXiModeModal
         isOpen={missingXiOpen}
         onOpenChange={setMissingXiOpen}
@@ -700,15 +681,6 @@ export function AllGamesGrid() {
             )}
           </>
         }
-      />
-      )}
-      {visibleCoins.length > 0 && (
-      <GameSection
-        title={t("play.sectionPlayCoins")}
-        hint={t("play.sectionPlayCoinsHint")}
-        modes={visibleCoins}
-        onOpenMode={openMode}
-        isNew={isNew}
       />
       )}
     </div>

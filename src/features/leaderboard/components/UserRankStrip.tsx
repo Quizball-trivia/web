@@ -3,6 +3,7 @@ import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { Trophy } from "lucide-react";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { useTierLabel } from "@/hooks/useTierLabel";
 
 interface UserRankStripProps {
   userEntry: LeaderboardEntry;
@@ -22,6 +23,7 @@ const poppins = {
 export function UserRankStrip({ userEntry, pointsUnit = "RP", hideTier = false }: UserRankStripProps) {
   const { isEventMode } = useActiveEventMode();
   const tierAccent = getTierAccent(userEntry.tier);
+  const tierLabelOf = useTierLabel();
   return (
     <div
       className="relative flex items-center gap-3 sm:gap-4 rounded-[10px] border-2 px-3 sm:px-4 py-3 sm:py-3.5"
@@ -51,7 +53,7 @@ export function UserRankStrip({ userEntry, pointsUnit = "RP", hideTier = false }
         </div>
         <div className="mt-1 flex items-center gap-2 text-[10px] sm:text-xs font-fun font-black uppercase tracking-wide">
           {!hideTier && (
-            <span className="truncate" style={{ color: tierAccent }}>{userEntry.tier}</span>
+            <span className="truncate" style={{ color: tierAccent }}>{tierLabelOf(userEntry.tier)}</span>
           )}
           <span className="tabular-nums shrink-0 text-white">
             {userEntry.rankPoints.toLocaleString()} {pointsUnit}

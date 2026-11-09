@@ -11,6 +11,7 @@ import { customizationFromAvatarValue } from '@/lib/avatars';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import { StoreScreen } from './StoreScreen';
+import { StoreCategoryNav, type StoreCategory } from './components/StoreCategoryNav';
 import { freshLocalStore, LOCAL_STORE_KEY, purchaseLocalPart, readLocalStore, serializeLocalStore, type LocalStoreState } from './localStorePreview';
 
 export function StoreExamplesScreen() {
@@ -18,7 +19,9 @@ export function StoreExamplesScreen() {
   const current = useRef(state);
   const [ready, setReady] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [category, setCategory] = useState("hair");
+  const [category, setCategory] = useState<StoreCategory>("all");
+  // Mock ticket balance (cycle 0 → 5) so ticket-pack states can be checked here.
+  const [tickets, setTickets] = useState(3);
   const [search, setSearch] = useState("");
   const { locale, setLocale, t } = useLocale();
   useEffect(() => {
@@ -36,7 +39,7 @@ export function StoreExamplesScreen() {
   }
   function onEquip(customization: AvatarCustomization) { commit({ ...current.current, customization }); }
   function onPurchase(slug: string) { commit(purchaseLocalPart(current.current, slug)); }
-  const localPreview = { ...state, onEquip, onPurchase, category, search };
+  const localPreview = { ...state, onEquip, onPurchase, category, search, tickets };
   if (!ready) return <p className="p-8 text-white">{t("store.previewLoading")}</p>;
   return (
     <main className="min-h-screen bg-background text-white">
@@ -57,18 +60,18 @@ export function StoreExamplesScreen() {
             <div className="flex items-center gap-3"><AvatarDisplay customization={state.customization} size="lg" /><AvatarDisplay customization={state.customization} size="sm" shape="square" /></div>
             <p className="text-sm text-white/60">{t("store.previewSizes")}</p>
             <p className="text-lg font-semibold" data-testid="test-coins">{state.coins.toLocaleString()} {t("store.previewCoins")}</p>
+            <button type="button" onClick={() => setTickets((n) => (n + 1) % 6)} className="text-left text-sm text-white/70 underline underline-offset-4">
+              {t("store.ticketsTitle")}: {tickets}/5
+            </button>
             <Link href="/dev/jerseys" className="text-center text-sm underline">{t("store.previewAdjust")}</Link>
             <button onClick={() => setEditorOpen(true)} className="rounded-2xl bg-store-accent px-6 py-3 font-semibold">{t("store.previewEdit")}</button>
             <button onClick={() => commit(freshLocalStore())} className="text-sm text-white/60 underline underline-offset-4">{t("store.previewReset")}</button>
           </div>
         </section>
       </header>
-      <nav aria-label={t("store.previewCategories")} className="sticky top-0 z-20 mx-auto mt-6 max-w-5xl border-y border-white/10 bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="flex gap-2 overflow-x-auto pb-3">
-          {[['hair',t('store.previewPlayerHair')],['jerseys',t('store.jerseysTitle')],['headwear',t('store.headwearTitle')],['accessories',t('store.accessoriesTitle')],['glasses',t('profile.avatarPicker.tabGlasses')],['facialHair',t('profile.avatarPicker.tabFacialHair')],['all',t('store.previewAll')]].map(([id,label]) => <button key={id} type="button" aria-pressed={category === id} onClick={() => setCategory(id)} className="shrink-0 rounded-full border border-white/20 px-4 py-2 text-sm aria-pressed:border-fuchsia-500 aria-pressed:bg-fuchsia-950">{label}</button>)}
-        </div>
-        <input type="search" aria-label={t("store.previewFind")} placeholder={t("store.previewSearch")} value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-xl border border-white/15 bg-store-card px-4 py-2 text-sm" />
-      </nav>
+      <div className="sticky top-0 z-20 mx-auto mt-6 max-w-5xl px-4">
+        <StoreCategoryNav category={category} onCategoryChange={setCategory} search={search} onSearchChange={setSearch} />
+      </div>
       <StoreScreen localPreview={localPreview} />
       <AvatarPicker open={editorOpen} onOpenChange={setEditorOpen} currentCustomization={state.customization} localPreview={localPreview} onSelect={value => {
         try { onEquip(customizationFromAvatarValue(value)); setEditorOpen(false); toast.success(t('store.previewSaved')); }

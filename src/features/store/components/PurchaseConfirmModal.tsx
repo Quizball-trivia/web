@@ -37,6 +37,12 @@ export interface PurchaseConfirmModalProps {
    * by a single disabled "Need more" button (modal stays preview-only).
    */
   affordable?: boolean;
+  /** Current coin balance; with `priceCoins`, drives the shortfall / balance-after line. */
+  balance?: number | null;
+  /** Numeric coin price (coin purchases only). */
+  priceCoins?: number;
+  /** When set, an unaffordable item offers "How to earn coins" instead of a dead end. */
+  onEarnMore?: () => void;
 }
 
 export function PurchaseConfirmModal({
@@ -50,9 +56,14 @@ export function PurchaseConfirmModal({
   previewCustomization,
   confirmLabel,
   affordable = true,
+  balance,
+  priceCoins,
+  onEarnMore,
 }: PurchaseConfirmModalProps) {
   const { t } = useLocale();
   const hidePrice = !price.trim();
+  const hasCoinMath = priceInCoins && !hidePrice && balance != null && priceCoins != null && priceCoins > 0;
+  const shortfall = hasCoinMath ? Math.max(0, priceCoins - balance) : 0;
   return (
     <AnimatePresence>
       {open && (
@@ -99,12 +110,6 @@ export function PurchaseConfirmModal({
             {!hidePrice && (
               <div className="mt-4 flex items-center justify-center gap-2">
                 <span
-                  className="text-[10px] uppercase tracking-[0.04em] text-white/55"
-                  style={poppins}
-                >
-                  {t('profile.purchase.price')}
-                </span>
-                <span
                   className="text-[28px] tabular-nums text-white"
                   style={poppins}
                 >
@@ -114,8 +119,27 @@ export function PurchaseConfirmModal({
               </div>
             )}
 
+            {hasCoinMath && (
+              <p className="mt-2 text-center text-[13px] text-white/70 tabular-nums">
+                {!affordable && shortfall > 0
+                  ? <>{t("store.balanceLabel", { amount: balance.toLocaleString() })} · <span className="font-semibold text-brand-yellow">{t("store.needMoreAmount", { amount: shortfall.toLocaleString() })}</span></>
+                  : t("store.balanceAfter", { amount: (balance - priceCoins).toLocaleString() })}
+              </p>
+            )}
+
             {/* Buttons */}
-            {!affordable ? (
+            {!affordable && onEarnMore ? (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={onEarnMore}
+                  className="flex h-[48px] w-full items-center justify-center rounded-[16px] bg-brand-yellow text-[14px] uppercase text-black transition-transform active:translate-y-[1px]"
+                  style={poppins}
+                >
+                  {t('store.howToEarnCoins')}
+                </button>
+              </div>
+            ) : !affordable ? (
               <div className="mt-6">
                 <button
                   type="button"

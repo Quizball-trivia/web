@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, RotateCcw, Filter } from "lucide-react";
+import { Search, RotateCcw, Filter, Plus } from "lucide-react";
 import { usePublicLobbies } from "@/lib/queries/lobbies.queries";
 import { LobbyCard } from "./LobbyCard";
 import { Loader2 } from "lucide-react";
@@ -10,9 +10,11 @@ interface LobbyBrowsePanelProps {
   onJoin: (inviteCode: string) => void;
   isJoiningCode?: string | null;
   onActionTriggered?: () => void;
+  /** Shown as the empty state's way forward: no open rooms means "make one". */
+  onCreateRoom?: () => void;
 }
 
-export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: LobbyBrowsePanelProps) {
+export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered, onCreateRoom }: LobbyBrowsePanelProps) {
   const { t } = useLocale();
   const { data: lobbies, isLoading, isFetching, refetch } = usePublicLobbies();
   const [search, setSearch] = useState("");
@@ -49,17 +51,13 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
        {/* Search & Filter Bar */}
        <div className="flex flex-row items-center gap-2 sm:gap-3">
           <div className="relative min-w-0 flex-1">
-             <Search className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-4 sm:size-5 text-white/55" />
+             <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-white/45" aria-hidden />
              <input
-                type="text"
-                placeholder={t("friend.searchPlaceholder")}
-                className="h-12 sm:h-14 w-full rounded-[20px] border-none bg-brand-blue pl-9 sm:pl-14 pr-3 sm:pr-5 text-sm sm:text-base uppercase text-white outline-none placeholder:text-white/45 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
-                style={{
-                  fontFamily: "'Poppins', sans-serif",
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
-                  boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
-                }}
+                type="search"
+                aria-label={t("friend.searchRoomsPlaceholder")}
+                placeholder={t("friend.searchRoomsPlaceholder")}
+                className="h-11 sm:h-12 w-full rounded-[14px] border border-white/15 bg-surface-deep pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-blue disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden"
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500 }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
              />
@@ -123,6 +121,16 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
                   {t("friend.noLobbiesFound")}
                 </h3>
                 <p className="mt-1 max-w-xs text-sm text-white/55">{t("friend.noLobbiesHint")}</p>
+                {onCreateRoom && (
+                  <button
+                    type="button"
+                    onClick={onCreateRoom}
+                    className="mt-5 flex h-11 items-center justify-center gap-2 rounded-[14px] bg-brand-yellow px-5 text-sm font-semibold uppercase tracking-[0.04em] text-black transition-colors hover:bg-brand-yellow/90"
+                  >
+                    <Plus className="size-4" strokeWidth={3} />
+                    {t("friend.createRoom")}
+                  </button>
+                )}
              </div>
           ) : (
              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">

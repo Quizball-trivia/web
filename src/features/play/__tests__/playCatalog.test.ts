@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DAILY_CHALLENGE_SLUGS, PLAY_WITH_COINS_SLUGS, RETIRED_PLAY_SLUGS, parsePlayPopularity, playOrderFrom, playPopularityKey } from "../playCatalog";
+import { DAILY_CHALLENGE_SLUGS, RETIRED_PLAY_SLUGS, parsePlayPopularity, playOrderFrom, playPopularityKey } from "../playCatalog";
 import { createPlayOrderLoader } from "../playOrderLoader";
 
 const NOW = new Date("2026-10-11T12:00:00Z");
@@ -17,7 +17,7 @@ describe("playPopularityKey", () => {
 describe("playOrderFrom", () => {
   it("keeps the hand-made order when there are no numbers, and still marks new games", () => {
     for (const empty of [null, { generated_at: null, games: {} }]) {
-      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, coins: null, newSlugs: ["minuto", "shared-player", "name-chain", "buscaminas", "pistas"] });
+      expect(playOrderFrom(empty, NOW)).toEqual({ daily: null, newSlugs: ["minuto", "shared-player", "name-chain", "buscaminas", "pistas"] });
     }
   });
 
@@ -34,14 +34,11 @@ describe("playOrderFrom", () => {
     }, NOW);
     expect(order.daily?.[0]).toBe("daily-statSniper");
     expect([...(order.daily ?? [])].sort()).toEqual([...DAILY_CHALLENGE_SLUGS].sort());
-    expect(order.coins?.[0]).toBe("mini-squad-spin");
-    expect([...(order.coins ?? [])].sort()).toEqual([...PLAY_WITH_COINS_SLUGS].sort());
   });
 
   it("keeps the hand-made order of a row that has no counts of its own", () => {
     const order = playOrderFrom({ generated_at: null, games: { "squad-spin": { players_7d: 9, players_3d: 3 } } }, NOW);
     expect(order.daily).toBeNull();
-    expect(order.coins?.[0]).toBe("mini-squad-spin");
   });
 
   it("keeps True or False last even when its numbers lead the row", () => {
@@ -52,8 +49,14 @@ describe("playOrderFrom", () => {
   });
 
   it("never lists a retired game on the Play page", () => {
-    const listed = new Set([...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS]);
+    const listed = new Set(DAILY_CHALLENGE_SLUGS);
     expect(RETIRED_PLAY_SLUGS.filter((slug) => listed.has(slug))).toEqual([]);
+  });
+
+  it("keeps the coin games off the Play page", () => {
+    expect(DAILY_CHALLENGE_SLUGS).not.toContain("mini-final-third");
+    expect(DAILY_CHALLENGE_SLUGS).not.toContain("mini-squad-spin");
+    expect(RETIRED_PLAY_SLUGS).toEqual(expect.arrayContaining(["mini-final-third", "mini-squad-spin"]));
   });
 
   it("stops marking a game as new three weeks after its release", () => {
@@ -107,7 +110,7 @@ describe("createPlayOrderLoader", () => {
     let now = Date.parse("2026-10-11T12:00:00Z");
     const read = vi.fn().mockRejectedValue(new Error("404"));
     const load = createPlayOrderLoader(read, { clock: () => now });
-    expect(await load()).toMatchObject({ daily: null, coins: null });
+    expect(await load()).toMatchObject({ daily: null });
     now += 60_000;
     await load();
     expect(read).toHaveBeenCalledTimes(1);
@@ -132,7 +135,7 @@ describe("createPlayOrderLoader", () => {
     const read = vi.fn().mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
     // A fixed day: on the real one, a game released that week would lead the row.
     const load = createPlayOrderLoader(read, { firstWaitMs: 5, clock: () => Date.parse("2026-10-11T12:00:00Z") });
-    expect(await load()).toMatchObject({ daily: null, coins: null });
+    expect(await load()).toMatchObject({ daily: null });
     // Pages arriving while it is still running join the same read.
     expect(await load()).toMatchObject({ daily: null });
     expect(read).toHaveBeenCalledTimes(1);
