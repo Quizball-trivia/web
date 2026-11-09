@@ -24,6 +24,8 @@ describe("refused invite: a way forward for each reason", () => {
   it("classifies the reason", () => {
     expect(inviteFailureKind(failure("LOBBY_MODE_REQUIRES_ACCOUNT"))).toBe("account");
     expect(inviteFailureKind(failure("LOBBY_FULL"))).toBe("full");
+    expect(inviteFailureKind(failure("LOBBY_GAME_STARTED"))).toBe("in_progress");
+    expect(inviteFailureKind(failure("LOBBY_ENDED"))).toBe("ended");
     expect(inviteFailureKind(failure("LOBBY_NOT_FOUND", room("ended")))).toBe("ended");
     expect(inviteFailureKind(failure("LOBBY_NOT_FOUND", room("in_progress")))).toBe("in_progress");
     expect(inviteFailureKind(failure("LOBBY_NOT_FOUND", room("unknown")))).toBe("expired");
@@ -51,14 +53,14 @@ describe("refused invite: a way forward for each reason", () => {
   });
 
   it("ended room: start a new room; mid-game room: try again or open your own", () => {
-    const a = renderScreen(failure("LOBBY_NOT_FOUND", room("ended")));
+    const a = renderScreen(failure("LOBBY_ENDED", room("ended")));
     expect(screen.getByRole("heading").textContent).toBe("friend.inviteEndedTitle");
     fireEvent.click(screen.getByRole("button", { name: /inviteNewRoom/ }));
     expect(a.onNewRoom).toHaveBeenCalledOnce();
   });
 
   it("mid-game room: try again first, own room second; a missing host name falls back", () => {
-    const a = renderScreen(failure("LOBBY_NOT_FOUND", room("in_progress", "football_grid", null)));
+    const a = renderScreen(failure("LOBBY_GAME_STARTED", room("in_progress", "football_grid", null)));
     expect(screen.getByRole("heading").textContent).toBe('friend.inviteInProgressTitle:{"host":"friend.inviteHostFallback"}');
     fireEvent.click(screen.getByRole("button", { name: /inviteTryAgain/ }));
     fireEvent.click(screen.getByRole("button", { name: /inviteOwnRoom/ }));

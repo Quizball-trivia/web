@@ -113,9 +113,10 @@ export function FriendMatchHubPage() {
         router.push(`/friend/room/${result.inviteCode}?source=public_lobby`);
         return;
       }
-      if (result.code === "LOBBY_NOT_FOUND") {
+      if (["LOBBY_NOT_FOUND", "LOBBY_GAME_STARTED", "LOBBY_ENDED"].includes(result.code)) {
         void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
-        toast.error(t('friend.toastLobbyClosed'));
+        toast.error(t(result.code === "LOBBY_GAME_STARTED" ? "friend.inviteInProgressDescription"
+          : result.code === "LOBBY_ENDED" ? "friend.inviteEndedTitle" : "friend.toastLobbyClosed"));
       } else {
         toast.error(result.message);
       }
