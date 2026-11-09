@@ -278,7 +278,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
           onPick={(playerId, slotId) => {
             log("onPick", playerId, slotId);
             const signed = s.spin.players.find((p) => p.id === playerId);
-            sfx(signed && signed.rating >= 85 ? "signStar" : "sign");
+            sfx(signed && s.variant !== "knowledge" && signed.rating >= 85 ? "signStar" : "sign");
             if (!multi) setUndoFrom({ state: s, name: signed?.name ?? "" });
             setS((x) => pick(u, x, playerId, slotId));
           }}
