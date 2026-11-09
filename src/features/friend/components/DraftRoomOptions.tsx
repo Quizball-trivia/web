@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { FORMATIONS, type Era, type FormationId, type Variant } from "@/features/draft/draft.rules";
@@ -25,14 +25,20 @@ const sameChoice = (a: DraftRoomChoice, b: DraftRoomChoice) => a.leagueId === b.
 
 const chip = (selected: boolean, canEdit: boolean) => cn("min-h-9 rounded-full px-3 text-xs font-bold transition-colors", selected ? "bg-brand-blue text-white" : "bg-white/[0.07] text-white/75", canEdit && !selected && "hover:bg-white/[0.12]", !canEdit && !selected && "opacity-45");
 
-export function DraftRoomOptions({ options, canEdit, onChange, hostOnly }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string }) {
+export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendingChange }: { options: Record<string, unknown> | null; canEdit: boolean; onChange: (options: Record<string, unknown>) => void; hostOnly: string; onPendingChange?: (pending: boolean) => void }) {
   const { locale } = useLocale();
   const c = draftCopy(locale);
   const server = readDraftOptions(options);
   // Quick taps must not undo each other: until the room echoes what was sent, the next tap builds on what was sent,
-  // not on the older settings the room still shows. The room's own value wins again once it matches, or after 3 s.
+  // not on the older settings the room still shows. Once the room confirms it (or 3 s pass, or editing is no longer
+  // allowed) the room's own value is shown again.
   const [sent, setSent] = useState<DraftRoomChoice | null>(null);
-  const value = sent && !sameChoice(sent, server) ? sent : server;
+  if (sent && (!canEdit || sameChoice(sent, server))) setSent(null);
+  const pending = canEdit && sent && !sameChoice(sent, server) ? sent : null;
+  const value = pending ?? server;
+  // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
+  useEffect(() => { onPendingChange?.(pending !== null); }, [pending, onPendingChange]);
+  useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
   const set = (patch: Partial<DraftRoomChoice>) => {
     if (!canEdit) return;
     const next = { ...value, ...patch };

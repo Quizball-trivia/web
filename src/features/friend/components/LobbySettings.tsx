@@ -176,14 +176,20 @@ export function LobbySettings({
   });
   const savingRef = useRef(false);
   const syncSavingRef = useRef<() => void>(() => {});
+  // A room game's own options (Football Draft) can be on their way too: the lobby is saving until the room answers.
+  const roomOptionsPendingRef = useRef(false);
   const syncSaving = useCallback(() => {
-    const saving = Object.keys(pendingChangesRef.current).length > 0 || inFlightChangesRef.current !== null;
+    const saving = Object.keys(pendingChangesRef.current).length > 0 || inFlightChangesRef.current !== null || roomOptionsPendingRef.current;
     if (saving === savingRef.current) return;
     savingRef.current = saving;
     onSavingChangeRef.current?.(saving);
   }, []);
   useEffect(() => {
     syncSavingRef.current = syncSaving;
+  }, [syncSaving]);
+  const onRoomOptionsPending = useCallback((pending: boolean) => {
+    roomOptionsPendingRef.current = pending;
+    syncSaving();
   }, [syncSaving]);
 
   const mode = optimisticMode?.gameMode ?? serverMode;
@@ -1066,7 +1072,7 @@ export function LobbySettings({
               <CodenamesRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
             )}
             {roomGame === 'draft' && roomGame === serverRoomGame && (
-              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} />
+              <DraftRoomOptions options={settings?.roomOptions ?? null} canEdit={canEdit} hostOnly={t("friend.roomOptionsHostOnly")} onChange={(options) => onRoomOptions?.(options)} onPendingChange={onRoomOptionsPending} />
             )}
             {roomGame === 'football_race' && roomGame === serverRoomGame && (
               <FootballRaceOptions options={settings?.roomOptions ?? null} memberCount={memberCount} canEdit={canEdit} onChange={(options) => onRoomOptions?.(options)} />
