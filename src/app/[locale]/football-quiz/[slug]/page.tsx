@@ -12,10 +12,11 @@ import {
 import {
   CampaignQuizApiError,
   getCampaignQuiz,
+  loadCampaignSlugRegistry,
   resolveCampaignQuizRoute,
 } from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
-import { campaignQuizPath, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { campaignQuizPath, normalizeCampaignSlug, registerCampaignSlugs, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,8 +25,12 @@ interface CampaignQuizPageProps {
   searchParams: Promise<{ preview?: string }>;
 }
 
-const loadQuiz = cache((slug: string, preview: string | undefined, locale: 'en' | 'ka') =>
-  getCampaignQuiz(slug, preview, locale));
+const loadQuiz = cache(async (slug: string, preview: string | undefined, locale: 'en' | 'ka') => {
+  const quiz = await getCampaignQuiz(slug, preview, locale);
+  // A preview may be a draft whose URLs are not public yet.
+  if (!preview) registerCampaignSlugs([quiz]);
+  return quiz;
+});
 
 export function generateStaticParams() {
   return CAMPAIGN_QUIZ_SLUGS.map((slug) => ({ locale: 'en', slug }));
@@ -36,7 +41,7 @@ function absoluteImage(url: string): string {
 }
 
 export async function generateMetadata({ params, searchParams }: CampaignQuizPageProps): Promise<Metadata> {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   if (locale !== 'en' && locale !== 'ka') return {};
   if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
 
@@ -85,7 +90,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 }
 
 export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   const slugCheck = normalizeCampaignSlug(slug);
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/football-quiz/${slugCheck.slug}`, preview));
@@ -153,6 +158,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
         url: pageUrl,
         name: title,
         description,
+        ...(quiz.page?.content_modified_at ? { dateModified: quiz.page.content_modified_at } : {}),
         inLanguage: isGeorgian ? 'ka-GE' : 'en-GB',
         isPartOf: { '@id': `${SITE_URL}/#website` },
         mainEntity: { '@id': `${pageUrl}#quiz` },

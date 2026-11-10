@@ -4,7 +4,8 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { CAMPAIGN_QUIZ_SLUGS } from '@/features/campaign-quiz/campaignQuiz.content';
 import { campaignPublicSlug, campaignQuizPath, campaignSourceSlug, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 import { buildCampaignQuizMetadata, renderCampaignQuizPage } from '@/features/campaign-quiz/CampaignQuizServerPage';
-import { CampaignQuizApiError, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
+import { confirmedCampaignSource } from '@/features/campaign-quiz/campaignQuiz.confirmed';
+import { CampaignQuizApiError, loadCampaignSlugRegistry, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,22 +19,24 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params, searchParams }: PortugueseCampaignQuizPageProps): Promise<Metadata> {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   if (locale !== 'pt') return {};
   if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
-  const sourceSlug = campaignSourceSlug(slug, 'pt');
+  const confirmed = await confirmedCampaignSource();
+  const sourceSlug = confirmed ?? campaignSourceSlug(slug, 'pt');
   return buildCampaignQuizMetadata(sourceSlug, 'pt', preview);
 }
 
 export default async function PortugueseCampaignQuizPage({ params, searchParams }: PortugueseCampaignQuizPageProps) {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   const slugCheck = normalizeCampaignSlug(slug);
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/quiz-de-futebol/${slugCheck.slug}`, preview));
-  const sourceSlug = campaignSourceSlug(slug, 'pt');
+  const confirmed = await confirmedCampaignSource();
+  const sourceSlug = confirmed ?? campaignSourceSlug(slug, 'pt');
   // Permanent: these mappings (English slug on the Portuguese folder, other locales) never depend on the visitor.
   if (locale !== 'pt') permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'en'), preview));
-  if (slug !== campaignPublicSlug(sourceSlug, 'pt')) permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'pt'), preview));
+  if (!confirmed && slug !== campaignPublicSlug(sourceSlug, 'pt')) permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'pt'), preview));
   try {
     return await renderCampaignQuizPage(sourceSlug, 'pt', preview);
   } catch (error) {

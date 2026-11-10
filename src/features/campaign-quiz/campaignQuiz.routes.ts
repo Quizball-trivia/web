@@ -278,12 +278,42 @@ export function normalizeCampaignSlug(slug: string): { kind: 'ok' } | { kind: 'r
   return { kind: 'invalid' };
 }
 
+/**
+ * Slugs the backend registry announces (pages the quiz agent adds need no web release). They win over the tables above,
+ * which stay as the answer when the registry has not been read (client bundles, older backends). The registry is the
+ * same for every visitor, so one copy per server process is shared by all requests: a full read replaces it, and
+ * page and catalog responses (from the same registry) add their own entries in between.
+ */
+let REGISTERED_PUBLIC = new Map<string, string>();
+let REGISTERED_SOURCE = new Map<string, string>();
+
+type RegisteredPage = { slug: string; public_slugs?: Partial<Record<CampaignQuizLocale, string>> };
+
+/** Replaces the whole registry (an empty list goes back to the tables alone). */
+export function replaceCampaignSlugs(pages: ReadonlyArray<RegisteredPage>): void {
+  REGISTERED_PUBLIC = new Map();
+  REGISTERED_SOURCE = new Map();
+  registerCampaignSlugs(pages);
+}
+
+export function registerCampaignSlugs(pages: ReadonlyArray<RegisteredPage>): void {
+  for (const page of pages) {
+    for (const [locale, publicSlug] of Object.entries(page.public_slugs ?? {})) {
+      if (!publicSlug || !isValidSlug(publicSlug) || !(locale in CAMPAIGN_HUB_FOLDER)) continue;
+      const previous = REGISTERED_PUBLIC.get(`${locale}:${page.slug}`);
+      if (previous && previous !== publicSlug) REGISTERED_SOURCE.delete(`${locale}:${previous}`);
+      REGISTERED_PUBLIC.set(`${locale}:${page.slug}`, publicSlug);
+      REGISTERED_SOURCE.set(`${locale}:${publicSlug}`, page.slug);
+    }
+  }
+}
+
 export function campaignPublicSlug(sourceSlug: string, locale: CampaignQuizLocale): string {
-  return PUBLIC_SLUGS[locale]?.[sourceSlug] ?? sourceSlug;
+  return REGISTERED_PUBLIC.get(`${locale}:${sourceSlug}`) ?? PUBLIC_SLUGS[locale]?.[sourceSlug] ?? sourceSlug;
 }
 
 export function campaignSourceSlug(publicSlug: string, locale: CampaignQuizLocale): string {
-  return SOURCE_SLUGS[locale]?.[publicSlug] ?? publicSlug;
+  return REGISTERED_SOURCE.get(`${locale}:${publicSlug}`) ?? SOURCE_SLUGS[locale]?.[publicSlug] ?? publicSlug;
 }
 
 export function campaignQuizPath(sourceSlug: string, locale: CampaignQuizLocale): string {
