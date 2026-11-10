@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
 import { updateMe } from "@/lib/api/endpoints";
+import { translateIn } from "@/lib/i18n/client-messages";
 import type { Locale } from "@/lib/i18n/locale";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -57,7 +58,7 @@ export function useChangeLanguage() {
     setLocale(newLocale);
     try {
       if (user) await enqueuePreferenceSave(user.id, newLocale);
-      toast.success(t("settings.languageUpdated"));
+      toast.success(await translateIn(newLocale, "settings.languageUpdated"));
     } catch {
       setLocale(previous);
       toast.error(t("settings.languageUpdateFailed"));
