@@ -4,8 +4,10 @@ import type {
   CampaignQuizAnswer,
   CampaignQuizRating,
   CampaignQuizHubPage,
+  CampaignQuizPublicSlugs,
   CampaignQuizRoute,
 } from './campaignQuiz.types';
+import { registerCampaignSlugs, replaceCampaignSlugs } from './campaignQuiz.routes';
 import type { Locale } from '@/lib/i18n/messages';
 import { timeoutSignal } from '@/lib/timeoutSignal';
 
@@ -52,7 +54,48 @@ export async function listCampaignQuizPages(locale: Locale = 'en'): Promise<Camp
     headers: { Accept: 'application/json' },
     signal: requestSignal(),
   });
-  return parseJson<CampaignQuizHubPage[]>(response);
+  const pages = await parseJson<CampaignQuizHubPage[]>(response);
+  registerCampaignSlugs(pages);
+  return pages;
+}
+
+/**
+ * Reads the backend's slug registry into the route helpers (cached five minutes). A backend without the registry, or
+ * one that cannot be reached, leaves the hardcoded tables in charge: the 29 original pages keep working either way.
+ */
+const REGISTRY_TTL_MS = 300_000;
+let registryRead: { at: number; pending: Promise<void> } | null = null;
+
+export function loadCampaignSlugRegistry(): Promise<void> {
+  if (registryRead && Date.now() - registryRead.at < REGISTRY_TTL_MS) return registryRead.pending;
+  const pending = readCampaignSlugRegistry();
+  registryRead = { at: Date.now(), pending };
+  return pending;
+}
+
+async function readCampaignSlugRegistry(): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes/slugs`, {
+      next: { revalidate: 300 },
+      headers: { Accept: 'application/json' },
+      signal: requestSignal(),
+    });
+    // A backend without the registry (or rolled back to before it): the tables alone, until the next read.
+    if (response.status === 404) {
+      replaceCampaignSlugs([]);
+      return;
+    }
+    if (!response.ok) return;
+    const body = await response.json() as { pages?: Array<{ slug: string; public_slugs?: CampaignQuizPublicSlugs }> };
+    if (Array.isArray(body.pages)) replaceCampaignSlugs(body.pages);
+  } catch {
+    // Unreachable: keep what was read last; the tables answer what it never had.
+  }
+}
+
+/** Test seam: forget when the registry was last read. */
+export function resetCampaignSlugRegistryRead(): void {
+  registryRead = null;
 }
 
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {
@@ -70,6 +113,7 @@ export async function answerCampaignQuizQuestion(input: {
   selectedOptionId: string;
   previewToken?: string;
   locale?: Locale;
+  setVersion?: number;
 }): Promise<CampaignQuizAnswer> {
   const response = await fetch(
     `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(input.slug)}/answers?locale=${encodeURIComponent(input.locale ?? 'en')}`,
@@ -84,6 +128,7 @@ export async function answerCampaignQuizQuestion(input: {
         question_id: input.questionId,
         selected_option_id: input.selectedOptionId,
         preview_token: input.previewToken,
+        ...(input.setVersion ? { set_version: input.setVersion } : {}),
       }),
       signal: requestSignal(),
     },

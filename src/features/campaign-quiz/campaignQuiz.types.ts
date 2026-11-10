@@ -55,7 +55,12 @@ export interface CampaignQuizPage {
   ka_lede: string | null;
   related_pages: CampaignQuizRelatedPage[];
   updated_at: string;
+  /** Last real change of the page's copy, images or questions; absent from older backends. */
+  content_modified_at?: string;
 }
+
+/** Public slug per language of a page; older backends do not send it (the hardcoded tables then decide). */
+export type CampaignQuizPublicSlugs = Partial<Record<'en' | 'ka' | 'es' | 'ru' | 'pt' | 'de' | 'tr' | 'fr', string>>;
 
 export interface CampaignQuizHubPage {
   slug: string;
@@ -66,12 +71,16 @@ export interface CampaignQuizHubPage {
   hero_image_alt: string;
   locale_mode: CampaignQuizPage['locale_mode'];
   updated_at: string;
+  content_modified_at?: string;
+  public_slugs?: CampaignQuizPublicSlugs;
 }
 
 export interface CampaignQuizRoute {
   kind: 'page' | 'redirect' | 'gone' | 'missing';
   slug: string;
   target_slug: string | null;
+  /** Registry backends, asked with a locale: the public slug of the page (page) or of the target (redirect). */
+  public_slug?: string | null;
 }
 
 export interface CampaignQuiz {
@@ -91,6 +100,9 @@ export interface CampaignQuiz {
    * a backend predates. ka, pt, de, tr and fr also need every question of the set in that language.
    */
   editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean; tr?: boolean; fr?: boolean };
+  /** The question set version of this round; answers send it back so a refresh mid-round cannot break the round. */
+  set_version?: number;
+  public_slugs?: CampaignQuizPublicSlugs;
 }
 
 export interface CampaignQuizAnswer {

@@ -9,7 +9,7 @@ import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerS
 import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
 import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
-import { CAMPAIGN_HUB_FOLDER, campaignQuizPath, campaignSourceSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { CAMPAIGN_HUB_FOLDER, campaignHubPath, campaignQuizPath, campaignSourceSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
 // pages are localized; everything else (app, auth, game) is intentionally
@@ -293,7 +293,7 @@ export async function middleware(req: NextRequest) {
   ) {
     try {
       const response = await fetch(
-        `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizSource)}`,
+        `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizSource)}?locale=${quizLocale}&public=${encodeURIComponent(quizPath[3])}`,
         {
           headers: { Accept: 'application/json' },
           cache: 'no-store',
@@ -302,9 +302,20 @@ export async function middleware(req: NextRequest) {
       );
       if (response.ok) {
         const route = await response.json() as CampaignQuizRoute;
+        // Backends with the slug registry name the URL to use in this language; older ones leave it to the tables.
+        const canonicalPath = (slug: string) => route.public_slug
+          ? `${campaignHubPath(quizLocale!)}/${route.public_slug}`
+          : campaignQuizPath(slug, quizLocale!);
+        if (route.kind === 'page' && route.public_slug && route.public_slug !== quizPath[3]) {
+          const url = req.nextUrl.clone();
+          url.pathname = canonicalPath(route.slug);
+          const redirectResponse = NextResponse.redirect(url, 301);
+          redirectResponse.headers.set('Content-Security-Policy', csp);
+          return redirectResponse;
+        }
         if (route.kind === 'redirect' && route.target_slug) {
           const url = req.nextUrl.clone();
-          url.pathname = campaignQuizPath(route.target_slug, quizLocale!);
+          url.pathname = canonicalPath(route.target_slug);
           const redirectResponse = NextResponse.redirect(url, 301);
           redirectResponse.headers.set('Content-Security-Policy', csp);
           return redirectResponse;

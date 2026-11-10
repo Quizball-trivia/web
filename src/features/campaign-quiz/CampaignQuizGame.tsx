@@ -28,6 +28,8 @@ interface CampaignQuizGameProps {
   locale?: Locale;
   scoreTemplate?: string;
   previewToken?: string;
+  /** The question set version the page was served with; sent with each answer. */
+  setVersion?: number;
 }
 
 const UI_COPY = {
@@ -217,6 +219,7 @@ export function CampaignQuizGame({
   locale = 'en',
   scoreTemplate = 'You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.',
   previewToken,
+  setVersion,
 }: CampaignQuizGameProps) {
   const copy = UI_COPY[locale];
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -252,6 +255,7 @@ export function CampaignQuizGame({
         selectedOptionId: optionId,
         previewToken,
         locale,
+        setVersion,
       });
       setAnswers((current) => ({
         ...current,

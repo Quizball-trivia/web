@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { CAMPAIGN_QUIZ_SLUGS } from '@/features/campaign-quiz/campaignQuiz.content';
 import { campaignPublicSlug, campaignQuizPath, campaignSourceSlug, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 import { buildCampaignQuizMetadata, renderCampaignQuizPage } from '@/features/campaign-quiz/CampaignQuizServerPage';
-import { CampaignQuizApiError, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
+import { CampaignQuizApiError, loadCampaignSlugRegistry, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params, searchParams }: SpanishCampaignQuizPageProps): Promise<Metadata> {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   if (locale !== 'es') return {};
   if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
   const sourceSlug = campaignSourceSlug(slug, 'es');
@@ -26,7 +26,7 @@ export async function generateMetadata({ params, searchParams }: SpanishCampaign
 }
 
 export default async function SpanishCampaignQuizPage({ params, searchParams }: SpanishCampaignQuizPageProps) {
-  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   const slugCheck = normalizeCampaignSlug(slug);
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/quiz-de-futbol/${slugCheck.slug}`, preview));

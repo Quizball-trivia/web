@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [locale, await (locale === 'ru' ? listCampaignQuizPages(locale) : catalogOrNone(locale))] as const;
   })));
   const newestUpdate = (pages: CampaignQuizHubPage[]) => pages
-    .map((page) => validLastModified(page.updated_at))
+    .map((page) => validLastModified(page.content_modified_at ?? page.updated_at))
     .filter((date): date is Date => Boolean(date))
     .sort((a, b) => b.getTime() - a.getTime())[0];
 
@@ -101,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     ...campaignPages.flatMap((page) => CAMPAIGN_QUIZ_LOCALES
       .filter((locale) => catalogs.get(locale)!.some((edition) => edition.slug === page.slug))
-      .map((locale) => entry(campaignQuizPath(page.slug, locale), 'monthly', 0.8, validLastModified(page.updated_at)))),
+      .map((locale) => entry(campaignQuizPath(page.slug, locale), 'monthly', 0.8, validLastModified(page.content_modified_at ?? page.updated_at)))),
   ];
 
   return [
