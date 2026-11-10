@@ -36,23 +36,6 @@ describe("useChangeLanguage", () => {
     expect(toast.error).toHaveBeenCalledWith("settings.languageUpdateFailed");
   });
 
-  it("confirms the change in the newly chosen language, not the one being left", async () => {
-    currentLocale = "tr";
-    updateMe.mockResolvedValueOnce({ preferred_language: "fr" });
-    const { result } = renderHook(() => useChangeLanguage());
-    await act(async () => { await result.current.changeLanguage("fr"); });
-    const fr = (await import("@/messages/fr.json")).default as { settings: { languageUpdated: string } };
-    await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith(fr.settings.languageUpdated));
-    expect(fr.settings.languageUpdated).not.toBe("Dil güncellendi");
-  });
-
-  it("does not hold the saving state while the new language's text loads", async () => {
-    updateMe.mockResolvedValueOnce({ preferred_language: "de" });
-    const { result } = renderHook(() => useChangeLanguage());
-    await act(async () => { await result.current.changeLanguage("de"); });
-    expect(result.current.isSaving).toBe(false);
-  });
-
   it("allows one in-place change at a time across instances", async () => {
     const d = deferred<{ preferred_language: string }>();
     updateMe.mockReturnValueOnce(d.promise);

@@ -20,7 +20,6 @@ import { useEffect } from "react";
 import { useMyAchievements, usePublicProfile } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
 import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
-import { translateIn } from "@/lib/i18n/client-messages";
 import {
   formatCooldownDate,
   getNicknameCooldown,
@@ -207,7 +206,7 @@ export default function ProfilePage() {
         setAuthenticated({ ...authUser, preferred_language: updated.preferred_language });
       }
       setLocale(language as Locale);
-      void translateIn(language as Locale, "profile.languageUpdated").then((m) => toast.success(m));
+      toast.success(t("profile.languageUpdated"));
     } catch (error) {
       toast.error(t("profile.languageUpdateFailed"), {
         description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),

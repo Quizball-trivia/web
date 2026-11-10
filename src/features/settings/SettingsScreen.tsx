@@ -42,7 +42,6 @@ import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { LOCALES, type Locale } from "@/lib/i18n/locale-config";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
-import { translateIn } from "@/lib/i18n/client-messages";
 import {
   DEFAULT_USER_PREFERENCES,
   getUserPreferences,
@@ -321,7 +320,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         const updated = await updateMe({ preferred_language: newLocale });
         setAuthenticated({ ...user, preferred_language: updated.preferred_language ?? newLocale });
       }
-      void translateIn(newLocale, "settings.languageUpdated").then((m) => toast.success(m));
+      toast.success(t("settings.languageUpdated"));
     } catch {
       setLocale(locale as Locale);
       toast.error(t("settings.languageUpdateFailed"));
