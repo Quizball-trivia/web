@@ -57,3 +57,9 @@ export function translateDictionary(dictionary: MessageDictionary | undefined, k
 export function translate(locale: Locale, key: MessageKey, params?: Record<string, string | number>): string {
   return translateDictionary(dictionaries[locale], key, params);
 }
+
+/** The message in a language that may not be on screen yet (e.g. confirming a language change in the new language). */
+export async function translateIn(locale: Locale, key: MessageKey): Promise<string> {
+  const dictionary = await loadLocaleMessages(locale).catch(() => undefined);
+  return translateDictionary(dictionary, key);
+}
