@@ -9,6 +9,7 @@ import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerS
 import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
 import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
+import { CONFIRMED_QUIZ_HEADER } from "@/features/campaign-quiz/campaignQuiz.confirmed";
 import { CAMPAIGN_HUB_FOLDER, campaignHubPath, campaignQuizPath, campaignSourceSlug, type CampaignQuizLocale } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
@@ -223,6 +224,8 @@ export async function middleware(req: NextRequest) {
   }
 
   const requestHeaders = new Headers(req.headers);
+  // Only this middleware may vouch for a quiz URL.
+  requestHeaders.delete(CONFIRMED_QUIZ_HEADER);
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
@@ -313,6 +316,7 @@ export async function middleware(req: NextRequest) {
           redirectResponse.headers.set('Content-Security-Policy', csp);
           return redirectResponse;
         }
+        if (route.kind === 'page' && route.public_slug === quizPath[3]) requestHeaders.set(CONFIRMED_QUIZ_HEADER, route.slug);
         if (route.kind === 'redirect' && route.target_slug) {
           const url = req.nextUrl.clone();
           url.pathname = canonicalPath(route.target_slug);

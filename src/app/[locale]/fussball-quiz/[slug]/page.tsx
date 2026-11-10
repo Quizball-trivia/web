@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { CAMPAIGN_QUIZ_SLUGS } from '@/features/campaign-quiz/campaignQuiz.content';
 import { campaignPublicSlug, campaignQuizPath, campaignSourceSlug, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 import { buildCampaignQuizMetadata, renderCampaignQuizPage } from '@/features/campaign-quiz/CampaignQuizServerPage';
+import { confirmedCampaignSource } from '@/features/campaign-quiz/campaignQuiz.confirmed';
 import { CampaignQuizApiError, loadCampaignSlugRegistry, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,8 @@ export async function generateMetadata({ params, searchParams }: GermanCampaignQ
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams, loadCampaignSlugRegistry()]);
   if (locale !== 'de') return {};
   if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
-  const sourceSlug = campaignSourceSlug(slug, 'de');
+  const confirmed = await confirmedCampaignSource();
+  const sourceSlug = confirmed ?? campaignSourceSlug(slug, 'de');
   return buildCampaignQuizMetadata(sourceSlug, 'de', preview);
 }
 
@@ -30,10 +32,11 @@ export default async function GermanCampaignQuizPage({ params, searchParams }: G
   const slugCheck = normalizeCampaignSlug(slug);
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/fussball-quiz/${slugCheck.slug}`, preview));
-  const sourceSlug = campaignSourceSlug(slug, 'de');
+  const confirmed = await confirmedCampaignSource();
+  const sourceSlug = confirmed ?? campaignSourceSlug(slug, 'de');
   // Permanent: these mappings (English slug on the German folder, other locales) never depend on the visitor.
   if (locale !== 'de') permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'en'), preview));
-  if (slug !== campaignPublicSlug(sourceSlug, 'de')) permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'de'), preview));
+  if (!confirmed && slug !== campaignPublicSlug(sourceSlug, 'de')) permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'de'), preview));
   try {
     return await renderCampaignQuizPage(sourceSlug, 'de', preview);
   } catch (error) {

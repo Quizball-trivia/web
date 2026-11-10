@@ -65,13 +65,26 @@ describe('campaign quiz API', () => {
     expect(campaignQuizPath('eastfield', 'pt')).toBe('/pt/quiz-de-futebol/eastfield');
   });
 
+  it('retries a failed registry read on the next request instead of waiting five minutes', async () => {
+    const { loadCampaignSlugRegistry, resetCampaignSlugRegistryRead } = await import('../campaignQuiz.api');
+    resetCampaignSlugRegistryRead();
+    fetchSpy.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) });
+    await loadCampaignSlugRegistry();
+    fetchSpy.mockResolvedValueOnce(ok({ pages: [{ slug: 'westbury', public_slugs: { tr: 'westbury-testi' } }] }));
+    await loadCampaignSlugRegistry();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(campaignQuizPath('westbury', 'tr')).toBe('/tr/futbol-bilgi-yarismasi/westbury-testi');
+  });
+
   it('sends the set version with an answer when the page had one', async () => {
     const { answerCampaignQuizQuestion } = await import('../campaignQuiz.api');
     fetchSpy.mockResolvedValue(ok({ correct: true, correct_option_id: 'b', explanation: null }));
     await answerCampaignQuizQuestion({ slug: 'eastfield', questionId: 'q1', selectedOptionId: 'b', setVersion: 4 });
     await answerCampaignQuizQuestion({ slug: 'eastfield', questionId: 'q1', selectedOptionId: 'b' });
+    await answerCampaignQuizQuestion({ slug: 'eastfield', questionId: 'q1', selectedOptionId: 'b', setVersion: 0 });
     const bodies = fetchSpy.mock.calls.map((call) => JSON.parse(String((call[1] as RequestInit).body)));
     expect(bodies[0]).toMatchObject({ set_version: 4 });
     expect(bodies[1]).not.toHaveProperty('set_version');
+    expect(bodies[2]).not.toHaveProperty('set_version');
   });
 });

@@ -118,4 +118,14 @@ describe("retired and renamed quiz pages", () => {
     expect(response.status).toBe(301);
     expect(new URL(response.headers.get("location")!).pathname).toBe("/fr/quiz-foot/quiz-northwick-fc");
   });
+
+  it("vouches for a URL the backend confirmed, and never forwards a visitor's own claim", async () => {
+    routeLookup({ kind: "page", slug: "liverpool-fc", public_slug: "quiz-liverpool" });
+    const confirmed = await middleware(new NextRequest("https://quizball.io/fr/quiz-foot/quiz-liverpool"));
+    expect(confirmed.headers.get("x-middleware-request-x-quiz-confirmed-source")).toBe("liverpool-fc");
+
+    routeLookup({ kind: "missing", slug: "nowhere" });
+    const forged = await middleware(new NextRequest("https://quizball.io/fr/quiz-foot/nowhere", { headers: { "x-quiz-confirmed-source": "liverpool-fc" } }));
+    expect(forged.headers.get("x-middleware-request-x-quiz-confirmed-source")).toBeNull();
+  });
 });
