@@ -15,7 +15,7 @@ describe('verified press app links', () => {
     expect(doc.querySelector(`a[href="/${locale}/download"]`)).not.toBeNull();
     expect(doc.body.textContent).toContain('Quizball LLC');
     expect(doc.body.textContent).toContain('io.quizball.mobile');
-    expect(doc.querySelector('a[href^="mailto:support@quizball.io"]')).not.toBeNull();
+    expect(doc.querySelector('a[href^="mailto:nika@quizball.io"]')).not.toBeNull();
     expect(JSON.parse(doc.querySelector('script[type="application/ld+json"]')?.textContent ?? '{}')).toMatchObject({
       dateModified: '2026-10-07',
     });

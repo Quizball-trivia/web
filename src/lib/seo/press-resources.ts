@@ -52,7 +52,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
       "Quizball LLC publishes Quizball at quizball.io and the official Android app on Google Play (io.quizball.mobile).",
       "Correct answers affect possession, attacking momentum and goals in football-style matches.",
       "Players can use ranked play, friendly matches and football knowledge modes including Auction, Football Grid and Tic-Tac-Toe.",
-      "QuizBall publishes free topic quizzes in English and Spanish; its interface supports English, Georgian, Spanish and Turkish.",
+      "QuizBall publishes free topic quizzes in English and Spanish; its interface supports English, Georgian, Spanish, Turkish, Russian, Portuguese, German and French.",
       "Public search quizzes and the ranked-match question pool have separate publication controls.",
       "QuizBall documents how football questions are researched, reviewed, updated and corrected.",
     ],
@@ -78,7 +78,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     downloadLink: "Official Quizball Android download",
     contactHeading: "Questions or verification requests",
     contactBody:
-      "For product facts, corrections or permission questions, contact support@quizball.io. Please include the page or claim you want verified.",
+      "For product facts, corrections or permission questions, contact nika@quizball.io. Please include the page or claim you want verified.",
     legalNote:
       "QuizBall is independent and is not affiliated with, endorsed by or sponsored by any club, league, federation or competition organizer.",
   },
@@ -99,7 +99,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
       "Quizball LLC publica Quizball en quizball.io y la app oficial para Android en Google Play (io.quizball.mobile).",
       "Las respuestas correctas influyen en la posesión, el impulso ofensivo y los goles de cada partido.",
       "Incluye partidas clasificatorias, amistosos y modos de conocimiento como Subasta, Football Grid y Tres en raya.",
-      "QuizBall publica quizzes temáticos gratuitos en inglés y español; la interfaz admite inglés, georgiano, español y turco.",
+      "QuizBall publica quizzes temáticos gratuitos en inglés y español; la interfaz admite inglés, georgiano, español, turco, ruso, portugués, alemán y francés.",
       "Los quizzes públicos y el banco de preguntas clasificatorias tienen controles de publicación separados.",
       "QuizBall explica públicamente cómo investiga, revisa, actualiza y corrige sus preguntas.",
     ],
@@ -125,7 +125,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     downloadLink: "Descarga oficial de Quizball para Android",
     contactHeading: "Preguntas o solicitudes de verificación",
     contactBody:
-      "Para verificar datos, comunicar correcciones o consultar permisos, escribe a support@quizball.io e incluye la página o afirmación correspondiente.",
+      "Para verificar datos, comunicar correcciones o consultar permisos, escribe a nika@quizball.io e incluye la página o afirmación correspondiente.",
     legalNote:
       "QuizBall es independiente y no está afiliado, respaldado ni patrocinado por ningún club, liga, federación u organizador de competiciones.",
   },
