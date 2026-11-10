@@ -1,7 +1,12 @@
 /**
- * Mentalista Futbolero copy in the four shipping locales (en / es / ka / tr). Prototype strings only: the production
- * build moves player-facing copy into `messages/*.json`. No real football content lives here.
+ * Mentalista Futbolero playground-prototype copy, in every supported UI locale (en / es / ka / tr / ru / pt / de / fr).
+ * The table is a `Record<Locale, …>`, so a supported locale can never silently fall back to English; only an unknown
+ * locale string does. Interface strings only: this does not imply the game's category content exists in all of these
+ * languages. Prototype strings: the production build moves player-facing copy into `messages/*.json`. No real football
+ * content lives here.
  */
+
+import { isSupportedLocale, type Locale } from "@/lib/i18n/locale-config";
 
 export interface MentalistaCopy {
   brand: readonly [string, string];
@@ -198,8 +203,162 @@ const TR: MentalistaCopy = {
   offline: "Bağlantı koptu — yeniden bağlanılıyor…",
 };
 
-const BY_LOCALE: Record<string, MentalistaCopy> = { en: EN, es: ES, ka: KA, tr: TR };
+const RU: MentalistaCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  exit: "Выйти",
+  rules: "Один игрок тайно выбирает имя из категории. Остальные пытаются угадать именно этот выбор — точное попадание приносит 2 очка. 3–6 игроков; менталист меняется, так что каждый и читает, и становится тем, кого читают.",
+  start: "Начать",
+  left: "Вне игры",
+  youChoose: "Выбери одного — тайно",
+  youChooseHint: "Остальные попробуют угадать именно твой выбор.",
+  waitChoose: (c) => `${c} выбирает имя…`,
+  youPredict: (c) => `Кого выбрал игрок ${c}?`,
+  youPredictHint: "Не просто подходящее имя — именно выбор менталиста.",
+  beingRead: "Тебя пытаются прочитать…",
+  locked: "Зафиксировано",
+  revise: "Нажми на другой вариант, чтобы изменить",
+  committed: "Выбор сделан",
+  predicted: "Ответ дан",
+  pickWas: (c) => `Выбор менталиста (${c})`,
+  matched: "В точку!",
+  missed: "Мимо",
+  noPick: "Выбор не сделан",
+  voidTimeout: "У менталиста вышло время — в этом раунде без очков.",
+  voidDropped: "Менталист покинул игру — в этом раунде без очков.",
+  plusTwo: (p) => `+${p}`,
+  round: (n, total) => `Раунд ${n} из ${total}`,
+  chooserTag: "Менталист",
+  youTag: "Ты",
+  youWon: "Победа!",
+  tieFirst: "Делите первое место!",
+  youPlace: (p) => `Твоё место: ${p}`,
+  colReads: "Угадано",
+  invalid: {
+    empty: "Сначала введи имя.",
+    too_long: "Слишком длинное имя.",
+    out_of_category: "Такого имени нет в этой категории.",
+  },
+  offline: "Связь потеряна — переподключаемся…",
+};
 
+const PT: MentalistaCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  exit: "Sair",
+  rules: "Um jogador escolhe em segredo um nome da categoria. Os outros tentam adivinhar exatamente essa escolha — acertar vale 2 pontos. 3–6 jogadores; o mentalista se reveza, então todo mundo lê e é lido.",
+  start: "Começar",
+  left: "Saiu",
+  youChoose: "Escolha um — em segredo",
+  youChooseHint: "Os outros vão tentar adivinhar exatamente quem você escolheu.",
+  waitChoose: (c) => `${c} está escolhendo um nome…`,
+  youPredict: (c) => `Quem ${c} escolheu?`,
+  youPredictHint: "Não vale qualquer nome — tem que ser a escolha exata do mentalista.",
+  beingRead: "Estão tentando ler você…",
+  locked: "Confirmado",
+  revise: "Toque em outro para mudar",
+  committed: "Escolheu",
+  predicted: "Palpitou",
+  pickWas: (c) => `${c} escolheu`,
+  matched: "Acertou!",
+  missed: "Errou",
+  noPick: "Nenhuma escolha foi feita",
+  voidTimeout: "O tempo do mentalista acabou — rodada sem pontos.",
+  voidDropped: "O mentalista saiu — rodada sem pontos.",
+  plusTwo: (p) => `+${p}`,
+  round: (n, total) => `Rodada ${n} de ${total}`,
+  chooserTag: "Mentalista",
+  youTag: "Você",
+  youWon: "Você venceu!",
+  tieFirst: "Empate em 1º lugar!",
+  youPlace: (p) => `Você terminou em ${p}º`,
+  colReads: "Acertos",
+  invalid: {
+    empty: "Digite um nome primeiro.",
+    too_long: "Esse nome é longo demais.",
+    out_of_category: "Esse nome não é desta categoria.",
+  },
+  offline: "Conexão perdida — reconectando…",
+};
+
+const DE: MentalistaCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  exit: "Verlassen",
+  rules: "Ein Spieler wählt geheim einen Namen aus der Kategorie. Alle anderen versuchen, genau diese Wahl zu erraten — ein Treffer bringt 2 Punkte. 3–6 Spieler; der Mentalist wechselt, sodass jeder mal liest und gelesen wird.",
+  start: "Starten",
+  left: "Raus",
+  youChoose: "Wähl einen aus — geheim",
+  youChooseHint: "Die anderen versuchen, genau deine Wahl zu erraten.",
+  waitChoose: (c) => `${c} wählt einen Namen…`,
+  youPredict: (c) => `Wen hat ${c} gewählt?`,
+  youPredictHint: "Nicht irgendein gültiger Name — genau die Wahl des Mentalisten.",
+  beingRead: "Sie versuchen, dich zu lesen…",
+  locked: "Festgelegt",
+  revise: "Tippe auf einen anderen, um zu ändern",
+  committed: "Gewählt",
+  predicted: "Getippt",
+  pickWas: (c) => `Gewählt hat: ${c}`,
+  matched: "Volltreffer!",
+  missed: "Daneben",
+  noPick: "Es wurde nichts gewählt",
+  voidTimeout: "Dem Mentalisten ist die Zeit ausgegangen — keine Punkte in dieser Runde.",
+  voidDropped: "Der Mentalist ist raus — keine Punkte in dieser Runde.",
+  plusTwo: (p) => `+${p}`,
+  round: (n, total) => `Runde ${n} von ${total}`,
+  chooserTag: "Mentalist",
+  youTag: "Du",
+  youWon: "Du hast gewonnen!",
+  tieFirst: "Geteilter erster Platz!",
+  youPlace: (p) => `Du landest auf Platz ${p}`,
+  colReads: "Treffer",
+  invalid: {
+    empty: "Gib zuerst einen Namen ein.",
+    too_long: "Dieser Name ist zu lang.",
+    out_of_category: "Kein Name aus dieser Kategorie.",
+  },
+  offline: "Verbindung verloren — verbinde neu…",
+};
+
+const FR: MentalistaCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  exit: "Quitter",
+  rules: "Un joueur choisit en secret un nom de la catégorie. Les autres tentent de deviner exactement ce choix — bien lire rapporte 2 points. 3 à 6 joueurs ; le mentaliste change à chaque manche, ainsi tout le monde lit et se fait lire.",
+  start: "Commencer",
+  left: "A quitté",
+  youChoose: "Choisis-en un — en secret",
+  youChooseHint: "Les autres vont essayer de deviner exactement ton choix.",
+  waitChoose: (c) => `${c} choisit un nom…`,
+  youPredict: (c) => `Quel est le choix de ${c} ?`,
+  youPredictHint: "Pas juste un nom valide — son choix exact.",
+  beingRead: "Ils essaient de lire dans tes pensées…",
+  locked: "Validé",
+  revise: "Touche une autre option pour changer",
+  committed: "A choisi",
+  predicted: "A deviné",
+  pickWas: (c) => `Le choix de ${c}`,
+  matched: "Bien lu !",
+  missed: "Raté",
+  noPick: "Aucun choix n’a été fait",
+  voidTimeout: "Le mentaliste a manqué de temps — pas de points cette manche.",
+  voidDropped: "Le mentaliste est parti — pas de points cette manche.",
+  plusTwo: (p) => `+${p}`,
+  round: (n, total) => `Manche ${n} sur ${total}`,
+  chooserTag: "Mentaliste",
+  youTag: "Toi",
+  youWon: "Tu as gagné !",
+  tieFirst: "Égalité à la première place !",
+  youPlace: (p) => `Tu termines à la ${p}${p === 1 ? "re" : "e"} place`,
+  colReads: "Réussites",
+  invalid: {
+    empty: "Écris d’abord un nom.",
+    too_long: "Ce nom est trop long.",
+    out_of_category: "Ce nom n’est pas dans cette catégorie.",
+  },
+  offline: "Connexion perdue — reconnexion…",
+};
+
+/** Exhaustive by type: adding a `Locale` without its copy is a compile error, never a silent English fallback. */
+const BY_LOCALE: Record<Locale, MentalistaCopy> = { en: EN, es: ES, ka: KA, tr: TR, ru: RU, pt: PT, de: DE, fr: FR };
+
+/** Copy for a supported locale; an unknown locale string falls back to English. */
 export function mentalistaCopy(locale: string): MentalistaCopy {
-  return BY_LOCALE[locale] ?? EN;
+  return isSupportedLocale(locale) ? BY_LOCALE[locale] : EN;
 }

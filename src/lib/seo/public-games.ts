@@ -15,7 +15,13 @@ export type GuestStrategy =
   /** The mode's client engine runs inline as a practice round: no account, no wallet, sample content. */
   | "demo"
   /** No guest engine yet: the card/page says "Account required" and opens the app sign-in. */
-  | "app";
+  | "app"
+  /**
+   * A private browser room for friends (no inline engine, no demoSlug): the page opens `playPath` to create a room and
+   * share its invitation link. Whether an account is needed depends on guest rooms being enabled server-side, so copy
+   * must state it conditionally (GamePageCopy.roomAccountNotice), never promise account-free play.
+   */
+  | "room";
 
 export type PublicGameGroup = "multiplayer" | "daily" | "coins" | "solo" | "competitive";
 
@@ -52,6 +58,8 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1, practiceLocales: ["en", "ka", "es", "tr"] },
   // Friendly rooms need a guest identity on the server (phase 3): card only, opens the app.
   { modeId: "friendly", slug: "friendly", group: "multiplayer", guest: "app", page: false, card: true, destination: { kind: "app", path: "/friend" }, related: ["grid", "auction", "moneyDrop"], order: 2 },
+  // Private friends' room (3–6 players): no daily, solo or practice version, so no demoSlug; the page opens the room creator.
+  { modeId: "mentalista", slug: "football-mentalista", group: "multiplayer", guest: "room", page: true, card: true, destination: { kind: "page" }, related: ["codenames", "grid", "auction"], order: 3 },
   { modeId: "ranked", slug: "ranked", group: "competitive", guest: "demo", demoSlug: "match", page: true, card: true, destination: { kind: "page" }, related: ["grid", "auction"], order: 0 },
   // Established campaign-quiz pages keep these intents; the cards link there.
   { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },

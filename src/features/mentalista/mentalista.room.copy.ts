@@ -1,8 +1,13 @@
 /**
- * Mentalista Futbolero — the REAL room screens' copy, in the four shipping locales (en / es / ka / tr). Separate from
- * the playground prototype's `mentalista.copy.ts`, which is left untouched. Common room words (you / leave / away /
- * offline / youWon / …) come from `wordSharedCopy`; only the game-specific strings live here. No real football content.
+ * Mentalista Futbolero — the REAL room screens' copy, in every supported UI locale (en / es / ka / tr / ru / pt / de /
+ * fr). The table is a `Record<Locale, …>`, so a supported locale can never silently fall back to English; only an
+ * unknown locale string does. This is interface copy only: the game's category content is a separate concern and is
+ * NOT implied to exist in all of these languages. Separate from the playground prototype's `mentalista.copy.ts`.
+ * Common room words (you / leave / away / offline / youWon / …) come from `wordSharedCopy`; only the game-specific
+ * strings live here. No real football content.
  */
+
+import { isSupportedLocale, type Locale } from "@/lib/i18n/locale-config";
 
 export interface MentalistaRoomCopy {
   brand: readonly [string, string];
@@ -159,8 +164,130 @@ const TR: MentalistaRoomCopy = {
   disconnectedNotice: "Bağlantı koptu. Yeniden bağlanılıyor; süre işlemeye devam ediyor.",
 };
 
-const BY_LOCALE: Record<string, MentalistaRoomCopy> = { en: EN, es: ES, ka: KA, tr: TR };
+const RU: MentalistaRoomCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  round: (n, total) => `Раунд ${n} из ${total}`,
+  chooserTag: "Менталист",
+  youChoose: "Выбери одного — тайно",
+  youChooseHint: "Остальные попробуют угадать именно твой выбор.",
+  waitChoose: (c) => `${c} выбирает…`,
+  chosen: "Выбор сделан",
+  youPredict: (c) => `Кого выбрал игрок ${c}?`,
+  youPredictHint: "Зафиксируй точный выбор менталиста — изменить будет нельзя.",
+  beingRead: "Тебя пытаются прочитать…",
+  predicted: "Зафиксировано",
+  lock: "Зафиксировать",
+  pickFirst: "Выбери вариант",
+  locked: "Зафиксировано",
+  sending: "Отправка…",
+  waiting: "Ждём остальных…",
+  lockedOf: (done, total) => `Зафиксировали: ${done}/${total}`,
+  pickWas: (c) => `Выбор менталиста (${c})`,
+  readIt: "В точку!",
+  missed: "Мимо",
+  noPrediction: "Без ответа",
+  voided: "Выбор не сделан — в этом раунде без очков.",
+  nextRound: "Скоро следующий раунд…",
+  lastRound: "Последний раунд",
+  readsStat: "Угадано",
+  readsDetail: (r) => `Угадано: ${r}`,
+  disconnectedNotice: "Связь потеряна. Переподключаемся; время продолжает идти.",
+};
 
+const PT: MentalistaRoomCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  round: (n, total) => `Rodada ${n} de ${total}`,
+  chooserTag: "Mentalista",
+  youChoose: "Escolha um — em segredo",
+  youChooseHint: "Os outros vão tentar ler exatamente quem você escolheu.",
+  waitChoose: (c) => `${c} está escolhendo…`,
+  chosen: "Escolheu",
+  youPredict: (c) => `Quem ${c} escolheu?`,
+  youPredictHint: "Confirme a escolha exata do mentalista — não dá para mudar depois.",
+  beingRead: "Estão tentando ler você…",
+  predicted: "Confirmado",
+  lock: "Confirmar",
+  pickFirst: "Escolha uma opção",
+  locked: "Confirmado",
+  sending: "Enviando…",
+  waiting: "Esperando os outros…",
+  lockedOf: (done, total) => `${done}/${total} confirmaram`,
+  pickWas: (c) => `${c} escolheu`,
+  readIt: "Acertou!",
+  missed: "Errou",
+  noPrediction: "Sem palpite",
+  voided: "Nenhuma escolha foi feita — rodada sem pontos.",
+  nextRound: "Já vem a próxima rodada…",
+  lastRound: "Última rodada",
+  readsStat: "Acertos",
+  readsDetail: (r) => `${r} acerto${r === 1 ? "" : "s"}`,
+  disconnectedNotice: "Conexão perdida. Reconectando; o relógio continua correndo.",
+};
+
+const DE: MentalistaRoomCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  round: (n, total) => `Runde ${n} von ${total}`,
+  chooserTag: "Mentalist",
+  youChoose: "Wähl einen aus — geheim",
+  youChooseHint: "Die anderen versuchen, genau deine Wahl zu erraten.",
+  waitChoose: (c) => `${c} wählt…`,
+  chosen: "Gewählt",
+  youPredict: (c) => `Wen hat ${c} gewählt?`,
+  youPredictHint: "Leg dich auf die exakte Wahl fest — ändern geht danach nicht mehr.",
+  beingRead: "Sie versuchen, dich zu lesen…",
+  predicted: "Festgelegt",
+  lock: "Festlegen",
+  pickFirst: "Wähl eine Option",
+  locked: "Festgelegt",
+  sending: "Wird gesendet…",
+  waiting: "Warte auf die anderen…",
+  lockedOf: (done, total) => `${done}/${total} festgelegt`,
+  pickWas: (c) => `Gewählt hat: ${c}`,
+  readIt: "Volltreffer!",
+  missed: "Daneben",
+  noPrediction: "Kein Tipp",
+  voided: "Es wurde nichts gewählt — keine Punkte in dieser Runde.",
+  nextRound: "Gleich kommt die nächste Runde…",
+  lastRound: "Letzte Runde",
+  readsStat: "Treffer",
+  readsDetail: (r) => `${r} Treffer`,
+  disconnectedNotice: "Verbindung verloren. Verbinde neu; die Uhr läuft weiter.",
+};
+
+const FR: MentalistaRoomCopy = {
+  brand: ["Mentalista", "Futbolero"],
+  round: (n, total) => `Manche ${n} sur ${total}`,
+  chooserTag: "Mentaliste",
+  youChoose: "Choisis-en un — en secret",
+  youChooseHint: "Les autres vont essayer de deviner exactement ton choix.",
+  waitChoose: (c) => `${c} fait son choix…`,
+  chosen: "Choisi",
+  youPredict: (c) => `Quel est le choix de ${c} ?`,
+  youPredictHint: "Valide son choix exact — impossible de le changer ensuite.",
+  beingRead: "Ils essaient de lire dans tes pensées…",
+  predicted: "Validé",
+  lock: "Valider",
+  pickFirst: "Choisis une option",
+  locked: "Validé",
+  sending: "Envoi…",
+  waiting: "En attente des autres…",
+  lockedOf: (done, total) => `${done}/${total} ont validé`,
+  pickWas: (c) => `Le choix de ${c}`,
+  readIt: "Bien lu !",
+  missed: "Raté",
+  noPrediction: "Aucun choix",
+  voided: "Aucun choix n’a été fait — pas de points cette manche.",
+  nextRound: "La prochaine manche arrive…",
+  lastRound: "Dernière manche",
+  readsStat: "Réussites",
+  readsDetail: (r) => `${r} réussite${r > 1 ? "s" : ""}`,
+  disconnectedNotice: "Connexion perdue. Reconnexion en cours ; le chrono continue de tourner.",
+};
+
+/** Exhaustive by type: adding a `Locale` without its copy is a compile error, never a silent English fallback. */
+const BY_LOCALE: Record<Locale, MentalistaRoomCopy> = { en: EN, es: ES, ka: KA, tr: TR, ru: RU, pt: PT, de: DE, fr: FR };
+
+/** Copy for a supported locale; an unknown locale string falls back to English. */
 export function mentalistaRoomCopy(locale: string): MentalistaRoomCopy {
-  return BY_LOCALE[locale] ?? EN;
+  return isSupportedLocale(locale) ? BY_LOCALE[locale] : EN;
 }

@@ -103,7 +103,7 @@ export function MentalistaBoard({ view, snapshot, room, locale, error }: { view:
   const heading = (() => {
     if (view.phase === "choose") return iAmChooser ? t.youChoose : t.waitChoose(nameOf(chooserSeat));
     if (view.phase === "predict") return iAmChooser ? t.beingRead : t.youPredict(nameOf(chooserSeat));
-    if (view.phase === "reveal") return t.pickWas(nameOf(chooserSeat));
+    if (view.phase === "reveal") return reveal?.voided ? t.voided : t.pickWas(nameOf(chooserSeat));
     return t.waiting;
   })();
   const hint = view.phase === "choose" && iAmChooser ? t.youChooseHint : view.phase === "predict" && !iAmChooser ? t.youPredictHint : null;
@@ -213,7 +213,6 @@ export function MentalistaBoard({ view, snapshot, room, locale, error }: { view:
 
       {reveal && (
         <>
-          {reveal.voided && <p className="mt-3 rounded-xl bg-white/[0.08] px-3 py-2 text-sm font-bold text-white/85">{t.voided}</p>}
           {revealRows}
           <p className="mt-2 text-xs font-bold text-white/60">{final ? t.lastRound : t.nextRound}</p>
         </>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LOCALES } from "@/lib/i18n/locale";
 import { ALL_DEMO_MODES } from "@/features/demos/demoModes";
-import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
+import { DAILY_COLLECTION_SLUG, GAME_PAGES, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
 import { SEO_PAGE_LOCALES } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublicGameByModeId, guestCardHref, findPublishedGame, isFullGameDemo, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
@@ -24,6 +24,85 @@ describe("public games manifest", () => {
     for (const game of PUBLIC_GAMES.filter((g) => g.guest === "demo")) {
       expect(game.demoSlug, game.slug).toBeTruthy();
       expect(demoSlugs.has(game.demoSlug!), `${game.slug} → ${game.demoSlug}`).toBe(true);
+    }
+  });
+
+  it("room-strategy modes run no inline engine and carry the room labels in every locale", () => {
+    const rooms = PUBLIC_GAMES.filter((g) => g.guest === "room");
+    expect(rooms.map((g) => g.modeId)).toEqual(["mentalista"]);
+    for (const game of rooms) {
+      expect(game.demoSlug, game.slug).toBeUndefined();
+      for (const locale of LOCALES) {
+        expect(game.copy[locale].roomBadge, `${game.slug} badge ${locale}`).toBeTruthy();
+        expect(game.copy[locale].roomAccountNotice, `${game.slug} account notice ${locale}`).toBeTruthy();
+      }
+    }
+    // Other modes keep their copy shape unchanged.
+    for (const game of PUBLIC_GAMES.filter((g) => g.guest !== "room")) {
+      for (const locale of LOCALES) expect(game.copy[locale].roomBadge ?? game.copy[locale].roomAccountNotice, `${game.slug} ${locale}`).toBeUndefined();
+    }
+  });
+
+  it("publishes Football Mentalista as a friends' room under its own localized URL in every locale", () => {
+    const game = findPublicGameByModeId("mentalista")!;
+    expect(game).toMatchObject({ slug: "football-mentalista", group: "multiplayer", guest: "room", page: true, card: true, destination: { kind: "page" }, playPath: "/friend/room/new?room=mentalista", artSlug: "mentalista", section: "games" });
+    expect(game.demoSlug).toBeUndefined();
+    expect(isFullGameDemo(game.demoSlug)).toBe(false);
+    const expected = {
+      en: "/en/football-games/football-mentalista",
+      ka: "/ka/football-games/football-mentalista",
+      es: "/es/juegos-de-futbol/mentalista-futbolero",
+      tr: "/tr/futbol-oyunlari/futbol-mentalisti",
+      ru: "/ru/futbolnye-igry/futbolnyy-mentalist",
+      pt: "/pt/jogos-de-futebol/mentalista-do-futebol",
+      de: "/de/fussballspiele/fussball-mentalist",
+      fr: "/fr/jeux-de-foot/mentaliste-foot",
+    } as const;
+    for (const locale of SEO_PAGE_LOCALES) {
+      const [, , folder, slug] = expected[locale].split("/");
+      expect(gamePagePath(game, locale)).toBe(expected[locale]);
+      expect(cardHref(game, locale)).toBe(expected[locale]);
+      expect(findPublishedGame(locale, folder, slug)?.modeId).toBe("mentalista");
+      // No other copy entry (published or not) owns the same slug in this locale.
+      expect(GAME_PAGES.filter((entry) => gamePageSlug(entry, locale) === slug).map((entry) => entry.slug), locale).toEqual(["football-mentalista"]);
+      expect(slug).not.toBe(DAILY_COLLECTION_SLUG[locale]);
+    }
+    expect(findPublishedGame("es", "juegos-de-futbol", "football-mentalista")).toBeNull();
+    expect(findPublishedGame("fr", "football-games", "mentaliste-foot")).toBeNull();
+    expect(publishedLocalesOf(game)).toEqual([...SEO_PAGE_LOCALES]);
+    expect(relatedPublishedGames(game).map((g) => g.modeId)).toEqual(["codenames", "grid", "auction"]);
+    for (const modeId of game.related) expect(findPublicGameByModeId(modeId)?.page, modeId).toBe(true);
+  });
+
+  it("Football Mentalista bodies state the room rules, the language split and the conditional account in every locale", () => {
+    const game = findPublicGameByModeId("mentalista")!;
+    const english = GAME_PAGE_DETAILS[game.slug]!.en!.join(" ");
+    for (const rule of ["3 to 6 players", "three provided options", "secretly lock", "exact prediction", "2 points", "the chooser earns 0 that round", "every player chooses exactly once", "no daily edition, no solo mode and no practice demo", "no stakes, coins, XP or ranking", "invitation link"]) {
+      expect(english).toContain(rule);
+    }
+    // [word for "eight" (interface languages), the four category languages, the guest-room term].
+    const languageSplit: Record<(typeof SEO_PAGE_LOCALES)[number], [string, string[], RegExp]> = {
+      en: ["eight", ["English", "Spanish", "Georgian", "Turkish"], /guest rooms/],
+      ka: ["რვა", ["ინგლისურ", "ესპანურ", "ქართულ", "თურქულ"], /სტუმრის ოთახ/],
+      es: ["ocho", ["inglés", "español", "georgiano", "turco"], /salas para invitados/],
+      tr: ["sekiz", ["İngilizce", "İspanyolca", "Gürcüce", "Türkçe"], /isafir odalar/],
+      ru: ["восьми", ["английском", "испанском", "грузинском", "турецком"], /гостевые комнаты/],
+      pt: ["oito", ["inglês", "espanhol", "georgiano", "turco"], /salas para convidados/],
+      de: ["acht", ["Englisch", "Spanisch", "Georgisch", "Türkisch"], /Gasträume/],
+      fr: ["huit", ["anglais", "espagnol", "géorgien", "turc"], /salons invités/],
+    };
+    for (const locale of SEO_PAGE_LOCALES) {
+      const body = GAME_PAGE_DETAILS[game.slug]?.[locale] ?? [];
+      expect(body.length, locale).toBeGreaterThanOrEqual(4);
+      const [eight, categoryLanguages, guestRooms] = languageSplit[locale];
+      const languages = body[body.length - 1];
+      expect(languages, locale).toContain(eight);
+      for (const name of categoryLanguages) expect(languages, `${locale} ${name}`).toContain(name);
+      expect(languages, locale).toMatch(guestRooms);
+      expect(game.copy[locale].roomAccountNotice, locale).toMatch(guestRooms);
+      const all = [body.join(" "), ...Object.values(game.copy[locale]).flat()].join(" ");
+      for (const digit of ["2", "0", "3", "6"]) expect(all, `${locale} ${digit}`).toContain(digit);
+      expect(all, locale).not.toMatch(/\b(free|gratis|gratuit)|უფასო|ücretsiz|bedava|kostenlos|grátis|бесплатн/i);
     }
   });
 

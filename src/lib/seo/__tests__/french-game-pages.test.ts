@@ -10,7 +10,7 @@ const NEVER = /\b(quizz|money drop|tenable|miser|mise|pari|parier|cote|pronostic
 const frenchTexts = (slug: string): string[] => {
   const copy = GAME_PAGES.find((entry) => entry.slug === slug)?.copy.fr;
   if (!copy) throw new Error(`no French copy for ${slug}`);
-  return [copy.title, copy.metaTitle, copy.metaDescription, copy.intro, copy.reward, copy.cta, ...copy.howToPlay, ...(GAME_PAGE_DETAILS[slug]?.fr ?? [])];
+  return [copy.title, copy.metaTitle, copy.metaDescription, copy.intro, copy.reward, copy.cta, ...copy.howToPlay, ...[copy.roomBadge, copy.roomAccountNotice].filter((text): text is string => Boolean(text)), ...(GAME_PAGE_DETAILS[slug]?.fr ?? [])];
 };
 
 describe("French game pages", () => {
@@ -21,8 +21,8 @@ describe("French game pages", () => {
     expect(DAILY_COLLECTION_SLUG.fr).toBe("jeux-quotidiens");
   });
 
-  it("gives all 35 games a lowercase ASCII slug of its own", () => {
-    expect(GAME_PAGES).toHaveLength(35);
+  it("gives all 36 games a lowercase ASCII slug of its own", () => {
+    expect(GAME_PAGES).toHaveLength(36);
     const slugs = GAME_PAGES.map((entry) => gamePageSlug(entry, "fr"));
     expect(new Set(slugs).size).toBe(slugs.length);
     for (const slug of slugs) expect(slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -39,6 +39,7 @@ describe("French game pages", () => {
     ["played-for-both-clubs", "joueur-en-commun"],
     ["money-drop", "repartis-tes-pieces"],
     ["guess-the-goal-minute", "a-quelle-minute"],
+    ["football-mentalista", "mentaliste-foot"],
   ])("%s lives at /fr/jeux-de-foot/%s", (key, slug) => {
     const entry = GAME_PAGES.find((candidate) => candidate.slug === key)!;
     expect(gamePagePath(entry, "fr")).toBe(`/fr/jeux-de-foot/${slug}`);

@@ -7,6 +7,9 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MentalistaBoard, MentalistaResults } from "../MentalistaRoom";
 import type { MentalistaResult, MentalistaView } from "../mentalista.server";
+import { mentalistaCopy, type MentalistaCopy } from "../mentalista.copy";
+import { mentalistaRoomCopy, type MentalistaRoomCopy } from "../mentalista.room.copy";
+import { LOCALES } from "@/lib/i18n/locale";
 import type { RoomStatePayload, RoomSeatPayload } from "@/lib/realtime/socket.types";
 
 afterEach(cleanup);
@@ -299,5 +302,256 @@ describe("mentalista results", () => {
     // mySeat 0 finished second; the table is the server's, places and all.
     expect(screen.getByText(/You finished/)).toBeTruthy();
     expect(screen.queryByText(/undefined/)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Localization: every supported UI locale has complete, non-English Mentalista copy. UI strings only — this says nothing
+// about which languages the game's category content exists in. Invented names only.
+// ---------------------------------------------------------------------------------------------------------------------
+
+const INVENTED = "Zorblax Quennimore";
+const UNKNOWN_LOCALES = ["xx", "", "zz-ZZ"];
+
+/** A key/kind signature of a copy object: nested plain objects are flattened, tuples are recorded with their length. */
+function shapeOf(obj: object, prefix = ""): string[] {
+  return Object.entries(obj).flatMap(([k, v]) => {
+    const key = `${prefix}${k}`;
+    if (Array.isArray(v)) return [`${key}:array${v.length}`];
+    if (v !== null && typeof v === "object") return shapeOf(v, `${key}.`);
+    return [`${key}:${typeof v}`];
+  }).sort();
+}
+
+/** Every string leaf of a copy object (nested objects and tuples included). */
+function stringLeaves(obj: object): string[] {
+  return Object.values(obj).flatMap((v) =>
+    typeof v === "string" ? [v] : v !== null && typeof v === "object" ? stringLeaves(v) : [],
+  );
+}
+
+function evalRoom(t: MentalistaRoomCopy) {
+  return {
+    round: t.round(2, 6),
+    waitChoose: t.waitChoose(INVENTED),
+    youPredict: t.youPredict(INVENTED),
+    lockedOf: t.lockedOf(2, 5),
+    pickWas: t.pickWas(INVENTED),
+    readsDetail0: t.readsDetail(0),
+    readsDetail1: t.readsDetail(1),
+    readsDetail3: t.readsDetail(3),
+  };
+}
+
+function evalProto(t: MentalistaCopy) {
+  return {
+    waitChoose: t.waitChoose(INVENTED),
+    youPredict: t.youPredict(INVENTED),
+    pickWas: t.pickWas(INVENTED),
+    plusTwo: t.plusTwo(2),
+    round: t.round(2, 6),
+    youPlace1: t.youPlace(1),
+    youPlace2: t.youPlace(2),
+    youPlace3: t.youPlace(3),
+    youPlace4: t.youPlace(4),
+  };
+}
+
+describe("mentalista copy — eight-locale parity", () => {
+  it("covers exactly the eight supported locales", () => {
+    expect([...LOCALES].sort()).toEqual(["de", "en", "es", "fr", "ka", "pt", "ru", "tr"]);
+  });
+
+  it.each([...LOCALES])("room copy for %s has the same keys and kinds as English, with no empty strings", (locale) => {
+    const t = mentalistaRoomCopy(locale);
+    expect(shapeOf(t)).toEqual(shapeOf(mentalistaRoomCopy("en")));
+    for (const s of stringLeaves(t)) expect(s.trim().length).toBeGreaterThan(0);
+  });
+
+  it.each([...LOCALES])("prototype copy for %s has the same keys and kinds as English, with no empty strings", (locale) => {
+    const t = mentalistaCopy(locale);
+    expect(shapeOf(t)).toEqual(shapeOf(mentalistaCopy("en")));
+    expect(Object.keys(t.invalid).sort()).toEqual(["empty", "out_of_category", "too_long"]);
+    for (const s of stringLeaves(t)) expect(s.trim().length).toBeGreaterThan(0);
+  });
+
+  it.each([...LOCALES])("room copy function fields for %s evaluate cleanly with invented names", (locale) => {
+    const out = evalRoom(mentalistaRoomCopy(locale));
+    for (const s of Object.values(out)) {
+      expect(typeof s).toBe("string");
+      expect(s.trim().length).toBeGreaterThan(0);
+      expect(s).not.toMatch(/undefined|NaN|\[object/);
+    }
+    expect(out.waitChoose).toContain(INVENTED);
+    expect(out.youPredict).toContain(INVENTED);
+    expect(out.pickWas).toContain(INVENTED);
+    expect(out.round).toContain("2");
+    expect(out.round).toContain("6");
+    expect(out.lockedOf).toContain("2/5");
+    expect(out.readsDetail3).toContain("3");
+  });
+
+  it.each([...LOCALES])("prototype copy function fields for %s evaluate cleanly with invented names", (locale) => {
+    const out = evalProto(mentalistaCopy(locale));
+    for (const s of Object.values(out)) {
+      expect(typeof s).toBe("string");
+      expect(s.trim().length).toBeGreaterThan(0);
+      expect(s).not.toMatch(/undefined|NaN|\[object/);
+    }
+    expect(out.waitChoose).toContain(INVENTED);
+    expect(out.youPredict).toContain(INVENTED);
+    expect(out.pickWas).toContain(INVENTED);
+    expect(out.plusTwo).toBe("+2");
+    expect(out.youPlace2).toContain("2");
+  });
+});
+
+describe("mentalista copy — no supported locale falls back to English", () => {
+  const nonEnglish = LOCALES.filter((l) => l !== "en");
+
+  it.each(nonEnglish)("room copy for %s is its own table, not English", (locale) => {
+    const en = mentalistaRoomCopy("en");
+    const t = mentalistaRoomCopy(locale);
+    expect(t).not.toBe(en);
+    for (const k of ["youChoose", "youChooseHint", "beingRead", "lock", "pickFirst", "waiting", "voided", "nextRound", "lastRound", "disconnectedNotice"] as const) {
+      expect(t[k], `${locale}.${k}`).not.toBe(en[k]);
+    }
+    const ev = evalRoom(t);
+    const evEn = evalRoom(en);
+    for (const k of ["round", "waitChoose", "youPredict", "lockedOf", "pickWas", "readsDetail3"] as const) {
+      expect(ev[k], `${locale}.${k}()`).not.toBe(evEn[k]);
+    }
+  });
+
+  it.each(nonEnglish)("prototype copy for %s is its own table, not English", (locale) => {
+    const en = mentalistaCopy("en");
+    const t = mentalistaCopy(locale);
+    expect(t).not.toBe(en);
+    for (const k of ["exit", "rules", "youChoose", "youPredictHint", "beingRead", "noPick", "voidTimeout", "voidDropped", "youWon", "offline"] as const) {
+      expect(t[k], `${locale}.${k}`).not.toBe(en[k]);
+    }
+    expect(t.invalid.empty).not.toBe(en.invalid.empty);
+    expect(t.invalid.out_of_category).not.toBe(en.invalid.out_of_category);
+    const ev = evalProto(t);
+    const evEn = evalProto(en);
+    for (const k of ["waitChoose", "youPredict", "pickWas", "round", "youPlace2"] as const) {
+      expect(ev[k], `${locale}.${k}()`).not.toBe(evEn[k]);
+    }
+  });
+
+  it("the room rules still describe the unchanged game in every locale (3–6 players, 2 points)", () => {
+    for (const locale of LOCALES) {
+      const rules = mentalistaCopy(locale).rules;
+      expect(rules, locale).toMatch(/3/);
+      expect(rules, locale).toMatch(/6/);
+      expect(rules, locale).toMatch(/2/);
+    }
+  });
+
+  it.each(UNKNOWN_LOCALES)("an unknown locale %j falls back to English", (locale) => {
+    expect(mentalistaRoomCopy(locale)).toBe(mentalistaRoomCopy("en"));
+    expect(mentalistaCopy(locale)).toBe(mentalistaCopy("en"));
+  });
+});
+
+describe("mentalista board — localized rendering", () => {
+  const boardIn = (locale: string, v: MentalistaView, r = room()) =>
+    render(<MentalistaBoard view={v} snapshot={snapshot()} room={r} locale={locale} error={null} />);
+
+  it.each([...LOCALES])("the chooser's choose screen renders in %s", (locale) => {
+    const t = mentalistaRoomCopy(locale);
+    boardIn(locale, view());
+    expect(screen.getByText(t.youChoose)).toBeTruthy();
+    expect(screen.getByText(t.youChooseHint)).toBeTruthy();
+    expect(screen.getByText(t.round(1, 6))).toBeTruthy();
+    expect(screen.getByRole("button", { name: t.pickFirst })).toBeTruthy();
+  });
+
+  it("pt: the chooser picks and locks with Portuguese controls, sending the same command", () => {
+    const r = room();
+    boardIn("pt", view(), r);
+    expect(screen.getByText("Escolha um — em segredo")).toBeTruthy();
+    expect(screen.getByText("Rodada 1 de 6")).toBeTruthy();
+    fireEvent.click(screen.getByText("Alpha"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(r.send).toHaveBeenCalledWith({ type: "choose", round: 0, option: 0 });
+    expect(screen.queryByText("Pick one — secretly")).toBeNull();
+  });
+
+  it("de: a predictor is asked about the chooser in German", () => {
+    boardIn("de", view({ phase: "predict", iAmChooser: false, chooserSeat: 0, mySeat: 1 }));
+    expect(screen.getByText("Runde 1 von 6")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Wähl eine Option" })).toBeTruthy();
+    expect(screen.getByText(mentalistaRoomCopy("de").youPredictHint)).toBeTruthy();
+    expect(screen.queryByText(/Who did/)).toBeNull();
+  });
+
+  it("ru: a matched reveal is labeled in Russian", () => {
+    const rev: MentalistaResult = {
+      round: 0, chooser: 0, target: 1, voided: false,
+      entries: [{ seat: 1, prediction: 1, matched: true, points: 2 }, { seat: 2, prediction: 0, matched: false, points: 0 }],
+    };
+    const seats = view().seats.map((s) => ({ ...s, score: s.seat === 1 ? 2 : 0 }));
+    boardIn("ru", view({ phase: "reveal", iAmChooser: false, mySeat: 1, seats, reveal: rev, results: [rev] }));
+    expect(screen.getByText("В точку!")).toBeTruthy();
+    expect(screen.getByText("Скоро следующий раунд…")).toBeTruthy();
+    expect(screen.queryByText("Read it!")).toBeNull();
+  });
+
+  it("fr: a voided round says so in French", () => {
+    const rev: MentalistaResult = {
+      round: 0, chooser: 0, target: null, voided: true,
+      entries: [{ seat: 1, prediction: 2, matched: false, points: 0 }, { seat: 2, prediction: null, matched: false, points: 0 }],
+    };
+    boardIn("fr", view({ phase: "reveal", iAmChooser: false, mySeat: 1, reveal: rev }));
+    expect(screen.getByText("Aucun choix n’a été fait — pas de points cette manche.")).toBeTruthy();
+    expect(screen.queryByText(/No pick was made/)).toBeNull();
+  });
+
+  describe("void reveal heading", () => {
+    const voidRev: MentalistaResult = {
+      round: 0, chooser: 0, target: null, voided: true,
+      entries: [
+        { seat: 0, prediction: null, matched: false, points: 0 },
+        { seat: 1, prediction: 2, matched: false, points: 0 },
+        { seat: 2, prediction: null, matched: false, points: 0 },
+      ],
+    };
+    const normalRev: MentalistaResult = {
+      round: 0, chooser: 0, target: 1, voided: false,
+      entries: [
+        { seat: 0, prediction: null, matched: false, points: 0 },
+        { seat: 1, prediction: 1, matched: true, points: 2 },
+        { seat: 2, prediction: 0, matched: false, points: 0 },
+      ],
+    };
+
+    it.each([...LOCALES])("%s: a voided reveal shows the void text once, as the live heading, and scores nobody", (locale) => {
+      const t = mentalistaRoomCopy(locale);
+      boardIn(locale, view({ phase: "reveal", iAmChooser: false, mySeat: 1, reveal: voidRev, results: [voidRev] }));
+      const voided = screen.getAllByText(t.voided);
+      expect(voided).toHaveLength(1);
+      expect(voided[0].getAttribute("aria-live")).toBe("polite");
+      expect(screen.queryByText(t.pickWas("Player0"))).toBeNull();
+      expect(document.querySelector("[data-mv-target]")).toBeNull();
+      expect(screen.queryByText(t.readIt)).toBeNull();
+      const scores = [...document.querySelectorAll("[data-room-score-source]")];
+      expect(scores.length).toBeGreaterThan(0);
+      expect(scores.every((el) => el.textContent === "0")).toBe(true);
+    });
+
+    it.each([...LOCALES])("%s: a normal reveal keeps the chooser heading and no void text", (locale) => {
+      const t = mentalistaRoomCopy(locale);
+      const seats = view().seats.map((s) => ({ ...s, score: s.seat === 1 ? 2 : 0 }));
+      boardIn(locale, view({ phase: "reveal", iAmChooser: false, mySeat: 1, seats, reveal: normalRev, results: [normalRev] }));
+      expect(screen.getByText(t.pickWas("Player0")).getAttribute("aria-live")).toBe("polite");
+      expect(screen.queryByText(t.voided)).toBeNull();
+    });
+  });
+
+  it("an unknown locale renders the English board", () => {
+    boardIn("xx", view());
+    expect(screen.getByText("Pick one — secretly")).toBeTruthy();
+    expect(screen.getByText("Round 1 of 6")).toBeTruthy();
   });
 });

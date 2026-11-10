@@ -7,9 +7,19 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', async (importOriginal) => (
   listCampaignQuizPages: listCampaignQuizPagesMock,
 }));
 
+// The page module is imported for its metadata/params exports only: its screens and request headers stay out.
+vi.mock('next/headers', () => ({ headers: async () => new Headers() }));
+vi.mock('@/features/marketing/PublicGameScreen', () => ({ PublicGameScreen: () => null }));
+vi.mock('@/features/marketing/DailyCollectionScreen', () => ({ DailyCollectionScreen: () => null }));
+
 import sitemap from '../sitemap';
 import { CampaignQuizApiError } from '@/features/campaign-quiz/campaignQuiz.api';
 import { DOWNLOAD_UPDATED_AT } from '@/lib/seo/app-download';
+import { publicGameDynamicParams, publicGameMetadata, publicGameRoomPlayers, publicGameStaticParams } from '@/features/marketing/publicGamePage';
+import { PUBLIC_GAMES_FOLDER, SEO_PAGE_LOCALES, gamePagePath } from '@/lib/seo/game-pages';
+import { findPublicGameByModeId, publishedLocalesOf } from '@/lib/seo/public-games';
+import { buildPublicGameStructuredData } from '@/lib/seo/structured-data';
+import { HTML_LANG } from '@/lib/i18n/locale';
 
 describe('sitemap lastModified signals', () => {
   beforeEach(() => {
@@ -201,5 +211,84 @@ describe('sitemap lastModified signals', () => {
       return pages;
     });
     await expect(sitemap()).rejects.toBeInstanceOf(CampaignQuizApiError);
+  });
+});
+
+describe('Football Mentalista public page (private room)', () => {
+  const mentalista = findPublicGameByModeId('mentalista')!;
+  const slugOf = (locale: (typeof SEO_PAGE_LOCALES)[number]) => gamePagePath(mentalista, locale).split('/')[3];
+
+  beforeEach(() => {
+    listCampaignQuizPagesMock.mockReset();
+    // No live API: the campaign catalog is empty for every locale.
+    listCampaignQuizPagesMock.mockResolvedValue([]);
+  });
+
+  it('is published in all eight page locales under each locale folder', () => {
+    expect(mentalista.page).toBe(true);
+    expect(mentalista.guest).toBe('room');
+    expect(publishedLocalesOf(mentalista)).toEqual([...SEO_PAGE_LOCALES]);
+    for (const locale of SEO_PAGE_LOCALES) {
+      expect(gamePagePath(mentalista, locale)).toBe(`/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${slugOf(locale)}`);
+      expect(slugOf(locale)).toMatch(/^[a-z0-9-]+$/);
+    }
+  });
+
+  it('lists the page once per locale in the sitemap, and never the noindex room route', async () => {
+    const entries = await sitemap();
+    for (const locale of SEO_PAGE_LOCALES) {
+      const url = `https://quizball.io${gamePagePath(mentalista, locale)}`;
+      expect(entries.filter((entry) => entry.url === url), url).toHaveLength(1);
+    }
+    expect(entries.some((entry) => entry.url.includes('/friend/room'))).toBe(false);
+    expect(listCampaignQuizPagesMock).toHaveBeenCalled();
+  });
+
+  it('every locale folder serves its page through the static and dynamic params', () => {
+    for (const locale of SEO_PAGE_LOCALES) {
+      const folder = PUBLIC_GAMES_FOLDER[locale];
+      const param = { locale, slug: slugOf(locale) };
+      expect(publicGameStaticParams(folder)).toContainEqual(param);
+      expect(publicGameDynamicParams(folder)).toContainEqual(param);
+      // Another locale's folder does not serve it under this locale.
+      for (const other of new Set(Object.values(PUBLIC_GAMES_FOLDER))) {
+        if (other !== folder) expect(publicGameStaticParams(other)).not.toContainEqual(param);
+      }
+    }
+  });
+
+  it.each(SEO_PAGE_LOCALES)('%s: canonical and hreflang name the eight localized pages', async (locale) => {
+    const metadata = await publicGameMetadata(PUBLIC_GAMES_FOLDER[locale], Promise.resolve({ locale, slug: slugOf(locale) }));
+    expect(metadata.alternates?.canonical).toBe(`https://quizball.io${gamePagePath(mentalista, locale)}`);
+    const languages = metadata.alternates?.languages as Record<string, string>;
+    for (const other of SEO_PAGE_LOCALES) {
+      expect(languages[HTML_LANG[other]]).toBe(`https://quizball.io${gamePagePath(mentalista, other)}`);
+    }
+    expect(languages['x-default']).toBe(`https://quizball.io${gamePagePath(mentalista, 'en')}`);
+    expect(metadata.title).toBeTruthy();
+    expect(metadata.description).toBe(mentalista.copy[locale].metaDescription);
+  });
+
+  it('structured data: a 3–6 player multiplayer party game, nothing about solo, daily or ranked play', () => {
+    const room = publicGameRoomPlayers(mentalista);
+    expect(room).toEqual({ minPlayers: 3, maxPlayers: 6 });
+    const data = buildPublicGameStructuredData({ locale: 'en', path: gamePagePath(mentalista, 'en'), name: 'Football Mentalista', description: 'x', homeLabel: 'Games', free: true, room });
+    const game = data['@graph'].find((node) => node['@type'] === 'VideoGame') as Record<string, unknown>;
+    expect(game.genre).toEqual(['Sports', 'Party']);
+    expect(game.playMode).toBe('MultiPlayer');
+    expect(game.numberOfPlayers).toEqual({ '@type': 'QuantitativeValue', minValue: 3, maxValue: 6 });
+    expect(JSON.stringify(data)).not.toMatch(/SinglePlayer|daily|ranked|leaderboard/i);
+  });
+
+  it('structured data keeps the defaults for every other public game', () => {
+    for (const modeId of ['grid', 'auction', 'ranked', 'codenames', 'buscaminas']) {
+      const game = findPublicGameByModeId(modeId)!;
+      expect(publicGameRoomPlayers(game), modeId).toBeUndefined();
+      const data = buildPublicGameStructuredData({ locale: 'en', path: gamePagePath(game, 'en'), name: modeId, description: 'x', homeLabel: 'Games', free: true, room: publicGameRoomPlayers(game) });
+      const node = data['@graph'].find((entry) => entry['@type'] === 'VideoGame') as Record<string, unknown>;
+      expect(node.genre).toEqual(['Trivia', 'Sports']);
+      expect(node).not.toHaveProperty('playMode');
+      expect(node).not.toHaveProperty('numberOfPlayers');
+    }
   });
 });

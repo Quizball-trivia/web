@@ -9,7 +9,9 @@ import { DeferredCardArt } from "./DeferredCardArt";
 function GameCard({ game, locale, surface, deferArtwork }: { game: PublicGame; locale: Locale; surface: PublicSurface; deferArtwork?: boolean }) {
   const copy = HOME_COPY[locale].cards;
   const text = game.copy[locale];
-  const badge = game.guest === "demo" ? copy.practice : copy.accountRequired;
+  // A private friends' room has no practice round and may not need an account: its own badge ("Private room · 3–6 players").
+  const room = game.guest === "room";
+  const badge = game.guest === "demo" ? copy.practice : room ? text.roomBadge ?? copy.accountRequired : copy.accountRequired;
   const Art = deferArtwork ? DeferredCardArt : DemoModeArt;
   return (
     <GameCardLink
@@ -28,7 +30,7 @@ function GameCard({ game, locale, surface, deferArtwork }: { game: PublicGame; l
         <h3 className="line-clamp-2 text-sm font-semibold uppercase md:text-base">{text.title}</h3>
         <p className="mt-1 line-clamp-2 text-xs text-white md:text-sm">{text.intro}</p>
         <span className="mt-2 inline-block text-xs font-bold uppercase tracking-wide text-brand-yellow">
-          {game.destination.kind === "quiz" ? copy.quizPage : game.guest === "demo" ? copy.guest : copy.playLabel}
+          {game.destination.kind === "quiz" ? copy.quizPage : game.guest === "demo" ? copy.guest : room ? text.cta : copy.playLabel}
         </span>
       </div>
     </GameCardLink>
