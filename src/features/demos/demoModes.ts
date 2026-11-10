@@ -839,7 +839,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   careerPath: {
-    title: { en: "Career Path", ka: "კარიერის გზა", es: "Trayectoria", tr: "Kariyer Yolu", ru: "Карьерный путь", pt: "Caminho da Carreira", de: "Karrierestationen", fr: "Parcours du joueur", },
+    title: { en: "Career Path", ka: "კარიერის გზა", es: "Trayectoria", tr: "Kariyerden Futbolcu Tahmin Etme", ru: "Карьерный путь", pt: "Caminho da Carreira", de: "Karrierestationen", fr: "Parcours du joueur", },
     description: {
       en: "Follow the transfer trail and name the player behind the career.",
       ka: "მიჰყევი ტრანსფერების კვალს და გამოიცანი ვისი კარიერაა.",

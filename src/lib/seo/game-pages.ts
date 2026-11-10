@@ -452,7 +452,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     tr: {
       metaTitle: "Kariyer Yolu — Kulüplerinden Futbolcuyu Tahmin Et",
       metaDescription: "Kulüp armalarını sırayla gör, o yolu yürüyen oyuncuyu söyle. Her gün yeni bir Kariyer Yolu görevi.",
-      title: "Kariyer Yolu",
+      title: "Kariyerden Futbolcu Tahmin Etme",
       intro: "Eskiden yeniye bir kulüp arması dizisi. Bu hangi futbolcunun kariyeri? İsmi yaz ve öğren.",
       howToPlay: ["Kulüp sırasını incele.", "Olduğunu düşündüğün oyuncuyu yaz.", "Doğru cevaplar günlük skoruna eklenir."],
       reward: "Oynadığın her gün jeton ve XP kazan.",

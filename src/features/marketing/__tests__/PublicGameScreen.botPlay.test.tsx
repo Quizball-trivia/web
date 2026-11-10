@@ -63,3 +63,20 @@ describe("PublicGameScreen — word-game loading contract", () => {
     }
   });
 });
+
+describe("PublicGameScreen — Minuto guest discovery", () => {
+  it.each([
+    ["en", "10 goals per game · past days free, no account"],
+    ["ka", "10 გოლი თამაშში · წინა დღეები უფასოდ, ანგარიშის გარეშე"],
+    ["es", "10 goles por partida · días anteriores gratis, sin cuenta"],
+    ["tr", "Her oyunda 10 gol · geçmiş günler ücretsiz, hesap gerekmez"],
+    ["ru", "10 голов за игру · прошлые дни бесплатно, без аккаунта"],
+    ["pt", "10 gols por partida · dias anteriores grátis, sem conta"],
+    ["de", "10 Tore pro Spiel · frühere Tage kostenlos, ohne Konto"],
+    ["fr", "10 buts par partie · jours précédents gratuits, sans compte"],
+  ] as const)("clarifies free archive access before play in %s", (locale, label) => {
+    render(<PublicGameScreen game={findPublicGameByModeId("minuto")!} locale={locale} />);
+    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+});

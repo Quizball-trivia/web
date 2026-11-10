@@ -2,14 +2,18 @@ import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import type { Locale } from "@/lib/i18n/locale";
 import { HOME_COPY } from "@/lib/seo/home-copy";
 import type { PublicSurface } from "@/lib/analytics/public-games.analytics";
-import { cardHref, type PublicGame } from "@/lib/seo/public-games";
+import { cardHref, isFullGameDemo, type PublicGame } from "@/lib/seo/public-games";
 import { GameCardLink } from "./PublicLinks";
 import { DeferredCardArt } from "./DeferredCardArt";
 
 function GameCard({ game, locale, surface, deferArtwork }: { game: PublicGame; locale: Locale; surface: PublicSurface; deferArtwork?: boolean }) {
   const copy = HOME_COPY[locale].cards;
   const text = game.copy[locale];
-  const badge = game.guest === "demo" ? copy.practice : copy.accountRequired;
+  const badge = game.destination.kind === "quiz"
+    ? copy.quiz
+    : game.guest !== "demo"
+      ? copy.accountRequired
+      : isFullGameDemo(game.demoSlug) ? copy.dailyGame : copy.practice;
   const Art = deferArtwork ? DeferredCardArt : DemoModeArt;
   return (
     <GameCardLink
