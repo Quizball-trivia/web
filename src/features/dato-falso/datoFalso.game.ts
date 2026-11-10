@@ -3,7 +3,7 @@ import type { WordDailyCalendar } from "@/features/wordgames/daily/wordDaily.log
 import { datoFalsoCopy } from "./datoFalso.copy";
 
 /** Same calendar as the backend (dato-falso.days.ts): staging dates, re-dated with the seed before the production release. */
-export const DATO_FALSO_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-17", rankedStart: "2026-10-19", publishedDays: 36 };
+export const DATO_FALSO_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-17", rankedStart: "2026-10-19", publishedDays: 50 };
 
 export const datoFalsoDailyGame = (locale: string): WordDailyGame => {
   const c = datoFalsoCopy(locale);
