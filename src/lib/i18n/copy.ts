@@ -94,7 +94,7 @@ const en: LocaleCopy = {
       },
       {
         title: "8. Contact Us",
-        body: "If you have any questions about these Terms, please contact us at support@quizball.com.",
+        body: "If you have any questions about these Terms, please contact us at nika@quizball.io.",
       },
     ],
   },
@@ -207,7 +207,7 @@ const ka: LocaleCopy = {
       },
       {
         title: "8. კონტაქტი",
-        body: "თუ გაქვთ რაიმე შეკითხვა ამ პირობებთან დაკავშირებით, გთხოვთ, დაგვიკავშირდეთ მისამართზე: support@quizball.com.",
+        body: "თუ გაქვთ რაიმე შეკითხვა ამ პირობებთან დაკავშირებით, გთხოვთ, დაგვიკავშირდეთ მისამართზე: nika@quizball.io.",
       },
     ],
   },
@@ -319,7 +319,7 @@ const es: LocaleCopy = {
       },
       {
         title: "8. Contacto",
-        body: "Si tienes alguna pregunta sobre estos Términos, contáctanos en support@quizball.io.",
+        body: "Si tienes alguna pregunta sobre estos Términos, contáctanos en nika@quizball.io.",
       },
     ],
   },
@@ -431,7 +431,7 @@ const tr: LocaleCopy = {
       },
       {
         title: "8. Bize Ulaş",
-        body: "Bu Şartlar hakkında soruların varsa support@quizball.com adresinden bize ulaşabilirsin.",
+        body: "Bu Şartlar hakkında soruların varsa nika@quizball.io adresinden bize ulaşabilirsin.",
       },
     ],
   },
@@ -543,7 +543,7 @@ const ru: LocaleCopy = {
       },
       {
         title: "8. Свяжись с нами",
-        body: "Если у тебя есть вопросы об этих условиях, напиши нам на support@quizball.com.",
+        body: "Если у тебя есть вопросы об этих условиях, напиши нам на nika@quizball.io.",
       },
     ],
   },
@@ -655,7 +655,7 @@ const pt: LocaleCopy = {
       },
       {
         title: "8. Fale Conosco",
-        body: "Se você tiver dúvidas sobre estes Termos, entre em contato pelo e-mail support@quizball.com.",
+        body: "Se você tiver dúvidas sobre estes Termos, entre em contato pelo e-mail nika@quizball.io.",
       },
     ],
   },
@@ -767,7 +767,7 @@ const de: LocaleCopy = {
       },
       {
         title: "8. Kontakt",
-        body: "Wenn du Fragen zu diesen Bedingungen hast, schreib uns bitte an support@quizball.com.",
+        body: "Wenn du Fragen zu diesen Bedingungen hast, schreib uns bitte an nika@quizball.io.",
       },
     ],
   },
@@ -879,7 +879,7 @@ const fr: LocaleCopy = {
       },
       {
         title: "8. Contact",
-        body: "Si tu as des questions sur ces conditions, écris-nous à support@quizball.com.",
+        body: "Si tu as des questions sur ces conditions, écris-nous à nika@quizball.io.",
       },
     ],
   },

@@ -110,7 +110,7 @@ export default async function EditorialMethodologyPage({
             <h2 className="mt-4 text-xl font-semibold">{copy.correctionHeading}</h2>
             <p className="mt-3 text-sm font-medium leading-7 text-white/65">{copy.correctionBody}</p>
             <a
-              href="mailto:support@quizball.io?subject=QuizBall%20question%20correction"
+              href="mailto:nika@quizball.io?subject=QuizBall%20question%20correction"
               className="mt-5 inline-flex min-h-10 items-center gap-2 font-semibold text-brand-cyan hover:underline"
             >
               <Mail className="size-4" aria-hidden />

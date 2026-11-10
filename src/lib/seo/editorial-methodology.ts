@@ -84,7 +84,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Found a question that needs another look?",
     correctionBody:
       "Send the quiz name, question and the source you believe supports a correction. We will review the underlying fact and wording.",
-    correctionLink: "Email support@quizball.io",
+    correctionLink: "Email nika@quizball.io",
     exploreHeading: "See the method in action",
     exploreBody:
       "Start with two of QuizBall’s most useful football knowledge formats, or browse every free quiz.",
@@ -137,7 +137,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "იპოვეთ კითხვა, რომელიც ხელახლა უნდა გადავამოწმოთ?",
     correctionBody:
       "გამოგვიგზავნეთ ქვიზის სახელი, კითხვა და წყარო, რომელიც შესწორებას ადასტურებს. ჩვენ ფაქტსა და ფორმულირებას გადავამოწმებთ.",
-    correctionLink: "მისწერეთ support@quizball.io-ს",
+    correctionLink: "მისწერეთ nika@quizball.io-ს",
     exploreHeading: "ნახეთ მეთოდი პრაქტიკაში",
     exploreBody:
       "დაიწყეთ QuizBall-ის ორი გამორჩეული ფორმატით ან დაათვალიერეთ ყველა უფასო ქვიზი.",
@@ -190,7 +190,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "¿Has encontrado una pregunta que deberíamos revisar?",
     correctionBody:
       "Envíanos el nombre del quiz, la pregunta y la fuente que respalda la corrección. Revisaremos el dato y la redacción.",
-    correctionLink: "Escribir a support@quizball.io",
+    correctionLink: "Escribir a nika@quizball.io",
     exploreHeading: "Mira el método en acción",
     exploreBody:
       "Empieza con dos de los formatos más útiles de QuizBall o explora todos los quizzes gratuitos.",
@@ -243,7 +243,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Yeniden bakılması gereken bir soru mu buldun?",
     correctionBody:
       "Quiz adını, soruyu ve düzeltmeyi desteklediğini düşündüğün kaynağı gönder. Temel gerçeği ve ifadeyi inceleyeceğiz.",
-    correctionLink: "support@quizball.io adresine yaz",
+    correctionLink: "nika@quizball.io adresine yaz",
     exploreHeading: "Yöntemi iş başında gör",
     exploreBody:
       "QuizBall'un en faydalı iki futbol bilgisi formatıyla başla ya da tüm ücretsiz quizlere göz at.",
@@ -296,7 +296,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Нашёл вопрос, который стоит перепроверить?",
     correctionBody:
       "Пришли название викторины, вопрос и источник, который подтверждает исправление. Мы перепроверим сам факт и формулировку.",
-    correctionLink: "Напиши на support@quizball.io",
+    correctionLink: "Напиши на nika@quizball.io",
     exploreHeading: "Посмотри, как это работает",
     exploreBody:
       "Начни с двух самых полезных форматов QuizBall для проверки футбольных знаний или загляни во все бесплатные викторины.",
@@ -349,7 +349,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Encontrou uma pergunta que merece ser revista?",
     correctionBody:
       "Envie o nome do quiz, a pergunta e a fonte que, na sua opinião, confirma a correção. Vamos revisar o fato e o enunciado.",
-    correctionLink: "Fale com a gente pelo e-mail support@quizball.io",
+    correctionLink: "Fale com a gente pelo e-mail nika@quizball.io",
     exploreHeading: "Veja o método na prática",
     exploreBody:
       "Comece por dois dos formatos do QuizBall que melhor testam seus conhecimentos sobre futebol ou explore todos os quizzes gratuitos.",
@@ -402,7 +402,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Eine Frage entdeckt, die wir noch einmal prüfen sollten?",
     correctionBody:
       "Schick uns den Quiznamen, die Frage und die Quelle, die deiner Meinung nach eine Korrektur stützt. Wir prüfen die zugrunde liegende Tatsache und die Formulierung.",
-    correctionLink: "E-Mail an support@quizball.io",
+    correctionLink: "E-Mail an nika@quizball.io",
     exploreHeading: "Die Methodik in der Praxis",
     exploreBody:
       "Starte mit zwei besonders nützlichen Fußballquiz-Formaten von QuizBall oder entdecke alle kostenlosen Quizze.",
@@ -455,7 +455,7 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     correctionHeading: "Tu as repéré une question à vérifier ?",
     correctionBody:
       "Envoie le nom du quiz, la question et la source qui, selon toi, justifie une correction. Nous vérifierons le fait concerné et la formulation.",
-    correctionLink: "Écrire à support@quizball.io",
+    correctionLink: "Écrire à nika@quizball.io",
     exploreHeading: "Voir la méthode en pratique",
     exploreBody:
       "Commence par deux des formats de QuizBall les plus utiles pour tester tes connaissances du football, ou parcours tous les quiz gratuits.",

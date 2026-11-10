@@ -252,7 +252,7 @@ export const DOWNLOAD_COPY: Record<Locale, DownloadCopy> = {
     questions: [
       { question: 'Que app do Quizball é este?', answer: 'Este é o app oficial do quizball.io para Android, publicado pela Quizball LLC. O nome do desenvolvedor no Google Play é Quizball e o ID do app Android é io.quizball.mobile. Use o botão de download desta página para abrir a página correta.' },
       { question: 'O Quizball é grátis para baixar?', answer: 'Sim. Você pode baixar o Quizball gratuitamente no Google Play em celulares e tablets Android compatíveis. É necessário ter conexão com a internet para jogar.' },
-      { question: 'Quais idiomas posso escolher?', answer: 'O app do Quizball oferece suporte a inglês, georgiano, espanhol, turco e português do Brasil. Escolha seu idioma nas configurações do app.' },
+      { question: 'Quais idiomas posso escolher?', answer: 'O app do Quizball para Android oferece suporte a inglês, georgiano, espanhol e turco. Escolha seu idioma nas configurações do app. No site quizball.io você também pode jogar em português.' },
     ],
   },
   de: {
