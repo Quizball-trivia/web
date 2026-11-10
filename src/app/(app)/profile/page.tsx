@@ -207,7 +207,7 @@ export default function ProfilePage() {
         setAuthenticated({ ...authUser, preferred_language: updated.preferred_language });
       }
       setLocale(language as Locale);
-      toast.success(await translateIn(language as Locale, "profile.languageUpdated"));
+      void translateIn(language as Locale, "profile.languageUpdated").then((m) => toast.success(m));
     } catch (error) {
       toast.error(t("profile.languageUpdateFailed"), {
         description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),

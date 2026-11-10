@@ -321,7 +321,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         const updated = await updateMe({ preferred_language: newLocale });
         setAuthenticated({ ...user, preferred_language: updated.preferred_language ?? newLocale });
       }
-      toast.success(await translateIn(newLocale, "settings.languageUpdated"));
+      void translateIn(newLocale, "settings.languageUpdated").then((m) => toast.success(m));
     } catch {
       setLocale(locale as Locale);
       toast.error(t("settings.languageUpdateFailed"));
