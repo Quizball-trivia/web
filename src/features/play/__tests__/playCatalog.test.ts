@@ -51,6 +51,16 @@ describe("playOrderFrom", () => {
     expect([...(order.daily ?? [])].sort()).toEqual([...DAILY_CHALLENGE_SLUGS].sort());
   });
 
+  it("puts a game in its launch week among the first three daily cards, even with few players yet", () => {
+    const games = {
+      minuto: { players_7d: 1416, players_3d: 978 }, buscaminas: { players_7d: 1392, players_3d: 698 }, tenable: { players_7d: 1103, players_3d: 428 },
+      "shared-player": { players_7d: 976, players_3d: 430 }, "football-darts-501": { players_7d: 754, players_3d: 534 }, "football-draft": { players_7d: 24, players_3d: 24 },
+    };
+    const order = playOrderFrom({ generated_at: null, games }, new Date("2026-11-10T12:00:00Z"));
+    expect(order.daily?.slice(0, 3)).toContain("football-draft");
+    expect(order.newSlugs).toContain("football-draft");
+  });
+
   it("never lists a retired game on the Play page", () => {
     const listed = new Set([...DAILY_CHALLENGE_SLUGS, ...PLAY_WITH_COINS_SLUGS]);
     expect(RETIRED_PLAY_SLUGS.filter((slug) => listed.has(slug))).toEqual([]);
@@ -58,9 +68,10 @@ describe("playOrderFrom", () => {
 
   it("stops marking a game as new three weeks after its release", () => {
     expect(playOrderFrom(null, new Date("2026-10-26T12:00:00Z")).newSlugs).toEqual(["conexiones-futboleras", "tenable", "shared-player", "name-chain", "football-horserace", "football-codenames", "dato-falso-futbolero"]);
-    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual(["football-darts-501", "conexiones-futboleras"]);
-    expect(playOrderFrom(null, new Date("2026-11-17T12:00:00Z")).newSlugs).toEqual(["football-darts-501"]);
-    expect(playOrderFrom(null, new Date("2026-11-21T12:00:00Z")).newSlugs).toEqual([]);
+    expect(playOrderFrom(null, new Date("2026-11-15T12:00:00Z")).newSlugs).toEqual(["football-draft", "football-darts-501", "conexiones-futboleras"]);
+    expect(playOrderFrom(null, new Date("2026-11-17T12:00:00Z")).newSlugs).toEqual(["football-draft", "football-darts-501"]);
+    expect(playOrderFrom(null, new Date("2026-11-21T12:00:00Z")).newSlugs).toEqual(["football-draft"]);
+    expect(playOrderFrom(null, new Date("2026-11-30T12:00:00Z")).newSlugs).toEqual([]);
   });
 });
 

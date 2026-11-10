@@ -29,34 +29,37 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   const { locale } = useLocale();
   const c = draftCopy(locale);
   const server = readDraftOptions(options);
-  // Quick taps must not undo each other: until the room echoes what was sent, the next tap builds on what was sent,
-  // not on the older settings the room still shows. Once the room confirms it (or 3 s pass, or editing is no longer
-  // allowed) the room's own value is shown again.
-  const [sent, setSent] = useState<DraftRoomChoice | null>(null);
-  if (sent && (!canEdit || sameChoice(sent, server))) setSent(null);
-  // The lobby rolled its settings back (a refusal it already reported): the change on its way is over, and so is its wait.
+  // Quick taps must not undo each other, on the screen or on the server. The screen shows the newest choice at once;
+  // the server gets one change at a time (the room applies each under a lock, so two in flight could land out of
+  // order). `want` is the newest choice, `inFlight` the one sent and not yet confirmed by the room.
+  const [q, setQ] = useState<{ want: DraftRoomChoice | null; inFlight: DraftRoomChoice | null }>({ want: null, inFlight: null });
   const [seenRefusal, setSeenRefusal] = useState(refusedVersion);
-  if (refusedVersion !== seenRefusal) {
-    setSeenRefusal(refusedVersion);
-    if (sent) setSent(null);
-  }
-  const pending = canEdit && sent && !sameChoice(sent, server) ? sent : null;
-  const value = pending ?? server;
+  let next = q;
+  // Editing no longer allowed, or the lobby rolled its settings back (a refusal it already reported): all of it is over.
+  if ((!canEdit || refusedVersion !== seenRefusal) && (next.want || next.inFlight)) next = { want: null, inFlight: null };
+  // The room confirmed what was in flight.
+  if (next.inFlight && sameChoice(next.inFlight, server)) next = { ...next, inFlight: null };
+  // Nothing in flight: the newest choice goes out if the room does not show it yet, or is done if it does.
+  if (!next.inFlight && next.want) next = sameChoice(next.want, server) ? { want: null, inFlight: null } : { ...next, inFlight: next.want };
+  if (refusedVersion !== seenRefusal) setSeenRefusal(refusedVersion);
+  if (next !== q) setQ(next);
+  const pending = next.want !== null || next.inFlight !== null;
+  const value = next.want ?? server;
+  // Each change put in flight is sent once.
+  useEffect(() => { if (q.inFlight) onChange({ ...q.inFlight }); }, [q.inFlight]); // eslint-disable-line react-hooks/exhaustive-deps
   // While a change is on its way the lobby treats the settings as saving: Ready and Start wait for the room's answer.
-  useEffect(() => { onPendingChange?.(pending !== null); }, [pending, onPendingChange]);
+  useEffect(() => { onPendingChange?.(pending); }, [pending, onPendingChange]);
   useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
-  // No answer in 3 s counts as refused, like any lobby setting: the room's value returns and a held Ready is dropped.
-  // A newer tap restarts the wait; the room's confirmation ends it.
+  // A change the room does not confirm within 3 s counts as refused, like any lobby setting: the room's value returns
+  // and a held Ready is dropped. The wait belongs to the change in flight; changes from elsewhere do not extend it.
   useEffect(() => {
-    if (!pending) return;
-    const timer = setTimeout(() => { setSent(null); onAbandoned?.(); }, 3_000);
+    if (!q.inFlight) return;
+    const timer = setTimeout(() => { setQ({ want: null, inFlight: null }); onAbandoned?.(); }, 3_000);
     return () => clearTimeout(timer);
-  }, [pending, onAbandoned]);
+  }, [q.inFlight, onAbandoned]);
   const set = (patch: Partial<DraftRoomChoice>) => {
     if (!canEdit) return;
-    const next = { ...value, ...patch };
-    setSent(next);
-    onChange(next);
+    setQ((current) => ({ ...current, want: { ...(current.want ?? server), ...patch } }));
   };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
     <div>

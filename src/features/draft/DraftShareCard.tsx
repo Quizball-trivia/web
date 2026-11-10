@@ -148,13 +148,44 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [names, setNames] = useState(defaultNames);
   const [copied, setCopied] = useState(false);
-  useEffect(() => { if (canvas.current) void drawShareCard(canvas.current, data, names); }, [data, names]);
+  // Each version of the card is drawn off screen; only the newest is shown and exported. Its PNG is made at once, so
+  // Share reaches the system sheet without waiting (or the browser treats the tap as expired), and a Share or Save
+  // pressed while a redraw is still running waits for that newest image, never an older one.
+  const ready = useRef<Blob | null>(null);
+  const pending = useRef<Promise<Blob | null>>(Promise.resolve(null));
+  const drawing = useRef(0);
+  useEffect(() => {
+    const el = canvas.current;
+    if (!el) return;
+    const mine = ++drawing.current;
+    ready.current = null;
+    const off = document.createElement("canvas");
+    pending.current = drawShareCard(off, data, names).then(() => new Promise<Blob | null>((resolve) => {
+      if (mine !== drawing.current) { resolve(null); return; }
+      el.width = off.width; el.height = off.height;
+      el.getContext("2d")?.drawImage(off, 0, 0);
+      off.toBlob((b) => { const newest = mine === drawing.current; if (newest) ready.current = b; resolve(newest ? b : null); }, "image/png");
+    }));
+    return () => { drawing.current += 1; };
+  }, [data, names]);
 
   const [failed, setFailed] = useState(false);
-  const blob = () => new Promise<Blob | null>((resolve) => { if (canvas.current) canvas.current.toBlob(resolve, "image/png"); else resolve(null); });
+  // Waits for the newest image: a draw replaced while waiting hands over to its replacement. Null once the sheet is gone.
+  const open = useRef(true);
+  useEffect(() => { open.current = true; return () => { open.current = false; }; }, []);
+  const blob = async (): Promise<Blob | null> => {
+    for (let tries = 0; tries < 8 && open.current; tries++) {
+      if (ready.current) return ready.current;
+      const mine = drawing.current;
+      const b = await pending.current;
+      if (b && mine === drawing.current) return b;
+    }
+    return null;
+  };
   const save = async () => {
     try {
       const b = await blob();
+      if (!open.current) return;
       if (!b) { setFailed(true); return; }
       setFailed(false);
       const url = URL.createObjectURL(b);
@@ -171,7 +202,8 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
   };
   const share = async () => {
     try {
-      const b = await blob();
+      const b = ready.current ?? (await blob());
+      if (!open.current) return;
       const file = b ? new File([b], "football-draft.png", { type: "image/png" }) : null;
       if (!file) { setFailed(true); return; }
       if (navigator.canShare?.({ files: [file] })) {
@@ -183,7 +215,10 @@ export function ShareSheet({ c, data, text, defaultNames, onDone, onClose }: { c
       await save();
     } catch (e) {
       // Closing the system sheet is a choice, not a failure.
-      if (!(e instanceof DOMException && e.name === "AbortError")) setFailed(true);
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      // The browser refused the system sheet (no gesture left, or not allowed here): the image is saved instead.
+      if (e instanceof DOMException && e.name === "NotAllowedError") { await save(); return; }
+      setFailed(true);
     }
   };
   const copy = async () => {

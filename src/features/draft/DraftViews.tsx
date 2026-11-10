@@ -435,6 +435,8 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
   // The squad stays hidden until the reels land.
   const players = spinning || armed ? [] : spin.players;
   const targetSlot = slots.find((x) => x.id === target) ?? null;
+  // "All" and the tapped place's own tab keep the tapped place; another position's tab is a new choice.
+  const changeTab = (at: PickerTab) => { setPos(at); if (at !== "ALL" && at !== targetSlot?.pos) setTarget(null); };
   const choose = (id: string) => {
     const p = spin.players.find((x) => x.id === id);
     const dest = p && destination(p, slots, myPicks, target);
@@ -477,7 +479,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
           )}
           <div className={cn("lg:hidden", armed && "hidden")}>
             <p className={cn("mb-1.5 text-center text-[11px] font-semibold text-white/70", short && "hidden")} aria-live="polite">{hint}</p>
-            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }}
+            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab}
               target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
           </div>
           {!shared && !armed && (
@@ -505,7 +507,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
             <h2 className="text-sm font-black uppercase" style={poppins}>{c.squad}</h2>
             <p className="text-xs text-white/70">{hint}</p>
           </div>
-          <SquadList budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={(at) => { setPos(at); setTarget(null); }} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
+          <SquadList budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
         </div>
       </div>
       {/* No exit animation: a button still fading out could be pressed after the next squad is on screen. */}
