@@ -70,6 +70,9 @@ describe("SuggestBox", () => {
     await type(input, "milo vant");
     await screen.findByRole("option", { name: /Milo Vantar/ });
     expect(screen.getByRole("option", { name: /Milo Vantar/ })).toHaveAttribute("aria-selected", "true");
+    // The button keeps the focus (pointer-down is cancelled), so it sends the highlighted name like Enter does.
+    const button = screen.getByRole("button", { name: "Send" });
+    expect(fireEvent.pointerDown(button)).toBe(false);
     fireEvent.submit(input.closest("form")!);
     expect(onSubmit).toHaveBeenLastCalledWith("Milo Vantar", "p1");
 
