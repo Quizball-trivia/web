@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { CampaignQuizLanding } from './CampaignQuizLanding';
 import { getCampaignQuizContent } from './campaignQuiz.content';
 import { CampaignQuizApiError, getCampaignQuiz, listCampaignQuizPages } from './campaignQuiz.api';
+import { registerCampaignSlugs } from './campaignQuiz.routes';
 import type { CampaignQuiz } from './campaignQuiz.types';
 import { CAMPAIGN_HREFLANG, CAMPAIGN_OG_LOCALE, CAMPAIGN_QUIZ_LOCALES, campaignHubPath, campaignQuizPath, isLanguageRejected, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
@@ -31,8 +32,12 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   fr: { home: 'Accueil', hub: 'Quiz foot' },
 };
 
-const loadQuiz = cache((slug: string, preview: string | undefined, locale: CampaignQuizLocale) =>
-  getCampaignQuiz(slug, preview, locale));
+const loadQuiz = cache(async (slug: string, preview: string | undefined, locale: CampaignQuizLocale) => {
+  const quiz = await getCampaignQuiz(slug, preview, locale);
+  // A preview may be a draft whose URLs are not public yet.
+  if (!preview) registerCampaignSlugs([quiz]);
+  return quiz;
+});
 
 /** Editions that always exist; a missing edition of any other language is answered in English by the quiz endpoint. */
 const ALWAYS_ON_EDITIONS: readonly CampaignQuizLocale[] = ['en', 'es'];
@@ -166,6 +171,7 @@ export async function renderCampaignQuizPage(
       {
         '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl,
         name: content.metadataTitle, description: content.description, inLanguage: language,
+        ...(quiz.page?.content_modified_at ? { dateModified: quiz.page.content_modified_at } : {}),
         isPartOf: { '@id': `${SITE_URL}/#website` }, mainEntity: { '@id': `${pageUrl}#quiz` },
       },
       {

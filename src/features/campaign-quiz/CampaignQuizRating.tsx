@@ -7,6 +7,7 @@ import { trackCampaignQuizRating } from './campaignQuiz.analytics';
 import type { CampaignQuizRating as Rating } from './campaignQuiz.types';
 import type { Locale } from '@/lib/i18n/messages';
 import { russianPlural } from './campaignQuiz.plural';
+import { formatCampaignNumber } from './campaignQuiz.number';
 
 interface CampaignQuizRatingProps {
   slug: string;
@@ -126,7 +127,6 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
     }
   };
 
-  const numberLocale = locale === 'es' ? 'es-ES' : locale === 'ru' ? 'ru-RU' : locale === 'pt' ? 'pt-BR' : locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'tr' ? 'tr-TR' : locale === 'ka' ? 'ka-GE' : 'en-GB';
   return (
     <section
       id="quiz-rating"
@@ -138,7 +138,7 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
       </h2>
       <p className="mt-1 text-sm font-semibold text-white/75">
         {aggregate.count > 0 && aggregate.average !== null
-          ? `${aggregate.average.toLocaleString(numberLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${copy.outOf} · ${aggregate.count.toLocaleString(numberLocale)} ${
+          ? `${formatCampaignNumber(aggregate.average, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${copy.outOf} · ${formatCampaignNumber(aggregate.count, locale)} ${
               locale === 'ru'
                 ? russianPlural(aggregate.count, 'оценка', 'оценки', 'оценок')
                 : aggregate.count === 1 ? copy.rating : copy.ratings

@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Brain,
+  CalendarCheck,
   Clock3,
   LockKeyhole,
   ShieldCheck,
@@ -80,6 +81,7 @@ const COPY = {
     soloWarmup: 'Solo warm-up',
     answerPrompt: 'Pick one answer for each question. Your score arrives instantly.',
     factChecked: 'Fact-checked questions',
+    updated: 'Updated {date}',
     fiveMinutes: 'About 5 minutes',
     instantScore: 'Instant score',
     readyRanked: 'Ready for ranked?',
@@ -105,6 +107,7 @@ const COPY = {
     soloWarmup: 'სოლო გახურება',
     answerPrompt: 'აირჩიე თითო პასუხი. შედეგს მყისიერად მიიღებ.',
     factChecked: 'გადამოწმებული კითხვები',
+    updated: 'განახლდა: {date}',
     fiveMinutes: 'დაახლოებით 5 წუთი',
     instantScore: 'მყისიერი შედეგი',
     readyRanked: 'მზად ხარ რეიტინგისთვის?',
@@ -130,6 +133,7 @@ const COPY = {
     soloWarmup: 'Calentamiento individual',
     answerPrompt: 'Elige una respuesta para cada pregunta. Tu puntuación aparece al instante.',
     factChecked: 'Preguntas verificadas',
+    updated: 'Actualizado el {date}',
     fiveMinutes: 'Unos 5 minutos',
     instantScore: 'Puntuación instantánea',
     readyRanked: '¿Listo para la clasificatoria?',
@@ -155,6 +159,7 @@ const COPY = {
     soloWarmup: 'Одиночная разминка',
     answerPrompt: 'Выбери один ответ на каждый вопрос. Результат появится сразу.',
     factChecked: 'Вопросы с проверенными фактами',
+    updated: 'Обновлено {date}',
     fiveMinutes: 'Около 5 минут',
     instantScore: 'Результат сразу',
     readyRanked: 'Готов к рейтинговым матчам?',
@@ -180,6 +185,7 @@ const COPY = {
     soloWarmup: 'Aquecimento individual',
     answerPrompt: 'Escolha uma resposta para cada pergunta. Seu resultado aparece na hora.',
     factChecked: 'Perguntas com fatos verificados',
+    updated: 'Atualizado em {date}',
     fiveMinutes: 'Cerca de 5 minutos',
     instantScore: 'Resultado na hora',
     readyRanked: 'Pronto para o ranqueado?',
@@ -205,6 +211,7 @@ const COPY = {
     soloWarmup: 'Solo-Aufwärmrunde',
     answerPrompt: 'Wähle pro Frage eine Antwort. Dein Ergebnis siehst du sofort.',
     factChecked: 'Geprüfte Fragen',
+    updated: 'Aktualisiert am {date}',
     fiveMinutes: 'Etwa 5 Minuten',
     instantScore: 'Sofortiges Ergebnis',
     readyRanked: 'Bereit für Ranked?',
@@ -230,6 +237,7 @@ const COPY = {
     soloWarmup: 'Échauffement en solo',
     answerPrompt: 'Choisis une réponse par question. Ton score s’affiche instantanément.',
     factChecked: 'Questions vérifiées',
+    updated: 'Mis à jour le {date}',
     fiveMinutes: 'Environ 5 minutes',
     instantScore: 'Score instantané',
     readyRanked: 'Prêt pour le mode classé ?',
@@ -255,6 +263,7 @@ const COPY = {
     soloWarmup: 'Tek başına ısınma turu',
     answerPrompt: 'Her soru için bir cevap seç. Puanını anında gör.',
     factChecked: 'Bilgileri doğrulanmış sorular',
+    updated: 'Güncelleme: {date}',
     fiveMinutes: 'Yaklaşık 5 dakika',
     instantScore: 'Anında puan',
     readyRanked: 'Sıralamalı oynamaya hazır mısın?',
@@ -328,9 +337,24 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
   }, []);
 }
 
+const DATE_LOCALE: Record<CampaignQuizLocale, string> = {
+  en: 'en-GB', ka: 'ka-GE', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', de: 'de-DE', tr: 'tr-TR', fr: 'fr-FR',
+};
+
+/** The date the page's content last changed, for the visible "Updated" line (UTC, so server and client agree). */
+function contentDate(value: string | undefined, locale: CampaignQuizLocale): { iso: string; label: string } | null {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return null;
+  return {
+    iso: date.toISOString(),
+    label: new Intl.DateTimeFormat(DATE_LOCALE[locale], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date),
+  };
+}
+
 export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken, editions, openSlugs }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
+  const updatedOn = contentDate(quiz.page?.content_modified_at, locale);
   const hubPath = campaignHubPath(locale);
   const difficultyCounts = quiz.difficulty_counts ?? quiz.questions.reduce(
     (counts, question) => {
@@ -356,6 +380,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
       <CampaignQuizPageView
         slug={quiz.slug}
         totalQuestions={quiz.total_questions}
+        publicSlugs={previewToken ? undefined : quiz.public_slugs}
       />
       <header className="sticky top-0 z-50 bg-surface-page-alt/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
@@ -501,6 +526,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               locale={locale}
               scoreTemplate={content.scoreTemplate}
               previewToken={previewToken}
+              setVersion={quiz.set_version}
             />
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-white/40">
               <span className="inline-flex items-center gap-1.5">
@@ -515,6 +541,12 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
                 <Brain className="size-4 text-brand-yellow" aria-hidden />
                 {copy.instantScore}
               </span>
+              {updatedOn ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarCheck className="size-4 text-brand-cyan" aria-hidden />
+                  <time dateTime={updatedOn.iso}>{copy.updated.replace('{date}', updatedOn.label)}</time>
+                </span>
+              ) : null}
             </div>
           </div>
         </section>

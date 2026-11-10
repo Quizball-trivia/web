@@ -184,7 +184,7 @@ export default async function PressResourcesPage({
           <Mail className="size-6 text-brand-cyan" aria-hidden />
           <h2 className="mt-4 text-2xl font-semibold">{copy.contactHeading}</h2>
           <p className="mt-3 max-w-3xl text-sm font-medium leading-7 text-white/65">{copy.contactBody}</p>
-          <a href="mailto:support@quizball.io?subject=QuizBall%20verification%20request" className="mt-5 inline-flex min-h-10 items-center font-semibold text-brand-yellow hover:underline">support@quizball.io</a>
+          <a href="mailto:nika@quizball.io?subject=QuizBall%20verification%20request" className="mt-5 inline-flex min-h-10 items-center font-semibold text-brand-yellow hover:underline">nika@quizball.io</a>
           <p className="mt-6 border-t border-white/10 pt-5 text-xs font-medium leading-6 text-white/45">{copy.legalNote}</p>
         </section>
       </main>
