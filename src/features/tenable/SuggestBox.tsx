@@ -59,12 +59,11 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
   }, [key, q, kind, release, locale, lookup]);
 
   const shown = open && q.length >= MIN_QUERY && result?.key === key ? result.items : [];
-  // Nothing picked by keyboard: when exactly one suggestion starts like the typed text (or one of its words does), it
-  // is highlighted, so Enter sends the name the player sees ("Tigres" → the shown club), never a different club that
-  // the bare text would be read as. Several candidates → nothing is preselected; the player picks.
+  // Nothing picked by keyboard and a single suggestion shown that starts like the typed text (or a word of it does):
+  // it is highlighted, so Enter sends the name the player sees. With more than one suggestion nothing is preselected
+  // (the typed text may be an exact name of another one); the player picks.
   const typed = fold(q);
-  const candidates = active < 0 && typed ? shown.flatMap((s, i) => (startsLike(fold(s.label), typed) ? [i] : [])) : [];
-  const current = active >= 0 ? active : candidates.length === 1 ? candidates[0] : -1;
+  const current = active >= 0 ? active : shown.length === 1 && typed && startsLike(fold(shown[0].label), typed) ? 0 : -1;
   // A highlight belongs to the results it was made on: a new list (another kind or release) drops it with them.
   const [activeKey, setActiveKey] = useState(key);
   if (activeKey !== key) { setActiveKey(key); setActive(-1); }

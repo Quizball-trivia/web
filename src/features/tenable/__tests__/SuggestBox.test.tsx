@@ -80,13 +80,19 @@ describe("SuggestBox", () => {
     expect(onSubmit).toHaveBeenLastCalledWith("Milo", null);
   });
 
-  it("a word of the name and accents count: \"vardo\" picks the only \"Club Várdo\"", async () => {
-    const lookup = vi.fn(async () => [{ eid: "c9", label: "Club Várdo", qualifier: null }, { eid: "c8", label: "Ostra Lind", qualifier: null }]);
+  it("a word of the name and accents count: \"vardo\" picks the only \"Club Várdo\"; never with other names shown", async () => {
+    const lookup = vi.fn(async (_k: string, _r: string, q: string) => (q === "vardo"
+      ? [{ eid: "c9", label: "Club Várdo", qualifier: null }]
+      : [{ eid: "c9", label: "Club Várdo", qualifier: null }, { eid: "c8", label: "Club Stelar", qualifier: null }]));
     const { input, onSubmit } = box(lookup);
     await type(input, "vardo");
     await screen.findByRole("option", { name: /Club Várdo/ });
     fireEvent.submit(input.closest("form")!);
     expect(onSubmit).toHaveBeenLastCalledWith("Club Várdo", "c9");
+    await type(input, "varda");
+    await screen.findByRole("option", { name: /Club Stelar/ });
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).toHaveBeenLastCalledWith("varda", null);
   });
 
   it("Enter that confirms an input-method composition sends nothing", async () => {
