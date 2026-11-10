@@ -42,8 +42,15 @@ describe("useChangeLanguage", () => {
     const { result } = renderHook(() => useChangeLanguage());
     await act(async () => { await result.current.changeLanguage("fr"); });
     const fr = (await import("@/messages/fr.json")).default as { settings: { languageUpdated: string } };
-    expect(toast.success).toHaveBeenCalledWith(fr.settings.languageUpdated);
+    await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith(fr.settings.languageUpdated));
     expect(fr.settings.languageUpdated).not.toBe("Dil güncellendi");
+  });
+
+  it("does not hold the saving state while the new language's text loads", async () => {
+    updateMe.mockResolvedValueOnce({ preferred_language: "de" });
+    const { result } = renderHook(() => useChangeLanguage());
+    await act(async () => { await result.current.changeLanguage("de"); });
+    expect(result.current.isSaving).toBe(false);
   });
 
   it("allows one in-place change at a time across instances", async () => {

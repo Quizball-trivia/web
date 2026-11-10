@@ -58,7 +58,8 @@ export function translate(locale: Locale, key: MessageKey, params?: Record<strin
   return translateDictionary(dictionaries[locale], key, params);
 }
 
-/** The message in a language that may not be on screen yet (e.g. confirming a language change in the new language). */
+/** The message in a language that may not be on screen yet (e.g. confirming a language change in the new language).
+ * Callers must not hold UI state on it: the dictionary chunk can be slow. */
 export async function translateIn(locale: Locale, key: MessageKey): Promise<string> {
   const dictionary = await loadLocaleMessages(locale).catch(() => undefined);
   return translateDictionary(dictionary, key);

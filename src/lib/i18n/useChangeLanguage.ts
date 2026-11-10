@@ -58,7 +58,7 @@ export function useChangeLanguage() {
     setLocale(newLocale);
     try {
       if (user) await enqueuePreferenceSave(user.id, newLocale);
-      toast.success(await translateIn(newLocale, "settings.languageUpdated"));
+      void translateIn(newLocale, "settings.languageUpdated").then((m) => toast.success(m));
     } catch {
       setLocale(previous);
       toast.error(t("settings.languageUpdateFailed"));
