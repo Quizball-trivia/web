@@ -1823,7 +1823,7 @@ export interface ClientToServerEvents {
     ack?: (result: LobbyJoinByCodeResult) => void
   ) => void;
   'lobby:leave': (data?: { correlationId?: string }, ack?: (result: LobbyLeaveResult) => void) => void;
-  'lobby:ready': (data: { ready: boolean; seen?: LobbySeenGame }) => void;
+  'lobby:ready': (data: { ready: boolean; seen?: LobbySeenGame; locale?: string }) => void;
   /** Host only, room-game rooms: the game's options (null = back to its defaults). Changing them un-readies everyone. */
   'lobby:room_options': (data: { lobbyId?: string; options: Record<string, unknown> | null }) => void;
   'lobby:update_settings': (data: {

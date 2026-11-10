@@ -72,7 +72,7 @@ export function TenableBoard({ view, snapshot, room, locale, error, lookup }: { 
     const slotName = f.rank !== null ? view.slots[f.rank - 1]?.name ?? f.text : f.text;
     if (f.kind === "right" && f.rank !== null) return { tone: "ok" as const, text: `${nameOf(f.seat)}: ${t.ok(slotName, f.rank)}` };
     if (f.kind === "wrong") return { tone: "bad" as const, text: mine ? t.wrong(f.name ?? f.text) : `${t.lifeLost(nameOf(f.seat))} · ${t.wrong(f.name ?? f.text)}` };
-    if (f.kind === "time") return { tone: "bad" as const, text: `${t.lifeLost(nameOf(f.seat))} · ${t.time}` };
+    if (f.kind === "time") return { tone: "bad" as const, text: `${mine ? t.youLostLife : t.lifeLost(nameOf(f.seat))} · ${t.time}` };
     if (!mine) return null;
     return { tone: "warn" as const, text: f.kind === "repeat" ? t.repeat(f.name ?? f.text) : f.kind === "unknown" ? t.unknown(f.text) : t.ambiguous(f.text) };
   })();
