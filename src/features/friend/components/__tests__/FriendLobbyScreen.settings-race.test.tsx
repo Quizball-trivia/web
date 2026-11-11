@@ -65,7 +65,7 @@ const ULTIMO: Game = { gameMode: "duel", duelGame: "ultimo", roomGame: null };
 const AUCTION: Game = { gameMode: "auction", duelGame: null, roomGame: null };
 const seen = (game: Game) => ({ gameMode: game.gameMode, duelGame: game.duelGame, roomGame: game.roomGame });
 /** A Ready as the screen sends it: with the game it was pressed on. */
-const readyOn = (game: Game) => ({ event: "lobby:ready", payload: { ready: true, seen: seen(game) } });
+const readyOn = (game: Game) => ({ event: "lobby:ready", payload: { ready: true, seen: seen(game), locale: "en" } });
 
 /**
  * The lobby server as far as this race goes (backend lobby-commands.service): a settings change is refused once every

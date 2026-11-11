@@ -4,6 +4,9 @@ import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ANSWER_MAX_LENGTH, fetchSuggestions, type EntityKind, type Suggestion } from "./tenable.api";
 
+const fold = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+const startsLike = (label: string, typed: string) => label.startsWith(typed) || label.split(/[\s.-]+/).some((word) => word.startsWith(typed));
+
 const DEBOUNCE_MS = 150;
 const MIN_QUERY = 2;
 /** Suggestions depend only on (kind, release, text, language): kept for the page's life, bounded; failures are never kept. */
@@ -56,6 +59,11 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
   }, [key, q, kind, release, locale, lookup]);
 
   const shown = open && q.length >= MIN_QUERY && result?.key === key ? result.items : [];
+  // Nothing picked by keyboard and a single suggestion shown that starts like the typed text (or a word of it does):
+  // it is highlighted, so Enter sends the name the player sees. With more than one suggestion nothing is preselected
+  // (the typed text may be an exact name of another one); the player picks.
+  const typed = fold(q);
+  const current = active >= 0 ? active : shown.length === 1 && typed && startsLike(fold(shown[0].label), typed) ? 0 : -1;
   // A highlight belongs to the results it was made on: a new list (another kind or release) drops it with them.
   const [activeKey, setActiveKey] = useState(key);
   if (activeKey !== key) { setActiveKey(key); setActive(-1); }
@@ -72,15 +80,15 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
 
   return (
     <form className={cn("sticky bottom-0 mt-3 space-y-2 bg-surface-page-alt/95 pb-1 pt-2", className)}
-      onSubmit={(e) => { e.preventDefault(); if (active >= 0 && shown[active]) choose(shown[active]); else send(draft, null); }}>
+      onSubmit={(e) => { e.preventDefault(); if (current >= 0 && shown[current]) choose(shown[current]); else send(draft, null); }}>
       {shown.length > 0 && (
         <ul id={listId} role="listbox" aria-label={placeholder} className="max-h-56 overflow-y-auto rounded-2xl bg-surface-card p-1 shadow-2xl shadow-black/40">
           {shown.map((s, i) => (
-            <li key={s.eid} id={optionId(i)} role="option" aria-selected={i === active}
+            <li key={s.eid} id={optionId(i)} role="option" aria-selected={i === current}
               // The input keeps the focus (the phone keyboard stays up); the pick itself is a click, so a drag that
               // scrolls the list never picks anything.
               onPointerDown={(e) => e.preventDefault()} onClick={() => choose(s)}
-              className={cn("flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm", i === active ? "bg-brand-blue text-white" : "text-white/90 hover:bg-white/10")}>
+              className={cn("flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm", i === current ? "bg-brand-blue text-white" : "text-white/90 hover:bg-white/10")}>
               <span className="min-w-0 truncate font-semibold">{s.label}</span>
               {s.qualifier && <span className="shrink-0 text-xs text-white/60">{s.qualifier}</span>}
             </li>
@@ -93,8 +101,8 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
         onKeyDown={(e) => {
           // Enter that confirms an input-method composition is not a send.
           if (e.key === "Enter" && (e.nativeEvent.isComposing || e.keyCode === 229)) { e.preventDefault(); return; }
-          if (e.key === "ArrowDown" && shown.length) { e.preventDefault(); setActive((a) => (a + 1) % shown.length); }
-          else if (e.key === "ArrowUp" && shown.length) { e.preventDefault(); setActive((a) => (a <= 0 ? shown.length - 1 : a - 1)); }
+          if (e.key === "ArrowDown" && shown.length) { e.preventDefault(); setActive((current + 1) % shown.length); }
+          else if (e.key === "ArrowUp" && shown.length) { e.preventDefault(); setActive(current <= 0 ? shown.length - 1 : current - 1); }
           else if (e.key === "Escape" && shown.length) {
             // Closes the suggestions only; the game's own Escape (exit) is for when they are closed.
             e.preventDefault();
@@ -105,12 +113,14 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
           }
         }}
         role="combobox" aria-autocomplete="list" aria-expanded={shown.length > 0} aria-controls={listId}
-        aria-activedescendant={active >= 0 && shown[active] ? optionId(active) : undefined}
+        aria-activedescendant={current >= 0 && shown[current] ? optionId(current) : undefined}
         autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="send"
         placeholder={disabled && note ? note : placeholder} aria-label={placeholder}
         className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
         style={{ fontWeight: 600, letterSpacing: "0.08em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }} />
       <button type="submit" disabled={disabled || !sendable(draft)}
+        // Keeps the input focused (and the highlighted suggestion with it), so the button sends what Enter would.
+        onPointerDown={(e) => e.preventDefault()}
         className="font-poppins h-14 w-full rounded-[20px] bg-brand-green uppercase text-white outline-none transition-colors hover:bg-brand-green-deep focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)" }}>
         {say}

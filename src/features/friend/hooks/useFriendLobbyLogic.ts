@@ -960,7 +960,7 @@ export function useFriendLobbyLogic({
     if (!me || !activeLobby) return;
     setOptimisticReadyState({ value: ready, lobbyId: activeLobby.lobbyId });
     const seen = ready ? seenGame(shown) : undefined;
-    getSocket().emit("lobby:ready", { ready, ...(seen && { seen }) });
+    getSocket().emit("lobby:ready", { ready, ...(seen && { seen }), ...(ready && { locale: asLobbyLocale(locale) }) });
     logger.info("Socket emit lobby:ready", { ready, seen });
   };
 

@@ -65,6 +65,39 @@ describe("SuggestBox", () => {
     expect(lookup).toHaveBeenLastCalledWith("club", "rel-c", "Vardo", "en");
   });
 
+  it("Enter sends the one suggestion that starts like the typed text (shown highlighted); with several it sends the text", async () => {
+    const { input, onSubmit } = box();
+    await type(input, "milo vant");
+    await screen.findByRole("option", { name: /Milo Vantar/ });
+    expect(screen.getByRole("option", { name: /Milo Vantar/ })).toHaveAttribute("aria-selected", "true");
+    // The button keeps the focus (pointer-down is cancelled), so it sends the highlighted name like Enter does.
+    const button = screen.getByRole("button", { name: "Send" });
+    expect(fireEvent.pointerDown(button)).toBe(false);
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).toHaveBeenLastCalledWith("Milo Vantar", "p1");
+
+    await type(input, "Milo");
+    await screen.findAllByRole("option");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).toHaveBeenLastCalledWith("Milo", null);
+  });
+
+  it("a word of the name and accents count: \"vardo\" picks the only \"Club Várdo\"; never with other names shown", async () => {
+    const lookup = vi.fn(async (_k: string, _r: string, q: string) => (q === "vardo"
+      ? [{ eid: "c9", label: "Club Várdo", qualifier: null }]
+      : [{ eid: "c9", label: "Club Várdo", qualifier: null }, { eid: "c8", label: "Club Stelar", qualifier: null }]));
+    const { input, onSubmit } = box(lookup);
+    await type(input, "vardo");
+    await screen.findByRole("option", { name: /Club Várdo/ });
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).toHaveBeenLastCalledWith("Club Várdo", "c9");
+    await type(input, "varda");
+    await screen.findByRole("option", { name: /Club Stelar/ });
+    fireEvent.submit(input.closest("form")!);
+    expect(onSubmit).toHaveBeenLastCalledWith("varda", null);
+  });
+
   it("Enter that confirms an input-method composition sends nothing", async () => {
     const { input, onSubmit } = box();
     await type(input, "Milo");
