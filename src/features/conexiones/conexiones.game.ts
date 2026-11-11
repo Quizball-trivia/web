@@ -3,7 +3,7 @@ import type { WordDailyCalendar } from "@/features/wordgames/daily/wordDaily.log
 import { conexionesCopy } from "./conexiones.copy";
 
 /** Same calendar as the backend (conexiones.days.ts): staging dates, re-dated with the seed before the production release. */
-export const CONEXIONES_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-21", rankedStart: "2026-10-24", publishedDays: 36 };
+export const CONEXIONES_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-21", rankedStart: "2026-10-24", publishedDays: 50 };
 
 export const conexionesDailyGame = (locale: string): WordDailyGame => {
   const c = conexionesCopy(locale);
