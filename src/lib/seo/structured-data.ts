@@ -259,16 +259,34 @@ export function buildGamesHomeStructuredData({ locale, path, title, description,
   };
 }
 
-/** One public game page: WebPage + VideoGame (schema.org vocabulary, no rich-result promise) + visible breadcrumb. */
-export function buildPublicGameStructuredData({ locale, path, name, description, homeLabel, free }: {
+/** Seats of a private friends' room game (public-games.ts `guest: "room"`), for its VideoGame entity. */
+export interface PublicGameRoomPlayers {
+  minPlayers: number;
+  maxPlayers: number;
+}
+
+/**
+ * One public game page: WebPage + VideoGame (schema.org vocabulary, no rich-result promise) + visible breadcrumb.
+ * `room` marks a private friends' room game: a multiplayer party game for that many players. Nothing about solo,
+ * daily or ranked play is claimed; without `room` the entity keeps the default genres.
+ */
+export function buildPublicGameStructuredData({ locale, path, name, description, homeLabel, free, room }: {
   locale: Locale;
   path: string;
   name: string;
   description: string;
   homeLabel: string;
   free: boolean;
+  room?: PublicGameRoomPlayers;
 }) {
   const url = `${SITE_URL}${path}`;
+  const roomFields = room
+    ? {
+        genre: ["Sports", "Party"],
+        playMode: "MultiPlayer",
+        numberOfPlayers: { "@type": "QuantitativeValue", minValue: room.minPlayers, maxValue: room.maxPlayers },
+      }
+    : { genre: ["Trivia", "Sports"] };
   const home = `${SITE_URL}/${locale}`;
   return {
     "@context": "https://schema.org",
@@ -292,7 +310,7 @@ export function buildPublicGameStructuredData({ locale, path, name, description,
         description,
         gamePlatform: "Web browser",
         applicationCategory: "Game",
-        genre: ["Trivia", "Sports"],
+        ...roomFields,
         inLanguage: LANGUAGE_TAG[locale],
         isAccessibleForFree: free,
         publisher: { "@id": SITE_SCHEMA_IDS.organization },

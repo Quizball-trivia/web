@@ -10,7 +10,7 @@ import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
 import { BuscaminasBanner } from "./public/BuscaminasBanner";
 import { DeferredWordDailyBoard } from "./public/DeferredWordDailyBoard";
-import { SignInLink } from "./public/PublicLinks";
+import { RoomEntryLink, SignInLink } from "./public/PublicLinks";
 import { PublicPageBoard } from "./public/PublicPageBoard";
 
 const L: Record<SeoPageLocale, { compete: string; competeText: string; howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; guestDaily: string; startDaily: string; accountDaily: string; coinLabel: string; coinStart: string; coinNote: string; coinAccountText: string; member: string; english: string; noteDaily: string; loading: string; sampleFallback: string; accountTextDaily: string; playNow: string; playNowLabel: string; playNowNote: string; training: string; trainingText: string; ranked: string; rankedText: string; samePhone: string }> = {
@@ -214,6 +214,9 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
   const botPlay = game.modeId === "grid" || game.modeId === "auction";
   const playNowGuestHref = game.modeId === "grid" ? "/tic-tac-toe?source=practice_bot&pack=european" : "/auction?source=practice_bot";
   const playNowMemberHref = game.modeId === "grid" ? "/tic-tac-toe?source=matchmaking&pack=european" : "/auction";
+  // A private friends' room (Mentalista): no practice round, no ranked/XP/coins account card; the hero opens the room
+  // creator (or sign-in while guest rooms are off) and states the account condition.
+  const room = game.guest === "room";
   return (
     <PublicPageFrame>
       <nav aria-label="Breadcrumb" className="text-xs font-semibold uppercase tracking-wide text-white/55">
@@ -232,8 +235,15 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
           <h1 className="text-3xl font-black uppercase leading-tight md:text-5xl">{copy.title}</h1>
           <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">{copy.intro}</p>
           {crossLinkHref && crossLinkGame && <BuscaminasBanner locale={locale} href={crossLinkHref} target={crossLinkGame.modeId === "triviaMines" ? "triviaMines" : "buscaminas"} />}
-          <p className="mt-3 text-sm font-semibold text-brand-yellow">{fullGame ? fullGame.label : botPlay ? labels.playNowLabel : game.guest === "demo" ? (isCoinSample ? labels.coinLabel : isDaily ? labels.guestDaily : labels.guest) : home.cards.accountRequired}</p>
-          {botPlay ? (
+          <p className="mt-3 text-sm font-semibold text-brand-yellow">{fullGame ? fullGame.label : botPlay ? labels.playNowLabel : game.guest === "demo" ? (isCoinSample ? labels.coinLabel : isDaily ? labels.guestDaily : labels.guest) : room ? copy.roomBadge ?? home.cards.accountRequired : home.cards.accountRequired}</p>
+          {room ? (
+            <section aria-label={copy.cta} className="mt-6 flex flex-col items-start gap-3">
+              <RoomEntryLink href={game.playPath} locale={locale} returnTo={path} modeId={game.modeId} placement="game_page_room" signInLabel={home.nav.signIn} className="inline-flex h-14 items-center justify-center rounded-full bg-brand-green px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-green-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+                {copy.cta}
+              </RoomEntryLink>
+              {copy.roomAccountNotice && <p className="text-sm text-white/75">{copy.roomAccountNotice}</p>}
+            </section>
+          ) : botPlay ? (
             <section aria-label={labels.playNow} className="mt-6 flex flex-col items-start gap-3">
               <PlayNowLink modeId={game.modeId} locale={locale} guestHref={playNowGuestHref} memberHref={playNowMemberHref} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-green text-white hover:bg-brand-green-deep px-8 text-base font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-70">
                 {labels.playNow}
@@ -298,7 +308,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             <PublicGameEmbed variant="inline" modeId={game.modeId} demoSlug={game.demoSlug} locale={locale} pagePath={path} playPath={game.playPath} engineEmitsEvents={engineEmitsEvents(game.demoSlug)} practiceLocalised={!game.practiceLocales || game.practiceLocales.includes(locale)} copy={{ start: isCoinSample ? labels.coinStart : isDaily ? labels.startDaily : labels.start, note: isCoinSample ? labels.coinNote : isDaily ? labels.noteDaily : labels.note, exit: labels.exit, english: labels.english, title: copy.title }} />
           )}
         </section>
-      ) : (
+      ) : room ? null : (
         <section className="mt-12 max-w-3xl rounded-2xl bg-brand-blue p-5">
           <h2 className="text-lg font-bold uppercase">{fullGame ? fullGame.account : competitive ? labels.compete : isDaily || isCoinSample ? labels.accountDaily : labels.account}</h2>
           <p className="mt-2 text-sm text-white/85">{fullGame ? fullGame.accountText : competitive ? labels.competeText : isCoinSample ? labels.coinAccountText : isDaily ? labels.accountTextDaily : labels.accountText}</p>

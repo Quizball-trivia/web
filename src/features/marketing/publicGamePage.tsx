@@ -10,6 +10,9 @@ import { buildGamesHomeStructuredData, buildPublicGameStructuredData, serializeJ
 import { PublicGameScreen } from "./PublicGameScreen";
 import { DailyCollectionScreen } from "./DailyCollectionScreen";
 import { isWordGameLandingPath } from "@/lib/word-game-critical-assets";
+import { LOBBY_MODES, ROOM_GAMES, choicePlayable, roomGameMinSeats } from "@/lib/lobby/lobbyModes";
+import type { RoomGameId } from "@/lib/realtime/socket.types";
+import type { PublicGame } from "@/lib/seo/public-games";
 
 type Params = Promise<{ locale: string; slug: string }>;
 
@@ -23,6 +26,22 @@ export async function JsonLd({ data }: { data: unknown }) {
 }
 
 // ---- game pages ------------------------------------------------------------
+/**
+ * Seats of a private friends' room game (`guest: "room"`, playPath `/friend/room/new?room=<id>`), from the same
+ * capability map the room screen uses (Mentalista: 3–6). Undefined for every other game, which keeps its defaults.
+ */
+export function publicGameRoomPlayers(game: Pick<PublicGame, "guest" | "playPath">): { minPlayers: number; maxPlayers: number } | undefined {
+  if (game.guest !== "room") return undefined;
+  const [path, query = ""] = game.playPath.split("?");
+  const roomGame = path === "/friend/room/new" ? new URLSearchParams(query).get("room") : null;
+  if (!roomGame || !ROOM_GAMES.includes(roomGame as RoomGameId)) return undefined;
+  const id = roomGame as RoomGameId;
+  return {
+    minPlayers: roomGameMinSeats(id, LOBBY_MODES.room_game.hostStart?.min ?? 2),
+    maxPlayers: choicePlayable({ gameMode: "room_game", roomGame: id }),
+  };
+}
+
 export const dailyCollectionStaticParams = (folder: string) => localesForFolder(folder).map((locale) => ({ locale }));
 
 export function publicGameStaticParams(folder: string) {
@@ -67,6 +86,7 @@ export async function PublicGamePage({ folder, params }: { folder: string; param
     description: copy.metaDescription,
     homeLabel: HOME_COPY[locale].nav.games,
     free: true,
+    room: publicGameRoomPlayers(game),
   });
   return (
     <>

@@ -1,4 +1,6 @@
-import { GUEST_LOBBIES_ENABLED, RANKED_V2_ENABLED, ZONE_BOT_ENABLED } from '@/lib/config';
+import { GUEST_LOBBIES_ENABLED, RANKED_V2_ENABLED, ROOM_GAMES_ENABLED, ZONE_BOT_ENABLED } from '@/lib/config';
+import { isRoomGameEnabled } from '@/lib/lobby/lobbyModes';
+import type { Locale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -39,7 +41,7 @@ import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { useDirectFriendRoom } from '@/features/friend/hooks/useDirectFriendRoom';
 import { useIsGuest } from '@/lib/auth/useIsGuest';
 import { useAuthStore } from '@/stores/auth.store';
-import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
+import { findPublicGameByModeId, publicGamePath as gamePagePath, publicPagePathFor } from '@/lib/seo/public-games';
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 import { WinRateStat } from './WinRateStat';
 import { CARD_WIDTH, CardScroller } from './CardScroller';
@@ -308,8 +310,9 @@ function CompactModeCard({
     </>
   );
   if (href) {
+    // Only the Mentalista card passes href today: a plain crawlable link, never prefetched.
     return (
-      <Link href={href} onClick={onClick} className={className} style={{ backgroundColor: bg }}>
+      <Link href={href} prefetch={false} onClick={onClick} className={className} style={{ backgroundColor: bg }}>
         {inner}
       </Link>
     );
@@ -330,6 +333,29 @@ function CompactModeCard({
     >
       {inner}
     </div>
+  );
+}
+
+/**
+ * Mentalista (private friends' room, 3–6 players) in the main swipe row. Every visitor — member, guest or auth still
+ * loading — goes to its localized public page, which owns the room entry, so there is no auth race here and nothing is
+ * created on render or click. Title, badge and CTA come from the public-games registry; hidden when the room game is
+ * switched off (NEXT_PUBLIC_ROOM_GAMES_DISABLED) or has no public page.
+ */
+export function MentalistaPlayCard({ locale }: { locale: Locale }) {
+  const game = findPublicGameByModeId('mentalista');
+  if (!game?.page || !isRoomGameEnabled('mentalista', ROOM_GAMES_ENABLED)) return null;
+  const copy = game.copy[locale] ?? game.copy.en;
+  if (!copy.roomBadge) return null;
+  return (
+    <CompactModeCard
+      bg={colors.blue.brand}
+      title={copy.title}
+      subtitle={copy.roomBadge}
+      iconSrc="/assets/brand/quizball-icon-512.png"
+      ctaLabel={copy.cta}
+      href={publicPagePathFor(game, locale)}
+    />
   );
 }
 
@@ -828,6 +854,7 @@ export function ModeSelectionScreen({
           badge={t('play.newBadge')}
           onClick={openCodenamesCard}
         />
+        <MentalistaPlayCard locale={locale} />
         {isAuctionCardEnabled && (
           <CompactModeCard
             bg="#6B2FB3"

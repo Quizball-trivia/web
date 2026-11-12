@@ -750,7 +750,7 @@ export interface paths {
                             /** Format: date-time */
                             phone_verified_at: string | null;
                             /** @enum {string} */
-                            role: "admin" | "user";
+                            role: "admin" | "user" | "partner_staff";
                             nickname: string | null;
                             country: string | null;
                             /** Format: uri */
@@ -763,6 +763,7 @@ export interface paths {
                                 facialHair?: string;
                                 headwear?: string;
                                 earwear?: string;
+                                frame?: string;
                                 /** @enum {string} */
                                 hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                             } | null;
@@ -1229,6 +1230,7 @@ export interface paths {
                                         facialHair?: string;
                                         headwear?: string;
                                         earwear?: string;
+                                        frame?: string;
                                         /** @enum {string} */
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
@@ -1249,6 +1251,7 @@ export interface paths {
                                         facialHair?: string;
                                         headwear?: string;
                                         earwear?: string;
+                                        frame?: string;
                                         /** @enum {string} */
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
@@ -1364,6 +1367,376 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stats/persons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Browse real registered users or playing guest journeys (admin) */
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "registered" | "guest";
+                    search?: string;
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paged person rows */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            persons: {
+                                id: string;
+                                /** @enum {string} */
+                                kind: "registered" | "guest";
+                                nickname: string | null;
+                                email: string | null;
+                                country: string | null;
+                                createdAt: string;
+                                coins: number | null;
+                                converted: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Admin role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/persons/{kind}/{id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One person's activity timeline from the production database (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kind: "registered" | "guest";
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Newest-first activity entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            activity: {
+                                at: string;
+                                type: string;
+                                meta: {
+                                    [key: string]: unknown;
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Admin role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/analytics-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Real-numbers product analytics overview from the production database (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Totals, actives, 30-day series and country breakdown (Asia/Tbilisi days) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            totals: {
+                                registered: number;
+                                playingGuests: number;
+                                totalUsers: number;
+                                guestConversionPct30d: number;
+                            };
+                            actives: {
+                                dau: number;
+                                wau: number;
+                                mau: number;
+                            };
+                            dauSeries: {
+                                day: string;
+                                count: number;
+                            }[];
+                            signupsPerDay: {
+                                day: string;
+                                count: number;
+                            }[];
+                            gamesPerDay: {
+                                day: string;
+                                mode: string;
+                                games: number;
+                            }[];
+                            countries: {
+                                country: string;
+                                registered: number;
+                                guests: number;
+                                total: number;
+                            }[];
+                            generatedAt: string;
+                            /** @enum {string} */
+                            timezone: "Asia/Tbilisi";
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Admin role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/audience": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Players per period: each person once, new vs returning, countries, top games and sources (admin) */
+        get: {
+            parameters: {
+                query?: {
+                    period?: "today" | "yesterday" | "7d" | "30d";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Audience for today, yesterday, the last 7 or 30 complete Georgia days */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            period: "today" | "yesterday" | "7d" | "30d";
+                            range: {
+                                from: string;
+                                to: string;
+                            };
+                            partial: boolean;
+                            summary: {
+                                active: number;
+                                registered: number;
+                                guests: number;
+                                plays: number;
+                                newPlayers: number | null;
+                                newGuests: number | null;
+                                returning: number | null;
+                                newRegistered: number;
+                                newRegisteredPlayed: number;
+                                signupPlatforms: {
+                                    web: number;
+                                    android: number;
+                                    ios: number;
+                                };
+                            };
+                            previous: {
+                                range: {
+                                    from: string;
+                                    to: string;
+                                };
+                                active: number;
+                                registered: number;
+                                guests: number;
+                                newGuests: number | null;
+                                newRegistered: number;
+                            } | null;
+                            countries: {
+                                country: string;
+                                active: number;
+                                registered: number;
+                                guests: number;
+                                newRegistered: number;
+                            }[];
+                            games: {
+                                mode: string;
+                                players: number;
+                                registered: number;
+                                guests: number;
+                                plays: number;
+                            }[];
+                            trend: {
+                                day: string;
+                                active: number;
+                                registered: number;
+                                guests: number;
+                                counted: boolean;
+                            }[];
+                            sources: {
+                                /** @enum {boolean} */
+                                connected: false;
+                            } | {
+                                /** @enum {boolean} */
+                                connected: true;
+                                error: string;
+                            } | {
+                                /** @enum {boolean} */
+                                connected: true;
+                                newVisitors: number;
+                                referrers: {
+                                    key: string;
+                                    people: number;
+                                }[];
+                                landingPages: {
+                                    key: string;
+                                    people: number;
+                                }[];
+                                utmSources: {
+                                    key: string;
+                                    people: number;
+                                }[];
+                            };
+                            coverage: {
+                                start: string;
+                                firstCompleteDay: string | null;
+                                incompleteDays: number;
+                                historyComplete: boolean;
+                                refreshedAt: string | null;
+                            };
+                            generatedAt: string;
+                            /** @enum {string} */
+                            timezone: "Asia/Tbilisi";
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Admin role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lobbies/public": {
         parameters: {
             query?: never;
@@ -1377,6 +1750,7 @@ export interface paths {
                 query?: {
                     limit?: number;
                     joinableOnly?: boolean | null;
+                    games?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1398,6 +1772,10 @@ export interface paths {
                                 displayName: string;
                                 /** @enum {string} */
                                 gameMode: "friendly_possession" | "friendly_party_quiz" | "football_grid" | "auction" | "ranked_sim" | "duel" | "room_game";
+                                /** @enum {string|null} */
+                                duelGame: "buscaminas" | "pistas" | "ultimo" | "minuto" | null;
+                                /** @enum {string|null} */
+                                roomGame: "aproximado" | "shared_player" | "name_chain" | "tenable" | "football_race" | "codenames" | "dato_falso" | "conexiones" | "darts501" | "zone_match" | "draft" | "mentalista" | null;
                                 isPublic: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1417,14 +1795,11 @@ export interface paths {
                                         facialHair?: string;
                                         headwear?: string;
                                         earwear?: string;
+                                        frame?: string;
                                         /** @enum {string} */
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                 };
-                                /** @enum {string|null} */
-                                duelGame: "buscaminas" | "pistas" | "ultimo" | "minuto" | null;
-                                /** @enum {string|null} */
-                                roomGame: "aproximado" | "shared_player" | "name_chain" | null;
                             }[];
                         };
                     };
@@ -1516,7 +1891,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                     limit?: number;
                     offset?: number | null;
                     season?: string;
@@ -1600,7 +1977,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                     season?: string;
                 };
                 header?: never;
@@ -1630,6 +2009,11 @@ export interface paths {
                             trend: "up" | "down" | "same";
                             trendValue: number;
                             total: number;
+                            nextTarget: {
+                                username: string;
+                                rank: number;
+                                gap: number;
+                            } | null;
                         } | null;
                     };
                 };
@@ -2320,7 +2704,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund" | "wl_reward";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -2344,7 +2728,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund" | "wl_reward";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -3220,6 +3604,7 @@ export interface paths {
                             facialHair?: string;
                             headwear?: string;
                             earwear?: string;
+                            frame?: string;
                             /** @enum {string} */
                             hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                         } | null;
@@ -3895,6 +4280,7 @@ export interface paths {
                                     facialHair?: string;
                                     headwear?: string;
                                     earwear?: string;
+                                    frame?: string;
                                     /** @enum {string} */
                                     hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                 } | null;
@@ -3921,6 +4307,63 @@ export interface paths {
                 };
                 /** @description Not authenticated */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/user-total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Guest-inclusive user total for the CMS dashboard
+         * @description Requires admin role. total = registered + guestsPlayed - converters. Read-only.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User total */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminUserTotalResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3976,6 +4419,7 @@ export interface paths {
                                     facialHair?: string;
                                     headwear?: string;
                                     earwear?: string;
+                                    frame?: string;
                                     /** @enum {string} */
                                     hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                 } | null;
@@ -4062,6 +4506,7 @@ export interface paths {
                                         facialHair?: string;
                                         headwear?: string;
                                         earwear?: string;
+                                        frame?: string;
                                         /** @enum {string} */
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
@@ -4103,6 +4548,7 @@ export interface paths {
                                         facialHair?: string;
                                         headwear?: string;
                                         earwear?: string;
+                                        frame?: string;
                                         /** @enum {string} */
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
@@ -5903,10 +6349,10 @@ export interface paths {
                          * @description Array of question prompts to check
                          * @example [
                          *       {
-                         *         "en": "What is the capital of France?"
+                         *         "en": "Which moon hosts the invented Cloudfin Cup?"
                          *       },
                          *       {
-                         *         "en": "What is 2+2?"
+                         *         "en": "Which fictional club plays at Lanternleaf Stadium?"
                          *       }
                          *     ]
                          */
@@ -6057,6 +6503,7 @@ export interface paths {
                             questionCount: number;
                             secondsPerQuestion: number;
                             startingMoney: number;
+                            personalBest?: number | null;
                             questions: {
                                 /** Format: uuid */
                                 id: string;
@@ -6093,6 +6540,7 @@ export interface paths {
                             description: string;
                             roundCount: number;
                             secondsPerRound: number;
+                            personalBest?: number | null;
                             rounds: {
                                 /** Format: uuid */
                                 id: string;
@@ -6306,6 +6754,7 @@ export interface paths {
                             description: string;
                             questionCount: number;
                             secondsPerQuestion: number;
+                            personalBest?: number | null;
                             questions: {
                                 /** Format: uuid */
                                 id: string;
@@ -7106,6 +7555,650 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/devices/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register this account’s native push device */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        expoPushToken: string;
+                        /** @enum {string} */
+                        platform: "ios" | "android";
+                        clientRevision: number;
+                        /**
+                         * @default en
+                         * @enum {string}
+                         */
+                        locale?: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
+                        /** @default UTC */
+                        timezone?: string;
+                        appVersion?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            registered: boolean;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/devices/unregister": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unregister this account’s native push device */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        expoPushToken: string;
+                        /** @enum {string} */
+                        platform: "ios" | "android";
+                        clientRevision: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            unregistered: true;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the account’s push consent and local reminder time */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            matchInvitesEnabled: boolean;
+                            dailyRemindersEnabled: boolean;
+                            newGamesEnabled: boolean;
+                            dailyReminderHour: number;
+                            timezone: string;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update explicit push consent and reminder time */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        matchInvitesEnabled?: boolean;
+                        dailyRemindersEnabled?: boolean;
+                        newGamesEnabled?: boolean;
+                        dailyReminderHour?: number;
+                        timezone?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            matchInvitesEnabled: boolean;
+                            dailyRemindersEnabled: boolean;
+                            newGamesEnabled: boolean;
+                            dailyReminderHour: number;
+                            timezone: string;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/notifications/devices/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue a notification only to the current account’s devices */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            queued: number;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/campaigns/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin: count eligible opted-in campaign recipients */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            users: number;
+                            devices: number;
+                            alreadyCapped: number;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/campaigns/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin: explicitly queue an idempotent production campaign */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        campaignId: string;
+                        title: {
+                            en: string;
+                            ka: string;
+                            es: string;
+                            tr: string;
+                            ru?: string;
+                            pt?: string;
+                            de?: string;
+                            fr?: string;
+                        };
+                        body: {
+                            en: string;
+                            ka: string;
+                            es: string;
+                            tr: string;
+                            ru?: string;
+                            pt?: string;
+                            de?: string;
+                            fr?: string;
+                        };
+                        /** @enum {string} */
+                        route: "/(tabs)" | "/(tabs)/events" | "/(tabs)/leaderboard" | "/(app)/daily/challenges" | "/(game)/training" | "/(game)/grid-training" | "/(tabs)/store";
+                        /** @enum {boolean} */
+                        confirmSend: true;
+                    };
+                };
+            };
+            responses: {
+                /** @description Push account state or queue result; a queue/ticket is not proof of delivery */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            queued: number;
+                            duplicate: boolean;
+                        };
+                    };
+                };
+                /** @description Bearer authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account or admin permission required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Request limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Push capability is not configured or enabled */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -7472,6 +8565,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/weekend-league/rewards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's granted Weekend League rewards, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Granted rewards with a seen flag */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlRewardsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/weekend-league/rewards/{rewardId}/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge a reward reveal (grants nothing) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    rewardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Whether this call acknowledged it */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlRewardSeenResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/wl/tournaments": {
         parameters: {
             query?: never;
@@ -7674,6 +8859,8 @@ export interface paths {
                             spectator_delay_ms?: number;
                             /** @default 0 */
                             bot_fill_min_field?: number;
+                            /** @default false */
+                            reward_payout?: boolean;
                         };
                     };
                 };
@@ -7938,6 +9125,1515 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate + dedupe uploaded WL questions against the pool and every past event (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        questions: {
+                            /** @enum {string} */
+                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
+                            /** @enum {string} */
+                            difficulty: "easy" | "medium" | "hard";
+                            /**
+                             * @default draft
+                             * @enum {string}
+                             */
+                            status?: "draft" | "published" | "archived";
+                            /** @enum {string} */
+                            visibility?: "public" | "wl_private";
+                            prompt: {
+                                [key: string]: string;
+                            };
+                            explanation?: {
+                                [key: string]: string;
+                            } | null;
+                            payload: {
+                                /** @enum {string} */
+                                type: "mcq_single";
+                                image?: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number;
+                                    height: number;
+                                    aspect_ratio?: string;
+                                    /** Format: uri */
+                                    source_url?: string | null;
+                                    /** @enum {string} */
+                                    storage_status?: "stored" | "external_fallback";
+                                    storage_error?: string | null;
+                                    /** Format: date-time */
+                                    storage_attempted_at?: string | null;
+                                    title?: string | null;
+                                    author?: string | null;
+                                    license?: string | null;
+                                    /** Format: uri */
+                                    license_url?: string | null;
+                                    provider?: string | null;
+                                };
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "true_false";
+                                options: ({
+                                    /** @enum {string} */
+                                    id: "true";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    id: "false";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                })[];
+                            } | {
+                                /** @enum {string} */
+                                type: "imposter_multi_select";
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "input_text";
+                                accepted_answers: {
+                                    [key: string]: string;
+                                }[];
+                                case_sensitive: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "countdown_list";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                answer_groups: {
+                                    id: string;
+                                    display: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "clue_chain";
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                clues: {
+                                    /** @enum {string} */
+                                    type: "text" | "emoji";
+                                    content: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "put_in_order";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                /** @enum {string} */
+                                direction: "asc" | "desc";
+                                items: {
+                                    id: string;
+                                    label: {
+                                        [key: string]: string;
+                                    };
+                                    details?: {
+                                        [key: string]: string;
+                                    } | null;
+                                    emoji?: string | null;
+                                    sort_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "career_path";
+                                clubs: {
+                                    [key: string]: string;
+                                }[];
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                            } | {
+                                /** @enum {string} */
+                                type: "high_low";
+                                stat_label: {
+                                    [key: string]: string;
+                                };
+                                matchups: {
+                                    id: string;
+                                    left_name: {
+                                        [key: string]: string;
+                                    };
+                                    left_value: number;
+                                    right_name: {
+                                        [key: string]: string;
+                                    };
+                                    right_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "football_logic";
+                                /** Format: uri */
+                                image_a_url: string;
+                                /** Format: uri */
+                                image_b_url: string;
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                prompt?: {
+                                    [key: string]: string;
+                                };
+                                explanation?: {
+                                    [key: string]: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "missing_xi";
+                                team: {
+                                    [key: string]: string;
+                                };
+                                opponent: {
+                                    [key: string]: string;
+                                };
+                                match_label: {
+                                    [key: string]: string;
+                                };
+                                formation: string;
+                                score?: string | null;
+                                season?: number | null;
+                                slots: {
+                                    id: string;
+                                    position: string;
+                                    number: number | null;
+                                    x: number;
+                                    y: number;
+                                    name: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                    tm_id?: number | null;
+                                }[];
+                                tm_formation?: string | null;
+                                layout_version?: number | null;
+                                verified?: {
+                                    source: string;
+                                    matchId?: string | null;
+                                    checkedAt: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "pass_chain";
+                                start_tm_id: number;
+                                target_tm_id: number;
+                                par: number;
+                                bridges?: number | null;
+                                solution: {
+                                    tm_id: number;
+                                    /**
+                                     * @default club
+                                     * @enum {string}
+                                     */
+                                    kind?: "club" | "manager";
+                                    via: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "stat_sniper";
+                                kind: string;
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                unit: {
+                                    [key: string]: string;
+                                };
+                                value: number;
+                                min: number;
+                                max: number;
+                                step: number;
+                                source?: {
+                                    [key: string]: string | number | boolean | unknown | unknown;
+                                } | null;
+                            };
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Per-row report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentCheckResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish uploaded WL questions into the protected pool as a batch (admin, async) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kind: "true_false" | "put_in_order" | "mcq_single" | "career_path" | "clue_chain";
+                        note?: string;
+                        /** @default false */
+                        sync_to_staging?: boolean;
+                        /** @default [] */
+                        force_indexes?: number[];
+                        questions: {
+                            /** @enum {string} */
+                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
+                            /** @enum {string} */
+                            difficulty: "easy" | "medium" | "hard";
+                            /**
+                             * @default draft
+                             * @enum {string}
+                             */
+                            status?: "draft" | "published" | "archived";
+                            /** @enum {string} */
+                            visibility?: "public" | "wl_private";
+                            prompt: {
+                                [key: string]: string;
+                            };
+                            explanation?: {
+                                [key: string]: string;
+                            } | null;
+                            payload: {
+                                /** @enum {string} */
+                                type: "mcq_single";
+                                image?: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number;
+                                    height: number;
+                                    aspect_ratio?: string;
+                                    /** Format: uri */
+                                    source_url?: string | null;
+                                    /** @enum {string} */
+                                    storage_status?: "stored" | "external_fallback";
+                                    storage_error?: string | null;
+                                    /** Format: date-time */
+                                    storage_attempted_at?: string | null;
+                                    title?: string | null;
+                                    author?: string | null;
+                                    license?: string | null;
+                                    /** Format: uri */
+                                    license_url?: string | null;
+                                    provider?: string | null;
+                                };
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "true_false";
+                                options: ({
+                                    /** @enum {string} */
+                                    id: "true";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    id: "false";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                })[];
+                            } | {
+                                /** @enum {string} */
+                                type: "imposter_multi_select";
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "input_text";
+                                accepted_answers: {
+                                    [key: string]: string;
+                                }[];
+                                case_sensitive: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "countdown_list";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                answer_groups: {
+                                    id: string;
+                                    display: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "clue_chain";
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                clues: {
+                                    /** @enum {string} */
+                                    type: "text" | "emoji";
+                                    content: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "put_in_order";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                /** @enum {string} */
+                                direction: "asc" | "desc";
+                                items: {
+                                    id: string;
+                                    label: {
+                                        [key: string]: string;
+                                    };
+                                    details?: {
+                                        [key: string]: string;
+                                    } | null;
+                                    emoji?: string | null;
+                                    sort_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "career_path";
+                                clubs: {
+                                    [key: string]: string;
+                                }[];
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                            } | {
+                                /** @enum {string} */
+                                type: "high_low";
+                                stat_label: {
+                                    [key: string]: string;
+                                };
+                                matchups: {
+                                    id: string;
+                                    left_name: {
+                                        [key: string]: string;
+                                    };
+                                    left_value: number;
+                                    right_name: {
+                                        [key: string]: string;
+                                    };
+                                    right_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "football_logic";
+                                /** Format: uri */
+                                image_a_url: string;
+                                /** Format: uri */
+                                image_b_url: string;
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                prompt?: {
+                                    [key: string]: string;
+                                };
+                                explanation?: {
+                                    [key: string]: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "missing_xi";
+                                team: {
+                                    [key: string]: string;
+                                };
+                                opponent: {
+                                    [key: string]: string;
+                                };
+                                match_label: {
+                                    [key: string]: string;
+                                };
+                                formation: string;
+                                score?: string | null;
+                                season?: number | null;
+                                slots: {
+                                    id: string;
+                                    position: string;
+                                    number: number | null;
+                                    x: number;
+                                    y: number;
+                                    name: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                    tm_id?: number | null;
+                                }[];
+                                tm_formation?: string | null;
+                                layout_version?: number | null;
+                                verified?: {
+                                    source: string;
+                                    matchId?: string | null;
+                                    checkedAt: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "pass_chain";
+                                start_tm_id: number;
+                                target_tm_id: number;
+                                par: number;
+                                bridges?: number | null;
+                                solution: {
+                                    tm_id: number;
+                                    /**
+                                     * @default club
+                                     * @enum {string}
+                                     */
+                                    kind?: "club" | "manager";
+                                    via: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "stat_sniper";
+                                kind: string;
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                unit: {
+                                    [key: string]: string;
+                                };
+                                value: number;
+                                min: number;
+                                max: number;
+                                step: number;
+                                source?: {
+                                    [key: string]: string | number | boolean | unknown | unknown;
+                                } | null;
+                            };
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Batch accepted; poll the batch for progress */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentImportResponse"];
+                    };
+                };
+                /** @description Rows blocked (errors / unforced duplicates) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent WL content import batches (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Batches */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentBatchesResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/batches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One WL content batch with per-row state (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Batch detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentBatchDetail"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Undo a WL content batch: delete its questions that were never dealt (admin) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Undo outcome */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentUndoResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch still processing */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/batches/{id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-draw the coming WL event with this batch's questions first (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Event to re-draw; defaults to the coming one
+                         */
+                        tournament_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Schedule outcome */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentScheduleResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch not published, no coming event, or play has started */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/runway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fresh editor inventory vs. drawable WL stock per round kind (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Runway */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentRunway"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/next-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Frozen content of the coming WL event, per game and round (admin) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Event to show; defaults to the coming one */
+                    tournament_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Next event content */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentNextEventResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/lineup/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weekends a lineup can be uploaded for, with lock reasons (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Events */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlLineupEventsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/lineup/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate a lineup upload and preview its exact placements; returns a preview id when it can be saved (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        tournament_id: string;
+                        /** @enum {string} */
+                        scope: "game_0" | "game_1" | "game_2" | "game_3" | "saturday" | "weekend";
+                        note?: string | null;
+                        questions: {
+                            /** @enum {string} */
+                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
+                            /** @enum {string} */
+                            difficulty: "easy" | "medium" | "hard";
+                            /**
+                             * @default draft
+                             * @enum {string}
+                             */
+                            status?: "draft" | "published" | "archived";
+                            /** @enum {string} */
+                            visibility?: "public" | "wl_private";
+                            prompt: {
+                                [key: string]: string;
+                            };
+                            explanation?: {
+                                [key: string]: string;
+                            } | null;
+                            payload: {
+                                /** @enum {string} */
+                                type: "mcq_single";
+                                image?: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number;
+                                    height: number;
+                                    aspect_ratio?: string;
+                                    /** Format: uri */
+                                    source_url?: string | null;
+                                    /** @enum {string} */
+                                    storage_status?: "stored" | "external_fallback";
+                                    storage_error?: string | null;
+                                    /** Format: date-time */
+                                    storage_attempted_at?: string | null;
+                                    title?: string | null;
+                                    author?: string | null;
+                                    license?: string | null;
+                                    /** Format: uri */
+                                    license_url?: string | null;
+                                    provider?: string | null;
+                                };
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "true_false";
+                                options: ({
+                                    /** @enum {string} */
+                                    id: "true";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    id: "false";
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                })[];
+                            } | {
+                                /** @enum {string} */
+                                type: "imposter_multi_select";
+                                options: {
+                                    id: string;
+                                    text: {
+                                        [key: string]: string;
+                                    };
+                                    is_correct: boolean;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "input_text";
+                                accepted_answers: {
+                                    [key: string]: string;
+                                }[];
+                                case_sensitive: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "countdown_list";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                answer_groups: {
+                                    id: string;
+                                    display: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "clue_chain";
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                clues: {
+                                    /** @enum {string} */
+                                    type: "text" | "emoji";
+                                    content: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "put_in_order";
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                /** @enum {string} */
+                                direction: "asc" | "desc";
+                                items: {
+                                    id: string;
+                                    label: {
+                                        [key: string]: string;
+                                    };
+                                    details?: {
+                                        [key: string]: string;
+                                    } | null;
+                                    emoji?: string | null;
+                                    sort_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "career_path";
+                                clubs: {
+                                    [key: string]: string;
+                                }[];
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                            } | {
+                                /** @enum {string} */
+                                type: "high_low";
+                                stat_label: {
+                                    [key: string]: string;
+                                };
+                                matchups: {
+                                    id: string;
+                                    left_name: {
+                                        [key: string]: string;
+                                    };
+                                    left_value: number;
+                                    right_name: {
+                                        [key: string]: string;
+                                    };
+                                    right_value: number;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "football_logic";
+                                /** Format: uri */
+                                image_a_url: string;
+                                /** Format: uri */
+                                image_b_url: string;
+                                display_answer: {
+                                    [key: string]: string;
+                                };
+                                accepted_answers: string[];
+                                prompt?: {
+                                    [key: string]: string;
+                                };
+                                explanation?: {
+                                    [key: string]: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "missing_xi";
+                                team: {
+                                    [key: string]: string;
+                                };
+                                opponent: {
+                                    [key: string]: string;
+                                };
+                                match_label: {
+                                    [key: string]: string;
+                                };
+                                formation: string;
+                                score?: string | null;
+                                season?: number | null;
+                                slots: {
+                                    id: string;
+                                    position: string;
+                                    number: number | null;
+                                    x: number;
+                                    y: number;
+                                    name: {
+                                        [key: string]: string;
+                                    };
+                                    accepted_answers: string[];
+                                    tm_id?: number | null;
+                                }[];
+                                tm_formation?: string | null;
+                                layout_version?: number | null;
+                                verified?: {
+                                    source: string;
+                                    matchId?: string | null;
+                                    checkedAt: string;
+                                } | null;
+                            } | {
+                                /** @enum {string} */
+                                type: "pass_chain";
+                                start_tm_id: number;
+                                target_tm_id: number;
+                                par: number;
+                                bridges?: number | null;
+                                solution: {
+                                    tm_id: number;
+                                    /**
+                                     * @default club
+                                     * @enum {string}
+                                     */
+                                    kind?: "club" | "manager";
+                                    via: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "stat_sniper";
+                                kind: string;
+                                prompt: {
+                                    [key: string]: string;
+                                };
+                                unit: {
+                                    [key: string]: string;
+                                };
+                                value: number;
+                                min: number;
+                                max: number;
+                                step: number;
+                                source?: {
+                                    [key: string]: string | number | boolean | unknown | unknown;
+                                } | null;
+                            };
+                        }[];
+                        slots: {
+                            game_index: number;
+                            round_index: number | null;
+                            question_index: number | null;
+                            reserve_ordinal: number;
+                        }[];
+                        lines?: (number | null)[];
+                        /** @default [] */
+                        force_indexes?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Preview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlLineupPreviewResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Weekend not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/lineup/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a previewed lineup: publishes its questions and places them exactly as previewed, or nothing (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        preview_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Saving started (poll the batch) */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlLineupSaveResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Preview not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Preview expired, weekend changed or locked */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wl/content/tournaments/{id}/reseed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-draw a not-yet-played tournament's content from the current pool (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reseed outcome */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WlContentReseedResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Play started or wrong status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -8928,7 +11624,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                     limit?: number;
                     offset?: number | null;
                 };
@@ -9007,7 +11705,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                 };
                 header?: never;
                 path?: never;
@@ -9032,6 +11732,11 @@ export interface paths {
                             tier: string | null;
                             rank: number;
                             total: number;
+                            nextTarget: {
+                                username: string;
+                                rank: number;
+                                gap: number;
+                            } | null;
                         } | null;
                     };
                 };
@@ -9094,7 +11799,7 @@ export interface paths {
                     "application/json": {
                         text: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**
@@ -9173,7 +11878,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**
@@ -9765,7 +12470,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                     limit?: number;
                     offset?: number | null;
                 };
@@ -9844,7 +12551,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    scope?: "global" | "country";
+                    scope?: "global" | "country" | "club";
+                    country?: string;
+                    club?: string;
                 };
                 header?: never;
                 path?: never;
@@ -9869,6 +12578,11 @@ export interface paths {
                             tier: string | null;
                             rank: number;
                             total: number;
+                            nextTarget: {
+                                username: string;
+                                rank: number;
+                                gap: number;
+                            } | null;
                         } | null;
                     };
                 };
@@ -10017,6 +12731,7 @@ export interface components {
                         facialHair?: string;
                         headwear?: string;
                         earwear?: string;
+                        frame?: string;
                         /** @enum {string} */
                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
@@ -10037,6 +12752,7 @@ export interface components {
                         facialHair?: string;
                         headwear?: string;
                         earwear?: string;
+                        frame?: string;
                         /** @enum {string} */
                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
@@ -10086,6 +12802,41 @@ export interface components {
                 currentSeasonNumber: number;
                 previousSeasonNumber: number | null;
             };
+        };
+        AnalyticsOverviewResponse: {
+            totals: {
+                registered: number;
+                playingGuests: number;
+                totalUsers: number;
+                guestConversionPct30d: number;
+            };
+            actives: {
+                dau: number;
+                wau: number;
+                mau: number;
+            };
+            dauSeries: {
+                day: string;
+                count: number;
+            }[];
+            signupsPerDay: {
+                day: string;
+                count: number;
+            }[];
+            gamesPerDay: {
+                day: string;
+                mode: string;
+                games: number;
+            }[];
+            countries: {
+                country: string;
+                registered: number;
+                guests: number;
+                total: number;
+            }[];
+            generatedAt: string;
+            /** @enum {string} */
+            timezone: "Asia/Tbilisi";
         };
         RankedProfileResponse: {
             rp: number;
@@ -10205,7 +12956,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund" | "wl_reward";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -10241,7 +12992,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund" | "wl_reward";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */
@@ -10567,7 +13318,7 @@ export interface components {
             /** Format: date-time */
             phone_verified_at: string | null;
             /** @enum {string} */
-            role: "admin" | "user";
+            role: "admin" | "user" | "partner_staff";
             nickname: string | null;
             country: string | null;
             /** Format: uri */
@@ -10580,6 +13331,7 @@ export interface components {
                 facialHair?: string;
                 headwear?: string;
                 earwear?: string;
+                frame?: string;
                 /** @enum {string} */
                 hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
             } | null;
@@ -10608,6 +13360,7 @@ export interface components {
                 facialHair?: string;
                 headwear?: string;
                 earwear?: string;
+                frame?: string;
                 /** @enum {string} */
                 hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
             } | null;
@@ -10688,6 +13441,12 @@ export interface components {
             rp: number | null;
             tier: string | null;
         };
+        AdminUserTotalResponse: {
+            registered: number;
+            guestsPlayed: number;
+            converters: number;
+            total: number;
+        };
         FriendsResponse: {
             friends: {
                 /** Format: uuid */
@@ -10703,6 +13462,7 @@ export interface components {
                     facialHair?: string;
                     headwear?: string;
                     earwear?: string;
+                    frame?: string;
                     /** @enum {string} */
                     hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                 } | null;
@@ -10745,6 +13505,7 @@ export interface components {
                         facialHair?: string;
                         headwear?: string;
                         earwear?: string;
+                        frame?: string;
                         /** @enum {string} */
                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
@@ -10786,6 +13547,7 @@ export interface components {
                         facialHair?: string;
                         headwear?: string;
                         earwear?: string;
+                        frame?: string;
                         /** @enum {string} */
                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
@@ -11935,6 +14697,206 @@ export interface components {
                 poisonish: number;
             } | null;
         };
+        WlContentCheckResponse: {
+            rows: {
+                index: number;
+                type: string;
+                /** @enum {string} */
+                status: "ready" | "warning" | "duplicate" | "played" | "error";
+                issues: {
+                    code: string;
+                    message: string;
+                    /** @enum {string} */
+                    severity: "error" | "warning";
+                }[];
+                duplicate_of: {
+                    /** Format: uuid */
+                    question_id: string | null;
+                    /** @enum {string} */
+                    where: "pool" | "public" | "history" | "batch";
+                    played: boolean;
+                    week_key: string | null;
+                    status: string | null;
+                } | null;
+                similar_to: {
+                    /** Format: uuid */
+                    question_id: string | null;
+                    /** @enum {string} */
+                    where: "pool" | "public" | "history" | "batch";
+                    week_key: string | null;
+                } | null;
+                crests: {
+                    club: string;
+                    club_id: string | null;
+                    logo_url: string | null;
+                }[];
+                image: {
+                    ok: boolean;
+                    url: string;
+                    width: number | null;
+                    height: number | null;
+                    bytes: number | null;
+                    content_type: string | null;
+                    reason: string | null;
+                } | null;
+            }[];
+            staging_configured: boolean;
+            summary: {
+                ready: number;
+                warning: number;
+                duplicate: number;
+                played: number;
+                error: number;
+            };
+        };
+        WlContentImportResponse: {
+            /** Format: uuid */
+            batch_id: string;
+            accepted: number;
+        };
+        WlContentBatch: {
+            /** Format: uuid */
+            id: string;
+            created_at: string;
+            /** Format: uuid */
+            created_by: string | null;
+            created_by_email: string | null;
+            kind: string;
+            note: string | null;
+            /** @enum {string} */
+            status: "processing" | "done" | "failed" | "undoing" | "undone";
+            row_count: number;
+            sync_to_staging: boolean;
+            result: {
+                [key: string]: unknown;
+            } | null;
+            error: string | null;
+            undone_at: string | null;
+            counts: {
+                pending: number;
+                created: number;
+                translated: number;
+                published: number;
+                failed: number;
+                deleted: number;
+            };
+        };
+        WlContentBatchDetail: {
+            /** Format: uuid */
+            id: string;
+            created_at: string;
+            /** Format: uuid */
+            created_by: string | null;
+            created_by_email: string | null;
+            kind: string;
+            note: string | null;
+            /** @enum {string} */
+            status: "processing" | "done" | "failed" | "undoing" | "undone";
+            row_count: number;
+            sync_to_staging: boolean;
+            result: {
+                [key: string]: unknown;
+            } | null;
+            error: string | null;
+            undone_at: string | null;
+            counts: {
+                pending: number;
+                created: number;
+                translated: number;
+                published: number;
+                failed: number;
+                deleted: number;
+            };
+            rows: {
+                row_index: number;
+                /** Format: uuid */
+                question_id: string | null;
+                /** @enum {string} */
+                state: "pending" | "created" | "translated" | "published" | "failed" | "deleted";
+                error: string | null;
+                summary: string;
+                placements: {
+                    week_key: string;
+                    status: string;
+                    game_index: number;
+                    round_index: number | null;
+                    question_index: number | null;
+                    reserve_ordinal: number;
+                    kind: string;
+                }[];
+                in_backup: boolean;
+            }[];
+            lineup: {
+                /** Format: uuid */
+                tournament_id: string;
+                week_key: string;
+                games: number[];
+                at: string;
+                slots: {
+                    game_index: number;
+                    round_index: number | null;
+                    question_index: number | null;
+                    reserve_ordinal: number;
+                    kind: string;
+                    /** @enum {string} */
+                    origin: "upload" | "pool";
+                    /** Format: uuid */
+                    source_question_id: string;
+                    summary: string;
+                    current: boolean;
+                }[];
+            } | null;
+        };
+        WlContentRunway: {
+            need_per_event: {
+                [key: string]: number;
+            };
+            inventory: {
+                type: string;
+                difficulty: string;
+                photo: boolean;
+                fresh: number;
+            }[];
+            drawable: {
+                kind: string;
+                drawable: number;
+                need: number;
+                events_left: number;
+            }[];
+            fresh_events_left: {
+                [key: string]: number;
+            };
+        };
+        WlContentReseedResponse: {
+            ok: boolean;
+            inserted: number;
+            previous_rows: number;
+            shortages?: {
+                [key: string]: {
+                    need: number;
+                    have: number;
+                };
+            };
+            /** Format: uuid */
+            reseed_id: string | null;
+        };
+        WlContentScheduleResponse: {
+            ok: boolean;
+            inserted: number;
+            previous_rows: number;
+            shortages?: {
+                [key: string]: {
+                    need: number;
+                    have: number;
+                };
+            };
+            /** Format: uuid */
+            reseed_id: string | null;
+            week_key: string;
+            placed_main: number;
+            placed_reserve: number;
+            not_placed: number;
+        };
         Announcement: {
             /** Format: uuid */
             id: string;
@@ -12432,6 +15394,30 @@ export interface components {
         AuctionPipelinePromptResetResponse: {
             reset: boolean;
         };
+        WlRewardsResponse: {
+            rewards: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                tournamentId: string;
+                weekKey: string | null;
+                /** @enum {string} */
+                band: "participant" | "finalist" | "top10" | "third" | "second" | "winner";
+                finalRank: number | null;
+                coins: number;
+                items: {
+                    slug: string;
+                    avatarPartId: string;
+                    slot: string;
+                    alreadyOwned: boolean;
+                }[];
+                grantedAt: string;
+                seen: boolean;
+            }[];
+        };
+        WlRewardSeenResponse: {
+            acknowledged: boolean;
+        };
         WlAdminCreateTestResponse: {
             /** Format: uuid */
             tournament_id: string;
@@ -12454,6 +15440,131 @@ export interface components {
                 visibility: string;
                 n: number;
             }[];
+        };
+        WlContentBatchesResponse: {
+            batches: components["schemas"]["WlContentBatch"][];
+        };
+        WlContentUndoResponse: {
+            deleted: number;
+            kept: number;
+            kept_ids: string[];
+            staging_deleted: number | null;
+            /** @description Stored photos removed by this undo; null while the cleanup waits behind a running import */
+            photos: {
+                deleted: number;
+                shared: number;
+                error: string | null;
+            } | null;
+        };
+        WlContentNextEventResponse: Record<string, never>;
+        WlLineupEventsResponse: {
+            events: {
+                /** Format: uuid */
+                id: string;
+                week_key: string;
+                status: string;
+                answers: number;
+                editable: boolean;
+                reason: string | null;
+                games: {
+                    game_index: number;
+                    rows: number;
+                    complete: boolean;
+                }[];
+            }[];
+        };
+        WlLineupPreviewResponse: {
+            /** Format: uuid */
+            preview_id: string | null;
+            expires_at: string | null;
+            event: {
+                /** Format: uuid */
+                id: string;
+                week_key: string;
+                status: string;
+            };
+            scope: string;
+            games: number[];
+            kept_games: number[];
+            slots: {
+                game_index: number;
+                round_index: number | null;
+                question_index: number | null;
+                reserve_ordinal: number;
+                kind: string;
+                /** @enum {string} */
+                origin: "upload" | "pool";
+                row_index: number | null;
+                view: Record<string, never> | null;
+            }[];
+            replaced: {
+                game_index: number;
+                rows: Record<string, never>[];
+            }[];
+            checks: {
+                rows: {
+                    index: number;
+                    type: string;
+                    /** @enum {string} */
+                    status: "ready" | "warning" | "duplicate" | "played" | "error";
+                    issues: {
+                        code: string;
+                        message: string;
+                        /** @enum {string} */
+                        severity: "error" | "warning";
+                    }[];
+                    duplicate_of: {
+                        /** Format: uuid */
+                        question_id: string | null;
+                        /** @enum {string} */
+                        where: "pool" | "public" | "history" | "batch";
+                        played: boolean;
+                        week_key: string | null;
+                        status: string | null;
+                    } | null;
+                    similar_to: {
+                        /** Format: uuid */
+                        question_id: string | null;
+                        /** @enum {string} */
+                        where: "pool" | "public" | "history" | "batch";
+                        week_key: string | null;
+                    } | null;
+                    crests: {
+                        club: string;
+                        club_id: string | null;
+                        logo_url: string | null;
+                    }[];
+                    image: {
+                        ok: boolean;
+                        url: string;
+                        width: number | null;
+                        height: number | null;
+                        bytes: number | null;
+                        content_type: string | null;
+                        reason: string | null;
+                    } | null;
+                }[];
+                staging_configured: boolean;
+                summary: {
+                    ready: number;
+                    warning: number;
+                    duplicate: number;
+                    played: number;
+                    error: number;
+                };
+            };
+            problems: {
+                where: string;
+                message: string;
+                row_index: number | null;
+            }[];
+            undecided: number[];
+        };
+        WlLineupSaveResponse: {
+            /** Format: uuid */
+            batch_id: string;
+            accepted: number;
+            already_started: boolean;
         };
         WlAdminDeleteTestResponse: {
             deleted: boolean;

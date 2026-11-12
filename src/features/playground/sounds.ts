@@ -9,6 +9,15 @@ import type { GameId, PlayMode } from "./types";
 export interface SoundEvent { moment: string; sound: string | null; where: string }
 
 export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>>> = {
+  mentalista: {
+    // Prototype: the room screen plays no audio yet. Candidates for the real build: a soft reveal sting, a "read it"
+    // hit for a matching predictor, a flat miss. Listed here so /dev/games can open the mode (the lookup is by game id).
+    room: [
+      { moment: "Reveal: you read the Mentalist (+2)", sound: null, where: "prototype: sound to pick (reveal hit)" },
+      { moment: "Reveal: you missed", sound: null, where: "prototype: sound to pick (reveal miss)" },
+      { moment: "Round voided (timeout / chooser left)", sound: null, where: "prototype: no sound yet" },
+    ],
+  },
   conexiones: {
     solo: [{ moment: "Any daily moment", sound: null, where: "prototype: no sounds yet" }],
     duel: [{ moment: "Any duel moment", sound: null, where: "prototype: no sounds yet" }],

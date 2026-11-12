@@ -12,7 +12,7 @@ import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 import { InviteFailureScreen } from "./InviteFailureScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DuelGameId, LobbySeenGame, RoomGameId } from "@/lib/realtime/socket.types";
-import { canHostStart, choicePlayable, lobbyModeCapabilities, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
+import { canHostStart, choicePlayable, lobbyModeCapabilities, roomGameMinSeats, settingsChoiceKey } from "@/lib/lobby/lobbyModes";
 import { toast } from "sonner";
 
 type ShownGame = { lobbyId: string | null; choiceKey: string; game: LobbySeenGame };
@@ -168,7 +168,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     : isDuelLobby
       ? t("friend.readyCopyDuel")
     : settings?.gameMode === "room_game"
-      ? t(choicePlayable(settings) === 2 ? "friend.readyCopyDuel" : choicePlayable(settings) === 4 ? "friend.readyCopyRoomGameUpTo4" : choicePlayable(settings) === 8 ? "friend.readyCopyRoomGameUpTo8" : "friend.readyCopyRoomGame")
+      ? t(settings.roomGame === "mentalista" ? "friend.readyCopyMentalista" : choicePlayable(settings) === 2 ? "friend.readyCopyDuel" : choicePlayable(settings) === 4 ? "friend.readyCopyRoomGameUpTo4" : choicePlayable(settings) === 8 ? "friend.readyCopyRoomGameUpTo8" : "friend.readyCopyRoomGame")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
@@ -201,6 +201,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       : t("friend.startMatch");
   const statusCopy = isSittingOutRoomGame
     ? t("friend.roomGameInProgress")
+    : settings?.gameMode === "room_game" && settings.roomGame === "mentalista" && members.length < roomGameMinSeats(settings.roomGame, 2)
+    ? t("friend.waitingMorePlayers")
     : isAuctionLobby
     ? allReady
       ? t("friend.everyoneReady")

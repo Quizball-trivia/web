@@ -19,6 +19,10 @@ export interface GamePageCopy {
   howToPlay: string[];
   reward: string;
   cta: string;
+  /** Room-strategy pages only (public-games.ts `guest: "room"`): badge in place of "Practice"/"Account required", e.g. "Private room · 3–6 players". */
+  roomBadge?: string;
+  /** Room-strategy pages only: conditional account notice (sign-in is needed only while guest rooms are not enabled). */
+  roomAccountNotice?: string;
 }
 
 export interface GamePageEntry {
@@ -90,6 +94,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-darts-501": { es: "dardos-futboleros-501", tr: "futbol-dart-oyunu", ru: "futbolnyy-darts-501", pt: "dardos-com-jogadores-de-futebol", de: "fussball-darts-501" , fr: "flechettes-foot-501" },
   // Working names: the owner has not chosen the final ones. KA follows EN.
   "football-draft-game": { es: "draft-de-futbol", tr: "futbol-draft-oyunu", ru: "futbolnyy-draft", pt: "draft-de-futebol", de: "fussball-draft-spiel", fr: "draft-de-foot" },
+  // Approved 2026-11 for the friends' room game. KA follows EN.
+  "football-mentalista": { es: "mentalista-futbolero", tr: "futbol-mentalisti", ru: "futbolnyy-mentalist", pt: "mentalista-do-futebol", de: "fussball-mentalist", fr: "mentaliste-foot" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -155,6 +161,37 @@ function mode(
       pt: { ...copy.pt, cta: cta.pt },
       de: { ...copy.de, cta: cta.de },
       fr: { ...copy.fr, cta: cta.fr },
+    },
+  };
+}
+
+/** Room-strategy pages open a room creator, not a game: their CTA says so. */
+const roomCta = { en: "Create a room", ka: "შექმენი ოთახი", es: "Crear sala", tr: "Oda oluştur", ru: "Создать комнату", pt: "Criar sala", de: "Raum erstellen", fr: "Créer un salon" } as const;
+
+type RoomPageCopy = Omit<GamePageCopy, "cta" | "roomBadge" | "roomAccountNotice"> & Required<Pick<GamePageCopy, "roomBadge" | "roomAccountNotice">>;
+
+/** A friends'-room game page: every locale must carry the room badge and the conditional account notice. */
+function room(
+  slug: string,
+  playPath: string,
+  artSlug: string,
+  copy: Record<Locale, RoomPageCopy>,
+): GamePageEntry {
+  return {
+    slug,
+    section: "games",
+    playPath,
+    artSlug,
+    slugs: LOCALIZED_SLUGS[slug],
+    copy: {
+      en: { ...copy.en, cta: roomCta.en },
+      ka: { ...copy.ka, cta: roomCta.ka },
+      es: { ...copy.es, cta: roomCta.es },
+      tr: { ...copy.tr, cta: roomCta.tr },
+      ru: { ...copy.ru, cta: roomCta.ru },
+      pt: { ...copy.pt, cta: roomCta.pt },
+      de: { ...copy.de, cta: roomCta.de },
+      fr: { ...copy.fr, cta: roomCta.fr },
     },
   };
 }
@@ -2336,6 +2373,89 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Chaque jour, un top 10 caché : les meilleurs buteurs de la Ligue des champions, les transferts les plus chers ou les entraîneurs aux plus beaux palmarès. Cite les noms recherchés. Chaque bonne réponse grimpe à sa place ; après 3 erreurs, la partie s’arrête. Trouveras-tu les 10 ?",
       howToPlay: ["Lis le titre de la liste du jour : il indique ce que les 10 noms ont en commun.", "Saisis un nom ou choisis-le parmi les suggestions. Une bonne réponse apparaît à son rang, avec son chiffre.", "Un vrai joueur absent de la liste te coûte une vie. Un nom déjà présent ou inconnu ne coûte rien. Tu as 3 vies.", "Ton score compte les noms trouvés. Partage ton classement ou joue avec des amis : chacun joue à son tour sur le même tableau, et chaque place vaut son numéro."],
       reward: "Joue aux listes des jours précédents sans compte ; connecte-toi pour celle du jour et le classement quotidien.",
+    },
+  }),
+  // Friends' room only (no daily, solo or practice): the CTA opens the room creator; artSlug falls back until its art ships.
+  room("football-mentalista", "/friend/room/new?room=mentalista", "mentalista", {
+    en: {
+      metaTitle: "Football Mentalista: Read Your Friends' Football Minds | QuizBall",
+      metaDescription: "A private-room football party game for 3 to 6 friends. One player secretly picks one of three options; everyone else locks the exact pick to score 2 points.",
+      title: "Football Mentalista",
+      intro: "Football Mentalista is a room game for 3 to 6 friends. Each round one player is the chooser: they see three football options and secretly lock one. Everyone else tries to read their mind and lock the exact same option.",
+      howToPlay: ["Create a private room in your browser and share the invitation link with 2 to 5 friends. The room plays with 3 to 6 players.", "The chooser sees three options for the round's football prompt and secretly locks one of them.", "Every other player locks an exact prediction of that choice. A correct prediction is worth 2 points; the chooser scores 0 that round.", "The chooser role rotates until every player has chosen once. At the end the room shows the final points."],
+      reward: "A friends' room game: no stakes, no coins, no XP and no ranking. Points only count inside your room.",
+      roomBadge: "Private room · 3–6 players",
+      roomAccountNotice: "If guest rooms are not enabled, you will be asked to sign in before the room is created.",
+    },
+    ka: {
+      metaTitle: "ფეხბურთის მენტალისტი: ამოიცანი მეგობრის არჩევანი | QuizBall",
+      metaDescription: "საფეხბურთო თამაში კერძო ოთახში 3–6 მეგობრისთვის. ერთი მოთამაშე სამი ვარიანტიდან ერთს ფარულად ირჩევს, დანარჩენები ზუსტად ამ არჩევანს გამოიცნობენ 2 ქულისთვის.",
+      title: "ფეხბურთის მენტალისტი",
+      intro: "ფეხბურთის მენტალისტი ოთახის თამაშია 3-დან 6 მეგობრამდე. ყოველ რაუნდში ერთი მოთამაშე ამრჩეველია: ის სამ საფეხბურთო ვარიანტს ხედავს და ერთს ფარულად აფიქსირებს. დანარჩენები ცდილობენ მისი აზრები ამოიკითხონ და ზუსტად იგივე ვარიანტი დააფიქსირონ.",
+      howToPlay: ["შექმენი კერძო ოთახი ბრაუზერში და მოსაწვევი ბმული 2–5 მეგობარს გაუზიარე. ოთახში 3-დან 6 მოთამაშემდე თამაშობს.", "ამრჩეველი რაუნდის საფეხბურთო კითხვისთვის სამ ვარიანტს ხედავს და ერთ-ერთს ფარულად აფიქსირებს.", "ყველა სხვა მოთამაშე აფიქსირებს ზუსტ ვარაუდს, რომელი ვარიანტი აირჩია ამრჩეველმა. სწორი ვარაუდი 2 ქულა ღირს; ამრჩეველი ამ რაუნდში 0 ქულას იღებს.", "ამრჩევლის როლი გადადის, სანამ ყველა მოთამაშე ერთხელ არ აირჩევს. ბოლოს ოთახი საბოლოო ქულებს აჩვენებს."],
+      reward: "მეგობრული ოთახის თამაში: ფსონების, მონეტების, XP-ის და რეიტინგის გარეშე. ქულები მხოლოდ შენს ოთახში ითვლება.",
+      roomBadge: "კერძო ოთახი · 3–6 მოთამაშე",
+      roomAccountNotice: "თუ სტუმრის ოთახები ჩართული არ არის, ოთახის შექმნამდე ანგარიშში შესვლა მოგიწევს.",
+    },
+    es: {
+      metaTitle: "Mentalista futbolero: leé la mente de tus amigos | QuizBall",
+      metaDescription: "Un juego de fútbol en sala privada para 3 a 6 amigos. Uno elige en secreto una de tres opciones; el resto fija su elección exacta y suma 2 puntos.",
+      title: "Mentalista futbolero",
+      intro: "Mentalista futbolero es un juego de sala para 3 a 6 amigos. En cada ronda un jugador elige: ve tres opciones de fútbol y fija una en secreto. Los demás intentan leerle la mente y fijar exactamente la misma opción.",
+      howToPlay: ["Creá una sala privada en el navegador y compartí el enlace de invitación con entre 2 y 5 amigos. La sala se juega con 3 a 6 jugadores.", "Quien elige ve tres opciones para la consigna de fútbol de la ronda y fija una en secreto.", "Cada uno de los demás fija una predicción exacta de esa elección. Acertar vale 2 puntos; quien elige suma 0 en esa ronda.", "El turno de elegir rota hasta que cada jugador eligió una vez. Al final, la sala muestra los puntos finales."],
+      reward: "Un juego de sala entre amigos: sin apuestas, sin monedas, sin XP y sin ranking. Los puntos solo cuentan dentro de tu sala.",
+      roomBadge: "Sala privada · 3–6 jugadores",
+      roomAccountNotice: "Si las salas para invitados no están activadas, vas a tener que iniciar sesión antes de crear la sala.",
+    },
+    tr: {
+      metaTitle: "Futbol Mentalisti: Arkadaşlarının Aklını Oku | QuizBall",
+      metaDescription: "3–6 arkadaş için özel odada futbol oyunu. Bir oyuncu üç seçenekten birini gizlice seçer; diğerleri tam seçimi bulmaya çalışır ve doğru olan 2 puan alır.",
+      title: "Futbol Mentalisti",
+      intro: "Futbol Mentalisti, 3 ile 6 arkadaş için bir oda oyunudur. Her turda bir oyuncu seçicidir: üç futbol seçeneği görür ve birini gizlice kilitler. Diğerleri onun aklını okumaya ve tam olarak aynı seçeneği kilitlemeye çalışır.",
+      howToPlay: ["Tarayıcında özel bir oda oluştur ve davet bağlantısını 2 ile 5 arkadaşınla paylaş. Oda 3 ile 6 oyuncuyla oynanır.", "Seçici, turun futbol sorusu için üç seçenek görür ve birini gizlice kilitler.", "Diğer her oyuncu bu seçim için tam bir tahmin kilitler. Doğru tahmin 2 puan değerindedir; seçici o turda 0 puan alır.", "Seçicilik sırası, her oyuncu bir kez seçene kadar döner. Sonunda oda final puanlarını gösterir."],
+      reward: "Arkadaşlar arası bir oda oyunu: bahis, jeton, XP ve sıralama yok. Puanlar yalnızca odanın içinde sayılır.",
+      roomBadge: "Özel oda · 3–6 oyuncu",
+      roomAccountNotice: "Misafir odaları açık değilse, oda oluşturulmadan önce giriş yapman istenir.",
+    },
+    ru: {
+      metaTitle: "Футбольный менталист: прочитай мысли друзей | QuizBall",
+      metaDescription: "Футбольная игра в закрытой комнате для 3–6 друзей. Один тайно выбирает один из трёх вариантов, остальные угадывают точный выбор и получают 2 очка.",
+      title: "Футбольный менталист",
+      intro: "Футбольный менталист — игра в комнате для 3–6 друзей. В каждом раунде один игрок выбирает: он видит три футбольных варианта и тайно фиксирует один. Остальные пытаются прочитать его мысли и зафиксировать точно такой же вариант.",
+      howToPlay: ["Создай закрытую комнату в браузере и поделись ссылкой-приглашением с 2–5 друзьями. В комнате играют от 3 до 6 человек.", "Выбирающий видит три варианта к футбольному заданию раунда и тайно фиксирует один из них.", "Каждый из остальных фиксирует свою точную догадку об этом выборе. Верная догадка — 2 очка; выбирающий в этом раунде получает 0.", "Роль выбирающего переходит по кругу, пока каждый игрок не выберет один раз. В конце комната показывает итоговые очки."],
+      reward: "Дружеская игра в комнате: без ставок, монет, XP и рейтинга. Очки считаются только внутри твоей комнаты.",
+      roomBadge: "Закрытая комната · 3–6 игроков",
+      roomAccountNotice: "Если гостевые комнаты не включены, перед созданием комнаты нужно будет войти в аккаунт.",
+    },
+    pt: {
+      metaTitle: "Mentalista do futebol: leia a mente dos amigos | QuizBall",
+      metaDescription: "Um jogo de futebol em sala privada para 3 a 6 amigos. Um jogador escolhe em segredo uma de três opções; os outros tentam acertar a escolha exata e ganham 2 pontos.",
+      title: "Mentalista do futebol",
+      intro: "Mentalista do futebol é um jogo de sala para 3 a 6 amigos. A cada rodada, um jogador escolhe: ele vê três opções de futebol e trava uma em segredo. Os outros tentam ler a mente dele e travar exatamente a mesma opção.",
+      howToPlay: ["Crie uma sala privada no navegador e compartilhe o link de convite com 2 a 5 amigos. A sala é jogada com 3 a 6 jogadores.", "Quem escolhe vê três opções para o tema de futebol da rodada e trava uma delas em segredo.", "Cada um dos outros trava sua resposta exata sobre essa escolha. Acertar vale 2 pontos; quem escolhe fica com 0 nessa rodada.", "A vez de escolher passa adiante até que cada jogador tenha escolhido uma vez. No fim, a sala mostra a pontuação final."],
+      reward: "Um jogo de sala entre amigos: sem apostas, sem moedas, sem XP e sem ranking. Os pontos só valem dentro da sua sala.",
+      roomBadge: "Sala privada · 3–6 jogadores",
+      roomAccountNotice: "Se as salas para convidados não estiverem ativadas, você vai precisar entrar na sua conta antes de criar a sala.",
+    },
+    de: {
+      metaTitle: "Fußball-Mentalist: Lies die Gedanken deiner Freunde | QuizBall",
+      metaDescription: "Ein Fußball-Partyspiel im privaten Raum für 3 bis 6 Freunde. Einer wählt geheim eine von drei Optionen, die anderen erraten die genaue Wahl für 2 Punkte.",
+      title: "Fußball-Mentalist",
+      intro: "Fußball-Mentalist ist ein Raumspiel für 3 bis 6 Freunde. In jeder Runde wählt ein Spieler: Er sieht drei Fußball-Optionen und legt sich geheim auf eine fest. Die anderen versuchen, seine Gedanken zu lesen und genau dieselbe Option festzulegen.",
+      howToPlay: ["Erstelle im Browser einen privaten Raum und teile den Einladungslink mit 2 bis 5 Freunden. Gespielt wird mit 3 bis 6 Spielern.", "Wer wählt, sieht drei Optionen zur Fußball-Aufgabe der Runde und legt sich geheim auf eine davon fest.", "Alle anderen legen ihre genaue Vermutung zu dieser Wahl fest. Ein Treffer bringt 2 Punkte; wer wählt, bekommt in dieser Runde 0.", "Die Rolle des Wählenden wechselt, bis jeder Spieler einmal gewählt hat. Am Ende zeigt der Raum die Gesamtpunkte."],
+      reward: "Ein Raumspiel unter Freunden: ohne Einsätze, Münzen, XP und Rangliste. Punkte zählen nur in deinem Raum.",
+      roomBadge: "Privater Raum · 3–6 Spieler",
+      roomAccountNotice: "Sind Gasträume nicht aktiviert, musst du dich anmelden, bevor der Raum erstellt wird.",
+    },
+    fr: {
+      metaTitle: "Mentaliste foot : lis dans les pensées de tes amis | QuizBall",
+      metaDescription: "Un jeu de foot en salon privé pour 3 à 6 amis. Un joueur choisit en secret une option parmi trois, les autres devinent ce choix exact pour 2 points.",
+      title: "Mentaliste foot",
+      intro: "Mentaliste foot est un jeu de salon pour 3 à 6 amis. À chaque manche, un joueur choisit : il voit trois options de foot et en verrouille une en secret. Les autres tentent de lire dans ses pensées et de verrouiller exactement la même option.",
+      howToPlay: ["Crée un salon privé dans ton navigateur et partage le lien d’invitation avec 2 à 5 amis. Le salon se joue à 3 à 6 joueurs.", "Le joueur qui choisit voit trois options pour le thème foot de la manche et en verrouille une en secret.", "Chaque autre joueur verrouille sa réponse exacte sur ce choix. Une bonne réponse vaut 2 points ; le joueur qui choisit marque 0 sur cette manche.", "Le rôle de celui qui choisit tourne jusqu’à ce que chaque joueur ait choisi une fois. À la fin, le salon affiche les points finaux."],
+      reward: "Un jeu de salon entre amis : aucun enjeu, pas de pièces, pas d’XP, pas de classement. Les points ne comptent que dans ton salon.",
+      roomBadge: "Salon privé · 3 à 6 joueurs",
+      roomAccountNotice: "Si les salons invités ne sont pas activés, tu devras te connecter avant la création du salon.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {

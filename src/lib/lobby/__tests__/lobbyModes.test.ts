@@ -8,6 +8,7 @@ import {
   isDuelGameEnabled, isRoomGameEnabled,
   lobbyModeCapabilities,
   modeChoiceKey,
+  roomGameMinSeats,
 } from "../lobbyModes";
 
 describe("lobby mode capability map (web mirror)", () => {
@@ -82,5 +83,22 @@ describe("room games with their own seat count", () => {
     expect(canHostStart("room_game", 8, "codenames")).toBe(true);
     expect(canHostStart("room_game", 9, "codenames")).toBe(false);
     expect(canHostStart("room_game", 7, "tenable")).toBe(false);
+  });
+
+  it("Mentalista needs a chooser plus two readers (3) and caps at 6", () => {
+    expect(choicePlayable({ gameMode: "room_game", roomGame: "mentalista" })).toBe(6);
+    // Two is not enough for Mentalista even though the room mode's floor is two.
+    expect(canHostStart("room_game", 2, "mentalista")).toBe(false);
+    expect(canHostStart("room_game", 3, "mentalista")).toBe(true);
+    expect(canHostStart("room_game", 6, "mentalista")).toBe(true);
+    expect(canHostStart("room_game", 7, "mentalista")).toBe(false);
+    expect(roomGameMinSeats("mentalista", 2)).toBe(3);
+  });
+
+  it("Mentalista's higher floor leaves every other room game at the mode's floor of two", () => {
+    for (const game of ["name_chain", "tenable", "codenames", "dato_falso", "darts501", "draft"] as const) {
+      expect(roomGameMinSeats(game, 2)).toBe(2);
+      expect(canHostStart("room_game", 2, game)).toBe(true);
+    }
   });
 });

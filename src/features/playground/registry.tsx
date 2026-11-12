@@ -41,6 +41,7 @@ import { CODENAMES_WORDS_ROOM, CODENAMES_WORDS_SOLO } from "./codenamesWordsScen
 import { CONEXIONES_DUEL, CONEXIONES_SOLO } from "./conexionesScenarios";
 import { D501_DUEL, D501_ROOM, D501_SOLO } from "./darts501Scenarios";
 import { DRAFT_DUEL, DRAFT_ROOM, DRAFT_SOLO } from "./draftScenarios";
+import { MENTALISTA_ROOM } from "./mentalistaScenarios";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
 interface DuelData { snapshot: DuelStatePayload; secondsLeft: number | null; connected: boolean; busy: boolean; error: string | null; confirmLeave: boolean }
@@ -386,6 +387,11 @@ const SOLO_NOTE = "The daily race: same race for everyone that day (set \"day\" 
 const RACE_NOTE = "Playable: you are seat 0, bots take the rest. Real stats come from the local private pack (public/dev-data, never committed); without it the invented fixture plays. Edit seats, tournament (random, WC, EURO, COPA, AFCON, ASIA, GOLD, WCQ, EUROQ, NL, ALL), target (0 = by lobby size), finish, botSkill, nations (codes, yours first) or seed in the state.";
 
 export const GAMES: GameEntry[] = [
+  {
+    id: "mentalista",
+    name: "Mentalista Futbolero (prototype)",
+    scenarios: { room: MENTALISTA_ROOM },
+  },
   {
     id: "draft",
     name: "Football Draft (prototype)",
