@@ -209,6 +209,7 @@
 @source "../features/store/components/CoinIcon.tsx";
 @source "../features/tenable/tenable.copy.ts";
 @source "../features/tenable/tenable.game.ts";
+@source "../features/weekend-league/paused.ts";
 @source "../features/weekend-league/rewards/WlFrame.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremony.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremonyHost.tsx";

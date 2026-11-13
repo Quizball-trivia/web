@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 
 import { EventsDashboard } from "@/features/tournaments/EventsDashboard";
 import { WeekendLeagueLiveScreen } from "@/features/weekend-league/WeekendLeagueLiveScreen";
+import { WEEKEND_LEAGUE_PAUSED } from "@/features/weekend-league/paused";
 
 const EVENTS_ENABLED = process.env.NEXT_PUBLIC_FEATURE_EVENTS_ENABLED === "true";
 
@@ -21,6 +22,7 @@ function EventsContent() {
 }
 
 export default function EventsPage() {
+  if (WEEKEND_LEAGUE_PAUSED) redirect("/play");
   return (
     <Suspense fallback={null}>
       <EventsContent />

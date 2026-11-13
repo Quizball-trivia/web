@@ -7,6 +7,7 @@ import { Bell, Check, ChevronRight, Flame, Target, Ticket } from "lucide-react";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getWeekendLeagueCurrent } from "@/lib/api/endpoints";
+import { WEEKEND_LEAGUE_PAUSED } from "@/features/weekend-league/paused";
 import {
   trackDailyComebackPromptShown,
   trackDailyComebackReminder,
@@ -131,7 +132,7 @@ function DailyChallengeCompleteModalExperimentAssignment({
   country?: string | null;
   createdAt?: string | null;
 }) {
-  const isEligibleCountry = country?.trim().toUpperCase() === "GE";
+  const isEligibleCountry = !WEEKEND_LEAGUE_PAUSED && country?.trim().toUpperCase() === "GE";
   const weekendLeagueQuery = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
