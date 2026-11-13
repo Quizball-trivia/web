@@ -18,6 +18,7 @@ import {
   type WlQpToastExperimentVariant,
 } from '@/lib/experiments/wlQpToastExperiment';
 import { WlQpToast } from '@/features/weekend-league/components/WlQpToast';
+import { WEEKEND_LEAGUE_PAUSED } from '@/features/weekend-league/paused';
 import { trackWlQpToastClicked, trackWlQpToastShown } from '@/lib/analytics/game-events';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -156,7 +157,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
   const qpToastAssignmentRef =
     useRef<Promise<WlQpToastExperimentVariant> | null>(null);
   const trackedQpToastRef = useRef(false);
-  const qpToastCue = useMemo(() => getWlQpToastCue({
+  const qpToastCue = useMemo(() => WEEKEND_LEAGUE_PAUSED ? null : getWlQpToastCue({
     matchType,
     isCancelledNoContest,
     qpAwarded,

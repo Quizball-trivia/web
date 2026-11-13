@@ -31,6 +31,7 @@ import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 import { colors } from '@/lib/colors';
 import { isAuctionCardEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
 import { WeekendLeagueProgressExperimentRail } from '@/features/weekend-league/components/WeekendLeagueProgressExperimentRail';
+import { WEEKEND_LEAGUE_PAUSED } from '@/features/weekend-league/paused';
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
@@ -398,7 +399,7 @@ export function ModeSelectionScreen({
   // doesn't double-count when a dev build points at real analytics.
   const bannerViewedRef = useRef(false);
   useEffect(() => {
-    if (bannerViewedRef.current) return;
+    if (WEEKEND_LEAGUE_PAUSED || bannerViewedRef.current) return;
     bannerViewedRef.current = true;
     trackWlBannerViewed();
   }, []);
@@ -606,9 +607,11 @@ export function ModeSelectionScreen({
       {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
       {/* Instrumented at the placement, not inside Rail — the dev gallery
           mounts every Rail variant and would fire an impression per skin. */}
-      <div onClickCapture={trackWlBannerClicked}>
-        <WeekendLeagueProgressExperimentRail />
-      </div>
+      {!WEEKEND_LEAGUE_PAUSED && (
+        <div onClickCapture={trackWlBannerClicked}>
+          <WeekendLeagueProgressExperimentRail />
+        </div>
+      )}
 
       {playHomeNotice}
 

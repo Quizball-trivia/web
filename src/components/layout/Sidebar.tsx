@@ -9,19 +9,19 @@ import type { ShellChromeComponents } from "./app-shell/shellChrome.types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { WEEKEND_LEAGUE_PAUSED } from "@/features/weekend-league/paused";
 
 const NAV_ITEMS = [
   { path: "/play", labelKey: "navigation.play" },
   { path: "/leaderboard", labelKey: "navigation.leaderboard" },
   { path: "/social", labelKey: "navigation.social" },
   { path: "/play/friend?tab=browse", labelKey: "navigation.lobbies", exact: true },
-  // Events tab hidden until the feature ships — keep the route + translations
-  // in place so we can flip it back on without re-wiring.
   { path: "/events", labelKey: "navigation.events" },
   { path: "/store", labelKey: "navigation.store" },
   { path: "/profile", labelKey: "navigation.profile" },
   { path: "/settings", labelKey: "navigation.settings" },
 ] as const;
+const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((item) => !(WEEKEND_LEAGUE_PAUSED && item.path === "/events"));
 
 interface SidebarProps {
   footerChrome: Pick<ShellChromeComponents, "SocialLinks" | "ContactModal">;
@@ -68,7 +68,7 @@ export function Sidebar({ currentPath, homeHref = "/play", prefetchRoutes = true
 
       <ScrollArea className="flex-1 py-2">
         <nav className="flex flex-col items-center space-y-3 px-5">
-          {NAV_ITEMS.map((item) => {
+          {VISIBLE_NAV_ITEMS.map((item) => {
             const isActive = isPathActive(currentPath, item.path, "exact" in item ? item.exact : undefined);
             const showSocialBadge = item.path === "/social" && socialBadgeCount > 0;
 

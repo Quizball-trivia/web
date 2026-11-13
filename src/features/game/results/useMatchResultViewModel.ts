@@ -29,6 +29,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 import { resolveMatchOutcome } from '@/lib/domain/matchOutcome';
 import type { RealtimeResultsScreenProps } from './results.types';
+import { WEEKEND_LEAGUE_PAUSED } from '@/features/weekend-league/paused';
 
 export interface MatchResultViewModel {
   // Win/loss/draw resolution
@@ -176,7 +177,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   // authoritative settlement data so profile and result screens cannot diverge.
   const rpChange = myOutcome?.deltaRp ?? 0;
   const coinsAwarded = myOutcome?.coinsAwarded ?? null;
-  const qpAwarded = myOutcome?.qpAwarded ?? null;
+  const qpAwarded = WEEKEND_LEAGUE_PAUSED ? null : myOutcome?.qpAwarded ?? null;
   const refundedTickets = isCancelledNoContest && matchType === 'ranked' ? 1 : 0;
   const oldRP = myOutcome?.oldRp ?? oldRpBase;
   const newRP = myOutcome?.newRp ?? oldRP;
