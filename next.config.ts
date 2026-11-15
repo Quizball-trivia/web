@@ -157,6 +157,24 @@ const nextConfig: NextConfig = {
       headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
     }));
     const fontLicense = { source: "/assets/fonts/poppins/LICENSE.txt", headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }] };
+    // Vercel's default for public files (max-age=0) makes every page view re-ask
+    // for each image and sound, and each 304 is a billed CDN request. These files
+    // are replaced by new names or a ?v= bump, not edited in place. Listed before
+    // the immutable rules so those still win; store art keeps its own versioning.
+    // 3D models are left out: a .gltf and the .bin it references are rebuilt
+    // under the same names and must never be cached apart.
+    const dailyCachedAssets = ["/assets/:path((?!store/)(?!.*\\.(?:gltf|bin|glb)$).*)", "/sounds/:path*", "/clubs/:path*"].map((source) => ({
+      source,
+      headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+    }));
+    // Images go through /_next/image, whose shared cache reports an Age of weeks,
+    // so a day-long max-age is already stale on arrival and every view
+    // revalidates. CI rejects in-place edits to these files
+    // (scripts/check-immutable-assets.mjs): changed art needs a new file name.
+    const immutableAssetImages = {
+      source: "/assets/:path((?!store/).*\\.(?:png|webp|avif|jpe?g|svg|gif))",
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+    };
     // Block preview/branch deploys from search indexes even for
     // non-HTML responses (sitemap.xml, JSON, etc.).
     if (IS_PRODUCTION_DEPLOYMENT) {
@@ -168,6 +186,8 @@ const nextConfig: NextConfig = {
         QUIZBALL_HOST_RULE,
         PARTNER_HOST_RULE,
         brandAssets,
+        ...dailyCachedAssets,
+        immutableAssetImages,
         ...criticalAssets,
         ...avatarAssetHeaders,
         fontLicense,
@@ -184,6 +204,8 @@ const nextConfig: NextConfig = {
       QUIZBALL_HOST_RULE,
       PARTNER_HOST_RULE,
       brandAssets,
+      ...dailyCachedAssets,
+      immutableAssetImages,
       ...criticalAssets,
       ...avatarAssetHeaders,
       fontLicense,
