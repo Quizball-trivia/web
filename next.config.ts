@@ -161,7 +161,9 @@ const nextConfig: NextConfig = {
     // for each image and sound, and each 304 is a billed CDN request. These files
     // are replaced by new names or a ?v= bump, not edited in place. Listed before
     // the immutable rules so those still win; store art keeps its own versioning.
-    const dailyCachedAssets = ["/assets/:path((?!store/).*)", "/sounds/:path*", "/clubs/:path*"].map((source) => ({
+    // 3D models are left out: a .gltf and the .bin it references are rebuilt
+    // under the same names and must never be cached apart.
+    const dailyCachedAssets = ["/assets/:path((?!store/)(?!.*\\.(?:gltf|bin|glb)$).*)", "/sounds/:path*", "/clubs/:path*"].map((source) => ({
       source,
       headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
     }));
