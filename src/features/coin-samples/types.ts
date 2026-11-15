@@ -1,5 +1,5 @@
 /** Four-language text as the pool stores it. */
-export type SampleText = { en: string; ka: string; es: string; tr: string; ru?: string; pt?: string; de?: string; fr?: string };
+export type SampleText = { en: string; ka: string; es: string; tr: string; ru?: string; pt?: string; de?: string; fr?: string; el?: string };
 
 /** One MCQ from the frozen bank (Trivia Mines, Free Kicks, Road to Goal samples). */
 export interface SampleQuestion {
@@ -21,6 +21,7 @@ export interface SampleSquadSpinReel {
   label_pt?: string | null;
   label_de?: string | null;
   label_fr?: string | null;
+  label_el?: string | null;
   asset_key: string | null;
 }
 

@@ -25,6 +25,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import { getI18nText } from '@/lib/utils/i18n';
 import { useLocale } from '@/contexts/LocaleContext';
+import { upperText } from '@/lib/i18n/typography';
 
 export type LiveSpecialQuestion =
   | ResolvedCountdownQuestion
@@ -233,7 +234,7 @@ export function SpecialResultSummary({
                     letterSpacing: '0.02em',
                   }}
                 >
-                  {pointsText.toUpperCase()}
+                  {upperText(pointsText)}
                 </span>
               )}
             </div>

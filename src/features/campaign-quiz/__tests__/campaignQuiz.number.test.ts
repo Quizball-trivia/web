@@ -65,7 +65,7 @@ describe('formatCampaignNumber — Georgian', () => {
 
 describe('formatCampaignNumber — other locales are unchanged', () => {
   const PREVIOUS: Record<Exclude<Locale, 'ka'>, string> = {
-    en: 'en-GB', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', de: 'de-DE', fr: 'fr-FR', tr: 'tr-TR',
+    en: 'en-GB', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', de: 'de-DE', fr: 'fr-FR', el: 'el-GR', tr: 'tr-TR',
   };
 
   it.each(Object.entries(PREVIOUS))('%s formats with %s', (locale, tag) => {

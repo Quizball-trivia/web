@@ -9,6 +9,7 @@ interface LabelledCriterion {
   labelPt?: string | null;
   labelDe?: string | null;
   labelFr?: string | null;
+  labelEl?: string | null;
 }
 
 /** Criterion label in the app locale; English when that language has no label yet. */
@@ -28,6 +29,8 @@ export function criterionLabel(criterion: LabelledCriterion, locale: Locale): st
       return criterion.labelDe || criterion.labelEn;
     case 'fr':
       return criterion.labelFr || criterion.labelEn;
+    case 'el':
+      return criterion.labelEl || criterion.labelEn;
     default:
       return criterion.labelEn;
   }
@@ -41,5 +44,6 @@ export function compactCriterionLabel(criterion: LabelledCriterion, locale: Loca
     .replace(/^Companheiro de clube de (.+)$/, 'Companheiro de clube · $1')
     .replace(/^Vereinskollege von (.+)$/, 'Vereinskollege · $1')
     .replace(/^A joué en club avec (.+)$/, 'Coéquipier en club · $1')
+    .replace(/^Έπαιξε στον ίδιο σύλλογο με (.+)$/, 'Συμπαίκτης στον σύλλογο · $1')
     .replace(/^(.+) ile aynı kulüpte oynadı$/, '$1 · aynı kulüp');
 }

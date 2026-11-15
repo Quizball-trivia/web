@@ -25,6 +25,7 @@ const POPULAR_QUIZ_SLUGS = {
   de: ['career-path', 'guess-the-player', 'club-badges', 'premier-league'],
   tr: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
   fr: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
+  el: ['career-path', 'guess-the-player', 'club-badges', 'real-madrid'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
@@ -132,6 +133,19 @@ const HUB_COPY = {
     rankedHeading: 'Passe aux duels classés',
     rankedBody: 'Les quiz en solo sont l’échauffement. Inscris-toi gratuitement pour affronter de vrais fans et grimper au classement QuizBall.',
     groups: { team: 'Quiz clubs et sélections', league: 'Quiz championnats', quiz_type: 'Défis foot', article: 'Culture foot' },
+  },
+  el: {
+    ranked: 'Παίξε αγώνα κατάταξης', eyebrow: 'Δωρεάν ποδοσφαιρικό κουίζ',
+    title: 'Ποδοσφαιρικό κουίζ — Παίξε δωρεάν κουίζ και δοκίμασε τις γνώσεις σου',
+    intro: 'Διάλεξε ένα κουίζ, απάντησε σε ελεγμένες ερωτήσεις ποδοσφαίρου και δες αμέσως τη βαθμολογία σου. Κάθε ατομικό κουίζ ξεκινά δωρεάν και δεν χρειάζεται λογαριασμό.',
+    popularHeading: 'Δημοφιλή ποδοσφαιρικά κουίζ στο Ηνωμένο Βασίλειο',
+    popularBody: 'Ξεκίνα με ενδιαφέρουσες ερωτήσεις για τα σήματα συλλόγων, τις καριέρες παικτών, την Έβερτον και τη Λίβερπουλ — τα κουίζ που προτιμούν περισσότερο οι φίλοι του ποδοσφαίρου στο Ηνωμένο Βασίλειο.',
+    playFree: 'Παίξε δωρεάν', verifiedHeading: 'Ελεγμένες ποδοσφαιρικές ερωτήσεις',
+    verifiedBody: 'Τα δημόσια κουίζ του QuizBall χρησιμοποιούν ελεγμένες ερωτήσεις για συλλόγους, διοργανώσεις, παίκτες και την ιστορία του ποδοσφαίρου.',
+    methodologyLink: 'Πώς ελέγχει το QuizBall κάθε ερώτηση',
+    rankedHeading: 'Δοκίμασε τη βαθμολογία σου σε αγώνες κατάταξης',
+    rankedBody: 'Τα ατομικά κουίζ είναι η προθέρμανση. Κάνε δωρεάν εγγραφή για να παίξεις με πραγματικούς φιλάθλους και να ανέβεις στην κατάταξη του QuizBall.',
+    groups: { team: 'Κουίζ συλλόγων', league: 'Κουίζ πρωταθλημάτων', quiz_type: 'Ποδοσφαιρικές προκλήσεις', article: 'Ποδοσφαιρικές γνώσεις' },
   },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
