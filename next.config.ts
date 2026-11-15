@@ -157,6 +157,14 @@ const nextConfig: NextConfig = {
       headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
     }));
     const fontLicense = { source: "/assets/fonts/poppins/LICENSE.txt", headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }] };
+    // Vercel's default for public files (max-age=0) makes every page view re-ask
+    // for each image and sound, and each 304 is a billed CDN request. These files
+    // are replaced by new names or a ?v= bump, not edited in place. Listed before
+    // the immutable rules so those still win; store art keeps its own versioning.
+    const dailyCachedAssets = ["/assets/:path((?!store/).*)", "/sounds/:path*", "/clubs/:path*"].map((source) => ({
+      source,
+      headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+    }));
     // Block preview/branch deploys from search indexes even for
     // non-HTML responses (sitemap.xml, JSON, etc.).
     if (IS_PRODUCTION_DEPLOYMENT) {
@@ -168,6 +176,7 @@ const nextConfig: NextConfig = {
         QUIZBALL_HOST_RULE,
         PARTNER_HOST_RULE,
         brandAssets,
+        ...dailyCachedAssets,
         ...criticalAssets,
         ...avatarAssetHeaders,
         fontLicense,
@@ -184,6 +193,7 @@ const nextConfig: NextConfig = {
       QUIZBALL_HOST_RULE,
       PARTNER_HOST_RULE,
       brandAssets,
+      ...dailyCachedAssets,
       ...criticalAssets,
       ...avatarAssetHeaders,
       fontLicense,
