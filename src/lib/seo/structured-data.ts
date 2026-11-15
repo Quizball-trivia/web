@@ -25,6 +25,7 @@ const LANGUAGE_TAG: Record<Locale, string> = {
   pt: "pt-BR",
   de: "de-DE",
   fr: "fr-FR",
+  el: "el-GR",
 };
 
 export function serializeJsonLd(value: unknown): string {
@@ -71,7 +72,7 @@ export function buildSiteStructuredData() {
         description: SITE_DESCRIPTION,
         publisher: { "@id": SITE_SCHEMA_IDS.organization },
         about: { "@id": SITE_SCHEMA_IDS.game },
-        inLanguage: ["en", "ka", "es", "tr", "ru", "pt", "de", "fr"],
+        inLanguage: ["en", "ka", "es", "tr", "ru", "pt", "de", "fr", "el"],
         potentialAction: {
           "@type": "SearchAction",
           target: `${SITE_URL}/social?q={search_term_string}`,
@@ -93,7 +94,7 @@ export function buildSiteStructuredData() {
         url: SITE_URL,
         image: `${SITE_URL}${SITE_OG_IMAGE_PATH}`,
         genre: ["Trivia", "Sports", "Football", "Quiz", "Multiplayer"],
-        inLanguage: ["en", "ka", "es", "tr", "ru", "pt", "de", "fr"],
+        inLanguage: ["en", "ka", "es", "tr", "ru", "pt", "de", "fr", "el"],
         keywords: "football trivia, football quiz, soccer quiz, multiplayer football game",
         publisher: { "@id": SITE_SCHEMA_IDS.organization },
         isPartOf: { "@id": SITE_SCHEMA_IDS.website },

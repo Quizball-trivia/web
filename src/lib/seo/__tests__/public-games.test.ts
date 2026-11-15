@@ -88,7 +88,7 @@ describe("public games manifest", () => {
 
   it("every game page is published in all seven locales, and cards link to the localized page", () => {
     for (const game of PUBLISHED_PUBLIC_GAMES.filter((g) => g.page)) {
-      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr", "ru", "pt", "de", "fr"]);
+      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr", "ru", "pt", "de", "fr", "el"]);
     }
     expect(findPublishedGame("tr", "futbol-oyunlari", "auction")).not.toBeNull();
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;

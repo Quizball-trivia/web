@@ -27,6 +27,7 @@ const LocaleAssetProviders = {
   pt: dynamic(() => import("./locale-asset-providers.pt").then((module) => module.LocaleAssetProviders)),
   de: dynamic(() => import("./locale-asset-providers.de").then((module) => module.LocaleAssetProviders)),
   fr: dynamic(() => import("./locale-asset-providers.fr").then((module) => module.LocaleAssetProviders)),
+  el: dynamic(() => import("./locale-asset-providers.el").then((module) => module.LocaleAssetProviders)),
 };
 
 type RouteProvidersProps = {
