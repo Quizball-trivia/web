@@ -165,6 +165,14 @@ const nextConfig: NextConfig = {
       source,
       headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
     }));
+    // Images go through /_next/image, whose shared cache reports an Age of weeks,
+    // so a day-long max-age is already stale on arrival and every view
+    // revalidates. CI rejects in-place edits to these files
+    // (scripts/check-immutable-assets.mjs): changed art needs a new file name.
+    const immutableAssetImages = {
+      source: "/assets/:path((?!store/).*\\.(?:png|webp|avif|jpe?g|svg|gif))",
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+    };
     // Block preview/branch deploys from search indexes even for
     // non-HTML responses (sitemap.xml, JSON, etc.).
     if (IS_PRODUCTION_DEPLOYMENT) {
@@ -177,6 +185,7 @@ const nextConfig: NextConfig = {
         PARTNER_HOST_RULE,
         brandAssets,
         ...dailyCachedAssets,
+        immutableAssetImages,
         ...criticalAssets,
         ...avatarAssetHeaders,
         fontLicense,
@@ -194,6 +203,7 @@ const nextConfig: NextConfig = {
       PARTNER_HOST_RULE,
       brandAssets,
       ...dailyCachedAssets,
+      immutableAssetImages,
       ...criticalAssets,
       ...avatarAssetHeaders,
       fontLicense,
