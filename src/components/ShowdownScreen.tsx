@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { CountryFlag } from '@/components/CountryFlag';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 import { useUserPreferences } from '@/lib/preferences/userPreferences';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import type { AvatarCustomization } from '@/types/game';
@@ -223,7 +224,10 @@ function PlayerSide({
   // Opponent (right side) faces the player — flip horizontally per Figma.
   const isOpponent = side === 'right';
   const avatarCustomization = info.avatarCustomization ?? { base: info.avatar || 'avatar-1' };
+  const { t } = useLocale();
   const frameSrc = getTierFrameSrc(info.tier ?? 'Academy');
+  const tierKey = `tiers.${info.tier}` as MessageKey;
+  const tierLabel = info.tier ? (t(tierKey) === tierKey ? info.tier : t(tierKey)) : "";
   const isVertical = variant === 'vertical';
 
   // Vertical variant enters from top/bottom instead of left/right.
@@ -351,7 +355,7 @@ function PlayerSide({
           }
           style={{ ...poppins, color: tierAccent }}
         >
-          {info.tier}
+          {tierLabel}
         </motion.div>
       )}
 
