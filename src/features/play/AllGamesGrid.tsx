@@ -490,7 +490,7 @@ function matchesFilter(section: "daily" | "coins", filter: FinderFilter, isNew: 
 
 // Accent- and case-insensitive so "Gol" finds "Golü" and "sut" finds "Şut" (Turkish ı folds to i).
 function searchKey(value: string): string {
-  return value.trim().toLowerCase().replace(/ı/g, "i").replace(/ß/g, "ss").replace(/œ/g, "oe").replace(/æ/g, "ae").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return value.trim().toLowerCase().replace(/ς/g, "σ").replace(/ı/g, "i").replace(/ß/g, "ss").replace(/œ/g, "oe").replace(/æ/g, "ae").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function matchesQuery(mode: DemoModeCard, query: string): boolean {

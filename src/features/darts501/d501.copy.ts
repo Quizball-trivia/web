@@ -295,7 +295,7 @@ const copy = {
     window: (lo: number, hi: number) => `Τερμάτισε με ${lo}–${hi}`, maxHint: "Μέγ. 180 ανά βελάκι",
     placeholder: "Ονόμασε έναν ποδοσφαιριστή", say: "Ρίξε", giveUp: "Εγκατάλειψη", asOf: (d: string) => `Με στοιχεία έως ${d}`,
     score: (name: string, stat: number) => `${name} −${stat}`, checkout: (name: string, stat: number) => `Τερματισμός! ${name} −${stat}`, perfect: "Στο κέντρο: ακριβώς 0!",
-    bust: (name: string, stat: number) => `Άκυρη ρίψη! Ο ${name} (${stat}) σε πάει κάτω από −10`, over180: (name: string, stat: number) => `${name}: ${stat} — πάνω από 180, χωρίς πόντους`,
+    bust: (name: string, stat: number) => `Άκυρη ρίψη! ${name} (${stat}): το σκορ θα έπεφτε κάτω από −10`, over180: (name: string, stat: number) => `${name}: ${stat} — πάνω από 180, χωρίς πόντους`,
     miss: (t: string) => `${t} δεν μετράει εδώ: χωρίς πόντους`, repeat: (t: string) => `${t} έχει ήδη ριχτεί: ξαναρίξε`,
     uncovered: (t: string) => `Δεν έχουμε αριθμούς για τον ${t}: δοκίμασε άλλον`,
     unknown: (t: string) => `Δεν γνωρίζουμε «${t}»: έλεγξε την ορθογραφία`, ambiguous: (t: string) => `Το «${t}» ταιριάζει σε περισσότερους από έναν: γράψε ολόκληρο το όνομα`, time: "Τέλος χρόνου: χωρίς πόντους",

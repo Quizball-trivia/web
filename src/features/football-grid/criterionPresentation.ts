@@ -74,6 +74,7 @@ export function criterionPresentation(criterion: FootballGridCriterionView, loca
       /^A joué avec (.+)$/,
       /^(.+) ile aynı kulüpte oynadı$/,
       /^(.+) ile oynadı$/,
+      /^Έπαιξε στον ίδιο σύλλογο με (.+)$/,
     ];
     const name = patterns.map((pattern) => label.match(pattern)?.[1]).find(Boolean);
     if (name) return {
