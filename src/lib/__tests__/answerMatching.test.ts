@@ -1,3 +1,4 @@
+import { matchesName } from "@/features/mini-games/lib/matching";
 import { describe, expect, it } from "vitest";
 import {
   countdownMatch,
@@ -71,5 +72,14 @@ describe("answerMatching", () => {
 
     expect(countdownMatch("mar", groups, [])).toBeNull();
     expect(countdownMatch("mar", groups, ["Marco Silva", "Marcelo Bielsa"])).toBeNull();
+  });
+});
+
+describe("Greek answers", () => {
+  it("ignore accents, read final sigma as σ and accept capitals", () => {
+    expect(normalizeAnswer("Καραγκούνης")).toBe("καραγκουνησ");
+    expect(fuzzyMatchesAnswer("καραγκουνησ", ["Γιώργος Καραγκούνης"])).toBe(true);
+    expect(fuzzyMatchesAnswer("ΚΑΡΑΓΚΟΥΝΗΣ", ["Γιώργος Καραγκούνης"])).toBe(true);
+    expect(matchesName("Αρησ", ["Άρης"]).ok).toBe(true);
   });
 });
