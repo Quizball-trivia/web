@@ -44,7 +44,10 @@ const VARIANT_KEY = "football-draft-variant";
 const savedFreeRun = (): string | null => { try { return localStorage.getItem(FREE_RUN_KEY); } catch { return null; } };
 const rememberFreeRun = (id: string) => { try { localStorage.setItem(FREE_RUN_KEY, id); } catch { /* private window */ } };
 const forgetFreeRun = () => { try { localStorage.removeItem(FREE_RUN_KEY); } catch { /* private window */ } };
-const savedVariant = (): Variant => { try { const v = typeof window === "undefined" ? null : sessionStorage.getItem(VARIANT_KEY); return v === "classic" || v === "knowledge" ? v : "budget"; } catch { return "budget"; } };
+// Only Budget is offered; older Classic/Knowledge runs and challenge links still open in their own version.
+const savedVariant = (): Variant => "budget";
+/** Today's daily is always the Budget board, whatever version an older challenge or run left in state. */
+const DAILY: Variant = "budget";
 const rememberVariant = (v: Variant) => { try { sessionStorage.setItem(VARIANT_KEY, v); } catch { /* private window */ } };
 
 type Screen = "intro" | "setup" | "challenge" | "draft" | "season" | "result" | "versus" | "gone";
@@ -96,9 +99,9 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   // What the first screen says about today, for the version chosen.
   useEffect(() => {
     let live = true;
-    void withRetry(() => draftApi.today(variant, locale, initialDay)).then((t) => { if (!live) return; setToday(t); setProblem((p) => (p === c.loadFailed ? null : p)); }).catch(() => { if (live) setProblem(c.loadFailed); });
+    void withRetry(() => draftApi.today(DAILY, locale, initialDay)).then((t) => { if (!live) return; setToday(t); setProblem((p) => (p === c.loadFailed ? null : p)); }).catch(() => { if (live) setProblem(c.loadFailed); });
     return () => { live = false; };
-  }, [variant, locale, initialDay, authStatus, c.loadFailed]);
+  }, [locale, initialDay, authStatus, c.loadFailed]);
 
   // An unfinished free draft stays on the server: a reload offers it back.
   useEffect(() => {
@@ -174,14 +177,14 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
       // A guest opens yesterday from today's entry, and a closed day chosen from the address as it is.
       const day = today.guest && today.day >= today.live ? today.practiceDay : today.day;
       if (!day) { signedInPrompt(); return; }
-      const next = await withRetry(() => draftApi.startDaily(variant, day, locale));
+      const next = await withRetry(() => draftApi.startDaily(DAILY, day, locale));
       if (next.state.phase !== "result") beginTracked();
-      adopt(next, { daily: variant });
+      adopt(next, { daily: DAILY });
       onDay?.(day, day === today.live);
     } catch (error) {
       if (reasonOf(error) === "sign_in_for_today") signedInPrompt(); else setProblem(c.loadFailed);
     } finally { setPending(false); starting.current = false; }
-  }, [today, variant, locale, adopt, beginTracked, signedInPrompt, onDay, c.loadFailed]);
+  }, [today, locale, adopt, beginTracked, signedInPrompt, onDay, c.loadFailed]);
 
   const startSetup = useCallback(async () => {
     if (starting.current) return;
@@ -352,9 +355,9 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
   return (
     <Frame lang={locale} wide>
       {screen === "intro" && today ? (
-        <DraftIntro locale={locale} number={today.number} league={today.league as League} best={today.best?.rec ?? null} nextDaily={nextDaily} variant={variant} onVariant={setVariant} onExit={exit}
+        <DraftIntro locale={locale} number={today.number} league={today.league as League} best={today.best?.rec ?? null} nextDaily={nextDaily} onExit={exit}
           dailyLabel={today.guest ? c.guestPractice : today.played ? c.dailySeen : undefined} guestNote={today.guest ? c.guestSignIn : null} onSignIn={signedInPrompt}
-          resumeLabel={resumable ? c.resumeDraft : null} onResume={() => void resume()} onDaily={() => void playDaily()} onFree={() => { setSetup((x) => ({ ...x, variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} />
+          resumeLabel={resumable ? c.resumeDraft : null} onResume={() => void resume()} onDaily={() => void playDaily()} onFree={() => { setSetup((x) => ({ ...x, variant: "budget" })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} />
       ) : screen === "setup" && today ? (
         <DraftSetup locale={locale} leagues={today.leagues as League[]} values={setup} friends={false} onChange={setSetup} onStart={() => void startSetup()} onExit={() => setScreen("intro")} />
       ) : screen === "challenge" ? (
@@ -377,7 +380,7 @@ export function DraftGame({ locale, onExit, onEvent, initialDay, onDay, initialC
           <SeasonResultView locale={locale} number={state.number ?? today?.number ?? 0} seed={state.result.goalSeed} prediction={state.prediction} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={!!state.ranked}
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} nextDaily={boardDay ? nextDaily : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
             leaderboard={boardDay ? <DraftLeaderboard locale={locale} rows={board} variant={boardVariant} onVariant={(v) => { setVariant(v); setScreen("intro"); }} onOpen={(row) => void openTeam(row)} /> : undefined}
-            onShare={() => undefined} onAgain={() => { setSetup((x) => ({ ...x, variant: state.variant })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
+            onShare={() => undefined} onAgain={() => { setSetup((x) => ({ ...x, variant: "budget" })); setScreen("setup"); }} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
           {shownLink && (
             <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface-card p-2">
               <input readOnly value={shownLink} aria-label={c.challengeFriend} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-1 text-xs text-white/90 outline-none" />
