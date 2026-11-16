@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { nameChainCopy, wordDailyCopy, wordSharedCopy } from "@/features/wordgames/copy";
 import { AnswerBox, Chips, Frame, GreenButton, QuietButton, TopBar, poppins } from "@/features/wordgames/ui";
-import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
+import { createDailyGameCall, DailyGameApiError } from "@/lib/repositories/dailyGameApi";
 import { cn } from "@/lib/utils";
 import { Lettered } from "./Lettered";
 import { nameChainPracticeCopy } from "./nameChainPractice.copy";
@@ -29,6 +29,7 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
   const latest = useRef(state);
   useEffect(() => { latest.current = state; }, [state]);
   const inFlight = useRef(false);
+  const restart = useRef(false);
 
   const run = useCallback(async (action: { op: "start" } | { op: "pass" } | { op: "answer"; answer: string }) => {
     if (inFlight.current) return;
@@ -43,12 +44,21 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
       const next = applyPractice(latest.current, body.op, res);
       latest.current = next;
       setState(next);
-    } catch {
-      // Nothing is lost: the chain lives here, so the same step can simply be tried again.
-      setFailed(true);
+    } catch (error) {
+      if (error instanceof DailyGameApiError && error.message === "practice_restart" && body.op !== "start") {
+        // The names this chain froze are gone (a new version is live): retrying the same step would be refused again.
+        restart.current = true;
+      } else {
+        // Nothing is lost: the chain lives here, so the same step can simply be tried again.
+        setFailed(true);
+      }
     } finally {
       inFlight.current = false;
       setBusy(false);
+    }
+    if (restart.current) {
+      restart.current = false;
+      void run({ op: "start" });
     }
   }, [locale]);
 
