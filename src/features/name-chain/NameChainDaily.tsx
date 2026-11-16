@@ -25,7 +25,7 @@ export interface NameChainDailyState extends WordRunStateBase {
   settled: { reason: "time" | "pass" | "cap"; named: number; could: string[] } | null;
   results: number[]; longest: number;
   /** The letters the run froze at its start; its leaderboard follows them, not the interface language. */
-  alphabet?: "latin" | "cyrillic";
+  alphabet?: "latin" | "cyrillic" | "greek";
 }
 type Result = Verdict | "late" | "too_fast";
 
