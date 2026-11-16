@@ -1099,6 +1099,7 @@ export interface FootballGridOption {
   name: string;
   nameKa: string | null;
   nameRu?: string | null;
+  nameEl?: string | null;
   imageUrl: string | null;
 }
 
