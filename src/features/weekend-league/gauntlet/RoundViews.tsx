@@ -10,7 +10,7 @@ import { ArrowRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useLocale } from '@/contexts/LocaleContext';
-import { findClubByName } from '@/lib/clubs';
+import { findClubByName, indexedClubCrest } from '@/lib/clubs';
 import { poppins } from '../constants';
 import type { RoundDef } from './gauntlet.types';
 import { AnswerBtn, GauntletHeader, QuestionCard, RoundProgressDashes, type AnswerState } from './RoundChrome';
@@ -181,8 +181,9 @@ export function CareerPathCard({ heading, items }: { heading: string; items: Car
 /** One club in the chain: crest when we can resolve one (with the name under
  *  it), a text chip otherwise — never a bare unlabelled logo. */
 export function CareerChip({ item }: { item: CareerItem }) {
-  const club = item.imageSrc ? null : findClubByName(item.matchName ?? item.label);
-  const src = item.imageSrc ?? club?.logo ?? null;
+  const indexed = item.imageSrc ? null : indexedClubCrest(item.matchName ?? item.label);
+  const club = item.imageSrc || indexed ? null : findClubByName(item.matchName ?? item.label);
+  const src = item.imageSrc ?? indexed ?? club?.logo ?? null;
   if (src == null) {
     // No crest in the registry: a monogram shield keeps the chain visually
     // uniform — every step reads as a badge, never a bare text pill.

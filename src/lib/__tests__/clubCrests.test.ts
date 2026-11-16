@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findClubByName, resolveClubCrestByName, slugifyClubName } from '../clubs';
+import { findClubByName, indexedClubCrest, resolveClubCrestByName, slugifyClubName } from '../clubs';
 
 describe('slugifyClubName', () => {
   it('produces TM-style slugs from formal names', () => {
@@ -20,9 +20,11 @@ describe('resolveClubCrestByName', () => {
   it('never falls into the prefix trap: distinct clubs sharing a name prefix stay distinct', () => {
     expect(resolveClubCrestByName('Paris FC')?.logo).toBe('/clubs/paris-fc.webp');
     expect(resolveClubCrestByName('Los Angeles Galaxy')?.label).toBe('LA Galaxy');
-    expect(resolveClubCrestByName('Sparta Rotterdam')).toBeNull();
-    expect(resolveClubCrestByName('Union Saint-Gilloise')).toBeNull();
-    expect(resolveClubCrestByName('Deportivo Toluca')).toBeNull();
+    // Prefix siblings resolve to their own Transfermarkt crest, never to the registry neighbour.
+    for (const name of ['Sparta Rotterdam', 'Union Saint-Gilloise', 'Deportivo Toluca']) {
+      const logo = resolveClubCrestByName(name)?.logo;
+      expect(logo === undefined || /\/tm-\d+\.webp$/.test(logo)).toBe(true);
+    }
   });
 
   it('reaches registry crests through hand-verified aliases', () => {
@@ -32,7 +34,7 @@ describe('resolveClubCrestByName', () => {
   });
 
   it('returns null for clubs whose only registry crest is the corrupt placeholder', () => {
-    expect(resolveClubCrestByName('PFK CSKA Moskva')).toBeNull();
+    expect(resolveClubCrestByName('PFK CSKA Moskva')?.logo).toMatch(/\/tm-\d+\.webp$/);
     expect(resolveClubCrestByName('Bournemouth')?.logo).toBe('/clubs/afc-bournemouth.webp');
     for (const name of ['Bournemouth', 'Crystal Palace', 'Stoke City']) {
       const registryHit = findClubByName(name);
@@ -45,8 +47,18 @@ describe('resolveClubCrestByName', () => {
 
   it('returns null (not a guess) for clubs with no crest art anywhere', () => {
     expect(resolveClubCrestByName('Made Up Release Fixture Club')).toBeNull();
-    expect(resolveClubCrestByName('Atlético Nacional')).toBeNull();
+    expect(resolveClubCrestByName('Atlético Nacional')?.logo ?? '').not.toMatch(/club-logos\/wl-/);
     expect(resolveClubCrestByName(null)).toBeNull();
     expect(resolveClubCrestByName('')).toBeNull();
+  });
+});
+
+describe('indexedClubCrest', () => {
+  it('finds Transfermarkt crests by name and ignores bracketed notes', () => {
+    expect(indexedClubCrest('Degerfors')).toMatch(/\/tm-3641\.webp$/);
+    expect(indexedClubCrest('Montpellier (loan)')).toMatch(/\/tm-969\.webp$/);
+    expect(indexedClubCrest('Real Valladolid')).toMatch(/\/tm-366\.webp$/);
+    expect(indexedClubCrest('Made Up Release Fixture Club')).toBeNull();
+    expect(indexedClubCrest(null)).toBeNull();
   });
 });

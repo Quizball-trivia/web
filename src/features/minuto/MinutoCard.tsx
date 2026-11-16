@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/CountryFlag";
 import { footballGridStorageImageUrl } from "@/lib/football-grid/assets";
+import { indexedClubCrest } from "@/lib/clubs";
 import type { Locale } from "@/lib/i18n/locale";
 import { formatMinute, type MinuteValue, type MinutoGoalCard, type MinutoTeam } from "./minuto.logic";
 import { minutoCopy, nameFor } from "./minuto.copy";
@@ -36,7 +37,7 @@ function TeamBadge({ team, size = "md" }: { team: MinutoTeam; size?: "sm" | "md"
       </span>
     );
   }
-  const src = team.crest ? footballGridStorageImageUrl(team.crest) : null;
+  const src = team.crest ? footballGridStorageImageUrl(team.crest) : indexedClubCrest(team.name.en);
   if (!src || failedSrc === src) {
     const initials = team.name.en.split(/\s+/).filter((w) => !/^(fc|cf|ac|sc|afc|club)$/i.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
     const text = { sm: "text-[10px]", md: "text-base lg:text-xl", fluid: "text-[5cqw]" }[size];

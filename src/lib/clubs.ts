@@ -1,5 +1,6 @@
 import clubsData from '@/data/clubs.json';
 import crestFileList from '@/data/club-crest-files.json';
+import crestIndex from '@/data/club-crest-index.json';
 
 export interface Club {
   id: string;
@@ -233,6 +234,19 @@ export function slugifyClubName(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/** Slugified club name → Transfermarkt club id; the crest lives at imgs/club-logos/tm-<id>.webp. */
+const TM_CREST_INDEX = crestIndex as Record<string, number>;
+
+/**
+ * Crest for a club the registry doesn't carry (career-path stops, auction clubs, Minuto teams), looked up by name.
+ * Notes in brackets ("Montpellier (loan)") are ignored. Returns null when the club isn't indexed.
+ */
+export function indexedClubCrest(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const id = TM_CREST_INDEX[slugifyClubName(name.replace(/\([^)]*\)/g, ' '))];
+  return id ? clubLogoUrl(`tm-${id}.webp`) : null;
+}
+
 export interface ResolvedClubCrest {
   label: string;
   logo: string;
@@ -256,6 +270,8 @@ export function resolveClubCrestByName(name: string | null | undefined): Resolve
   if (CREST_FILES.has(`${fileSlug}.webp`)) {
     return { label: name, logo: `/clubs/${fileSlug}.webp` };
   }
+  const indexed = indexedClubCrest(name);
+  if (indexed) return { label: name, logo: indexed };
   const aliasId = CREST_REGISTRY_ALIASES[slug];
   if (aliasId) {
     const aliased = clubs.find((c) => c.id === aliasId);
