@@ -14,6 +14,7 @@ import { findClubByName } from '@/lib/clubs';
 import { poppins } from '../constants';
 import type { RoundDef } from './gauntlet.types';
 import { AnswerBtn, GauntletHeader, QuestionCard, RoundProgressDashes, type AnswerState } from './RoundChrome';
+import { upperText } from '@/lib/i18n/typography';
 
 export interface RoundHeaderModel {
   gameIndex: number;
@@ -186,7 +187,7 @@ export function CareerChip({ item }: { item: CareerItem }) {
   if (src == null) {
     // No crest in the registry: a monogram shield keeps the chain visually
     // uniform — every step reads as a badge, never a bare text pill.
-    const initials = (item.label ?? '?').trim().slice(0, 2).toUpperCase();
+    const initials = upperText((item.label ?? '?').trim().slice(0, 2));
     return (
       <span className="flex w-16 flex-col items-center gap-1 sm:w-20">
         <span className="flex size-11 items-center justify-center rounded-[10px] border-2 border-white/25 bg-white/10 font-poppins text-sm font-black text-white sm:size-14 sm:text-base">

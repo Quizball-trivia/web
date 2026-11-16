@@ -13,6 +13,7 @@ import {
   type ChainPlayer,
 } from '../data/passChain';
 import { useMiniT } from '../lib/i18n';
+import { upperText } from '@/lib/i18n/typography';
 
 interface Link {
   player: ChainPlayer;
@@ -20,12 +21,13 @@ interface Link {
 }
 
 const initials = (name: string) =>
-  name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  upperText(
+    name
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2),
+  );
 
 export function PassChain({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
