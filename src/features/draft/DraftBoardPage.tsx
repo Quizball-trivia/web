@@ -12,7 +12,7 @@ const todayInBuenosAires = () => new Date(Date.now() - 3 * 3_600_000).toISOStrin
 
 /** The public page's Top 10: today's board of the chosen version. No team opens from here: that needs today's game played. */
 export function DraftBoardPage({ locale }: { locale: string }) {
-  const [variant, setVariant] = useState<Variant>("budget");
+  const variant: Variant = "budget";
   const [rows, setRows] = useState<BoardRow[]>([]);
   const [day, setDay] = useState(todayInBuenosAires);
   // A page left open past midnight shows the new day's board when the visitor comes back to it.
@@ -27,5 +27,5 @@ export function DraftBoardPage({ locale }: { locale: string }) {
     void withRetry(() => draftApi.leaderboard(variant, day, locale)).then((board) => { if (live) setRows(boardRowsOf(board.top).slice(0, 10)); }).catch(() => { if (live) setRows([]); });
     return () => { live = false; };
   }, [variant, locale, day]);
-  return <DraftLeaderboard locale={locale} rows={rows} variant={variant} onVariant={setVariant} compact={false} />;
+  return <DraftLeaderboard locale={locale} rows={rows} compact={false} />;
 }
