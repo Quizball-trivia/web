@@ -235,7 +235,7 @@ export function slugifyClubName(name: string): string {
 }
 
 /** Slugified club name → Transfermarkt club id; the crest lives at imgs/club-logos/tm-<id>.webp. */
-const TM_CREST_INDEX = crestIndex as Record<string, number>;
+const TM_CREST_INDEX = new Map<string, number>(Object.entries(crestIndex as Record<string, number>));
 
 /**
  * Crest for a club the registry doesn't carry (career-path stops, auction clubs, Minuto teams), looked up by name.
@@ -243,7 +243,7 @@ const TM_CREST_INDEX = crestIndex as Record<string, number>;
  */
 export function indexedClubCrest(name: string | null | undefined): string | null {
   const key = name ? crestIndexKey(name) : '';
-  const id = key ? TM_CREST_INDEX[key] : undefined;
+  const id = key ? TM_CREST_INDEX.get(key) : undefined;
   return id ? clubLogoUrl(`tm-${id}.webp`) : null;
 }
 

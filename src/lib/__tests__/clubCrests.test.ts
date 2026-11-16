@@ -60,6 +60,8 @@ describe('indexedClubCrest', () => {
     expect(indexedClubCrest('Made Up Release Fixture Club')).toBeNull();
     expect(indexedClubCrest(null)).toBeNull();
     expect(indexedClubCrest('   ')).toBeNull();
+    expect(indexedClubCrest('constructor')).toBeNull();
+    expect(indexedClubCrest('América')).toBeNull();
     expect(indexedClubCrest('ტორპედო')).toBeNull();
     expect(indexedClubCrest('Brøndby IF')).toBe(indexedClubCrest('Bröndby IF'));
     expect(indexedClubCrest('FC Nordsjælland')).toBe(indexedClubCrest('FC Nordsjaelland'));

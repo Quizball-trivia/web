@@ -5,6 +5,7 @@
 // the live socket flow (WlLiveFlow.tsx). Change a view here and it changes in
 // the playground AND in the real Weekend League.
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -181,9 +182,11 @@ export function CareerPathCard({ heading, items }: { heading: string; items: Car
 /** One club in the chain: crest when we can resolve one (with the name under
  *  it), a text chip otherwise — never a bare unlabelled logo. */
 export function CareerChip({ item }: { item: CareerItem }) {
-  const indexed = item.imageSrc ? null : indexedClubCrest(item.matchName ?? item.label);
-  const club = item.imageSrc || indexed ? null : findClubByName(item.matchName ?? item.label);
-  const src = item.imageSrc ?? indexed ?? club?.logo ?? null;
+  // A crest that fails to load drops to the next source (index → registry → monogram), never retried.
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
+  const name = item.matchName ?? item.label;
+  const candidates = item.imageSrc ? [item.imageSrc] : [indexedClubCrest(name), findClubByName(name)?.logo ?? null];
+  const src = candidates.find((c): c is string => Boolean(c) && !failed.has(c!)) ?? null;
   if (src == null) {
     // No crest in the registry: a monogram shield keeps the chain visually
     // uniform — every step reads as a badge, never a bare text pill.
@@ -210,6 +213,7 @@ export function CareerChip({ item }: { item: CareerItem }) {
         height={96}
         className="size-11 object-contain sm:size-14"
         unoptimized
+        onError={() => setFailed((prev) => new Set(prev).add(src))}
       />
       {item.label && (
         <span className="line-clamp-2 w-full break-words text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
