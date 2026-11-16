@@ -6,8 +6,8 @@
 
 import type { MiniLocale } from '../lib/i18n';
 
-// This bank holds real figures, so it stays out of French: fr reads English.
-type BilingualText = Record<Exclude<MiniLocale, 'fr'> | 'pt' | 'de', string> & { fr?: string };
+// This bank holds real figures, so it stays out of French and Greek: fr and el read English.
+type BilingualText = Record<Exclude<MiniLocale, 'fr' | 'el'> | 'pt' | 'de', string> & { fr?: string; el?: string };
 
 export interface SniperRound {
   id: string;

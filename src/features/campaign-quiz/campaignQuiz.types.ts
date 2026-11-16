@@ -60,7 +60,7 @@ export interface CampaignQuizPage {
 }
 
 /** Public slug per language of a page; older backends do not send it (the hardcoded tables then decide). */
-export type CampaignQuizPublicSlugs = Partial<Record<'en' | 'ka' | 'es' | 'ru' | 'pt' | 'de' | 'tr' | 'fr', string>>;
+export type CampaignQuizPublicSlugs = Partial<Record<'en' | 'ka' | 'es' | 'ru' | 'pt' | 'de' | 'tr' | 'fr' | 'el', string>>;
 
 export interface CampaignQuizHubPage {
   slug: string;
@@ -99,7 +99,7 @@ export interface CampaignQuiz {
    * Which language editions exist (a missing one is served in English). Absent from older backends, as is any language
    * a backend predates. ka, pt, de, tr and fr also need every question of the set in that language.
    */
-  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean; tr?: boolean; fr?: boolean };
+  editions?: { ka: boolean; es: boolean; ru: boolean; pt?: boolean; de?: boolean; tr?: boolean; fr?: boolean; el?: boolean };
   /** The question set version of this round; answers send it back so a refresh mid-round cannot break the round. */
   set_version?: number;
   public_slugs?: CampaignQuizPublicSlugs;

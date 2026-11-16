@@ -638,13 +638,87 @@ const fr: UltimoCopy = {
   board: { title: "Classement du jour", players: (n) => (n < 2 ? `${n} joueur` : `${n} joueurs`), empty: "Personne n’a encore terminé aujourd’hui. Sois le premier !", join: "Connecte-toi pour jouer au défi du jour et apparaître au classement.", joinButton: "Se connecter" },
 };
 
-const COPY: Record<string, UltimoCopy> = { es, en, ka, tr, ru, pt, de, fr };
+const el: UltimoCopy = {
+  brandA: "Βρες τους",
+  brandB: "όλους!",
+  loading: "Φόρτωση…",
+  loadError: "Δεν ήταν δυνατή η φόρτωση των κατηγοριών. Δοκίμασε ξανά.",
+  retry: "Δοκίμασε ξανά",
+  exit: "Έξοδος",
+  soon: "Οι πρώτες κατηγορίες έρχονται σύντομα.",
+  guestYesterday: "Συνδέσου για να παίξεις τη σημερινή πρόκληση και να εμφανιστείς στην κατάταξη. Μέχρι τότε, παίξε τις προηγούμενες ημέρες.",
+  playToday: "Παίξε τη σημερινή πρόκληση",
+  dayOver: "Η ημέρα αυτή τελείωσε. Σε μεταφέρουμε στη σημερινή πρόκληση.",
+  maintenance: "Κάνουμε μια γρήγορη διόρθωση. Δοκίμασε ξανά σύντομα.",
+  actionError: "Κάτι πήγε στραβά. Δοκίμασε ξανά.",
+  connection: "Ασταθής σύνδεση: επαναφέρουμε το παιχνίδι σου…",
+  restarted: "Οι κατηγορίες ενημερώθηκαν: ξεκίνα ξανά.",
+  sessionChanged: "Η συνεδρία σου άλλαξε: ξεκίνα ξανά.",
+  intro: {
+    lines: [
+      "5 κατηγορίες την ημέρα, ίδιες για όλους.",
+      "Πες τις απαντήσεις τη μία μετά την άλλη, χωρίς επανάληψη: το χρονόμετρο ξεκινά από 20 s και μειώνεται με κάθε σωστή απάντηση.",
+      "Αν τελειώσει ο χρόνος ή κάνεις 3 λάθη στη σειρά, τελειώνει η κατηγορία.",
+      "1 πόντος ανά απάντηση και +5 αν συμπληρώσεις τη λίστα.",
+    ],
+    start: "Παίξε",
+    resume: (n) => `Συνέχεια · κατηγορία ${n}`,
+    finished: "Δες αποτέλεσμα",
+    past: "Προηγούμενες ημέρες",
+    newBoard: "Νέες κατηγορίες κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής.",
+  },
+  category: (n, total) => `Κατηγορία ${n} από ${total}`,
+  perTurn: (s) => `${s} s ανά σειρά`,
+  left: (n, total) => `Απομένουν ${n} από ${total}`,
+  begin: "Ξεκίνα κατηγορία",
+  startsIn: "Ξεκινά σε…",
+  go: "Πάμε!",
+  turnFirst: "Ξεκίνα!",
+  turnNext: "Ονόμασε άλλη μία",
+  errors: "λάθη",
+  placeholder: "Γράψε μια απάντηση",
+  say: "Απάντησε",
+  you: "Εσύ",
+  pts: "πόν.",
+  feedback: {
+    wrong: (t, n, max) => `✗ «${t}» δεν είναι στη λίστα (${n}/${max})`,
+    repeat: (t, n, max) => `↺ Έχεις ήδη πει «${t}» (${n}/${max})`,
+    ambiguous: (t) => `Ποιο «${t}»; Υπάρχουν περισσότερα από ένα: γράψε ολόκληρο το όνομα`,
+    late: "Τέλος χρόνου",
+  },
+  catEnd: {
+    time: "Τέλος χρόνου",
+    misses: (max) => `${max} λάθη στη σειρά`,
+    complete: "Δεν έμεινε τίποτα να ονομάσεις",
+    titleComplete: "Η λίστα ολοκληρώθηκε!",
+    titleOut: "Εκτός παιχνιδιού",
+    named: (n, total, pts) => `Ονόμασες ${n} από ${total} · +${pts} πόν.`,
+    missing: (n) => `Σου ξέφυγαν ${n}`,
+    revealLater: "Όσα σου ξέφυγαν θα αποκαλυφθούν όταν τελειώσει η ημέρα.",
+    next: "Επόμενη κατηγορία",
+    result: "Δες αποτέλεσμα",
+  },
+  end: {
+    title: "Καθημερινή πρόκληση",
+    points: (n) => (n === 1 ? "πόντος" : "πόντοι"),
+    answers: (n) => (n === 1 ? "1 απάντηση" : `${n} απαντήσεις`),
+    rank: (n) => `Σήμερα: #${n}`,
+    share: "Κοινοποίηση",
+    copied: "Αντιγράφηκε!",
+    leaderboard: "Σημερινή κατάταξη",
+    noPlayers: "Κανείς δεν έχει ολοκληρώσει ακόμα σήμερα.",
+  },
+  archive: { title: "Προηγούμενες ημέρες", back: "Πίσω", day: (n) => `Ημέρα #${n}`, today: "Σήμερα" },
+  board: { title: "Κατάταξη ημέρας", players: (n) => (n === 1 ? "1 παίκτης" : `${n} παίκτες`), empty: "Κανείς δεν έχει ολοκληρώσει ακόμα σήμερα. Γίνε ο πρώτος!", join: "Συνδέσου για να παίξεις τη σημερινή πρόκληση και να εμφανιστείς στην κατάταξη.", joinButton: "Σύνδεση" },
+};
+
+const COPY: Record<string, UltimoCopy> = { es, en, ka, tr, ru, pt, de, fr, el };
 
 export const ultimoCopy = (locale: Locale | string): UltimoCopy => COPY[locale] ?? en;
 
-/** Russian, German, French, and Portuguese content is optional: missing or blank ru, de, fr, and pt text falls back to English; other locales fall back to Spanish. */
+/** Greek, Russian, German, French, and Portuguese content is optional: missing or blank el, ru, de, fr, and pt text falls back to English; other locales fall back to Spanish. */
 export const textFor = (text: LocalizedText | null | undefined, locale: Locale | string): string => {
   if (!text) return "";
   const value = (text as Record<string, string | undefined>)[locale];
-  return value?.trim() ? value : locale === "ru" ? text.en : locale === "pt" ? text.en : locale === "de" ? text.en : locale === "fr" ? text.en : text.es;
+  return value?.trim() ? value : locale === "ru" ? text.en : locale === "pt" ? text.en : locale === "de" ? text.en : locale === "fr" ? text.en : locale === "el" ? text.en : text.es;
 };

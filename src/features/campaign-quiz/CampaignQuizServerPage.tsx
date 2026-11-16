@@ -19,6 +19,7 @@ const SCHEMA_LANGUAGE: Record<CampaignQuizLocale, string> = {
   de: 'de-DE',
   tr: 'tr-TR',
   fr: 'fr-FR',
+  el: 'el-GR',
 };
 
 const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
@@ -30,6 +31,7 @@ const BREADCRUMB: Record<CampaignQuizLocale, { home: string; hub: string }> = {
   de: { home: 'Startseite', hub: 'Fußball-Quiz' },
   tr: { home: 'Ana sayfa', hub: 'Futbol Bilgi Yarışması' },
   fr: { home: 'Accueil', hub: 'Quiz foot' },
+  el: { home: 'Αρχική', hub: 'Κουίζ ποδοσφαίρου' },
 };
 
 const loadQuiz = cache(async (slug: string, preview: string | undefined, locale: CampaignQuizLocale) => {
@@ -63,7 +65,7 @@ export const hasCampaignEdition = cache(async (slug: string, quiz: Pick<Campaign
  * at any time, so a closed page sends the visitor to the English quiz (temporarily) instead of a 404. The destination
  * decides, which also covers cached pages and client bundles that cannot know what is open.
  */
-const ENGLISH_WHEN_CLOSED: readonly CampaignQuizLocale[] = ['ka', 'tr', 'fr'];
+const ENGLISH_WHEN_CLOSED: readonly CampaignQuizLocale[] = ['ka', 'tr', 'fr', 'el'];
 
 function closedEdition(sourceSlug: string, locale: CampaignQuizLocale): never {
   if (ENGLISH_WHEN_CLOSED.includes(locale)) redirect(campaignQuizPath(sourceSlug, 'en'));

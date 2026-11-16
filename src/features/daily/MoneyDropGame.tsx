@@ -25,6 +25,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { trackLifelineUsed } from "@/lib/analytics/game-events";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { labelColon } from "@/lib/i18n/typography";
+import { upperText } from "@/lib/i18n/typography";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -523,7 +524,7 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
               <div className="flex items-center justify-center gap-2">
                 <span className={cn("px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
-                  {difficultyLabel(currentQuestion.difficulty).toUpperCase()}
+                  {upperText(difficultyLabel(currentQuestion.difficulty))}
                 </span>
                 <span className="px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold bg-brand-cyan/15 text-brand-cyan">
                   {currentQuestion.category}

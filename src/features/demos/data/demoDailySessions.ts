@@ -18,7 +18,7 @@ import { DEMO_QUESTIONS } from "./demoQuestions";
 
 type L = Locale;
 /** The labels here sit on real demo content, which stays out of French: fr reads English. */
-type LabelLocale = Exclude<L, "fr">;
+type LabelLocale = Exclude<L, "fr" | "el">;
 
 const EXTRA = {
   "Money Drop": {
@@ -332,7 +332,7 @@ export const LEAGUE_LABELS: Record<string, Record<LabelLocale, string>> = {
   "Chinese Super League": { en: "Chinese Super League", ka: "ჩინეთის სუპერლიგა", es: "Superliga china", tr: "Çin Süper Ligi", ru: "Китайская Суперлига", pt: "Superliga Chinesa", de: "Chinesische Super League" },
   "Japanese J. League Division 1": { en: "Japanese J. League Division 1", ka: "იაპონიის J-ლიგა", es: "J. League japonesa", tr: "Japonya J. Ligi", ru: "Первый дивизион J-лиги Японии", pt: "J. League Japonesa", de: "Japanische J. League Division 1" },
 };
-const label = (table: Record<string, Record<LabelLocale, string>>, locale: L, value: string) => (locale === "fr" ? value : table[value]?.[locale] ?? value);
+const label = (table: Record<string, Record<LabelLocale, string>>, locale: L, value: string) => (locale === "fr" || locale === "el" ? value : table[value]?.[locale] ?? value);
 type ExtraKey = keyof typeof EXTRA;
 /** Session names and one-line rules only; the questions and answers in this file have no French. */
 const FR_LABELS: Partial<Record<ExtraKey, string>> = {

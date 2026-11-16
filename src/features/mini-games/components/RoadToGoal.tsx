@@ -371,6 +371,42 @@ const COPY = {
     target: 'cible',
     finish: 'But',
   },
+  el: {
+    title: 'Δρόμος για το γκολ',
+    subtitle: 'Πέρασε 10 αμυντικούς και τον τερματοφύλακα. Μία ποδοσφαιρική ερώτηση σε κάθε ζώνη.',
+    balance: 'Υπόλοιπο',
+    zone: 'Ζώνη',
+    stake: 'Πόντοι',
+    introEyebrow: 'Η πρόκληση των έντεκα ζωνών',
+    introTitle: 'Ξέρεις. Ντριμπλάρεις. Κρατάς.',
+    introBody: 'Κάθε απάντηση οδηγεί σε δοκιμασία επιβίωσης. Οι σωστές απαντήσεις αυξάνουν τις πιθανότητές σου. Μετά από κάθε ζώνη που περνάς, εξασφάλισε τους πόντους ή αντιμετώπισε τον επόμενο αμυντικό.',
+    kickOff: 'Ξεκίνα με {stake} πόντους',
+    noFunds: 'Δεν έχεις αρκετούς πόντους για να παίξεις',
+    nextReturn: 'Επόμενη ανταμοιβή',
+    currentReturn: 'Τρέχουσα ανταμοιβή',
+    question: 'Ερώτηση',
+    answerFast: 'Απάντησε πριν σε προλάβει ο αμυντικός',
+    clean: 'Πέρασες τον αμυντικό',
+    cleanBody: 'Πέρασες τη ζώνη {zone}. Ο επόμενος αμυντικός πλησιάζει ήδη.',
+    continue: 'Επίθεση στη ζώνη {zone}',
+    cashOut: 'Κράτα {amount}',
+    saved: 'Απόκρουση!',
+    savedBody: 'Ο τερματοφύλακας απέκρουσε το τελευταίο σου σουτ. Έχασες τους πόντους σου.',
+    tackled: 'Σε έκοψε!',
+    tackledBody: 'Ο αμυντικός σταμάτησε την πορεία σου στη ζώνη {zone}. Έχασες τους πόντους σου.',
+    correctWas: 'Σωστή απάντηση: {answer}',
+    newRun: 'Νέος γύρος',
+    cashed: 'Πόντοι εξασφαλισμένοι',
+    cashedBody: '{zones} ζώνες ολοκληρώθηκαν με πολλαπλασιαστή {mult}×.',
+    finalTitle: 'ΓΚΟΛ!',
+    finalBody: 'Πέρασες δέκα αμυντικούς και τον τερματοφύλακα. Τέλειος γύρος με 4,00×.',
+    won: 'Εξασφάλισες {amount}',
+    startAgain: 'Παίξε ξανά',
+    liveRoute: 'Ζωντανή διαδρομή',
+    safe: 'περασμένη',
+    target: 'πρόκληση',
+    finish: 'ΓΚΟΛ',
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -397,7 +433,7 @@ function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): T
 }
 
 function points(value: number, locale: string) {
-  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'pt' ? 'pt-BR' : undefined, {
+  return value.toLocaleString(locale === 'de' ? 'de-DE' : locale === 'fr' ? 'fr-FR' : locale === 'el' ? 'el-GR' : locale === 'pt' ? 'pt-BR' : undefined, {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });
