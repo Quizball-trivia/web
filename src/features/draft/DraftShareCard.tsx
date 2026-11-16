@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { GreenButton, QuietButton, poppins } from "@/features/wordgames/ui";
 import type { DraftText } from "./draft.copy";
 import { effective, type Pick, type Slot } from "./draft.rules";
+import { upperText } from "@/lib/i18n/typography";
 
 const W = 1080, H = 1350;
 const FONT = "Poppins, sans-serif";
@@ -51,7 +52,7 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardData,
   ctx.fillText(`${d.brand[0]} `.toUpperCase(), 60, 84);
   const left = ctx.measureText(`${d.brand[0]} `.toUpperCase()).width;
   ctx.fillStyle = lime;
-  ctx.fillText(d.brand[1].toUpperCase(), 60 + left, 84);
+  ctx.fillText(upperText(d.brand[1]), 60 + left, 84);
   ctx.textAlign = "right";
   ctx.font = `700 30px ${FONT}`;
   ctx.fillStyle = "rgba(255,255,255,0.7)";
@@ -66,7 +67,7 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardData,
   ctx.textAlign = "center";
   ctx.fillStyle = onPanel;
   ctx.font = `700 30px ${FONT}`;
-  ctx.fillText(d.league.toUpperCase(), W / 2, 178);
+  ctx.fillText(upperText(d.league), W / 2, 178);
   fitText(ctx, d.record, 900, 130, W - 200);
   ctx.fillText(d.record, W / 2, 300);
   fitText(ctx, `${d.finish} · ${d.position}`, 700, 38, W - 200);

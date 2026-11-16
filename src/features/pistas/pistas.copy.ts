@@ -650,10 +650,91 @@ const fr: Copy = {
   },
 };
 
-const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt, de, fr };
+const el: Copy = {
+  brandA: "Βρες τον",
+  brandB: "ποδοσφαιριστή",
+  player: (n, total) => `Παίκτης ${n} / ${total}`,
+  pointsInPlay: "Πόντοι στο παιχνίδι",
+  score: "Οι πόντοι σου",
+  revealClue: "Δες το στοιχείο",
+  clueLocked: "Κλειδωμένο στοιχείο",
+  inputLabel: "Γράψε το επώνυμο του παίκτη",
+  inputPlaceholder: "Επώνυμο…",
+  inputHint: "Επώνυμο ή παρατσούκλι",
+  guess: "Μάντεψε",
+  giveUp: "Εγκατάλειψη",
+  wrong: "Λάθος",
+  lastChance: (clues) => (clues > 0 ? `Τελευταία ευκαιρία: μπορείς να δεις ${clues === 1 ? "1 ακόμη στοιχείο" : `${clues} ακόμη στοιχεία`} και έχεις 1 προσπάθεια.` : "Τελευταία ευκαιρία: έχεις 1 προσπάθεια."),
+  solved: (n) => `Σωστά! +${n}`,
+  missed: "Δεν το βρήκες",
+  was: (name) => `Ήταν ${name}`,
+  revealLater: "Η σημερινή απάντηση θα εμφανιστεί αύριο στην ενότητα «Προηγούμενες ημέρες».",
+  next: "Επόμενος παίκτης",
+  finish: "Δες το αποτέλεσμα",
+  kinds: { confed: "Συνομοσπονδία", position: "Θέση", foot: "Δυνατό πόδι", decade: "Δεκαετία", fact: "Στοιχείο" },
+  positions: { GK: "ΤΦ", DF: "ΑΜ", MF: "ΜΕΣ", FW: "ΕΠ" },
+  feet: { left: "Αριστερό", right: "Δεξί" },
+  intro: {
+    lines: [
+      "10 παίκτες τη μέρα, με 10 στοιχεία ο καθένας, από το πιο δύσκολο ως το πιο εύκολο.",
+      "Μάντεψε με το πρώτο στοιχείο και κέρδισε 10 πόντους. Κάθε στοιχείο που ζητάς αφαιρεί 1 πόντο.",
+      "Γράψε το επώνυμο. Αν κάνεις λάθος, έχεις ακόμη 1 προσπάθεια και έως 3 επιπλέον στοιχεία.",
+    ],
+    start: "Παίξε",
+    resume: (n) => `Συνέχεια · παίκτης ${n}`,
+    past: "Προηγούμενες ημέρες",
+    newBoard: "10 νέοι παίκτες κάθε μέρα στις 00:00 (ώρα Αργεντινής).",
+    soon: "Τα πρώτα στοιχεία έρχονται σύντομα.",
+  },
+  end: {
+    score: "Πόντοι",
+    of: (max) => `από ${max}`,
+    solved: "Βρέθηκαν",
+    avgClues: "Στοιχεία ανά σωστή απάντηση",
+    streak: "Σερί",
+    days: (n) => (n === 1 ? "1 ημέρα" : `${n} ημέρες`),
+    comeBack: "Αύριο θα έχει 10 νέους παίκτες.",
+    share: "Κοινοποίηση",
+    whatsapp: "WhatsApp",
+    copy: "Αντιγραφή",
+    copied: "Αντιγράφηκε!",
+    past: "Παίξε προηγούμενες ημέρες",
+    more: "Περισσότερα παιχνίδια",
+    answers: "Απαντήσεις",
+    answersLater: "Οι σημερινές απαντήσεις θα εμφανιστούν αύριο.",
+    clues: (n) => (n === 1 ? "1 στοιχείο" : `${n} στοιχεία`),
+  },
+  archive: { title: "Προηγούμενες ημέρες", played: (s) => `${s.toLocaleString("el-GR")} πόντ.`, inProgress: "Σε εξέλιξη", notPlayed: "Δεν παίχτηκε", today: "Σήμερα", back: "Πίσω" },
+  shareText: (n, score, grid, url) => `Βρες τον ποδοσφαιριστή #${n} — ${score}/100\n${grid}\nΜπορείς να με νικήσεις; ${url}`,
+  report: "Αναφορά σφάλματος σε στοιχείο",
+  reported: "Ευχαριστούμε! Θα το ελέγξουμε.",
+  exit: "Έξοδος",
+  loading: "Φόρτωση στοιχείων…",
+  loadError: "Δεν φορτώθηκαν τα στοιχεία. Δοκίμασε ξανά σε λίγο.",
+  retry: "Δοκίμασε ξανά",
+  actionError: "Η σύνδεση διακόπηκε. Δοκίμασε ξανά.",
+  restarted: "Το παιχνίδι σου άλλαξε (σε άλλη συσκευή ή μετά από διόρθωση). Το φορτώσαμε ξανά.",
+  dayOver: "Η μέρα τελείωσε στην Αργεντινή: οι νέοι παίκτες είναι διαθέσιμοι.",
+  guestYesterday: "Παίζεις μια προηγούμενη ημέρα. Δημιούργησε λογαριασμό για να παίξεις τη σημερινή και να μπεις στην κατάταξη.",
+  playToday: "Παίξε τη σημερινή",
+  maintenance: "Το παιχνίδι συντηρείται. Επέστρεψε σύντομα.",
+  sessionChanged: "Η συνεδρία σου άλλαξε. Ξεκίνα ξανά.",
+  board: {
+    title: "Σημερινή κατάταξη",
+    players: (n) => (n === 1 ? "1 παίκτης ολοκλήρωσε" : `${n} παίκτες ολοκλήρωσαν`),
+    empty: "Κανείς δεν ολοκλήρωσε ακόμη τα σημερινά στοιχεία. Γίνε ο πρώτος!",
+    rank: (r) => `#${r} σήμερα`,
+    join: "Δημιούργησε λογαριασμό για να μπεις στη σημερινή κατάταξη",
+    joinButton: "Μπες στην κατάταξη",
+    unranked: "Οι προηγούμενες ημέρες δεν μετρούν στην κατάταξη.",
+    guestPlay: "Παίζεις ως επισκέπτης: οι πόντοι σου δεν μετρούν στην κατάταξη.",
+  },
+};
+
+const COPY: Record<string, Copy> = { es, en, ka, tr, ru, pt, de, fr, el };
 
 export const pistasCopy = (locale: string): Copy => COPY[locale] ?? en;
 
-/** Clue text in the page locale; ka/tr/ru/pt/de/fr fall back to English, then Spanish. */
+/** Clue text in the page locale; ka/tr/ru/pt/de/fr/el fall back to English, then Spanish. */
 export const textFor = (text: LocalizedText, locale: string): string =>
-  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : locale === "de" ? (text as LocalizedText & { de?: string }).de : locale === "fr" ? (text as LocalizedText & { fr?: string }).fr : text.en) || text.en || text.es;
+  (locale === "ka" ? text.ka : locale === "tr" ? text.tr : locale === "ru" ? text.ru : locale === "es" ? text.es : locale === "pt" ? text.pt : locale === "de" ? (text as LocalizedText & { de?: string }).de : locale === "fr" ? (text as LocalizedText & { fr?: string }).fr : locale === "el" ? (text as LocalizedText & { el?: string }).el : text.en) || text.en || text.es;

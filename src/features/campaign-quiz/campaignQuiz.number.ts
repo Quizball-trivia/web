@@ -7,6 +7,7 @@ const NUMBER_LOCALE: Record<Exclude<Locale, 'ka'>, string> = {
   pt: 'pt-BR',
   de: 'de-DE',
   fr: 'fr-FR',
+  el: 'el-GR',
   tr: 'tr-TR',
 };
 

@@ -49,6 +49,17 @@ export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: Campa
         rating: 'note',
         ratings: 'notes',
       }
+    : locale === 'el'
+    ? {
+        saved: 'Ευχαριστούμε — η αξιολόγησή σου αποθηκεύτηκε.',
+        failed: 'Δεν μπορέσαμε να αποθηκεύσουμε την αξιολόγησή σου. Δοκίμασε ξανά.',
+        heading: 'Πώς θα αξιολογούσες αυτό το κουίζ;',
+        first: 'Γίνε ο πρώτος που θα το αξιολογήσει.',
+        rate: 'Αξιολόγησε',
+        outOf: 'στα 5',
+        rating: 'αξιολόγηση',
+        ratings: 'αξιολογήσεις',
+      }
     : locale === 'tr'
     ? {
         saved: 'Teşekkürler, değerlendirmen kaydedildi.',

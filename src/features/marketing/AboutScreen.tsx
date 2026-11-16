@@ -24,6 +24,7 @@ const BACK_LABEL: Record<Locale, string> = {
   pt: "Voltar",
   de: "Zurück",
   fr: "Retour",
+  el: "Πίσω",
 };
 
 const HOME_LABEL: Record<Locale, string> = {
@@ -35,6 +36,7 @@ const HOME_LABEL: Record<Locale, string> = {
   pt: "Início do QuizBall",
   de: "QuizBall-Startseite",
   fr: "Accueil QuizBall",
+  el: "Αρχική QuizBall",
 };
 
 const MODE_COLORS = [

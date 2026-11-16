@@ -1,5 +1,5 @@
 /** A new language is added here; the tables below then refuse to compile until they carry it. */
-export const CAMPAIGN_QUIZ_LOCALES = ['en', 'ka', 'es', 'ru', 'pt', 'de', 'tr', 'fr'] as const;
+export const CAMPAIGN_QUIZ_LOCALES = ['en', 'ka', 'es', 'ru', 'pt', 'de', 'tr', 'fr', 'el'] as const;
 export type CampaignQuizLocale = (typeof CAMPAIGN_QUIZ_LOCALES)[number];
 
 const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
@@ -224,6 +224,7 @@ export const CAMPAIGN_HUB_FOLDER: Record<CampaignQuizLocale, string> = {
   de: 'fussball-quiz',
   tr: 'futbol-bilgi-yarismasi',
   fr: 'quiz-foot',
+  el: 'kouiz-podosfairou',
 };
 
 /** hreflang per edition: the internal locale is `pt`, the Brazilian page is announced as pt-BR (HTML_LANG). */
@@ -236,6 +237,7 @@ export const CAMPAIGN_HREFLANG: Record<CampaignQuizLocale, string> = {
   de: 'de',
   tr: 'tr',
   fr: 'fr',
+  el: 'el',
 };
 
 export const CAMPAIGN_OG_LOCALE: Record<CampaignQuizLocale, string> = {
@@ -247,6 +249,7 @@ export const CAMPAIGN_OG_LOCALE: Record<CampaignQuizLocale, string> = {
   de: 'de_DE',
   tr: 'tr_TR',
   fr: 'fr_FR',
+  el: 'el_GR',
 };
 
 export function campaignHubPath(locale: CampaignQuizLocale): string {

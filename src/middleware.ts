@@ -61,6 +61,7 @@ const QUIZ_GONE: Record<CampaignQuizLocale, { title: string; message: string }> 
   es: { title: 'Quiz no disponible', message: 'Este quiz ya no está disponible.' },
   tr: { title: 'Test artık kullanılamıyor', message: 'Bu test artık kullanılamıyor.' },
   fr: { title: 'Quiz indisponible', message: 'Ce quiz n’est plus disponible.' },
+  el: { title: 'Το κουίζ δεν είναι πλέον διαθέσιμο', message: 'Αυτό το κουίζ δεν είναι πλέον διαθέσιμο.' },
 };
 
 // Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
@@ -274,9 +275,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // A games folder belongs to its own locales (/en|ka/football-games,
-  // /es/juegos-de-futbol, /tr/futbol-oyunlari, /pt/jogos-de-futebol, /de/fussballspiele, /fr/jeux-de-foot). Other combinations answer 404
+  // /es/juegos-de-futbol, /tr/futbol-oyunlari, /pt/jogos-de-futebol, /de/fussballspiele, /fr/jeux-de-foot, /el/podosfairika-paixnidia). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru|pt|de|fr)\/([a-z-]+)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr|ru|pt|de|fr|el)\/([a-z-]+)(?:\/|$)/);
   if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
@@ -284,7 +285,7 @@ export async function middleware(req: NextRequest) {
   // Slug changes and retired CMS quiz pages are resolved before Next renders.
   // This is the only reliable way to return a real 410 (rather than a themed
   // 404 page) while keeping redirects locale-aware.
-  const quizPath = pathname.match(/^\/(en|ka|es|ru|pt|de|tr|fr)\/([a-z-]+)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  const quizPath = pathname.match(/^\/(en|ka|es|ru|pt|de|tr|fr|el)\/([a-z-]+)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
   const quizLocale = quizPath && CAMPAIGN_HUB_FOLDER[quizPath[1] as CampaignQuizLocale] === quizPath[2]
     ? quizPath[1] as CampaignQuizLocale
     : undefined;

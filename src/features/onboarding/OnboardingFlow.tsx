@@ -34,6 +34,7 @@ const LANGUAGES = [
   { code: 'pt', name: 'PORTUGUESE', nativeName: 'Português (Brasil)', countryCode: 'br' },
   { code: 'de', name: 'GERMAN', nativeName: 'Deutsch', countryCode: 'de' },
   { code: 'fr', name: 'FRENCH', nativeName: 'Français', countryCode: 'fr' },
+  { code: 'el', name: 'GREEK', nativeName: 'Ελληνικά', countryCode: 'gr' },
   { code: 'tr', name: 'TURKISH', nativeName: 'Türkçe', countryCode: 'tr' },
 ] as const satisfies readonly { code: Locale; name: string; nativeName: string; countryCode: string }[];
 

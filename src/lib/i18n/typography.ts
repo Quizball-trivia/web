@@ -4,3 +4,5 @@ export const percentText = (value: number | string, locale: string): string => `
 /** A fixed-decimals number in the reader's own format ("19.5", "19,5"). */
 export const decimalText = (value: number, decimals: number, locale: string): string =>
   new Intl.NumberFormat(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value);
+/** Upper-case for display: Greek capitals drop their accents (ΕΥΚΟΛΟ, not ΕΎΚΟΛΟ), which plain toUpperCase keeps. */
+export const upperText = (text: string): string => (/[Ͱ-Ͽἀ-῿]/.test(text) ? text.toLocaleUpperCase("el") : text.toUpperCase());

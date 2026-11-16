@@ -183,6 +183,7 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
   if (rawLocale === 'de') permanentRedirect('/de/fussball-quiz');
   if (rawLocale === 'tr') permanentRedirect('/tr/futbol-bilgi-yarismasi');
   if (rawLocale === 'fr') permanentRedirect('/fr/quiz-foot');
+  if (rawLocale === 'el') permanentRedirect('/el/kouiz-podosfairou');
   if (rawLocale !== 'en' && rawLocale !== 'ka') notFound();
   const locale = rawLocale as 'en' | 'ka';
   const copy = HUB_COPY[locale];

@@ -125,6 +125,7 @@ const ADDRESSES_THE_READER: Record<string, RegExp[]> = {
   ru: [word('ты|твой|твоя|твоё|твои|тебя|тебе|соперник|соперника|сопернику'), /\p{L}(ешь|(?<!л)ишь)(?!\p{L})/u],
   tr: [word('sen|senin|sana|seni|ikiniz|rakip|rakibe|rakibin|hakkın|seçimin'), /\p{L}(dın|din|dun|dün)(?!\p{L})/u],
   ka: [word('შენ|შენი|შენს|მათი|მათ|მოწინააღმდეგე|მოიგე|დაკარგე|ითამაშე|ითამაშეთ|უპასუხეთ|დაგრჩა|გაგიმართლა|აღმოჩნდი')],
+  el: [word('εσύ|εσένα|σου|σένα|αντίπαλος|αντίπαλο|αντιπάλου|αντίπαλέ')],
 };
 
 describe('text shown to both seats', () => {

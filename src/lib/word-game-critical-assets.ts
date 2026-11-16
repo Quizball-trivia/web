@@ -30,6 +30,10 @@ const WORD_GAME_PATHS = new Set([
   "/pt/jogos-de-futebol/conexoes-do-futebol",
   "/de/fussballspiele/fussball-connections",
   "/fr/jeux-de-foot/connections-foot",
+  "/el/podosfairika-paixnidia/connections-podosfairou",
+  "/el/podosfairika-paixnidia/epaiksan-kai-stis-dyo-omades",
+  "/el/podosfairika-paixnidia/koursa-ethnikon",
+  "/el/podosfairika-paixnidia/poio-einai-to-psema",
   "/en/football-games/football-darts-501",
   "/es/juegos-de-futbol/dardos-futboleros-501",
   "/ka/football-games/football-darts-501",
@@ -38,6 +42,7 @@ const WORD_GAME_PATHS = new Set([
   "/pt/jogos-de-futebol/dardos-com-jogadores-de-futebol",
   "/de/fussballspiele/fussball-darts-501",
   "/fr/jeux-de-foot/flechettes-foot-501",
+  "/el/podosfairika-paixnidia/podosfairika-velakia-501",
   "/en/football-games/football-draft-game",
   "/ka/football-games/football-draft-game",
   "/es/juegos-de-futbol/draft-de-futbol",
@@ -46,6 +51,7 @@ const WORD_GAME_PATHS = new Set([
   "/pt/jogos-de-futebol/draft-de-futebol",
   "/de/fussballspiele/fussball-draft-spiel",
   "/fr/jeux-de-foot/draft-de-foot",
+  "/el/podosfairika-paixnidia/podosfairiko-draft",
 ]);
 
 export function isWordGameLandingPath(pathname: string): boolean {

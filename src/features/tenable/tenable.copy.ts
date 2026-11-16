@@ -177,6 +177,28 @@ const copy = {
     listOf: (n: number, of: number) => `Liste ${n}/${of}`, listDone: "Liste terminée !", listOut: "Tout le monde a été éliminé", nextList: "Prochaine liste en approche…",
     pointsStat: "Points", foundStat: "Trouvées", slotsDetail: (n: number) => `Réponses trouvées : ${n}`, lifeLost: (name: string) => `${name} a perdu une vie`, youLostLife: "Tu as perdu une vie", outOfList: "Éliminé",
   },
+  el: {
+    brand: ["Βρες το", "Top 10"] as const,
+    title: "Βρες το Top 10", tag: "Ένα Top 10 τη μέρα",
+    lines: [
+      "Κάθε μέρα, μία κρυφή λίστα Top 10. Ονόμασε τους παίκτες της.",
+      "Κάθε σωστή απάντηση ανεβαίνει στη θέση της στον πύργο. Η επανάληψη απάντησης που βρίσκεται ήδη στον πύργο δεν κοστίζει τίποτα.",
+      "Με 3 λάθη κερδίζει ο πύργος. Μπορείς να βρεις και τους δέκα;",
+    ],
+    roomLines: ["Με τη σειρά, πείτε απαντήσεις από την ίδια κρυφή λίστα.", "Κάθε θέση αξίζει όσους πόντους γράφει: #10 = 10 πόντοι.", "Λάθος απάντηση ή λήξη χρόνου = χάνεται μία ζωή. 3 ζωές ανά λίστα, 3 λίστες."],
+    hidden: "Κρυφή λίστα", asOf: (d: string) => `Στις ${d}`, found: (n: number) => `${n}/10`,
+    placeholder: "Ποιος είναι στη λίστα;", say: "Αποστολή", giveUp: "Εγκατάλειψη",
+    ok: (name: string, rank: number) => `#${rank} ${name}`, wrong: (t: string) => `${t} δεν είναι στη λίστα`, repeat: (t: string) => `${t} βρίσκεται ήδη στον πύργο`,
+    unknown: (t: string) => `Δεν αναγνωρίζουμε το "${t}": έλεγξε την ορθογραφία`, repeatWrong: (t: string) => `${t}: το δοκίμασες ήδη, χωρίς απώλεια ζωής`, opensTomorrow: "Η υπόλοιπη λίστα θα ανοίξει αύριο, μόλις κλείσει η σημερινή κατάταξη.", corrected: "Αυτή η λίστα διορθώθηκε αφού έπαιξες, γι’ αυτό οι απαντήσεις της δεν εμφανίζονται εδώ.", ambiguous: (t: string) => `Το "${t}" αντιστοιχεί σε περισσότερους από έναν: γράψε ολόκληρο το όνομα`, time: "Ο χρόνος τελείωσε",
+    missesTitle: "Εκτός λίστας", livesLeft: (n: number) => `Ζωές που απομένουν: ${n}`,
+    endComplete: "Βρες το Top 10! Βρήκες και τους δέκα!", endLives: "Ο πύργος σε νίκησε", endGaveUp: "Εγκατέλειψες",
+    score: (n: number) => `${n}/10`, missedTitle: "Δεν βρήκες",
+    fullListTitle: "Ολόκληρη η λίστα", legendFound: "Βρέθηκαν", legendMissed: "Δεν βρέθηκαν", practiceCta: "Εξάσκηση στον πύργο", practiceHint: "Κάνε εξάσκηση με μια ευκολότερη λίστα από το αρχείο. Χωρίς κατάταξη, χωρίς πίεση.",
+    shareText: (n: number, found: number, tower: string) => `Βρες το Top 10 #${n}: ${found}/10\n${tower}`,
+    yourTurn: "Η σειρά σου", seatTurn: (name: string) => `Σειρά του ${name}`, waiting: "Περίμενε τη σειρά σου", sending: "Έλεγχος…", youOut: "Δεν έχεις άλλες ζωές σε αυτή τη λίστα",
+    listOf: (n: number, of: number) => `Λίστα ${n}/${of}`, listDone: "Η λίστα ολοκληρώθηκε!", listOut: "Όλοι αποκλείστηκαν", nextList: "Έρχεται η επόμενη λίστα…",
+    pointsStat: "Πόντοι", foundStat: "Βρέθηκαν", slotsDetail: (n: number) => `Βρέθηκαν: ${n}`, lifeLost: (name: string) => `${name}: έχασε μία ζωή`, youLostLife: "Έχασες μία ζωή", outOfList: "Εκτός λίστας",
+  },
 } as const;
 
 export const tenableCopy = (locale: string) => copy[asWordLocale(locale)];
