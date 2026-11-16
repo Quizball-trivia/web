@@ -21,10 +21,9 @@ describe('resolveClubCrestByName', () => {
     expect(resolveClubCrestByName('Paris FC')?.logo).toBe('/clubs/paris-fc.webp');
     expect(resolveClubCrestByName('Los Angeles Galaxy')?.label).toBe('LA Galaxy');
     // Prefix siblings resolve to their own Transfermarkt crest, never to the registry neighbour.
-    for (const name of ['Sparta Rotterdam', 'Union Saint-Gilloise', 'Deportivo Toluca']) {
-      const logo = resolveClubCrestByName(name)?.logo;
-      expect(logo === undefined || /\/tm-\d+\.webp$/.test(logo)).toBe(true);
-    }
+    expect(resolveClubCrestByName('Sparta Rotterdam')?.logo).toMatch(/\/tm-468\.webp$/);
+    expect(resolveClubCrestByName('Union Saint-Gilloise')?.logo).toMatch(/\/tm-3948\.webp$/);
+    expect(resolveClubCrestByName('Deportivo Toluca')?.logo).toMatch(/\/tm-1804\.webp$/);
   });
 
   it('reaches registry crests through hand-verified aliases', () => {
@@ -60,5 +59,10 @@ describe('indexedClubCrest', () => {
     expect(indexedClubCrest('Real Valladolid')).toMatch(/\/tm-366\.webp$/);
     expect(indexedClubCrest('Made Up Release Fixture Club')).toBeNull();
     expect(indexedClubCrest(null)).toBeNull();
+    expect(indexedClubCrest('   ')).toBeNull();
+    expect(indexedClubCrest('ტორპედო')).toBeNull();
+    expect(indexedClubCrest('Brøndby IF')).toBe(indexedClubCrest('Bröndby IF'));
+    expect(indexedClubCrest('FC Nordsjælland')).toBe(indexedClubCrest('FC Nordsjaelland'));
+    expect(indexedClubCrest('FC Nordsjælland')).toMatch(/\/tm-2778\.webp$/);
   });
 });

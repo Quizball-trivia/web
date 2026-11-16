@@ -242,9 +242,17 @@ const TM_CREST_INDEX = crestIndex as Record<string, number>;
  * Notes in brackets ("Montpellier (loan)") are ignored. Returns null when the club isn't indexed.
  */
 export function indexedClubCrest(name: string | null | undefined): string | null {
-  if (!name) return null;
-  const id = TM_CREST_INDEX[slugifyClubName(name.replace(/\([^)]*\)/g, ' '))];
+  const key = name ? crestIndexKey(name) : '';
+  const id = key ? TM_CREST_INDEX[key] : undefined;
   return id ? clubLogoUrl(`tm-${id}.webp`) : null;
+}
+
+const LETTER_FOLDS: Record<string, string> = { ø: 'o', æ: 'ae', œ: 'oe', đ: 'd', ł: 'l', ı: 'i', þ: 'th', ð: 'd' };
+
+/** Index key: the club slug with letters NFKD can't split folded too, so "Brøndby" and "Bröndby" meet at "brondby". */
+export function crestIndexKey(name: string): string {
+  const folded = name.replace(/\([^)]*\)/g, ' ').toLowerCase().replace(/[øæœđłıþð]/g, (c) => LETTER_FOLDS[c]);
+  return slugifyClubName(folded);
 }
 
 export interface ResolvedClubCrest {
