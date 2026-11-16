@@ -249,6 +249,32 @@ const COPY = {
     playQuiz: 'Jouer',
     footer: '© 2026 QuizBall. Des quiz de foot conçus pour la compétition.',
   },
+  el: {
+    rankedTrivia: 'Ποδοσφαιρικό κουίζ κατάταξης',
+    playRanked: 'Παίξε αγώνα κατάταξης',
+    home: 'Αρχική',
+    footballQuiz: 'Ποδοσφαιρικό κουίζ',
+    verifiedQuestions: 'επαληθευμένες ερωτήσεις',
+    startQuiz: 'Ξεκίνα το κουίζ',
+    noLogin: 'Δεν χρειάζεται σύνδεση',
+    easy: 'εύκολες ερωτήσεις',
+    medium: 'μέτριες ερωτήσεις',
+    hard: 'δύσκολες ερωτήσεις',
+    soloWarmup: 'Ατομική προθέρμανση',
+    answerPrompt: 'Διάλεξε μία απάντηση για κάθε ερώτηση. Βλέπεις το αποτέλεσμα αμέσως.',
+    factChecked: 'Ερωτήσεις με επαληθευμένα στοιχεία',
+    updated: 'Ενημερώθηκε {date}',
+    fiveMinutes: 'Περίπου 5 λεπτά',
+    instantScore: 'Άμεσο αποτέλεσμα',
+    readyRanked: 'Έτοιμος για αγώνα κατάταξης;',
+    fairPlay: 'Φτιαγμένο για δίκαιο παιχνίδι',
+    publicOnly: 'Αυτές οι δημόσιες ερωτήσεις προθέρμανσης είναι ξεχωριστές από τη βάση ερωτήσεων για αγώνες κατάταξης.',
+    keepPlaying: 'Συνέχισε να παίζεις',
+    relatedQuizzes: 'Σχετικά ποδοσφαιρικά κουίζ',
+    allQuizzes: 'Όλα τα ποδοσφαιρικά κουίζ',
+    playQuiz: 'Παίξε',
+    footer: '© 2026 QuizBall. Ποδοσφαιρικό κουίζ για πραγματικό ανταγωνισμό.',
+  },
   tr: {
     rankedTrivia: 'Sıralamalı futbol bilgi yarışması',
     playRanked: 'Sıralamalı Oyna',
@@ -307,10 +333,18 @@ const FRENCH_SINGULAR = {
   hard: 'question difficile',
 } as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
 
+const GREEK_SINGULAR = {
+  verifiedQuestions: 'επαληθευμένη ερώτηση',
+  easy: 'εύκολη ερώτηση',
+  medium: 'μέτρια ερώτηση',
+  hard: 'δύσκολη ερώτηση',
+} as const satisfies Record<keyof typeof RUSSIAN_COUNT_FORMS, string>;
+
 function countLabel(locale: CampaignQuizLocale, count: number, key: keyof typeof RUSSIAN_COUNT_FORMS): string {
   if (locale === 'pt' && count === 1) return PORTUGUESE_SINGULAR[key];
   if (locale === 'de' && count === 1) return GERMAN_SINGULAR[key];
   if (locale === 'fr' && count <= 1) return FRENCH_SINGULAR[key];
+  if (locale === 'el' && count === 1) return GREEK_SINGULAR[key];
   if (locale !== 'ru') return COPY[locale][key];
   const [one, few, many] = RUSSIAN_COUNT_FORMS[key];
   return russianPlural(count, one, few, many);
@@ -338,7 +372,7 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
 }
 
 const DATE_LOCALE: Record<CampaignQuizLocale, string> = {
-  en: 'en-GB', ka: 'ka-GE', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', de: 'de-DE', tr: 'tr-TR', fr: 'fr-FR',
+  en: 'en-GB', ka: 'ka-GE', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', de: 'de-DE', tr: 'tr-TR', fr: 'fr-FR', el: 'el-GR',
 };
 
 /** The date the page's content last changed, for the visible "Updated" line (UTC, so server and client agree). */

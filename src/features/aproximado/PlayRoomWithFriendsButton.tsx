@@ -18,6 +18,7 @@ const COPY: Record<Locale, { label: string; hint: string }> = {
   pt: { label: "Jogue com amigos (2–6)", hint: "Sala privada: compartilhe o link e jogue ao vivo, sem precisar de conta." },
   de: { label: "Mit Freunden spielen (2–6)", hint: "Privater Raum: Teile den Link und spiel live mit, ganz ohne Konto." },
   fr: { label: "Jouer entre amis (2–6)", hint: "Salon privé : partage le lien et joue en direct, sans compte." },
+  el: { label: "Παίξε με φίλους (2–6)", hint: "Ιδιωτικό δωμάτιο: μοιράσου τον σύνδεσμο και παίξε ζωντανά, χωρίς λογαριασμό." },
 };
 
 /**

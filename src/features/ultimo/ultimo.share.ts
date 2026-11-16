@@ -1,10 +1,10 @@
 import { COMPLETE_BONUS, CATEGORIES_PER_DAY, latestDay, puzzleNumber, releaseDay, type Tier } from "./ultimo.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
 const LETTER: Record<Tier, string> = { complete: "c", good: "g", some: "s", none: "n" };
 const TIER: Record<string, Tier> = { c: "complete", g: "good", s: "some", n: "none" };
 /** `ue-` keeps these apart from Buscaminas and Pistas codes on the shared /r/ route. */
-const CODE = /^ue-(\d{1,3})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru|pt|de|fr)$/;
+const CODE = /^ue-(\d{1,3})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
 
 export interface UltimoShareResult {
   number: number;
@@ -14,7 +14,7 @@ export interface UltimoShareResult {
 }
 
 export function encodeUltimoShare(number: number, score: number, tiers: readonly Tier[], locale: string): string {
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" || locale === "el" ? locale : "en";
   return `ue-${number}-${score}-${tiers.map((t) => LETTER[t]).join("")}-${shareLocale}`;
 }
 
@@ -46,4 +46,5 @@ export const ULTIMO_SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: st
   pt: { brandA: "Última resposta", brandB: "em pé", points: "pts", challenge: "Você consegue aguentar mais?", title: (n, s) => `Última resposta em pé #${n}: ${s} pts`, description: "5 categorias de futebol por dia. Diga o máximo de respostas que puder antes que o tempo acabe.", open: "Jogue Última resposta em pé" },
   de: { brandA: "Nenne", brandB: "alle!", points: "Pkt.", challenge: "Hältst du länger durch als ich?", title: (n, s) => `Nenne alle! #${n}: ${s} Pkt.`, description: "Jeden Tag 5 Fußballkategorien. Nenne so viele Antworten wie möglich, bevor die Zeit abläuft.", open: "Jetzt spielen" },
   fr: { brandA: "Cite-les", brandB: "tous !", points: "pts", challenge: "Tu peux tenir plus longtemps ?", title: (n, s) => `Cite-les tous ! #${n} : ${s} pts`, description: "5 catégories de football par jour. Cite autant de réponses que possible avant la fin du chrono.", open: "Jouer à Cite-les tous !" },
+  el: { brandA: "Βρες τους", brandB: "όλους!", points: "βαθ.", challenge: "Μπορείς να αντέξεις περισσότερο;", title: (n, s) => `Βρες τους όλους! #${n}: ${s} βαθ.`, description: "5 κατηγορίες ποδοσφαίρου την ημέρα. Ονόμασε όσες περισσότερες απαντήσεις μπορείς πριν τελειώσει ο χρόνος.", open: "Παίξε Βρες τους όλους!" },
 };

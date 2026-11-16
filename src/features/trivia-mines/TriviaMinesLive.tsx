@@ -27,7 +27,7 @@ const MAX_STAKE = 500;
 const HEARTBEAT_MS = 10_000;
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "pt" ? value.pt ?? value.en : locale === "de" ? value.de ?? value.en : locale === "fr" ? value.fr ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
+const text = (value: { en: string; ka: string; es?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string; el?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "pt" ? value.pt ?? value.en : locale === "de" ? value.de ?? value.en : locale === "fr" ? value.fr ?? value.en : locale === "el" ? value.el ?? value.en : locale === "tr" ? value.tr ?? value.en : locale === "ru" ? value.ru ?? value.en : value.en) || value.en;
 
 /** Partner play (Freecroco): free, start 100 points, no wallet, coins or live feeds; the host shows the result. */
 export interface TriviaMinesPartnerMode {
@@ -63,6 +63,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
   const coin = (size: number) => (partner ? null : <CoinIcon size={size} />);
   const api = useMemo(() => client ?? triviaMinesApi, [client]);
   const { t, locale } = useLocale();
+  const numberLocale = locale === "el" ? "el-GR" : undefined;
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: wallet } = useStoreWallet({ enabled: !quiet });
@@ -248,7 +249,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
 
         {!partner && <div className="mb-1 flex items-center gap-3">
           {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
-          <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString()}</span>
+          <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString(numberLocale)}</span>
         </div>}
 
         {!state && !quiet && <RunsBoard runs={topRuns} className="mt-4" />}
@@ -260,16 +261,16 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
             <div className="mb-3 grid grid-cols-3 text-center">
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{partner ? partner.labels.start : t("triviaMines.stake")}</div>
-                <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}>{coin(14)}{state.stake_coins.toLocaleString()}</div>
+                <div className="flex items-center justify-center gap-1 text-lg font-black tabular-nums text-white" style={poppins}>{coin(14)}{state.stake_coins.toLocaleString(numberLocale)}</div>
               </div>
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{settled && !(partner && state.status === "expired") ? (state.status === "cashed" ? t("triviaMines.banked") : t("triviaMines.tackled")) : partner ? partner.labels.points : t("triviaMines.pot")}</div>
-                <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}>{coin(14)}{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString()}</div>
+                <div className={cn("flex items-center justify-center gap-1 text-lg font-black tabular-nums", state.status === "lost" ? "text-brand-red-soft" : "text-brand-green-light")} style={poppins}>{coin(14)}{(state.status === "lost" ? 0 : state.status === "cashed" ? state.payout_coins ?? state.pot_coins : state.pot_coins).toLocaleString(numberLocale)}</div>
               </div>
               <div>
                 <div className="text-[9px] font-black uppercase tracking-wide text-white/45" style={poppins}>{t("triviaMines.multiplier")}</div>
-                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{decimalText(state.mult_bp / 10000, 2, locale)}×</div>
-                {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString()}</div>}
+                <div className="text-lg font-black tabular-nums text-white" style={poppins}>{decimalText(state.mult_bp / 10000, 2, numberLocale ?? locale)}×</div>
+                {!settled && <div className="text-[9px] font-bold text-white/40" style={poppins}>→ {state.next_pot_coins.toLocaleString(numberLocale)}</div>}
               </div>
             </div>
             {/* A partner frame is short: the board shrinks with its height so the buttons under it stay in view. */}
@@ -311,7 +312,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
                   <Eye className="size-4" /> {t("triviaMines.scout", { n: String(state.scouts_left) })}
                 </button>
                 <button type="button" data-testid="trivia-mines-cashout" onClick={cashout} disabled={busy || state.opened.length === 0} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[20px] bg-brand-green text-sm font-black uppercase tracking-wide text-white disabled:opacity-40" style={poppins}>
-                  {coin(16)} {partner ? partner.labels.cashOut(state.pot_coins.toLocaleString()) : t("triviaMines.cashOut", { pot: state.pot_coins.toLocaleString() })}
+                  {coin(16)} {partner ? partner.labels.cashOut(state.pot_coins.toLocaleString(numberLocale)) : t("triviaMines.cashOut", { pot: state.pot_coins.toLocaleString(numberLocale) })}
                 </button>
               </div>
             )}
@@ -363,7 +364,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample, partner }:
             {settled && !(partner && state.status === "expired") && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 rounded-[20px] px-4 py-3 text-center text-white", partner && "lg:col-start-2 lg:row-start-1 lg:mt-0", state.status === "cashed" ? "bg-brand-green" : "bg-brand-blue")}>
                 <p className="text-[11px] font-black uppercase tracking-wide text-white/85" style={poppins}>{state.status === "cashed" ? t("triviaMines.banked") : state.status === "lost" ? t("triviaMines.tackled") : t("triviaMines.refunded")}</p>
-                <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}>{coin(20)}{(state.status === "cashed" ? state.payout_coins ?? 0 : state.status === "expired" ? state.stake_coins : 0).toLocaleString()}</p>
+                <p className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-black tabular-nums" style={poppins}>{coin(20)}{(state.status === "cashed" ? state.payout_coins ?? 0 : state.status === "expired" ? state.stake_coins : 0).toLocaleString(numberLocale)}</p>
                 <button type="button" data-testid="trivia-mines-finish" onClick={() => { if (partner) partner.onFinished(state); else { setState(null); setError(null); } }} className="font-poppins mt-3 h-12 w-full rounded-[20px] bg-brand-yellow text-[15px] font-black uppercase tracking-wide text-black transition-all active:translate-y-[2px]">
                   {partner ? partner.labels.finish : t("triviaMines.playAgain")}
                 </button>

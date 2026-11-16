@@ -1,6 +1,6 @@
 /** Copy of the word games' screens (played for both, name chain). The lobby and SEO pages keep their own strings. */
-export type WordLocale = "tr" | "en" | "es" | "ka" | "ru" | "pt" | "de" | "fr";
-export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" ? locale : "en");
+export type WordLocale = "tr" | "en" | "es" | "ka" | "ru" | "pt" | "de" | "fr" | "el";
+export const asWordLocale = (locale: string): WordLocale => (locale === "tr" || locale === "es" || locale === "ka" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" || locale === "el" ? locale : "en");
 
 /** 1 игрок, 2 игрока, 5 игроков; 11–14 always take the many form. */
 export const russianPlural = (n: number, one: string, few: string, many: string) =>
@@ -37,6 +37,12 @@ const shared = {
     youWon: "Tu as gagné !", tieFirst: "Égalité en tête !", youPlace: (n: number) => `Tu es à la ${n}${n === 1 ? "re" : "e"} place`, left: "A quitté", away: "Déconnecté", backToRoom: "Retour au salon",
     rivalLeft: "Ton adversaire a quitté le match.", offline: "Pas de connexion : reconnexion…", leave: "Quitter le match", leaveConfirm: "Quitter le match ? Tu ne pourras pas revenir.", leaveYes: "Quitter", leaveNo: "Continuer à jouer",
     iWasRight: "J’avais la bonne réponse", reported: "Merci, on va vérifier.", startsIn: "Début",
+  },
+  el: {
+    exit: "Έξοδος", you: "Εσύ", rival: "Αντίπαλος", placeholder: "Γράψε ποδοσφαιριστή", say: "Στείλε", won: "Κέρδισες τον αγώνα!", lost: "Έχασες τον αγώνα", draw: "Ισοπαλία",
+    youWon: "Νίκησες!", tieFirst: "Ισοβαθμία στην πρώτη θέση!", youPlace: (n: number) => `Τερμάτισες στη θέση ${n}`, left: "Αποχώρησε", away: "Χωρίς σύνδεση", backToRoom: "Επιστροφή στο δωμάτιο",
+    rivalLeft: "Ο αντίπαλος αποχώρησε.", offline: "Χωρίς σύνδεση: επανασύνδεση…", leave: "Αποχώρηση από τον αγώνα", leaveConfirm: "Να αποχωρήσεις από τον αγώνα; Δεν θα μπορέσεις να επιστρέψεις.", leaveYes: "Αποχώρηση", leaveNo: "Συνέχισε να παίζεις",
+    iWasRight: "Είχα δίκιο", reported: "Ευχαριστούμε, θα το ελέγξουμε.", startsIn: "Ξεκινάει",
   },
   en: {
     exit: "Exit", you: "You", rival: "Rival", placeholder: "Type a footballer", say: "Send", won: "You won the match!", lost: "You lost the match", draw: "Draw",
@@ -118,6 +124,18 @@ const sharedPlayer = {
     answers: (n: number) => `Réponses valides (${n})`, more: (n: number) => `+${n} de plus`, next: "Prochaine paire…",
     answeredCount: (n: number, of: number) => `Joueurs ayant trouvé une réponse : ${n}/${of}`, firstWas: (name: string) => `Premier à trouver : ${name}`, youFirst: "Tu as trouvé en premier !", noAnswer: "aucune réponse",
     foundStat: "Trouvés", foundDetail: (n: number, of: number) => `Paires trouvées : ${n}/${of}`, summary: "Paires",
+  },
+  el: {
+    brand: ["ΕΠΑΙΞΑΝ", "ΚΑΙ ΣΤΙΣ ΔΥΟ"] as const,
+    rules: ["Δύο σύλλογοι εμφανίζονται ταυτόχρονα.", "Γράψε έναν ποδοσφαιριστή που έπαιξε και στους δύο. Μετράνε και οι δανεισμοί.", "Μια λάθος απάντηση σε μπλοκάρει για 1 δευτερόλεπτο."],
+    duelRule: "Η πρώτη σωστή απάντηση δίνει τον πόντο. Κερδίζει όποιος φτάσει πρώτος τους 3 πόντους.", partyRule: "8 γύροι. Η πρώτη σωστή απάντηση δίνει 3 πόντους, η δεύτερη 2 και κάθε άλλη σωστή απάντηση 1.",
+    prompt: "Γράψε έναν ποδοσφαιριστή που έπαιξε και στους δύο", round: (n: number, of: number) => `Γύρος ${n} / ${of}`, roundOpen: (n: number) => `Γύρος ${n}`,
+    wrong: (text: string) => `«${text}» δεν έπαιξε και στους δύο`, locked: (s: number) => `Λάθος! Περίμενε ${s} δευτ.`, got: (name: string) => `Σωστό: ${name}!`,
+    waitRival: "Η απάντησή σου καταχωρίστηκε…", lockedIn: "Η απάντησή σου καταχωρίστηκε. Περιμένουμε τους άλλους…", sending: "Αποστολή…",
+    pointYou: "Ο πόντος δικός σου!", pointRival: "Πόντος στον αντίπαλο", pointBoth: "Μοιρασμένος πόντος", nobody: "Κανείς δεν βρήκε απάντηση",
+    answers: (n: number) => `Σωστές απαντήσεις (${n})`, more: (n: number) => `+${n} ακόμη`, next: "Έρχεται το επόμενο ζευγάρι…",
+    answeredCount: (n: number, of: number) => `Απαντήσεις από παίκτες: ${n}/${of}`, firstWas: (name: string) => `Πρώτος που βρήκε: ${name}`, youFirst: "Απάντησες πρώτος!", noAnswer: "χωρίς απάντηση",
+    foundStat: "Βρέθηκαν", foundDetail: (n: number, of: number) => `Ζευγάρια: ${n}/${of}`, summary: "Ζευγάρια",
   },
   en: {
     brand: ["PLAYED FOR", "BOTH"] as const,
@@ -208,6 +226,16 @@ const nameChain = {
     out: "Éliminé", youOut: "Tu es éliminé de cette manche. Attends la suivante.", knocked: (name: string) => `${name} est éliminé`, roundTo: (name: string) => `${name} a remporté la manche`, lastStanding: "Dernier joueur encore en jeu",
     answersStat: "Réponses", answersDetail: (n: number) => `${n} ${n === 0 || n === 1 ? "bonne réponse" : "bonnes réponses"}`, chainTitle: "Chaîne",
   },
+  el: {
+    brand: ["ΑΛΥΣΙΔΑ", "ΠΟΔΟΣΦΑΙΡΙΣΤΩΝ"] as const,
+    yourTurn: (letter: string) => `Σειρά σου: γράψε ποδοσφαιριστή από ${letter}`, seatTurn: (name: string, letter: string) => `${name} γράφει: γράμμα ${letter}`,
+    nextLetter: "Επόμενο γράμμα", round: (n: number) => `Γύρος ${n}`, supplied: "Το έδωσε το παιχνίδι", fresh: "Δεν έμεινε κανείς με αυτό το γράμμα, οπότε το παιχνίδι έδωσε νέο όνομα.",
+    unknown: (text: string) => `«${text}» δεν υπάρχει στη λίστα, δοκίμασε ξανά`, letter: (name: string, starts: string, need: string) => `${name} αρχίζει από ${starts}, χρειάζεσαι ${need}`, repeat: (name: string) => `${name} έχει ήδη ειπωθεί`,
+    roundWon: "Ο γύρος δικός σου!", roundLost: "Έχασες τον γύρο", time: "Τέλος χρόνου", passed: "Εγκατέλειψε", leftTurn: "Αποχώρησε από τον αγώνα", giveUp: "Εγκατάλειψη",
+    could: (letter: string) => `Ποδοσφαιριστές από ${letter}`, nextRound: "Ξεκινά ο επόμενος γύρος…", waiting: "Ο αντίπαλός σου γράφει…", sending: "Αποστολή…",
+    out: "Εκτός", youOut: "Αποκλείστηκες από αυτόν τον γύρο. Περίμενε τον επόμενο.", knocked: (name: string) => `${name} αποκλείστηκε`, roundTo: (name: string) => `Νίκη για ${name} στον γύρο`, lastStanding: "Τελευταίος παίκτης",
+    answersStat: "Απαντήσεις", answersDetail: (n: number) => `Σωστές απαντήσεις: ${n}`, chainTitle: "Αλυσίδα",
+  },
   en: {
     brand: ["NAME", "CHAIN"] as const,
     yourTurn: (letter: string) => `Your turn: a footballer starting with ${letter}`, seatTurn: (name: string, letter: string) => `${name} is typing: letter ${letter}`,
@@ -286,6 +314,15 @@ const daily = {
     share: "Partager", copy: "Copier", copied: "Copié", friends: "Jouer entre amis (2–6)", friendsSignIn: "Connecte-toi pour jouer entre amis", points: "pts",
     board: { title: "Classement du jour", players: (n: number) => `${n} ${n === 0 || n === 1 ? "joueur" : "joueurs"}`, empty: "Personne n’a encore terminé aujourd’hui. Sois le premier.", join: "Inscris-toi pour apparaître au classement.", joinButton: "S’inscrire" },
   },
+  el: {
+    loading: "Φόρτωση…", loadError: "Δεν ήταν δυνατή η φόρτωση του παιχνιδιού.", retry: "Δοκίμασε ξανά", exit: "Έξοδος", soon: "Η πρώτη μέρα ανοίγει σύντομα.", back: "Πίσω",
+    play: "Παίξε", resume: "Συνέχεια", seeResult: "Δες το αποτέλεσμα", archive: "Προηγούμενες μέρες", archiveTitle: "Προηγούμενες μέρες", today: "Σήμερα", next: "Επόμενο",
+    guestPast: "Παίζεις μια προηγούμενη μέρα ως επισκέπτης. Δεν μετράει στην κατάταξη.", guestToday: "Για το σημερινό παιχνίδι χρειάζεσαι λογαριασμό. Ως επισκέπτης μπορείς να παίξεις προηγούμενες μέρες.",
+    playToday: "Κάνε εγγραφή για να παίξεις σήμερα", practice: "Αυτή η μέρα δεν μετράει στην κατάταξη (προπόνηση).", rank: (n: number) => `Σήμερα είσαι στη θέση ${n}`,
+    notices: { dayOver: "Η μέρα τελείωσε. Άνοιξε η επόμενη.", guestToday: "Για το σημερινό παιχνίδι χρειάζεσαι λογαριασμό.", maintenance: "Σύντομη συντήρηση. Δοκίμασε ξανά σε λίγο.", restarted: "Το περιεχόμενο της ημέρας ενημερώθηκε· ξεκινάς από την αρχή.", sessionChanged: "Η συνεδρία σου άλλαξε. Ξεκίνα ξανά.", actionError: "Κάτι πήγε στραβά. Δοκίμασε ξανά.", connection: "Χωρίς σύνδεση: επανασύνδεση…" },
+    share: "Κοινοποίηση", copy: "Αντιγραφή", copied: "Αντιγράφηκε", friends: "Παίξε με φίλους (2–6)", friendsSignIn: "Συνδέσου για να παίξεις με φίλους", points: "πόντοι",
+    board: { title: "Η σημερινή κατάταξη", players: (n: number) => `Παίκτες: ${n}`, empty: "Κανείς δεν έχει τελειώσει σήμερα. Γίνε ο πρώτος.", join: "Κάνε εγγραφή για να μπεις στην κατάταξη.", joinButton: "Εγγραφή" },
+  },
   en: {
     loading: "Loading…", loadError: "The game could not be loaded.", retry: "Try again", exit: "Exit", soon: "The first day opens soon.", back: "Back",
     play: "Play", resume: "Continue", seeResult: "See the result", archive: "Past days", archiveTitle: "Past days", today: "Today", next: "Next",
@@ -356,6 +393,14 @@ const sharedPlayerDaily = {
     endTitle: "Terminé pour aujourd’hui", result: (n: number, of: number) => `Paires trouvées : ${n}/${of}`, summary: "Paires", notFound: "introuvable", late: "Le temps était écoulé ; la réponse n’a pas été comptée.",
     shareText: (number: number, score: number, of: number) => `Joueur en commun #${number} : ${score}/${of}`, speedLabel: "Vitesse",
   },
+  el: {
+    title: "Έπαιξαν και στις δύο", tag: "Δέκα ζευγάρια τη μέρα",
+    lines: (seconds: number) => ["Δέκα ζευγάρια συλλόγων κάθε μέρα.", `Για κάθε ζευγάρι, γράψε έναν ποδοσφαιριστή που έπαιξε και στους δύο: έχεις ${seconds} δευτερόλεπτα.`, "Κάθε ζευγάρι που βρίσκεις δίνει 1 πόντο. Όσο πιο γρήγορα απαντάς, τόσο πιο ψηλά στην κατάταξη."],
+    pair: (n: number, of: number) => `Ζευγάρι ${n}/${of}`, found: "Σωστό!", missed: "Τέλος χρόνου", yourAnswer: (name: string) => `Η απάντησή σου: ${name}`,
+    answersTomorrow: (n: number) => `Υπάρχουν ${n} σωστές απαντήσεις. Τα ονόματα θα εμφανιστούν όταν τελειώσει η μέρα.`, nextPair: "Επόμενο ζευγάρι", finish: "Δες το αποτέλεσμα", othersFound: "Άλλοι ποδοσφαιριστές που έπαιξαν και στους δύο", othersMissed: "Θα μπορούσες να πεις",
+    endTitle: "Τέλος για σήμερα", result: (n: number, of: number) => `Ζευγάρια που βρήκες: ${n}/${of}`, summary: "Ζευγάρια", notFound: "δεν βρέθηκε", late: "Ο χρόνος είχε τελειώσει, η απάντηση δεν μετρήθηκε.",
+    shareText: (number: number, score: number, of: number) => `Έπαιξαν και στις δύο #${number}: ${score}/${of}`, speedLabel: "Ταχύτητα",
+  },
   en: {
     title: "Played for Both", tag: "Ten pairs a day",
     lines: (seconds: number) => ["Ten club pairs every day.", `For each pair, type a footballer who played for both: you have ${seconds} seconds.`, "Every pair you find is 1 point. Faster players rank higher."],
@@ -422,6 +467,14 @@ const nameChainDaily = {
     chainOver: "Fin de la chaîne", capped: "Chaîne complète !", soFar: (n: number) => `${n} joueur${n === 0 || n === 1 ? "" : "s"} pour l’instant`, nextChain: "Chaîne suivante", finish: "Voir le résultat",
     endTitle: "Terminé pour aujourd’hui", footballers: (n: number) => `${n} joueur${n === 0 || n === 1 ? "" : "s"}`, longest: (n: number) => `Chaîne la plus longue : ${n}`, chains: "Chaînes", longestLabel: "La plus longue",
     shareText: (number: number, score: number, chains: string) => `La dernière lettre #${number} : ${score} joueur${score === 0 || score === 1 ? "" : "s"} (${chains})`,
+  },
+  el: {
+    title: "Αλυσίδα ποδοσφαιριστών", tag: "Τρεις αλυσίδες τη μέρα",
+    lines: ["Σου δίνουμε έναν ποδοσφαιριστή. Γράψε έναν άλλον που το όνομά του αρχίζει από το τελευταίο γράμμα του προηγούμενου.", "Μετράει και το όνομα και το επώνυμο: ο Anthony Martial ταιριάζει στα A και M.", "Έχεις 10 δευτερόλεπτα για κάθε απάντηση· ο χρόνος μειώνεται όσο μεγαλώνει η αλυσίδα. Τρεις αλυσίδες τη μέρα: πόσους ποδοσφαιριστές συνολικά;"],
+    chainOf: (n: number, of: number) => `Αλυσίδα ${n}/${of}`, tooFast: "Πολύ γρήγορα! Περίμενε λίγο.", late: "Ο χρόνος είχε τελειώσει, η απάντηση δεν μετρήθηκε.",
+    chainOver: "Τέλος αλυσίδας", capped: "Η αλυσίδα ολοκληρώθηκε!", soFar: (n: number) => `Ποδοσφαιριστές μέχρι τώρα: ${n}`, nextChain: "Επόμενη αλυσίδα", finish: "Δες το αποτέλεσμα",
+    endTitle: "Τέλος για σήμερα", footballers: (n: number) => `Ποδοσφαιριστές: ${n}`, longest: (n: number) => `Μεγαλύτερη αλυσίδα: ${n}`, chains: "Αλυσίδες", longestLabel: "Μεγαλύτερη",
+    shareText: (number: number, score: number, chains: string) => `Αλυσίδα ποδοσφαιριστών #${number}: σύνολο ${score} (${chains})`,
   },
   en: {
     title: "Football Name Chain", tag: "Three chains a day",

@@ -19,6 +19,7 @@ const SECTION: Record<Locale, { games: string; daily: string; company: string; m
   pt: { games: 'Modos de jogo', daily: 'Desafios diários', company: 'QuizBall', methodology: 'Metodologia editorial', press: 'Imprensa', index: 'Índice de conhecimento sobre futebol' },
   de: { games: 'Spielmodi', daily: 'Tages-Challenges', company: 'QuizBall', methodology: 'Redaktionelle Methodik', press: 'Presse', index: 'Fußball-Wissensindex' },
   fr: { games: 'Modes de jeu', daily: 'Défis du jour', company: 'QuizBall', methodology: 'Méthodologie éditoriale', press: 'Presse', index: 'Index des connaissances footballistiques' },
+  el: { games: 'Λειτουργίες παιχνιδιού', daily: 'Καθημερινές προκλήσεις', company: 'QuizBall', methodology: 'Συντακτική μεθοδολογία', press: 'Τύπος', index: 'Δείκτης ποδοσφαιρικών γνώσεων' },
 };
 
 /**

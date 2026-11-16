@@ -169,6 +169,23 @@ const UI_COPY = {
     score: 'Voir mon score',
     next: 'Question suivante',
   },
+  el: {
+    answerError: 'Δεν μπορέσαμε να ελέγξουμε την απάντηση. Δοκίμασε ξανά.',
+    fullTime: 'Τέλος αγώνα',
+    youScored: 'Πέτυχες',
+    playRanked: 'Παίξε σε αγώνα κατάταξης',
+    playAgain: 'Παίξε το κουίζ ξανά',
+    question: 'Ερώτηση',
+    of: 'από',
+    correctCount: 'σωστές απαντήσεις',
+    correctAnswer: 'Σωστή απάντηση',
+    incorrectAnswer: 'Η απάντησή σου ήταν λάθος',
+    checking: 'Ελέγχουμε την απάντησή σου…',
+    correctFeedback: 'Σωστά — μπράβο!',
+    incorrectFeedback: 'Όχι ακριβώς — η σωστή απάντηση είναι επισημασμένη.',
+    score: 'Δες τη βαθμολογία μου',
+    next: 'Επόμενη ερώτηση',
+  },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**
@@ -376,7 +393,7 @@ export function CampaignQuizGame({
           {copy.question} {currentIndex + 1} {copy.of} {questions.length}
         </div>
         <div className="flex h-12 min-w-28 shrink-0 items-center justify-center rounded-2xl bg-brand-blue px-4 font-semibold text-white sm:h-14 sm:text-lg">
-          {score} {locale === 'fr' && score > 1 ? 'bonnes réponses' : copy.correctCount}
+          {score} {locale === 'fr' && score > 1 ? 'bonnes réponses' : locale === 'el' && score === 1 ? 'σωστή απάντηση' : copy.correctCount}
         </div>
       </div>
 

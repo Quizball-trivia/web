@@ -18,6 +18,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Long-cached /assets images are not edited in place
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-immutable-assets.mjs
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck

@@ -10,6 +10,7 @@ export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = {
   pt: "jogos-de-futebol",
   de: "fussballspiele",
   fr: "jeux-de-foot",
+  el: "podosfairika-paixnidia",
 };
 
 export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
@@ -21,4 +22,5 @@ export const DAILY_COLLECTION_SLUG: Record<Locale, string> = {
   pt: "jogos-diarios",
   de: "taegliche-raetsel",
   fr: "jeux-quotidiens",
+  el: "kathimerina-paixnidia",
 };

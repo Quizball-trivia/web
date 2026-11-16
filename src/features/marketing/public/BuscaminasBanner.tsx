@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { trackEvent } from "@/lib/posthog";
 import type { SeoPageLocale } from "@/lib/seo/game-pages";
 
-type BuscaminasBannerLocale = SeoPageLocale | "pt" | "de" | "fr";
+type BuscaminasBannerLocale = SeoPageLocale | "pt" | "de" | "fr" | "el";
 
 const TO_TRIVIA: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
   es: { title: "¿Buscabas Minas de trivia?", text: "El juego de casillas con defensas ocultos, preguntas y monedas sigue acá." },
@@ -16,6 +16,7 @@ const TO_TRIVIA: Record<BuscaminasBannerLocale, { title: string; text: string }>
   pt: { title: "Procurando Minas de Trivia?", text: "O jogo de casas com defensores escondidos, perguntas e moedas está aqui." },
   de: { title: "Suchst du Quiz-Minenfeld?", text: "Das Kachelspiel mit versteckten Verteidigern, Fragen und Münzen findest du hier." },
   fr: { title: "Tu cherchais Terrain miné ?", text: "Le jeu de cases avec des défenseurs cachés, des questions et des pièces est ici." },
+  el: { title: "Ψάχνεις το Ναρκοπέδιο ερωτήσεων;", text: "Το παιχνίδι με τετράγωνα, κρυμμένους αμυντικούς, ερωτήσεις και νομίσματα είναι εδώ." },
 };
 
 const COPY: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
@@ -27,6 +28,7 @@ const COPY: Record<BuscaminasBannerLocale, { title: string; text: string }> = {
   pt: { title: "Procurando a versão com jogadores?", text: "Campo Minado do Futebol: 16 jogadores, 12 combinam com a dica e 4 são minas. 5 rodadas rápidas, um tabuleiro novo por dia." },
   de: { title: "Suchst du die Version mit Spielern?", text: "Fußball-Minesweeper: 16 Spieler, 12 passen zum Hinweis und 4 sind Minen. 5 schnelle Runden, jeden Tag ein neues Spielfeld." },
   fr: { title: "Tu cherchais la version avec des joueurs ?", text: "Démineur foot : 16 joueurs, 12 correspondent à l’indice et 4 sont des mines. 5 manches rapides, un nouveau plateau chaque jour." },
+  el: { title: "Ψάχνεις την έκδοση με τους παίκτες;", text: "Ποδοσφαιρικός ναρκαλιευτής: 16 παίκτες, 12 ταιριάζουν με το στοιχείο και 4 είναι νάρκες. 5 γρήγοροι γύροι, νέο ταμπλό κάθε μέρα." },
 };
 
 /** Sends Trivia Mines visitors who searched for the player-card game to Buscaminas futbolero. */

@@ -18,7 +18,7 @@ const clubBadges = { slug: 'club-badges', locale_mode: 'en_only', category: 'qui
 
 // No quiz has a ka, pt, de, tr or fr edition unless a test says so: those catalogs are then empty.
 const withEditions = (...editions: string[]) => async (locale: string) =>
-  !['ka', 'pt', 'de', 'tr', 'fr'].includes(locale) || editions.includes(locale) ? [clubBadges] : [];
+  !['ka', 'pt', 'de', 'tr', 'fr', 'el'].includes(locale) || editions.includes(locale) ? [clubBadges] : [];
 beforeEach(() => {
   listCampaignQuizPagesMock.mockReset().mockImplementation(withEditions());
 });

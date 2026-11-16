@@ -1334,6 +1334,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Você já está em uma partida. Reconectando…',
     de: 'Du bist schon in einem Match. Verbindung wird wiederhergestellt…',
     fr: 'Tu es déjà dans un match. Reconnexion…',
+    el: 'Παίζεις ήδη σε αγώνα. Επανασύνδεση…',
   },
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
@@ -1344,6 +1345,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'O conteúdo do leilão não está disponível no momento.',
     de: 'Momentan sind keine Auktionsinhalte verfügbar.',
     fr: 'Aucun contenu pour les enchères n’est disponible pour le moment.',
+    el: 'Δεν υπάρχει διαθέσιμο περιεχόμενο δημοπρασίας αυτή τη στιγμή.',
   },
   // Turn-action rejections. These are the ones a player actually hits mid-match
   // (double-tap, losing a race to a rival, tapping after their turn passed), so
@@ -1357,6 +1359,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Essa rodada já passou — seu lance não foi realizado.',
     de: 'Diese Runde ist bereits vorbei — dein Gebot wurde nicht abgegeben.',
     fr: 'Le tour est déjà passé — ton enchère n’a pas été placée.',
+    el: 'Η σειρά σου πέρασε — η προσφορά σου δεν καταχωρίστηκε.',
   },
   auction_no_active_bidding: {
     en: 'Bidding is not open right now.',
@@ -1367,6 +1370,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Não é possível dar lances no momento.',
     de: 'Gebote sind gerade nicht möglich.',
     fr: 'Les enchères ne sont pas ouvertes pour le moment.',
+    el: 'Η υποβολή προσφορών δεν είναι διαθέσιμη τώρα.',
   },
   auction_seat_already_folded: {
     en: 'You already folded on this player.',
@@ -1377,6 +1381,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Você já desistiu de dar lances por este jogador.',
     de: 'Du hast bei diesem Spieler bereits gepasst.',
     fr: 'Tu t’es déjà retiré des enchères pour ce joueur.',
+    el: 'Έχεις ήδη αποσυρθεί για αυτόν τον παίκτη.',
   },
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
@@ -1387,6 +1392,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Você já tem o maior lance.',
     de: 'Du hast bereits das höchste Gebot.',
     fr: 'Tu as déjà l’enchère la plus élevée.',
+    el: 'Έχεις ήδη την υψηλότερη προσφορά.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
@@ -1397,6 +1403,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Você não pode dar lances por este jogador.',
     de: 'Du kannst für diesen Spieler kein Gebot abgeben.',
     fr: 'Tu ne peux pas enchérir sur ce joueur.',
+    el: 'Δεν μπορείς να κάνεις προσφορά για αυτόν τον παίκτη.',
   },
   auction_invalid_bid: {
     en: "That bid isn't valid any more — the price moved.",
@@ -1407,6 +1414,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Esse lance não é mais válido — o preço mudou.',
     de: 'Dieses Gebot ist nicht mehr gültig — der Preis hat sich geändert.',
     fr: 'Cette enchère n’est plus valable — le prix a changé.',
+    el: 'Η προσφορά δεν ισχύει πια — η τιμή άλλαξε.',
   },
   auction_solo_pick_not_yours: {
     en: "That choice belongs to another player.",
@@ -1417,6 +1425,7 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     pt: 'Essa escolha pertence a outro jogador.',
     de: 'Diese Auswahl gehört einem anderen Spieler.',
     fr: 'Ce choix appartient à un autre joueur.',
+    el: 'Αυτή η επιλογή ανήκει σε άλλον παίκτη.',
   },
 };
 
@@ -1429,6 +1438,7 @@ const AUCTION_ERROR_GENERIC = {
   pt: 'Algo deu errado. Tente novamente.',
   de: 'Etwas ist schiefgelaufen. Versuch es erneut.',
   fr: 'Une erreur s’est produite. Réessaie.',
+  el: 'Κάτι πήγε στραβά. Δοκίμασε ξανά.',
 };
 
 function friendlyAuctionError(payload: AuctionErrorPayload, locale: Locale): string {

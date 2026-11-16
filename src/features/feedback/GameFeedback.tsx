@@ -64,6 +64,13 @@ const COPY = {
     thanks: "Merci ! Nous lisons toutes les réponses.", stars: (n: number) => `${n} ${n < 2 ? "étoile" : "étoiles"} sur 5`,
     error: "Échec de l’envoi. Réessaie.", sending: "Envoi en cours…",
   },
+  el: {
+    title: (game: string) => `Πώς σου φάνηκε το ${game};`,
+    online: "Θα έπαιζες online με έναν τυχαίο αντίπαλο, όπως στον Αγώνα κατάταξης ή στην Ποδοσφαιρική τρίλιζα;",
+    yes: "Ναι", no: "Όχι", comment: "Έχεις κάτι να μας πεις; (προαιρετικά)", send: "Αποστολή", later: "Όχι τώρα", close: "Κλείσιμο",
+    thanks: "Ευχαριστούμε! Διαβάζουμε κάθε απάντηση.", stars: (n: number) => `${n} από 5 αστέρια`,
+    error: "Δεν ήταν δυνατή η αποστολή. Δοκίμασε ξανά.", sending: "Αποστολή…",
+  },
 } as const;
 
 const copyFor = (locale: string) => COPY[(locale in COPY ? locale : "en") as keyof typeof COPY];

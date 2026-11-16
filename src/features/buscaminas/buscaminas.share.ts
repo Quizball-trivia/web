@@ -1,10 +1,10 @@
 import { DAILY_MAX_SCORE, DAILY_ROUNDS, MAX_SCORE, ROUNDS_PER_DAY, type RoundOutcome, type RoundResult } from "./buscaminas.logic";
 
-export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr";
+export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
 const LETTER: Record<RoundOutcome, string> = { perfect: "p", banked: "b", mine: "m" };
 const OUTCOME: Record<string, RoundOutcome> = { p: "perfect", b: "banked", m: "mine" };
 /** A daily run shares its 5 squares; links shared before the daily run existed carry all 20. */
-const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{5}|[pbm]{20})-(es|en|ka|tr|ru|pt|de|fr)$/;
+const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{5}|[pbm]{20})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
 const MAX_FOR: Record<number, number> = { [DAILY_ROUNDS]: DAILY_MAX_SCORE, [ROUNDS_PER_DAY]: MAX_SCORE };
 
 export interface ShareResult {
@@ -17,7 +17,7 @@ export interface ShareResult {
 /** Compact, unsigned result code for share links (the daily run's rounds); purely cosmetic (it drives a preview image, nothing else). */
 export function encodeShare(number: number, results: readonly RoundResult[], locale: string): string {
   const score = results.reduce((sum, r) => sum + r.points, 0);
-  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" ? locale : "en";
+  const shareLocale: ShareLocale = locale === "es" || locale === "ka" || locale === "tr" || locale === "ru" || locale === "pt" || locale === "de" || locale === "fr" || locale === "el" ? locale : "en";
   return `${number}-${score}-${results.map((r) => LETTER[r.outcome]).join("")}-${shareLocale}`;
 }
 
@@ -41,4 +41,5 @@ export const SHARE_COPY: Record<ShareLocale, { brandA: string; brandB: string; p
   pt: { brandA: "Futebol", brandB: "Campo Minado", points: "pts", challenge: "Você consegue me vencer?", title: (n, s) => `Campo Minado de Futebol #${n}: ${s} pts`, description: "16 jogadores, 12 atendem à dica e 4 são minas. Quantos pontos você consegue fazer?", open: "Jogue Campo Minado de Futebol" },
   de: { brandA: "Fußball", brandB: "Minesweeper", points: "Pkt.", challenge: "Schlägst du mich?", title: (n, s) => `Fußball-Minesweeper #${n}: ${s} Pkt.`, description: "16 Spieler, 12 passen zum Hinweis und 4 sind Minen. Wie viele Punkte schaffst du?", open: "Fußball-Minesweeper spielen" },
   fr: { brandA: "Démineur", brandB: "foot", points: "pts", challenge: "Tu peux me battre ?", title: (n, s) => `Démineur foot #${n} : ${s} pts`, description: "16 joueurs, 12 correspondent à l’indice et 4 sont des mines. Combien de points peux-tu marquer ?", open: "Jouer à Démineur foot" },
+  el: { brandA: "Ποδοσφαιρικός", brandB: "ναρκαλιευτής", points: "πόντ.", challenge: "Μπορείς να με νικήσεις;", title: (n, s) => `Ποδοσφαιρικός ναρκαλιευτής #${n}: ${s} πόντ.`, description: "16 παίκτες, 12 ταιριάζουν στο στοιχείο και 4 είναι νάρκες. Πόσους πόντους μπορείς να κερδίσεις;", open: "Παίξε «Ποδοσφαιρικός ναρκαλιευτής»" },
 };
