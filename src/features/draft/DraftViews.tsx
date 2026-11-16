@@ -517,7 +517,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
           </div>
         </motion.div>
       )}
-      {openSeat && <TeamSheet c={c} name={openSeat.me ? c.you : openSeat.name} slots={slots} picks={openSeat.picks} hidden={hidden} seconds={seconds} onClose={() => setTeamSeat(null)} />}
+      {openSeat && <TeamSheet c={c} name={openSeat.name} me={openSeat.me} slots={slots} picks={openSeat.picks} hidden={hidden} seconds={seconds} onClose={() => setTeamSeat(null)} />}
       {why && <RatingSheet c={c} player={why} spin={spin} teams={league.teams} onClose={() => setWhy(null)} />}
     </div>
   );
@@ -560,7 +560,7 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
   // With six seats most chips are off screen on a phone: keep whoever is picking in view.
   useEffect(() => { if (seat.active) self.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); }, [seat.active]);
   return (
-    <button ref={self} type="button" onClick={onOpen} aria-label={c.teamOf(seat.me ? c.you : seat.name)} className={cn("flex min-w-[8.5rem] flex-1 items-center gap-2 rounded-2xl px-2.5 text-left", tight ? "py-1" : "py-2", seat.active ? (seat.me ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-brand-blue/25 ring-2 ring-brand-blue") : "bg-surface-card")}>
+    <button ref={self} type="button" onClick={onOpen} aria-label={seat.me ? c.yourTeam : c.teamOf(seat.name)} className={cn("flex min-w-[8.5rem] flex-1 items-center gap-2 rounded-2xl px-2.5 text-left", tight ? "py-1" : "py-2", seat.active ? (seat.me ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-brand-blue/25 ring-2 ring-brand-blue") : "bg-surface-card")}>
       {seat.avatar ? <DuelAvatar customization={seat.avatar} size="xs" /> : <span className="size-8 rounded-full bg-white/15" />}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold text-white/80">{seat.me ? c.you : seat.name}{seat.note ? ` · ${seat.note}` : ""}</span>
@@ -571,14 +571,15 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
 }
 
 /** Anyone's XI, from a seat chip or the final table: seeing each other's teams is what starts the arguing. */
-export function TeamSheet({ c, name, slots, picks, hidden, seconds, onPlay, onClose }: { c: DraftText; name: string; slots: Slot[]; picks: (Pick | null)[]; hidden?: boolean; seconds?: number | null; onPlay?: () => void; onClose: () => void }) {
+export function TeamSheet({ c, name, me, slots, picks, hidden, seconds, onPlay, onClose }: { c: DraftText; name: string; me?: boolean; slots: Slot[]; picks: (Pick | null)[]; hidden?: boolean; seconds?: number | null; onPlay?: () => void; onClose: () => void }) {
   useEscape(onClose);
   const team = lines(slots, picks);
+  const title = me ? c.yourTeam : c.teamOf(name);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" role="dialog" aria-modal aria-label={c.teamOf(name)} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" role="dialog" aria-modal aria-label={title} onClick={onClose}>
       <div className="max-h-full w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface-card p-4 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="min-w-0 text-sm font-black uppercase" style={poppins}>{c.teamOf(name)}</h2>
+          <h2 className="min-w-0 text-sm font-black uppercase" style={poppins}>{title}</h2>
           {!hidden && picks.some(Boolean) && <span className="shrink-0 text-xs font-bold text-white/80">{c.teamRating} <span className="text-lg font-black tabular-nums text-white" style={poppins}>{Math.round(team.overall)}</span></span>}
         </div>
         {seconds != null && <p role="timer" className="mt-2 rounded-xl bg-brand-yellow px-3 py-1.5 text-center text-xs font-black text-surface-page" style={poppins}>{c.yourTurn} · {seconds} s</p>}
@@ -1217,7 +1218,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
       <ol className="mt-4 space-y-2">
         {rows.map((r, i) => (
           <li key={r.seat.name}>
-           <button type="button" onClick={() => setTeamSeat(r.seat.name)} aria-label={c.teamOf(r.seat.me ? c.you : r.seat.name)} className={cn("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", r.seat.me ? "bg-brand-green/15 ring-1 ring-brand-green" : "bg-surface-card")}>
+           <button type="button" onClick={() => setTeamSeat(r.seat.name)} aria-label={r.seat.me ? c.yourTeam : c.teamOf(r.seat.name)} className={cn("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", r.seat.me ? "bg-brand-green/15 ring-1 ring-brand-green" : "bg-surface-card")}>
             <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-black", medal[i] ?? "bg-white/10")} style={poppins}>{i + 1}</span>
             {r.seat.avatar ? <DuelAvatar customization={r.seat.avatar} size="xs" /> : <span className="size-8 rounded-full bg-white/15" />}
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{r.seat.me ? c.you : r.seat.name}</p><p className="text-[11px] text-white/70">{c.teamRating} {Math.round(r.team)} · {c.finish[r.season.finish]}</p></div>
@@ -1227,7 +1228,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
         ))}
       </ol>
       <GreenButton onClick={onAgain} className="mt-auto">{againLabel ?? c.again}</GreenButton>
-      {open && <TeamSheet c={c} name={open.me ? c.you : open.name} slots={slots} picks={open.picks} onClose={() => setTeamSeat(null)} />}
+      {open && <TeamSheet c={c} name={open.name} me={open.me} slots={slots} picks={open.picks} onClose={() => setTeamSeat(null)} />}
     </div>
   );
 }
