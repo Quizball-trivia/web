@@ -365,7 +365,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
 
   // The places the server just filled with free academy kids, as it reports them.
   const forcedKids = useMemo(() => (state?.forced ?? []).map((id) => slots.find((x) => x.id === id)?.label ?? id), [state?.forced, slots]);
-  const moneyNotice = state?.notice !== "academy_money" ? null : forcedKids.length ? c.academyMoney(forcedKids.join(", "), forcedKids.length) : c.academyMoneyAny;
+  const moneyNotice = forcedKids.length ? c.academyMoney(forcedKids.join(", "), forcedKids.length) : state?.notice === "academy_money" ? c.academyMoneyAny : null;
   const notice = moneyNotice ?? (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoneyChoice : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
   const target: ChallengeTarget | null = challenge ? { from: challenge.from, seed: "", leagueId: "", era: challenge.era, formation: challenge.formation, variant: challenge.variant, respins: 2, ...challenge.record, picks: challenge.picks ?? Array(11).fill(null) } : null;
   const boardTitle = (l: League | null) => (l ? c.boardWeek(c.leagueName(l)) : c.board);
