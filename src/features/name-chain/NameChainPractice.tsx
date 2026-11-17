@@ -29,36 +29,42 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
   const latest = useRef(state);
   useEffect(() => { latest.current = state; }, [state]);
   const inFlight = useRef(false);
-  const restart = useRef(false);
 
-  const run = useCallback(async (action: { op: "start" } | { op: "pass" } | { op: "answer"; answer: string }) => {
+  type Action = { op: "start" } | { op: "pass" } | { op: "answer"; answer: string };
+  const run = useCallback(async (first: Action) => {
     if (inFlight.current) return;
-    const body = practiceRequest(latest.current, locale, action);
-    if (!body) return;
     inFlight.current = true;
     setBusy(true);
-    setFailed(false);
+    let action: Action | null = first;
     try {
-      const res = await step(body);
-      // One step in flight at a time, so latest.current is the state this step was built on; keep the updater pure.
-      const next = applyPractice(latest.current, body.op, res);
-      latest.current = next;
-      setState(next);
-    } catch (error) {
-      if (error instanceof DailyGameApiError && error.message === "practice_restart" && body.op !== "start") {
-        // The names this chain froze are gone (a new version is live): retrying the same step would be refused again.
-        restart.current = true;
-      } else {
-        // Nothing is lost: the chain lives here, so the same step can simply be tried again.
-        setFailed(true);
+      while (action) {
+        const body = practiceRequest(latest.current, locale, action);
+        action = null;
+        if (!body) break;
+        setFailed(false);
+        try {
+          const res = await step(body);
+          // One step in flight at a time, so latest.current is the state this step was built on; keep the updater pure.
+          const next = applyPractice(latest.current, body.op, res);
+          latest.current = next;
+          setState(next);
+        } catch (error) {
+          if (error instanceof DailyGameApiError && error.message === "practice_restart" && body.op !== "start") {
+            // The names this chain froze are gone (a new version is live): drop the chain so its steps cannot be
+            // resent, and start a fresh one. If that start fails, the start retry shows (no chain is open).
+            const cleared: PracticeState = { ...latest.current, links: [], letter: "", last: null, ended: null };
+            latest.current = cleared;
+            setState(cleared);
+            action = { op: "start" };
+          } else {
+            // Nothing is lost: the chain lives here, so the same step can simply be tried again.
+            setFailed(true);
+          }
+        }
       }
     } finally {
       inFlight.current = false;
       setBusy(false);
-    }
-    if (restart.current) {
-      restart.current = false;
-      void run({ op: "start" });
     }
   }, [locale]);
 
