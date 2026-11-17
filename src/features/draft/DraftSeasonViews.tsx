@@ -105,7 +105,8 @@ export function TeamTalk({ locale, slots, picks, budget, tactics, tactic, captai
 export const momentText = (c: DraftText, m: MomentView) => (m.kind === "injury" ? c.injury(m.name ?? "", m.weeks ?? 1, m.cover ?? null) : m.kind === "red" ? c.red(m.name ?? "", m.cover ?? null) : c.derby(m.rival ?? ""));
 
 export function MomentsList({ c, moments, derby, upTo }: { c: DraftText; moments: MomentView[]; derby?: string | null; upTo?: number }) {
-  const shown = moments.filter((m) => upTo == null || m.round <= upTo);
+  // An academy kid's absence changes the lineup but nobody announces it.
+  const shown = moments.filter((m) => m.kind === "derby" || (!!m.name && (upTo == null || m.round <= upTo)));
   if (!shown.length && !derby) return null;
   return (
     <ul className="space-y-1.5 text-xs">
@@ -183,7 +184,7 @@ export function WinterBreak({ locale, half, slots, picks, tactics, tactic, pendi
             )}
             {!w.signing && !w.spin && <p className="mt-2 text-[11px] font-semibold text-white/55">{c.januaryNone}</p>}
           </Card>
-          {half.moments.length > 0 && <Card title={c.momentsTitle}><MomentsList c={c} moments={half.moments} /></Card>}
+          {half.moments.some((m) => m.name) && <Card title={c.momentsTitle}><MomentsList c={c} moments={half.moments} /></Card>}
         </div>
         <div className="space-y-3">
           {player && <p role="status" className="rounded-xl bg-brand-yellow px-3 py-2 text-center text-sm font-black text-surface-page" style={poppins}>{c.januaryPlace(surname(player.name))}</p>}

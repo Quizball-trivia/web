@@ -13,7 +13,7 @@ import { draftCopy } from "./draft.copy";
 import { DRAFT_SOUNDS, preloadDraftSounds, type DraftSoundMoment } from "./draft.sounds";
 import { ChallengeIntro, DraftBoard, DraftHome, DraftLeaderboard, MatchDayView, SeasonResultView, SeasonTicker, TeamSheet, XiReady, type BoardRow, type BoardSeat } from "./DraftViews";
 import { draftApi, reasonOf, withRetry, type ChallengeView, type DraftLeagues, type LeagueBoard, type RunEnvelope, type RunKind, type TieResponse } from "./draft.api";
-import { FORMATIONS, SEASON_PACE, matchMs, seasonStats, type ClubSeason, type FormationId, type League, type MatchDay, type Pick, type SeasonResult, type TacticId } from "./draft.rules";
+import { FORMATIONS, SEASON_PACE, matchMs, roundPicks, seasonStats, type ClubSeason, type FormationId, type League, type MatchDay, type Pick, type SeasonResult, type TacticId } from "./draft.rules";
 import { slotsOf } from "./draft.engine";
 import { SeasonExtras, TeamTalk, WinterBreak, momentText } from "./DraftSeasonViews";
 import type { ChallengeTarget } from "./draft.engine";
@@ -254,14 +254,27 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
     const t = setTimeout(() => setUpTo((v) => v + 1), matchMs(ticking, upTo));
     return () => clearTimeout(t);
   }, [screen, ticking, halfSeason, upTo, holding, sfx, env?.run.id]);
+  // Rules v2: who played each round (absences covered from the bench, the January squad from the turn of the year).
+  const picksFor = useMemo(() => {
+    if (!state || state.rules !== 2) return undefined;
+    const extra = state.result?.extra;
+    const squad = (p: (Pick | null)[]) => ({ picks: p.slice(0, 11), bench: p.slice(11), boost: {} });
+    const who = roundPicks({
+      slots: FORMATIONS[state.formation], first: squad(extra?.first ?? myPicks), second: extra ? squad(myPicks) : undefined,
+      half: extra?.half ?? state.half?.half ?? 0, moments: extra?.moments ?? state.half?.moments ?? [],
+    });
+    return (round: number) => who(round).picks;
+  }, [state, myPicks]);
+  const goalSeed = state?.goalSeed ?? state?.result?.goalSeed ?? "";
   // The season's top scorer, from the same goals the season showed: measured against the real Golden Boot.
   const topScorer = useMemo(() => {
     if (!season || !state?.result) return null;
-    const top = seasonStats(state.result.goalSeed, season, slots, myPicks).topScorer;
+    const top = seasonStats(goalSeed, season, slots, myPicks, picksFor).topScorer;
     const p = top ? myPicks[slots.findIndex((x) => x.id === top.slotId)] : null;
-    return top && p ? { name: p.academy ? c.academy : p.player.name, goals: top.goals } : null;
-  }, [season, state?.result, slots, myPicks, c.academy]);
-  const tickerMoments = useMemo(() => (state?.half?.moments ?? state?.result?.extra?.moments ?? []).map((m) => ({ round: m.round, text: momentText(c, m) })), [state?.half?.moments, state?.result?.extra?.moments, c]);
+    if (!top) return null;
+    return { name: top.name !== undefined ? top.name || c.academy : !p || p.academy ? c.academy : p.player.name, goals: top.goals };
+  }, [season, state?.result, slots, myPicks, picksFor, goalSeed, c.academy]);
+  const tickerMoments = useMemo(() => (state?.half?.moments ?? state?.result?.extra?.moments ?? []).filter((m) => m.name).map((m) => ({ round: m.round, text: momentText(c, m) })), [state?.half?.moments, state?.result?.extra?.moments, c]);
   // A run left at the winter break opens there.
   useEffect(() => { if (screen === "draft" && state?.phase === "half") setScreen("winter"); }, [screen, state?.phase]);
 
@@ -412,14 +425,14 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
           }}
           onRespin={(k) => { setRolling(true); void move("respin", { kind: k }).then((next) => { if (next && next.state.spin?.id !== state.spin?.id) { sfx("respin"); setTimeout(() => setRolling(false), ROLL_MS); } else setRolling(false); }); }} onExit={exit} />
       ) : screen === "season" && ticking && state && (state.result || halfSeason) ? (
-        <SeasonTicker locale={locale} seed={state.result?.goalSeed ?? env?.run.id ?? ""} season={ticking} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(ticking, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")}
+        <SeasonTicker locale={locale} seed={goalSeed} season={ticking} picksFor={picksFor} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(ticking, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")}
           onSkip={() => setScreen(halfSeason ? "winter" : "result")} moments={tickerMoments} label={state.rules === 2 ? (halfSeason ? c.firstHalf : c.secondHalf) : undefined} />
       ) : screen === "versus" && tie ? (
         <MatchDayView key={tie.id} locale={locale} match={tie.result as MatchDay} me={ME(tie.picks ?? myPicks, c.you)} rival={{ name: tie.rivalName, avatar: null, picks: tie.opponentPicks, me: false, active: false }} slots={FORMATIONS[tie.formation]} rivalSlots={FORMATIONS[tie.opponentFormation ?? tie.formation]} seed={tie.seed} reveal={!seenTies.includes(tie.id)}
           onFinish={(won) => { if (!seenTies.includes(tie.id)) { sfx(won ? "matchWin" : "defeat"); setSeenTies((x) => [...x, tie.id]); } }} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onBack={() => setScreen(state?.result ? "result" : "intro")} onExit={exit} />
       ) : season && state?.result && league ? (
         <>
-          <SeasonResultView locale={locale} number={state.number ?? 0} seed={state.result.goalSeed} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={weekly}
+          <SeasonResultView locale={locale} number={state.number ?? 0} seed={goalSeed || state.result.goalSeed} picksFor={picksFor} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={weekly}
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
             leaderboard={weekly ? leaderboard(league, true) : undefined} captain={state.result.extra?.captain ?? null} links={state.result.extra?.links ?? null}
             extras={state.result.extra ? <SeasonExtras locale={locale} extra={state.result.extra} slots={slots} picks={myPicks} finish={season.finish} topScorer={topScorer} /> : undefined}

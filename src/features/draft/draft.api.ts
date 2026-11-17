@@ -15,13 +15,15 @@ export interface ServerRun {
   forced?: string[];
   result: { season: SeasonResult; coinsEarned: number; goalSeed: string; extra?: SeasonExtra } | null;
   /** The season rules: 2 has the bench, the team talk, two halves with a January window, moments and cups. */
-  rules?: number; captain?: string | null; tactic?: TacticId | null; tactic2?: TacticId | null; tactics?: TacticId[] | null; links?: ChemLink[] | null; half?: PublicHalf | null;
+  rules?: number; goalSeed?: string | null; captain?: string | null; tactic?: TacticId | null; tactic2?: TacticId | null; tactics?: TacticId[] | null; links?: ChemLink[] | null; half?: PublicHalf | null;
   done: boolean; day?: string; ranked?: boolean; rank?: number; number?: number | null; kind?: "free" | "challenge"; challengeCode?: string | null;
 }
 /** Rules v2, after the season: the cups, moments, chemistry, captain and tactics, and the real top scorer. */
 export interface SeasonExtra {
   cup: CupRun; europe: CupRun | null; moments: MomentView[]; derby: string | null; links: ChemLink[]; captain: string | null; tactic: TacticId | null; tactic2: TacticId | null;
   realTop: { name: string; club: string; goals: number; season: string } | null; cupCoins: number; half: number; january: { slotId: string; in: string; out: string | null } | null;
+  /** The squad of the first half: with the moments, who played each round. */
+  first: (Pick | null)[];
 }
 /** Rules v2, at the winter break: the first half as played and the January window. */
 export interface PublicHalf {

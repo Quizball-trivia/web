@@ -11,7 +11,7 @@ import { draftCopy, type DraftText } from "./draft.copy";
 import type { ChallengeTarget } from "./draft.engine";
 import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
-  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, isBench, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
+  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, isBench, openSlotsFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
   type ChemLink, type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
 } from "./draft.rules";
 
@@ -437,8 +437,8 @@ const unavailable = (c: DraftText, p: DraftPlayer, picks: (Pick | null)[], by?: 
 function PosTabs({ c, players, slots, picks, taken, pos, onPos, maxPrice }: { c: DraftText; players: DraftPlayer[]; slots: Slot[]; picks: (Pick | null)[]; taken: { playerId: string; by: string }[]; pos: PickerTab; onPos: (p: PickerTab) => void; maxPrice: number | null }) {
   const signable = (p: DraftPlayer) => !taken.some((t) => t.playerId === p.id) && !!destination(p, slots, picks) && (maxPrice === null || costOf(p) <= maxPrice);
   // The bench is not a position: its places only show under All.
-  const onPitch = (slot: Slot | undefined) => !!slot && !isBench(slot);
-  const tabs = POS_ORDER.map((at) => ({ at, open: slots.filter((x, i) => !picks[i] && x.pos === at && !isBench(x)).length, count: players.filter((p) => { const d = destination(p, slots, picks); return signable(p) && onPitch(d?.slot) && d?.slot.pos === at; }).length }));
+  const pitchFits = (p: DraftPlayer, at: Pos) => openSlotsFor(p, slots, picks).some((s) => !isBench(s) && s.pos === at);
+  const tabs = POS_ORDER.map((at) => ({ at, open: slots.filter((x, i) => !picks[i] && x.pos === at && !isBench(x)).length, count: players.filter((p) => signable(p) && pitchFits(p, at)).length }));
   return (
     <div role="tablist" aria-label={c.squad} className="grid grid-cols-5 gap-1.5">
       <button type="button" role="tab" aria-selected={pos === "ALL"} onClick={() => onPos("ALL")}
@@ -484,7 +484,8 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
   const fits = (p: DraftPlayer) => !isTaken(p.id) && !!destination(p, slots, picks);
   const tooDear = (p: DraftPlayer) => fits(p) && maxPrice !== null && costOf(p) > maxPrice;
   const signable = (p: DraftPlayer) => fits(p) && !tooDear(p);
-  const list = players.filter((p) => { if (pos === "ALL") return fits(p); const d = destination(p, slots, picks); return d ? !isBench(d.slot) && d.slot.pos === pos : p.pos === pos; })
+  // A position's tab lists everyone who can take one of its open places on the pitch, whatever his best place is.
+  const list = players.filter((p) => (pos === "ALL" ? fits(p) : openSlotsFor(p, slots, picks).some((s) => !isBench(s) && s.pos === pos) || (!destination(p, slots, picks) && p.pos === pos)))
     .sort((a, b) => Number(signable(b)) - Number(signable(a)) || (hidden ? (maxPrice !== null ? costOf(b) - costOf(a) : 0) || a.name.localeCompare(b.name) : rated(b) - rated(a)));
   return (
     <div className={cn("space-y-2", disabled && "pointer-events-none opacity-60")}>
@@ -841,12 +842,14 @@ function FormStrip({ season, played, live }: { season: SeasonResult; played: num
   );
 }
 
-export function SeasonTicker({ locale, seed, season, slots, picks, variant, upTo, matchTime, holding = false, onGoal, onSkip, moments, label }: {
+export function SeasonTicker({ locale, seed, season, slots, picks: squad, variant, upTo, matchTime, holding = false, onGoal, onSkip, moments, label, picksFor }: {
   locale: string; seed: string; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; variant: Variant; upTo: number;
   /** Rules v2: injuries, red cards and the derby, shown in the week they happen. */
   moments?: { round: number; text: string }[];
   /** Which part of the season this is (first or second half). */
   label?: string;
+  /** Rules v2: who played each round (absences covered, the January squad after the turn of the year). */
+  picksFor?: (round: number) => (Pick | null)[];
   /** How long the match on screen lasts. */
   matchTime: number;
   /** Stay on the match that just ended the perfect run. */
@@ -859,6 +862,8 @@ export function SeasonTicker({ locale, seed, season, slots, picks, variant, upTo
   const final = holding || over;
   const live = season.matches[final ? Math.max(0, upTo - 1) : upTo];
   const minute = useMatchMinute(live.round, matchTime, final);
+  // The players on the pitch this round: their goals, and their names under the discs.
+  const picks = useMemo(() => (picksFor ? picksFor(live.round) : squad), [picksFor, live.round, squad]);
   const allGoals = useMemo(() => matchGoals(seed, live, slots, picks), [seed, live, slots, picks]);
   const goals = allGoals.filter((g) => g.minute <= minute);
   const mine = goals.filter((g) => g.mine), theirs = goals.filter((g) => !g.mine);
@@ -942,9 +947,10 @@ function SeasonRow({ c, m, desktopOnly }: { c: DraftText; m: MatchResult; deskto
 }
 
 /** Who did what in the season just watched: built from the same goals the season showed. */
-function SeasonAwards({ c, seed, season, slots, picks }: { c: DraftText; seed: string; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[] }) {
-  const stats = useMemo(() => seasonStats(seed, season, slots, picks), [seed, season, slots, picks]);
-  const nameOf = (slotId: string) => { const p = picks[slots.findIndex((x) => x.id === slotId)]; return !p || p.academy ? c.academy : p.player.name; };
+function SeasonAwards({ c, seed, season, slots, picks, picksFor }: { c: DraftText; seed: string; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; picksFor?: (round: number) => (Pick | null)[] }) {
+  const stats = useMemo(() => seasonStats(seed, season, slots, picks, picksFor), [seed, season, slots, picks, picksFor]);
+  // With the season's own lineups each line already names its player; otherwise the place's player now.
+  const nameOf = (slotId: string, name?: string) => { if (name !== undefined) return name || c.academy; const p = picks[slots.findIndex((x) => x.id === slotId)]; return !p || p.academy ? c.academy : p.player.name; };
   const keeper = picks[slots.findIndex((x) => x.pos === "GK")];
   const award = (label: string, who: string, value: string) => (
     <div className="min-w-0 rounded-xl bg-black/20 px-2.5 py-2">
@@ -957,15 +963,15 @@ function SeasonAwards({ c, seed, season, slots, picks }: { c: DraftText; seed: s
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {stats.topScorer && award(c.goldenBoot, nameOf(stats.topScorer.slotId), c.goals(stats.topScorer.goals))}
-        {stats.topAssists && award(c.topAssists, nameOf(stats.topAssists.slotId), c.assists(stats.topAssists.assists))}
+        {stats.topScorer && award(c.goldenBoot, nameOf(stats.topScorer.slotId, stats.topScorer.name), c.goals(stats.topScorer.goals))}
+        {stats.topAssists && award(c.topAssists, nameOf(stats.topAssists.slotId, stats.topAssists.name), c.assists(stats.topAssists.assists))}
         {award(c.goldenGlove, !keeper || keeper.academy ? c.academy : keeper.player.name, c.cs(stats.cleanSheets))}
       </div>
       <Expandable title={c.playerStats}>
         <ol className="space-y-0.5 text-sm">
           {ranked.map((x) => (
-            <li key={x.slotId} className="flex items-center gap-2 rounded-lg px-2 py-1">
-              <span className="min-w-0 flex-1 truncate">{nameOf(x.slotId)}</span>
+            <li key={`${x.slotId}-${x.name ?? ""}`} className="flex items-center gap-2 rounded-lg px-2 py-1">
+              <span className="min-w-0 flex-1 truncate">{nameOf(x.slotId, x.name)}</span>
               <span className="shrink-0 text-xs text-white/80 tabular-nums">{c.goals(x.goals)} · {c.assists(x.assists)}</span>
             </li>
           ))}
@@ -998,9 +1004,9 @@ function BudgetSummary({ c, picks, total }: { c: DraftText; picks: (Pick | null)
 
 export const beatsTarget = (season: SeasonResult, t: ChallengeTarget) => season.points - t.points || (season.gf - season.ga) - (t.gf - t.ga) || season.gf - t.gf;
 
-export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit, extras, captain, links }: {
-  /** Rules v2: the trophies, awards and moments of the season. */
-  extras?: ReactNode; captain?: string | null; links?: ChemLink[] | null;
+export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit, extras, captain, links, picksFor }: {
+  /** Rules v2: the trophies, awards and moments of the season, and who played each round. */
+  extras?: ReactNode; captain?: string | null; links?: ChemLink[] | null; picksFor?: (round: number) => (Pick | null)[];
   locale: string; number: number; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; league: League; variant: Variant; coinsEarned: number; ranked: boolean;
   leaderboard?: ReactNode; shareLink: string; challenge?: ChallengeTarget | null; newBest?: boolean; nextDaily?: string | null; initialShare?: boolean; onPlayTarget?: () => void; seed?: string; budget?: number; onShare: (text: string) => void; onAgain: () => void; onFriends: () => void; onChallenge?: () => void; onExit: () => void;
 }) {
@@ -1052,7 +1058,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
             </div>
           </div>
           {variant === "knowledge" && <PicksReveal c={c} slots={slots} picks={picks} />}
-          {seed && <SeasonAwards c={c} seed={seed} season={season} slots={slots} picks={picks} />}
+          {seed && <SeasonAwards c={c} seed={seed} season={season} slots={slots} picks={picks} picksFor={picksFor} />}
           {challenge && onPlayTarget && <GreenButton onClick={onPlayTarget}>{c.playMatch}</GreenButton>}
           {season.weak && (
             <div className="rounded-2xl bg-surface-card px-4 py-3">
