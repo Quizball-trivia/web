@@ -1,5 +1,5 @@
 import { createDailyGameCall, DailyGameApiError, isNetworkFailure } from "@/lib/repositories/dailyGameApi";
-import type { Era, FormationId, Honour, MatchDay, Pick, SeasonResult, Variant } from "./draft.rules";
+import type { ChemLink, CupRun, Era, FormationId, Honour, MatchDay, MomentView, Pick, SeasonResult, TacticId, Variant } from "./draft.rules";
 
 /** Same calendar as the backend (draft-daily.days.ts). */
 export const DRAFT_CALENDAR = { contentStart: "2026-10-31", rankedStart: "2026-11-05", publishedDays: 400 };
@@ -7,14 +7,28 @@ export const DRAFT_CALENDAR = { contentStart: "2026-10-31", rankedStart: "2026-1
 export interface ServerSpin { id: string; club: string; season: string; legend: boolean; finish: number; honour?: Honour; players: Pick["player"][] }
 export interface ServerRun {
   variant: Variant; league: { id: string; name: string; short: string; teams: number; games: number }; era: Era; formation: FormationId;
-  phase: "picking" | "ready" | "result"; armed: boolean; round: number; picks: (Pick | null)[]; spin: ServerSpin | null; pool: string[];
+  phase: "picking" | "ready" | "half" | "result"; armed: boolean; round: number; picks: (Pick | null)[]; spin: ServerSpin | null; pool: string[];
   respins: number; respinCost: number | null; budget: number | null; spent: number; notice: string | null; undoName: string | null; canUndo: boolean;
   /** The squad on offer shows names (and prices) only; picks too in Ball Knowledge until the result. */
   hideSquad?: boolean; hidePicks?: boolean;
   /** The places free academy kids just took on their own (nobody was affordable). */
   forced?: string[];
-  result: { season: SeasonResult; coinsEarned: number; goalSeed: string } | null;
+  result: { season: SeasonResult; coinsEarned: number; goalSeed: string; extra?: SeasonExtra } | null;
+  /** The season rules: 2 has the bench, the team talk, two halves with a January window, moments and cups. */
+  rules?: number; goalSeed?: string | null; captain?: string | null; tactic?: TacticId | null; tactic2?: TacticId | null; tactics?: TacticId[] | null; links?: ChemLink[] | null; half?: PublicHalf | null;
   done: boolean; day?: string; ranked?: boolean; rank?: number; number?: number | null; kind?: "free" | "challenge"; challengeCode?: string | null;
+}
+/** Rules v2, after the season: the cups, moments, chemistry, captain and tactics, and the real top scorer. */
+export interface SeasonExtra {
+  cup: CupRun; europe: CupRun | null; moments: MomentView[]; derby: string | null; links: ChemLink[]; captain: string | null; tactic: TacticId | null; tactic2: TacticId | null;
+  realTop: { name: string; club: string; goals: number; season: string } | null; cupCoins: number; half: number; january: { slotId: string; in: string; out: string | null } | null;
+  /** The squad of the first half: with the moments, who played each round. */
+  first: (Pick | null)[];
+}
+/** Rules v2, at the winter break: the first half as played and the January window. */
+export interface PublicHalf {
+  half: number; matches: Array<{ round: number; home: boolean; gf: number; ga: number; opponent: string }>; position: number; gap: number; leader: string; moments: MomentView[];
+  window: { spin: ServerSpin | null; spinsLeft: number; money: number; signing: { slotId: string; in: string; out: string | null; refund: number } | null };
 }
 export interface RunEnvelope { run: { id: string; version: number }; state: ServerRun }
 export interface DraftToday { day: string; number: number; league: { id: string; name: string; short: string; teams: number; games: number }; era: Era; formation: FormationId; leagues: Array<{ id: string; name: string; short: string; teams: number; games: number }>; best: { rec: string; points: number } | null; played: boolean; guest: boolean; live: string; practiceDay: string | null }
@@ -47,7 +61,7 @@ export const draftApi = {
   startDaily: (variant: Variant, day: string, locale: string) => call<RunEnvelope>(`/${variant}/start`, "POST", { day }, locale),
   startFree: (choice: { leagueId: string; era: Era; formation: FormationId; variant: Variant }, locale: string) => call<RunEnvelope>("/play/free", "POST", choice, locale),
   currentFree: (runId: string, locale: string) => call<RunEnvelope>(`/play/free?runId=${q(runId)}`, "GET", undefined, locale),
-  move: (kind: RunKind, path: "spin" | "pick" | "academy" | "respin" | "undo" | "finish", run: RunEnvelope["run"], body: Record<string, unknown>, locale: string) =>
+  move: (kind: RunKind, path: "spin" | "pick" | "academy" | "respin" | "undo" | "finish" | "captain" | "tactic" | "january/spin" | "january/sign", run: RunEnvelope["run"], body: Record<string, unknown>, locale: string) =>
     call<RunEnvelope>(`${moveBase(kind)}/${path}`, "POST", { runId: run.id, version: run.version, ...body }, locale, path === "finish" ? LONG : {}),
   leaderboard: (variant: Variant, day: string, locale: string) => call<Leaderboard>(`/${variant}/leaderboard?day=${q(day)}`, "GET", undefined, locale, { identity: "optional" }),
   team: (variant: Variant, day: string, userId: string, locale: string) => call<TeamResponse>(`/${variant}/team?day=${q(day)}&userId=${q(userId)}`, "GET", undefined, locale),

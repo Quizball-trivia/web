@@ -13,7 +13,9 @@ import { draftCopy } from "./draft.copy";
 import { DRAFT_SOUNDS, preloadDraftSounds, type DraftSoundMoment } from "./draft.sounds";
 import { ChallengeIntro, DraftBoard, DraftHome, DraftLeaderboard, MatchDayView, SeasonResultView, SeasonTicker, TeamSheet, XiReady, type BoardRow, type BoardSeat } from "./DraftViews";
 import { draftApi, reasonOf, withRetry, type ChallengeView, type DraftLeagues, type LeagueBoard, type RunEnvelope, type RunKind, type TieResponse } from "./draft.api";
-import { FORMATIONS, SEASON_PACE, matchMs, type ClubSeason, type FormationId, type League, type MatchDay, type Pick } from "./draft.rules";
+import { FORMATIONS, SEASON_PACE, matchMs, roundPicks, seasonStats, type ClubSeason, type FormationId, type League, type MatchDay, type Pick, type SeasonResult, type TacticId } from "./draft.rules";
+import { slotsOf } from "./draft.engine";
+import { SeasonExtras, TeamTalk, WinterBreak, momentText } from "./DraftSeasonViews";
 import type { ChallengeTarget } from "./draft.engine";
 
 const ROLL_MS = 1000;
@@ -37,7 +39,7 @@ const boardRows = (board: LeagueBoard | null): BoardRow[] => {
   return board.me ? [...others, row(board.me, true)].sort((x, y) => x.rank - y.rank || Number(y.me) - Number(x.me)) : others;
 };
 
-type Screen = "intro" | "challenge" | "draft" | "season" | "result" | "versus" | "gone";
+type Screen = "intro" | "challenge" | "draft" | "season" | "winter" | "result" | "versus" | "gone";
 type Rival = BoardRow & { picks: (Pick | null)[]; formation: FormationId };
 
 /**
@@ -83,7 +85,8 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
 
   const state = env?.state ?? null;
   const league: League | null = state?.league ?? null;
-  const slots = state ? FORMATIONS[state.formation] : FORMATIONS[formation];
+  // Rules v2 drafts a bench after the XI: its three places come after the formation's eleven.
+  const slots = state ? slotsOf({ formation: state.formation, rules: state.rules }) : FORMATIONS[formation];
   const myPicks = useMemo(() => state?.picks ?? Array(11).fill(null), [state?.picks]);
   const leagues = (home?.leagues ?? []) as League[];
   const chosen = leagues.find((l) => l.id === leagueId) ?? leagues[0] ?? null;
@@ -139,7 +142,8 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
   const take = useCallback((next: RunEnvelope) => setEnv((cur) => (cur && cur.run.id === next.run.id && cur.run.version > next.run.version ? cur : next)), []);
   const adopt = useCallback((next: RunEnvelope, k: RunKind) => {
     take(next); setKind(k); setProblem(null);
-    setScreen(next.state.phase === "result" ? "result" : "draft");
+    // A run left at the winter break opens there.
+    setScreen(next.state.phase === "result" ? "result" : next.state.phase === "half" ? "winter" : "draft");
   }, [take]);
 
   const resetLinks = useCallback(() => { setChallengeCode(null); setChallenge(null); linkRequest.current++; setChallengeLink(null); setCopiedUrl(null); }, []);
@@ -166,6 +170,8 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
           take(fresh);
           // The answer was lost but the move happened: the season was played, so go on to it.
           if (fresh.state.phase === "result") { setScreen("result"); if (path === "finish") onEvent?.("complete", { score: fresh.state.result?.season.points } as EngineEventDetail); }
+          // The first half was played: on to the winter break.
+          else if (fresh.state.phase === "half") setScreen("winter");
         }
       }
       setProblem(reason === "day_over" ? c.dayOver : reason === "no_coins" ? c.noCoins : c.moveFailed);
@@ -224,24 +230,54 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
     setTimeout(() => { setRolling(false); if (next) sfx("land"); }, wait);
   }, [state?.armed, move, sfx]);
 
+  /** Kick-off: the whole season, or (rules v2) its first half; from the winter break, the second half. */
   const finishDraft = useCallback(async () => {
+    const fromHalf = state?.phase === "half" ? state.half?.half ?? 0 : 0;
     const next = await move("finish");
     if (!next) return;
-    sfx("kickoff"); setUpTo(0); setHeldFor(null); setScreen("season");
-    onEvent?.("complete", { score: next.state.result?.season.points } as EngineEventDetail);
-  }, [move, sfx, onEvent]);
+    sfx("kickoff"); setUpTo(fromHalf); setHeldFor(null); setScreen("season");
+    if (next.state.phase === "result") onEvent?.("complete", { score: next.state.result?.season.points } as EngineEventDetail);
+  }, [move, sfx, onEvent, state?.phase, state?.half?.half]);
 
-  // The season on the clock.
+  // The season on the clock. At the winter break only the first half exists: it plays as a season of its own length.
+  const halfSeason = useMemo<SeasonResult | null>(() => {
+    const h = state?.phase === "half" ? state.half : null;
+    if (!h) return null;
+    const matches = h.matches.map((m) => ({ ...m, opponent: { id: m.opponent, name: m.opponent, strength: 0, gk: 0, def: 0, mid: 0, att: 0 }, reason: null }));
+    return { w: 0, d: 0, l: 0, gf: 0, ga: 0, points: 0, position: h.position, teams: 0, games: h.half, finish: "mid", matches, weak: null, table: [], race: [] };
+  }, [state?.phase, state?.half]);
   const season = state?.result?.season ?? null;
-  const firstDrop = season ? season.matches.findIndex((m) => m.gf <= m.ga) : -1;
-  const holding = !!season && firstDrop >= 0 && upTo === firstDrop + 1 && heldFor !== env?.run.id;
+  const ticking = halfSeason ?? season;
+  const firstDrop = ticking ? ticking.matches.findIndex((m) => m.gf <= m.ga) : -1;
+  const holding = !!ticking && firstDrop >= 0 && upTo === firstDrop + 1 && heldFor !== env?.run.id;
   useEffect(() => {
-    if (screen !== "season" || !season) return;
-    if (upTo >= season.games) { sfx("fullTime"); const t = setTimeout(() => setScreen("result"), SEASON_PACE.end); return () => clearTimeout(t); }
+    if (screen !== "season" || !ticking) return;
+    if (upTo >= ticking.games) { sfx("fullTime"); const t = setTimeout(() => setScreen(halfSeason ? "winter" : "result"), SEASON_PACE.end); return () => clearTimeout(t); }
     if (holding) { const t = setTimeout(() => setHeldFor(env?.run.id ?? null), SEASON_PACE.runEnded); return () => clearTimeout(t); }
-    const t = setTimeout(() => setUpTo((v) => v + 1), matchMs(season, upTo));
+    const t = setTimeout(() => setUpTo((v) => v + 1), matchMs(ticking, upTo));
     return () => clearTimeout(t);
-  }, [screen, season, upTo, holding, sfx, env?.run.id]);
+  }, [screen, ticking, halfSeason, upTo, holding, sfx, env?.run.id]);
+  // Rules v2: who played each round (absences covered from the bench, the January squad from the turn of the year).
+  const picksFor = useMemo(() => {
+    if (!state || state.rules !== 2) return undefined;
+    const extra = state.result?.extra;
+    const squad = (p: (Pick | null)[]) => ({ picks: p.slice(0, 11), bench: p.slice(11), boost: {} });
+    const who = roundPicks({
+      slots: FORMATIONS[state.formation], first: squad(extra?.first ?? myPicks), second: extra ? squad(myPicks) : undefined,
+      half: extra?.half ?? state.half?.half ?? 0, moments: extra?.moments ?? state.half?.moments ?? [],
+    });
+    return (round: number) => who(round).picks;
+  }, [state, myPicks]);
+  const goalSeed = state?.goalSeed ?? state?.result?.goalSeed ?? "";
+  // The season's top scorer, from the same goals the season showed: measured against the real Golden Boot.
+  const topScorer = useMemo(() => {
+    if (!season || !state?.result) return null;
+    const top = seasonStats(goalSeed, season, slots, myPicks, picksFor).topScorer;
+    const p = top ? myPicks[slots.findIndex((x) => x.id === top.slotId)] : null;
+    if (!top) return null;
+    return { name: top.name !== undefined ? top.name || c.academy : !p || p.academy ? c.academy : p.player.name, goals: top.goals };
+  }, [season, state?.result, slots, myPicks, picksFor, goalSeed, c.academy]);
+  const tickerMoments = useMemo(() => (state?.half?.moments ?? state?.result?.extra?.moments ?? []).filter((m) => m.name).map((m) => ({ round: m.round, text: momentText(c, m) })), [state?.half?.moments, state?.result?.extra?.moments, c]);
 
   const resultSounded = useRef<string | null>(null);
   useEffect(() => {
@@ -369,11 +405,20 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
           board={leaderboard(chosen, true)} />
       ) : screen === "challenge" ? (
         target ? <ChallengeIntro locale={locale} target={target} league={{ id: "", name: challenge!.league, short: "", teams: 0, games: 0 }} onStart={() => void acceptChallenge()} onExit={backHome} /> : <p className="m-auto text-sm text-white/60">{c.loading}</p>
+      ) : screen === "draft" && state?.phase === "ready" && state.rules === 2 && state.tactics ? (
+        <TeamTalk locale={locale} slots={slots} picks={myPicks} budget={state.budget ?? undefined} tactics={state.tactics} tactic={state.tactic ?? null} captain={state.captain ?? null} links={state.links ?? []} pending={pending}
+          notice={moneyNotice ?? (state.notice === "academy" ? c.academyNotice : null)}
+          undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")}
+          onCaptain={(slotId) => void move("captain", { slotId })} onTactic={(t: TacticId) => void move("tactic", { tactic: t })} onPlay={() => void finishDraft()} onExit={exit} />
+      ) : screen === "winter" && state?.phase === "half" && state.half && state.tactics ? (
+        <WinterBreak locale={locale} half={state.half} slots={slots} picks={myPicks} tactics={state.tactics} tactic={state.tactic2 ?? state.tactic ?? null} pending={pending}
+          onScout={() => void move("january/spin")} onSign={(playerId, slotId) => { void move("january/sign", { playerId, slotId }).then((next) => { if (next) sfx("sign"); }); }}
+          onTactic={(t: TacticId) => void move("tactic", { tactic: t })} onPlay={() => void finishDraft()} onExit={exit} />
       ) : screen === "draft" && state?.phase === "ready" ? (
         <XiReady locale={locale} slots={slots} picks={myPicks} variant={state.variant} hidePicks={state.hidePicks} budget={state.budget ?? undefined} notice={moneyNotice ?? (state.notice === "academy" ? c.academyNotice : null)} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onPlay={() => void finishDraft()} onExit={exit} />
       ) : screen === "draft" && state && league ? (
         <DraftBoard locale={locale} slots={slots} spin={(state.spin ? { ...state.spin, clubId: state.spin.id, leagueId: league.id } : { id: "", clubId: "", club: "", season: "", leagueId: league.id, legend: false, finish: 0, players: [] }) as ClubSeason} league={league} variant={state.variant} round={state.round}
-          hideSquad={state.hideSquad} hidePicks={state.hidePicks}
+          hideSquad={state.hideSquad} hidePicks={state.hidePicks} links={state.links}
           seats={[ME(myPicks, c.you)]} myPicks={myPicks} taken={[]} respins={state.respins} respinCost={state.respinCost} coins={null} mode={"daily" in kind ? "daily" : "free"} notice={notice} spinning={rolling} armed={state.armed && !rolling} onSpin={() => void spinNow()} pool={state.pool}
           budget={state.budget ?? undefined} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onAcademy={(slotId) => { void move("academy", { slotId }).then((next) => { if (next) sfx("sign"); }); }}
           onPick={(playerId, slotId) => {
@@ -385,16 +430,18 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
             });
           }}
           onRespin={(k) => { setRolling(true); void move("respin", { kind: k }).then((next) => { if (next && next.state.spin?.id !== state.spin?.id) { sfx("respin"); setTimeout(() => setRolling(false), ROLL_MS); } else setRolling(false); }); }} onExit={exit} />
-      ) : screen === "season" && season && state?.result ? (
-        <SeasonTicker locale={locale} seed={state.result.goalSeed} season={season} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(season, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onSkip={() => setScreen("result")} />
+      ) : screen === "season" && ticking && state && (state.result || halfSeason) ? (
+        <SeasonTicker locale={locale} seed={goalSeed} season={ticking} picksFor={picksFor} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(ticking, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")}
+          onSkip={() => setScreen(halfSeason ? "winter" : "result")} moments={tickerMoments} label={state.rules === 2 ? (halfSeason ? c.firstHalf : c.secondHalf) : undefined} />
       ) : screen === "versus" && tie ? (
         <MatchDayView key={tie.id} locale={locale} match={tie.result as MatchDay} me={ME(tie.picks, c.you)} rival={{ name: tie.rivalName, avatar: null, picks: tie.opponentPicks, me: false, active: false }} slots={FORMATIONS[tie.formation]} rivalSlots={FORMATIONS[tie.opponentFormation ?? tie.formation]} seed={tie.seed} reveal={!seenTies.includes(tie.id)}
           onFinish={(won) => { if (!seenTies.includes(tie.id)) { sfx(won ? "matchWin" : "defeat"); setSeenTies((x) => [...x, tie.id]); } }} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onBack={() => setScreen(state?.result ? "result" : "intro")} onExit={exit} />
       ) : season && state?.result && league ? (
         <>
-          <SeasonResultView locale={locale} number={state.number ?? 0} seed={state.result.goalSeed} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={weekly}
+          <SeasonResultView locale={locale} number={state.number ?? 0} seed={goalSeed || state.result.goalSeed} picksFor={picksFor} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={weekly}
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
-            leaderboard={weekly ? leaderboard(league, true) : undefined}
+            leaderboard={weekly ? leaderboard(league, true) : undefined} captain={state.result.extra?.captain ?? null} links={state.result.extra?.links ?? null} tactic={state.result.extra?.tactic2 ?? state.result.extra?.tactic ?? null}
+            extras={state.result.extra ? <SeasonExtras locale={locale} extra={state.result.extra} slots={slots} picks={myPicks} finish={season.finish} topScorer={topScorer} /> : undefined}
             onShare={() => undefined} onAgain={backHome} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
           {shownLink && (
             <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface-card p-2">
