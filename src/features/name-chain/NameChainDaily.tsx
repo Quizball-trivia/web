@@ -25,13 +25,14 @@ export interface NameChainDailyState extends WordRunStateBase {
   settled: { reason: "time" | "pass" | "cap"; named: number; could: string[] } | null;
   results: number[]; longest: number;
   /** The letters the run froze at its start; its leaderboard follows them, not the interface language. */
-  alphabet?: "latin" | "cyrillic";
+  alphabet?: "latin" | "cyrillic" | "greek";
 }
 type Result = Verdict | "late" | "too_fast";
 
 export const nameChainDailyApi = createWordDailyApi<NameChainDailyState, Result, { day: string; starts: string[] }>("/api/v1/name-chain");
 const loadLatinBoard = (day: string, locale: string) => nameChainDailyApi.leaderboard(day, locale === "ru" ? "en" : locale === "pt" ? "pt" : locale === "de" ? "de" : locale === "fr" ? "fr" : locale === "el" ? "el" : locale);
 const loadCyrillicBoard = (day: string) => nameChainDailyApi.leaderboard(day, "ru");
+const loadGreekBoard = (day: string) => nameChainDailyApi.leaderboard(day, "el");
 
 export { nameChainDailyGame } from "@/features/wordgames/daily/wordDaily.games";
 
@@ -165,7 +166,7 @@ export function NameChainDaily({ locale, onExit, onEvent, initialDay, onDay }: {
   const end = state?.done && day ? (
     <DailyEnd game={game} locale={locale} day={day} shareText={gd.shareText(puzzleNumber(NAME_CHAIN_CALENDAR, day), state.score, state.results.join(" + "))} guestOnPastBoard={daily.guestOnPastBoard}
       ranked={state.ranked} rank={state.rank} onArchive={() => daily.setView("archive")} onExit={onExit}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={state.alphabet === "cyrillic" ? loadCyrillicBoard : loadLatinBoard} day={isLiveDay(NAME_CHAIN_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />}>
+      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={state.alphabet === "cyrillic" ? loadCyrillicBoard : state.alphabet === "greek" ? loadGreekBoard : loadLatinBoard} day={isLiveDay(NAME_CHAIN_CALENDAR, day, daily.today) ? day : undefined} refreshKey={daily.boardRefresh} placement="end" className="mt-6" />}>
       <div className="rounded-3xl bg-brand-blue px-5 pb-5 pt-4 text-center">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75">{gd.endTitle} · #{puzzleNumber(NAME_CHAIN_CALENDAR, day)}</p>
         <p className="mt-2 text-6xl font-black leading-none tabular-nums" style={poppins} data-daily-final>{state.score}</p>

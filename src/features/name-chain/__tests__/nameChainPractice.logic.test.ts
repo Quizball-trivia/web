@@ -57,3 +57,14 @@ describe("name chain relaxed practice", () => {
     expect(body?.used.at(-1)).toBe(`p${many.length - 1}`);
   });
 });
+
+describe("practice keeps the names its chain started with", () => {
+  it("echoes the start's frozen versions on answers and passes, and forgets them with a new chain", () => {
+    const frozen = { oe: "el-test", al: "gr" as const };
+    const s = applyPractice(emptyPractice(), "start", res({ links: [link("bako", true)], letter: "Ο", frozen }));
+    expect(practiceRequest(s, "el", { op: "answer", answer: "Ορλεν" })).toMatchObject({ op: "answer", frozen });
+    expect(practiceRequest(s, "el", { op: "pass" })).toMatchObject({ op: "pass", frozen });
+    const fresh = applyPractice(s, "start", res({ links: [link("orlen", true)], letter: "Ν" }));
+    expect(practiceRequest(fresh, "el", { op: "answer", answer: "x" })).not.toHaveProperty("frozen");
+  });
+});
