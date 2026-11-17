@@ -62,8 +62,10 @@ function ChemistryList({ c, slots, picks, links }: { c: DraftText; slots: Slot[]
 
 // ── The team talk: captain, tactic, chemistry ──────────────────────────────────────────────────────────────────────
 
-export function TeamTalk({ locale, slots, picks, budget, tactics, tactic, captain, links, notice, pending, onCaptain, onTactic, onPlay, onExit }: {
+export function TeamTalk({ locale, slots, picks, budget, tactics, tactic, captain, links, notice, pending, onCaptain, onTactic, onPlay, onExit, undoName, onUndo }: {
   locale: string; slots: Slot[]; picks: (Pick | null)[]; budget?: number; tactics: TacticId[]; tactic: TacticId | null; captain: string | null; links: ChemLink[];
+  /** The last signing can still be taken back (when the draft allows undo). */
+  undoName?: string | null; onUndo?: () => void;
   notice?: string | null; pending?: boolean; onCaptain: (slotId: string) => void; onTactic: (t: TacticId) => void; onPlay: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
@@ -93,7 +95,8 @@ export function TeamTalk({ locale, slots, picks, budget, tactics, tactic, captai
           {budget != null && <p className="text-center text-sm font-black text-brand-yellow tabular-nums" style={poppins}>{c.spent(spentOn(picks), budget)}</p>}
         </div>
       </div>
-      <div className="mt-auto pt-4">
+      <div className="mt-auto space-y-2 pt-4">
+        {undoName && onUndo && <QuietButton onClick={onUndo}>{c.undo}: {surname(undoName)}</QuietButton>}
         <GreenButton onClick={onPlay} disabled={pending}>{c.kickOff}</GreenButton>
       </div>
     </div>
@@ -137,7 +140,10 @@ export function WinterBreak({ locale, half, slots, picks, tactics, tactic, pendi
   // Selling whoever holds the place brings back half his price.
   const refundAt = (i: number) => { const p = picks[i]; return p && !p.academy ? Math.floor((p.price ?? 0) / 2) : 0; };
   const affordableAt = (i: number) => !!player && costOf(player) <= w.money + refundAt(i);
-  const places = player ? slots.filter((s, i) => fits(player, s) && affordableAt(i)).map((s) => s.id) : [];
+  // Never a second season of someone already in the squad: only the place of that very player, who would be sold.
+  const person = (p: DraftPlayer) => p.personId ?? p.id;
+  const clash = (i: number) => !!player && picks.some((q, k) => k !== i && !!q && !q.academy && person(q.player) === person(player));
+  const places = player ? slots.filter((s, i) => fits(player, s) && affordableAt(i) && !clash(i)).map((s) => s.id) : [];
   const sign = (slot: Slot) => { if (player) { onSign(player.id, slot.id); setChosen(null); } };
   return (
     <div className="flex flex-1 flex-col">

@@ -965,7 +965,9 @@ function SeasonAwards({ c, seed, season, slots, picks, picksFor }: { c: DraftTex
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {stats.topScorer && award(c.goldenBoot, nameOf(stats.topScorer.slotId, stats.topScorer.name), c.goals(stats.topScorer.goals))}
         {stats.topAssists && award(c.topAssists, nameOf(stats.topAssists.slotId, stats.topAssists.name), c.assists(stats.topAssists.assists))}
-        {award(c.goldenGlove, !keeper || keeper.academy ? c.academy : keeper.player.name, c.cs(stats.cleanSheets))}
+        {stats.keeper !== undefined
+          ? award(c.goldenGlove, stats.keeper ? stats.keeper.name || c.academy : c.academy, c.cs(stats.keeper?.cleanSheets ?? 0))
+          : award(c.goldenGlove, !keeper || keeper.academy ? c.academy : keeper.player.name, c.cs(stats.cleanSheets))}
       </div>
       <Expandable title={c.playerStats}>
         <ol className="space-y-0.5 text-sm">
@@ -1018,6 +1020,8 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
   const versus = challenge ? beatsTarget(season, challenge) : 0;
   const targetRecord = challenge ? `${challenge.w}–${challenge.d}–${challenge.l}` : "";
   const [sharing, setSharing] = useState(initialShare);
+  // The share card draws the pitch only: the bench stays off it.
+  const pitchSlots = slots.filter((s) => !isBench(s));
   const shareText = c.shareText(number, record(season), shareSquares(picks), c.finish[season.finish], modeName, shareLink);
   return (
     <div className="flex flex-1 flex-col">
@@ -1091,7 +1095,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
       </div>
       {sharing && (
         <ShareSheet c={c} text={shareText} defaultNames={!ranked && !onChallenge} onClose={() => setSharing(false)} onDone={() => onShare(shareText)}
-          data={{ brand: c.brand, number, league: c.leagueName(league), mode: modeName, record: record(season), finish: c.finish[season.finish], position: c.position(season.position), perfect, slots, picks, academy: c.academy, cta: c.shareCta, link: shareLink }} />
+          data={{ brand: c.brand, number, league: c.leagueName(league), mode: modeName, record: record(season), finish: c.finish[season.finish], position: c.position(season.position), perfect, slots: pitchSlots, picks: picks.slice(0, pitchSlots.length), academy: c.academy, cta: c.shareCta, link: shareLink }} />
       )}
     </div>
   );

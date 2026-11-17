@@ -403,6 +403,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
       ) : screen === "draft" && state?.phase === "ready" && state.rules === 2 && state.tactics ? (
         <TeamTalk locale={locale} slots={slots} picks={myPicks} budget={state.budget ?? undefined} tactics={state.tactics} tactic={state.tactic ?? null} captain={state.captain ?? null} links={state.links ?? []} pending={pending}
           notice={moneyNotice ?? (state.notice === "academy" ? c.academyNotice : null)}
+          undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")}
           onCaptain={(slotId) => void move("captain", { slotId })} onTactic={(t: TacticId) => void move("tactic", { tactic: t })} onPlay={() => void finishDraft()} onExit={exit} />
       ) : screen === "winter" && state?.phase === "half" && state.half && state.tactics ? (
         <WinterBreak locale={locale} half={state.half} slots={slots} picks={myPicks} tactics={state.tactics} tactic={state.tactic2 ?? state.tactic ?? null} pending={pending}
