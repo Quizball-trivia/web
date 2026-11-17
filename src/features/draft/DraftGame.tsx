@@ -262,11 +262,12 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
   useEffect(() => { if (state?.phase === "result" && "free" in kind) forgetFreeRun(); }, [state?.phase, kind]);
 
   // A team sheet belongs to the board it was opened from: another league or screen drops a late reply and closes the sheet.
+  // The same for a head-to-head still on its way, and when the home data (a new week) comes back.
   const teamRequest = useRef(0);
   useEffect(() => {
     teamRequest.current++;
     setOpenRival(null);
-  }, [boardLeague, screen]);
+  }, [boardLeague, screen, homeVersion]);
   const openTeam = useCallback(async (row: BoardRow) => {
     if (!row.runId) return;
     const request = ++teamRequest.current;
@@ -280,9 +281,12 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
   const canPlayRival = !!openRival && !openRival.me && !!shownBoard?.me;
   const playRival = useCallback(async () => {
     if (!openRival?.runId) return;
+    const request = ++teamRequest.current;
     setPending(true);
     try {
       const t = await draftApi.boardTie(openRival.runId, locale);
+      // Closed the sheet, changed league or started a draft meanwhile: the tie is saved, but it does not take the screen.
+      if (request !== teamRequest.current) return;
       setTie({ ...t, rivalName: openRival.name });
       setOpenRival(null);
       if (!seenTies.includes(t.id) && isNewTie(t)) sfx("kickoff"); else setSeenTies((x) => [...x, t.id]);
@@ -384,7 +388,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
       ) : screen === "season" && season && state?.result ? (
         <SeasonTicker locale={locale} seed={state.result.goalSeed} season={season} slots={slots} picks={myPicks} variant={state.variant} upTo={upTo} matchTime={matchMs(season, upTo)} holding={holding} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onSkip={() => setScreen("result")} />
       ) : screen === "versus" && tie ? (
-        <MatchDayView key={tie.id} locale={locale} match={tie.result as MatchDay} me={ME(tie.picks ?? myPicks, c.you)} rival={{ name: tie.rivalName, avatar: null, picks: tie.opponentPicks, me: false, active: false }} slots={FORMATIONS[tie.formation]} rivalSlots={FORMATIONS[tie.opponentFormation ?? tie.formation]} seed={tie.seed} reveal={!seenTies.includes(tie.id)}
+        <MatchDayView key={tie.id} locale={locale} match={tie.result as MatchDay} me={ME(tie.picks, c.you)} rival={{ name: tie.rivalName, avatar: null, picks: tie.opponentPicks, me: false, active: false }} slots={FORMATIONS[tie.formation]} rivalSlots={FORMATIONS[tie.opponentFormation ?? tie.formation]} seed={tie.seed} reveal={!seenTies.includes(tie.id)}
           onFinish={(won) => { if (!seenTies.includes(tie.id)) { sfx(won ? "matchWin" : "defeat"); setSeenTies((x) => [...x, tie.id]); } }} onGoal={(mine) => sfx(mine ? "goal" : "conceded")} onBack={() => setScreen(state?.result ? "result" : "intro")} onExit={exit} />
       ) : season && state?.result && league ? (
         <>
@@ -401,7 +405,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
           <p role="status" aria-live="polite" className="sr-only">{shownLink && copiedUrl === shownLink ? c.shareCopied : ""}</p>
         </>
       ) : null}
-      {openRival && <TeamSheet c={c} name={openRival.name} slots={FORMATIONS[openRival.formation]} picks={openRival.picks} onPlay={canPlayRival ? () => void playRival() : undefined} onClose={() => setOpenRival(null)} />}
+      {openRival && <TeamSheet c={c} name={openRival.name} slots={FORMATIONS[openRival.formation]} picks={openRival.picks} onPlay={canPlayRival ? () => void playRival() : undefined} onClose={() => { teamRequest.current++; setOpenRival(null); }} />}
       {problem && screen !== "draft" && <p role="alert" className="mt-3 rounded-xl bg-brand-red-soft/20 px-3 py-2 text-center text-xs font-semibold text-white">{problem}</p>}
       {problem && screen === "draft" && state?.phase === "ready" && <p role="alert" className="mt-3 rounded-xl bg-brand-red-soft/20 px-3 py-2 text-center text-xs font-semibold text-white">{problem}</p>}
     </Frame>

@@ -21,7 +21,7 @@ export interface DraftToday { day: string; number: number; league: { id: string;
 export interface BoardEntry { rank: number; userId: string; username: string; avatarUrl: string | null; avatarCustomization: never; w: number; d: number; l: number; points: number; gd: number; gf: number; score: number }
 export interface Leaderboard { day: string; players: number; top: BoardEntry[]; me: BoardEntry | null }
 export interface TeamResponse { formation: FormationId; picks: (Pick | null)[] }
-export interface TieResponse { id: string; seed: string; formation: FormationId; opponentFormation?: FormationId; picks?: (Pick | null)[]; at: string; side: 0 | 1; opponent: string; opponentPicks: (Pick | null)[]; result: MatchDay }
+export interface TieResponse { id: string; seed: string; formation: FormationId; opponentFormation?: FormationId; /** The XI that played for this side (a board tie plays your best of the week). */ picks: (Pick | null)[]; at: string; side: 0 | 1; opponent: string; opponentPicks: (Pick | null)[]; result: MatchDay }
 export interface LeagueInfo { id: string; name: string; short: string; teams: number; games: number }
 /** The first screen: leagues on offer, the board week, and the member's best of the week in each league. */
 export interface DraftLeagues { week: string; leagues: LeagueInfo[]; mine: Array<{ leagueId: string; w: number; d: number; l: number; points: number }>; guest: boolean }
