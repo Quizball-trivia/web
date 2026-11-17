@@ -139,11 +139,12 @@ export function WinterBreak({ locale, half, slots, picks, tactics, tactic, pendi
   // Where he could play: any place he fits, filled or not (whoever is there is sold for half his price).
   // Selling whoever holds the place brings back half his price.
   const refundAt = (i: number) => { const p = picks[i]; return p && !p.academy ? Math.floor((p.price ?? 0) / 2) : 0; };
-  const affordableAt = (i: number) => !!player && costOf(player) <= w.money + refundAt(i);
   // Never a second season of someone already in the squad: only the place of that very player, who would be sold.
   const person = (p: DraftPlayer) => p.personId ?? p.id;
-  const clash = (i: number) => !!player && picks.some((q, k) => k !== i && !!q && !q.academy && person(q.player) === person(player));
-  const places = player ? slots.filter((s, i) => fits(player, s) && affordableAt(i) && !clash(i)).map((s) => s.id) : [];
+  const clash = (who: DraftPlayer, i: number) => picks.some((q, k) => k !== i && !!q && !q.academy && person(q.player) === person(who));
+  // The places a signing can take: he fits, the money plus that place's sale covers him, and he is not already in.
+  const placesOf = (who: DraftPlayer) => slots.filter((s, i) => fits(who, s) && costOf(who) <= w.money + refundAt(i) && !clash(who, i)).map((s) => s.id);
+  const places = player ? placesOf(player) : [];
   const sign = (slot: Slot) => { if (player) { onSign(player.id, slot.id); setChosen(null); } };
   return (
     <div className="flex flex-1 flex-col">
@@ -171,7 +172,7 @@ export function WinterBreak({ locale, half, slots, picks, tactics, tactic, pendi
                     <ul className="mt-1.5 max-h-64 space-y-1 overflow-y-auto pr-1">
                       {squad.slice().sort((a, b) => (b.price ?? 0) - (a.price ?? 0)).map((p) => {
                         const on = chosen === p.id;
-                        const dear = costOf(p) > w.money + Math.max(0, ...picks.map((_, i) => refundAt(i)));
+                        const dear = placesOf(p).length === 0;
                         return (
                           <li key={p.id}>
                             <button type="button" disabled={dear} onClick={() => setChosen(on ? null : p.id)}
