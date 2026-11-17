@@ -1,5 +1,6 @@
 import type { Finish, LossReason, Pos, WeakLink } from "./draft.rules";
 import { LEAGUE_COPY } from "./draft.league-copy";
+import { SEASON_COPY } from "./draft.season-copy";
 
 /** Football Draft copy (working name; the name check is still open). pt, de, ru and fr are first drafts, not yet checked by a native speaker. */
 export interface DraftCopy {
@@ -345,6 +346,7 @@ export function draftCopy(locale: string) {
   const key = (locale in ALL ? locale : "en") as keyof typeof ALL;
   const base = ALL[key];
   const leagues = LEAGUE_COPY[key];
-  return { ...base, ...leagues, lineNames: LINE_NAMES[key], leagueName: (l: { id: string; name: string }) => (l.id === "iconic" ? leagues.iconicName : l.name) };
+  const season = SEASON_COPY[key];
+  return { ...base, ...leagues, ...season, lineNames: LINE_NAMES[key], leagueName: (l: { id: string; name: string }) => (l.id === "iconic" ? leagues.iconicName : l.id === "europe" ? season.europeLeague : l.name) };
 }
 export type DraftText = ReturnType<typeof draftCopy>;

@@ -11,15 +11,15 @@ import { draftCopy, type DraftText } from "./draft.copy";
 import type { ChallengeTarget } from "./draft.engine";
 import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
-  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
-  type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
+  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, isBench, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
+  type ChemLink, type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
 } from "./draft.rules";
 
 const surname = (name: string) => name.split(" ").slice(1).join(" ") || name;
 const variantName = (c: DraftText, v: Variant) => (v === "knowledge" ? c.knowledge : v === "budget" ? c.budget : c.classic);
 const euros = (m: number) => `€${m}M`;
 /** What a player costs: the server's price (it knows his reputation), or the rating's price for older states. */
-const costOf = (p: DraftPlayer & { price?: number }) => p.price ?? priceOf(p);
+export const costOf = (p: DraftPlayer & { price?: number }) => p.price ?? priceOf(p);
 
 /** A phone with the browser's bars showing: the pick screen tightens so everything still fits without scrolling. */
 const SHORT_PHONE = "(max-height: 720px) and (max-width: 1023px)";
@@ -40,6 +40,7 @@ const LEAGUE_TONE: Record<string, { crest: string; stripe: string }> = {
   bundesliga: { crest: "bg-[#d20515] text-white", stripe: "bg-white" },
   ligue1: { crest: "bg-[#0e1e3c] text-[#dae025]", stripe: "bg-[#dae025]" },
   iconic: { crest: "bg-brand-yellow text-surface-page", stripe: "bg-brand-yellow" },
+  europe: { crest: "bg-[#0b1f6b] text-[#ffd400]", stripe: "bg-[#ffd400]" },
 };
 const toneOf = (id: string) => LEAGUE_TONE[id] ?? { crest: "bg-brand-blue text-white", stripe: "bg-brand-blue" };
 const CREST = "[clip-path:polygon(0_0,100%_0,100%_62%,50%_100%,0_62%)]";
@@ -147,7 +148,8 @@ export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague
                     <LeagueCrest league={l} />
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-2 block text-sm font-black leading-tight" style={poppins}>{c.leagueName(l)}</span>
-                      {mine[l.id] && <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-brand-green-light">{c.boardYou} · {mine[l.id]}</span>}
+                      {mine[l.id] ? <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-brand-green-light">{c.boardYou} · {mine[l.id]}</span>
+                        : l.id === "europe" && <span className="mt-0.5 block text-[11px] font-semibold leading-tight text-white/60">{c.europeNote}</span>}
                     </span>
                   </motion.button>
                 );
@@ -319,8 +321,14 @@ function Reel({ label, value, sub, spinning, tone, tight }: { label: string; val
 /** Rating tiers in brand colours: yellow stars, green good, blue the rest. */
 export const tierBg = (r: number) => (r >= 85 ? "bg-brand-yellow text-surface-page" : r >= 75 ? "bg-brand-green text-white" : "bg-brand-blue text-white");
 
-export function DraftPitch({ slots, picks, highlight = [], hideRatings, onSlot, onEmptySlot, className, academy, compact, goals, tight }: {
+export function DraftPitch({ slots, picks, highlight = [], hideRatings, onSlot, onEmptySlot, className, academy, compact, goals, tight, links, captain, onPlayer }: {
   slots: Slot[]; picks: (Pick | null)[]; highlight?: string[]; hideRatings?: boolean; onSlot?: (slotId: string) => void; className?: string; academy: string;
+  /** Former teammates in the XI: a chalk line between them. */
+  links?: ChemLink[] | null;
+  /** The armband: a C on that place. */
+  captain?: string | null;
+  /** Tapping a signed player (the team talk gives him the armband). */
+  onPlayer?: (slotId: string) => void;
   /** Tapping an empty slot that is not highlighted (the phone picker jumps to that position). */
   onEmptySlot?: (slot: Slot) => void;
   /** Small side-by-side pitches: ratings only, no names. */
@@ -337,7 +345,17 @@ export function DraftPitch({ slots, picks, highlight = [], hideRatings, onSlot, 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/assets/stadium-green-vertical.webp" alt="" aria-hidden draggable={false} className="absolute inset-0 size-full object-fill" />
       <div aria-hidden className="absolute inset-0 bg-black/10" />
+      {links && links.length > 0 && (
+        <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 size-full">
+          {links.map((l) => {
+            const a = slots.find((s) => s.id === l.a), b = slots.find((s) => s.id === l.b);
+            return a && b ? <line key={`${l.a}-${l.b}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#ffc800" strokeOpacity={0.85} strokeWidth={0.9} strokeDasharray="2 1.5" vectorEffect="non-scaling-stroke" /> : null;
+          })}
+        </svg>
+      )}
       {slots.map((slot, i) => {
+        // The bench sits under the pitch (BenchRow), never on it.
+        if (isBench(slot)) return null;
         const p = picks[i];
         const lit = highlight.includes(slot.id);
         const r = p ? effective(p) : 0;
@@ -353,10 +371,12 @@ export function DraftPitch({ slots, picks, highlight = [], hideRatings, onSlot, 
                 {p ? (hideRatings ? "✓" : r) : slot.label}
               </motion.span>
             </AnimatePresence>
+            {captain === slot.id && p && <span className="absolute left-1/2 top-0 z-10 ml-2 flex size-4 items-center justify-center rounded-full bg-brand-yellow text-[9px] font-black text-surface-page ring-2 ring-surface-page" style={poppins}>C</span>}
             {!compact && p && <span className={cn("mx-auto block max-w-full truncate rounded-full bg-black/60 px-1.5 py-px font-bold leading-tight text-white", tight ? "mt-0.5 text-[9px]" : "mt-1 text-[10px]")}>{p.academy ? academy : surname(p.player.name)}</span>}
           </>
         );
         const style = { left: `${slot.x}%`, top: `${slot.y}%` };
+        if (onPlayer && p && !p.academy) return <button key={slot.id} type="button" onClick={() => onPlayer(slot.id)} aria-label={p.player.name} aria-pressed={captain === slot.id} className="absolute w-[4.5rem] -translate-x-1/2 -translate-y-1/2 text-center" style={style}>{body}</button>;
         return onSlot && lit
           ? <motion.button key={slot.id} type="button" onClick={() => onSlot(slot.id)} aria-label={slot.label} animate={reduce ? undefined : { scale: [1, 1.12, 1] }} transition={{ repeat: Infinity, duration: 0.9 }}
               className="absolute z-10 w-[4.5rem] -translate-x-1/2 -translate-y-1/2 text-center" style={style}>{body}</motion.button>
@@ -364,6 +384,37 @@ export function DraftPitch({ slots, picks, highlight = [], hideRatings, onSlot, 
             ? <button key={slot.id} type="button" onClick={() => onEmptySlot(slot)} aria-label={slot.label} className="absolute w-[4.5rem] -translate-x-1/2 -translate-y-1/2 text-center" style={style}>{body}</button>
             : <div key={slot.id} className="absolute w-[4.5rem] -translate-x-1/2 -translate-y-1/2 text-center" style={style}>{body}</div>;
       })}
+    </div>
+  );
+}
+
+/** The bench under the pitch: three places anyone can take; a tap on an empty one aims the next signing there. */
+export function BenchRow({ c, slots, picks, target, hideRatings, onEmpty, selectable, onPick }: {
+  c: DraftText; slots: Slot[]; picks: (Pick | null)[]; target?: string | null; hideRatings?: boolean; onEmpty?: (slot: Slot) => void;
+  /** January: places a signing could take (filled or not), and the tap that puts him there. */
+  selectable?: string[]; onPick?: (slot: Slot) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl bg-black/30 px-3 py-2 ring-1 ring-white/10">
+      <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.14em] text-white/60" style={poppins}>{c.bench}</span>
+      <div className="flex flex-1 justify-around gap-1.5">
+        {slots.map((slot, i) => {
+          if (!isBench(slot)) return null;
+          const p = picks[i];
+          const lit = target === slot.id || !!selectable?.includes(slot.id);
+          const disc = (
+            <span className={cn("mx-auto flex size-9 items-center justify-center rounded-full text-xs font-black tabular-nums",
+              p ? (p.academy ? "bg-white/30 text-white" : cn(hideRatings ? "bg-brand-green text-white" : tierBg(effective(p)), "ring-2 ring-white/80")) : lit ? "border-[3px] border-brand-yellow bg-brand-yellow/25 text-brand-yellow" : "border-2 border-dashed border-white/50 text-white/70")} style={poppins}>
+              {p ? (hideRatings ? "✓" : effective(p)) : c.benchSlot}
+            </span>
+          );
+          const label = p && <span className="mt-0.5 block max-w-[4.5rem] truncate text-[10px] font-bold text-white/85">{p.academy ? c.academy : surname(p.player.name)}</span>;
+          if (onPick && selectable?.includes(slot.id)) return <button key={slot.id} type="button" onClick={() => onPick(slot)} aria-label={c.bench} className="flex min-w-0 flex-col items-center rounded-xl ring-2 ring-brand-yellow">{disc}{label}</button>;
+          return !p && onEmpty
+            ? <button key={slot.id} type="button" onClick={() => onEmpty(slot)} aria-label={c.bench} aria-pressed={lit} className="flex min-w-0 flex-col items-center">{disc}</button>
+            : <div key={slot.id} className="flex min-w-0 flex-col items-center">{disc}{label}</div>;
+        })}
+      </div>
     </div>
   );
 }
@@ -376,7 +427,7 @@ function DestinationTag({ c, player, slots, picks, target }: { c: DraftText; pla
   if (!dest) return null;
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums", dest.offPosition ? "bg-brand-yellow text-surface-page" : "bg-white/10 text-white/80")} style={poppins} title={dest.offPosition ? c.closePosition(dest.penalty) : undefined}>
-      → {dest.slot.label}{dest.offPosition && ` −${dest.penalty}`}
+      → {isBench(dest.slot) ? c.benchSlot : dest.slot.label}{dest.offPosition && ` −${dest.penalty}`}
     </span>
   );
 }
@@ -385,7 +436,9 @@ const unavailable = (c: DraftText, p: DraftPlayer, picks: (Pick | null)[], by?: 
 
 function PosTabs({ c, players, slots, picks, taken, pos, onPos, maxPrice }: { c: DraftText; players: DraftPlayer[]; slots: Slot[]; picks: (Pick | null)[]; taken: { playerId: string; by: string }[]; pos: PickerTab; onPos: (p: PickerTab) => void; maxPrice: number | null }) {
   const signable = (p: DraftPlayer) => !taken.some((t) => t.playerId === p.id) && !!destination(p, slots, picks) && (maxPrice === null || costOf(p) <= maxPrice);
-  const tabs = POS_ORDER.map((at) => ({ at, open: slots.filter((x, i) => !picks[i] && x.pos === at).length, count: players.filter((p) => signable(p) && destination(p, slots, picks)?.slot.pos === at).length }));
+  // The bench is not a position: its places only show under All.
+  const onPitch = (slot: Slot | undefined) => !!slot && !isBench(slot);
+  const tabs = POS_ORDER.map((at) => ({ at, open: slots.filter((x, i) => !picks[i] && x.pos === at && !isBench(x)).length, count: players.filter((p) => { const d = destination(p, slots, picks); return signable(p) && onPitch(d?.slot) && d?.slot.pos === at; }).length }));
   return (
     <div role="tablist" aria-label={c.squad} className="grid grid-cols-5 gap-1.5">
       <button type="button" role="tab" aria-selected={pos === "ALL"} onClick={() => onPos("ALL")}
@@ -431,7 +484,7 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
   const fits = (p: DraftPlayer) => !isTaken(p.id) && !!destination(p, slots, picks);
   const tooDear = (p: DraftPlayer) => fits(p) && maxPrice !== null && costOf(p) > maxPrice;
   const signable = (p: DraftPlayer) => fits(p) && !tooDear(p);
-  const list = players.filter((p) => (pos === "ALL" ? fits(p) : (destination(p, slots, picks)?.slot.pos ?? p.pos) === pos))
+  const list = players.filter((p) => { if (pos === "ALL") return fits(p); const d = destination(p, slots, picks); return d ? !isBench(d.slot) && d.slot.pos === pos : p.pos === pos; })
     .sort((a, b) => Number(signable(b)) - Number(signable(a)) || (hidden ? (maxPrice !== null ? costOf(b) - costOf(a) : 0) || a.name.localeCompare(b.name) : rated(b) - rated(a)));
   return (
     <div className={cn("space-y-2", disabled && "pointer-events-none opacity-60")}>
@@ -516,7 +569,7 @@ export function RatingSheet({ c, player, spin, teams, onClose }: { c: DraftText;
 
 export interface BoardSeat { name: string; avatar: AvatarCustomization | null; picks: (Pick | null)[]; me: boolean; active: boolean; note?: string | null }
 
-export function DraftBoard({ locale, slots, spin, league, variant, round, seats, myPicks, taken, respins, respinCost, coins, mode, notice, spinning, armed = false, seconds, waitingFor, side, pool, feed = null, initialWhy = null, initialTeam = null, undoName = null, onUndo, onSpin, onPick, onRespin, onExit, budget = BUDGET.total, onAcademy, hideSquad, hidePicks }: {
+export function DraftBoard({ locale, slots, spin, league, variant, round, seats, myPicks, taken, respins, respinCost, coins, mode, notice, spinning, armed = false, seconds, waitingFor, side, pool, feed = null, initialWhy = null, initialTeam = null, undoName = null, onUndo, onSpin, onPick, onRespin, onExit, budget = BUDGET.total, onAcademy, hideSquad, hidePicks, links }: {
   locale: string; slots: Slot[]; spin: ClubSeason; league: League; variant: Variant; round: number; seats: BoardSeat[]; myPicks: (Pick | null)[];
   taken: { playerId: string; by: string }[]; respins: number; respinCost: number | null; coins: number | null; mode: "daily" | "free" | "duel" | "room" | "challenge";
   notice: string | null; spinning?: boolean;
@@ -535,6 +588,8 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
   budget?: number; onAcademy?: (slotId: string) => void;
   /** Names and prices only in the squad; ratings of signed players too (Ball Knowledge). Default from the version. */
   hideSquad?: boolean; hidePicks?: boolean;
+  /** Former teammates already in the XI. */
+  links?: ChemLink[] | null;
 }) {
   const c = draftCopy(locale);
   const hidden = hidePicks ?? variant === "knowledge";
@@ -588,7 +643,8 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
         <div className="min-w-0 space-y-2.5 lg:sticky lg:top-3 lg:space-y-3">
           <SpinCard c={c} spin={spin} league={league} spinning={spinning} armed={armed} pool={pool} tight={short} />
           <DraftPitch slots={slots} picks={myPicks} highlight={target ? [target] : []} hideRatings={hidden} academy={c.academy} tight={short} className={short ? "h-[14.5rem]" : "aspect-[4/3.25] lg:aspect-[3/3.4]"}
-            onSlot={() => setTarget(null)} onEmptySlot={(slot) => { setPos(slot.pos); setTarget(slot.id); }} />
+            onSlot={() => setTarget(null)} onEmptySlot={(slot) => { setPos(slot.pos); setTarget(slot.id); }} links={links} />
+          {slots.some(isBench) && <BenchRow c={c} slots={slots} picks={myPicks} target={target} hideRatings={hidden} onEmpty={(slot) => { setPos("ALL"); setTarget(target === slot.id ? null : slot.id); }} />}
           {armed && <p className="pb-20 text-center text-sm font-semibold text-white/70 lg:pb-0">{c.spinHint}</p>}
           {armed && onSpin && (
             <div className="fixed inset-x-0 bottom-4 z-30 px-4 lg:static lg:px-0">
@@ -785,8 +841,12 @@ function FormStrip({ season, played, live }: { season: SeasonResult; played: num
   );
 }
 
-export function SeasonTicker({ locale, seed, season, slots, picks, variant, upTo, matchTime, holding = false, onGoal, onSkip }: {
+export function SeasonTicker({ locale, seed, season, slots, picks, variant, upTo, matchTime, holding = false, onGoal, onSkip, moments, label }: {
   locale: string; seed: string; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; variant: Variant; upTo: number;
+  /** Rules v2: injuries, red cards and the derby, shown in the week they happen. */
+  moments?: { round: number; text: string }[];
+  /** Which part of the season this is (first or second half). */
+  label?: string;
   /** How long the match on screen lasts. */
   matchTime: number;
   /** Stay on the match that just ended the perfect run. */
@@ -834,6 +894,10 @@ export function SeasonTicker({ locale, seed, season, slots, picks, variant, upTo
           </div>
         </div>
         <FormStrip season={season} played={upTo} live={final ? null : upTo} />
+        {label && <p className="text-center text-[10px] font-black uppercase tracking-[0.18em] text-white/60" style={poppins}>{label}</p>}
+        {moments?.filter((m) => m.round === live.round).map((m) => (
+          <motion.p key={`${m.round}-${m.text}`} initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} role="status" className="rounded-xl bg-brand-red-soft/20 px-3 py-1.5 text-center text-xs font-bold text-white ring-1 ring-brand-red-soft/50">{m.text}</motion.p>
+        ))}
         <div aria-live="polite" className="flex min-h-6 justify-center">
           {played.length > 0 && (holding && dropped
             ? <motion.p key="ended" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-full rounded-2xl bg-brand-red-soft px-3 py-1 text-center text-xs font-black text-white" style={poppins}>{c.runEnded(dropped.round, `${dropped.gf}–${dropped.ga}`, `${dropped.home ? c.vs : "@"} ${dropped.opponent.name}`)}</motion.p>
@@ -934,7 +998,9 @@ function BudgetSummary({ c, picks, total }: { c: DraftText; picks: (Pick | null)
 
 export const beatsTarget = (season: SeasonResult, t: ChallengeTarget) => season.points - t.points || (season.gf - season.ga) - (t.gf - t.ga) || season.gf - t.gf;
 
-export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit }: {
+export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit, extras, captain, links }: {
+  /** Rules v2: the trophies, awards and moments of the season. */
+  extras?: ReactNode; captain?: string | null; links?: ChemLink[] | null;
   locale: string; number: number; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; league: League; variant: Variant; coinsEarned: number; ranked: boolean;
   leaderboard?: ReactNode; shareLink: string; challenge?: ChallengeTarget | null; newBest?: boolean; nextDaily?: string | null; initialShare?: boolean; onPlayTarget?: () => void; seed?: string; budget?: number; onShare: (text: string) => void; onAgain: () => void; onFriends: () => void; onChallenge?: () => void; onExit: () => void;
 }) {
@@ -974,6 +1040,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
             {nextDaily && <p className={cn("mt-1 text-xs font-semibold", perfect ? "text-surface-page/70" : "text-white/70")}>{c.nextDaily(nextDaily)}</p>}
           </motion.div>
           {variant === "budget" && <BudgetSummary c={c} picks={picks} total={budget} />}
+          {extras}
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <GreenButton onClick={() => setSharing(true)} className="flex items-center justify-center gap-2"><Share2 className="size-4" aria-hidden />{c.share}</GreenButton>
@@ -1010,7 +1077,8 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
           <SeasonDetails c={c} season={season} />
         </div>
         <div className="min-w-0 space-y-4">
-          <DraftPitch slots={slots} picks={picks} academy={c.academy} />
+          <DraftPitch slots={slots} picks={picks} academy={c.academy} captain={captain} links={links} />
+          {slots.some(isBench) && <BenchRow c={c} slots={slots} picks={picks} />}
           {challenge && <ChallengeCompare c={c} slots={slots} mine={picks} target={challenge} />}
           {ranked && leaderboard}
         </div>
@@ -1170,7 +1238,7 @@ function Confetti() {
   );
 }
 
-function LineBars({ c, team }: { c: DraftText; team: Lines }) {
+export function LineBars({ c, team }: { c: DraftText; team: Lines }) {
   const rows: [string, number][] = [[c.lineNames.att, team.att], [c.lineNames.mid, team.mid], [c.lineNames.def, team.def], [c.lineNames.gk, team.gk]];
   return (
     <div className="rounded-2xl bg-surface-card px-4 py-3">
