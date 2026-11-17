@@ -142,7 +142,8 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
   const take = useCallback((next: RunEnvelope) => setEnv((cur) => (cur && cur.run.id === next.run.id && cur.run.version > next.run.version ? cur : next)), []);
   const adopt = useCallback((next: RunEnvelope, k: RunKind) => {
     take(next); setKind(k); setProblem(null);
-    setScreen(next.state.phase === "result" ? "result" : "draft");
+    // A run left at the winter break opens there.
+    setScreen(next.state.phase === "result" ? "result" : next.state.phase === "half" ? "winter" : "draft");
   }, [take]);
 
   const resetLinks = useCallback(() => { setChallengeCode(null); setChallenge(null); linkRequest.current++; setChallengeLink(null); setCopiedUrl(null); }, []);
@@ -169,6 +170,8 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
           take(fresh);
           // The answer was lost but the move happened: the season was played, so go on to it.
           if (fresh.state.phase === "result") { setScreen("result"); if (path === "finish") onEvent?.("complete", { score: fresh.state.result?.season.points } as EngineEventDetail); }
+          // The first half was played: on to the winter break.
+          else if (fresh.state.phase === "half") setScreen("winter");
         }
       }
       setProblem(reason === "day_over" ? c.dayOver : reason === "no_coins" ? c.noCoins : c.moveFailed);
@@ -275,8 +278,6 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
     return { name: top.name !== undefined ? top.name || c.academy : !p || p.academy ? c.academy : p.player.name, goals: top.goals };
   }, [season, state?.result, slots, myPicks, picksFor, goalSeed, c.academy]);
   const tickerMoments = useMemo(() => (state?.half?.moments ?? state?.result?.extra?.moments ?? []).filter((m) => m.name).map((m) => ({ round: m.round, text: momentText(c, m) })), [state?.half?.moments, state?.result?.extra?.moments, c]);
-  // A run left at the winter break opens there.
-  useEffect(() => { if (screen === "draft" && state?.phase === "half") setScreen("winter"); }, [screen, state?.phase]);
 
   const resultSounded = useRef<string | null>(null);
   useEffect(() => {
@@ -435,7 +436,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
         <>
           <SeasonResultView locale={locale} number={state.number ?? 0} seed={goalSeed || state.result.goalSeed} picksFor={picksFor} budget={state.budget ?? undefined} season={season} slots={slots} picks={myPicks} league={league} variant={state.variant} coinsEarned={state.result.coinsEarned} ranked={weekly}
             shareLink={typeof window === "undefined" ? "" : `${window.location.origin}/football-draft`} challenge={challengeCode && target ? target : null} onChallenge={() => void challengeFriend()} onPlayTarget={challengeCode ? () => void playChallengeTie() : undefined}
-            leaderboard={weekly ? leaderboard(league, true) : undefined} captain={state.result.extra?.captain ?? null} links={state.result.extra?.links ?? null}
+            leaderboard={weekly ? leaderboard(league, true) : undefined} captain={state.result.extra?.captain ?? null} links={state.result.extra?.links ?? null} tactic={state.result.extra?.tactic2 ?? state.result.extra?.tactic ?? null}
             extras={state.result.extra ? <SeasonExtras locale={locale} extra={state.result.extra} slots={slots} picks={myPicks} finish={season.finish} topScorer={topScorer} /> : undefined}
             onShare={() => undefined} onAgain={backHome} onFriends={() => router.push("/friend/room/new?room=draft")} onExit={exit} />
           {shownLink && (

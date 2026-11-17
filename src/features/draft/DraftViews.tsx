@@ -11,8 +11,8 @@ import { draftCopy, type DraftText } from "./draft.copy";
 import type { ChallengeTarget } from "./draft.engine";
 import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
-  ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, isBench, openSlotsFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
-  type ChemLink, type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
+  ACADEMY_RATING, BUDGET, CAPTAIN_BONUS, CHEMISTRY_CAP, FORMATIONS, TACTICS, XI, budgetFor, isBench, openSlotsFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
+  type ChemLink, type ClubSeason, type DraftPlayer, type TacticId, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
 } from "./draft.rules";
 
 const surname = (name: string) => name.split(" ").slice(1).join(" ") || name;
@@ -409,9 +409,11 @@ export function BenchRow({ c, slots, picks, target, hideRatings, onEmpty, select
             </span>
           );
           const label = p && <span className="mt-0.5 block max-w-[4.5rem] truncate text-[10px] font-bold text-white/85">{p.academy ? c.academy : surname(p.player.name)}</span>;
-          if (onPick && selectable?.includes(slot.id)) return <button key={slot.id} type="button" onClick={() => onPick(slot)} aria-label={c.bench} className="flex min-w-0 flex-col items-center rounded-xl ring-2 ring-brand-yellow">{disc}{label}</button>;
+          // Each place its own name for a screen reader: "Bench 2", and who holds it.
+          const name = `${c.bench} ${slots.slice(0, i + 1).filter(isBench).length}${p ? ` · ${p.academy ? c.academy : p.player.name}` : ""}`;
+          if (onPick && selectable?.includes(slot.id)) return <button key={slot.id} type="button" onClick={() => onPick(slot)} aria-label={name} className="flex min-w-0 flex-col items-center rounded-xl ring-2 ring-brand-yellow">{disc}{label}</button>;
           return !p && onEmpty
-            ? <button key={slot.id} type="button" onClick={() => onEmpty(slot)} aria-label={c.bench} aria-pressed={lit} className="flex min-w-0 flex-col items-center">{disc}</button>
+            ? <button key={slot.id} type="button" onClick={() => onEmpty(slot)} aria-label={name} aria-pressed={lit} className="flex min-w-0 flex-col items-center">{disc}</button>
             : <div key={slot.id} className="flex min-w-0 flex-col items-center">{disc}{label}</div>;
         })}
       </div>
@@ -1006,14 +1008,18 @@ function BudgetSummary({ c, picks, total }: { c: DraftText; picks: (Pick | null)
 
 export const beatsTarget = (season: SeasonResult, t: ChallengeTarget) => season.points - t.points || (season.gf - season.ga) - (t.gf - t.ga) || season.gf - t.gf;
 
-export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit, extras, captain, links, picksFor }: {
+export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit, extras, captain, links, picksFor, tactic }: {
   /** Rules v2: the trophies, awards and moments of the season, and who played each round. */
   extras?: ReactNode; captain?: string | null; links?: ChemLink[] | null; picksFor?: (round: number) => (Pick | null)[];
+  /** Rules v2: the tactic the season ended with (its shift shows in the line bars). */
+  tactic?: TacticId | null;
   locale: string; number: number; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; league: League; variant: Variant; coinsEarned: number; ranked: boolean;
   leaderboard?: ReactNode; shareLink: string; challenge?: ChallengeTarget | null; newBest?: boolean; nextDaily?: string | null; initialShare?: boolean; onPlayTarget?: () => void; seed?: string; budget?: number; onShare: (text: string) => void; onAgain: () => void; onFriends: () => void; onChallenge?: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
-  const team = lines(slots, picks);
+  // The lines the season was played with: chemistry, the armband and the tactic (rules v2), as the team talk showed them.
+  const boost = captain || links?.length || tactic ? { perSlot: slots.map((s, k) => Math.min(CHEMISTRY_CAP, (links ?? []).filter((l) => l.a === s.id || l.b === s.id).length) + (captain === s.id && picks[k] && !picks[k]!.academy ? CAPTAIN_BONUS : 0)), shift: tactic ? TACTICS[tactic] : null } : undefined;
+  const team = lines(slots, picks, boost);
   const losses = season.matches.filter((m) => m.reason).slice(0, 4);
   const perfect = season.finish === "perfect";
   const modeName = variantName(c, variant);

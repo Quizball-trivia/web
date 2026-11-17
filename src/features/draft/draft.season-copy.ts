@@ -22,7 +22,7 @@ const en: SeasonCopy = {
   chooseTactic: "Your manager's tactic",
   tacticNames: { gegenpress: "Gegenpress", catenaccio: "Catenaccio", tikitaka: "Tiki-taka", counter: "Counter-attack", wingplay: "Wing play", parkbus: "Park the bus" },
   tacticNotes: { gegenpress: "Win it high, score more, leave space behind", catenaccio: "Locked at the back, little going forward", tikitaka: "Own the ball, own the midfield", counter: "Sit deep, break fast", wingplay: "Width and crosses for the forwards", parkbus: "Everyone behind the ball" },
-  chemistry: "Chemistry", chemLinks: (n) => `${n} former ${n === 1 ? "teammates link" : "teammate links"} up`, chemNone: "No former teammates in your XI: chemistry comes from players who shared a dressing room.", chemPair: (a, b, cl, se) => `${a} & ${b} · ${cl} ${se}`,
+  chemistry: "Chemistry", chemLinks: (n) => `${n} ${n === 1 ? "link" : "links"} between former teammates`, chemNone: "No former teammates in your XI: chemistry comes from players who shared a dressing room.", chemPair: (a, b, cl, se) => `${a} & ${b} · ${cl} ${se}`,
   kickOff: "Kick off the season", firstHalf: "First half of the season", secondHalf: "Second half of the season", winterBreak: "Winter break", halfRecord: (w, d, l, p) => `${w}–${d}–${l} · ${p} pts at the turn of the year`,
   january: "January transfer window", januaryHint: "One signing: he takes a place in your XI or on the bench, and whoever was there is sold for half his price.", januaryScout: "Scout a squad", januaryAgain: "Another squad", januaryMoney: (m) => `€${m}M to spend`, januaryPick: "Tap a player, then the place he takes", januaryPlace: (n) => `Where does ${n} play?`,
   januaryDone: (i, o, r) => (o ? `${i} in, ${o} out (+€${r}M)` : `${i} signed`), januaryNone: "No January signing", secondTactic: "Tactic for the second half", playSecondHalf: "Play the second half",
@@ -96,7 +96,7 @@ const pt: SeasonCopy = {
   januaryDone: (i, o, r) => (o ? `Chega ${i}, sai ${o} (+€${r}M)` : `${i} contratado`), januaryNone: "Nenhuma contratação em janeiro", secondTactic: "Tática para a segunda metade", playSecondHalf: "Jogar a segunda metade",
   injury: (n, w, c) => `${n} machucado, fora por ${w} ${w === 1 ? "rodada" : "rodadas"}: entra ${c ?? "um garoto da base"}`, red: (n, c) => `${n} expulso, suspenso por um jogo: entra ${c ?? "um garoto da base"}`, derby: (r) => `Clássico contra ${r}`, momentsTitle: "Os momentos da temporada",
   trophies: "Troféus", cupName: "Copa", europeName: "Europa", stage: (k, s, of) => (["Final", "Semifinal", "Quartas de final", "Oitavas de final", "16 avos de final"][of - 1 - s] ?? `Fase ${s + 1}`),
-  cupWon: "Campeão da copa!", europeWon: "Campeão da Europa!", treble: "TRÍPLICE COROA!", outIn: (st, o, sc) => `Eliminado nas ${st.toLowerCase()}: ${sc} contra ${o}`, noEurope: "Termine entre os quatro primeiros para jogar na Europa.", trophyCoins: (n) => `+${n} moedas por troféus`,
+  cupWon: "Campeão da copa!", europeWon: "Campeão da Europa!", treble: "TRÍPLICE COROA!", outIn: (st, o, sc) => `Eliminado (${st.toLowerCase()}): ${sc} contra ${o}`, noEurope: "Termine entre os quatro primeiros para jogar na Europa.", trophyCoins: (n) => `+${n} moedas por troféus`,
   awards: "Prêmios", goldenBootVs: (m, g, r, rg, se) => `${m} marcou ${g}. O artilheiro real de ${se}: ${r} com ${rg}.`, januarySigning: "Contratação de janeiro",
   europeLeague: "Europa", europeNote: "As cinco ligas num só sorteio",
 };
@@ -164,7 +164,7 @@ const el: SeasonCopy = {
   januaryDone: (i, o, r) => (o ? `Έρχεται ο ${i}, φεύγει ο ${o} (+€${r}M)` : `Υπογραφή: ${i}`), januaryNone: "Καμία μεταγραφή τον Ιανουάριο", secondTactic: "Τακτική για τον δεύτερο γύρο", playSecondHalf: "Παίξε τον δεύτερο γύρο",
   injury: (n, w, c) => `Ο ${n} τραυματίστηκε, εκτός για ${w} ${w === 1 ? "εβδομάδα" : "εβδομάδες"}: μπαίνει ${c ?? "ένας παίκτης ακαδημίας"}`, red: (n, c) => `Ο ${n} αποβλήθηκε, τιμωρία ενός αγώνα: μπαίνει ${c ?? "ένας παίκτης ακαδημίας"}`, derby: (r) => `Ντέρμπι με ${r}`, momentsTitle: "Οι στιγμές της σεζόν",
   trophies: "Τρόπαια", cupName: "Κύπελλο", europeName: "Ευρώπη", stage: (k, s, of) => (["Τελικός", "Ημιτελικός", "Προημιτελικός", "Φάση των 16", "Φάση των 32"][of - 1 - s] ?? `Γύρος ${s + 1}`),
-  cupWon: "Κυπελλούχος!", europeWon: "Πρωταθλητής Ευρώπης!", treble: "ΤΡΕΜΠΛ!", outIn: (st, o, sc) => `Αποκλεισμός στον ${st.toLowerCase()}: ${sc} με ${o}`, noEurope: "Τερμάτισε στην πρώτη τετράδα για να παίξεις στην Ευρώπη.", trophyCoins: (n) => `+${n} νομίσματα για τρόπαια`,
+  cupWon: "Κυπελλούχος!", europeWon: "Πρωταθλητής Ευρώπης!", treble: "ΤΡΕΜΠΛ!", outIn: (st, o, sc) => `Αποκλεισμός (${st.toLowerCase()}): ${sc} με ${o}`, noEurope: "Τερμάτισε στην πρώτη τετράδα για να παίξεις στην Ευρώπη.", trophyCoins: (n) => `+${n} νομίσματα για τρόπαια`,
   awards: "Βραβεία", goldenBootVs: (m, g, r, rg, se) => `Ο ${m} σκόραρε ${g}. Ο πραγματικός πρώτος σκόρερ της ${se}: ${r} με ${rg}.`, januarySigning: "Μεταγραφή Ιανουαρίου",
   europeLeague: "Ευρώπη", europeNote: "Και τα πέντε πρωταθλήματα σε μία κλήρωση",
 };
