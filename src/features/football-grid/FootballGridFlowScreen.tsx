@@ -1303,7 +1303,7 @@ export function CriterionHeader({
   );
 }
 
-function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string }) {
+function ClaimedCell({ claim, isMine, claimedLabel, displayName }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string; displayName?: string | null }) {
   return (
     <motion.div
       initial={{ scale: 0.4, opacity: 0 }}
@@ -1317,7 +1317,7 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
         className="size-11 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-12"
       />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
-        {claim.displayName ?? claimedLabel}
+        {displayName ?? claim.displayName ?? claimedLabel}
       </span>
       <motion.span
         className="pointer-events-none absolute inset-0 rounded-xl border-2"
@@ -1356,6 +1356,14 @@ export function MatchBoard({
   highlightCells?: number[] | null;
 }) {
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
+  // Claims carry the canonical English name; Georgian, Russian and Greek players see the roster's name in their alphabet.
+  const localizedNames = LOCALIZED_NAME_LOCALES.has(locale);
+  const roster = useGridTypeaheadRoster(localizedNames);
+  const rosterById = useMemo(() => new Map(roster.map((player) => [player.id, player])), [roster]);
+  const claimName = (claim: FootballGridClaimState) => {
+    const player = localizedNames ? rosterById.get(claim.footballPlayerId) : undefined;
+    return player ? localizedPlayerName(locale, claim.displayName ?? player.nameEn, player) : null;
+  };
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === (activeUserId ?? selfUserId);
   return (
     <motion.div
@@ -1400,7 +1408,7 @@ export function MatchBoard({
                 !selectable && !claim && 'opacity-60',
               )}
             >
-              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} /> : (
+              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} displayName={claimName(claim)} /> : (
                 <span className="absolute inset-0 grid place-items-center font-poppins text-lg font-black text-white/15">·</span>
               )}
             </motion.button>
@@ -1651,6 +1659,8 @@ function OptionName({ name }: { name: string }) {
     </span>
   );
 }
+
+const LOCALIZED_NAME_LOCALES = new Set<string>(['ka', 'ru', 'el']);
 
 function useGridTypeaheadRoster(enabled = true): GridTypeaheadPreparedPlayer[] {
   const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);

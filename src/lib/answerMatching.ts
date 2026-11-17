@@ -24,7 +24,9 @@ export function normalizeAnswer(value: string): string {
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    // Greek final sigma is σ (typed either way at a word's end; lower-casing Σ gives either).
+    .replace(/ς/g, "σ");
 }
 
 export function levenshtein(left: string, right: string): number {
