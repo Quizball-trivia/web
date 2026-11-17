@@ -625,7 +625,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
     <div className={cn("flex flex-1 flex-col", short && "-mb-3")}>
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap seconds={seconds ?? null}
         right={<span className="flex shrink-0 flex-col items-end text-xs font-bold leading-tight text-white/70 tabular-nums" style={poppins}>
-          {shared ? c.round(round + 1) : c.pickN(Math.min(XI, round + 1), XI)}
+          {shared ? c.round(round + 1) : c.pickN(Math.min(slots.length, round + 1), slots.length)}
         </span>} />
       <ProgressStrip picks={myPicks} hidden={hidden} />
       {purse && <WalletStrip c={c} money={purse} total={budget} />}
@@ -722,7 +722,7 @@ function WalletStrip({ c, money, total }: { c: DraftText; money: { left: number;
 function ProgressStrip({ picks, hidden }: { picks: (Pick | null)[]; hidden: boolean }) {
   const done = picks.filter((p): p is Pick => !!p);
   return (
-    <div className="mt-2 grid grid-cols-11 gap-1" aria-hidden>
+    <div className="mt-2 grid gap-1" style={{ gridTemplateColumns: `repeat(${picks.length}, minmax(0, 1fr))` }} aria-hidden>
       {picks.map((_, i) => {
         const p = done[i];
         return <motion.span key={i} initial={false} animate={{ scaleY: p ? 1 : 0.6 }} className={cn("h-1.5 origin-bottom rounded-full", p ? (hidden ? "bg-brand-green" : p.academy ? "bg-white/40" : tierBg(effective(p)).split(" ")[0]) : "bg-white/15")} />;
