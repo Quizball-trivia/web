@@ -37,13 +37,14 @@ describe('Grid name suggestions across interface languages', () => {
   });
 
   it('finds a player by the Greek name with or without accents and either final sigma', () => {
+    // Invented footballer: the repository is public.
     const el: GridTypeaheadPreparedPlayer[] = [{
-      id: 'karagounis', nameEn: 'Giorgos Karagounis', nameKa: null, nameEl: 'Γιώργος Καραγκούνης',
-      wordsEn: ['giorgos', 'karagounis'], wordsKa: [], wordsRu: [], wordsEl: normalizeGridAnswerText('Γιώργος Καραγκούνης').split(' '),
+      id: 'varkadakis', nameEn: 'Lefteris Varkadakis', nameKa: null, nameEl: 'Λευτέρης Βαρκαδάκης',
+      wordsEn: ['lefteris', 'varkadakis'], wordsKa: [], wordsRu: [], wordsEl: normalizeGridAnswerText('Λευτέρης Βαρκαδάκης').split(' '),
     }];
-    expect(searchGridPlayers(el, 'Καραγ', 'el').map((player) => player.nameEl)).toEqual(['Γιώργος Καραγκούνης']);
-    expect(searchGridPlayers(el, 'καραγκουνησ', 'el').map((player) => player.id)).toEqual(['karagounis']);
-    expect(searchGridPlayers(el, 'ΓΙΩΡΓΟΣ ΚΑΡ', 'el').map((player) => player.id)).toEqual(['karagounis']);
+    expect(searchGridPlayers(el, 'Βαρκα', 'el').map((player) => player.nameEl)).toEqual(['Λευτέρης Βαρκαδάκης']);
+    expect(searchGridPlayers(el, 'βαρκαδακησ', 'el').map((player) => player.id)).toEqual(['varkadakis']);
+    expect(searchGridPlayers(el, 'ΛΕΥΤΕΡΗΣ ΒΑΡ', 'el').map((player) => player.id)).toEqual(['varkadakis']);
   });
 
   it('finds a player by the Russian name and keeps it on the suggestion', () => {
