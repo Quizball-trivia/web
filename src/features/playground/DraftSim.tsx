@@ -110,6 +110,8 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
     seats: seatsFor(mode === "duel" ? 2 : mode === "room" ? Math.max(3, Math.min(6, o.seats ?? config.seats)) : 1), coins: config.coins,
   });
   const [variant] = useState<Variant>(config.variant);
+  // A draft started from the home plays like the real one: Budget, with the squad's ratings hidden until signing.
+  const [fromHome, setFromHome] = useState(false);
   const [screen, setScreen] = useState<"intro" | "setup" | "challenge" | "draft" | "season" | "result" | "versus">(config.intro ? "intro" : "draft");
   const [openRival, setOpenRival] = useState<BoardRow | null>(null);
   const [versus, setVersus] = useState<{ seat: BoardSeat; match: MatchDay; seed: string } | null>(null);
@@ -208,7 +210,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
     if (done) { recorded.current = done.seasons; setS(done); setScreen("result"); return; }
     begin(make(mode, mode === "daily" ? { variant, era: "all", formation: "4-3-3", leagueId: dailyLeague(u.leagues, dailyKey()) } : { leagueId: s.leagueId, era: s.era, formation: s.formation, variant: s.variant, seats: s.seats.length }));
   };
-  const openSetup = (kind: "free" | "friends") => { setSetupFor(kind); setSetup((x) => ({ ...x, variant })); setScreen("setup"); };
+  const openSetup = (kind: "free" | "friends") => { setFromHome(false); setSetupFor(kind); setSetup((x) => ({ ...x, variant })); setScreen("setup"); };
   const startSetup = () => { setTarget(null); begin(make(setupFor === "free" ? "free" : setup.seats === 2 ? "duel" : "room", setup)); };
   const exit = () => { log("onExit"); setTarget(null); setScreen("intro"); };
   const undo = () => { if (!undoFrom) return; log("onUndo"); lastSpin.current = undoFrom.state.spin.id; setArmed(false); setRolling(null); setS(undoFrom.state); setUndoFrom(null); };
@@ -263,7 +265,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
       {screen === "intro" ? (
         <DraftHome locale={locale} leagues={u.leagues} mine={best?.rec ? { [setup.leagueId]: best.rec } : {}} leagueId={setup.leagueId} formation={setup.formation}
           onLeague={(id) => setSetup((x) => ({ ...x, leagueId: id }))} onFormation={(f) => setSetup((x) => ({ ...x, formation: f }))}
-          onStart={() => { setTarget(null); begin(make("free", { ...setup, era: "all", variant })); }} onFriends={() => openSetup("friends")} onExit={() => log("onExit")} />
+          onStart={() => { setTarget(null); setFromHome(true); begin(make("free", { ...setup, era: "all", variant: "budget" })); }} onFriends={() => openSetup("friends")} onExit={() => log("onExit")} />
       ) : screen === "setup" ? (
         <DraftSetup locale={locale} leagues={u.leagues} values={setup} friends={setupFor === "friends"} onChange={setSetup} onStart={startSetup} onExit={exit} />
       ) : screen === "challenge" && target ? (
@@ -271,7 +273,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
       ) : screen === "draft" && s.phase === "ready" && !multi ? (
         <XiReady locale={locale} slots={slots} picks={s.seats[0].picks} variant={s.variant} budget={s.budget} notice={s.notice === "academy_money" ? c.academyMoneyAny : s.notice === "academy" ? c.academyNotice : null} undoName={undoFrom?.name ?? null} onUndo={undo} onPlay={playOn} onExit={exit} />
       ) : screen === "draft" ? (
-        <DraftBoard locale={locale} slots={slots} spin={s.spin} league={league} variant={s.variant} round={s.round} seats={boardSeats(s)} myPicks={s.seats[0].picks}
+        <DraftBoard locale={locale} slots={slots} spin={s.spin} league={league} variant={s.variant} round={s.round} seats={boardSeats(s)} myPicks={s.seats[0].picks} hideSquad={fromHome || undefined}
           taken={takenView(s, c.you)} respins={s.respins} respinCost={s.mode === "free" ? RESPIN_COST : null} coins={s.mode === "free" ? s.coins : null} mode={s.mode} notice={notice}
           spinning={spinning} armed={armed} onSpin={spinNow} pool={pool} feed={multi ? feedText : null} seconds={multi && !s.seats[seat].bot ? seconds : null} waitingFor={multi && s.seats[seat].bot ? s.seats[seat].name : null}
           undoName={undoFrom?.name ?? null} onUndo={undo}
