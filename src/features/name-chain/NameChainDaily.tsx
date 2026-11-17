@@ -30,7 +30,8 @@ export interface NameChainDailyState extends WordRunStateBase {
 type Result = Verdict | "late" | "too_fast";
 
 export const nameChainDailyApi = createWordDailyApi<NameChainDailyState, Result, { day: string; starts: string[] }>("/api/v1/name-chain");
-const loadLatinBoard = (day: string, locale: string) => nameChainDailyApi.leaderboard(day, locale === "ru" ? "en" : locale === "pt" ? "pt" : locale === "de" ? "de" : locale === "fr" ? "fr" : locale === "el" ? "el" : locale);
+// Russian and Greek players' Latin-letter runs rank on the English board; the other locales have their own.
+const loadLatinBoard = (day: string, locale: string) => nameChainDailyApi.leaderboard(day, locale === "ru" || locale === "el" ? "en" : locale);
 const loadCyrillicBoard = (day: string) => nameChainDailyApi.leaderboard(day, "ru");
 const loadGreekBoard = (day: string) => nameChainDailyApi.leaderboard(day, "el");
 

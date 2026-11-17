@@ -52,7 +52,10 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
           if (error instanceof DailyGameApiError && error.message === "practice_restart" && body.op !== "start") {
             // The names this chain froze are gone (a new version is live): drop the chain so its steps cannot be
             // resent, and start a fresh one. If that start fails, the start retry shows (no chain is open).
-            const cleared: PracticeState = { ...latest.current, links: [], letter: "", last: null, ended: null };
+            // The chain on screen still counts towards the longest one, as when a start replaces it.
+            const prior = latest.current;
+            const results = prior.links.length > 0 && !prior.ended ? [...prior.results, namedIn(prior)] : prior.results;
+            const cleared: PracticeState = { ...prior, results, links: [], letter: "", last: null, ended: null };
             latest.current = cleared;
             setState(cleared);
             action = { op: "start" };

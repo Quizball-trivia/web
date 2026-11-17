@@ -75,11 +75,12 @@ describe("answerMatching", () => {
   });
 });
 
+// Invented names only: the repository is public.
 describe("Greek answers", () => {
   it("ignore accents, read final sigma as σ and accept capitals", () => {
-    expect(normalizeAnswer("Καραγκούνης")).toBe("καραγκουνησ");
-    expect(fuzzyMatchesAnswer("καραγκουνησ", ["Γιώργος Καραγκούνης"])).toBe(true);
-    expect(fuzzyMatchesAnswer("ΚΑΡΑΓΚΟΥΝΗΣ", ["Γιώργος Καραγκούνης"])).toBe(true);
-    expect(matchesName("Αρησ", ["Άρης"]).ok).toBe(true);
+    expect(normalizeAnswer("Βαρκαδάκης")).toBe("βαρκαδακησ");
+    expect(fuzzyMatchesAnswer("βαρκαδακησ", ["Λευτέρης Βαρκαδάκης"])).toBe(true);
+    expect(fuzzyMatchesAnswer("ΒΑΡΚΑΔΑΚΗΣ", ["Λευτέρης Βαρκαδάκης"])).toBe(true);
+    expect(matchesName("Βελμορασ", ["Βελμόρας"]).ok).toBe(true);
   });
 });

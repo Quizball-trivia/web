@@ -65,4 +65,23 @@ describe("NameChainPractice", () => {
     await screen.findByRole("textbox");
     expect(call).toHaveBeenCalledTimes(4);
   });
+  it("keeps the dropped chain in the longest chain", async () => {
+    call
+      .mockResolvedValueOnce(step({ links: [link("p-bako", "Bako", true)], letter: "O" }))
+      .mockResolvedValueOnce(step({ result: "ok", links: [link("p-orlen", "Orlen")], letter: "N", last: { kind: "ok", text: "orlen", name: "Orlen", starts: [] } }))
+      .mockRejectedValueOnce(new DailyGameApiError("practice_restart", 400))
+      .mockResolvedValueOnce(step({ links: [link("p-nesto", "Nesto", true)], letter: "O" }));
+    render(<NameChainPractice locale="en" brand={["FOOTBALL", "CHAIN"]} onBack={() => {}} />);
+
+    const input = await screen.findByRole("textbox");
+    fireEvent.change(input, { target: { value: "Orlen" } });
+    fireEvent.submit(input.closest("form")!);
+    await screen.findByText("1 in this chain");
+    await waitFor(() => expect(screen.getByRole("textbox")).not.toBeDisabled());
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Nurak" } });
+    fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    await waitFor(() => expect(call).toHaveBeenCalledTimes(4));
+    await screen.findByText("0 in this chain");
+    expect(screen.getByText("Longest chain: 1")).toBeTruthy();
+  });
 });
