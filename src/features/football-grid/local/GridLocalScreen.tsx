@@ -734,7 +734,7 @@ function SuspensionPicker({ copy, locale, title, body, onDone }: {
     [locale, picked, query, roster],
   );
   const full = picked.length >= LOCAL_SUSPENSIONS;
-  const shown = (player: { name: string; nameKa: string | null; nameRu?: string | null }) => localizedPlayerName(locale, player.name, player);
+  const shown = (player: { name: string; nameKa: string | null; nameRu?: string | null; nameEl?: string | null }) => localizedPlayerName(locale, player.name, player);
   return (
     <>
       <header className="text-center">
@@ -765,7 +765,7 @@ function SuspensionPicker({ copy, locale, title, body, onDone }: {
           {results.map((player) => (
             <li key={player.id}>
               <button type="button"
-                onClick={() => { setPicked((current) => [...current, { playerId: player.id, name: player.nameEn, nameKa: player.nameKa, nameRu: player.nameRu ?? null, imageUrl: null }]); setQuery(''); }}
+                onClick={() => { setPicked((current) => [...current, { playerId: player.id, name: player.nameEn, nameKa: player.nameKa, nameRu: player.nameRu ?? null, nameEl: player.nameEl ?? null, imageUrl: null }]); setQuery(''); }}
                 className="flex w-full border-b border-white/5 px-3 py-3 text-left text-sm font-bold text-white last:border-b-0 hover:bg-white/5">
                 {localizedPlayerName(locale, player.nameEn, player)}
               </button>
