@@ -341,7 +341,10 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
 
   const backHome = useCallback(() => { setEnv(null); setOpenRival(null); setTie(null); resetLinks(); setHomeVersion((v) => v + 1); setScreen("intro"); }, [resetLinks]);
 
-  const notice = (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoney : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
+  // The places the server just filled with free academy kids, as it reports them.
+  const forcedKids = useMemo(() => (state?.forced ?? []).map((id) => slots.find((x) => x.id === id)?.label ?? id), [state?.forced, slots]);
+  const moneyNotice = state?.notice !== "academy_money" ? null : forcedKids.length ? c.academyMoney(forcedKids.join(", "), forcedKids.length) : c.academyMoneyAny;
+  const notice = moneyNotice ?? (state?.notice === "no_fit" ? c.noFit : state?.notice === "academy" ? c.academyNotice : state?.notice === "no_money" ? c.noMoneyChoice : state?.notice === "no_other_season" ? c.noOtherSeason : state?.notice === "no_coins" ? c.noCoins : null) ?? problem;
   const target: ChallengeTarget | null = challenge ? { from: challenge.from, seed: "", leagueId: "", era: challenge.era, formation: challenge.formation, variant: challenge.variant, respins: 2, ...challenge.record, picks: challenge.picks ?? Array(11).fill(null) } : null;
   const boardTitle = (l: League | null) => (l ? c.boardWeek(c.leagueName(l)) : c.board);
   const leaderboard = (l: League | null, open: boolean) => (
@@ -363,7 +366,7 @@ export function DraftGame({ locale, onExit, onEvent, initialChallenge }: {
       ) : screen === "challenge" ? (
         target ? <ChallengeIntro locale={locale} target={target} league={{ id: "", name: challenge!.league, short: "", teams: 0, games: 0 }} onStart={() => void acceptChallenge()} onExit={backHome} /> : <p className="m-auto text-sm text-white/60">{c.loading}</p>
       ) : screen === "draft" && state?.phase === "ready" ? (
-        <XiReady locale={locale} slots={slots} picks={myPicks} variant={state.variant} hidePicks={state.hidePicks} budget={state.budget ?? undefined} notice={state.notice === "academy" ? c.academyNotice : null} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onPlay={() => void finishDraft()} onExit={exit} />
+        <XiReady locale={locale} slots={slots} picks={myPicks} variant={state.variant} hidePicks={state.hidePicks} budget={state.budget ?? undefined} notice={moneyNotice ?? (state.notice === "academy" ? c.academyNotice : null)} undoName={state.canUndo ? state.undoName || c.academyKid : null} onUndo={() => void move("undo")} onPlay={() => void finishDraft()} onExit={exit} />
       ) : screen === "draft" && state && league ? (
         <DraftBoard locale={locale} slots={slots} spin={(state.spin ? { ...state.spin, clubId: state.spin.id, leagueId: league.id } : { id: "", clubId: "", club: "", season: "", leagueId: league.id, legend: false, finish: 0, players: [] }) as ClubSeason} league={league} variant={state.variant} round={state.round}
           hideSquad={state.hideSquad} hidePicks={state.hidePicks}

@@ -212,7 +212,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
   const startSetup = () => { setTarget(null); begin(make(setupFor === "free" ? "free" : setup.seats === 2 ? "duel" : "room", setup)); };
   const exit = () => { log("onExit"); setTarget(null); setScreen("intro"); };
   const undo = () => { if (!undoFrom) return; log("onUndo"); lastSpin.current = undoFrom.state.spin.id; setArmed(false); setRolling(null); setS(undoFrom.state); setUndoFrom(null); };
-  const notice = s.notice === "no_coins" ? c.noCoins : s.notice === "no_fit" ? c.noFit : s.notice === "academy" ? c.academyNotice : s.notice === "no_other_season" ? c.noOtherSeason : s.notice === "no_money" ? c.noMoney : null;
+  const notice = s.notice === "no_coins" ? c.noCoins : s.notice === "no_fit" ? c.noFit : s.notice === "academy" ? c.academyNotice : s.notice === "no_other_season" ? c.noOtherSeason : s.notice === "no_money" ? c.noMoneyChoice : s.notice === "academy_money" ? c.academyMoneyAny : null;
   // Each row is a real team drafted from the same draw, so it can be opened and played.
   const rows = useMemo(() => (s.seasons && !isShared(s.mode) ? rivalBoard(u, s) : []), [u, s]);
   // The forecast for the XI just built: shown before the season (not in Ball Knowledge, it would give ratings away) and held against the result.
@@ -269,7 +269,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
       ) : screen === "challenge" && target ? (
         <ChallengeIntro locale={locale} target={target} league={league} onStart={accept} onExit={exit} />
       ) : screen === "draft" && s.phase === "ready" && !multi ? (
-        <XiReady locale={locale} slots={slots} picks={s.seats[0].picks} variant={s.variant} budget={s.budget} undoName={undoFrom?.name ?? null} onUndo={undo} onPlay={playOn} onExit={exit} />
+        <XiReady locale={locale} slots={slots} picks={s.seats[0].picks} variant={s.variant} budget={s.budget} notice={s.notice === "academy_money" ? c.academyMoneyAny : s.notice === "academy" ? c.academyNotice : null} undoName={undoFrom?.name ?? null} onUndo={undo} onPlay={playOn} onExit={exit} />
       ) : screen === "draft" ? (
         <DraftBoard locale={locale} slots={slots} spin={s.spin} league={league} variant={s.variant} round={s.round} seats={boardSeats(s)} myPicks={s.seats[0].picks}
           taken={takenView(s, c.you)} respins={s.respins} respinCost={s.mode === "free" ? RESPIN_COST : null} coins={s.mode === "free" ? s.coins : null} mode={s.mode} notice={notice}

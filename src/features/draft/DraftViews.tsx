@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, Coins, Crown, Info, RefreshCw, Share2, Shield } from "lucide-react";
@@ -33,9 +32,44 @@ const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page",
 
 // ── Home: choose a league ──────────────────────────────────────────────────────────────────────────────────────────
 
+/** Each league's colours on its crest: a nod to the real competition, nothing more. */
+const LEAGUE_TONE: Record<string, { crest: string; stripe: string }> = {
+  pl: { crest: "bg-[#3d195b] text-white", stripe: "bg-[#00ff85]" },
+  laliga: { crest: "bg-[#ee3124] text-white", stripe: "bg-[#ffd200]" },
+  seriea: { crest: "bg-[#0a2e6e] text-white", stripe: "bg-[#29a8e0]" },
+  bundesliga: { crest: "bg-[#d20515] text-white", stripe: "bg-white" },
+  ligue1: { crest: "bg-[#0e1e3c] text-[#dae025]", stripe: "bg-[#dae025]" },
+  iconic: { crest: "bg-brand-yellow text-surface-page", stripe: "bg-brand-yellow" },
+};
+const toneOf = (id: string) => LEAGUE_TONE[id] ?? { crest: "bg-brand-blue text-white", stripe: "bg-brand-blue" };
+const CREST = "[clip-path:polygon(0_0,100%_0,100%_62%,50%_100%,0_62%)]";
+
+/** A club crest of the competition: its short name on a shield in its colours. */
+function LeagueCrest({ league, className }: { league: League; className?: string }) {
+  const tone = toneOf(league.id);
+  return (
+    <span aria-hidden className={cn("relative flex shrink-0 items-start justify-center pt-1.5", CREST, tone.crest, className ?? "h-12 w-10")}>
+      <span className={cn("absolute inset-x-0 top-0 h-1", tone.stripe)} />
+      {league.id === "iconic" ? <Crown className="mt-1 size-5" /> : <span className="mt-1 text-[11px] font-black tracking-tight" style={poppins}>{league.short}</span>}
+    </span>
+  );
+}
+
+/** A section title with the chalk underline of a matchday programme. */
+function ProgrammeTitle({ n, children }: { n?: number; children: ReactNode }) {
+  return (
+    <h3 className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-white/80" style={poppins}>
+      {n != null && <span className="flex size-5 items-center justify-center rounded-full bg-brand-yellow text-[10px] text-surface-page">{n}</span>}
+      {children}
+      <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-white/25 to-transparent" />
+    </h3>
+  );
+}
+
 /**
- * The first screen: pick a league (and a formation), draft, and see that league's weekly board. Iconic Clubs stands out:
- * it is the league of great seasons rather than a country's.
+ * The first screen, laid out like a matchday programme: the stadium and the budget on the scoreboard, then the league
+ * (crests; Iconic Clubs in gold across the row), the formation on a chalk tactics board, kick-off, and the league's
+ * weekly table.
  */
 export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague, onFormation, onStart, onFriends, onExit, board, guestNote, onSignIn, resumeLabel, onResume, pending }: {
   locale: string; leagues: League[];
@@ -52,68 +86,123 @@ export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague
 }) {
   const c = draftCopy(locale);
   const chosen = leagues.find((l) => l.id === leagueId) ?? leagues[0];
+  const iconic = leagues.find((l) => l.id === "iconic");
+  const national = leagues.filter((l) => l.id !== "iconic");
+  const reduce = useReducedMotion();
   return (
     <div className="flex flex-1 flex-col">
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap />
       <div className="lg:mt-3 lg:grid lg:grid-cols-2 lg:gap-x-8">
         <div>
-          <div className="relative mt-3 aspect-[16/7] w-full overflow-hidden rounded-2xl bg-game-art-night lg:mt-0 lg:aspect-video" aria-hidden>
-            <Image src="/assets/demos/game-modes/football-draft.webp" alt="" fill sizes="(max-width: 1023px) 100vw, 480px" className="object-cover" priority />
-          </div>
-          <p className="mt-3 text-3xl font-black uppercase leading-none" style={poppins}>{c.brand[0]} <span className="text-brand-green-light">{c.brand[1]}</span></p>
-          <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>{c.tag}</p>
-          <div className="mt-4 rounded-2xl bg-brand-yellow/10 px-4 py-3 ring-1 ring-brand-yellow/40">
-            <div className="flex items-center gap-3">
-              <Coins className="size-7 shrink-0 text-brand-yellow" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-3xl font-black leading-none text-brand-yellow tabular-nums" style={poppins}>{euros(BUDGET.total)}</p>
-                <p className="mt-1 text-sm font-bold leading-tight text-white">{c.budgetHint(BUDGET.total)}</p>
+          {/* The ground on matchday: turf, floodlight glow and the old two-stripe kit across the title. */}
+          <div className="relative mt-3 overflow-hidden rounded-3xl ring-1 ring-white/10 lg:mt-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/stadium-green.webp" alt="" aria-hidden draggable={false} className="absolute inset-0 size-full object-cover" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-surface-page/95" />
+            <div aria-hidden className="absolute -left-10 -top-16 size-48 rounded-full bg-white/20 blur-3xl" />
+            <div aria-hidden className="absolute -right-10 -top-16 size-48 rounded-full bg-white/15 blur-3xl" />
+            <div className="relative px-4 pb-4 pt-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-yellow" style={poppins}>{c.tag}</p>
+              <p className="mt-1 text-4xl font-black uppercase italic leading-[0.9] drop-shadow-[0_3px_0_rgba(0,0,0,0.45)] sm:text-5xl" style={poppins}>
+                {c.brand[0]}<br /><span className="text-brand-green-light">{c.brand[1]}</span>
+              </p>
+              <div aria-hidden className="mt-3 flex gap-1"><span className="h-1.5 w-16 rounded-full bg-brand-yellow" /><span className="h-1.5 w-8 rounded-full bg-white/80" /></div>
+              {/* The scoreboard: the budget in lights. */}
+              <div className="mt-4 flex items-stretch gap-3 rounded-2xl border border-white/10 bg-black/70 p-2.5 shadow-[inset_0_0_24px_rgba(0,0,0,0.6)]">
+                <div className="flex flex-col justify-center rounded-xl bg-[#120c02] px-3 py-1.5 ring-1 ring-brand-yellow/30">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-yellow/70" style={poppins}>{c.budget}</span>
+                  <span className="font-mono text-3xl font-black leading-none tracking-tight text-brand-yellow tabular-nums [text-shadow:0_0_10px_rgba(255,200,0,0.65)]">{euros(BUDGET.total)}</span>
+                </div>
+                <p className="min-w-0 self-center text-xs font-semibold leading-snug text-white/85">{c.hiddenRule}</p>
               </div>
             </div>
-            <p className="mt-2 text-xs font-medium leading-snug text-white/75">{c.hiddenRule} {c.budgetRule}</p>
           </div>
+          <ol className="mt-4 hidden space-y-2 lg:block">
+            {c.rules.map((line, i) => <RuleStep key={line} n={i + 1} line={line} />)}
+          </ol>
         </div>
-        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <SetupRow label={c.chooseLeague}>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-0">
-              {leagues.map((l) => {
+        <div className="lg:col-start-2">
+          <section className="mt-5 lg:mt-0">
+            <ProgrammeTitle n={1}>{c.chooseLeague}</ProgrammeTitle>
+            {iconic && (
+              <motion.button type="button" aria-pressed={iconic.id === chosen?.id} onClick={() => onLeague(iconic.id)} whileTap={reduce ? undefined : { scale: 0.98 }}
+                className={cn("relative mb-2 flex w-full items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-left transition-colors",
+                  iconic.id === chosen?.id ? "bg-gradient-to-r from-brand-yellow to-[#ffb000] text-surface-page ring-2 ring-white/70" : "bg-gradient-to-r from-brand-yellow/25 to-brand-yellow/5 text-white ring-1 ring-brand-yellow/60 hover:from-brand-yellow/35")}>
+                <span aria-hidden className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-white/20 blur-2xl" />
+                <LeagueCrest league={iconic} className="h-14 w-12 shadow-lg" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-black uppercase leading-tight" style={poppins}>{c.leagueName(iconic)}</span>
+                  <span className={cn("block text-xs font-semibold leading-tight", iconic.id === chosen?.id ? "text-surface-page/75" : "text-white/75")}>{mine[iconic.id] ? c.yourWeek(mine[iconic.id]) : c.iconicNote}</span>
+                </span>
+              </motion.button>
+            )}
+            {/* Two to a row; an odd last league takes the whole row. */}
+            <div className="grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
+              {national.map((l) => {
                 const on = l.id === chosen?.id;
-                const iconic = l.id === "iconic";
                 return (
-                  <button key={l.id} type="button" aria-pressed={on} onClick={() => onLeague(l.id)}
-                    className={cn("flex min-h-[4.25rem] flex-col items-start justify-center rounded-2xl px-3 py-2 text-left transition-colors",
-                      iconic ? (on ? "bg-brand-yellow text-surface-page ring-2 ring-brand-yellow" : "bg-brand-yellow/15 text-white ring-1 ring-brand-yellow/50 hover:bg-brand-yellow/25") : chipTone(on))}>
-                    <span className="flex w-full items-center gap-1.5 text-sm font-black leading-tight" style={poppins}>{iconic && <Crown className="size-4 shrink-0" aria-hidden />}<span className="min-w-0 truncate">{c.leagueName(l)}</span></span>
-                    <span className={cn("mt-0.5 line-clamp-2 text-[11px] font-semibold leading-tight", iconic && on ? "text-surface-page/75" : "text-white/65")}>{mine[l.id] ? c.yourWeek(mine[l.id]) : iconic ? c.iconicNote : c.perfectTarget(l.games)}</span>
-                  </button>
+                  <motion.button key={l.id} type="button" aria-pressed={on} onClick={() => onLeague(l.id)} whileTap={reduce ? undefined : { scale: 0.97 }}
+                    className={cn("flex min-h-[4.5rem] items-center gap-2.5 rounded-2xl border-b-4 px-2.5 py-2 text-left transition-colors",
+                      on ? "border-brand-green-deep bg-brand-green/20 ring-2 ring-brand-green" : "border-black/40 bg-surface-card hover:bg-white/10")}>
+                    <LeagueCrest league={l} />
+                    <span className="min-w-0 flex-1">
+                      <span className="line-clamp-2 block text-sm font-black leading-tight" style={poppins}>{c.leagueName(l)}</span>
+                      {mine[l.id] && <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-brand-green-light">{c.boardYou} · {mine[l.id]}</span>}
+                    </span>
+                  </motion.button>
                 );
               })}
             </div>
-          </SetupRow>
-          <div className="mt-4">
-            <SetupRow label={c.setFormation}>
-              <div className="grid grid-cols-4 gap-2">
-                {(Object.keys(FORMATIONS) as FormationId[]).map((f) => (
-                  <button key={f} type="button" aria-pressed={formation === f} onClick={() => onFormation(f)} className={cn("flex flex-col items-center gap-1.5 rounded-2xl p-2 text-xs font-black transition-colors", chipTone(formation === f))} style={poppins}>
-                    <FormationMark id={f} />{f}
-                  </button>
-                ))}
-              </div>
-            </SetupRow>
-          </div>
-          <div className="mt-4 space-y-2">
+          </section>
+          <section className="mt-5">
+            <ProgrammeTitle n={2}>{c.setFormation}</ProgrammeTitle>
+            {/* The tactics board: chalk on slate. */}
+            <div className="grid grid-cols-4 gap-2 rounded-2xl bg-[#13261c] p-2 ring-1 ring-white/10 shadow-[inset_0_0_30px_rgba(0,0,0,0.55)]">
+              {(Object.keys(FORMATIONS) as FormationId[]).map((f) => (
+                <button key={f} type="button" aria-pressed={formation === f} onClick={() => onFormation(f)}
+                  className={cn("flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-xs font-black transition-colors", formation === f ? "bg-white/10 text-brand-yellow ring-2 ring-brand-yellow" : "text-white/75 hover:bg-white/5")} style={poppins}>
+                  <ChalkFormation id={f} on={formation === f} />{f}
+                </button>
+              ))}
+            </div>
+          </section>
+          <div className="mt-5 space-y-2">
             {resumeLabel && onResume && <QuietButton onClick={onResume}>{resumeLabel}</QuietButton>}
-            <GreenButton onClick={onStart} disabled={pending || !chosen}>{chosen ? c.draftIn(c.leagueName(chosen)) : c.start}</GreenButton>
+            <GreenButton onClick={onStart} disabled={pending || !chosen} className="border-b-4 border-brand-green-deep shadow-[0_8px_24px_rgba(88,204,2,0.25)]">
+              <span className="inline-flex items-center gap-2">{chosen && <LeagueCrest league={chosen} className="h-7 w-6" />}{chosen ? c.draftIn(c.leagueName(chosen)) : c.start}</span>
+            </GreenButton>
             {guestNote && <button type="button" onClick={onSignIn} className="w-full text-center text-xs font-semibold text-brand-green-light underline underline-offset-2">{guestNote}</button>}
             <QuietButton onClick={onFriends}>{c.withFriends}</QuietButton>
           </div>
-          {board && <div className="mt-4">{board}</div>}
+          {board && <div className="mt-5">{board}</div>}
         </div>
-        <ul className="mt-5 space-y-2 pb-2 text-sm leading-snug text-white/85 lg:col-start-1">
-          {c.rules.map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
-        </ul>
+        <ol className="mt-5 space-y-2 pb-2 lg:hidden">
+          {c.rules.map((line, i) => <RuleStep key={line} n={i + 1} line={line} />)}
+        </ol>
       </div>
     </div>
+  );
+}
+
+/** A numbered step, like the notes in an old programme. */
+function RuleStep({ n, line }: { n: number; line: string }) {
+  return (
+    <li className="flex gap-3 rounded-2xl bg-white/[0.04] px-3 py-2.5 text-sm leading-snug text-white/85">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-brand-yellow/70 text-xs font-black text-brand-yellow" style={poppins}>{n}</span>
+      <span className="self-center">{line}</span>
+    </li>
+  );
+}
+
+/** A formation drawn in chalk: pitch lines and the eleven as dots. */
+function ChalkFormation({ id, on }: { id: FormationId; on: boolean }) {
+  return (
+    <span aria-hidden className="relative block aspect-[3/4] w-full max-w-[3.75rem] overflow-hidden rounded-md border border-white/40">
+      <span className="absolute inset-x-0 top-1/2 h-px bg-white/35" />
+      <span className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/35" />
+      <span className="absolute bottom-0 left-1/2 h-[18%] w-[52%] -translate-x-1/2 border border-b-0 border-white/35" />
+      {FORMATIONS[id].map((slot) => <span key={slot.id} className={cn("absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full", on ? "bg-brand-yellow" : "bg-white/90")} style={{ left: `${slot.x}%`, top: `${slot.y}%` }} />)}
+    </span>
   );
 }
 
@@ -564,6 +653,8 @@ function WalletStrip({ c, money, total }: { c: DraftText; money: { left: number;
         <motion.span key={money.left} initial={reduce ? false : { opacity: 0.4, y: -4 }} animate={{ opacity: 1, y: 0 }} className="shrink-0 text-base font-black text-brand-yellow">{euros(money.left)}</motion.span>
         {money.open > 0 && <span className="min-w-0 truncate text-right text-white/80">{c.eachPlace(money.each)}</span>}
       </div>
+      {/* Under €2M nobody can be bought; under €3M a place it soon will be. */}
+      {money.open > 0 && (money.left < 2 || money.each < 3) && <p className="mt-1 text-[11px] font-semibold leading-snug text-brand-yellow">{money.left < 2 ? c.walletEmpty : c.walletLow}</p>}
       <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
         <motion.div className="h-full rounded-full bg-brand-yellow" initial={false} animate={{ width: `${spentShare * 100}%` }} transition={{ duration: reduce ? 0 : 0.35 }} />
       </div>

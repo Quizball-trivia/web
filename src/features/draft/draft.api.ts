@@ -11,6 +11,8 @@ export interface ServerRun {
   respins: number; respinCost: number | null; budget: number | null; spent: number; notice: string | null; undoName: string | null; canUndo: boolean;
   /** The squad on offer shows names (and prices) only; picks too in Ball Knowledge until the result. */
   hideSquad?: boolean; hidePicks?: boolean;
+  /** The places free academy kids just took on their own (nobody was affordable). */
+  forced?: string[];
   result: { season: SeasonResult; coinsEarned: number; goalSeed: string } | null;
   done: boolean; day?: string; ranked?: boolean; rank?: number; number?: number | null; kind?: "free" | "challenge"; challengeCode?: string | null;
 }
