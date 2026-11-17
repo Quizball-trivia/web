@@ -43,7 +43,7 @@ function Board({ view, snapshot, room, locale, error }: { view: DraftRoomView; s
   const spin: ClubSeason = { ...view.spin, clubId: view.spin.id, leagueId: league.id };
   return (
     <>
-      <DraftBoard locale={locale} slots={FORMATIONS[view.formation]} spin={spin} league={league} variant={view.variant} round={view.round} seats={seats} myPicks={view.picks[me]}
+      <DraftBoard locale={locale} slots={FORMATIONS[view.formation]} spin={spin} league={league} variant={view.variant} round={view.round} seats={seats} myPicks={view.picks[me]} hideSquad={view.hideSquad} hidePicks={view.hidePicks}
         taken={view.taken.map((t) => ({ playerId: t.playerId, by: youOr(t.seat) }))} respins={0} respinCost={null} coins={null} mode={view.seats === 2 ? "duel" : "room"} budget={view.budget ?? undefined}
         notice={error ? c.roomError : null} seconds={myTurn ? seconds : null} waitingFor={myTurn ? null : youOr(view.activeSeat ?? 0)} feed={last ? c.signedFeed(youOr(last.seat), last.name, last.club, last.season) : null}
         onPick={(playerId, slotId) => { if (myTurn && !unconfirmed && room.inFlight === 0) room.send({ type: "pick", round: view.round, turn: view.turn, playerId, slotId }); }}

@@ -7,7 +7,9 @@ export type DraftRoomCommand = { type: "pick"; round: number; turn: number; play
 export interface DraftRoomView {
   phase: "picking" | "over" | "cancelled"; seats: number; you: number; round: number; turn: number; activeSeat: number | null; deadline: number; status: Array<"in" | "away" | "withdrawn">;
   variant: Variant; era: Era; formation: FormationId; budget: number | null; league: { id: string; name: string; short: string; teams: number; games: number };
-  spin: ServerSpin | null; taken: Array<{ playerId: string; seat: number }>; feed: Array<{ seat: number; name: string; club: string; season: string }>; picks: (Pick | null)[][];
+  spin: ServerSpin | null; taken: Array<{ playerId: string; seat: number }>;
+  /** Names and prices only in the squad; Ball Knowledge also keeps the signed players' ratings back. */
+  hideSquad?: boolean; hidePicks?: boolean; feed: Array<{ seat: number; name: string; club: string; season: string }>; picks: (Pick | null)[][];
   seasons: Array<{ w: number; d: number; l: number; gf: number; ga: number; points: number; position: number; finish: Finish; games: number }> | null; tie: MatchDay | null; winner: number | null; lines: number[] | null;
 }
 
