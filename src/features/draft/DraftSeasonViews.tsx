@@ -148,7 +148,7 @@ export function WinterBreak({ locale, half, slots, picks, tactics, tactic, pendi
   return (
     <div className="flex flex-1 flex-col">
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap />
-      <div className="mt-3 rounded-3xl bg-gradient-to-br from-[#1b3b5a] to-surface-card px-4 py-4 text-center shadow-xl ring-1 ring-white/10">
+      <div className="mt-3 rounded-3xl bg-gradient-to-br from-sky-950 to-surface-card px-4 py-4 text-center shadow-xl ring-1 ring-white/10">
         <p className="flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-sky-200" style={poppins}><Snowflake className="size-4" aria-hidden />{c.winterBreak}</p>
         <p className="mt-1 text-3xl font-black tabular-nums" style={poppins}>{wins}–{draws}–{half.matches.length - wins - draws}</p>
         <p className="mt-0.5 text-sm font-semibold text-white/80">{half.position === 1 ? c.raceTop(half.gap, half.leader) : c.raceOff(half.position, half.gap, half.leader)}</p>
@@ -236,7 +236,7 @@ export function SeasonExtras({ locale, extra, slots, picks, finish, topScorer }:
   return (
     <div className="space-y-3">
       <Card title={c.trophies} icon={<Trophy className="size-3.5" aria-hidden />}>
-        {treble && <motion.p initial={reduce ? false : { scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-2 rounded-xl bg-gradient-to-r from-brand-yellow to-[#ffb000] py-2 text-center text-xl font-black text-surface-page" style={poppins}>{c.treble}</motion.p>}
+        {treble && <motion.p initial={reduce ? false : { scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-2 rounded-xl bg-gradient-to-r from-brand-yellow to-amber-500 py-2 text-center text-xl font-black text-surface-page" style={poppins}>{c.treble}</motion.p>}
         <div className="space-y-2">
           <CupLine c={c} run={extra.cup} name={c.cupName} />
           {extra.europe ? <CupLine c={c} run={extra.europe} name={c.europeName} /> : <p className="rounded-xl bg-black/20 px-3 py-2 text-xs text-white/70">{c.noEurope}</p>}

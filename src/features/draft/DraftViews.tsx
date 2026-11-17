@@ -32,25 +32,25 @@ const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page",
 
 // ── Home: choose a league ──────────────────────────────────────────────────────────────────────────────────────────
 
-/** Each league's colours on its crest: a nod to the real competition, nothing more. */
-const LEAGUE_TONE: Record<string, { crest: string; stripe: string }> = {
-  pl: { crest: "bg-[#3d195b] text-white", stripe: "bg-[#00ff85]" },
-  laliga: { crest: "bg-[#ee3124] text-white", stripe: "bg-[#ffd200]" },
-  seriea: { crest: "bg-[#0a2e6e] text-white", stripe: "bg-[#29a8e0]" },
-  bundesliga: { crest: "bg-[#d20515] text-white", stripe: "bg-white" },
-  ligue1: { crest: "bg-[#0e1e3c] text-[#dae025]", stripe: "bg-[#dae025]" },
-  iconic: { crest: "bg-brand-yellow text-surface-page", stripe: "bg-brand-yellow" },
-  europe: { crest: "bg-[#0b1f6b] text-[#ffd400]", stripe: "bg-[#ffd400]" },
+/** Each league's colours on its crest: a nod to the real competition, nothing more (their own colours, so set inline, not as theme classes). */
+const LEAGUE_TONE: Record<string, { bg: string; fg: string; stripe: string }> = {
+  pl: { bg: "#3d195b", fg: "#ffffff", stripe: "#00ff85" },
+  laliga: { bg: "#ee3124", fg: "#ffffff", stripe: "#ffd200" },
+  seriea: { bg: "#0a2e6e", fg: "#ffffff", stripe: "#29a8e0" },
+  bundesliga: { bg: "#d20515", fg: "#ffffff", stripe: "#ffffff" },
+  ligue1: { bg: "#0e1e3c", fg: "#dae025", stripe: "#dae025" },
+  europe: { bg: "#0b1f6b", fg: "#ffd400", stripe: "#ffd400" },
 };
-const toneOf = (id: string) => LEAGUE_TONE[id] ?? { crest: "bg-brand-blue text-white", stripe: "bg-brand-blue" };
 const CREST = "[clip-path:polygon(0_0,100%_0,100%_62%,50%_100%,0_62%)]";
 
 /** A club crest of the competition: its short name on a shield in its colours. */
 function LeagueCrest({ league, className }: { league: League; className?: string }) {
-  const tone = toneOf(league.id);
+  // Iconic Clubs and any league without its own colours wear the site's.
+  const tone = LEAGUE_TONE[league.id];
+  const own = league.id === "iconic" ? "bg-brand-yellow text-surface-page" : "bg-brand-blue text-white";
   return (
-    <span aria-hidden className={cn("relative flex shrink-0 items-start justify-center pt-1.5", CREST, tone.crest, className ?? "h-12 w-10")}>
-      <span className={cn("absolute inset-x-0 top-0 h-1", tone.stripe)} />
+    <span aria-hidden className={cn("relative flex shrink-0 items-start justify-center pt-1.5", CREST, !tone && own, className ?? "h-12 w-10")} style={tone ? { backgroundColor: tone.bg, color: tone.fg } : undefined}>
+      <span className={cn("absolute inset-x-0 top-0 h-1", !tone && (league.id === "iconic" ? "bg-brand-yellow" : "bg-brand-blue"))} style={tone ? { backgroundColor: tone.stripe } : undefined} />
       {league.id === "iconic" ? <Crown className="mt-1 size-5" /> : <span className="mt-1 text-[11px] font-black tracking-tight" style={poppins}>{league.short}</span>}
     </span>
   );
@@ -110,7 +110,7 @@ export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague
               <div aria-hidden className="mt-3 flex gap-1"><span className="h-1.5 w-16 rounded-full bg-brand-yellow" /><span className="h-1.5 w-8 rounded-full bg-white/80" /></div>
               {/* The scoreboard: the budget in lights. */}
               <div className="mt-4 flex items-stretch gap-3 rounded-2xl border border-white/10 bg-black/70 p-2.5 shadow-[inset_0_0_24px_rgba(0,0,0,0.6)]">
-                <div className="flex flex-col justify-center rounded-xl bg-[#120c02] px-3 py-1.5 ring-1 ring-brand-yellow/30">
+                <div className="flex flex-col justify-center rounded-xl bg-black/80 px-3 py-1.5 ring-1 ring-brand-yellow/30">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-yellow/70" style={poppins}>{c.budget}</span>
                   <span className="font-mono text-3xl font-black leading-none tracking-tight text-brand-yellow tabular-nums [text-shadow:0_0_10px_rgba(255,200,0,0.65)]">{euros(BUDGET.total)}</span>
                 </div>
@@ -128,7 +128,7 @@ export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague
             {iconic && (
               <motion.button type="button" aria-pressed={iconic.id === chosen?.id} onClick={() => onLeague(iconic.id)} whileTap={reduce ? undefined : { scale: 0.98 }}
                 className={cn("relative mb-2 flex w-full items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-left transition-colors",
-                  iconic.id === chosen?.id ? "bg-gradient-to-r from-brand-yellow to-[#ffb000] text-surface-page ring-2 ring-white/70" : "bg-gradient-to-r from-brand-yellow/25 to-brand-yellow/5 text-white ring-1 ring-brand-yellow/60 hover:from-brand-yellow/35")}>
+                  iconic.id === chosen?.id ? "bg-gradient-to-r from-brand-yellow to-amber-500 text-surface-page ring-2 ring-white/70" : "bg-gradient-to-r from-brand-yellow/25 to-brand-yellow/5 text-white ring-1 ring-brand-yellow/60 hover:from-brand-yellow/35")}>
                 <span aria-hidden className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-white/20 blur-2xl" />
                 <LeagueCrest league={iconic} className="h-14 w-12 shadow-lg" />
                 <span className="min-w-0 flex-1">
@@ -159,7 +159,7 @@ export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague
           <section className="mt-5">
             <ProgrammeTitle n={2}>{c.setFormation}</ProgrammeTitle>
             {/* The tactics board: chalk on slate. */}
-            <div className="grid grid-cols-4 gap-2 rounded-2xl bg-[#13261c] p-2 ring-1 ring-white/10 shadow-[inset_0_0_30px_rgba(0,0,0,0.55)]">
+            <div className="grid grid-cols-4 gap-2 rounded-2xl bg-emerald-950 p-2 ring-1 ring-white/10 shadow-[inset_0_0_30px_rgba(0,0,0,0.55)]">
               {(Object.keys(FORMATIONS) as FormationId[]).map((f) => (
                 <button key={f} type="button" aria-pressed={formation === f} onClick={() => onFormation(f)}
                   className={cn("flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-xs font-black transition-colors", formation === f ? "bg-white/10 text-brand-yellow ring-2 ring-brand-yellow" : "text-white/75 hover:bg-white/5")} style={poppins}>
