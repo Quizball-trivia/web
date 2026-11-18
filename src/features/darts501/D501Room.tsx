@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { DartFeedback, DartLog, Dartboard, useCountTo } from "./D501Board";
 import { CategoryCard } from "./D501Solo";
 import { d501Copy } from "./d501.copy";
-import { checkoutWindow } from "./d501.rules";
+import { D501_ANSWER_FLOOR, checkoutWindow } from "./d501.rules";
 import { d501Places, type D501Command, type D501Seat, type D501View } from "./d501.view";
 
 export type D501RoomLink = Pick<RoomConnection<D501Command>, "send" | "nowMs" | "inFlight" | "retained" | "connected" | "resendRetained" | "leave">;
@@ -135,7 +135,7 @@ export function D501Board({ view, snapshot, room, locale, error, lookup }: { vie
   const answerBox = view.phase === "turn" && (
     <SuggestBox className={cn("z-20", !duel && "bottom-[104px] lg:bottom-0")} kind={view.current.kind} release={view.current.release} locale={locale} lookup={lookup}
       placeholder={t.placeholder} say={t.say} disabled={!myTurn || busy || !room.connected} note={busy ? t.sending : !room.connected ? c.offline : t.waiting}
-      onSubmit={(text, pick) => room.send({ type: "throw", epoch: view.epoch, attempt: view.attempt, text, pick })} />
+      floor={D501_ANSWER_FLOOR} floorHint={t.typeMore} onSubmit={(text, pick) => room.send({ type: "throw", epoch: view.epoch, attempt: view.attempt, text, pick })} />
   );
   const leaveSheet = leaving && (
     <Sheet label={c.leave} asks>

@@ -16,6 +16,9 @@ export const D501 = {
   turnMs: 20_000,
 } as const;
 
+/** A typed answer (no pick) needs 3 letters or digits, and under 5 a suggestion for it: shorter names are never read. */
+export const D501_ANSWER_FLOOR = { min: 3, known: 5 } as const;
+
 /** Totals three darts cannot make. "Pro rules" (optional, off by default) score them as nothing, as Generation Football does. */
 export const BOGEYS: ReadonlySet<number> = new Set([163, 166, 169, 172, 173, 175, 176, 178, 179]);
 
