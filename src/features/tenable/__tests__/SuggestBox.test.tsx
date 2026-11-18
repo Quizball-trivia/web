@@ -190,6 +190,17 @@ describe("SuggestBox with an answer floor (Darts)", () => {
   };
   const submit = (input: HTMLElement) => fireEvent.submit(input.closest("form")!);
 
+  it("Enter on text under the floor shows the hint, although the disabled Throw blocks the submit", async () => {
+    const { input, onSubmit } = floored(vi.fn(() => new Promise<never>(() => undefined)));
+    await type(input, "h");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByRole("status")).toHaveTextContent("Type more");
+    await type(input, "hu");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("never sends under three letters or digits, nor digits alone", async () => {
     const { input, button, onSubmit } = floored();
     for (const text of ["h", "Mi", "180", "12 4"]) {
@@ -202,13 +213,13 @@ describe("SuggestBox with an answer floor (Darts)", () => {
 
   it("a short text nobody is suggested for is held back once the suggestions are in; one with names goes as typed", async () => {
     const { input, button, onSubmit } = floored();
+    expect(screen.getByRole("status")).toHaveTextContent("");
     await type(input, "Xov");
     await waitFor(() => expect(button).toBeDisabled());
-    expect(screen.queryByRole("status")).toBeNull();
-    submit(input);
-    expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByRole("status")).toHaveTextContent("Type more");
     expect(input).toHaveAccessibleDescription("Type more");
+    submit(input);
+    expect(onSubmit).not.toHaveBeenCalled();
     await type(input, "Mil");
     expect(await screen.findAllByRole("option")).toHaveLength(2);
     expect(button).toBeEnabled();

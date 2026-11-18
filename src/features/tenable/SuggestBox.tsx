@@ -99,6 +99,10 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
     input.current?.focus({ preventScroll: true });
   };
   const choose = (s: Suggestion) => send(s.label, s.eid);
+  const picked = current >= 0 && Boolean(shown[current]);
+  // Held back by the floor: said once the suggestions show nobody for it, or once the player tried to send it.
+  const blocked = !picked && sendable(draft) && !typedOk(draft);
+  const hint = Boolean(floorHint) && blocked && (held || unknownName);
 
   return (
     <form className={cn("sticky bottom-0 mt-3 space-y-2 bg-surface-page-alt/95 pb-1 pt-2", className)}
@@ -123,6 +127,8 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
         onKeyDown={(e) => {
           // Enter that confirms an input-method composition is not a send.
           if (e.key === "Enter" && (e.nativeEvent.isComposing || e.keyCode === 229)) { e.preventDefault(); return; }
+          // A disabled Throw blocks Enter's submit: the floor's hint still has to show.
+          if (e.key === "Enter" && blocked) setHeld(true);
           if (e.key === "ArrowDown" && shown.length) { e.preventDefault(); setActive((current + 1) % shown.length); }
           else if (e.key === "ArrowUp" && shown.length) { e.preventDefault(); setActive(current <= 0 ? shown.length - 1 : current - 1); }
           else if (e.key === "Escape" && shown.length) {
@@ -135,14 +141,14 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
           }
         }}
         role="combobox" aria-autocomplete="list" aria-expanded={shown.length > 0} aria-controls={listId}
-        aria-describedby={held && floorHint ? `${listId}-hint` : undefined}
+        aria-describedby={hint ? `${listId}-hint` : undefined}
         aria-activedescendant={current >= 0 && shown[current] ? optionId(current) : undefined}
         autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="send"
         placeholder={disabled && note ? note : placeholder} aria-label={placeholder}
         className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
         style={{ fontWeight: 600, letterSpacing: "0.08em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }} />
-      {held && floorHint && <p id={`${listId}-hint`} role="status" className="text-center text-xs font-semibold text-white/70">{floorHint}</p>}
-      <button type="submit" disabled={disabled || !((current >= 0 && shown[current]) || typedOk(draft))}
+      {floorHint && <p id={`${listId}-hint`} role="status" className={cn("text-center text-xs font-semibold text-white/70", !hint && "sr-only")}>{hint ? floorHint : ""}</p>}
+      <button type="submit" disabled={disabled || !(picked || typedOk(draft))}
         // Keeps the input focused (and the highlighted suggestion with it), so the button sends what Enter would.
         onPointerDown={(e) => e.preventDefault()}
         className="font-poppins h-14 w-full rounded-[20px] bg-brand-green uppercase text-white outline-none transition-colors hover:bg-brand-green-deep focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"
