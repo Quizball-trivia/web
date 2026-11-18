@@ -141,7 +141,7 @@ export function SuggestBox({ kind, release, locale, placeholder, say, disabled, 
           }
         }}
         role="combobox" aria-autocomplete="list" aria-expanded={shown.length > 0} aria-controls={listId}
-        aria-describedby={hint ? `${listId}-hint` : undefined}
+        aria-describedby={hint ? `${listId}-hint` : undefined} aria-invalid={hint || undefined}
         aria-activedescendant={current >= 0 && shown[current] ? optionId(current) : undefined}
         autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="send"
         placeholder={disabled && note ? note : placeholder} aria-label={placeholder}

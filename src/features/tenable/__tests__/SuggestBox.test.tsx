@@ -218,6 +218,7 @@ describe("SuggestBox with an answer floor (Darts)", () => {
     await waitFor(() => expect(button).toBeDisabled());
     expect(screen.getByRole("status")).toHaveTextContent("Type more");
     expect(input).toHaveAccessibleDescription("Type more");
+    expect(input).toHaveAttribute("aria-invalid", "true");
     submit(input);
     expect(onSubmit).not.toHaveBeenCalled();
     await type(input, "Mil");
@@ -253,13 +254,11 @@ describe("SuggestBox with an answer floor (Darts)", () => {
     expect(onSubmit).toHaveBeenCalledWith("Qem", null);
   });
 
-  it("a picked suggestion always goes", async () => {
-    const { input, onSubmit } = floored();
-    await type(input, "Mi");
-    expect(screen.queryByRole("option")).toBeNull();
+  it("a picked suggestion always goes, even a label the floor would hold back as typed text", async () => {
+    const { input, onSubmit } = floored(vi.fn(async () => [{ eid: "li", label: "Li", qualifier: null }, ...NAMES]));
     await type(input, "Mil");
-    fireEvent.click(await screen.findByRole("option", { name: /Milo Vantar/ }));
-    expect(onSubmit).toHaveBeenCalledWith("Milo Vantar", "p1");
+    fireEvent.click(await screen.findByRole("option", { name: /^Li$/ }));
+    expect(onSubmit).toHaveBeenCalledWith("Li", "li");
   });
 
   it("without a floor (Tenable) short answers go as before", async () => {
