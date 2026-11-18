@@ -59,7 +59,7 @@ const POSITION_COLOR: Record<string, string> = { GK: "#FFE500", DEF: "#1CB0F6", 
 
 type Locale = ReturnType<typeof useLocale>["locale"];
 const reelLabel = (reel: SquadSpinReel, locale: Locale) => (locale === "ka" ? reel.label_ka : locale === "ru" ? reel.label_ru : locale === "pt" ? reel.label_pt : locale === "de" ? reel.label_de : locale === "fr" ? reel.label_fr : locale === "el" ? reel.label_el : locale === "es" ? reel.label_es : locale === "tr" ? reel.label_tr : reel.label_en) || reel.label_en;
-const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : locale === "ru" && p.name_ru ? p.name_ru : p.name_en);
+const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p.name_ka ? p.name_ka : locale === "ru" && p.name_ru ? p.name_ru : locale === "el" && p.name_el ? p.name_el : p.name_en);
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 
 /** Squad Spin, live: the reels and the answer set are held server-side; every answer, spin and cash-out is a request. */
