@@ -1,15 +1,19 @@
 import { createDailyGameCall, DailyGameApiError, isNetworkFailure } from "@/lib/repositories/dailyGameApi";
-import type { Era, FormationId, MatchDay, Pick, Prediction, SeasonResult, Variant } from "./draft.rules";
+import type { Era, FormationId, Honour, MatchDay, Pick, SeasonResult, Variant } from "./draft.rules";
 
 /** Same calendar as the backend (draft-daily.days.ts). */
 export const DRAFT_CALENDAR = { contentStart: "2026-10-31", rankedStart: "2026-11-05", publishedDays: 400 };
 
-export interface ServerSpin { id: string; club: string; season: string; legend: boolean; finish: number; players: Pick["player"][] }
+export interface ServerSpin { id: string; club: string; season: string; legend: boolean; finish: number; honour?: Honour; players: Pick["player"][] }
 export interface ServerRun {
   variant: Variant; league: { id: string; name: string; short: string; teams: number; games: number }; era: Era; formation: FormationId;
   phase: "picking" | "ready" | "result"; armed: boolean; round: number; picks: (Pick | null)[]; spin: ServerSpin | null; pool: string[];
   respins: number; respinCost: number | null; budget: number | null; spent: number; notice: string | null; undoName: string | null; canUndo: boolean;
-  prediction: Prediction | null; result: { season: SeasonResult; prediction: Prediction; coinsEarned: number; goalSeed: string } | null;
+  /** The squad on offer shows names (and prices) only; picks too in Ball Knowledge until the result. */
+  hideSquad?: boolean; hidePicks?: boolean;
+  /** The places free academy kids just took on their own (nobody was affordable). */
+  forced?: string[];
+  result: { season: SeasonResult; coinsEarned: number; goalSeed: string } | null;
   done: boolean; day?: string; ranked?: boolean; rank?: number; number?: number | null; kind?: "free" | "challenge"; challengeCode?: string | null;
 }
 export interface RunEnvelope { run: { id: string; version: number }; state: ServerRun }
@@ -17,7 +21,12 @@ export interface DraftToday { day: string; number: number; league: { id: string;
 export interface BoardEntry { rank: number; userId: string; username: string; avatarUrl: string | null; avatarCustomization: never; w: number; d: number; l: number; points: number; gd: number; gf: number; score: number }
 export interface Leaderboard { day: string; players: number; top: BoardEntry[]; me: BoardEntry | null }
 export interface TeamResponse { formation: FormationId; picks: (Pick | null)[] }
-export interface TieResponse { id: string; seed: string; formation: FormationId; at: string; side: 0 | 1; opponent: string; opponentPicks: (Pick | null)[]; result: MatchDay }
+export interface TieResponse { id: string; seed: string; formation: FormationId; opponentFormation?: FormationId; /** The XI that played for this side (a board tie plays your best of the week). */ picks: (Pick | null)[]; at: string; side: 0 | 1; opponent: string; opponentPicks: (Pick | null)[]; result: MatchDay }
+export interface LeagueInfo { id: string; name: string; short: string; teams: number; games: number }
+/** The first screen: leagues on offer, the board week, and the member's best of the week in each league. */
+export interface DraftLeagues { week: string; leagues: LeagueInfo[]; mine: Array<{ leagueId: string; w: number; d: number; l: number; points: number }>; guest: boolean }
+export interface LeagueBoardEntry { rank: number; runId: string; userId: string; username: string; avatarUrl: string | null; avatarCustomization: never; w: number; d: number; l: number; points: number; gd: number; gf: number; score: number }
+export interface LeagueBoard { leagueId: string; week: string; players: number; top: LeagueBoardEntry[]; me: LeagueBoardEntry | null }
 export interface ChallengeView { code: string; from: string; variant: Variant; league: string; era: Era; formation: FormationId; record: { w: number; d: number; l: number; points: number; gf: number; ga: number }; picks: (Pick | null)[] | null }
 
 const call = createDailyGameCall("/api/v1/draft");
@@ -48,6 +57,10 @@ export const draftApi = {
   challengeAccept: (code: string, locale: string) => call<{ daily?: RunEnvelope; variant?: Variant; day?: string; free?: RunEnvelope }>(`/play/challenges/${codePath(code)}/accept`, "POST", {}, locale),
   challengeTie: (code: string, locale: string) => call<TieResponse>(`/play/challenges/${codePath(code)}/tie`, "POST", {}, locale),
   myTies: (locale: string) => call<TieResponse[]>("/play/ties", "GET", undefined, locale),
+  leagues: (locale: string) => call<DraftLeagues>("/play/leagues", "GET", undefined, locale, { identity: "optional" }),
+  leagueBoard: (leagueId: string, locale: string, week?: string) => call<LeagueBoard>(`/play/board?league=${q(leagueId)}${week ? `&week=${q(week)}` : ""}`, "GET", undefined, locale, { identity: "optional" }),
+  boardTeam: (runId: string, locale: string) => call<TeamResponse>(`/play/board/team?runId=${q(runId)}`, "GET", undefined, locale, { identity: "optional" }),
+  boardTie: (runId: string, locale: string) => call<TieResponse>("/play/board/tie", "POST", { runId }, locale),
 };
 
 /** Asked again after no answer or a server that is busy (5xx). Only for what is safe to repeat. */
