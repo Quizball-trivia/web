@@ -9,7 +9,7 @@ import { SuggestBox, type SuggestLookup } from "@/features/tenable/SuggestBox";
 import { DartFeedback, DartLog, Dartboard, ScorePanel, dartEmoji } from "./D501Board";
 import { d501Copy } from "./d501.copy";
 import { D501_CALENDAR, d501DailyGame } from "./d501.game";
-import { D501 } from "./d501.rules";
+import { D501, D501_ANSWER_FLOOR } from "./d501.rules";
 import { dartsThrown, type D501Category, type D501SoloState } from "./d501.view";
 
 export { D501_CALENDAR, d501DailyGame };
@@ -46,7 +46,7 @@ export function D501PlayView({ locale, number, state, pending, notice, lookup, o
       {!done && (
         <>
           <SuggestBox className="z-20" kind={state.category.kind} release={state.category.release} locale={locale} lookup={lookup} placeholder={c.placeholder} say={c.say}
-            disabled={pending} note={pending ? c.sending : null} onSubmit={onSay} />
+            disabled={pending} note={pending ? c.sending : null} floor={D501_ANSWER_FLOOR} floorHint={c.typeMore} onSubmit={onSay} />
           <button type="button" onClick={onGiveUp} disabled={pending}
             className="mx-auto mt-1 min-h-9 px-3 text-xs font-bold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-white hover:underline disabled:opacity-50">{c.giveUp}</button>
         </>
