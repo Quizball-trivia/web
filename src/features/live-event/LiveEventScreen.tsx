@@ -12,7 +12,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { rememberPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
@@ -24,6 +23,7 @@ import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
 import { OrshabatobaShow } from './OrshabatobaShow';
 import { EventLobby, OrshabatobaEntryCard } from './OrshabatobaCard';
+import { useIsOrshabatobaAudience } from './useOrshabatobaAudience';
 
 export { EventLobby };
 import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
@@ -45,13 +45,12 @@ function pollMs(status: string | undefined): number {
  * studio. Without it (/events tab) a host-run event only shows the entry card that links to the studio.
  */
 export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactNode; studio?: boolean }) {
-  const { locale } = useLocale();
   // Georgian only: the show is a Georgian podcast, so its screens never switch language.
   const copy = liveEventCopy('ka');
   const router = useRouter();
   const queryClient = useQueryClient();
   const authStatus = useAuthStore((s) => s.status);
-  const georgian = locale === 'ka';
+  const georgian = useIsOrshabatobaAudience();
   const authed = authStatus === 'authenticated';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
@@ -179,7 +178,7 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
       </div>
     );
   }
-  if (!activeId) return <>{fallback}</>;
+  if (!activeId) return studio ? <>{fallback}</> : <OrshabatobaEntryCard live={false} />;
 
   const status = tournament?.id === activeId ? tournament.status : null;
   const entered = you?.entered === true;

@@ -7,7 +7,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Check, Loader2, Play, Tv, Users } from 'lucide-react';
+import { CalendarDays, Check, Loader2, Play, Tv, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { orshabatobaDisplay } from '@/features/orshabatoba/fonts';
 import type { liveEventCopy } from './liveEvent.copy';
@@ -185,35 +185,66 @@ export function EventLobby({
 
 /**
  * The /events tab entry: what the event is, when, and one button into the studio page (/orshabatoba), where
- * registration, the host's Start, the countdown and the game all happen.
+ * registration, the host's Start, the countdown and the game all happen. Georgian only.
  */
 export function OrshabatobaEntryCard({ live }: { live: boolean }) {
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-5">
+    <div className="mx-auto w-full max-w-md px-4 py-6">
       <section
-        className="@container relative w-full rounded-[20px] px-5 pb-6 pt-6 text-center sm:px-7"
+        className="relative w-full overflow-hidden rounded-[24px] text-center shadow-[0_20px_50px_rgba(10,30,140,0.45)] ring-1 ring-white/15"
         style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
       >
-        {live && (
-          <div className="mb-4 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-black uppercase tracking-widest text-white">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-white" />
+        {/* Soft light behind the hosts + faint diagonal stripes, like the app background. */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,0.22),transparent_55%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.07] bg-[repeating-linear-gradient(135deg,#fff_0_2px,transparent_2px_22px)]" aria-hidden />
+
+        <div className="relative px-6 pb-6 pt-5">
+          <div className="flex items-center justify-between">
+            {live ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-bold uppercase tracking-wider text-white">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-white" />
+                </span>
+                ლაივ
               </span>
-              ლაივ
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 font-poppins text-[12px] font-semibold text-white">
+                <span className="size-1.5 rounded-full bg-brand-green-light" aria-hidden /> ლაივ ივენთი
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 font-poppins text-[12px] font-semibold text-brand-yellow">
+              <CalendarDays className="size-3.5" aria-hidden /> ყოველ ორშაბათს
             </span>
           </div>
-        )}
-        <Hosts copy={{ hosts: { tato: 'ტატო', kala: 'კალა' } } as Copy} />
-        <NeonTitle className="mt-5 whitespace-normal text-[clamp(24px,8cqi,36px)] leading-tight">ლაივ ტურნირი ორშაბათობასთან ერთად</NeonTitle>
-        <p className="mt-3 inline-flex rounded-full bg-black/25 px-4 py-1.5 font-poppins text-[14px] font-semibold text-brand-yellow">ყოველ ორშაბათს</p>
-        <Link
-          href="/orshabatoba"
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-green py-3.5 font-poppins text-[17px] font-semibold uppercase text-white transition-opacity hover:opacity-90 active:opacity-80"
-        >
-          <Tv className="size-5" aria-hidden /> სტუდიაში შესვლა
-        </Link>
+
+          <div className="mt-6 flex items-end justify-center">
+            {(['tato', 'kala'] as const).map((id, i) => (
+              <div key={id} className={cn('flex flex-col items-center', i === 1 && '-ml-3')}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- tiny static portrait */}
+                <img
+                  src={`${ART}/${HOST_AVATAR[id]}`}
+                  width={120}
+                  height={120}
+                  alt=""
+                  className="relative size-28 rounded-full border-4 border-[#1A35A1] bg-black/40 object-cover shadow-[0_10px_24px_rgba(0,0,0,0.35)] ring-2 ring-brand-yellow"
+                />
+                <span className="mt-2 font-poppins text-[15px] font-bold text-white">{id === 'tato' ? 'ტატო' : 'კალა'}</span>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white sm:text-[24px]">
+            ლაივ ტურნირი ორშაბათობასთან ერთად
+          </h2>
+
+          <Link
+            href="/orshabatoba"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-green py-3.5 font-poppins text-[16px] font-bold text-white shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:brightness-105 active:translate-y-0.5 active:shadow-none"
+          >
+            <Tv className="size-5" aria-hidden /> სტუდიაში შესვლა
+          </Link>
+        </div>
       </section>
     </div>
   );
