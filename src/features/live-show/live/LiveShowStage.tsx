@@ -345,7 +345,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
   if (props.fullPage) {
     const inGame = phase === 'game' && screen.kind !== 'cancelled';
     return (
-      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-hidden bg-[#0b1020] font-fun">
+      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-hidden bg-surface-page-alt font-fun">
         {/* The studio is the page: it fills the whole screen. */}
         {/* The 3D camera frames the set to the screen's own shape, so a phone in portrait still sees both hosts. */}
         {/* Phones: the studio takes the top of the screen (both hosts big enough to see) and fades into the panel area;
@@ -366,7 +366,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
         </div>
         {/* Darken the top and bottom just enough for the bar and panels to read. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 to-transparent" aria-hidden />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55dvh] bg-gradient-to-t from-[#0b1020] from-[45%] to-transparent lg:h-1/2 lg:from-black/70 lg:from-0%" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55dvh] bg-gradient-to-t from-surface-page-alt from-[45%] to-transparent lg:h-1/2 lg:from-black/70 lg:from-0%" aria-hidden />
 
         <div className="absolute inset-0 flex flex-col">
           {/* Top bar: leave, title, and either the registered count or your live place + points. */}
@@ -402,7 +402,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
               // (below on a phone). Nothing overlaps: they are separate columns.
               <div className="mx-auto grid min-h-full w-full max-w-[1400px] items-end gap-4 px-3 pb-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
                 <main className="min-w-0">
-                  <div className="mx-auto w-full max-w-2xl rounded-[24px] bg-[#0b1020]/90 p-4 ring-1 ring-white/10 backdrop-blur-md sm:p-5">{panel}</div>
+                  <div className="mx-auto w-full max-w-2xl rounded-[24px] bg-surface-page-alt/90 p-4 ring-1 ring-white/10 backdrop-blur-md sm:p-5">{panel}</div>
                 </main>
                 {showScreen.kind !== 'champion' && !roundBreak && (
                   <aside className="min-w-0">
@@ -465,7 +465,7 @@ function LiveBoard({ locale, board, selfUserId, yourScore, title }: {
   const me = selfUserId ? board.find((r) => r.id === selfUserId) : undefined;
   const meShown = me && top.some((r) => r.id === me.id);
   return (
-    <section className="rounded-2xl bg-[#0b1020]/90 p-3 ring-1 ring-white/10 backdrop-blur-md">
+    <section className="rounded-2xl bg-surface-page-alt/90 p-3 ring-1 ring-white/10 backdrop-blur-md">
       <div className="mb-2 flex items-center justify-between px-1">
         <h3 className="font-poppins text-[13px] font-bold uppercase tracking-wider text-white/70">{title ?? (locale === 'ka' ? 'ლაივ ლიდერბორდი' : 'Live leaderboard')}</h3>
         <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-2 rounded-full bg-red-500" /></span>
