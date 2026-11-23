@@ -81,7 +81,17 @@ function ackResult(ack: WlAnswerAck | null): { points: number; correct: boolean 
 }
 
 export function LiveShowStage(props: LiveShowStageProps) {
-  const { locale, title, phase, now, kickoffMs, registered, screen, board, score, selfUserId, canAnswer, onAnswer, retryNonce, rounds } = props;
+  const { locale, title, phase, now, kickoffMs, registered, screen: liveScreen, board: liveBoard, score, selfUserId, canAnswer, onAnswer, retryNonce, rounds } = props;
+  // A cut flips an eliminated player to the (slightly delayed) spectator feed, and that resubscribe starts empty. Hold
+  // the last screen and leaderboard until the new feed catches up, so the round break shows their fate instead of a
+  // blank round-1 card and an empty board.
+  const [held, setHeld] = useState<{ screen: typeof liveScreen; board: typeof liveBoard; from: typeof liveBoard } | null>(null);
+  // `from` is the board prop this was taken from, so an empty incoming board can't re-trigger the update forever.
+  if (liveScreen.kind !== 'waiting' && (held?.screen !== liveScreen || held.from !== liveBoard)) {
+    setHeld({ screen: liveScreen, board: liveBoard.length > 0 ? liveBoard : held?.board ?? liveBoard, from: liveBoard });
+  }
+  const screen = phase === 'game' && liveScreen.kind === 'waiting' && held ? held.screen : liveScreen;
+  const board = liveBoard.length > 0 ? liveBoard : held?.board ?? liveBoard;
   // Rounds seen so far (round_index → kind), for headers when the server sends no layout.
   const [seen, setSeen] = useState<Map<number, ShowRound>>(() => new Map());
   // The answer key rides on the reveal: merge it into the attempt so every view (incl. the WL kinds) can show it.
@@ -166,7 +176,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
     if (!ended?.cut) return null;
     const introAt = a.playableAt - DISPATCH_LEAD_MS - ROUND_INTRO_MS;
     const big = bigRounds(rounds);
-    return now < introAt ? { finished: big.of[a.round_index - 1] ?? a.round_index, total: big.total, cut: ended.cut, until: introAt } : null;
+    return now < introAt ? { finished: big.of[a.round_index - 1] ?? a.round_index, total: big.total, cut: ended.cut, round: a.round_index, until: introAt } : null;
   })();
 
   const showScreen: ShowScreen = (() => {
@@ -194,6 +204,24 @@ export function LiveShowStage(props: LiveShowStageProps) {
   const you = youOf(selfUserId, score);
   const rank = selfUserId ? showBoard.find((r) => r.id === selfUserId)?.rank ?? null : null;
   const field = Math.max(registered ?? 0, showBoard.length);
+  // Players still in: the starting field cut down by every cut before the current round (the server rounds % up).
+  const aliveBefore = (roundIndex: number) => {
+    let n = field;
+    for (let i = 0; i < roundIndex; i += 1) {
+      const c = rounds?.[i]?.cut;
+      if (!c) continue;
+      n = c.keep_count != null ? Math.min(n, c.keep_count) : Math.ceil((n * (c.keep_percent ?? 100)) / 100);
+    }
+    return n;
+  };
+  const alive = phase === 'game' ? aliveBefore(showScreen.kind === 'champion' ? (rounds?.length ?? 0) : stageIndex) : field;
+  // Your fate at a cut, from your place against the cut line (the role flip from /current can lag the break).
+  const breakStatus = (() => {
+    if (!roundBreak) return null;
+    if (props.eliminated) return 'out' as const;
+    if (!canAnswer || rank == null) return null;
+    return rank <= aliveBefore(roundBreak.round) ? 'through' as const : 'out' as const;
+  })();
 
   const state = {
     pack: { id: 'live', title: { en: title, ka: title }, stages },
@@ -210,7 +238,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
     yourResult: ackResult(serverAck),
     reveal: revealStats,
     answeredCount: revealStats?.answered ?? 0,
-    aliveCount: field,
+    aliveCount: alive,
     board: showBoard,
     stage,
     question,
@@ -250,7 +278,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
         finished={roundBreak.finished}
         total={roundBreak.total}
         cut={roundBreak.cut}
-        status={props.eliminated ? 'out' : canAnswer ? 'through' : null}
+        status={breakStatus}
         secondsLeft={Math.max(0, Math.ceil((roundBreak.until - now) / 1000))}
         board={showBoard}
         selfUserId={selfUserId}
@@ -273,7 +301,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
             secondsLeft={secondsLeft}
             points={score}
             rank={canAnswer ? rank : null}
-            alive={field}
+            alive={alive}
             spectating={!canAnswer}
           />
         )}
@@ -309,7 +337,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
             secondsLeft={secondsLeft}
             points={score}
             rank={canAnswer ? rank : null}
-            alive={field}
+            alive={alive}
             spectating={!canAnswer}
           />
         )}
@@ -391,7 +419,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
               </div>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 font-poppins text-[13px] font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
-                <Users className="size-4" aria-hidden /> {field}
+                <Users className="size-4" aria-hidden /> {alive}
               </span>
             )}
           </header>
