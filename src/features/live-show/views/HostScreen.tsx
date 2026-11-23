@@ -61,15 +61,12 @@ function canUseWebGL(): boolean {
   }
 }
 
-/** Without WebGL (old phones, blocked GPU) the show goes on over a flat studio backdrop. */
-function StudioBackdrop() {
+/** A still of the same set: shown at once while three.js and the host models load, then the live scene fades in over
+ * it. Without WebGL (old phones, blocked GPU) the show goes on over this still. */
+function StudioPoster() {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#1d3b6b_0%,#0b1630_55%,#05080f_100%)]">
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-[linear-gradient(to_top,rgba(0,0,0,0.75),transparent)]" />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="select-none font-poppins text-[11vw] font-black uppercase tracking-tight text-white/[0.07] lg:text-[7vw]">ორშაბათობა</span>
-      </div>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element -- a fixed-size local still behind a WebGL canvas
+    <img src="/assets/orshabatoba/events/studio-wide.webp" alt="" aria-hidden className="absolute inset-0 size-full object-cover" />
   );
 }
 
@@ -79,7 +76,7 @@ class StudioBoundary extends Component<{ children: ReactNode }, { failed: boolea
     return { failed: true };
   }
   render() {
-    return this.state.failed ? <StudioBackdrop /> : this.props.children;
+    return this.state.failed ? null : this.props.children;
   }
 }
 
@@ -99,12 +96,15 @@ const StudioLayer = memo(function StudioLayer({ cue, anchors }: { cue: StudioCue
   }, [cue.impact]);
   const hit = cue.impact !== 0 && landed === cue.impact ? cue.impact : 0;
   const smash = useMemo(() => ({ tato: hit }), [hit]);
-  if (!webgl) return <StudioBackdrop />;
+  // The still sits outside the scene's error boundary: no WebGL, or a model that fails to load, keeps the picture.
+  if (!webgl) return <StudioPoster />;
   return (
+    <>
+    <StudioPoster />
     <StudioBoundary>
-      <StudioBackdrop />
-      <OrshabatobaStudio shot={cue.shot} acts={cue.acts} smash={smash} shake={hit} anchors={anchors} className="absolute inset-0" />
+      <OrshabatobaStudio shot={cue.shot} acts={cue.acts} smash={smash} shake={hit} anchors={anchors} className="absolute inset-0" fadeIn />
     </StudioBoundary>
+    </>
   );
 });
 

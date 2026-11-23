@@ -152,7 +152,7 @@ export function EventLobby({
   onRegister?: () => void;
   signedOut?: boolean;
   onSignIn?: () => void;
-  host?: { busy: boolean; message: string | null; onStart: () => void };
+  host?: { busy: boolean; message: string | null; confirming?: boolean; onStart: () => void };
   error?: string | null;
   /** Beside the live 3D studio: fill the side column instead of the centred card width. */
   compact?: boolean;
@@ -234,7 +234,7 @@ export function EventLobby({
           <div className="mt-4">
             <CtaButton tone="yellow" onClick={host.onStart} disabled={host.busy || !open}>
               {host.busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Play className="size-5" aria-hidden />}
-              {host.busy ? copy.starting : copy.start}
+              {host.busy ? copy.starting : host.confirming ? copy.confirmTap : copy.start}
             </CtaButton>
           </div>
           {host.message && (
