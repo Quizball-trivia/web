@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { INVENTED_SHOW_PACK } from '@/features/playground/fixtures/liveShow';
 import { YOU_ID } from './show.sim';
 import type { ShowLocale, ShowPack } from './show.types';
+import type { CrowdMood } from './studioDirector';
 import { useShowSim, type ShowState } from './useShowSim';
 import { HostScreen, joinedCount } from './views/HostScreen';
 import { QuestionView } from './views/QuestionViews';
@@ -160,6 +161,8 @@ function LiveShowSimInner({ pack, locale, setLocale, view, setView, real, useRea
 }) {
   const sim = useShowSim(pack, { crowd: 300, youName: 'You' });
   const { state } = sim;
+  // Dev: force how the studio hosts react on every reveal (null = follow the crowd).
+  const [mood, setMood] = useState<CrowdMood | null>(null);
   return (
     <div className="min-h-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-fixed font-fun">
       <div className="sticky top-0 z-[80] flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-black/85 px-3 py-2 backdrop-blur">
@@ -188,6 +191,11 @@ function LiveShowSimInner({ pack, locale, setLocale, view, setView, real, useRea
         <BarButton active={useReal} onClick={() => real && setUseReal(true)} title={real ? 'Real questions from the private pack' : 'No public/dev-data/live-show.json'}>
           real{real ? '' : ' (none)'}
         </BarButton>
+        <span className="mx-1 h-5 w-px bg-white/15" />
+        <BarButton active={mood === null} onClick={() => setMood(null)} title="Hosts react to how the crowd really did">hosts: auto</BarButton>
+        <BarButton active={mood === 'great'} onClick={() => setMood('great')}>cheer</BarButton>
+        <BarButton active={mood === 'bad'} onClick={() => setMood('bad')}>angry</BarButton>
+        <BarButton active={mood === 'disaster'} onClick={() => setMood('disaster')}>smash</BarButton>
       </div>
 
       <div className={cn('mx-auto flex w-full gap-6 px-4 py-6', view === 'both' ? 'max-w-[1600px] flex-col xl:flex-row xl:items-start' : 'max-w-5xl flex-col')}>
@@ -200,7 +208,7 @@ function LiveShowSimInner({ pack, locale, setLocale, view, setView, real, useRea
         )}
         {view !== 'phone' && (
           <div className="w-full min-w-0 flex-1">
-            <HostScreen state={state} locale={locale} />
+            <HostScreen state={state} locale={locale} moodOverride={mood} />
             <p className="mt-2 font-poppins text-xs font-bold text-white/40">Host screen (16:9 for OBS). Viewers see it on the stream a few seconds late; they answer on their phones.</p>
           </div>
         )}

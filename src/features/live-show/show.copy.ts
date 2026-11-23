@@ -60,6 +60,11 @@ const en = {
     answeredNow: 'answered',
     top: 'Top 10',
     roundOf: (n: number, total: number) => `Round ${n}/${total}`,
+    sayJoin: 'Scan and join us!',
+    sayGreat: (pct: number) => `${pct}% got it!`,
+    sayBad: (pct: number) => `Only ${pct}%?!`,
+    sayDisaster: (pct: number) => `${pct}%?! What is this!`,
+    out: 'out',
   },
 };
 
@@ -125,6 +130,11 @@ const ka: Copy = {
     answeredNow: 'უპასუხა',
     top: 'ტოპ 10',
     roundOf: (n, total) => `რაუნდი ${n}/${total}`,
+    sayJoin: 'დაასკანერე და შემოგვიერთდი!',
+    sayGreat: (pct) => `${pct}%-მა გამოიცნო!`,
+    sayBad: (pct) => `მხოლოდ ${pct}%?!`,
+    sayDisaster: (pct) => `${pct}%?! ეს რა არის!`,
+    out: 'გავარდა',
   },
 };
 
