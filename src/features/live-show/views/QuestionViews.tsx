@@ -125,7 +125,17 @@ export function ChoiceView({ q, locale, now, startsAt, answer, onAnswer, reveal,
   return (
     <div className="flex flex-col gap-4">
       {q.subject?.art && (
-        <ShowArtView art={q.subject.art} className={cn('mx-auto overflow-hidden rounded-3xl border-2 border-white/10', variant === 'host' ? 'size-28' : 'size-36')} />
+        // A photo question (picture with no subject name) gets a wide picture; a named subject (fake fact, odd one
+        // out) keeps the small portrait.
+        <ShowArtView
+          art={q.subject.art}
+          className={cn(
+            'mx-auto overflow-hidden rounded-3xl border-2 border-white/10',
+            !L(q.subject.name, locale)
+              ? 'aspect-[16/10] max-h-[38dvh] w-full max-w-xl bg-black/30'
+              : variant === 'host' ? 'size-28' : 'size-36',
+          )}
+        />
       )}
       <PromptCard sub={q.subject && L(q.subject.name, locale) ? L(q.subject.name, locale) : undefined}>{L(q.prompt, locale)}</PromptCard>
       <div className={pair || variant === 'host' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-2.5'}>
