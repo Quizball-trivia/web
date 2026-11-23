@@ -40,6 +40,7 @@ const en = {
   live: 'Live',
   hosts: { tato: 'Tato', kala: 'Kala' },
   hostsLabel: 'Hosts',
+  countdownUnits: ['Days', 'Hours', 'Min', 'Sec'] as [string, string, string, string],
 };
 
 type Copy = typeof en;
@@ -83,6 +84,7 @@ const ka: Copy = {
   live: 'ლაივი',
   hosts: { tato: 'ტატო', kala: 'კალა' },
   hostsLabel: 'წამყვანები',
+  countdownUnits: ['დღე', 'საათი', 'წუთი', 'წამი'],
 };
 
 export function liveEventCopy(locale: Locale): Copy {
