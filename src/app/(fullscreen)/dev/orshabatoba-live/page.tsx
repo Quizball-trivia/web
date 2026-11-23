@@ -15,6 +15,7 @@ import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
 import { EventLobby, KickoffCountdown } from '@/features/live-event/LiveEventScreen';
 import { NoLiveEvent } from '@/features/live-event/NoLiveEvent';
 import { liveEventCopy } from '@/features/live-event/liveEvent.copy';
+import { PackDemo } from './PackDemo';
 
 // Invented universe only (no real question or answer in this public repo); the picture is a neutral stand-in.
 const ART = { url: '/assets/orshabatoba/events/studio-wide.webp', fit: 'cover' };
@@ -251,6 +252,7 @@ function DevOrshabatobaLive() {
 /** Client-only: each frame reads the URL and the clock on first render. */
 function DevPage() {
   const [s] = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('s') ?? ''));
+  if (s === 'pack') return <PackDemo />;
   return s === 'demo' ? <DemoFlow /> : <DevOrshabatobaLive />;
 }
 
