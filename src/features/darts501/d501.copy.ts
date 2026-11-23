@@ -328,4 +328,13 @@ const copy = {
 };
 
 export const d501Copy = (locale: string) => copy[asWordLocale(locale)];
+
+/** Numbers that are not counts say what they are under the title (€m as tenable.figures writes it); counts need no label. */
+const UNIT_LABELS: Partial<Record<string, Record<ReturnType<typeof asWordLocale>, string>>> = {
+  market_value_eur_m: {
+    en: "Market value in €m", es: "Valor de mercado en M€", pt: "Valor de mercado em milhões de euros", de: "Marktwert in Mio. €", fr: "Valeur marchande en M€",
+    tr: "Piyasa değeri (milyon €)", ka: "საბაზრო ღირებულება (მლნ €)", ru: "Рыночная стоимость (млн €)", el: "Αγοραία αξία (εκατ. €)",
+  },
+};
+export const d501UnitLabel = (unit: string, locale: string): string | null => UNIT_LABELS[unit]?.[asWordLocale(locale)] ?? null;
 export type D501Copy = ReturnType<typeof d501Copy>;
