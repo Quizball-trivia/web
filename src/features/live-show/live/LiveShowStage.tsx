@@ -143,7 +143,9 @@ export function LiveShowStage(props: LiveShowStageProps) {
     ?? (localTap && retriedAttempt !== attempt?.attempt_id && (localTap.kind === 'choice' || localTap.kind === 'reveal_choice')
       ? localTap.optionId
       : null);
-  const verdict = attempt && serverAck?.accepted && verdictId ? { optionId: verdictId, correct: serverAck.correct } : null;
+  const verdict = attempt && serverAck?.accepted && verdictId
+    ? { optionId: verdictId, correct: serverAck.correct, correctId: serverAck.correct_id ?? null }
+    : null;
 
   // A new question starts at the top (prompt and timer in view); the reveal keeps the scroll.
   // The page may scroll inside the app shell's pane, not the window: bring the stage itself into view.
@@ -342,6 +344,13 @@ export function LiveShowStage(props: LiveShowStageProps) {
           />
         )}
         <div className="mx-auto mt-4 w-full max-w-xl px-1">
+          {canAnswer && showScreen.kind === 'question' && now < showScreen.startsAt && (
+            <p className="mb-2 text-center font-poppins text-[14px] font-bold text-brand-yellow">
+              {locale === 'ka'
+                ? `პასუხი იხსნება ${Math.ceil((showScreen.startsAt - now) / 1000)} წამში`
+                : `Answers open in ${Math.ceil((showScreen.startsAt - now) / 1000)}`}
+            </p>
+          )}
           <QuestionView
             key={question.id}
             q={question}
