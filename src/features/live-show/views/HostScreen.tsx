@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { Component, memo, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'motion/react';
 import { Crown, Users } from 'lucide-react';
@@ -51,8 +51,41 @@ const OrshabatobaStudio = dynamic(
 
 type Anchors = Record<HostId, RefObject<HTMLDivElement | null>>;
 
+function canUseWebGL(): boolean {
+  if (typeof document === 'undefined') return true;
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(canvas.getContext('webgl2') ?? canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+/** Without WebGL (old phones, blocked GPU) the show goes on over a flat studio backdrop. */
+function StudioBackdrop() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#1d3b6b_0%,#0b1630_55%,#05080f_100%)]">
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-[linear-gradient(to_top,rgba(0,0,0,0.75),transparent)]" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="select-none font-poppins text-[11vw] font-black uppercase tracking-tight text-white/[0.07] lg:text-[7vw]">ორშაბათობა</span>
+      </div>
+    </div>
+  );
+}
+
+class StudioBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? <StudioBackdrop /> : this.props.children;
+  }
+}
+
 /** The 3D set. Memoised: the show clock re-renders the host screen ten times a second, the cue changes far less. */
 const StudioLayer = memo(function StudioLayer({ cue, anchors }: { cue: StudioCue; anchors: Anchors }) {
+  const [webgl] = useState(canUseWebGL);
   // The laptop breaks when the fists land: timed from when the smash gesture starts, in real time like the gesture.
   const [landed, setLanded] = useState(0);
   useEffect(() => {
@@ -66,7 +99,13 @@ const StudioLayer = memo(function StudioLayer({ cue, anchors }: { cue: StudioCue
   }, [cue.impact]);
   const hit = cue.impact !== 0 && landed === cue.impact ? cue.impact : 0;
   const smash = useMemo(() => ({ tato: hit }), [hit]);
-  return <OrshabatobaStudio shot={cue.shot} acts={cue.acts} smash={smash} shake={hit} anchors={anchors} className="absolute inset-0" />;
+  if (!webgl) return <StudioBackdrop />;
+  return (
+    <StudioBoundary>
+      <StudioBackdrop />
+      <OrshabatobaStudio shot={cue.shot} acts={cue.acts} smash={smash} shake={hit} anchors={anchors} className="absolute inset-0" />
+    </StudioBoundary>
+  );
 });
 
 const BUBBLE_TONE: Record<StudioLine['tone'], string> = {
@@ -131,7 +170,20 @@ function TopTen({ state }: { state: ShowState }) {
  * The 16:9 page the creator adds to OBS. It runs live; viewers see it on the stream a few seconds late.
  * The ორშაბათობა studio plays behind everything: Tato and Kala sit at the edges and react to how the crowd did.
  */
-export function HostScreen({ state, locale, moodOverride }: { state: ShowState; locale: ShowLocale; moodOverride?: CrowdMood | null }) {
+/** The real night: no stand-in QR or simulated join clock, and the question can live outside the frame. */
+export interface HostScreenLive {
+  /** The interactive question is rendered beside the frame; the frame keeps the studio, title and leaders. */
+  hideQuestion?: boolean;
+  /** Before kickoff: a line under the title (e.g. "starts when the hosts press Start"). */
+  lobbyLine: string;
+  /** The Start countdown's target (server clock); null until the hosts press Start. */
+  countdownTo: number | null;
+  joined: number | null;
+  /** What Kala says in the lobby (the sim's line is about a QR code the site doesn't show). */
+  joinLine?: string;
+}
+
+export function HostScreen({ state, locale, moodOverride, live }: { state: ShowState; locale: ShowLocale; moodOverride?: CrowdMood | null; live?: HostScreenLive }) {
   const copy = SHOW_COPY[locale];
   const { screen } = state;
   const stageCount = state.pack.stages.length;
@@ -150,7 +202,7 @@ export function HostScreen({ state, locale, moodOverride }: { state: ShowState; 
   const lineText = !cue.say
     ? null
     : cue.say.line === 'join'
-      ? copy.host.sayJoin
+      ? live?.joinLine ?? copy.host.sayJoin
       : cue.say.line === 'great'
         ? copy.host.sayGreat(pct)
         : cue.say.line === 'bad'
@@ -191,7 +243,28 @@ export function HostScreen({ state, locale, moodOverride }: { state: ShowState; 
           )}
         </div>
 
-        {(screen.kind === 'creator' || screen.kind === 'lobby') && (
+        {live && screen.kind === 'lobby' && (
+          <div className="absolute inset-x-[23%] bottom-[7%] top-[20%] flex items-center justify-center">
+            <div className={cn(PANEL, 'flex flex-col items-center gap-3 px-10 py-7 text-center')}>
+              {live.countdownTo != null ? (
+                <>
+                  <div className="font-poppins text-sm font-black uppercase tracking-[0.3em] text-brand-yellow">{copy.startsIn}</div>
+                  <div className="font-poppins text-[96px] font-black leading-none tabular-nums">{mmss(live.countdownTo - state.now)}</div>
+                </>
+              ) : (
+                <div className="max-w-[30rem] font-poppins text-3xl font-black uppercase leading-tight">{live.lobbyLine}</div>
+              )}
+              {live.joined != null && (
+                <div className="mt-1 flex items-center justify-center gap-2 font-poppins text-2xl font-black">
+                  <Users className="size-6 text-brand-yellow" />
+                  {live.joined} {copy.joined}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!live && (screen.kind === 'creator' || screen.kind === 'lobby') && (
           <div className="absolute inset-x-[23%] bottom-[7%] top-[20%] flex items-center justify-center">
             <div className={cn(PANEL, 'flex items-center gap-8 px-8 py-6')}>
               <div className="flex flex-col items-center gap-2">
@@ -228,7 +301,7 @@ export function HostScreen({ state, locale, moodOverride }: { state: ShowState; 
 
         {(screen.kind === 'question' || screen.kind === 'reveal') && state.question && (
           <>
-            <motion.div
+            {!live?.hideQuestion && <motion.div
               initial={false}
               animate={{ left: docked ? '47%' : '22%', right: docked ? '2%' : '22%' }}
               transition={{ type: 'spring', stiffness: 170, damping: 24 }}
@@ -256,7 +329,7 @@ export function HostScreen({ state, locale, moodOverride }: { state: ShowState; 
                   variant="host"
                 />
               </div>
-            </motion.div>
+            </motion.div>}
             <LeaderStrip state={state} locale={locale} />
           </>
         )}

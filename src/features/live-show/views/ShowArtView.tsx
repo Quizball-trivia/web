@@ -114,7 +114,7 @@ export function ShowArtView({ art, className }: { art: ShowArt; className?: stri
   return (
     <div className={`relative ${className ?? ''}`}>
       {art.kind === 'image' ? (
-        <Image src={art.src} alt={art.alt ?? ''} fill sizes="(max-width: 768px) 100vw, 640px" className="object-cover" unoptimized />
+        <Image src={art.src} alt={art.alt ?? ''} fill sizes="(max-width: 768px) 100vw, 640px" className={art.fit === 'contain' ? 'object-contain' : 'object-cover'} unoptimized />
       ) : art.kind === 'crest' ? (
         <InventedCrest seed={art.seed} era={art.era} initials={art.initials} />
       ) : (

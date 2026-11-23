@@ -10,7 +10,7 @@ export type Localized = { en: string; ka?: string };
 
 /** Something drawn on screen: a hosted image, or an invented crest / shirt the fixtures render as SVG. */
 export type ShowArt =
-  | { kind: 'image'; src: string; alt?: string }
+  | { kind: 'image'; src: string; alt?: string; fit?: 'cover' | 'contain' }
   | { kind: 'crest'; seed: string; era: number; initials: string }
   | { kind: 'shirt'; seed: string; era: number };
 

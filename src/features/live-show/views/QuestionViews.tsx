@@ -25,6 +25,15 @@ export interface QuestionViewProps<Q extends ShowQuestion = ShowQuestion> {
   reveal: RevealStats | null;
   /** The OBS host screen: smaller art and two-column answers so a question fits 16:9. */
   variant?: 'phone' | 'host';
+  /** Zoom out / evolution: ms per reveal step (live: the server window split evenly). Default REVEAL_STEP_MS. */
+  stepMs?: number;
+  /** Live: the server scores by speed, so the 100/80/60 step ladder would mislead. */
+  hideWorth?: boolean;
+}
+
+function stepAt(elapsedMs: number, steps: number, stepMs: number | undefined): number {
+  if (!stepMs) return revealStepAt(elapsedMs, steps);
+  return Math.min(Math.max(steps - 1, 0), Math.floor(Math.max(elapsedMs, 0) / stepMs));
 }
 
 type BtnState = 'idle' | 'picked' | 'correct' | 'wrong' | 'dim';
@@ -141,13 +150,13 @@ function WorthLadder({ step, locale, frozen }: { step: number; locale: ShowLocal
   );
 }
 
-export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant }: QuestionViewProps<ZoomOutQuestion>) {
+export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth }: QuestionViewProps<ZoomOutQuestion>) {
   const steps = revealSteps(q);
   const elapsed = Math.max(0, now - startsAt);
   const frozenStep = answer?.kind === 'reveal_choice' ? answer.step : null;
-  const step = reveal ? steps - 1 : revealStepAt(elapsed, steps);
+  const step = reveal ? steps - 1 : stepAt(elapsed, steps, stepMs);
   // 6x at the start, 1x on the last step; it eases between steps instead of jumping.
-  const progress = reveal ? 1 : Math.min(1, elapsed / (REVEAL_STEP_MS * (steps - 1)));
+  const progress = reveal ? 1 : Math.min(1, elapsed / ((stepMs ?? REVEAL_STEP_MS) * (steps - 1)));
   const scale = 6 - 5 * progress;
   const picked = pickedId(answer);
   const open = now >= startsAt && !answer && !!onAnswer && !reveal;
@@ -162,7 +171,7 @@ export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal
           <ShowArtView art={q.art} className="size-full" />
         </div>
       </div>
-      <WorthLadder step={frozenStep ?? step} locale={locale} frozen={frozenStep != null} />
+      {!hideWorth && <WorthLadder step={frozenStep ?? step} locale={locale} frozen={frozenStep != null} />}
       <div className="grid grid-cols-2 gap-2.5">
         {q.options.map((o) => (
           <ChoiceButton
@@ -181,14 +190,16 @@ export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal
   );
 }
 
-export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant }: QuestionViewProps<EvolutionQuestion>) {
-  const steps = revealSteps(q);
+export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth }: QuestionViewProps<EvolutionQuestion>) {
+  // Live (stepMs given) shows every era; the simulator's points ladder caps it at five.
+  const steps = stepMs ? Math.max(1, q.eras.length) : revealSteps(q);
   const elapsed = Math.max(0, now - startsAt);
-  const step = reveal ? steps - 1 : revealStepAt(elapsed, steps);
+  const step = reveal ? steps - 1 : stepAt(elapsed, steps, stepMs);
   const frozenStep = answer?.kind === 'reveal_choice' ? answer.step : null;
   const picked = pickedId(answer);
   const open = now >= startsAt && !answer && !!onAnswer && !reveal;
-  const current = q.eras[Math.min(step, q.eras.length - 1)]!;
+  const current = q.eras[Math.min(step, q.eras.length - 1)];
+  if (!current) return <PromptCard>{L(q.prompt, locale)}</PromptCard>;
   return (
     <div className="flex flex-col gap-3">
       <PromptCard>{L(q.prompt, locale)}</PromptCard>
@@ -212,7 +223,7 @@ export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reve
           ))}
         </div>
       </div>
-      <WorthLadder step={frozenStep ?? step} locale={locale} frozen={frozenStep != null} />
+      {!hideWorth && <WorthLadder step={frozenStep ?? step} locale={locale} frozen={frozenStep != null} />}
       <div className="grid grid-cols-2 gap-2.5">
         {q.options.map((o) => (
           <ChoiceButton

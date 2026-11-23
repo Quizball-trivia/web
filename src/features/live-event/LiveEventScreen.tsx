@@ -12,7 +12,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, Check, Loader2, Mic, Play, Users } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
@@ -23,6 +22,11 @@ import { getSocket } from '@/lib/realtime/socket-client';
 import { syncWlClock, wlNow } from '@/features/weekend-league/wlClock';
 import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
+import { OrshabatobaShow } from './OrshabatobaShow';
+import { EventLobby } from './OrshabatobaCard';
+
+export { EventLobby };
+import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
 
 type Copy = ReturnType<typeof liveEventCopy>;
 
@@ -35,12 +39,6 @@ function pollMs(status: string | undefined): number {
   return 15_000;
 }
 
-function formatTbilisiTime(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tbilisi' }).format(d);
-}
 
 export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const { locale } = useLocale();
@@ -70,6 +68,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [mountedAt] = useState(() => Date.now());
   const [lastRole, setLastRole] = useState<'player' | 'spectator'>('spectator');
+  const [showMode, setShowMode] = useState(false);
   // Pin once, from a response this mount fetched: a cached /current from an
   // earlier visit may describe an event that has since finished, and a later
   // event replacing the pin would reset the live flow mid-result.
@@ -175,9 +174,17 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const countdownJoinOpen = !entered && kickoffMs != null
     && (status === 'entry_open' || status === 'entry_closed' || status === 'checkin');
   const register = () => { if (!enter.isPending) enter.mutate(); };
+  // The ორშაბათობა show (3D studio). Remembered, so the final stays in the show look after /current moves on.
+  // Only when the server sent a show layout (a hand-written pack of tap rounds): a bank-drawn event still plays WL
+  // kinds (put in order, career path, who am I…) the show screens can't answer, so it stays on WlLiveFlow.
+  const showRounds = (tournament as { show_rounds?: ShowRound[] } | null)?.show_rounds;
+  const showSlug = known && typeof tournament?.event_slug === 'string' && tournament.event_slug.startsWith('orshabatoba')
+    && Array.isArray(showRounds) && showRounds.length > 0;
+  if (showSlug && !showMode) setShowMode(true);
 
   const lobby = (
     <EventLobby
+      compact={showMode || showSlug}
       copy={copy}
       scheduledAt={tournament?.scheduled_at ?? null}
       registered={tournament?.registered_count ?? null}
@@ -197,6 +204,34 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
       } : undefined}
     />
   );
+
+  if (showMode) {
+    return (
+      <OrshabatobaShow
+        tournamentId={activeId}
+        role={role}
+        status={status}
+        kickoffMs={kickoffMs}
+        registered={tournament?.registered_count ?? null}
+        rounds={(tournament as { show_rounds?: ShowRound[] } | null)?.show_rounds ?? null}
+        title={copy.title}
+        lobbyLine={copy.startsWhenHostsSay}
+        pregamePanel={lobby}
+        countdownPanel={(
+          <KickoffCountdown
+            compact
+            copy={copy}
+            kickoffMs={kickoffMs}
+            canJoin={countdownJoinOpen}
+            joining={enter.isPending}
+            onJoin={register}
+            error={enterError}
+          />
+        )}
+        onExit={() => router.push('/play')}
+      />
+    );
+  }
 
   return (
     <WlLiveFlow
@@ -232,105 +267,6 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   );
 }
 
-function EventLobby({
-  copy, scheduledAt, registered, status, entered, registering, onRegister, signedOut, onSignIn, host, error,
-}: {
-  copy: Copy;
-  scheduledAt: string | null;
-  registered: number | null;
-  status: string | null;
-  entered: boolean;
-  registering?: boolean;
-  onRegister?: () => void;
-  signedOut?: boolean;
-  onSignIn?: () => void;
-  host?: { busy: boolean; message: string | null; onStart: () => void };
-  error?: string | null;
-}) {
-  const time = formatTbilisiTime(scheduledAt);
-  const open = status === 'entry_open';
-  const notYet = status === 'scheduled' || status === 'content_pending' || status === 'ready';
-  return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-5">
-      <section className="relative overflow-hidden rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-brand-green/20 blur-3xl" aria-hidden />
-        <div className="relative">
-          <div className="flex items-center gap-2 font-poppins text-[12px] font-black uppercase tracking-widest text-brand-green-light">
-            <Mic className="size-4" aria-hidden /> {copy.kicker}
-          </div>
-          <h1 className="mt-2 font-poppins text-4xl font-black uppercase leading-none text-white sm:text-5xl">{copy.title}</h1>
-          <p className="mt-3 max-w-md font-poppins text-[14px] font-semibold text-white/70">{copy.subtitle}</p>
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 font-poppins text-[12px] font-bold text-white">
-              <CalendarDays className="size-4" aria-hidden />
-              {time ? copy.startsAt(time) : copy.startsWhenHostsSay}
-            </span>
-            {registered != null && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 font-poppins text-[12px] font-bold text-white">
-                <Users className="size-4" aria-hidden /> {copy.registered(registered)}
-              </span>
-            )}
-          </div>
-
-          <div className="mt-6">
-            {signedOut ? (
-              <PrimaryButton onClick={onSignIn}>{copy.signIn}</PrimaryButton>
-            ) : entered ? (
-              <div className="rounded-2xl border-2 border-brand-green/40 bg-brand-green/10 p-4">
-                <div className="flex items-center gap-2 font-poppins text-lg font-black uppercase text-brand-green-light">
-                  <Check className="size-5" aria-hidden /> {copy.registeredTitle}
-                </div>
-                <p className="mt-1 font-poppins text-[13px] font-semibold text-white/70">{copy.registeredBody}</p>
-              </div>
-            ) : open ? (
-              <PrimaryButton onClick={onRegister} disabled={registering}>
-                {registering ? copy.registering : copy.register}
-              </PrimaryButton>
-            ) : notYet ? (
-              <p className="font-poppins text-[13px] font-semibold text-white/60">{copy.notOpenYet}</p>
-            ) : (
-              <p className="font-poppins text-[13px] font-semibold text-white/60">{copy.watchOnly}</p>
-            )}
-            {error && !entered && (
-              <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{error}</p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {host && (
-        <section className="rounded-[24px] border-2 border-brand-yellow/50 bg-brand-yellow/[0.07] p-6">
-          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-brand-yellow">{copy.hostTitle}</div>
-          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/70">{copy.hostBody}</p>
-          <button
-            type="button"
-            onClick={host.onStart}
-            disabled={host.busy || !open}
-            className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-brand-yellow font-poppins text-lg font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {host.busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Play className="size-5" aria-hidden />}
-            {host.busy ? copy.starting : copy.start}
-          </button>
-          {host.message && (
-            <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{host.message}</p>
-          )}
-        </section>
-      )}
-
-      <section className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6">
-        <ul className="space-y-2">
-          {copy.rules.map((rule) => (
-            <li key={rule} className="flex gap-2 font-poppins text-[13px] font-semibold text-white/70">
-              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" aria-hidden /> {rule}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
-  );
-}
-
 function PrimaryButton({ children, onClick, disabled }: { children: ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button
@@ -344,8 +280,8 @@ function PrimaryButton({ children, onClick, disabled }: { children: ReactNode; o
   );
 }
 
-function KickoffCountdown({
-  copy, kickoffMs, canJoin, joining, onJoin, error,
+export function KickoffCountdown({
+  copy, kickoffMs, canJoin, joining, onJoin, error, compact,
 }: {
   copy: Copy;
   kickoffMs: number | null;
@@ -353,6 +289,8 @@ function KickoffCountdown({
   joining: boolean;
   onJoin: () => void;
   error?: string | null;
+  /** Inside the show's side panel instead of full screen. */
+  compact?: boolean;
 }) {
   const [now, setNow] = useState(() => wlNow());
   useEffect(() => {
@@ -361,7 +299,9 @@ function KickoffCountdown({
   }, []);
   const left = kickoffMs == null ? null : Math.max(0, Math.ceil((kickoffMs - now) / 1000));
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center px-4 text-center">
+    <div className={compact
+      ? 'flex flex-col items-center justify-center rounded-[24px] border-2 border-white/10 bg-surface-card-deep px-4 py-8 text-center'
+      : 'flex min-h-[100dvh] flex-col items-center justify-center px-4 text-center'}>
       <div className="font-poppins text-[13px] font-black uppercase tracking-widest text-brand-green-light">{copy.title}</div>
       <div className="mt-2 font-poppins text-2xl font-black uppercase text-white">
         {left != null && left > 0 ? copy.startsIn : copy.getReady}
