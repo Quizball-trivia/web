@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * The ორშაბათობა card on /events: the podcast's own studio is the card (a still from the 3D set), with the neon-sign
- * title, the two hosts and the set's materials — walnut slats, the desk's grass, the jersey-frame yellow. Every lobby
- * state lives here: sign-in, register / registered, closed / watch-only, the host's Start panel and errors.
+ * The ორშაბათობა lobby on /events (Weekend League promo card layout). Every lobby state lives here: sign-in, register /
+ * registered, closed / watch-only, the host's Start panel and errors. StudioHero / NeonTitle are shared with NoLiveEvent.
  */
 
 import type { ReactNode } from 'react';
-import { Check, Loader2, Play, Users } from 'lucide-react';
+import Link from 'next/link';
+import { CalendarDays, Check, Loader2, Play, Tv, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { orshabatobaDisplay } from '@/features/orshabatoba/fonts';
 import type { liveEventCopy } from './liveEvent.copy';
@@ -15,14 +15,12 @@ import type { liveEventCopy } from './liveEvent.copy';
 type Copy = ReturnType<typeof liveEventCopy>;
 
 const ART = '/assets/orshabatoba/events';
-/** The set's materials. */
-const WOOD = 'bg-[#1c120b] bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.035)_0_18px,rgba(0,0,0,0.28)_18px_20px)]';
-const GRASS = 'h-1.5 bg-[linear-gradient(90deg,#2b6e1b,#58b52f_50%,#2b6e1b)]';
-const FRAME_YELLOW = 'bg-[#f2d34f] text-black hover:bg-[#f6dc6a]';
 /** The neon sign's glow, for the title. */
 const NEON = '[text-shadow:0_0_6px_rgba(255,255,255,0.75),0_0_18px_rgba(255,255,255,0.4),0_0_36px_rgba(150,205,255,0.3)]';
 
 const LIVE_STATUSES = new Set(['checkin', 'game_live', 'break']);
+/** Kala's is a front-on render of his 3D model (the studio still only has him in profile). */
+const HOST_AVATAR = { tato: 'host-tato.webp', kala: 'host-kala-front.webp' } as const;
 
 export function StudioHero({ dim, className, children }: { dim?: boolean; className?: string; children?: ReactNode }) {
   return (
@@ -53,52 +51,37 @@ export function NeonTitle({ children, className }: { children: ReactNode; classN
   );
 }
 
-function Kicker({ copy, live }: { copy: Copy; live: boolean }) {
-  return live ? (
-    <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-black uppercase tracking-widest text-white shadow-[0_0_18px_rgba(220,38,38,0.6)]">
-      <span className="relative flex size-2.5">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
-        <span className="relative inline-flex size-2.5 rounded-full bg-white" />
-      </span>
-      {copy.live}
-    </span>
-  ) : (
-    <span className="inline-flex items-center rounded-full border border-white/20 bg-black/50 px-3 py-1 font-poppins text-[12px] font-black uppercase tracking-wider text-white backdrop-blur-sm">
-      {copy.everyMonday}
-    </span>
-  );
-}
-
 function Hosts({ copy }: { copy: Copy }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-start justify-center gap-6 sm:gap-10">
       {(['tato', 'kala'] as const).map((id) => (
-        <div key={id} className="flex items-center gap-2">
+        <div key={id} className="flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny static portrait */}
           <img
-            src={`${ART}/host-${id}.webp`}
-            width={44}
-            height={44}
+            src={`${ART}/${HOST_AVATAR[id]}`}
+            width={120}
+            height={120}
             alt=""
-            className="size-11 rounded-full bg-black/40 object-cover ring-2 ring-[#f2d34f]/80"
+            className="size-24 rounded-full bg-black/40 object-cover ring-4 ring-brand-yellow shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-28"
           />
-          <span className={cn(orshabatobaDisplay.className, 'text-[17px] text-white')}>{copy.hosts[id]}</span>
+          <span className={cn(orshabatobaDisplay.className, 'text-[18px] text-white')}>{copy.hosts[id]}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function CtaButton({ children, onClick, disabled }: { children: ReactNode; onClick?: () => void; disabled?: boolean }) {
+function CtaButton({ children, onClick, disabled, tone = 'green' }: {
+  children: ReactNode; onClick?: () => void; disabled?: boolean; tone?: 'green' | 'yellow';
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        orshabatobaDisplay.className,
-        FRAME_YELLOW,
-        'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-center text-[clamp(15px,4.6cqi,19px)] leading-tight transition-[filter] hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60',
+        'flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 font-poppins text-[17px] font-semibold uppercase transition-opacity hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-60',
+        tone === 'green' ? 'bg-brand-green text-white' : 'bg-brand-yellow text-black',
       )}
     >
       {children}
@@ -106,11 +89,14 @@ function CtaButton({ children, onClick, disabled }: { children: ReactNode; onCli
   );
 }
 
+/**
+ * The ორშაბათობა card on /events (Georgian only), laid out like the Weekend League promo card: the hosts, the title,
+ * the registered count and one CTA. No countdown here: the 1-minute countdown appears only after the host's Start.
+ */
 export function EventLobby({
   copy, registered, status, entered, registering, onRegister, signedOut, onSignIn, host, error, compact,
 }: {
   copy: Copy;
-  /** Kept for callers; the weekly show always airs Monday 22:00. */
   scheduledAt?: string | null;
   registered: number | null;
   status: string | null;
@@ -121,97 +107,145 @@ export function EventLobby({
   onSignIn?: () => void;
   host?: { busy: boolean; message: string | null; confirming?: boolean; onStart: () => void };
   error?: string | null;
-  /** Beside the live 3D studio: no studio still, just the panel. */
+  /** Beside the live 3D studio: fill the side column instead of the centred card width. */
   compact?: boolean;
 }) {
   const open = status === 'entry_open';
   const notYet = status === 'scheduled' || status === 'content_pending' || status === 'ready';
   const live = status != null && LIVE_STATUSES.has(status);
 
-  const action = (
-    <div>
-      {signedOut ? (
-        <CtaButton onClick={onSignIn}>{copy.signIn}</CtaButton>
-      ) : entered ? (
-        <div className="rounded-2xl border-2 border-[#58b52f]/60 bg-[#58b52f]/15 p-4">
-          <div className={cn(orshabatobaDisplay.className, 'flex items-center gap-2 text-[20px] text-[#8fe05f]')}>
-            <Check className="size-5" aria-hidden /> {copy.registeredTitle}
-          </div>
-          <p className="mt-1 font-poppins text-[13px] font-semibold text-white/75">{copy.registeredBody}</p>
-        </div>
-      ) : open ? (
-        <CtaButton onClick={onRegister} disabled={registering}>
-          {registering ? copy.registering : copy.register}
-        </CtaButton>
-      ) : notYet ? (
-        <p className="font-poppins text-[13px] font-semibold text-white/65">{copy.notOpenYet}</p>
-      ) : (
-        <p className="font-poppins text-[13px] font-semibold text-white/65">{copy.watchOnly}</p>
-      )}
-      {error && !entered && (
-        <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-[#f2d34f]">{error}</p>
-      )}
-    </div>
-  );
-
-  const info = (
-    <div className={cn(WOOD, 'relative px-5 pb-5 pt-4 sm:px-7 sm:pb-6')}>
-      <p className="max-w-lg font-poppins text-[14px] font-semibold leading-snug text-white/80">{copy.subtitle}</p>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <Hosts copy={copy} />
-        {registered != null && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 font-poppins text-[12px] font-bold text-white">
-            <Users className="size-4 text-[#f2d34f]" aria-hidden /> {copy.registered(registered)}
-          </span>
-        )}
+  const action = signedOut ? (
+    <CtaButton onClick={onSignIn}>{copy.signIn}</CtaButton>
+  ) : entered ? (
+    <div className="rounded-[14px] border-2 border-[#58b52f]/60 bg-[#58b52f]/15 px-4 py-3">
+      <div className="flex items-center justify-center gap-2 font-poppins text-[17px] font-semibold uppercase text-[#8fe05f]">
+        <Check className="size-5" aria-hidden /> {copy.registeredTitle}
       </div>
-      <div className="mt-5">{action}</div>
+      <p className="mt-1 font-poppins text-[12px] font-semibold text-white/70">{copy.registeredBody}</p>
     </div>
+  ) : open ? (
+    <CtaButton onClick={onRegister} disabled={registering}>
+      {registering ? copy.registering : copy.register}
+    </CtaButton>
+  ) : (
+    <p className="font-poppins text-[13px] font-semibold text-white/65">{notYet ? copy.notOpenYet : copy.watchOnly}</p>
   );
 
   return (
-    <div className={cn('mx-auto w-full space-y-3', compact ? '' : 'max-w-3xl px-4 py-5')}>
-      <section className="@container overflow-hidden rounded-[24px] border-2 border-[#5a3a22] bg-[#1c120b] shadow-[0_18px_50px_rgba(0,0,0,0.45)]">
-        {compact ? (
-          <div className={cn(WOOD, 'px-5 pt-5 sm:px-7')}>
-            <Kicker copy={copy} live={live} />
-            <NeonTitle className="mt-3">{copy.title}</NeonTitle>
+    <div className={cn('mx-auto w-full space-y-3', compact ? '' : 'max-w-md px-4 py-5')}>
+      <section
+        className="@container relative w-full rounded-[20px] px-5 pb-6 pt-6 text-center sm:px-7"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
+      >
+        {live && (
+          <div className="mb-4 flex justify-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-black uppercase tracking-widest text-white">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-white" />
+              </span>
+              {copy.live}
+            </span>
           </div>
-        ) : (
-          <StudioHero>
-            <div className="absolute inset-x-0 bottom-0 px-5 pb-4 sm:px-7 sm:pb-5">
-              <Kicker copy={copy} live={live} />
-              <NeonTitle className="mt-2">{copy.title}</NeonTitle>
-            </div>
-          </StudioHero>
         )}
-        <div className={GRASS} aria-hidden />
-        {info}
+
+        {!compact && <Hosts copy={copy} />}
+
+        <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white first:mt-0 sm:text-[24px]">{copy.cardTitle}</h2>
+        {registered != null && (
+          <p className="mt-2 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
+            <Users className="size-4" aria-hidden /> {copy.registered(registered)}
+          </p>
+        )}
+
+        <div className="mt-5">{action}</div>
+        {error && !entered && (
+          <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{error}</p>
+        )}
       </section>
 
       {host && (
-        <section className={cn(WOOD, '@container overflow-hidden rounded-[24px] border-2 border-[#f2d34f]/70 p-5 sm:p-6')}>
-          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-[#f2d34f]">{copy.hostTitle}</div>
+        <section className="rounded-[20px] border-2 border-brand-yellow/70 bg-[#1A35A1] p-5 text-center">
+          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-brand-yellow">{copy.hostTitle}</div>
           <p className="mt-2 font-poppins text-[13px] font-semibold text-white/75">{copy.hostBody}</p>
           <div className="mt-4">
-            <CtaButton onClick={host.onStart} disabled={host.busy || !open}>
+            <CtaButton tone="yellow" onClick={host.onStart} disabled={host.busy || !open}>
               {host.busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Play className="size-5" aria-hidden />}
               {host.busy ? copy.starting : host.confirming ? copy.confirmTap : copy.start}
             </CtaButton>
           </div>
           {host.message && (
-            <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-[#f2d34f]">{host.message}</p>
+            <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{host.message}</p>
           )}
         </section>
       )}
+    </div>
+  );
+}
 
-      <ul className="flex flex-col gap-1.5 rounded-[20px] border border-white/10 bg-black/30 px-4 py-3 sm:flex-row sm:flex-wrap sm:gap-x-5">
-        {copy.rules.map((rule) => (
-          <li key={rule} className="flex items-start gap-2 font-poppins text-[12px] font-semibold text-white/65">
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#58b52f]" aria-hidden /> {rule}
-          </li>
-        ))}
-      </ul>
+/**
+ * The /events tab entry: what the event is, when, and one button into the studio page (/orshabatoba), where
+ * registration, the host's Start, the countdown and the game all happen. Georgian only.
+ */
+export function OrshabatobaEntryCard({ live }: { live: boolean }) {
+  return (
+    <div className="mx-auto w-full max-w-md px-4 py-6">
+      <section
+        className="relative w-full overflow-hidden rounded-[24px] text-center shadow-[0_20px_50px_rgba(10,30,140,0.45)] ring-1 ring-white/15"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
+      >
+        {/* Soft light behind the hosts + faint diagonal stripes, like the app background. */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,0.22),transparent_55%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.07] bg-[repeating-linear-gradient(135deg,#fff_0_2px,transparent_2px_22px)]" aria-hidden />
+
+        <div className="relative px-6 pb-6 pt-5">
+          <div className="flex items-center justify-between">
+            {live ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-bold uppercase tracking-wider text-white">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-white" />
+                </span>
+                ლაივ
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 font-poppins text-[12px] font-semibold text-white">
+                <span className="size-1.5 rounded-full bg-brand-green-light" aria-hidden /> ლაივ ივენთი
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 font-poppins text-[12px] font-semibold text-brand-yellow">
+              <CalendarDays className="size-3.5" aria-hidden /> ყოველ ორშაბათს
+            </span>
+          </div>
+
+          <div className="mt-6 flex items-end justify-center">
+            {(['tato', 'kala'] as const).map((id, i) => (
+              <div key={id} className={cn('flex flex-col items-center', i === 1 && '-ml-3')}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- tiny static portrait */}
+                <img
+                  src={`${ART}/${HOST_AVATAR[id]}`}
+                  width={120}
+                  height={120}
+                  alt=""
+                  className="relative size-28 rounded-full border-4 border-[#1A35A1] bg-black/40 object-cover shadow-[0_10px_24px_rgba(0,0,0,0.35)] ring-2 ring-brand-yellow"
+                />
+                <span className="mt-2 font-poppins text-[15px] font-bold text-white">{id === 'tato' ? 'ტატო' : 'კალა'}</span>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white sm:text-[24px]">
+            ლაივ ტურნირი ორშაბათობასთან ერთად
+          </h2>
+
+          <Link
+            href="/orshabatoba"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-green py-3.5 font-poppins text-[16px] font-bold text-white shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:brightness-105 active:translate-y-0.5 active:shadow-none"
+          >
+            <Tv className="size-5" aria-hidden /> სტუდიაში შესვლა
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

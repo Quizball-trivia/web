@@ -12,7 +12,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { rememberPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
@@ -23,7 +22,8 @@ import { syncWlClock, wlNow } from '@/features/weekend-league/wlClock';
 import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
 import { OrshabatobaShow } from './OrshabatobaShow';
-import { EventLobby } from './OrshabatobaCard';
+import { EventLobby, OrshabatobaEntryCard } from './OrshabatobaCard';
+import { useIsOrshabatobaAudience } from './useOrshabatobaAudience';
 
 export { EventLobby };
 import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
@@ -40,19 +40,24 @@ function pollMs(status: string | undefined): number {
 }
 
 
-export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
-  const { locale } = useLocale();
-  const copy = liveEventCopy(locale);
+/**
+ * `studio` = the /orshabatoba page: the whole event (register, host Start, countdown, game) inside the full-page 3D
+ * studio. Without it (/events tab) a host-run event only shows the entry card that links to the studio.
+ */
+export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactNode; studio?: boolean }) {
+  // Georgian only: the show is a Georgian podcast, so its screens never switch language.
+  const copy = liveEventCopy('ka');
   const router = useRouter();
   const queryClient = useQueryClient();
   const authStatus = useAuthStore((s) => s.status);
+  const georgian = useIsOrshabatobaAudience();
   const authed = authStatus === 'authenticated';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
   const query = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
-    enabled: authed,
+    enabled: authed && georgian,
     staleTime: 0,
     refetchInterval: (q) => pollMs(q.state.data?.tournament?.status),
   });
@@ -122,6 +127,9 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() }),
   });
 
+  // Shown to Georgian users only; everyone else gets the usual Events tab.
+  if (!georgian) return <>{fallback}</>;
+
   if (authStatus === 'loading' || (authed && query.isLoading)) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-5 px-4 py-5">
@@ -130,6 +138,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
     );
   }
 
+  if (!authed && !studio) return <OrshabatobaEntryCard live={false} />;
   if (!authed) {
     return (
       <EventLobby
@@ -169,7 +178,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
       </div>
     );
   }
-  if (!activeId) return <>{fallback}</>;
+  if (!activeId) return studio ? <>{fallback}</> : <OrshabatobaEntryCard live={false} />;
 
   const status = tournament?.id === activeId ? tournament.status : null;
   const entered = you?.entered === true;
@@ -178,7 +187,8 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   // Once /current stops describing this event (it completed and moved on),
   // keep the last role: flipping it would resubscribe and drop the result.
   const known = tournament?.id === activeId;
-  const computedRole: 'player' | 'spectator' = entered && (preGame || status === 'checkin' || checkedIn) ? 'player' : 'spectator';
+  const eliminated = you?.state === 'eliminated';
+  const computedRole: 'player' | 'spectator' = entered && !eliminated && (preGame || status === 'checkin' || checkedIn) ? 'player' : 'spectator';
   if (known && lastRole !== computedRole) setLastRole(computedRole);
   const role = known ? computedRole : lastRole;
   const kickoffMs = tournament?.qualifier_starts_at ? Date.parse(tournament.qualifier_starts_at) : null;
@@ -193,7 +203,8 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const showRounds = (tournament as { show_rounds?: ShowRound[] } | null)?.show_rounds;
   const showSlug = known && typeof tournament?.event_slug === 'string' && tournament.event_slug.startsWith('orshabatoba')
     && Array.isArray(showRounds) && showRounds.length > 0;
-  if (showSlug && !showMode) setShowMode(true);
+  if ((showSlug || studio) && !showMode) setShowMode(true);
+  if (!studio) return <OrshabatobaEntryCard live={status != null && ['checkin', 'game_live', 'break'].includes(status)} />;
 
   const lobby = (
     <EventLobby
@@ -228,6 +239,8 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   if (showMode) {
     return (
       <OrshabatobaShow
+        fullPage={studio}
+        eliminated={known && eliminated}
         tournamentId={activeId}
         role={role}
         status={status}
@@ -248,7 +261,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
             error={enterError}
           />
         )}
-        onExit={() => router.push('/play')}
+        onExit={() => router.push('/events')}
       />
     );
   }
@@ -262,7 +275,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
       checkinPending={enter.isPending}
       onCheckin={register}
       lateJoinUntilMs={null}
-      onExit={() => router.push('/play')}
+      onExit={() => router.push('/events')}
       kickoffMs={kickoffMs}
       registered={tournament?.registered_count ?? null}
       checkedInCount={tournament?.checked_in_count ?? 0}

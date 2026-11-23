@@ -181,6 +181,8 @@ export interface HostScreenLive {
   joined: number | null;
   /** What Kala says in the lobby (the sim's line is about a QR code the site doesn't show). */
   joinLine?: string;
+  /** Background only (the /orshabatoba page): the studio and hosts, none of the frame's own text, panels or bubbles. */
+  bare?: boolean;
 }
 
 export function HostScreen({ state, locale, moodOverride, live }: { state: ShowState; locale: ShowLocale; moodOverride?: CrowdMood | null; live?: HostScreenLive }) {
@@ -210,6 +212,17 @@ export function HostScreen({ state, locale, moodOverride, live }: { state: ShowS
           : copy.host.sayDisaster(pct);
   // The smash plays in the left half of the frame; the panel steps aside for it.
   const docked = cue.shot === 'tato-smash';
+
+  if (live?.bare) {
+    return (
+      <div ref={frame} className="relative h-full w-full overflow-hidden bg-black">
+        <StudioLayer cue={cue} anchors={anchors} />
+        {(['tato', 'kala'] as HostId[]).map((host) => (
+          <div key={host} ref={anchors[host]} className="pointer-events-none absolute left-0 top-0" style={{ visibility: 'hidden' }} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div ref={frame} className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black font-fun text-white">

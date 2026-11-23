@@ -1324,7 +1324,7 @@ function AnswerFeedback({ ack }: { ack: { accepted: boolean; correct?: boolean; 
 
 /** Reading grace: answers render dimmed + inert until the window opens, then
  *  fade to life — the question is readable the whole time. */
-function GraceReveal({ ready, children }: { ready: boolean; children: React.ReactNode }) {
+export function GraceReveal({ ready, children }: { ready: boolean; children: React.ReactNode }) {
   return (
     <div
       className={`transition-all duration-500 ${ready ? 'opacity-100 saturate-100' : 'pointer-events-none opacity-30 saturate-0'}`}
@@ -1512,7 +1512,7 @@ function HigherLowerQuestion({
 
 /** Shared driver for the typed kinds (career path, who-am-i): the designed
  *  blue input + green submit / red give-up, then the verdict box. */
-function TypedKindQuestion({
+export function TypedKindQuestion({
   card, locked, grace = false, spectator, onSubmit, feedback, evaluation, locale, revealed = false,
 }: {
   card: React.ReactNode;
@@ -1556,7 +1556,7 @@ function TypedKindQuestion({
   );
 }
 
-function WhoAmIQuestion({
+export function WhoAmIQuestion({
   attempt, locale, serverNow, locked, grace = false, badgeVisible = true, spectator, onSubmit, feedback, revealed = false,
 }: {
   grace?: boolean;

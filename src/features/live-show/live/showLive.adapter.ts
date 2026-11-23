@@ -17,9 +17,25 @@ import type { RevealStats } from '../useShowSim';
 export type LiveShowKind = Extract<ShowQuestionKind, 'true_false' | 'mcq' | 'zoom_out' | 'evolution' | 'odd_one_out' | 'fake_fact'>;
 const LIVE_KINDS: readonly LiveShowKind[] = ['true_false', 'mcq', 'zoom_out', 'evolution', 'odd_one_out', 'fake_fact'];
 
+/** Weekend League kinds a show can also play (rendered with the Weekend League question views). */
+export type WlShowKind = 'put_in_order' | 'career_path' | 'who_am_i';
+export const WL_SHOW_KINDS: ReadonlySet<string> = new Set<WlShowKind>(['put_in_order', 'career_path', 'who_am_i']);
+
 export interface ShowRound {
-  kind: LiveShowKind;
+  kind: LiveShowKind | WlShowKind;
   count: number;
+  /** Pack round title (the round card shows it instead of the kind label). */
+  title?: { ka: string; en: string };
+  /** Elimination at the end of this round. */
+  cut?: { keep_percent?: number; keep_count?: number };
+}
+
+/** Big rounds: every cut closes one. Returns, per pack round, its 1-based big-round number, and the total. */
+export function bigRounds(rounds: readonly ShowRound[] | null | undefined): { of: number[]; total: number } {
+  const of: number[] = [];
+  let n = 1;
+  for (const r of rounds ?? []) { of.push(n); if (r.cut) n += 1; }
+  return { of, total: Math.max(1, (rounds?.length ?? 0) > 0 && rounds![rounds!.length - 1]!.cut ? n - 1 : n) };
 }
 
 type I18n = Partial<Record<string, string>>;
@@ -151,15 +167,15 @@ export function toBoard(rows: readonly WlBoardRow[], locale: 'en' | 'ka'): Board
 /** Round definitions for headers and round cards: from the server layout, else from what has been dispatched. */
 export function toStages(rounds: readonly ShowRound[] | null | undefined, seen: ReadonlyMap<number, ShowRound>): ShowStageDef[] {
   const layout: ShowRound[] = rounds && rounds.length > 0
-    ? rounds.filter((r) => isLiveKind(r.kind) && r.count > 0)
+    ? rounds.filter((r) => (isLiveKind(r.kind) || WL_SHOW_KINDS.has(r.kind)) && r.count > 0)
     // Keep each round at its server index: a late joiner who first sees round 3 must not read it as round 1.
     : Array.from({ length: seen.size ? Math.max(...seen.keys()) + 1 : 0 }, (_, i) => seen.get(i) ?? { kind: 'mcq' as const, count: 1 });
   return layout.map((r, i) => ({
     id: `round-${i}`,
-    title: KIND_LABEL[r.kind],
+    title: r.title ? { en: r.title.en, ka: r.title.ka } : KIND_LABEL[isLiveKind(r.kind) ? r.kind : 'mcq'],
     // The round card lists the kinds it plays; one is enough to label it.
     questions: Array.from({ length: r.count }, (_, q) => (
-      { id: `round-${i}-${q}`, kind: r.kind, prompt: { en: '' }, options: [], correctId: '' } as unknown as ShowQuestion
+      { id: `round-${i}-${q}`, kind: isLiveKind(r.kind) ? r.kind : 'mcq', prompt: { en: '' }, options: [], correctId: '' } as unknown as ShowQuestion
     )),
   }));
 }

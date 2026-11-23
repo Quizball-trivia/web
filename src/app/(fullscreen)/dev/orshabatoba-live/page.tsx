@@ -15,6 +15,7 @@ import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
 import { EventLobby, KickoffCountdown } from '@/features/live-event/LiveEventScreen';
 import { NoLiveEvent } from '@/features/live-event/NoLiveEvent';
 import { liveEventCopy } from '@/features/live-event/liveEvent.copy';
+import { PackDemo } from './PackDemo';
 
 // Invented universe only (no real question or answer in this public repo); the picture is a neutral stand-in.
 const ART = { url: '/assets/orshabatoba/events/studio-wide.webp', fit: 'cover' };
@@ -59,6 +60,105 @@ function dispatch(key: string, now: number, playableIn: number): WlDispatchEvent
   } as unknown as WlDispatchEventPayload;
 }
 
+
+/** ?s=demo: the whole flow, clickable. Register → registered → host Start → countdown (?cd=seconds, default 60) → every
+ *  round type with a reveal after each → final. Everything is local; nothing touches the server. */
+const DEMO_STEPS = ['tf', 'mcq', 'zoom', 'evo', 'odd', 'fake'] as const;
+const DEMO_LEAD_MS = 2_500;
+const DEMO_QUESTION_MS = 10_000;
+const DEMO_REVEAL_MS = 5_000;
+const DEMO_STEP_MS = DEMO_LEAD_MS + DEMO_QUESTION_MS + DEMO_REVEAL_MS;
+const demoCorrect = (key: string) => (key === 'tf' ? 'true' : 'a');
+
+function DemoFlow() {
+  const copy = liveEventCopy('ka');
+  const [cdMs] = useState(() => {
+    const v = typeof window === 'undefined' ? NaN : Number(new URLSearchParams(window.location.search).get('cd'));
+    return (Number.isFinite(v) && v > 0 ? v : 60) * 1000;
+  });
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 100);
+    return () => window.clearInterval(id);
+  }, []);
+  const [entered, setEntered] = useState(false);
+  const [kickoff, setKickoff] = useState<number | null>(null);
+  const [picks, setPicks] = useState<Record<string, string>>({});
+  const registered = 247 + (entered ? 1 : 0);
+
+  const phase: LiveShowPhase = kickoff == null ? 'pregame' : now < kickoff ? 'countdown' : 'game';
+  const gameStart = (kickoff ?? 0) + 1_000;
+  const elapsed = now - gameStart;
+  const stepIndex = Math.floor(elapsed / DEMO_STEP_MS);
+  const inStep = elapsed - stepIndex * DEMO_STEP_MS;
+  const key = DEMO_STEPS[stepIndex];
+
+  const score = DEMO_STEPS.slice(0, Math.max(0, Math.min(stepIndex + (inStep >= DEMO_LEAD_MS + DEMO_QUESTION_MS ? 1 : 0), DEMO_STEPS.length)))
+    .reduce((sum, k) => sum + (picks[k] === demoCorrect(k) ? 100 : 0), 0);
+  const board: WlBoardRow[] = useMemo(
+    () => [...BOARD.slice(1), { user_id: 'u0', nickname: 'შენ', points: score, time_ms_total: 31_000, rank: 0 }]
+      .sort((a, b) => b.points - a.points).map((r, i) => ({ ...r, rank: i + 1 })),
+    [score],
+  );
+
+  let screen: WlLiveScreen = { kind: 'waiting' };
+  if (phase === 'game') {
+    if (elapsed < 0) {
+      screen = { kind: 'waiting' };
+    } else if (!key) {
+      screen = { kind: 'final_result', result: { type: 'final_result', tournamentId: 'dev', seq: 99, board, champion_user_id: board[0]!.user_id } as never, champion: board[0]!.user_id === 'u0' };
+    } else if (elapsed >= 0) {
+      const stepStart = gameStart + stepIndex * DEMO_STEP_MS;
+      const attempt = { ...dispatch(key, stepStart, DEMO_LEAD_MS), attempt_id: `demo-${key}`, question_index: 0, seq: 10 + stepIndex * 2 };
+      const pick = picks[key];
+      const answer = pick ? { accepted: true, correct: pick === demoCorrect(key), points: pick === demoCorrect(key) ? 100 : 0, elapsedMs: 2_000 } : null;
+      if (inStep < DEMO_LEAD_MS + DEMO_QUESTION_MS) {
+        screen = { kind: 'question', attempt, answer } as WlLiveScreen;
+      } else {
+        const reveal = { type: 'reveal', tournamentId: 'dev', seq: 11 + stepIndex * 2, attempt_id: attempt.attempt_id, game_index: 0, round_index: attempt.round_index, question_index: 0, kind: attempt.kind,
+          evaluation: { correct_id: demoCorrect(key) }, answered: 240, distribution: key === 'tf' ? { true: 170, false: 70 } : { a: 150, b: 40, c: 30, d: 20 }, board } as unknown as WlRevealEventPayload;
+        screen = { kind: 'reveal', attempt, reveal, answer } as WlLiveScreen;
+      }
+    }
+  }
+
+  return (
+    <LiveShowStage
+      locale="ka"
+      title={copy.title}
+      phase={phase}
+      now={now}
+      kickoffMs={kickoff}
+      registered={registered}
+      screen={screen}
+      board={phase === 'game' ? board : []}
+      score={score}
+      selfUserId="u0"
+      canAnswer={entered}
+      onAnswer={(id) => { if (key) setPicks((p) => (p[key] ? p : { ...p, [key]: String(id) })); }}
+      retryNonce={0}
+      rounds={ROUNDS}
+      lobbyLine={copy.startsWhenHostsSay}
+      pregamePanel={(
+        <EventLobby
+          compact
+          copy={copy}
+          registered={registered}
+          status="entry_open"
+          entered={entered}
+          onRegister={() => setEntered(true)}
+          host={{ busy: false, message: 'დემო: ამ ღილაკს მხოლოდ წამყვანი ხედავს.', onStart: () => setKickoff(Date.now() + cdMs) }}
+        />
+      )}
+      countdownPanel={(
+        <KickoffCountdown compact copy={copy} kickoffMs={kickoff} canJoin={!entered} joining={false} onJoin={() => setEntered(true)} />
+      )}
+      onExit={() => window.location.reload()}
+      fullPage
+    />
+  );
+}
+
 function DevOrshabatobaLive() {
   const copy = liveEventCopy('ka');
   const [s] = useState(() => (typeof window === 'undefined' ? 'lobby' : new URLSearchParams(window.location.search).get('s') ?? 'lobby'));
@@ -66,6 +166,7 @@ function DevOrshabatobaLive() {
     const w = typeof window === 'undefined' ? NaN : Number(new URLSearchParams(window.location.search).get('w'));
     return Number.isFinite(w) && w > 0 ? w : null;
   });
+  const [full] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('full') === '1');
   const [t0] = useState(() => Date.now());
   const [now, setNow] = useState(t0);
   useEffect(() => {
@@ -133,6 +234,7 @@ function DevOrshabatobaLive() {
       lobbyLine={copy.startsWhenHostsSay}
       pregamePanel={(
         <EventLobby
+          compact={full}
           copy={copy}
           scheduledAt={null}
           registered={248}
@@ -144,9 +246,16 @@ function DevOrshabatobaLive() {
       )}
       countdownPanel={<KickoffCountdown compact copy={copy} kickoffMs={kickoff} canJoin joining={false} onJoin={() => {}} />}
       onExit={() => {}}
+      fullPage={full}
     />
   );
 }
 
 /** Client-only: each frame reads the URL and the clock on first render. */
-export default dynamic(() => Promise.resolve(DevOrshabatobaLive), { ssr: false });
+function DevPage() {
+  const [s] = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('s') ?? ''));
+  if (s === 'pack') return <PackDemo />;
+  return s === 'demo' ? <DemoFlow /> : <DevOrshabatobaLive />;
+}
+
+export default dynamic(() => Promise.resolve(DevPage), { ssr: false });
