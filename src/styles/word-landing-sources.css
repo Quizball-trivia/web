@@ -361,6 +361,7 @@
 @source "../stores/friendDuelHandoff.store.ts";
 @source "../stores/friendRoomHandoff.store.ts";
 @source "../stores/gameSession.store.ts";
+@source "../stores/immersive.store.ts";
 @source "../stores/rankedMatchmaking.store.ts";
 @source "../stores/realtime-match/draft.slice.ts";
 @source "../stores/realtime-match/lobby.slice.ts";
