@@ -18,7 +18,7 @@ import { liveEventCopy } from '@/features/live-event/liveEvent.copy';
 import { PackDemo } from './PackDemo';
 
 // Invented universe only (no real question or answer in this public repo); the picture is a neutral stand-in.
-const ART = { url: '/assets/orshabatoba/events/studio-wide.webp', fit: 'cover' };
+const ART = { url: '/assets/orshabatoba/events/studio-wide-tripo.webp', fit: 'cover' };
 const ka = (t: string) => ({ en: t, ka: t });
 const CLUBS = [ka('ატლეტიკო ავრორა'), ka('რეალ ბრიზა'), ka('დეპორტივო ნუბე'), ka('პუერტო აზული')];
 const clubOptions = CLUBS.map((text, i) => ({ id: 'abcd'[i]!, text }));

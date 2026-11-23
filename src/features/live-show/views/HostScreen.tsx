@@ -66,7 +66,7 @@ function canUseWebGL(): boolean {
 function StudioPoster() {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a fixed-size local still behind a WebGL canvas
-    <img src="/assets/orshabatoba/events/studio-wide.webp" alt="" aria-hidden className="absolute inset-0 size-full object-cover" />
+    <img src="/assets/orshabatoba/events/studio-wide-tripo.webp" alt="" aria-hidden className="absolute inset-0 size-full object-cover" />
   );
 }
 
@@ -83,7 +83,7 @@ class StudioBoundary extends Component<{ children: ReactNode }, { failed: boolea
 /** The 3D set. Memoised: the show clock re-renders the host screen ten times a second, the cue changes far less. */
 const StudioLayer = memo(function StudioLayer({ cue, anchors }: { cue: StudioCue; anchors: Anchors }) {
   const [webgl] = useState(canUseWebGL);
-  // The laptop breaks when the fists land: timed from when the smash gesture starts, in real time like the gesture.
+  // The laptop breaks when the palm lands: timed from when the smash gesture starts, in real time like the gesture.
   const [landed, setLanded] = useState(0);
   useEffect(() => {
     if (!cue.impact) return;

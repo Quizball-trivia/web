@@ -417,28 +417,12 @@
       "bufferView": 3
     },
     {
-      "type": "VEC4",
-      "componentType": 5121,
-      "count": 15810,
+      "type": "MAT4",
+      "componentType": 5126,
+      "count": 40,
       "normalized": false,
       "byteOffset": 0,
       "bufferView": 4
-    },
-    {
-      "type": "VEC4",
-      "componentType": 5121,
-      "count": 15810,
-      "normalized": true,
-      "byteOffset": 0,
-      "bufferView": 5
-    },
-    {
-      "type": "MAT4",
-      "componentType": 5126,
-      "count": 20,
-      "normalized": false,
-      "byteOffset": 0,
-      "bufferView": 6
     },
     {
       "type": "VEC3",
@@ -456,7 +440,7 @@
       ],
       "normalized": true,
       "byteOffset": 0,
-      "bufferView": 7
+      "bufferView": 5
     },
     {
       "type": "VEC3",
@@ -464,11 +448,29 @@
       "count": 15810,
       "normalized": true,
       "byteOffset": 0,
-      "bufferView": 8
+      "bufferView": 6
     },
     {
       "type": "VEC2",
       "componentType": 5123,
+      "count": 15810,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 7
+    },
+    {
+      "name": "Hand joints",
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 15810,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 8
+    },
+    {
+      "name": "Skin weights",
+      "type": "VEC4",
+      "componentType": 5121,
       "count": 15810,
       "normalized": true,
       "byteOffset": 0,
@@ -540,62 +542,28 @@
     {
       "buffer": 1,
       "byteOffset": 147372,
-      "byteLength": 63240,
-      "target": 34962,
-      "byteStride": 4,
+      "byteLength": 2560,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
           "byteOffset": 29228,
-          "byteLength": 9297,
-          "mode": "ATTRIBUTES",
-          "byteStride": 4,
-          "count": 15810
-        }
-      }
-    },
-    {
-      "buffer": 1,
-      "byteOffset": 210612,
-      "byteLength": 63240,
-      "target": 34962,
-      "byteStride": 4,
-      "extensions": {
-        "EXT_meshopt_compression": {
-          "buffer": 0,
-          "byteOffset": 38528,
-          "byteLength": 23457,
-          "mode": "ATTRIBUTES",
-          "byteStride": 4,
-          "count": 15810
-        }
-      }
-    },
-    {
-      "buffer": 1,
-      "byteOffset": 273852,
-      "byteLength": 1280,
-      "extensions": {
-        "EXT_meshopt_compression": {
-          "buffer": 0,
-          "byteOffset": 61988,
-          "byteLength": 1158,
+          "byteLength": 1950,
           "mode": "ATTRIBUTES",
           "byteStride": 64,
-          "count": 20
+          "count": 40
         }
       }
     },
     {
       "buffer": 1,
-      "byteOffset": 275132,
+      "byteOffset": 149932,
       "byteLength": 126480,
       "target": 34962,
       "byteStride": 8,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 63148,
+          "byteOffset": 31180,
           "byteLength": 71481,
           "mode": "ATTRIBUTES",
           "byteStride": 8,
@@ -605,14 +573,14 @@
     },
     {
       "buffer": 1,
-      "byteOffset": 401612,
+      "byteOffset": 276412,
       "byteLength": 126480,
       "target": 34962,
       "byteStride": 8,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 134632,
+          "byteOffset": 102664,
           "byteLength": 96696,
           "mode": "ATTRIBUTES",
           "byteStride": 8,
@@ -622,15 +590,49 @@
     },
     {
       "buffer": 1,
-      "byteOffset": 528092,
+      "byteOffset": 402892,
       "byteLength": 63240,
       "target": 34962,
       "byteStride": 4,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 231328,
+          "byteOffset": 199360,
           "byteLength": 47816,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 15810
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 466132,
+      "byteLength": 63240,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 247176,
+          "byteLength": 11602,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 15810
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 529372,
+      "byteLength": 63240,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 258780,
+          "byteLength": 25057,
           "mode": "ATTRIBUTES",
           "byteStride": 4,
           "count": 15810
@@ -692,10 +694,10 @@
   "buffers": [
     {
       "uri": "tato.bin",
-      "byteLength": 279144
+      "byteLength": 283840
     },
     {
-      "byteLength": 591332,
+      "byteLength": 592612,
       "extensions": {
         "EXT_meshopt_compression": {
           "fallback": true
@@ -726,11 +728,11 @@
       "primitives": [
         {
           "attributes": {
-            "JOINTS_0": 50,
-            "WEIGHTS_0": 51,
-            "POSITION": 53,
-            "NORMAL": 54,
-            "TEXCOORD_0": 55
+            "POSITION": 51,
+            "NORMAL": 52,
+            "TEXCOORD_0": 53,
+            "JOINTS_0": 54,
+            "WEIGHTS_0": 55
           },
           "mode": 4,
           "material": 0,
@@ -848,6 +850,13 @@
         0.005442601162940264,
         -0.009878714568912983,
         0.9996699094772339
+      ],
+      "children": [
+        22,
+        24,
+        26,
+        28,
+        30
       ]
     },
     {
@@ -932,6 +941,13 @@
         -0.005442601162940264,
         0.009878714568912983,
         0.9996699094772339
+      ],
+      "children": [
+        32,
+        34,
+        36,
+        38,
+        40
       ]
     },
     {
@@ -1044,12 +1060,322 @@
         20,
         19
       ]
+    },
+    {
+      "name": "LeftThumb1",
+      "translation": [
+        -0.017648244365926644,
+        0.0673290138681346,
+        -0.08892429507514486
+      ],
+      "rotation": [
+        0.17709214771363774,
+        -0.4104740039624133,
+        0.4368855929016037,
+        0.7805641818609473
+      ],
+      "children": [
+        23
+      ]
+    },
+    {
+      "name": "LeftThumb2",
+      "translation": [
+        1.3877787807814457e-17,
+        0.04518513137120779,
+        0
+      ],
+      "rotation": [
+        -0.30617231202055506,
+        -0.03738677655560891,
+        -0.10119343406513037,
+        0.9458438735821441
+      ]
+    },
+    {
+      "name": "LeftIndex1",
+      "translation": [
+        -0.027495920275770823,
+        0.10570875892659051,
+        -0.07728153008250055
+      ],
+      "rotation": [
+        -0.02169098777576841,
+        -0.5416205374408634,
+        0.04902824753708218,
+        0.8389117506716809
+      ],
+      "children": [
+        25
+      ]
+    },
+    {
+      "name": "LeftIndex2",
+      "translation": [
+        0,
+        0.04462343280688358,
+        3.469446951953614e-18
+      ],
+      "rotation": [
+        0.31776568874977806,
+        0.0029676743384388997,
+        0.01600444648615207,
+        0.9480295447163406
+      ]
+    },
+    {
+      "name": "LeftMiddle1",
+      "translation": [
+        -0.015070918480212784,
+        0.10676136056479905,
+        -0.050910477167147326
+      ],
+      "rotation": [
+        0.004159696728639849,
+        -0.5398506882404361,
+        0.10200439300693165,
+        0.8355471471657003
+      ],
+      "children": [
+        27
+      ]
+    },
+    {
+      "name": "LeftMiddle2",
+      "translation": [
+        -1.3877787807814457e-17,
+        0.04693766979235822,
+        3.469446951953614e-18
+      ],
+      "rotation": [
+        0.2908142616957121,
+        0.0100811744886715,
+        0.03849593059927464,
+        0.9559516193001625
+      ]
+    },
+    {
+      "name": "LeftRing1",
+      "translation": [
+        -0.011760554767542394,
+        0.11030233049511369,
+        -0.022456409086216027
+      ],
+      "rotation": [
+        -0.008132694480656637,
+        -0.5389171036820749,
+        0.1472354109891322,
+        0.8293515228118108
+      ],
+      "children": [
+        29
+      ]
+    },
+    {
+      "name": "LeftRing2",
+      "translation": [
+        7.806255641895632e-18,
+        0.03952976307596286,
+        0
+      ],
+      "rotation": [
+        0.22461950840121925,
+        0.00919335575992319,
+        0.041870445474034346,
+        0.9735031712589703
+      ]
+    },
+    {
+      "name": "LeftPinky1",
+      "translation": [
+        -0.009693130436217208,
+        0.1041035998802693,
+        0.0020780056353391606
+      ],
+      "rotation": [
+        0.06399628593217441,
+        -0.5308717268435458,
+        0.1433043108370663,
+        0.8327926269609696
+      ],
+      "children": [
+        31
+      ]
+    },
+    {
+      "name": "LeftPinky2",
+      "translation": [
+        -3.469446951953614e-18,
+        0.03538295640067145,
+        3.469446951953614e-18
+      ],
+      "rotation": [
+        0.13495389486980033,
+        0.02138581002539386,
+        0.08616376712050954,
+        0.9868667076280521
+      ]
+    },
+    {
+      "name": "RightThumb1",
+      "translation": [
+        0.01713295000198188,
+        0.06834385335404719,
+        -0.08907477750702879
+      ],
+      "rotation": [
+        0.18942938964712855,
+        0.3880313904207784,
+        -0.4423285848466592,
+        0.7860620646065969
+      ],
+      "children": [
+        33
+      ]
+    },
+    {
+      "name": "RightThumb2",
+      "translation": [
+        6.938893903907228e-18,
+        0.04458570929796819,
+        0
+      ],
+      "rotation": [
+        -0.2401918727269325,
+        0.04257370259404706,
+        0.09912296407264361,
+        0.9647123831053565
+      ]
+    },
+    {
+      "name": "RightIndex1",
+      "translation": [
+        0.02865949272583417,
+        0.10616481448632661,
+        -0.07635205085892517
+      ],
+      "rotation": [
+        -0.07397971545700201,
+        0.5207921173465678,
+        -0.026759683754581487,
+        0.850050875851519
+      ],
+      "children": [
+        35
+      ]
+    },
+    {
+      "name": "RightIndex2",
+      "translation": [
+        1.3877787807814457e-17,
+        0.04607063712720241,
+        6.5052130349130266e-18
+      ],
+      "rotation": [
+        0.3897067604521964,
+        -0.001841597422516745,
+        -0.0161727523087603,
+        0.9207951408752912
+      ]
+    },
+    {
+      "name": "RightMiddle1",
+      "translation": [
+        0.0146653144923751,
+        0.10775072573967884,
+        -0.05080540291674578
+      ],
+      "rotation": [
+        -0.03022997510921644,
+        0.5208521802814969,
+        -0.08886161221941655,
+        0.8484708414404547
+      ],
+      "children": [
+        37
+      ]
+    },
+    {
+      "name": "RightMiddle2",
+      "translation": [
+        -1.3877787807814457e-17,
+        0.047419900269687426,
+        -1.734723475976807e-18
+      ],
+      "rotation": [
+        0.33552733211788777,
+        -0.007689835151671988,
+        -0.03904399040973312,
+        0.9411895891105455
+      ]
+    },
+    {
+      "name": "RightRing1",
+      "translation": [
+        -0.018714653851131708,
+        0.11763524933429065,
+        -0.03822704692286657
+      ],
+      "rotation": [
+        0.2047002918529184,
+        0.4613724995466773,
+        -0.28005725781100543,
+        0.8165789242472288
+      ],
+      "children": [
+        39
+      ]
+    },
+    {
+      "name": "RightRing2",
+      "translation": [
+        -2.6020852139652106e-18,
+        0.044308774021382724,
+        0
+      ],
+      "rotation": [
+        -0.00431384992746906,
+        -0.01920464203636358,
+        -0.038325366515895326,
+        0.9990714382387681
+      ]
+    },
+    {
+      "name": "RightPinky1",
+      "translation": [
+        -0.002925207704117416,
+        0.10738190686189752,
+        -0.0031813570436315247
+      ],
+      "rotation": [
+        0.1060691302844229,
+        0.4995267551455051,
+        -0.17398112303236457,
+        0.8419934259380568
+      ],
+      "children": [
+        41
+      ]
+    },
+    {
+      "name": "RightPinky2",
+      "translation": [
+        -3.469446951953614e-18,
+        0.03573626525168305,
+        0
+      ],
+      "rotation": [
+        0.18667008450356115,
+        -0.03171644576312198,
+        -0.08291932647455942,
+        0.9784031540814827
+      ]
     }
   ],
   "skins": [
     {
       "name": "bearded_guest_Rig",
-      "inverseBindMatrices": 52,
+      "inverseBindMatrices": 50,
       "joints": [
         19,
         2,
@@ -1070,7 +1396,27 @@
         15,
         14,
         13,
-        12
+        12,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41
       ]
     }
   ],

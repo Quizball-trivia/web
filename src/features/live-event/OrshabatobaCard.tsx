@@ -28,7 +28,7 @@ export function StudioHero({ dim, className, children }: { dim?: boolean; classN
       <picture>
         <source media="(max-width: 640px)" srcSet={`${ART}/studio-mobile.webp`} width={900} height={538} />
         <img
-          src={`${ART}/studio-wide.webp`}
+          src={`${ART}/studio-wide-tripo.webp`}
           width={1600}
           height={700}
           alt=""

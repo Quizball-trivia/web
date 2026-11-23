@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * One seated host. Both models share one skeleton (the Table Derby demo's
- * guest rig: Hips … Head, no fingers or face rig) and its SeatedIdle clip;
+ * One seated host. Both models use the studio bone names and SeatedIdle clip;
  * each host starts the loop at a different point so they never breathe in step.
  *
  * After each mixer update, a pose layer adds the acting on top: the head
@@ -18,7 +17,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { SEATS, type HostId, type HostModel } from './studioLayout';
-import { gesturePose, moodPose, type BoneTurn, type Hand, type HostAct } from './acting';
+import { DIGITS, fingerFlex, gesturePose, handGrip, moodPose, type BoneTurn, type Hand, type HostAct } from './acting';
 
 /** The host models are meshopt-compressed (EXT_meshopt_compression). */
 function withMeshopt(loader: GLTFLoader) {
@@ -40,15 +39,18 @@ const CAMERA_HAND: Record<HostId, Hand> = { tato: 'Right', kala: 'Left' };
 /** Bones the pose layer may turn, parents before children. */
 const POSE_BONES = [
   'Spine', 'Spine1', 'Spine2', 'Neck', 'Head',
-  'LeftShoulder', 'LeftArm', 'LeftForeArm', 'RightShoulder', 'RightArm', 'RightForeArm',
+  'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand',
+  'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand',
 ] as const;
 
 /** How a gaze turn is shared out, base of the neck first. */
 const GAZE_SHARE: Partial<Record<(typeof POSE_BONES)[number], number>> = { Neck: 0.4, Head: 0.6 };
 const MAX_GAZE = THREE.MathUtils.degToRad(50);
 
+const LOCAL_X = new THREE.Vector3(1, 0, 0);
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
 const parentQuat = new THREE.Quaternion();
+const inverseParentQuat = new THREE.Quaternion();
 const turn = new THREE.Quaternion();
 const axisTurn = new THREE.Quaternion();
 const headPos = new THREE.Vector3();
@@ -88,7 +90,7 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
   const seat = SEATS[id];
   const gltf = useLoader(GLTFLoader, light ? spec.lod1 : spec.lod0, withMeshopt);
 
-  const { root, mixer, idle, bones, head } = useMemo(() => {
+  const { root, mixer, idle, bones, fingers, head } = useMemo(() => {
     const obj = cloneSkinned(gltf.scene);
     obj.traverse((child) => {
       const mesh = child as THREE.SkinnedMesh;
@@ -108,8 +110,17 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
       base: new THREE.Quaternion(),
       turned: new THREE.Quaternion(0, 0, 0, 0),
       world: new THREE.Quaternion(),
+      applied: new THREE.Quaternion(),
+      outgoing: new THREE.Quaternion(),
     }));
-    return { root: obj, mixer: mix, idle: clip ? mix.clipAction(clip) : null, bones: list, head: obj.getObjectByName('Head') };
+    const fingers = (['Left', 'Right'] as const).map(hand => ({
+      hand,
+      joints: DIGITS.flatMap(digit => [1, 2].flatMap(link => {
+        const bone = obj.getObjectByName(hand + digit + link);
+        return bone ? [{ bone, digit, link, rest: bone.quaternion.clone() }] : [];
+      })),
+    }));
+    return { root: obj, mixer: mix, idle: clip ? mix.clipAction(clip) : null, bones: list, fingers, head: obj.getObjectByName('Head') };
   }, [gltf, id, spec.clip]);
 
   // Started here, not in the memo, so a Strict Mode cleanup/setup replay restarts it.
@@ -128,12 +139,14 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
     const left = new THREE.Vector3(Math.cos(seat.yaw), 0, -Math.sin(seat.yaw));
     const other = SEATS[id === 'tato' ? 'kala' : 'tato'];
     const toOther = Math.atan2(other.position[0] - seat.position[0], other.position[2] - seat.position[2]) - seat.yaw;
-    return { fwd, left, toOther };
+    return { axes: { up: WORLD_UP, left, forward: fwd }, toOther };
   }, [id, seat]);
 
   /** When the current gesture started (clock seconds), keyed by its replay key. */
   const gestureStart = useRef<{ key: number; at: number } | null>(null);
+  const transitionAt = useRef(-Infinity);
   const gaze = useRef(frame.toOther);
+  const anger = useRef(0);
   const steam = useRef<THREE.Group>(null);
 
   useFrame((state, delta) => {
@@ -146,10 +159,21 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
     gaze.current += (target - gaze.current) * (1 - Math.exp(-delta * 6));
 
     const g = act?.gesture;
-    if (g && gestureStart.current?.key !== g.key) gestureStart.current = { key: g.key, at: now };
+    if (gestureStart.current?.key !== g?.key) {
+      for (const bone of bones) bone.outgoing.copy(bone.applied);
+      transitionAt.current = now;
+      gestureStart.current = g ? { key: g.key, at: now + (g.delaySeconds ?? 0) } : null;
+    }
+    const elapsed = gestureStart.current ? now - gestureStart.current.at : -1;
+    const blend = THREE.MathUtils.smoothstep(now - transitionAt.current, 0, 0.14);
+    const breath = Math.sin(now * (id === 'tato' ? 1.55 : 1.28) + IDLE_OFFSET_S[id]);
+    anger.current += ((act?.anger ?? 0) - anger.current) * (1 - Math.exp(-delta * 8));
     const turns: BoneTurn[] = [
-      ...moodPose(act?.anger ?? 0, now),
-      ...(g && gestureStart.current ? gesturePose(g.name, now - gestureStart.current.at, CAMERA_HAND[id]) : []),
+      { bone: 'Spine1', axis: 'left', deg: 0.9 * breath },
+      { bone: 'LeftShoulder', axis: 'forward', deg: 0.65 * breath },
+      { bone: 'RightShoulder', axis: 'forward', deg: -0.65 * breath },
+      ...moodPose(anger.current, now),
+      ...(g && gestureStart.current ? gesturePose(g.name, elapsed, CAMERA_HAND[id]) : []),
     ];
 
     for (const b of bones) {
@@ -164,13 +188,24 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
       if (share) b.world.multiply(axisTurn.setFromAxisAngle(WORLD_UP, gaze.current * share));
       for (const t of turns) {
         if (t.bone !== b.name) continue;
-        b.world.premultiply(axisTurn.setFromAxisAngle(t.axis === 'up' ? WORLD_UP : frame.left, THREE.MathUtils.degToRad(t.deg)));
+        b.world.premultiply(axisTurn.setFromAxisAngle(frame.axes[t.axis], THREE.MathUtils.degToRad(t.deg)));
       }
+      b.applied.copy(b.outgoing).slerp(b.world, blend);
       bone.parent.getWorldQuaternion(parentQuat);
       // World-space turn expressed in the bone's parent frame.
-      turn.copy(b.world).premultiply(parentQuat.clone().invert()).multiply(parentQuat);
+      turn.copy(b.applied).premultiply(inverseParentQuat.copy(parentQuat).invert()).multiply(parentQuat);
       bone.quaternion.premultiply(turn);
       b.turned.copy(bone.quaternion);
+    }
+
+    const fingerBlend = 1 - Math.exp(-22 * delta);
+    for (const { hand, joints } of fingers) {
+      const grip = handGrip(g?.name, elapsed, hand === CAMERA_HAND[id]);
+      for (const joint of joints) {
+        const goal = THREE.MathUtils.degToRad(fingerFlex(grip, joint.digit, joint.link));
+        axisTurn.setFromAxisAngle(LOCAL_X, goal).premultiply(joint.rest);
+        joint.bone.quaternion.slerp(axisTurn, fingerBlend);
+      }
     }
 
     if (!head) return;
@@ -184,7 +219,7 @@ export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
         puffs.children.forEach((p, i) => {
           const life = (now * 0.9 + i / STEAM_PUFFS) % 1;
           const side = i % 2 ? 1 : -1;
-          p.position.set(headPos.x + frame.left.x * side * 0.09, headPos.y + 0.12 + life * 0.35, headPos.z + frame.left.z * side * 0.09);
+          p.position.set(headPos.x + frame.axes.left.x * side * 0.09, headPos.y + 0.12 + life * 0.35, headPos.z + frame.axes.left.z * side * 0.09);
           p.scale.setScalar(0.08 + life * 0.22);
           (p as THREE.Sprite).material.opacity = 0.7 * Math.sin(Math.PI * life);
         });

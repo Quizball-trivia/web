@@ -89,15 +89,12 @@ export const HOST_MODELS: Record<HostId, HostModel> = {
     clip: 'SeatedIdle',
     floorOffset: -0.3,
   },
-  // His body from a generated character sheet, his head from a separate
-  // head sculpt painted from his photos; rigged on Tato's skeleton (same bone
-  // names and rest orientations, his own joint positions), so the same clip
-  // and head turn drive him.
+  // Full-body Tripo character fitted to the studio's named humanoid bones.
   kala: {
-    lod0: '/assets/orshabatoba/characters/kala/lod0-m/kala.gltf',
-    lod1: '/assets/orshabatoba/characters/kala/lod1-m/kala.gltf',
+    lod0: '/assets/orshabatoba/characters/kala/tripo/lod0/kala.gltf',
+    lod1: '/assets/orshabatoba/characters/kala/tripo/lod1/kala.gltf',
     clip: 'SeatedIdle',
-    floorOffset: -0.203,
+    floorOffset: -0.32,
   },
 };
 
