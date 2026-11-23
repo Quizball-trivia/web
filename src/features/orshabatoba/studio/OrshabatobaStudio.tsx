@@ -205,13 +205,33 @@ export interface OrshabatobaStudioProps {
   /** Elements to keep pinned above each host's head (speech bubbles). */
   anchors?: Partial<Record<HostId, RefObject<HTMLElement | null>>>;
   className?: string;
+  /** Transparent until both hosts are loaded and drawn, so whatever sits behind (the studio still) shows meanwhile. */
+  fadeIn?: boolean;
 }
 
-export function OrshabatobaStudio({ shot = 'wide', interactive = false, acts, smash, shake, anchors, className }: OrshabatobaStudioProps) {
+/** Mounts only once every model in its Suspense boundary has loaded; fires after the next drawn frame. */
+function ReadySignal({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(onReady));
+    return () => cancelAnimationFrame(id);
+  }, [onReady]);
+  return null;
+}
+
+export function OrshabatobaStudio({ shot = 'wide', interactive = false, acts, smash, shake, anchors, className, fadeIn = false }: OrshabatobaStudioProps) {
   // Canvas children only ever render on the client, so this is read once there.
   const [light] = useState(prefersLightModels);
+  const [ready, setReady] = useState(false);
+  const markReady = useMemo(() => () => setReady(true), []);
   return (
-    <div className={className} style={{ background: STUDIO_COLORS.background }}>
+    <div
+      className={className}
+      style={{
+        background: fadeIn ? undefined : STUDIO_COLORS.background,
+        opacity: fadeIn && !ready ? 0 : 1,
+        transition: fadeIn ? 'opacity 450ms ease-out' : undefined,
+      }}
+    >
       <Canvas
         shadows={{ type: THREE.PCFShadowMap }}
         dpr={light ? [1, 1.25] : [1, 1.75]}
@@ -230,9 +250,12 @@ export function OrshabatobaStudio({ shot = 'wide', interactive = false, acts, sm
           {(Object.keys(SEATS) as HostId[]).map((id) => (
             <StudioHost key={id} id={id} spec={HOST_MODELS[id]} light={light} act={acts?.[id]} anchor={anchors?.[id]} />
           ))}
+          <ReadySignal onReady={markReady} />
         </Suspense>
         <CameraRig shot={shot} interactive={interactive} shake={shake} />
-        <Bloom />
+        {/* Phones skip the bloom pass (a 4x-multisampled float target plus a blur chain every frame); the set still
+            renders straight to the antialiased canvas. */}
+        {!light && <Bloom />}
       </Canvas>
     </div>
   );

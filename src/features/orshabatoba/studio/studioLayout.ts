@@ -84,8 +84,8 @@ export interface HostModel {
 export const HOST_MODELS: Record<HostId, HostModel> = {
   // The Table Derby demo's left-seat guest.
   tato: {
-    lod0: '/assets/orshabatoba/characters/tato/lod0/tato.gltf',
-    lod1: '/assets/orshabatoba/characters/tato/lod1/tato.gltf',
+    lod0: '/assets/orshabatoba/characters/tato/lod0-m/tato.gltf',
+    lod1: '/assets/orshabatoba/characters/tato/lod1-m/tato.gltf',
     clip: 'SeatedIdle',
     floorOffset: -0.3,
   },
@@ -94,8 +94,8 @@ export const HOST_MODELS: Record<HostId, HostModel> = {
   // names and rest orientations, his own joint positions), so the same clip
   // and head turn drive him.
   kala: {
-    lod0: '/assets/orshabatoba/characters/kala/lod0/kala.gltf',
-    lod1: '/assets/orshabatoba/characters/kala/lod1/kala.gltf',
+    lod0: '/assets/orshabatoba/characters/kala/lod0-m/kala.gltf',
+    lod1: '/assets/orshabatoba/characters/kala/lod1-m/kala.gltf',
     clip: 'SeatedIdle',
     floorOffset: -0.203,
   },

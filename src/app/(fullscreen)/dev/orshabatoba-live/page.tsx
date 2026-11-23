@@ -16,8 +16,11 @@ import { EventLobby, KickoffCountdown } from '@/features/live-event/LiveEventScr
 import { NoLiveEvent } from '@/features/live-event/NoLiveEvent';
 import { liveEventCopy } from '@/features/live-event/liveEvent.copy';
 
-const CREST = (slug: string) => ({ url: `https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/${slug}.webp`, fit: 'contain' });
+// Invented universe only (no real question or answer in this public repo); the picture is a neutral stand-in.
+const ART = { url: '/assets/orshabatoba/events/studio-wide.webp', fit: 'cover' };
 const ka = (t: string) => ({ en: t, ka: t });
+const CLUBS = [ka('ატლეტიკო ავრორა'), ka('რეალ ბრიზა'), ka('დეპორტივო ნუბე'), ka('პუერტო აზული')];
+const clubOptions = CLUBS.map((text, i) => ({ id: 'abcd'[i]!, text }));
 
 const ROUNDS: ShowRound[] = [
   { kind: 'true_false', count: 4 },
@@ -29,24 +32,18 @@ const ROUNDS: ShowRound[] = [
 ];
 
 const QUESTIONS: Record<string, { round: number; kind: 'mcq' | 'true_false'; question: Record<string, unknown> }> = {
-  tf: { round: 0, kind: 'true_false', question: { prompt: ka('ლიონელ მესიმ ბარსელონაში 2004 წელს დებიუტი შეასრულა.'), show: { kind: 'true_false' } } },
-  mcq: { round: 1, kind: 'mcq', question: { prompt: ka('რომელმა კლუბმა მოიგო ჩემპიონთა ლიგა 2005 წელს?'), options: [
-    { id: 'a', text: ka('ლივერპული') }, { id: 'b', text: ka('მილანი') }, { id: 'c', text: ka('ჩელსი') }, { id: 'd', text: ka('ბარსელონა') },
-  ], show: { kind: 'mcq' } } },
-  zoom: { round: 2, kind: 'mcq', question: { prompt: ka('რომელი კლუბის ემბლემაა?'), image: CREST('juventus'), options: [
-    { id: 'a', text: ka('იუვენტუსი') }, { id: 'b', text: ka('ინტერი') }, { id: 'c', text: ka('ნიუკასლი') }, { id: 'd', text: ka('ბოტაფოგო') },
-  ], show: { kind: 'zoom_out', focus: { x: 0.5, y: 0.35 } } } },
-  evo: { round: 3, kind: 'mcq', question: { prompt: ka('რომელი კლუბის ემბლემის ევოლუციაა?'), options: [
-    { id: 'a', text: ka('ბარსელონა') }, { id: 'b', text: ka('ლივერპული') }, { id: 'c', text: ka('მილანი') }, { id: 'd', text: ka('რეალი') },
-  ], show: { kind: 'evolution', eras: [
-    { year: 1910, image: CREST('fc-barcelona') }, { year: 1960, image: CREST('ac-milan') }, { year: 1990, image: CREST('liverpool') }, { year: 2024, image: CREST('real-madrid-cf') },
+  tf: { round: 0, kind: 'true_false', question: { prompt: ka('ტომას ვარელო რეალ ბრიზაში თამაშობდა.'), show: { kind: 'true_false' } } },
+  mcq: { round: 1, kind: 'mcq', question: { prompt: ka('რომელმა კლუბმა მოიგო ჩრდილოეთის ლიგა ზედიზედ სამჯერ?'), options: clubOptions, show: { kind: 'mcq' } } },
+  zoom: { round: 2, kind: 'mcq', question: { prompt: ka('რა არის სურათზე?'), image: ART, options: clubOptions, show: { kind: 'zoom_out', focus: { x: 0.5, y: 0.35 } } } },
+  evo: { round: 3, kind: 'mcq', question: { prompt: ka('ვისი ემბლემის ისტორიაა?'), options: clubOptions, show: { kind: 'evolution', eras: [
+    { year: 1903, image: ART }, { year: 1951, image: ART }, { year: 1988, image: ART }, { year: 2019, image: ART },
   ] } } },
-  odd: { round: 4, kind: 'mcq', question: { prompt: ka('რომელი არ თამაშობდა რეალ მადრიდში?'), options: [
-    { id: 'a', text: ka('რონალდო') }, { id: 'b', text: ka('ზიდანი') }, { id: 'c', text: ka('ჩავი') }, { id: 'd', text: ka('ფიგუ') },
+  odd: { round: 4, kind: 'mcq', question: { prompt: ka('ვის არასდროს უთამაშია რეალ ბრიზაში?'), options: [
+    { id: 'a', text: ka('იკერ მონტანიესი') }, { id: 'b', text: ka('ბრუნო სალსედალი') }, { id: 'c', text: ka('დანტე ფეროლო') }, { id: 'd', text: ka('ლუკას ოიარსაბალი') },
   ], show: { kind: 'odd_one_out' } } },
   fake: { round: 5, kind: 'mcq', question: { prompt: ka('რომელი ფაქტია ტყუილი?'), options: [
-    { id: 'a', text: ka('5 ოქროს ბურთი აქვს') }, { id: 'b', text: ka('სპორტინგში დაიწყო') }, { id: 'c', text: ka('ბარსელონაში თამაშობდა') },
-  ], show: { kind: 'fake_fact', subject: { name: ka('კრიშტიანუ რონალდუ') } } } },
+    { id: 'a', text: ka('ორი ჩრდილოეთის ლიგა აქვს') }, { id: 'b', text: ka('პუერტო აზულში დაიწყო') }, { id: 'c', text: ka('ნორტე იუნაიტედში თამაშობდა') },
+  ], show: { kind: 'fake_fact', subject: { name: ka('ტომას ვარელო') } } } },
 };
 
 const NAMES = ['Talakha', 'FleetChamp1', 'gio_10', 'nino', 'luka.k', 'sandro', 'tatia', 'beqa', 'mari', 'dato', 'ana', 'levani'];

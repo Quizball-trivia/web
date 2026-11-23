@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatedPointsCounter } from '@/features/possession/components/AnimatedPointsCounter';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Clock, Crown, Eye, Radio, Users } from 'lucide-react';
@@ -160,7 +161,10 @@ export function ShowHeader({ locale, stageIndex, stageCount, stage, qIndex, seco
         {spectating ? (
           <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-white/80"><Eye className="size-3.5" /> {copy.spectating}</span>
         ) : (
-          <span className="tabular-nums">{rank != null ? `#${rank}` : ''} · {copy.points(points)}</span>
+          <span className="flex items-center gap-1.5 tabular-nums">
+            {rank != null && <span>#{rank} ·</span>}
+            <AnimatedPointsCounter value={points} label={locale === 'ka' ? 'ქულა' : 'pts'} accentClassName="text-brand-yellow" />
+          </span>
         )}
         <span className="flex items-center gap-1 tabular-nums"><Users className="size-3.5" /> {copy.playersLeft(alive)}</span>
       </div>

@@ -2074,7 +2074,7 @@ export interface WlSubscribeSnapshot {
   game_index: number;
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
-  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string } | null;
   /** money_drop in-flight attempt only: the server-derived budget carried
       into it — reconnects must not reset the client's display chain. */
   money_budget?: number;
@@ -2095,7 +2095,8 @@ export type WlSubscribeAck = {
 
 export type WlAnswerAck =
   /** carry: money-drop only — the amount that survived this question. */
-  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number }
+  /** answer_id: the option the server accepted (one-tap kinds), which a retry or second tab may not have tapped. */
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string }
   | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
 
 export interface ServerToClientEvents {

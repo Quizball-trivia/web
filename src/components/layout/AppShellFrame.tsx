@@ -75,6 +75,7 @@ export function AppShellFrame({ children, chrome }: AppShellProps & { chrome: Sh
     authUser,
     showHeader,
     showNav,
+    immersive,
     isPathActive,
     navbarCoins,
     navbarTickets,
@@ -99,13 +100,14 @@ export function AppShellFrame({ children, chrome }: AppShellProps & { chrome: Sh
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}
-        <div className="hidden xl:block" onClickCapture={guestNavGuard}>
+        {/* Covered by an immersive screen (the live show): out of the tab order too, so a key press can't leave the game. */}
+        <div className="hidden xl:block" onClickCapture={guestNavGuard} inert={immersive || undefined}>
           <Sidebar currentPath={vm.navPath} homeHref={homeHref} prefetchRoutes={!isGuest} socialBadgeCount={socialBadgeCount} footerChrome={chrome} />
         </div>
 
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
-          <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
+          <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex" inert={immersive || undefined}>
             {/* Left: the signed-in language switcher (flag only, in place, saved to the profile). Guests get theirs next to Sign in. */}
             <div className="flex items-center">
               {!isGuest && (publicLocale

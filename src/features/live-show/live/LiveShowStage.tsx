@@ -9,6 +9,7 @@
  * fake stream exactly as the server would.
  */
 
+import { useImmersiveStore } from '@/stores/immersive.store';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Crown, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,8 @@ import type { ShowAnswer, ShowLocale } from '../show.types';
 import type { ShowScreen, ShowState } from '../useShowSim';
 import { HostScreen } from '../views/HostScreen';
 import { QuestionView } from '../views/QuestionViews';
-import { RevealSplash, ShowHeader, StageIntro } from '../views/ShowScreens';
+import { ShowHeader, StageIntro } from '../views/ShowScreens';
+import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 import {
   correctIdOf, showKindOf, toBoard, toRevealStats, toShowQuestion, toStages, type LiveShowKind, type ShowRound,
 } from './showLive.adapter';
@@ -86,23 +88,51 @@ export function LiveShowStage(props: LiveShowStageProps) {
   // Your tap, per attempt (the server's ack follows; a rejection clears it).
   const [picked, setPicked] = useState<{ attemptId: string; answer: ShowAnswer } | null>(null);
   const [nonceSeen, setNonceSeen] = useState(retryNonce);
+  // An attempt whose ack went missing and was retried: the server keeps the FIRST accepted answer, which may not be
+  // the latest tap, so that attempt waits for the shared reveal instead of colouring a possibly wrong option.
+  const [retriedAttempt, setRetriedAttempt] = useState<string | null>(null);
   if (nonceSeen !== retryNonce) {
     setNonceSeen(retryNonce);
+    if (picked) setRetriedAttempt(picked.attemptId);
     setPicked(null);
   }
   const serverAck = screen.kind === 'question' || screen.kind === 'reveal' ? screen.answer : null;
+  // The option the server actually accepted wins over this tab's tap (a retry or a second tab may have tapped
+  // another); without one (an older server), the local tap stands in, except on a retried attempt.
+  const acceptedId = serverAck?.accepted ? serverAck.answer_id ?? null : null;
+  const localTap = picked && attempt && picked.attemptId === attempt.attempt_id ? picked.answer : null;
   // The server already holds an answer (e.g. after a reconnect): lock the buttons even without the local tap.
-  const yourAnswer: ShowAnswer | null = picked && attempt && picked.attemptId === attempt.attempt_id
-    ? picked.answer
-    : serverAck?.accepted ? { kind: 'choice', optionId: '', elapsedMs: serverAck.elapsedMs } : null;
+  const yourAnswer: ShowAnswer | null = acceptedId && serverAck?.accepted
+    ? { kind: 'choice', optionId: acceptedId, elapsedMs: serverAck.elapsedMs }
+    : localTap ?? (serverAck?.accepted ? { kind: 'choice', optionId: '', elapsedMs: serverAck.elapsedMs } : null);
+
+  // Ranked feel: your option turns green/red the moment the server's ack lands (the correct option itself waits for
+  // the shared reveal), and a correct tap splashes its points.
+  const immersive = phase !== 'pregame';
+  const enterImmersive = useImmersiveStore((s) => s.enter);
+  const leaveImmersive = useImmersiveStore((s) => s.leave);
+  useEffect(() => {
+    if (!immersive) return;
+    enterImmersive();
+    return leaveImmersive;
+  }, [immersive, enterImmersive, leaveImmersive]);
+
+  const verdictId = acceptedId
+    ?? (localTap && retriedAttempt !== attempt?.attempt_id && (localTap.kind === 'choice' || localTap.kind === 'reveal_choice')
+      ? localTap.optionId
+      : null);
+  const verdict = attempt && serverAck?.accepted && verdictId ? { optionId: verdictId, correct: serverAck.correct } : null;
 
   // A new question starts at the top (prompt and timer in view); the reveal keeps the scroll.
   // The page may scroll inside the app shell's pane, not the window: bring the stage itself into view.
   const rootRef = useRef<HTMLDivElement>(null);
   const questionId = screen.kind === 'question' ? screen.attempt.attempt_id : null;
   useEffect(() => {
-    if (questionId) rootRef.current?.scrollIntoView({ block: 'start' });
-  }, [questionId]);
+    if (!questionId || !rootRef.current) return;
+    // Full screen, the stage is its own scroller; inline (pre-game) the app pane scrolls.
+    if (phase === 'pregame') rootRef.current.scrollIntoView({ block: 'start' });
+    else rootRef.current.scrollTo({ top: 0 });
+  }, [questionId, phase]);
 
   const reveal = screen.kind === 'reveal' ? screen.reveal : null;
   const question = attempt ? toShowQuestion(attempt, correctIdOf(reveal)) : null;
@@ -176,7 +206,14 @@ export function LiveShowStage(props: LiveShowStageProps) {
   if (phase === 'pregame') panel = props.pregamePanel;
   else if (phase === 'countdown') panel = props.countdownPanel;
   else if (screen.kind === 'cancelled') {
-    panel = <PanelCard><p className="font-poppins text-lg font-black text-white">{locale === 'ka' ? 'თამაში გაუქმდა.' : 'The game was cancelled.'}</p></PanelCard>;
+    panel = (
+      <PanelCard>
+        <p className="font-poppins text-lg font-black text-white">{locale === 'ka' ? 'თამაში გაუქმდა.' : 'The game was cancelled.'}</p>
+        <button type="button" onClick={props.onExit} className="mt-4 rounded-xl bg-white/10 px-6 py-3 font-poppins text-sm font-black uppercase text-white hover:bg-white/15">
+          {locale === 'ka' ? 'გასვლა' : 'Exit'}
+        </button>
+      </PanelCard>
+    );
   } else if (showScreen.kind === 'champion') {
     panel = <FinalBoard locale={locale} board={showBoard} selfUserId={selfUserId} yourScore={canAnswer ? score : null} onExit={props.onExit} />;
   } else if (showScreen.kind === 'stage_intro' && stage) {
@@ -208,6 +245,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
             startsAt={showScreen.kind === 'question' ? showScreen.startsAt : 0}
             deadline={showScreen.kind === 'question' ? showScreen.deadline : 0}
             answer={yourAnswer}
+            verdict={verdict}
             onAnswer={canAnswer && windowOpen ? submit : undefined}
             reveal={revealStats}
             stepMs={stepMs}
@@ -216,7 +254,11 @@ export function LiveShowStage(props: LiveShowStageProps) {
             variant={question.kind === 'zoom_out' || question.kind === 'evolution' ? 'host' : 'phone'}
           />
         </div>
-        {canAnswer && <RevealSplash show={showScreen.kind === 'reveal'} points={state.yourResult?.points ?? (yourAnswer ? 0 : null)} correct={state.yourResult?.correct ?? false} />}
+        {canAnswer && attempt && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex justify-center">
+            <ArenaScoreSplash key={attempt.attempt_id} show={verdict?.correct === true} points={serverAck?.accepted ? serverAck.points : null} side="right" />
+          </div>
+        )}
       </div>
     );
   } else {
@@ -224,7 +266,14 @@ export function LiveShowStage(props: LiveShowStageProps) {
   }
 
   return (
-    <div ref={rootRef} className="min-h-[100dvh] bg-surface-page-alt font-fun">
+    // From the host's Start on, the show takes the whole screen (no app sidebar), like Weekend League and Ranked.
+    <div
+      ref={rootRef}
+      className={cn(
+        'bg-surface-page-alt font-fun',
+        phase === 'pregame' ? 'min-h-[100dvh]' : 'fixed inset-0 z-50 overflow-y-auto overscroll-contain',
+      )}
+    >
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-3 py-3 sm:px-4 sm:py-5 lg:flex-row lg:items-start">
         <div className="w-full min-w-0 lg:sticky lg:top-4 lg:flex-1">
           <HostScreen
