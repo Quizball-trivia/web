@@ -103,7 +103,9 @@ function DemoFlow() {
 
   let screen: WlLiveScreen = { kind: 'waiting' };
   if (phase === 'game') {
-    if (!key) {
+    if (elapsed < 0) {
+      screen = { kind: 'waiting' };
+    } else if (!key) {
       screen = { kind: 'final_result', result: { type: 'final_result', tournamentId: 'dev', seq: 99, board, champion_user_id: board[0]!.user_id } as never, champion: board[0]!.user_id === 'u0' };
     } else if (elapsed >= 0) {
       const stepStart = gameStart + stepIndex * DEMO_STEP_MS;

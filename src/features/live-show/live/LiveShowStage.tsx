@@ -84,7 +84,11 @@ export function LiveShowStage(props: LiveShowStageProps) {
   const { locale, title, phase, now, kickoffMs, registered, screen, board, score, selfUserId, canAnswer, onAnswer, retryNonce, rounds } = props;
   // Rounds seen so far (round_index → kind), for headers when the server sends no layout.
   const [seen, setSeen] = useState<Map<number, ShowRound>>(() => new Map());
-  const attempt = screen.kind === 'question' || screen.kind === 'reveal' ? screen.attempt : null;
+  // The answer key rides on the reveal: merge it into the attempt so every view (incl. the WL kinds) can show it.
+  const rawAttempt = screen.kind === 'question' || screen.kind === 'reveal' ? screen.attempt : null;
+  const attempt: typeof rawAttempt = rawAttempt && screen.kind === 'reveal'
+    ? { ...rawAttempt, evaluation: { ...(rawAttempt.evaluation ?? {}), ...(screen.reveal.evaluation ?? {}) } }
+    : rawAttempt;
   if (attempt) {
     const prev = seen.get(attempt.round_index);
     const kind: LiveShowKind = showKindOf(attempt);
@@ -134,12 +138,14 @@ export function LiveShowStage(props: LiveShowStageProps) {
   // A new question starts at the top (prompt and timer in view); the reveal keeps the scroll.
   // The page may scroll inside the app shell's pane, not the window: bring the stage itself into view.
   const rootRef = useRef<HTMLDivElement>(null);
+  /** Full page: the element that actually scrolls (the root is overflow-hidden). */
+  const scrollRef = useRef<HTMLDivElement>(null);
   const questionId = screen.kind === 'question' ? screen.attempt.attempt_id : null;
   useEffect(() => {
     if (!questionId || !rootRef.current) return;
     // Full screen, the stage is its own scroller; inline (pre-game) the app pane scrolls.
     if (phase === 'pregame') rootRef.current.scrollIntoView({ block: 'start' });
-    else rootRef.current.scrollTo({ top: 0 });
+    else (scrollRef.current ?? rootRef.current).scrollTo({ top: 0 });
   }, [questionId, phase]);
 
   const reveal = screen.kind === 'reveal' ? screen.reveal : null;
@@ -273,7 +279,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
         )}
         <div className="mx-auto mt-4 w-full max-w-xl px-1">
           <WlKindQuestion
-            key={attempt.attempt_id}
+            key={`${attempt.attempt_id}:${retryNonce}`}
             attempt={attempt}
             now={now}
             canAnswer={canAnswer}
@@ -390,7 +396,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
             )}
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {inGame ? (
               // Game: the question in the middle on a solid card (readability first); the live board on the right
               // (below on a phone). Nothing overlaps: they are separate columns.
