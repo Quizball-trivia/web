@@ -4,6 +4,7 @@ import type { Locale } from '@/lib/i18n/messages';
 const en = {
   kicker: 'Live quiz night · every Monday',
   title: 'Orshabatoba',
+  cardTitle: 'Orshabatoba live tournament',
   subtitle: 'Play along with the podcast: same questions, same moment, one leaderboard.',
   startsAt: (time: string) => `Starts ${time}`,
   startsWhenHostsSay: 'Starts when the hosts press Start',
@@ -11,7 +12,7 @@ const en = {
   register: 'Register',
   registering: 'Registering…',
   registeredTitle: "You're in!",
-  registeredBody: 'Keep this page open. When the hosts press Start, a countdown begins and everyone plays at once.',
+  registeredBody: 'Wait for Orshabatoba to start the tournament.',
   notOpenYet: 'Registration opens in a moment…',
   signIn: 'Sign in to register',
   watchOnly: "Registration is closed: you're watching live.",
@@ -43,7 +44,6 @@ const en = {
   live: 'Live',
   hosts: { tato: 'Tato', kala: 'Kala' },
   hostsLabel: 'Hosts',
-  countdownUnits: ['Days', 'Hours', 'Min', 'Sec'] as [string, string, string, string],
 };
 
 type Copy = typeof en;
@@ -51,6 +51,7 @@ type Copy = typeof en;
 const ka: Copy = {
   kicker: 'ლაივ ქვიზის საღამო · ყოველ ორშაბათს',
   title: 'ორშაბათობა',
+  cardTitle: 'ორშაბათობის ლაივ ტურნირი',
   subtitle: 'ითამაშე პოდკასტთან ერთად: ერთი და იგივე კითხვები, ერთსა და იმავე დროს, ერთი ლიდერბორდი.',
   startsAt: (time: string) => `იწყება ${time}-ზე`,
   startsWhenHostsSay: 'იწყება, როცა წამყვანები Start-ს დააჭერენ',
@@ -58,7 +59,7 @@ const ka: Copy = {
   register: 'რეგისტრაცია',
   registering: 'რეგისტრაცია…',
   registeredTitle: 'დარეგისტრირდი!',
-  registeredBody: 'ეს გვერდი ღია დატოვე. როცა წამყვანები Start-ს დააჭერენ, დაიწყება ათვლა და ყველა ერთად ითამაშებს.',
+  registeredBody: 'დაელოდე, სანამ ორშაბათობა ტურნირს დაიწყებს.',
   notOpenYet: 'რეგისტრაცია ცოტა ხანში გაიხსნება…',
   signIn: 'შედი, რომ დარეგისტრირდე',
   watchOnly: 'რეგისტრაცია დასრულდა: ლაივს უყურებ.',
@@ -90,7 +91,6 @@ const ka: Copy = {
   live: 'ლაივი',
   hosts: { tato: 'ტატო', kala: 'კალა' },
   hostsLabel: 'წამყვანები',
-  countdownUnits: ['დღე', 'საათი', 'წუთი', 'წამი'],
 };
 
 export function liveEventCopy(locale: Locale): Copy {

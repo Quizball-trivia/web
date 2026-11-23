@@ -42,17 +42,19 @@ function pollMs(status: string | undefined): number {
 
 export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const { locale } = useLocale();
-  const copy = liveEventCopy(locale);
+  // Georgian only: the show is a Georgian podcast, so its screens never switch language.
+  const copy = liveEventCopy('ka');
   const router = useRouter();
   const queryClient = useQueryClient();
   const authStatus = useAuthStore((s) => s.status);
+  const georgian = locale === 'ka';
   const authed = authStatus === 'authenticated';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
   const query = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
-    enabled: authed,
+    enabled: authed && georgian,
     staleTime: 0,
     refetchInterval: (q) => pollMs(q.state.data?.tournament?.status),
   });
@@ -121,6 +123,9 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
     onError: () => setHostMessage(copy.startFailed),
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() }),
   });
+
+  // Shown to Georgian users only; everyone else gets the usual Events tab.
+  if (!georgian) return <>{fallback}</>;
 
   if (authStatus === 'loading' || (authed && query.isLoading)) {
     return (

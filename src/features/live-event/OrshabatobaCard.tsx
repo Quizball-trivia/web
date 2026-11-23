@@ -5,10 +5,9 @@
  * registered, closed / watch-only, the host's Start panel and errors. StudioHero / NeonTitle are shared with NoLiveEvent.
  */
 
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Check, Loader2, Play, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { wlNow } from '@/features/weekend-league/wlClock';
 import { orshabatobaDisplay } from '@/features/orshabatoba/fonts';
 import type { liveEventCopy } from './liveEvent.copy';
 
@@ -46,54 +45,6 @@ export function NeonTitle({ children, className }: { children: ReactNode; classN
     <h1 className={cn(orshabatobaDisplay.className, NEON, 'whitespace-nowrap text-[clamp(24px,11cqi,64px)] leading-none text-white', className)}>
       {children}
     </h1>
-  );
-}
-
-/** Monday 22:00 Tbilisi (UTC+4, no DST) = Monday 18:00 UTC. Used when the server hasn't sent scheduled_at (signed out). */
-function nextShowMs(nowMs: number): number {
-  const d = new Date(nowMs);
-  const daysSinceMonday = (d.getUTCDay() + 6) % 7;
-  const monday = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - daysSinceMonday, 18);
-  // Keep tonight's show as the target for 3 hours after 22:00 (it starts when the hosts press Start).
-  return nowMs < monday + 3 * 3_600_000 ? monday : monday + 7 * 86_400_000;
-}
-
-const pad = (n: number) => String(Math.max(0, n)).padStart(2, '0');
-
-function Countdown({ copy, scheduledAt }: { copy: Copy; scheduledAt?: string | null }) {
-  const [nowMs, setNowMs] = useState<number | null>(null);
-  useEffect(() => {
-    const tick = () => setNowMs(wlNow());
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  const parsed = scheduledAt ? Date.parse(scheduledAt) : NaN;
-  const target = Number.isFinite(parsed) ? parsed : nowMs == null ? null : nextShowMs(nowMs);
-  const leftMs = target == null || nowMs == null ? null : Math.max(0, target - nowMs);
-
-  if (leftMs === 0) {
-    return <p className="font-poppins text-[14px] font-semibold text-white">{copy.startsWhenHostsSay}</p>;
-  }
-  const total = Math.floor((leftMs ?? 0) / 1000);
-  const values = [Math.floor(total / 86_400), Math.floor((total % 86_400) / 3600), Math.floor((total % 3600) / 60), total % 60];
-  return (
-    <div>
-      <p className="font-poppins text-[14px] font-semibold text-white">{copy.startsIn}</p>
-      <div className="mt-2 flex items-start justify-center gap-2" role="timer">
-        {values.map((v, i) => (
-          <div key={copy.countdownUnits[i]} className="flex items-start gap-2">
-            {i > 0 && <span className="pt-1 font-poppins text-[15px] font-semibold text-white">:</span>}
-            <div className="flex w-12 flex-col items-center">
-              <span className="font-poppins text-[30px] font-semibold leading-none tabular-nums text-[#f2d34f]">
-                {leftMs == null ? '00' : pad(v)}
-              </span>
-              <span className="mt-1.5 font-poppins text-[12px] font-semibold text-white/70">{copy.countdownUnits[i]}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -136,12 +87,11 @@ function CtaButton({ children, onClick, disabled, tone = 'green' }: {
 }
 
 /**
- * The ორშაბათობა card on /events, laid out like the Weekend League promo card: title, registered count, format line,
- * three rule tiles, countdown to Monday 22:00, one CTA. Podcast touches are kept minimal: the show's title font, the
- * studio's walnut colour and the two hosts.
+ * The ორშაბათობა card on /events (Georgian only), laid out like the Weekend League promo card: the hosts, the title,
+ * the registered count and one CTA. No countdown here: the 1-minute countdown appears only after the host's Start.
  */
 export function EventLobby({
-  copy, scheduledAt, registered, status, entered, registering, onRegister, signedOut, onSignIn, host, error, compact,
+  copy, registered, status, entered, registering, onRegister, signedOut, onSignIn, host, error, compact,
 }: {
   copy: Copy;
   scheduledAt?: string | null;
@@ -184,8 +134,8 @@ export function EventLobby({
         className="@container relative w-full rounded-[20px] border border-[#5a3a22] px-5 pb-6 pt-6 text-center sm:px-7"
         style={{ backgroundImage: 'linear-gradient(180deg, #3a2414 0%, #1c120b 100%)' }}
       >
-        <div className="flex justify-center">
-          {live ? (
+        {live && (
+          <div className="mb-4 flex justify-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 font-poppins text-[12px] font-black uppercase tracking-widest text-white">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
@@ -193,32 +143,16 @@ export function EventLobby({
               </span>
               {copy.live}
             </span>
-          ) : (
-            <span className="font-poppins text-[12px] font-semibold uppercase tracking-wider text-[#f2d34f]">{copy.everyMonday}</span>
-          )}
-        </div>
-
-        <div className="mt-4"><Hosts copy={copy} /></div>
-
-        <NeonTitle className="mt-4 text-[clamp(26px,9cqi,40px)]">{copy.title}</NeonTitle>
-        {registered != null && (
-          <p className="mt-1 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
-            <Users className="size-4" aria-hidden /> {copy.registered(registered)}
-          </p>
+          </div>
         )}
 
-        <p className="mt-4 font-poppins text-[13px] font-semibold text-white">{copy.subtitle}</p>
+        <Hosts copy={copy} />
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {copy.rules.map((rule) => (
-            <div key={rule} className="rounded-[12px] bg-black/30 px-2 py-2.5 font-poppins text-[11px] font-semibold leading-snug text-white [overflow-wrap:anywhere]">
-              {rule}
-            </div>
-          ))}
-        </div>
-
-        {!live && (status == null || notYet || open) && (
-          <div className="mt-5"><Countdown copy={copy} scheduledAt={scheduledAt} /></div>
+        <NeonTitle className="mt-5 whitespace-normal text-[clamp(24px,8cqi,36px)] leading-tight">{copy.cardTitle}</NeonTitle>
+        {registered != null && (
+          <p className="mt-2 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
+            <Users className="size-4" aria-hidden /> {copy.registered(registered)}
+          </p>
         )}
 
         <div className="mt-5">{action}</div>
