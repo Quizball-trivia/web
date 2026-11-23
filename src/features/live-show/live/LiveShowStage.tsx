@@ -11,7 +11,8 @@
 
 import { useImmersiveStore } from '@/stores/immersive.store';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Crown, LogOut, X } from 'lucide-react';
+import { Crown, LogOut, Users, X } from 'lucide-react';
+import { LayoutGroup, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { WlAnswerAck, WlBoardRow } from '@/lib/realtime/socket.types';
 import type { WlLiveScreen } from '@/features/weekend-league/live/useWlLive';
@@ -62,6 +63,8 @@ const DISPATCH_LEAD_MS = 3_000;
 const REVEAL_HOLD_MS = 5_000;
 /** The round card gives way this long before the window opens, so the first question still gets reading time. */
 const INTRO_READ_MS = 1_500;
+/** Server: a round's first question carries this intro lead (WL_ROUND_INTRO_MS) on top of DISPATCH_LEAD_MS. */
+const ROUND_INTRO_MS = 2_200;
 
 function youOf(selfUserId: string | null, score: number): SimPlayer {
   return {
@@ -144,6 +147,16 @@ export function LiveShowStage(props: LiveShowStageProps) {
     return toBoard(final ?? board, locale);
   }, [screen, board, locale]);
 
+  // Between rounds: the next round's first question arrives early (server adds ROUND_BREAK_MS); until its intro would
+  // start, show the leaderboard and a countdown to the next round.
+  const roundBreak = (() => {
+    if (phase !== 'game' || screen.kind !== 'question') return null;
+    const a = screen.attempt;
+    if (a.round_index === 0 || a.question_index !== 0) return null;
+    const introAt = a.playableAt - DISPATCH_LEAD_MS - ROUND_INTRO_MS;
+    return now < introAt ? { nextRound: a.round_index, until: introAt } : null;
+  })();
+
   const showScreen: ShowScreen = (() => {
     if (phase !== 'game') return { kind: 'lobby', openedAt: 0, closesAt: kickoffMs ?? now };
     switch (screen.kind) {
@@ -218,6 +231,17 @@ export function LiveShowStage(props: LiveShowStageProps) {
     );
   } else if (showScreen.kind === 'champion') {
     panel = <FinalBoard locale={locale} board={showBoard} selfUserId={selfUserId} yourScore={canAnswer ? score : null} onExit={props.onExit} />;
+  } else if (roundBreak) {
+    panel = (
+      <RoundBreak
+        locale={locale}
+        finished={roundBreak.nextRound}
+        total={Math.max(stages.length, 1)}
+        secondsLeft={Math.max(0, Math.ceil((roundBreak.until - now) / 1000))}
+        board={showBoard}
+        selfUserId={selfUserId}
+      />
+    );
   } else if (showScreen.kind === 'stage_intro' && stage) {
     panel = <StageIntro locale={locale} stage={stage} index={showScreen.stage} count={Math.max(stages.length, 1)} />;
   } else if (question && (showScreen.kind === 'question' || showScreen.kind === 'reveal')) {
@@ -268,13 +292,9 @@ export function LiveShowStage(props: LiveShowStageProps) {
   }
 
   if (props.fullPage) {
-    return (
-      <div ref={rootRef} className="fixed inset-0 z-50 overflow-hidden bg-black font-fun">
-        {/* The studio covers the whole screen (16:9 scaled to cover, centred). */}
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{ width: 'max(100vw, calc(100dvh * 16 / 9))' }}
-        >
+    const inGame = phase === 'game' && screen.kind !== 'cancelled';
+    const studio = (
+      <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
           <HostScreen
             state={state}
             locale={locale}
@@ -286,17 +306,54 @@ export function LiveShowStage(props: LiveShowStageProps) {
               joinLine: locale === 'ka' ? 'დარეგისტრირდი და ითამაშე ჩვენთან ერთად!' : 'Register and play along with us!',
             }}
           />
-        </div>
-        <button
-          type="button"
-          onClick={props.onExit}
-          aria-label={locale === 'ka' ? 'გასვლა' : 'Exit'}
-          className="absolute left-3 top-3 z-30 flex size-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-black/80 sm:left-5 sm:top-5"
-        >
-          <X className="size-6" strokeWidth={2.5} />
-        </button>
-        <div className="absolute inset-x-0 bottom-0 z-20 max-h-[78dvh] overflow-y-auto overscroll-contain px-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:inset-y-0 lg:left-auto lg:right-0 lg:flex lg:max-h-none lg:w-[460px] lg:items-center lg:px-5">
-          <div className="w-full py-3">{panel}</div>
+      </div>
+    );
+    return (
+      <div ref={rootRef} className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#0b1020] font-fun">
+        {/* Top bar: leave, title, and either the registered count or your live place + points. */}
+        <header className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#0b1020]/95 px-3 py-2.5 sm:px-5">
+          <button
+            type="button"
+            onClick={props.onExit}
+            aria-label={locale === 'ka' ? 'გასვლა' : 'Exit'}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+          >
+            <X className="size-5" strokeWidth={2.5} />
+          </button>
+          <div className="min-w-0 flex-1 truncate font-poppins text-[17px] font-bold text-white">{title}</div>
+          {inGame && canAnswer ? (
+            <div className="flex items-center gap-2 font-poppins text-[14px] font-bold text-white">
+              <span className="rounded-full bg-brand-yellow px-3 py-1 text-black">#{rank ?? '–'}</span>
+              <span className="tabular-nums">{score}</span>
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-poppins text-[13px] font-semibold text-white">
+              <Users className="size-4" aria-hidden /> {field}
+            </span>
+          )}
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {inGame ? (
+            // Game: the question is the hero (left), the live leaderboard is always beside it (below on a phone).
+            <div className="mx-auto grid w-full max-w-[1400px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+              <main className="min-w-0">
+                <div className="mx-auto w-full max-w-2xl">{panel}</div>
+              </main>
+              <aside className="flex min-w-0 flex-col gap-4">
+                <div className="hidden lg:block">{studio}</div>
+                {showScreen.kind !== 'champion' && !roundBreak && (
+                  <LiveBoard locale={locale} board={showBoard} selfUserId={selfUserId} yourScore={canAnswer ? score : null} />
+                )}
+              </aside>
+            </div>
+          ) : (
+            // Before the game: the studio big, the lobby / countdown panel beside it (below on a phone).
+            <div className="mx-auto grid w-full max-w-[1400px] items-start gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+              {studio}
+              <div className="min-w-0">{panel}</div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -327,6 +384,77 @@ export function LiveShowStage(props: LiveShowStageProps) {
         </div>
         <aside className="w-full shrink-0 lg:w-[440px]">{panel}</aside>
       </div>
+    </div>
+  );
+}
+
+const BOARD_ROWS = 10;
+
+/** The live leaderboard: top 10, rows slide when places change, and your row is always shown (pinned when outside). */
+function LiveBoard({ locale, board, selfUserId, yourScore, title }: {
+  locale: ShowLocale;
+  board: ReturnType<typeof toBoard>;
+  selfUserId: string | null;
+  yourScore: number | null;
+  title?: string;
+}) {
+  const top = board.slice(0, BOARD_ROWS);
+  const me = selfUserId ? board.find((r) => r.id === selfUserId) : undefined;
+  const meShown = me && top.some((r) => r.id === me.id);
+  return (
+    <section className="rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <h3 className="font-poppins text-[13px] font-bold uppercase tracking-wider text-white/70">{title ?? (locale === 'ka' ? 'ლაივ ლიდერბორდი' : 'Live leaderboard')}</h3>
+        <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-2 rounded-full bg-red-500" /></span>
+      </div>
+      {top.length === 0 ? (
+        <p className="px-1 py-3 font-poppins text-[13px] font-semibold text-white/50">{locale === 'ka' ? 'ქულები პირველი კითხვის შემდეგ გამოჩნდება.' : 'Scores appear after the first question.'}</p>
+      ) : (
+        <LayoutGroup>
+          <ol className="flex flex-col gap-1">
+            {top.map((r) => (
+              <motion.li key={r.id} layout transition={{ type: 'spring', stiffness: 500, damping: 40 }}>
+                <BoardLine row={r} mine={r.id === selfUserId} />
+              </motion.li>
+            ))}
+          </ol>
+        </LayoutGroup>
+      )}
+      {me && !meShown && (
+        <div className="mt-2 border-t border-white/10 pt-2"><BoardLine row={me} mine /></div>
+      )}
+      {!me && yourScore != null && (
+        <div className="mt-2 flex items-center justify-between rounded-xl bg-brand-green/20 px-3 py-2 ring-2 ring-brand-green">
+          <span className="font-poppins text-sm font-bold text-white">{locale === 'ka' ? 'შენი ქულა' : 'Your score'}</span>
+          <span className="font-poppins text-sm font-bold tabular-nums text-white">{yourScore}</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Between rounds: what just finished, the standings, and when the next round starts. */
+function RoundBreak({ locale, finished, total, secondsLeft, board, selfUserId }: {
+  locale: ShowLocale;
+  /** The round that just finished, 1-based. */
+  finished: number;
+  total: number;
+  secondsLeft: number;
+  board: ReturnType<typeof toBoard>;
+  selfUserId: string | null;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl bg-white/[0.06] px-5 py-5 text-center ring-1 ring-white/10">
+        <div className="font-poppins text-[14px] font-semibold text-white/70">
+          {locale === 'ka' ? `რაუნდი ${finished} / ${total} დასრულდა` : `Round ${finished} of ${total} finished`}
+        </div>
+        <div className="mt-2 font-poppins text-[22px] font-bold text-white">
+          {locale === 'ka' ? 'შემდეგი რაუნდი იწყება' : 'Next round starts in'}
+        </div>
+        <div className="mt-1 font-poppins text-[56px] font-bold leading-none tabular-nums text-brand-yellow">{secondsLeft}</div>
+      </div>
+      <LiveBoard locale={locale} board={board} selfUserId={selfUserId} yourScore={null} title={locale === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'} />
     </div>
   );
 }
