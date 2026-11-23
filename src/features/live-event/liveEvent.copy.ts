@@ -36,6 +36,10 @@ const en = {
   loadError: 'Could not load the event.',
   retry: 'Try again',
   closesAtZero: 'Registration closes when the countdown hits 0.',
+  everyMonday: 'Every Monday · 22:00',
+  live: 'Live',
+  hosts: { tato: 'Tato', kala: 'Kala' },
+  hostsLabel: 'Hosts',
 };
 
 type Copy = typeof en;
@@ -75,6 +79,10 @@ const ka: Copy = {
   loadError: 'ივენთი ვერ ჩაიტვირთა.',
   retry: 'თავიდან ცდა',
   closesAtZero: 'რეგისტრაცია დასრულდება, როცა ათვლა ნულს მიაღწევს.',
+  everyMonday: 'ყოველ ორშაბათს · 22:00',
+  live: 'ლაივი',
+  hosts: { tato: 'ტატო', kala: 'კალა' },
+  hostsLabel: 'წამყვანები',
 };
 
 export function liveEventCopy(locale: Locale): Copy {
