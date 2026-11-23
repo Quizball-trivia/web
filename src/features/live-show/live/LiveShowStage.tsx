@@ -293,67 +293,75 @@ export function LiveShowStage(props: LiveShowStageProps) {
 
   if (props.fullPage) {
     const inGame = phase === 'game' && screen.kind !== 'cancelled';
-    const studio = (
-      <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
+    return (
+      <div ref={rootRef} className="fixed inset-0 z-50 overflow-hidden bg-black font-fun">
+        {/* The studio is the page: 16:9 scaled to cover the whole screen, hosts at the edges. */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ width: 'max(100vw, calc(100dvh * 16 / 9))' }}
+        >
           <HostScreen
             state={state}
             locale={locale}
             live={{
               hideQuestion: true,
+              bare: true,
               lobbyLine: props.lobbyLine,
               countdownTo: phase === 'countdown' ? kickoffMs : null,
               joined: registered,
               joinLine: locale === 'ka' ? 'დარეგისტრირდი და ითამაშე ჩვენთან ერთად!' : 'Register and play along with us!',
             }}
           />
-      </div>
-    );
-    return (
-      <div ref={rootRef} className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#0b1020] font-fun">
-        {/* Top bar: leave, title, and either the registered count or your live place + points. */}
-        <header className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#0b1020]/95 px-3 py-2.5 sm:px-5">
-          <button
-            type="button"
-            onClick={props.onExit}
-            aria-label={locale === 'ka' ? 'გასვლა' : 'Exit'}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-          >
-            <X className="size-5" strokeWidth={2.5} />
-          </button>
-          <div className="min-w-0 flex-1 truncate font-poppins text-[17px] font-bold text-white">{title}</div>
-          {inGame && canAnswer ? (
-            <div className="flex items-center gap-2 font-poppins text-[14px] font-bold text-white">
-              <span className="rounded-full bg-brand-yellow px-3 py-1 text-black">#{rank ?? '–'}</span>
-              <span className="tabular-nums">{score}</span>
-            </div>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-poppins text-[13px] font-semibold text-white">
-              <Users className="size-4" aria-hidden /> {field}
-            </span>
-          )}
-        </header>
+        </div>
+        {/* Darken the top and bottom just enough for the bar and panels to read. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {inGame ? (
-            // Game: the question is the hero (left), the live leaderboard is always beside it (below on a phone).
-            <div className="mx-auto grid w-full max-w-[1400px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-              <main className="min-w-0">
-                <div className="mx-auto w-full max-w-2xl">{panel}</div>
-              </main>
-              <aside className="flex min-w-0 flex-col gap-4">
-                <div className="hidden lg:block">{studio}</div>
+        <div className="absolute inset-0 flex flex-col">
+          {/* Top bar: leave, title, and either the registered count or your live place + points. */}
+          <header className="flex shrink-0 items-center gap-3 px-3 py-3 sm:px-5">
+            <button
+              type="button"
+              onClick={props.onExit}
+              aria-label={locale === 'ka' ? 'გასვლა' : 'Exit'}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-black/55 text-white ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/75"
+            >
+              <X className="size-5" strokeWidth={2.5} />
+            </button>
+            <div className="min-w-0 flex-1 truncate font-poppins text-[18px] font-bold text-white drop-shadow">{title}</div>
+            {inGame && canAnswer ? (
+              <div className="flex items-center gap-2 rounded-full bg-black/55 py-1 pl-1 pr-3 font-poppins text-[14px] font-bold text-white ring-1 ring-white/15 backdrop-blur-md">
+                <span className="rounded-full bg-brand-yellow px-2.5 py-0.5 text-black">#{rank ?? '–'}</span>
+                <span className="tabular-nums">{score}</span>
+              </div>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 font-poppins text-[13px] font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
+                <Users className="size-4" aria-hidden /> {field}
+              </span>
+            )}
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {inGame ? (
+              // Game: the question in the middle on a solid card (readability first); the live board on the right
+              // (below on a phone). Nothing overlaps: they are separate columns.
+              <div className="mx-auto grid min-h-full w-full max-w-[1400px] items-end gap-4 px-3 pb-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+                <main className="min-w-0">
+                  <div className="mx-auto w-full max-w-2xl rounded-[24px] bg-[#0b1020]/90 p-4 ring-1 ring-white/10 backdrop-blur-md sm:p-5">{panel}</div>
+                </main>
                 {showScreen.kind !== 'champion' && !roundBreak && (
-                  <LiveBoard locale={locale} board={showBoard} selfUserId={selfUserId} yourScore={canAnswer ? score : null} />
+                  <aside className="min-w-0">
+                    <LiveBoard locale={locale} board={showBoard} selfUserId={selfUserId} yourScore={canAnswer ? score : null} />
+                  </aside>
                 )}
-              </aside>
-            </div>
-          ) : (
-            // Before the game: the studio big, the lobby / countdown panel beside it (below on a phone).
-            <div className="mx-auto grid w-full max-w-[1400px] items-start gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[minmax(0,1fr)_420px]">
-              {studio}
-              <div className="min-w-0">{panel}</div>
-            </div>
-          )}
+              </div>
+            ) : (
+              // Before the game: the hosts stay in view; the register / countdown panel sits low in the middle.
+              <div className="flex min-h-full items-end justify-center px-3 pb-6 sm:pb-10">
+                <div className="w-full max-w-md">{panel}</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -402,7 +410,7 @@ function LiveBoard({ locale, board, selfUserId, yourScore, title }: {
   const me = selfUserId ? board.find((r) => r.id === selfUserId) : undefined;
   const meShown = me && top.some((r) => r.id === me.id);
   return (
-    <section className="rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
+    <section className="rounded-2xl bg-[#0b1020]/90 p-3 ring-1 ring-white/10 backdrop-blur-md">
       <div className="mb-2 flex items-center justify-between px-1">
         <h3 className="font-poppins text-[13px] font-bold uppercase tracking-wider text-white/70">{title ?? (locale === 'ka' ? 'ლაივ ლიდერბორდი' : 'Live leaderboard')}</h3>
         <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" /><span className="relative inline-flex size-2 rounded-full bg-red-500" /></span>
