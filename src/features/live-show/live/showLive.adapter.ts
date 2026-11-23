@@ -20,6 +20,18 @@ const LIVE_KINDS: readonly LiveShowKind[] = ['true_false', 'mcq', 'zoom_out', 'e
 export interface ShowRound {
   kind: LiveShowKind;
   count: number;
+  /** Pack round title (the round card shows it instead of the kind label). */
+  title?: { ka: string; en: string };
+  /** Elimination at the end of this round. */
+  cut?: { keep_percent?: number; keep_count?: number };
+}
+
+/** Big rounds: every cut closes one. Returns, per pack round, its 1-based big-round number, and the total. */
+export function bigRounds(rounds: readonly ShowRound[] | null | undefined): { of: number[]; total: number } {
+  const of: number[] = [];
+  let n = 1;
+  for (const r of rounds ?? []) { of.push(n); if (r.cut) n += 1; }
+  return { of, total: Math.max(1, (rounds?.length ?? 0) > 0 && rounds![rounds!.length - 1]!.cut ? n - 1 : n) };
 }
 
 type I18n = Partial<Record<string, string>>;
@@ -156,7 +168,7 @@ export function toStages(rounds: readonly ShowRound[] | null | undefined, seen: 
     : Array.from({ length: seen.size ? Math.max(...seen.keys()) + 1 : 0 }, (_, i) => seen.get(i) ?? { kind: 'mcq' as const, count: 1 });
   return layout.map((r, i) => ({
     id: `round-${i}`,
-    title: KIND_LABEL[r.kind],
+    title: r.title ? { en: r.title.en, ka: r.title.ka } : KIND_LABEL[r.kind],
     // The round card lists the kinds it plays; one is enough to label it.
     questions: Array.from({ length: r.count }, (_, q) => (
       { id: `round-${i}-${q}`, kind: r.kind, prompt: { en: '' }, options: [], correctId: '' } as unknown as ShowQuestion

@@ -25,7 +25,7 @@ import { QuestionView } from '../views/QuestionViews';
 import { ShowHeader, StageIntro } from '../views/ShowScreens';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 import {
-  correctIdOf, showKindOf, toBoard, toRevealStats, toShowQuestion, toStages, type LiveShowKind, type ShowRound,
+  bigRounds, correctIdOf, showKindOf, toBoard, toRevealStats, toShowQuestion, toStages, type LiveShowKind, type ShowRound,
 } from './showLive.adapter';
 
 export type LiveShowPhase = 'pregame' | 'countdown' | 'game';
@@ -57,6 +57,8 @@ export interface LiveShowStageProps {
   onExit: () => void;
   /** The /orshabatoba page: the 3D studio fills the whole screen and the panel floats over it, with an X to leave. */
   fullPage?: boolean;
+  /** Cut at a round end: watches from then on (the server refuses this player's answers). */
+  eliminated?: boolean;
 }
 
 const DISPATCH_LEAD_MS = 3_000;
@@ -153,8 +155,11 @@ export function LiveShowStage(props: LiveShowStageProps) {
     if (phase !== 'game' || screen.kind !== 'question') return null;
     const a = screen.attempt;
     if (a.round_index === 0 || a.question_index !== 0) return null;
+    const ended = rounds?.[a.round_index - 1];
+    if (!ended?.cut) return null;
     const introAt = a.playableAt - DISPATCH_LEAD_MS - ROUND_INTRO_MS;
-    return now < introAt ? { nextRound: a.round_index, until: introAt } : null;
+    const big = bigRounds(rounds);
+    return now < introAt ? { finished: big.of[a.round_index - 1] ?? a.round_index, total: big.total, cut: ended.cut, until: introAt } : null;
   })();
 
   const showScreen: ShowScreen = (() => {
@@ -235,8 +240,10 @@ export function LiveShowStage(props: LiveShowStageProps) {
     panel = (
       <RoundBreak
         locale={locale}
-        finished={roundBreak.nextRound}
-        total={Math.max(stages.length, 1)}
+        finished={roundBreak.finished}
+        total={roundBreak.total}
+        cut={roundBreak.cut}
+        status={props.eliminated ? 'out' : canAnswer ? 'through' : null}
         secondsLeft={Math.max(0, Math.ceil((roundBreak.until - now) / 1000))}
         board={showBoard}
         selfUserId={selfUserId}
@@ -329,7 +336,11 @@ export function LiveShowStage(props: LiveShowStageProps) {
               <X className="size-5" strokeWidth={2.5} />
             </button>
             <div className="min-w-0 flex-1 truncate font-poppins text-[18px] font-bold text-white drop-shadow">{title}</div>
-            {inGame && canAnswer ? (
+            {inGame && props.eliminated ? (
+              <span className="rounded-full bg-red-600/90 px-3 py-1.5 font-poppins text-[13px] font-bold text-white">
+                {locale === 'ka' ? 'გავარდი · უყურებ' : 'Out · watching'}
+              </span>
+            ) : inGame && canAnswer ? (
               <div className="flex items-center gap-2 rounded-full bg-black/55 py-1 pl-1 pr-3 font-poppins text-[14px] font-bold text-white ring-1 ring-white/15 backdrop-blur-md">
                 <span className="rounded-full bg-brand-yellow px-2.5 py-0.5 text-black">#{rank ?? '–'}</span>
                 <span className="tabular-nums">{score}</span>
@@ -442,11 +453,14 @@ function LiveBoard({ locale, board, selfUserId, yourScore, title }: {
 }
 
 /** Between rounds: what just finished, the standings, and when the next round starts. */
-function RoundBreak({ locale, finished, total, secondsLeft, board, selfUserId }: {
+function RoundBreak({ locale, finished, total, cut, status, secondsLeft, board, selfUserId }: {
   locale: ShowLocale;
   /** The round that just finished, 1-based. */
   finished: number;
   total: number;
+  cut: { keep_percent?: number; keep_count?: number };
+  /** Your fate at this cut; null for spectators who never registered. */
+  status: 'through' | 'out' | null;
   secondsLeft: number;
   board: ReturnType<typeof toBoard>;
   selfUserId: string | null;
@@ -457,7 +471,24 @@ function RoundBreak({ locale, finished, total, secondsLeft, board, selfUserId }:
         <div className="font-poppins text-[14px] font-semibold text-white/70">
           {locale === 'ka' ? `რაუნდი ${finished} / ${total} დასრულდა` : `Round ${finished} of ${total} finished`}
         </div>
-        <div className="mt-2 font-poppins text-[22px] font-bold text-white">
+        <div className="mt-2 font-poppins text-[14px] font-semibold text-brand-yellow">
+          {cut.keep_count != null
+            ? (locale === 'ka' ? `შემდეგ რაუნდში გადადის ტოპ ${cut.keep_count}` : `Top ${cut.keep_count} go through`)
+            : (locale === 'ka' ? `შემდეგ რაუნდში გადადის ტოპ ${cut.keep_percent}%` : `Top ${cut.keep_percent}% go through`)}
+        </div>
+        {status && (
+        <div
+          className={cn(
+            'mx-auto mt-3 w-fit rounded-full px-4 py-1.5 font-poppins text-[15px] font-bold',
+            status === 'out' ? 'bg-red-600/90 text-white' : 'bg-brand-green text-white',
+          )}
+        >
+          {status === 'out'
+            ? (locale === 'ka' ? 'გავარდი — შეგიძლია უყურო ბოლომდე' : "You're out — keep watching")
+            : (locale === 'ka' ? 'გადახვედი შემდეგ რაუნდში!' : "You're through!")}
+        </div>
+        )}
+        <div className="mt-4 font-poppins text-[20px] font-bold text-white">
           {locale === 'ka' ? 'შემდეგი რაუნდი იწყება' : 'Next round starts in'}
         </div>
         <div className="mt-1 font-poppins text-[56px] font-bold leading-none tabular-nums text-brand-yellow">{secondsLeft}</div>

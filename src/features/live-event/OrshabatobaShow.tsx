@@ -7,7 +7,9 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from '@/contexts/LocaleContext';
+import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
 import { wlNow } from '@/features/weekend-league/wlClock';
 import { useWlLive } from '@/features/weekend-league/live/useWlLive';
@@ -25,9 +27,10 @@ export function phaseOf(status: string | null, kickoffMs: number | null, screenK
 }
 
 export function OrshabatobaShow({
-  tournamentId, role, status, kickoffMs, registered, rounds, title, lobbyLine, pregamePanel, countdownPanel, onExit, fullPage,
+  tournamentId, role, status, kickoffMs, registered, rounds, title, lobbyLine, pregamePanel, countdownPanel, onExit, fullPage, eliminated,
 }: {
   fullPage?: boolean;
+  eliminated?: boolean;
   tournamentId: string;
   role: 'player' | 'spectator';
   status: string | null;
@@ -47,6 +50,13 @@ export function OrshabatobaShow({
   // can lag it when a poll is slow.
   const serverNowRef = useRef(live.serverNow);
   useEffect(() => { serverNowRef.current = live.serverNow; }, [live.serverNow]);
+  // A new round may follow a cut: re-read /current so an eliminated player's role flips to watching.
+  const queryClient = useQueryClient();
+  const roundIndex = live.screen.kind === 'question' || live.screen.kind === 'reveal' ? live.screen.attempt?.round_index ?? null : null;
+  useEffect(() => {
+    if (roundIndex == null || roundIndex === 0) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() });
+  }, [roundIndex, queryClient]);
   const [now, setNow] = useState(() => wlNow());
   useEffect(() => {
     const id = window.setInterval(() => setNow(serverNowRef.current()), 100);
@@ -74,6 +84,7 @@ export function OrshabatobaShow({
       lobbyLine={lobbyLine}
       onExit={onExit}
       fullPage={fullPage}
+      eliminated={eliminated}
     />
   );
 }
