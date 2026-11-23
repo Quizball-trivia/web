@@ -215,7 +215,7 @@ export function HostScreen({ state, locale, moodOverride, live }: { state: ShowS
 
   if (live?.bare) {
     return (
-      <div ref={frame} className="relative aspect-video w-full overflow-hidden bg-black">
+      <div ref={frame} className="relative h-full w-full overflow-hidden bg-black">
         <StudioLayer cue={cue} anchors={anchors} />
         {(['tato', 'kala'] as HostId[]).map((host) => (
           <div key={host} ref={anchors[host]} className="pointer-events-none absolute left-0 top-0" style={{ visibility: 'hidden' }} />

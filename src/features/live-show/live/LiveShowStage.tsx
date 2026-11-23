@@ -294,12 +294,12 @@ export function LiveShowStage(props: LiveShowStageProps) {
   if (props.fullPage) {
     const inGame = phase === 'game' && screen.kind !== 'cancelled';
     return (
-      <div ref={rootRef} className="fixed inset-0 z-50 overflow-hidden bg-black font-fun">
-        {/* The studio is the page: 16:9 scaled to cover the whole screen, hosts at the edges. */}
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{ width: 'max(100vw, calc(100dvh * 16 / 9))' }}
-        >
+      <div ref={rootRef} className="fixed inset-0 z-[100] overflow-hidden bg-[#0b1020] font-fun">
+        {/* The studio is the page: it fills the whole screen. */}
+        {/* The 3D camera frames the set to the screen's own shape, so a phone in portrait still sees both hosts. */}
+        {/* Phones: the studio takes the top of the screen (both hosts big enough to see) and fades into the panel area;
+            desktop: the whole screen. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[60dvh] lg:inset-0 lg:h-auto">
           <HostScreen
             state={state}
             locale={locale}
@@ -315,7 +315,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
         </div>
         {/* Darken the top and bottom just enough for the bar and panels to read. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 to-transparent" aria-hidden />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55dvh] bg-gradient-to-t from-[#0b1020] from-[45%] to-transparent lg:h-1/2 lg:from-black/70 lg:from-0%" aria-hidden />
 
         <div className="absolute inset-0 flex flex-col">
           {/* Top bar: leave, title, and either the registered count or your live place + points. */}
@@ -357,7 +357,7 @@ export function LiveShowStage(props: LiveShowStageProps) {
               </div>
             ) : (
               // Before the game: the hosts stay in view; the register / countdown panel sits low in the middle.
-              <div className="flex min-h-full items-end justify-center px-3 pb-6 sm:pb-10">
+              <div className="flex min-h-full items-start justify-center px-3 pb-6 pt-[38dvh] lg:items-end lg:pb-10 lg:pt-0">
                 <div className="w-full max-w-md">{panel}</div>
               </div>
             )}

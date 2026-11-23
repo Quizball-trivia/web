@@ -138,6 +138,7 @@ function DemoFlow() {
       lobbyLine={copy.startsWhenHostsSay}
       pregamePanel={(
         <EventLobby
+          compact
           copy={copy}
           registered={registered}
           status="entry_open"
@@ -150,6 +151,7 @@ function DemoFlow() {
         <KickoffCountdown compact copy={copy} kickoffMs={kickoff} canJoin={!entered} joining={false} onJoin={() => setEntered(true)} />
       )}
       onExit={() => window.location.reload()}
+      fullPage
     />
   );
 }
@@ -161,6 +163,7 @@ function DevOrshabatobaLive() {
     const w = typeof window === 'undefined' ? NaN : Number(new URLSearchParams(window.location.search).get('w'));
     return Number.isFinite(w) && w > 0 ? w : null;
   });
+  const [full] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('full') === '1');
   const [t0] = useState(() => Date.now());
   const [now, setNow] = useState(t0);
   useEffect(() => {
@@ -228,6 +231,7 @@ function DevOrshabatobaLive() {
       lobbyLine={copy.startsWhenHostsSay}
       pregamePanel={(
         <EventLobby
+          compact={full}
           copy={copy}
           scheduledAt={null}
           registered={248}
@@ -239,6 +243,7 @@ function DevOrshabatobaLive() {
       )}
       countdownPanel={<KickoffCountdown compact copy={copy} kickoffMs={kickoff} canJoin joining={false} onJoin={() => {}} />}
       onExit={() => {}}
+      fullPage={full}
     />
   );
 }
