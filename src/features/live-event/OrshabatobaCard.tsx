@@ -62,7 +62,7 @@ function Hosts({ copy }: { copy: Copy }) {
             width={120}
             height={120}
             alt=""
-            className="size-24 rounded-full bg-black/40 object-cover ring-4 ring-[#f2d34f] shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-28"
+            className="size-24 rounded-full bg-black/40 object-cover ring-4 ring-brand-yellow shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-28"
           />
           <span className={cn(orshabatobaDisplay.className, 'text-[18px] text-white')}>{copy.hosts[id]}</span>
         </div>
@@ -81,7 +81,7 @@ function CtaButton({ children, onClick, disabled, tone = 'green' }: {
       disabled={disabled}
       className={cn(
         'flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 font-poppins text-[17px] font-semibold uppercase transition-opacity hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-60',
-        tone === 'green' ? 'bg-brand-green text-white' : 'bg-[#f2d34f] text-black',
+        tone === 'green' ? 'bg-brand-green text-white' : 'bg-brand-yellow text-black',
       )}
     >
       {children}
@@ -134,8 +134,8 @@ export function EventLobby({
   return (
     <div className={cn('mx-auto w-full space-y-3', compact ? '' : 'max-w-md px-4 py-5')}>
       <section
-        className="@container relative w-full rounded-[20px] border border-[#5a3a22] px-5 pb-6 pt-6 text-center sm:px-7"
-        style={{ backgroundImage: 'linear-gradient(180deg, #3a2414 0%, #1c120b 100%)' }}
+        className="@container relative w-full rounded-[20px] px-5 pb-6 pt-6 text-center sm:px-7"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
       >
         {live && (
           <div className="mb-4 flex justify-center">
@@ -160,13 +160,13 @@ export function EventLobby({
 
         <div className="mt-5">{action}</div>
         {error && !entered && (
-          <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-[#f2d34f]">{error}</p>
+          <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{error}</p>
         )}
       </section>
 
       {host && (
-        <section className="rounded-[20px] border-2 border-[#f2d34f]/70 bg-[#1c120b] p-5 text-center">
-          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-[#f2d34f]">{copy.hostTitle}</div>
+        <section className="rounded-[20px] border-2 border-brand-yellow/70 bg-[#1A35A1] p-5 text-center">
+          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-brand-yellow">{copy.hostTitle}</div>
           <p className="mt-2 font-poppins text-[13px] font-semibold text-white/75">{copy.hostBody}</p>
           <div className="mt-4">
             <CtaButton tone="yellow" onClick={host.onStart} disabled={host.busy || !open}>
@@ -175,7 +175,7 @@ export function EventLobby({
             </CtaButton>
           </div>
           {host.message && (
-            <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-[#f2d34f]">{host.message}</p>
+            <p role="alert" className="mt-3 font-poppins text-[13px] font-bold text-brand-yellow">{host.message}</p>
           )}
         </section>
       )}
@@ -191,8 +191,8 @@ export function OrshabatobaEntryCard({ live }: { live: boolean }) {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-5">
       <section
-        className="@container relative w-full rounded-[20px] border border-[#5a3a22] px-5 pb-6 pt-6 text-center sm:px-7"
-        style={{ backgroundImage: 'linear-gradient(180deg, #3a2414 0%, #1c120b 100%)' }}
+        className="@container relative w-full rounded-[20px] px-5 pb-6 pt-6 text-center sm:px-7"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
       >
         {live && (
           <div className="mb-4 flex justify-center">
@@ -207,7 +207,7 @@ export function OrshabatobaEntryCard({ live }: { live: boolean }) {
         )}
         <Hosts copy={{ hosts: { tato: 'ტატო', kala: 'კალა' } } as Copy} />
         <NeonTitle className="mt-5 whitespace-normal text-[clamp(24px,8cqi,36px)] leading-tight">ლაივ ტურნირი ორშაბათობასთან ერთად</NeonTitle>
-        <p className="mt-3 font-poppins text-[14px] font-semibold text-[#f2d34f]">ყოველ ორშაბათს</p>
+        <p className="mt-3 inline-flex rounded-full bg-black/25 px-4 py-1.5 font-poppins text-[14px] font-semibold text-brand-yellow">ყოველ ორშაბათს</p>
         <Link
           href="/orshabatoba"
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-green py-3.5 font-poppins text-[17px] font-semibold uppercase text-white transition-opacity hover:opacity-90 active:opacity-80"
