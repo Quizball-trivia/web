@@ -23,7 +23,7 @@ import { syncWlClock, wlNow } from '@/features/weekend-league/wlClock';
 import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
 import { OrshabatobaShow } from './OrshabatobaShow';
-import { EventLobby } from './OrshabatobaCard';
+import { EventLobby, OrshabatobaEntryCard } from './OrshabatobaCard';
 
 export { EventLobby };
 import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
@@ -40,7 +40,11 @@ function pollMs(status: string | undefined): number {
 }
 
 
-export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
+/**
+ * `studio` = the /orshabatoba page: the whole event (register, host Start, countdown, game) inside the full-page 3D
+ * studio. Without it (/events tab) a host-run event only shows the entry card that links to the studio.
+ */
+export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactNode; studio?: boolean }) {
   const { locale } = useLocale();
   // Georgian only: the show is a Georgian podcast, so its screens never switch language.
   const copy = liveEventCopy('ka');
@@ -135,6 +139,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
     );
   }
 
+  if (!authed && !studio) return <OrshabatobaEntryCard live={false} />;
   if (!authed) {
     return (
       <EventLobby
@@ -198,7 +203,8 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   const showRounds = (tournament as { show_rounds?: ShowRound[] } | null)?.show_rounds;
   const showSlug = known && typeof tournament?.event_slug === 'string' && tournament.event_slug.startsWith('orshabatoba')
     && Array.isArray(showRounds) && showRounds.length > 0;
-  if (showSlug && !showMode) setShowMode(true);
+  if ((showSlug || studio) && !showMode) setShowMode(true);
+  if (!studio) return <OrshabatobaEntryCard live={status != null && ['checkin', 'game_live', 'break'].includes(status)} />;
 
   const lobby = (
     <EventLobby
@@ -233,6 +239,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
   if (showMode) {
     return (
       <OrshabatobaShow
+        fullPage={studio}
         tournamentId={activeId}
         role={role}
         status={status}
@@ -253,7 +260,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
             error={enterError}
           />
         )}
-        onExit={() => router.push('/play')}
+        onExit={() => router.push('/events')}
       />
     );
   }
@@ -267,7 +274,7 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
       checkinPending={enter.isPending}
       onCheckin={register}
       lateJoinUntilMs={null}
-      onExit={() => router.push('/play')}
+      onExit={() => router.push('/events')}
       kickoffMs={kickoffMs}
       registered={tournament?.registered_count ?? null}
       checkedInCount={tournament?.checked_in_count ?? 0}

@@ -11,7 +11,7 @@
 
 import { useImmersiveStore } from '@/stores/immersive.store';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Crown, LogOut } from 'lucide-react';
+import { Crown, LogOut, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WlAnswerAck, WlBoardRow } from '@/lib/realtime/socket.types';
 import type { WlLiveScreen } from '@/features/weekend-league/live/useWlLive';
@@ -54,6 +54,8 @@ export interface LiveShowStageProps {
   countdownPanel: ReactNode;
   lobbyLine: string;
   onExit: () => void;
+  /** The /orshabatoba page: the 3D studio fills the whole screen and the panel floats over it, with an X to leave. */
+  fullPage?: boolean;
 }
 
 const DISPATCH_LEAD_MS = 3_000;
@@ -263,6 +265,41 @@ export function LiveShowStage(props: LiveShowStageProps) {
     );
   } else {
     panel = <PanelCard><p className="font-poppins text-lg font-black text-white">{locale === 'ka' ? 'მოემზადე…' : 'Get ready…'}</p></PanelCard>;
+  }
+
+  if (props.fullPage) {
+    return (
+      <div ref={rootRef} className="fixed inset-0 z-50 overflow-hidden bg-black font-fun">
+        {/* The studio covers the whole screen (16:9 scaled to cover, centred). */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ width: 'max(100vw, calc(100dvh * 16 / 9))' }}
+        >
+          <HostScreen
+            state={state}
+            locale={locale}
+            live={{
+              hideQuestion: true,
+              lobbyLine: props.lobbyLine,
+              countdownTo: phase === 'countdown' ? kickoffMs : null,
+              joined: registered,
+              joinLine: locale === 'ka' ? 'დარეგისტრირდი და ითამაშე ჩვენთან ერთად!' : 'Register and play along with us!',
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={props.onExit}
+          aria-label={locale === 'ka' ? 'გასვლა' : 'Exit'}
+          className="absolute left-3 top-3 z-30 flex size-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-black/80 sm:left-5 sm:top-5"
+        >
+          <X className="size-6" strokeWidth={2.5} />
+        </button>
+        <div className="absolute inset-x-0 bottom-0 z-20 max-h-[78dvh] overflow-y-auto overscroll-contain px-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:inset-y-0 lg:left-auto lg:right-0 lg:flex lg:max-h-none lg:w-[460px] lg:items-center lg:px-5">
+          <div className="w-full py-3">{panel}</div>
+        </div>
+      </div>
+    );
   }
 
   return (

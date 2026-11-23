@@ -25,8 +25,9 @@ export function phaseOf(status: string | null, kickoffMs: number | null, screenK
 }
 
 export function OrshabatobaShow({
-  tournamentId, role, status, kickoffMs, registered, rounds, title, lobbyLine, pregamePanel, countdownPanel, onExit,
+  tournamentId, role, status, kickoffMs, registered, rounds, title, lobbyLine, pregamePanel, countdownPanel, onExit, fullPage,
 }: {
+  fullPage?: boolean;
   tournamentId: string;
   role: 'player' | 'spectator';
   status: string | null;
@@ -72,6 +73,7 @@ export function OrshabatobaShow({
       countdownPanel={countdownPanel}
       lobbyLine={lobbyLine}
       onExit={onExit}
+      fullPage={fullPage}
     />
   );
 }
