@@ -18,6 +18,8 @@ const ART = '/assets/orshabatoba/events';
 const NEON = '[text-shadow:0_0_6px_rgba(255,255,255,0.75),0_0_18px_rgba(255,255,255,0.4),0_0_36px_rgba(150,205,255,0.3)]';
 
 const LIVE_STATUSES = new Set(['checkin', 'game_live', 'break']);
+/** Kala's is a front-on render of his 3D model (the studio still only has him in profile). */
+const HOST_AVATAR = { tato: 'host-tato.webp', kala: 'host-kala-front.webp' } as const;
 
 export function StudioHero({ dim, className, children }: { dim?: boolean; className?: string; children?: ReactNode }) {
   return (
@@ -55,7 +57,7 @@ function Hosts({ copy }: { copy: Copy }) {
         <div key={id} className="flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny static portrait */}
           <img
-            src={`${ART}/host-${id}.webp`}
+            src={`${ART}/${HOST_AVATAR[id]}`}
             width={120}
             height={120}
             alt=""
