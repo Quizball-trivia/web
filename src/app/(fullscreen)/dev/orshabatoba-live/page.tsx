@@ -132,7 +132,7 @@ function DemoFlow() {
       score={score}
       selfUserId="u0"
       canAnswer={entered}
-      onAnswer={(id) => { if (key) setPicks((p) => (p[key] ? p : { ...p, [key]: id })); }}
+      onAnswer={(id) => { if (key) setPicks((p) => (p[key] ? p : { ...p, [key]: String(id) })); }}
       retryNonce={0}
       rounds={ROUNDS}
       lobbyLine={copy.startsWhenHostsSay}

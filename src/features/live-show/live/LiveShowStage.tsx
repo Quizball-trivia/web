@@ -24,8 +24,9 @@ import { HostScreen } from '../views/HostScreen';
 import { QuestionView } from '../views/QuestionViews';
 import { ShowHeader, StageIntro } from '../views/ShowScreens';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+import { WlKindQuestion } from './WlKindQuestion';
 import {
-  bigRounds, correctIdOf, showKindOf, toBoard, toRevealStats, toShowQuestion, toStages, type LiveShowKind, type ShowRound,
+  bigRounds, correctIdOf, showKindOf, WL_SHOW_KINDS, toBoard, toRevealStats, toShowQuestion, toStages, type LiveShowKind, type ShowRound,
 } from './showLive.adapter';
 
 export type LiveShowPhase = 'pregame' | 'countdown' | 'game';
@@ -45,7 +46,7 @@ export interface LiveShowStageProps {
   selfUserId: string | null;
   /** Registered and seated: may answer. Spectators see the same screens without buttons. */
   canAnswer: boolean;
-  onAnswer: (answer: string) => void;
+  onAnswer: (answer: unknown) => void;
   /** Bumps when a rejected answer unlocks the question again. */
   retryNonce: number;
   rounds?: ShowRound[] | null;
@@ -251,6 +252,43 @@ export function LiveShowStage(props: LiveShowStageProps) {
     );
   } else if (showScreen.kind === 'stage_intro' && stage) {
     panel = <StageIntro locale={locale} stage={stage} index={showScreen.stage} count={Math.max(stages.length, 1)} />;
+  } else if (attempt && WL_SHOW_KINDS.has(attempt.kind) && (showScreen.kind === 'question' || showScreen.kind === 'reveal')) {
+    // Put in order / career path / who am I: the Weekend League views, inside the studio panel.
+    const secondsLeft = showScreen.kind === 'question' ? Math.max(0, Math.ceil((showScreen.deadline - Math.max(now, showScreen.startsAt)) / 1000)) : null;
+    panel = (
+      <div className="relative pb-4">
+        {stage && (
+          <ShowHeader
+            locale={locale}
+            stageIndex={showScreen.stage}
+            stageCount={Math.max(stages.length, 1)}
+            stage={stage}
+            qIndex={showScreen.q}
+            secondsLeft={secondsLeft}
+            points={score}
+            rank={canAnswer ? rank : null}
+            alive={field}
+            spectating={!canAnswer}
+          />
+        )}
+        <div className="mx-auto mt-4 w-full max-w-xl px-1">
+          <WlKindQuestion
+            key={attempt.attempt_id}
+            attempt={attempt}
+            now={now}
+            canAnswer={canAnswer}
+            ack={serverAck}
+            revealed={showScreen.kind === 'reveal'}
+            onAnswer={onAnswer}
+          />
+        </div>
+        {canAnswer && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex justify-center">
+            <ArenaScoreSplash key={attempt.attempt_id} show={serverAck?.accepted === true && serverAck.correct === true} points={serverAck?.accepted ? serverAck.points : null} side="right" />
+          </div>
+        )}
+      </div>
+    );
   } else if (question && (showScreen.kind === 'question' || showScreen.kind === 'reveal')) {
     const secondsLeft = showScreen.kind === 'question' ? Math.max(0, Math.ceil((showScreen.deadline - Math.max(now, showScreen.startsAt)) / 1000)) : null;
     panel = (
