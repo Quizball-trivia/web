@@ -99,18 +99,18 @@ function Countdown({ copy, scheduledAt }: { copy: Copy; scheduledAt?: string | n
 
 function Hosts({ copy }: { copy: Copy }) {
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-start justify-center gap-6 sm:gap-10">
       {(['tato', 'kala'] as const).map((id) => (
-        <div key={id} className="flex items-center gap-2">
+        <div key={id} className="flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny static portrait */}
           <img
             src={`${ART}/host-${id}.webp`}
-            width={32}
-            height={32}
+            width={120}
+            height={120}
             alt=""
-            className="size-8 rounded-full bg-black/40 object-cover ring-2 ring-[#f2d34f]/70"
+            className="size-24 rounded-full bg-black/40 object-cover ring-4 ring-[#f2d34f] shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-28"
           />
-          <span className="font-poppins text-[14px] font-semibold text-white">{copy.hosts[id]}</span>
+          <span className={cn(orshabatobaDisplay.className, 'text-[18px] text-white')}>{copy.hosts[id]}</span>
         </div>
       ))}
     </div>
@@ -198,7 +198,9 @@ export function EventLobby({
           )}
         </div>
 
-        <NeonTitle className="mt-2 text-[clamp(26px,9cqi,40px)]">{copy.title}</NeonTitle>
+        <div className="mt-4"><Hosts copy={copy} /></div>
+
+        <NeonTitle className="mt-4 text-[clamp(26px,9cqi,40px)]">{copy.title}</NeonTitle>
         {registered != null && (
           <p className="mt-1 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
             <Users className="size-4" aria-hidden /> {copy.registered(registered)}
@@ -214,8 +216,6 @@ export function EventLobby({
             </div>
           ))}
         </div>
-
-        <div className="mt-5"><Hosts copy={copy} /></div>
 
         {!live && (status == null || notYet || open) && (
           <div className="mt-5"><Countdown copy={copy} scheduledAt={scheduledAt} /></div>
