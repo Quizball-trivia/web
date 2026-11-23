@@ -9,7 +9,6 @@ import type { ShellChromeComponents } from "./app-shell/shellChrome.types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { WEEKEND_LEAGUE_PAUSED } from "@/features/weekend-league/paused";
 
 const NAV_ITEMS = [
   { path: "/play", labelKey: "navigation.play" },
@@ -21,7 +20,9 @@ const NAV_ITEMS = [
   { path: "/profile", labelKey: "navigation.profile" },
   { path: "/settings", labelKey: "navigation.settings" },
 ] as const;
-const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((item) => !(WEEKEND_LEAGUE_PAUSED && item.path === "/events"));
+// Events stays visible while the Weekend League is paused: it hosts live
+// events such as the Orshabatoba podcast night (2026-11-23).
+const VISIBLE_NAV_ITEMS = NAV_ITEMS;
 
 interface SidebarProps {
   footerChrome: Pick<ShellChromeComponents, "SocialLinks" | "ContactModal">;

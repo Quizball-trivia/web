@@ -69,3 +69,15 @@ export function enterWeekendLeague() {
 export function checkinWeekendLeague() {
   return apiFetch("post", "/api/v1/weekend-league/checkin");
 }
+
+export interface WlHostStartResponse {
+  started: boolean;
+  reason: "ok" | "already_started" | "not_enough_players" | "not_open";
+  kickoff_at_ms: number | null;
+  registered: number;
+}
+/** Host-run event (Orshabatoba): the named host account starts the game for everyone. */
+export function hostStartWeekendLeague(): Promise<WlHostStartResponse> {
+  // Path not yet in api.generated.ts (regenerate on the next openapi pass).
+  return apiFetch("post", "/api/v1/weekend-league/host-start" as never) as Promise<WlHostStartResponse>;
+}
