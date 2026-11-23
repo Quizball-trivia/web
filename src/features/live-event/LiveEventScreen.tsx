@@ -99,10 +99,23 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() }),
   });
   const [hostMessage, setHostMessage] = useState<string | null>(null);
+  // Two taps instead of window.confirm (a native dialog would sit on top of the live stream). The second tap must land
+  // before an absolute deadline, checked at the tap itself, so a delayed timer can never stretch the window.
+  const [armedUntil, setArmedUntil] = useState<number | null>(null);
+  useEffect(() => {
+    if (armedUntil == null) return;
+    const id = window.setTimeout(() => setArmedUntil(null), Math.max(0, armedUntil - Date.now()));
+    return () => window.clearTimeout(id);
+  }, [armedUntil]);
   const start = useMutation({
     mutationFn: hostStartWeekendLeague,
+    // Offline, fail now instead of pausing: a queued Start must never fire later on reconnect.
+    networkMode: 'always',
     onSuccess: (res) => {
       if (res.reason === 'not_enough_players') setHostMessage(copy.needTwo);
+      else if (res.reason === 'questions_updating') setHostMessage(copy.questionsUpdating);
+      else if (res.reason === 'questions_invalid') setHostMessage(copy.questionsInvalid);
+      else if (res.reason === 'wrong_event') setHostMessage(copy.startFailed);
       else setHostMessage(null);
     },
     onError: () => setHostMessage(copy.startFailed),
@@ -195,11 +208,18 @@ export function LiveEventScreen({ fallback }: { fallback: ReactNode }) {
       error={enterError}
       host={you?.is_host ? {
         busy: start.isPending,
-        message: hostMessage,
+        message: armedUntil != null ? copy.confirmStart(tournament?.registered_count ?? 0) : hostMessage,
+        confirming: armedUntil != null,
         onStart: () => {
           const n = tournament?.registered_count ?? 0;
-          if (n < 2) { setHostMessage(copy.needTwo); return; }
-          if (window.confirm(copy.confirmStart(n))) start.mutate();
+          if (n < 2 || !tournament?.id) { setArmedUntil(null); setHostMessage(copy.needTwo); return; }
+          if (armedUntil == null || Date.now() >= armedUntil) {
+            setHostMessage(null);
+            setArmedUntil(Date.now() + 8_000);
+            return;
+          }
+          setArmedUntil(null);
+          start.mutate(tournament.id);
         },
       } : undefined}
     />

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Bomb, Check, Lock } from 'lucide-react';
+import { Bomb, Check, Lock, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { L, SHOW_COPY } from '../show.copy';
 import { minesTally, REVEAL_POINTS, REVEAL_STEP_MS, revealStepAt, revealSteps, sliderPoints } from '../show.rules';
@@ -29,6 +29,8 @@ export interface QuestionViewProps<Q extends ShowQuestion = ShowQuestion> {
   stepMs?: number;
   /** Live: the server scores by speed, so the 100/80/60 step ladder would mislead. */
   hideWorth?: boolean;
+  /** Live: the server's verdict on your tap, shown on your option before the shared reveal. */
+  verdict?: { optionId: string; correct: boolean } | null;
 }
 
 function stepAt(elapsedMs: number, steps: number, stepMs: number | undefined): number {
@@ -52,17 +54,19 @@ export function ChoiceButton({
 }) {
   const pct = share == null ? null : Math.round(share * 100);
   return (
-    <button
+    <motion.button
       type="button"
       disabled={disabled}
       onClick={onPick}
+      animate={state === 'wrong' ? { x: [0, -7, 7, -4, 4, 0] } : state === 'correct' ? { scale: [1, 1.04, 1] } : { x: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
       className={cn(
         'relative flex w-full items-center overflow-hidden rounded-2xl border-2 px-4 text-left font-poppins font-bold uppercase text-white transition-colors',
         compact ? 'min-h-[54px] text-[13px]' : 'min-h-[62px] text-[15px] sm:text-[17px]',
         state === 'idle' && 'border-brand-yellow/90 shadow-[0_0_8px_rgba(255,229,0,0.2)] active:scale-[0.99]',
         state === 'picked' && 'border-brand-yellow bg-brand-yellow/20',
         state === 'correct' && 'border-brand-green bg-brand-green/25',
-        state === 'wrong' && 'border-brand-red text-brand-red',
+        state === 'wrong' && 'border-brand-red bg-brand-red/15 text-brand-red',
         state === 'dim' && 'border-white/15 opacity-60',
       )}
     >
@@ -78,14 +82,22 @@ export function ChoiceButton({
         {option.art && <ShowArtView art={option.art} className="size-9 shrink-0" />}
         <span className="flex-1 leading-tight">{L(option.label, locale)}</span>
         {state === 'picked' && <Lock className="size-4 shrink-0 text-brand-yellow" />}
+        {pct == null && state === 'correct' && <Check className="size-5 shrink-0 text-brand-green" />}
+        {pct == null && state === 'wrong' && <X className="size-5 shrink-0 text-brand-red" />}
         {pct != null && <span className="shrink-0 tabular-nums">{pct}%</span>}
       </span>
-    </button>
+    </motion.button>
   );
 }
 
-function optionState(id: string, correctId: string, picked: string | null, revealed: boolean): BtnState {
-  if (!revealed) return picked === id ? 'picked' : picked ? 'dim' : 'idle';
+function optionState(
+  id: string, correctId: string, picked: string | null, revealed: boolean,
+  verdict?: { optionId: string; correct: boolean } | null,
+): BtnState {
+  if (!revealed) {
+    if (verdict && verdict.optionId === id) return verdict.correct ? 'correct' : 'wrong';
+    return picked === id ? 'picked' : picked ? 'dim' : 'idle';
+  }
   if (id === correctId) return 'correct';
   if (id === picked) return 'wrong';
   return 'dim';
@@ -104,7 +116,7 @@ function pickedId(a: ShowAnswer | null): string | null {
   return a && (a.kind === 'choice' || a.kind === 'reveal_choice') ? a.optionId : null;
 }
 
-export function ChoiceView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant }: QuestionViewProps<ChoiceQuestion>) {
+export function ChoiceView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, verdict }: QuestionViewProps<ChoiceQuestion>) {
   const picked = pickedId(answer);
   const open = now >= startsAt && !answer && !!onAnswer && !reveal;
   const pair = q.options.length === 2;
@@ -120,7 +132,7 @@ export function ChoiceView({ q, locale, now, startsAt, answer, onAnswer, reveal,
             key={o.id}
             option={o}
             locale={locale}
-            state={optionState(o.id, q.correctId, picked, !!reveal)}
+            state={optionState(o.id, q.correctId, picked, !!reveal, verdict)}
             share={reveal ? reveal.shares[o.id] ?? 0 : null}
             disabled={!open}
             onPick={() => onAnswer?.({ kind: 'choice', optionId: o.id, elapsedMs: now - startsAt })}
@@ -150,7 +162,7 @@ function WorthLadder({ step, locale, frozen }: { step: number; locale: ShowLocal
   );
 }
 
-export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth }: QuestionViewProps<ZoomOutQuestion>) {
+export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth, verdict }: QuestionViewProps<ZoomOutQuestion>) {
   const steps = revealSteps(q);
   const elapsed = Math.max(0, now - startsAt);
   const frozenStep = answer?.kind === 'reveal_choice' ? answer.step : null;
@@ -179,7 +191,7 @@ export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal
             compact
             option={o}
             locale={locale}
-            state={optionState(o.id, q.correctId, picked, !!reveal)}
+            state={optionState(o.id, q.correctId, picked, !!reveal, verdict)}
             share={reveal ? reveal.shares[o.id] ?? 0 : null}
             disabled={!open}
             onPick={() => onAnswer?.({ kind: 'reveal_choice', optionId: o.id, step, elapsedMs: elapsed })}
@@ -190,7 +202,7 @@ export function ZoomOutView({ q, locale, now, startsAt, answer, onAnswer, reveal
   );
 }
 
-export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth }: QuestionViewProps<EvolutionQuestion>) {
+export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reveal, variant, stepMs, hideWorth, verdict }: QuestionViewProps<EvolutionQuestion>) {
   // Live (stepMs given) shows every era; the simulator's points ladder caps it at five.
   const steps = stepMs ? Math.max(1, q.eras.length) : revealSteps(q);
   const elapsed = Math.max(0, now - startsAt);
@@ -231,7 +243,7 @@ export function EvolutionView({ q, locale, now, startsAt, answer, onAnswer, reve
             compact
             option={o}
             locale={locale}
-            state={optionState(o.id, q.correctId, picked, !!reveal)}
+            state={optionState(o.id, q.correctId, picked, !!reveal, verdict)}
             share={reveal ? reveal.shares[o.id] ?? 0 : null}
             disabled={!open}
             onPick={() => onAnswer?.({ kind: 'reveal_choice', optionId: o.id, step, elapsedMs: elapsed })}

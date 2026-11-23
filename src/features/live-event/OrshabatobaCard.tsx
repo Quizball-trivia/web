@@ -98,7 +98,7 @@ function CtaButton({ children, onClick, disabled }: { children: ReactNode; onCli
       className={cn(
         orshabatobaDisplay.className,
         FRAME_YELLOW,
-        'flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-4 py-2 text-center text-[clamp(15px,4.6cqi,20px)] leading-tight shadow-[0_6px_0_#a8891d] transition-transform active:translate-y-0.5 active:shadow-[0_3px_0_#a8891d] disabled:cursor-not-allowed disabled:opacity-60',
+        'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-center text-[clamp(15px,4.6cqi,19px)] leading-tight transition-[filter] hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60',
       )}
     >
       {children}
@@ -119,7 +119,7 @@ export function EventLobby({
   onRegister?: () => void;
   signedOut?: boolean;
   onSignIn?: () => void;
-  host?: { busy: boolean; message: string | null; onStart: () => void };
+  host?: { busy: boolean; message: string | null; confirming?: boolean; onStart: () => void };
   error?: string | null;
   /** Beside the live 3D studio: no studio still, just the panel. */
   compact?: boolean;
@@ -196,7 +196,7 @@ export function EventLobby({
           <div className="mt-4">
             <CtaButton onClick={host.onStart} disabled={host.busy || !open}>
               {host.busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Play className="size-5" aria-hidden />}
-              {host.busy ? copy.starting : copy.start}
+              {host.busy ? copy.starting : host.confirming ? copy.confirmTap : copy.start}
             </CtaButton>
           </div>
           {host.message && (

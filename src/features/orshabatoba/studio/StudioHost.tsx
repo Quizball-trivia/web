@@ -15,9 +15,15 @@ import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { SEATS, type HostId, type HostModel } from './studioLayout';
 import { gesturePose, moodPose, type BoneTurn, type Hand, type HostAct } from './acting';
+
+/** The host models are meshopt-compressed (EXT_meshopt_compression). */
+function withMeshopt(loader: GLTFLoader) {
+  loader.setMeshoptDecoder(MeshoptDecoder);
+}
 
 /** Phones and low-memory devices get the lighter model, as in the demo. */
 export function prefersLightModels() {
@@ -80,7 +86,7 @@ export interface StudioHostProps {
 
 export function StudioHost({ id, spec, light, act, anchor }: StudioHostProps) {
   const seat = SEATS[id];
-  const gltf = useLoader(GLTFLoader, light ? spec.lod1 : spec.lod0);
+  const gltf = useLoader(GLTFLoader, light ? spec.lod1 : spec.lod0, withMeshopt);
 
   const { root, mixer, idle, bones, head } = useMemo(() => {
     const obj = cloneSkinned(gltf.scene);
