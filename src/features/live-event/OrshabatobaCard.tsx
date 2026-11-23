@@ -151,7 +151,7 @@ export function EventLobby({
 
         {!compact && <Hosts copy={copy} />}
 
-        <NeonTitle className="mt-5 first:mt-0 whitespace-normal text-[clamp(24px,8cqi,36px)] leading-tight">{copy.cardTitle}</NeonTitle>
+        <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white first:mt-0 sm:text-[24px]">{copy.cardTitle}</h2>
         {registered != null && (
           <p className="mt-2 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
             <Users className="size-4" aria-hidden /> {copy.registered(registered)}
