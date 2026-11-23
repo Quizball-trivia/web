@@ -2096,7 +2096,7 @@ export type WlSubscribeAck = {
 export type WlAnswerAck =
   /** carry: money-drop only — the amount that survived this question. */
   /** answer_id: the option the server accepted (one-tap kinds), which a retry or second tab may not have tapped. */
-  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string }
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string; correct_id?: string }
   | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
 
 export interface ServerToClientEvents {

@@ -30,7 +30,7 @@ export interface QuestionViewProps<Q extends ShowQuestion = ShowQuestion> {
   /** Live: the server scores by speed, so the 100/80/60 step ladder would mislead. */
   hideWorth?: boolean;
   /** Live: the server's verdict on your tap, shown on your option before the shared reveal. */
-  verdict?: { optionId: string; correct: boolean } | null;
+  verdict?: { optionId: string; correct: boolean; correctId?: string | null } | null;
 }
 
 function stepAt(elapsedMs: number, steps: number, stepMs: number | undefined): number {
@@ -63,7 +63,7 @@ export function ChoiceButton({
       className={cn(
         'relative flex w-full items-center overflow-hidden rounded-2xl border-2 px-4 text-left font-poppins font-bold uppercase text-white transition-colors',
         compact ? 'min-h-[54px] text-[13px]' : 'min-h-[62px] text-[15px] sm:text-[17px]',
-        state === 'idle' && 'border-brand-yellow/90 shadow-[0_0_8px_rgba(255,229,0,0.2)] active:scale-[0.99]',
+        state === 'idle' && 'border-brand-yellow/90 shadow-[0_0_8px_rgba(255,229,0,0.2)] active:scale-[0.99] disabled:border-white/25 disabled:opacity-50 disabled:shadow-none',
         state === 'picked' && 'border-brand-yellow bg-brand-yellow/20',
         state === 'correct' && 'border-brand-green bg-brand-green/25',
         state === 'wrong' && 'border-brand-red bg-brand-red/15 text-brand-red',
@@ -92,10 +92,12 @@ export function ChoiceButton({
 
 function optionState(
   id: string, correctId: string, picked: string | null, revealed: boolean,
-  verdict?: { optionId: string; correct: boolean } | null,
+  verdict?: { optionId: string; correct: boolean; correctId?: string | null } | null,
 ): BtnState {
   if (!revealed) {
     if (verdict && verdict.optionId === id) return verdict.correct ? 'correct' : 'wrong';
+    // Like Ranked: once your answer is in, the right option lights up too.
+    if (verdict?.correctId && verdict.correctId === id) return 'correct';
     return picked === id ? 'picked' : picked ? 'dim' : 'idle';
   }
   if (id === correctId) return 'correct';
@@ -123,7 +125,17 @@ export function ChoiceView({ q, locale, now, startsAt, answer, onAnswer, reveal,
   return (
     <div className="flex flex-col gap-4">
       {q.subject?.art && (
-        <ShowArtView art={q.subject.art} className={cn('mx-auto overflow-hidden rounded-3xl border-2 border-white/10', variant === 'host' ? 'size-28' : 'size-36')} />
+        // A photo question (picture with no subject name) gets a wide picture; a named subject (fake fact, odd one
+        // out) keeps the small portrait.
+        <ShowArtView
+          art={q.subject.art}
+          className={cn(
+            'mx-auto overflow-hidden rounded-3xl border-2 border-white/10',
+            !L(q.subject.name, locale)
+              ? 'aspect-[16/10] max-h-[38dvh] w-full max-w-xl bg-black/30'
+              : variant === 'host' ? 'size-28' : 'size-36',
+          )}
+        />
       )}
       <PromptCard sub={q.subject && L(q.subject.name, locale) ? L(q.subject.name, locale) : undefined}>{L(q.prompt, locale)}</PromptCard>
       <div className={pair || variant === 'host' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-2.5'}>
