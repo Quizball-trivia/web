@@ -8,7 +8,6 @@
 import { CalendarDays, Home, Medal, Gem, UserRound } from 'lucide-react';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { isPlaySurface } from '@/lib/routes/publicHub';
-import { WEEKEND_LEAGUE_PAUSED } from '@/features/weekend-league/paused';
 
 const ALL_MOBILE_NAV_ITEMS = [
   { path: '/play', labelKey: 'navigation.home', icon: Home },
@@ -18,7 +17,9 @@ const ALL_MOBILE_NAV_ITEMS = [
   { path: '/store', labelKey: 'navigation.store', icon: Gem },
 ] as const;
 
-export const MOBILE_NAV_ITEMS = ALL_MOBILE_NAV_ITEMS.filter((item) => !(WEEKEND_LEAGUE_PAUSED && item.path === '/events'));
+// Events stays visible while the Weekend League is paused: it hosts live
+// events such as the Orshabatoba podcast night (2026-11-23).
+export const MOBILE_NAV_ITEMS = ALL_MOBILE_NAV_ITEMS;
 
 export const HIDE_NAV_PATHS = ['/game', '/onboarding', '/pistas', '/ultimo', '/minuto', '/ortak-futbolcu', '/son-harfle', '/daily-grid', '/football-tenable', '/horserace', '/codenames', '/dato-falso-futbolero', '/conexiones-futboleras', '/football-darts-501', '/football-draft'];
 export const HEADER_PATHS = ['/', '/play', '/events', '/leaderboard', '/social', '/profile', '/store', '/career', '/daily'];

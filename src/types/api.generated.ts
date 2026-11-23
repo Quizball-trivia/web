@@ -11860,6 +11860,10 @@ export interface components {
                 break_until_ms: number | null;
                 spectator_delay_ms: number;
                 server_now_ms: number;
+                host_run?: boolean;
+                event_slug?: string | null;
+                scheduled_at?: string | null;
+                single_game?: boolean;
             } | null;
             you: {
                 entered: boolean;
@@ -11876,6 +11880,7 @@ export interface components {
                     target: number;
                     qualified: boolean;
                 };
+                is_host?: boolean;
             } | null;
         };
         WlQpResponse: {
