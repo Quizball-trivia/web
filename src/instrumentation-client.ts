@@ -1,5 +1,5 @@
 import posthog from 'posthog-js';
-import { preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
+import { isLoopbackHost, preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
 import { partnerFromHost } from '@/features/partner/partnerHosts';
 
 // PostHog runs on PROD ONLY: NEXT_PUBLIC_POSTHOG_KEY exists solely in the
@@ -12,6 +12,7 @@ import { partnerFromHost } from '@/features/partner/partnerHosts';
 if (
   typeof window !== 'undefined'
   && process.env.NEXT_PUBLIC_POSTHOG_KEY
+  && !isLoopbackHost(window.location.hostname)
   && !/^\/dev\/games(\/|$)/.test(window.location.pathname)
   && !partnerFromHost(window.location.host)
 ) {
