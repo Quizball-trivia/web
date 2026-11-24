@@ -1,3 +1,4 @@
+// @vitest-environment-options {"url":"https://quizball.io/en/play"}
 import { afterEach, expect, it, vi } from 'vitest';
 import type { CaptureResult, PostHogConfig } from 'posthog-js';
 
@@ -5,7 +6,7 @@ const { init } = vi.hoisted(() => ({ init: vi.fn() }));
 vi.mock('posthog-js', () => ({
   default: { init, featureFlags: { setReloadingPaused: vi.fn() } },
 }));
-afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
 it('registers a capture hook that removes credentials before an initialized client sends events', async () => {
   vi.resetModules();
@@ -20,4 +21,12 @@ it('registers a capture hook that removes credentials before an initialized clie
   };
   const capture = config.before_send as (event: CaptureResult) => CaptureResult | null;
   expect(capture(event)?.properties.$current_url).toBe('https://quizball.io/en/play?utm_source=google');
+});
+
+it('skips SDK initialization on localhost even when the project key is configured', async () => {
+  vi.resetModules();
+  vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'test-project-key');
+  vi.stubGlobal('location', new URL('http://localhost:3000/en/play'));
+  await import('@/instrumentation-client');
+  expect(init).not.toHaveBeenCalled();
 });
