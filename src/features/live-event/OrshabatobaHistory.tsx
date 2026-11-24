@@ -5,7 +5,7 @@
  * past show nights with their podium below it. Georgian only, like the rest of the show.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Trophy, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -53,6 +53,12 @@ export function OrshabatobaNextLine({ next, className }: { next: OrshabatobaHist
 
 export function OrshabatobaPastNights({ editions }: { editions: OrshabatobaHistoryResponse['editions'] }) {
   const [open, setOpen] = useState<OrshabatobaHistoryResponse['editions'][number] | null>(null);
+  // The buttons sit outside the Dialog (no DialogTrigger), so closing must hand focus back to the one that opened it.
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const restoreFocus = useCallback((event: Event) => {
+    event.preventDefault();
+    opener.current?.focus();
+  }, []);
   if (editions.length === 0) return null;
   return (
     <section className="mt-6">
@@ -82,7 +88,7 @@ export function OrshabatobaPastNights({ editions }: { editions: OrshabatobaHisto
             </ol>
             <button
               type="button"
-              onClick={() => setOpen(e)}
+              onClick={(ev) => { opener.current = ev.currentTarget; setOpen(e); }}
               className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-[12px] bg-white/[0.07] py-2.5 font-poppins text-[13px] font-semibold text-white/85 transition-colors hover:bg-white/[0.12] hover:text-white"
             >
               სრული ლიდერბორდი <ChevronRight className="size-4" aria-hidden />
@@ -91,13 +97,16 @@ export function OrshabatobaPastNights({ editions }: { editions: OrshabatobaHisto
         ))}
       </div>
       <Dialog open={open != null} onOpenChange={(v) => { if (!v) setOpen(null); }}>
-        {open && <FullBoard edition={open} />}
+        {open && <FullBoard edition={open} onCloseAutoFocus={restoreFocus} />}
       </Dialog>
     </section>
   );
 }
 
-function FullBoard({ edition }: { edition: OrshabatobaHistoryResponse['editions'][number] }) {
+function FullBoard({ edition, onCloseAutoFocus }: {
+  edition: OrshabatobaHistoryResponse['editions'][number];
+  onCloseAutoFocus: (event: Event) => void;
+}) {
   const userId = useAuthStore((s) => s.user?.id ?? null);
   const board = useQuery({
     queryKey: queryKeys.weekendLeague.orshabatobaBoard(edition.episode, userId),
@@ -108,7 +117,9 @@ function FullBoard({ edition }: { edition: OrshabatobaHistoryResponse['editions'
   const youRef = useCallback((el: HTMLLIElement | null) => { el?.scrollIntoView({ block: 'center' }); }, []);
 
   return (
-    <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden border-white/10 bg-game-stadium-night p-0 text-white sm:max-w-md">
+    <DialogContent
+      onCloseAutoFocus={onCloseAutoFocus}
+      className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden border-white/10 bg-game-stadium-night p-0 text-white sm:max-w-md">
       <div className="border-b border-white/10 px-5 pb-3 pt-5 pr-12">
         <DialogTitle className="font-poppins text-[18px] font-bold">ორშაბათობა #{edition.episode}</DialogTitle>
         <DialogDescription className="mt-1 font-poppins text-[13px] text-white/55">
