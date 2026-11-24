@@ -29,7 +29,7 @@ describe('cardFx', () => {
   });
 
   it('drops a card VAR cancelled and Home Advantage played by both', () => {
-    expect(cardFx(duel({ player: ['captains-armband'] }, { cancelled: { player: true, opponent: false } }), null).armband).toBeNull();
+    expect(cardFx(duel({ player: ['captains-armband'] }, { cancelled: { player: true, opponent: false }, choice: { player: 'captains-armband', opponent: null } }), null).armband).toBeNull();
     expect(cardFx(duel({ player: ['captains-armband'] }), null).armband).toBe('player');
     expect(cardFx(duel({ player: ['home-advantage'], opponent: ['home-advantage'] }), null).home).toBeNull();
   });

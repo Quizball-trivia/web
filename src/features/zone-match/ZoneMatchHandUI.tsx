@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CARD_BY_ID, type CardId, type CardPhase } from './zoneMatch.cards';
+import { CARD_BY_ID, HELPLINE_COINS, type CardId, type CardPhase } from './zoneMatch.cards';
 import { ATTACKS_EACH, attacksLeft, opponentPublicView, type MatchState } from './zoneMatch.machine';
 import { SIDE_COLOR } from './zoneMatch3d.layout';
 import { CardInspector, OpponentDeckSheet, handBlocker } from './ZoneMatchCards';
@@ -102,22 +102,43 @@ export function PlaystyleChoices({ state, onChoose }: { state: MatchState; onCho
 }
 
 /** During the question: the live cards you can play now, as chips; tap one, then confirm, and it fires. */
-export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (card: CardId) => void }) {
+/**
+ * What the helpline chips need from the room besides the match: the seat's coins (null = unknown yet; a guest has
+ * none and is asked to sign in) and whether the other side has already answered (Fog would be wasted).
+ */
+export interface HelplineWallet {
+  coins: number | null;
+  guest: boolean;
+  opponentAnswered: boolean;
+}
+
+const COIN_ICON = '/assets/coin-1.png?v=2';
+
+export function LiveCardChips({ state, onPlay, wallet }: { state: MatchState; onPlay: (card: CardId) => void; wallet?: HelplineWallet }) {
   const { c } = useZoneCopy();
   const [armed, setArmed] = useState<{ key: number; id: CardId } | null>(null);
   const key = state.mcq?.key ?? -1;
-  const playable = state.deck.player.filter((id) => CARD_BY_ID[id].phase === 'live' && handBlocker(state, id, 'live') === null);
+  const playable = state.deck.player.filter(
+    (id) => CARD_BY_ID[id].phase === 'live' && handBlocker(state, id, 'live') === null && !(id === 'fog' && wallet?.opponentAnswered),
+  );
   if (playable.length === 0) return null;
   const current = armed && armed.key === key ? armed.id : null;
+  // Prices only where helplines cost coins (the room passes a wallet then); a free match shows none.
+  const priceOf = (id: CardId) => (wallet ? HELPLINE_COINS[id] ?? 0 : 0);
+  // Unknown coins (still loading) don't block a tap: the server is the judge and refuses one it can't charge.
+  const affordable = (id: CardId) => !wallet || (!wallet.guest && (wallet.coins === null || wallet.coins >= priceOf(id)));
   return (
     <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 border-t border-white/10 pt-2.5" data-zm-live-chips>
       <span className="text-[10px] uppercase tracking-[0.12em] text-white/50" style={poppins}>{c.hand.liveCard}</span>
       {playable.map((id) => {
         const name = c.cards[id].name;
+        const price = priceOf(id);
         if (current === id) {
           return (
             <span key={id} className="flex items-center gap-1 rounded-full bg-brand-yellow/15 p-1 pl-2.5 ring-2 ring-brand-yellow">
-              <span className="text-[11px] uppercase text-white" style={poppins}>{fill(c.hand.playConfirm, { card: name })}</span>
+              <span className="text-[11px] uppercase text-white" style={poppins}>
+                {price > 0 ? fill(c.hand.helplineConfirm, { card: name, n: price }) : fill(c.hand.playConfirm, { card: name })}
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -142,21 +163,36 @@ export function LiveCardChips({ state, onPlay }: { state: MatchState; onPlay: (c
             </span>
           );
         }
+        const canPay = affordable(id);
         return (
           <motion.button
             key={id}
             type="button"
+            disabled={!canPay}
             onClick={() => setArmed({ key, id })}
-            whileTap={{ scale: 0.95 }}
-            className="flex h-11 items-center gap-1.5 rounded-full border-2 border-brand-yellow/60 bg-white/[0.06] py-1 pl-1 pr-3 text-[12px] uppercase text-white hover:bg-white/[0.12]"
+            whileTap={canPay ? { scale: 0.95 } : undefined}
+            title={canPay ? undefined : wallet?.guest ? c.hand.signInForHelplines : c.hand.notEnoughCoins}
+            className="flex h-11 items-center gap-1.5 rounded-full border-2 border-brand-yellow/60 bg-white/[0.06] py-1 pl-1 pr-2 text-[12px] uppercase text-white hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:border-white/15 disabled:opacity-50 disabled:hover:bg-white/[0.06]"
             style={poppins}
             data-zm-live-chip={id}
           >
-            <PlaystyleBadge id={id} size={30} showName={false} showCost={false} playable />
-            {fill(c.common.playCard, { card: name })}
+            <PlaystyleBadge id={id} size={30} showName={false} showCost={false} playable={canPay} />
+            {name}
+            {price > 0 && (
+              <span className="ml-0.5 flex items-center gap-0.5 rounded-full bg-black/30 py-0.5 pl-0.5 pr-1.5 text-[11px] text-brand-yellow" aria-label={fill(c.hand.helplinePrice, { n: price })}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={COIN_ICON} alt="" className="size-4 object-contain" />
+                {price}
+              </span>
+            )}
           </motion.button>
         );
       })}
+      {wallet && (wallet.guest || playable.some((id) => !affordable(id))) && (
+        <span className="w-full text-center text-[10px] text-white/50" style={poppins}>
+          {wallet.guest ? c.hand.signInForHelplines : c.hand.notEnoughCoins}
+        </span>
+      )}
     </div>
   );
 }
@@ -212,17 +248,20 @@ export function HudLoadouts({
   opponentName,
   phase,
   onPlay,
+  paid = false,
 }: {
   state: MatchState;
   opponentName: string;
   /** The window open now (the card can be played from its details), or null. */
   phase: CardPhase | null;
   onPlay: (card: CardId) => void;
+  /** Paid helplines: the details only describe them (the priced chips under the question are the one way to pay). */
+  paid?: boolean;
 }) {
   const [mine, setMine] = useState<CardId | null>(null);
   const [theirs, setTheirs] = useState(false);
   const them = opponentPublicView(state);
-  const blocker = mine ? handBlocker(state, mine, phase) : null;
+  const blocker = !mine ? null : paid ? (state.used.player.includes(mine) ? 'already-used' : 'use-below') : handBlocker(state, mine, phase);
   return (
     <>
       <div className="flex items-center justify-between gap-2 px-3 sm:px-6">

@@ -358,7 +358,8 @@ export function CardInspector({
   onClose,
 }: {
   id: CardId;
-  blocker: ReturnType<typeof handBlocker>;
+  /** 'use-below': a paid helpline, used only from the priced chips under the question. */
+  blocker: ReturnType<typeof handBlocker> | 'use-below';
   onPlay: () => void;
   onClose: () => void;
 }) {

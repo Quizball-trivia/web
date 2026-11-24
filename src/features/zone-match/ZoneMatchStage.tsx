@@ -41,7 +41,7 @@ import {
   unusedCategories,
 } from './zoneMatch.machine';
 import { CardClash, useDesktop } from './ZoneMatchCards';
-import { AttackCounter, HudLoadouts, LiveCardChips, PlaystyleChoices } from './ZoneMatchHandUI';
+import { AttackCounter, HudLoadouts, LiveCardChips, PlaystyleChoices, type HelplineWallet } from './ZoneMatchHandUI';
 import { CARD_TYPE_THEME, CardFace, CardGlyph } from './ZoneMatchCardFace';
 import { ZoneMatch3D } from './ZoneMatch3D';
 import { CategoryTile } from './ZoneMatchCategories';
@@ -103,6 +103,7 @@ export function ZoneMatchStage({
   onReaction,
   onHomeCategory,
   onPickCategory,
+  helplineWallet,
 }: {
   state: MatchState;
   now: number;
@@ -119,6 +120,8 @@ export function ZoneMatchStage({
   onHomeCategory: (categoryId: string) => void;
   /** Your attack: the category you pick for it. */
   onPickCategory: (categoryId: string) => void;
+  /** Paid helplines (Ranked 2.0 room): the seat's coins, for the prices on the live chips. */
+  helplineWallet?: HelplineWallet;
 }) {
   const { locale } = useLocale();
   const { c } = useZoneCopy();
@@ -299,7 +302,7 @@ export function ZoneMatchStage({
         <div ref={hudRef} className="pointer-events-auto mx-auto flex w-full max-w-3xl flex-col pb-1.5">
           <PossessionMatchViewport model={viewportModel} />
           {/* Each side's playstyles, under its score (the hand lives in the step card now). */}
-          <HudLoadouts state={state} opponentName={opponent.name} phase={handPhase} onPlay={playCard} />
+          <HudLoadouts state={state} opponentName={opponent.name} phase={handPhase} onPlay={playCard} paid={!!helplineWallet} />
           <div className="px-3 sm:px-4">
             <StandingEffects state={state} opponentName={opponent.name} />
           </div>
@@ -376,7 +379,7 @@ export function ZoneMatchStage({
                           onAnswer={onAnswer}
                         />
                       )}
-                      {handPhase === 'live' && <LiveCardChips state={state} onPlay={onLiveCard} />}
+                      {handPhase === 'live' && <LiveCardChips state={state} onPlay={onLiveCard} wallet={helplineWallet} />}
                       {state.battleStep === 'numeric' && state.numeric && (
                         <NumericPanel numeric={state.numeric} dark={numericDark} opponentName={opponent.name} onGuess={onGuess} />
                       )}

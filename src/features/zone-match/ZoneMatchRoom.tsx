@@ -8,6 +8,10 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queries/queryKeys';
+import { useStoreWallet } from '@/lib/queries/store.queries';
+import { useAuthStore } from '@/stores/auth.store';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { fill, zoneMatchCopy } from './zoneMatch.copy';
 import { useZoneCopy } from './useZoneCopy';
@@ -19,11 +23,9 @@ import { CoinToss } from './ZoneMatchCoinToss';
 import { DeckReveal } from './ZoneMatchCards';
 import { CategoriesReveal } from './ZoneMatchCategories';
 import { PhaseCurtain } from './ZoneMatchCurtain';
-import { LoadoutSteps, RuleChips } from './ZoneMatchLoadout';
 import { FullTime, ScreenFrame, showdownFullBody } from './ZoneMatchPrototype';
 import { ZoneMatchShootout } from './ZoneMatchShootout';
 import { ZoneMatchStage, type ZoneMatchSeat } from './ZoneMatchStage';
-import { PlaystylePicker } from './picker/PickerLab';
 import type { CardId } from './zoneMatch.cards';
 import type { Category, MatchState } from './zoneMatch.machine';
 
@@ -40,9 +42,12 @@ export interface ZoneMatchServerView {
   question: { prompt: string; options: string[] } | null;
   categories: Category[];
   end: { winner: 'you' | 'them' | null; reason: 'score' | 'left' } | null;
+  /** Helplines cost coins in this match (engine version 2); a match begun before that plays them free. */
+  helplinesPaid?: boolean;
 }
 
 export type ZoneMatchCommand =
+  /** Legacy: only a match stored before loadouts were removed still waits for one (its cards are ignored). */
   | { type: 'loadout'; cards: CardId[] }
   | { type: 'category'; round: number; categoryId: string }
   | { type: 'card'; duel: number; card: CardId | null }
@@ -117,11 +122,34 @@ function useServerNow(room: RoomConnection<ZoneMatchCommand>) {
   return now;
 }
 
-function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: RoomStatePayload; room: RoomConnection<ZoneMatchCommand> }) {
+/**
+ * The seat's coins for the helpline prices: refreshed whenever one of its helplines is spent (the server charged it),
+ * and after a refusal for lack of coins (the balance shown was out of date).
+ */
+function useHelplineWallet(view: ZoneMatchServerView, error: string | null) {
+  const authenticated = useAuthStore((st) => st.status === 'authenticated');
+  const wallet = useStoreWallet();
+  const queryClient = useQueryClient();
+  const spent = view.match.used.player.length;
+  useEffect(() => {
+    if (!authenticated) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+  }, [authenticated, spent, error, queryClient]);
+  return {
+    coins: authenticated ? (wallet.data?.coins ?? null) : 0,
+    guest: !authenticated,
+    opponentAnswered: view.opponentAnswered,
+  };
+}
+
+function Board({ view, snapshot, room, error }: { view: ZoneMatchServerView; snapshot: RoomStatePayload; room: RoomConnection<ZoneMatchCommand>; error: string | null }) {
   const { c } = useZoneCopy();
   const now = useServerNow(room);
   const seats = useMemo(() => seatsOf(snapshot, view.you), [snapshot, view.you]);
-  const [deck, setDeck] = useState<CardId[]>([]);
+  const helplineWallet = useHelplineWallet(view, error);
+  const noCoins = error === 'insufficient_coins';
+  // A helpline the server refused (no coins, or Fog after the other side answered) was never spent.
+  const refused = noCoins || error === 'rejected';
   // Optimistic input: a tap shows at once; the server's snapshot (which carries the right answer once this seat is
   // locked) takes over a round-trip later. Keyed to the question so a Substitution or the next duel drops it, and
   // time-bound: a command the server never confirmed must not pin the controls — after the window the player can
@@ -135,7 +163,12 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const [pendingCard, setPendingCard] = useState<{ duel: number; card: CardId | null; at: number } | null>(null);
   const [pendingPlay, setPendingPlay] = useState<{ duel: number; card: CardId; at: number } | null>(null);
   const [pendingHome, setPendingHome] = useState<{ duel: number; id: string; at: number } | null>(null);
-  const [pendingLoadout, setPendingLoadout] = useState<number | null>(null);
+  // A helpline the server refused comes straight back to the hand (no optimistic "played" left hiding the chips).
+  const [seenRefused, setSeenRefused] = useState(false);
+  if (refused !== seenRefused) {
+    setSeenRefused(refused);
+    if (refused) setPendingPlay(null);
+  }
   const answerPending = !!(view.match.mcq && view.match.battleStep === 'mcq' && view.match.mcq.answers.player === null
     && pendingAnswer?.key === view.match.mcq.key && now - pendingAnswer.at < OPTIMISTIC_MS
     && pendingAnswer.index !== view.match.mcq.firstMiss.player
@@ -174,50 +207,21 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
   const timeLeft = state.advanceAt === null ? null : Math.max(0, Math.ceil((state.advanceAt - now) / 1000));
   const send = room.send;
 
-  // A deck picked on the queue screen rides along in sessionStorage: submit it once and let the match start.
-  const queueDeckSent = useRef(false);
+  // A match stored before loadouts were removed still waits for one: send an empty one (the server ignores it).
+  const legacyLoadoutSent = useRef(false);
   useEffect(() => {
-    if (view.phase !== 'loadout' || view.loadoutIn.you || queueDeckSent.current) return;
-    try {
-      const raw = sessionStorage.getItem('zone-queue-deck');
-      if (!raw) return;
-      sessionStorage.removeItem('zone-queue-deck');
-      // The deck is bound to the match it was picked for: a stale leftover must not auto-submit in a later room.
-      const saved = JSON.parse(raw) as { matchId?: string; cards?: CardId[] };
-      if (saved.matchId === snapshot.matchId && Array.isArray(saved.cards) && saved.cards.length > 0) {
-        queueDeckSent.current = true;
-        send({ type: 'loadout', cards: saved.cards.slice(0, 3) });
-      }
-    } catch { /* an unreadable saved deck: the picker stands in */ }
-  }, [view.phase, view.loadoutIn.you, send, snapshot.matchId]);
+    if (view.phase !== 'loadout' || view.loadoutIn.you || legacyLoadoutSent.current) return;
+    legacyLoadoutSent.current = true;
+    send({ type: 'loadout', cards: [] });
+  }, [view.phase, view.loadoutIn.you, send]);
 
   if (view.phase === 'loadout') {
-    const secondsLeft = Math.max(0, Math.ceil((view.deadline - now) / 1000));
-    const loadoutInYou = view.loadoutIn.you || (pendingLoadout !== null && now - pendingLoadout < OPTIMISTIC_MS);
     return (
       <ScreenFrame wide>
-        <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col gap-3" data-zm-room="loadout">
-          {loadoutInYou ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-              <div className="text-2xl uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}>
-                {view.loadoutIn.them ? c.room.kickOff : fill(c.room.waitingFor, { name: seats.opponent.name })}
-              </div>
-              <div className="text-sm text-white/60">{fill(c.room.revealedAtShowdown, { s: secondsLeft })}</div>
-            </div>
-          ) : (
-            <PlaystylePicker
-              seat={seats.player}
-              deck={deck}
-              onDeckChange={setDeck}
-              loading={false}
-              onFindMatch={() => {
-                setPendingLoadout(now);
-                send({ type: 'loadout', cards: deck });
-              }}
-              steps={<LoadoutSteps ready={deck.length > 0} />}
-              rules={<RuleChips />}
-            />
-          )}
+        <div className="flex min-h-[calc(100dvh-1.5rem)] flex-col items-center justify-center gap-2 text-center" data-zm-room="loadout">
+          <div className="text-2xl uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}>
+            {view.loadoutIn.them ? c.room.kickOff : fill(c.room.waitingFor, { name: seats.opponent.name })}
+          </div>
         </div>
       </ScreenFrame>
     );
@@ -239,6 +243,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
       />
     );
   } else if (state.stage === 'deckReveal') {
+    // Only a match stored before helplines replaced loadouts is still at this step.
     body = (
       <ScreenFrame wide>
         <DeckReveal decks={state.deck} seats={seats} timeLeft={timeLeft} />
@@ -281,6 +286,7 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
         muted={false}
         onToggleMute={() => {}}
         onQuit={() => room.leave()}
+        helplineWallet={view.helplinesPaid ? helplineWallet : undefined}
         onAnswer={(index, questionId) => {
           // A second tap while the first is in flight is ignored (the server may already have locked the first);
           // a Second Ball retry, or an unconfirmed tap past the window, goes through.
@@ -333,6 +339,13 @@ function Board({ view, snapshot, room }: { view: ZoneMatchServerView; snapshot: 
     <div className="min-h-dvh bg-surface-page text-white" data-zm-stage={state.stage} data-zm-step={state.battleStep}>
       {body}
       <PhaseCurtain state={state} />
+      {noCoins && (
+        <div role="alert" className="pointer-events-none fixed inset-x-0 top-16 z-50 flex justify-center px-4">
+          <span className="rounded-full bg-brand-red px-4 py-2 text-sm font-semibold uppercase text-white shadow-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            {c.hand.notEnoughCoins}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -345,7 +358,7 @@ function Results({ view, snapshot, onRoom, onExit }: { view: ZoneMatchServerView
 
 export const zoneMatchScreens: RoomGameScreens<ZoneMatchServerView, ZoneMatchCommand> = {
   brand: (locale) => zoneMatchCopy(locale).brand,
-  Board: ({ view, snapshot, room }) => <Board view={view} snapshot={snapshot} room={room} />,
+  Board: ({ view, snapshot, room, error }) => <Board view={view} snapshot={snapshot} room={room} error={error} />,
   Results: (props) => <Results {...props} />,
   wide: () => true,
 };

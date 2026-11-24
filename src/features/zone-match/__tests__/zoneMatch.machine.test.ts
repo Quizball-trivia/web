@@ -2,7 +2,7 @@ import { SAMPLE_NUMERIC_QUESTIONS } from '@/features/numeric-question/sampleNume
 import { describe, expect, it } from 'vitest';
 import type { GameQuestion } from '@/lib/domain';
 import type { DuelSide } from '@/features/numeric-question/numericDuel';
-import { LOADOUT_BUDGET, deckCost, randomDeck, type CardId } from '../zoneMatch.cards';
+import { CARD_BY_ID, HELPLINE_COINS, HELPLINES, LOADOUT_BUDGET, deckCost, randomDeck, type CardId } from '../zoneMatch.cards';
 import { MATCH_ROUNDS, otherZoneSide, type BattleOutcome } from '../zoneMatch.rules';
 import {
   IDLE,
@@ -304,16 +304,24 @@ describe('leaving a match', () => {
 const RESTART_BASE = { type: 'RESTART', categoryPool: categories, windowMode: 'round', now: 0 } as const;
 
 describe('decks at the showdown', () => {
-  it('reveals both decks after the VS screen, then deals the categories', () => {
+  it('deals the categories straight after the VS screen (helplines are the same for everyone: no deck reveal)', () => {
     const mine: CardId[] = ['fifty-fifty', 'fog', 'tiki-taka'];
     let s = reducer(IDLE, { type: 'RESTART', categoryPool: categories, decks: { player: mine, opponent: randomDeck() }, windowMode: 'round', now: 0 });
     expect(s.stage).toBe('showdown');
-    s = reducer(s, { type: 'ADVANCE', content, now: s.advanceAt! });
-    expect(s.stage).toBe('deckReveal');
     expect(s.deck.player).toEqual(mine);
     expect(deckCost(s.deck.opponent)).toBeLessThanOrEqual(LOADOUT_BUDGET);
     s = reducer(s, { type: 'ADVANCE', content, now: s.advanceAt! });
     expect(s.stage).toBe('categories');
+    expect(s.categories.player).toHaveLength(5);
+  });
+
+  it('the three helplines are a legal hand, all played during the question', () => {
+    const s = reducer(IDLE, { ...RESTART_BASE, decks: { player: [...HELPLINES], opponent: [...HELPLINES] } });
+    expect(s.deck.player).toEqual([...HELPLINES]);
+    for (const id of HELPLINES) {
+      expect(CARD_BY_ID[id].phase).toBe('live');
+      expect(HELPLINE_COINS[id]).toBeGreaterThan(0);
+    }
   });
 
   it('never starts a match with an illegal deck', () => {
