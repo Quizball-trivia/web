@@ -23,7 +23,7 @@ function readState(file) {
     if (error.code !== "ENOENT") console.warn(`ignoring unreadable ${file}: ${error.message}`);
     return null;
   }
-  if (state && typeof state === "object" && !Array.isArray(state)) return state;
+  if (state && typeof state === "object" && !Array.isArray(state) && Object.values(state).every((v) => typeof v === "string")) return state;
   console.warn(`ignoring malformed ${file}`);
   return null;
 }
