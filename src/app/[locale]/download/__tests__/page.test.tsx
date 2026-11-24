@@ -68,6 +68,7 @@ describe('official Android download page', () => {
       ru: 'https://quizball.io/ru/download', 'pt-BR': 'https://quizball.io/pt/download',
       de: 'https://quizball.io/de/download',
       fr: 'https://quizball.io/fr/download',
+      el: 'https://quizball.io/el/download',
       'x-default': 'https://quizball.io/en/download',
     });
     // Inherit production/preview robots from the root; do not accidentally index previews.

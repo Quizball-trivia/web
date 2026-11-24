@@ -5,6 +5,7 @@ const call = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/repositories/dailyGameApi", async (importOriginal) => ({ ...(await importOriginal<object>()), createDailyGameCall: () => call }));
 
 import { NameChainPractice } from "../NameChainPractice";
+import { DailyGameApiError } from "@/lib/repositories/dailyGameApi";
 
 const step = (over: object) => ({ alphabet: "latin", result: null, links: [], letter: "", last: null, could: [], exhausted: false, ...over });
 const link = (pid: string, game: string, given = false) => ({ pid, name: game, game, given });
@@ -44,5 +45,43 @@ describe("NameChainPractice", () => {
     expect(screen.getByText("Nesto")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to the daily" }));
     expect(onBack).toHaveBeenCalled();
+  });
+  it("drops a chain the server can no longer play and offers a fresh start when that start fails", async () => {
+    call
+      .mockResolvedValueOnce(step({ links: [link("p-bako", "Bako", true)], letter: "O" }))
+      .mockRejectedValueOnce(new DailyGameApiError("practice_restart", 400))
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce(step({ links: [link("p-nesto", "Nesto", true)], letter: "O" }));
+    render(<NameChainPractice locale="en" brand={["FOOTBALL", "CHAIN"]} onBack={() => {}} />);
+
+    const input = await screen.findByRole("textbox");
+    fireEvent.change(input, { target: { value: "Orlen" } });
+    fireEvent.submit(input.closest("form")!);
+    // The stale chain is gone (nothing to resend) and its replacement's start can be retried.
+    const retry = await screen.findByRole("button", { name: "Try again" });
+    expect(call.mock.calls[2][2]).toEqual({ op: "start", locale: "en", used: ["p-bako"] });
+    expect(screen.queryByRole("textbox")).toBeNull();
+    fireEvent.click(retry);
+    await screen.findByRole("textbox");
+    expect(call).toHaveBeenCalledTimes(4);
+  });
+  it("keeps the dropped chain in the longest chain", async () => {
+    call
+      .mockResolvedValueOnce(step({ links: [link("p-bako", "Bako", true)], letter: "O" }))
+      .mockResolvedValueOnce(step({ result: "ok", links: [link("p-orlen", "Orlen")], letter: "N", last: { kind: "ok", text: "orlen", name: "Orlen", starts: [] } }))
+      .mockRejectedValueOnce(new DailyGameApiError("practice_restart", 400))
+      .mockResolvedValueOnce(step({ links: [link("p-nesto", "Nesto", true)], letter: "O" }));
+    render(<NameChainPractice locale="en" brand={["FOOTBALL", "CHAIN"]} onBack={() => {}} />);
+
+    const input = await screen.findByRole("textbox");
+    fireEvent.change(input, { target: { value: "Orlen" } });
+    fireEvent.submit(input.closest("form")!);
+    await screen.findByText("1 in this chain");
+    await waitFor(() => expect(screen.getByRole("textbox")).not.toBeDisabled());
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Nurak" } });
+    fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+    await waitFor(() => expect(call).toHaveBeenCalledTimes(4));
+    await screen.findByText("0 in this chain");
+    expect(screen.getByText("Longest chain: 1")).toBeTruthy();
   });
 });

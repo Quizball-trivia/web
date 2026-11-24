@@ -16,11 +16,12 @@ export interface SquadSpinReel {
   label_pt?: string | null;
   label_de?: string | null;
   label_fr?: string | null;
+  label_el?: string | null;
   label_es?: string | null;
   label_tr?: string | null;
   asset_key: string | null;
 }
-export interface SquadSpinPlayer { id: string; name_en: string; name_ka: string | null; name_ru?: string | null; image_url: string | null }
+export interface SquadSpinPlayer { id: string; name_en: string; name_ka: string | null; name_ru?: string | null; name_el?: string | null; image_url: string | null }
 
 export interface SquadSpinState {
   round_id: string;

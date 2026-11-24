@@ -826,7 +826,7 @@ export interface PublicAuctionFootballer {
   startingPrice: number;
   clues?: readonly string[];
   /** Same steps as `clues` per content locale; the client shows its own language. */
-  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr', readonly string[]>>;
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
@@ -944,7 +944,7 @@ export interface PublicAuctionPlayerRanking {
 export interface PublicAuctionMatchState {
   matchId: string;
   version: number;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   phase: AuctionMatchPhase;
   formation: AuctionFormationName;
   seats: PublicAuctionPlayer[];
@@ -959,12 +959,12 @@ export interface PublicAuctionMatchState {
 
 export interface AuctionStartAiMatchPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
 }
 
 export interface AuctionSearchStartPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
 }
 
 export type FootballGridDifficulty = 'easy' | 'normal' | 'hard';
@@ -1010,6 +1010,7 @@ export interface FootballGridCriterionView {
   labelPt?: string | null;
   labelDe?: string | null;
   labelFr?: string | null;
+  labelEl?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }
@@ -1098,6 +1099,7 @@ export interface FootballGridOption {
   name: string;
   nameKa: string | null;
   nameRu?: string | null;
+  nameEl?: string | null;
   imageUrl: string | null;
 }
 
@@ -1111,7 +1113,7 @@ export interface FootballGridOptionsPayload {
 }
 
 export interface FootballGridSearchStartPayload {
-  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   /** League pack to queue for; server defaults to 'european'. */
   theme?: string;
 }
@@ -1125,7 +1127,7 @@ export interface FootballGridVersionedCommandPayload {
 export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
   cellIndex: number;
   text: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   /** Pick-from-four: the footballer picked. */
   optionPlayerId?: string;
 }
@@ -1240,7 +1242,7 @@ export interface AuctionUiReadyPayload {
 
 export interface AuctionSearchStartedPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1251,7 +1253,7 @@ export interface AuctionSearchStartedPayload {
 
 export interface AuctionSearchStatusPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1281,7 +1283,7 @@ export interface AuctionMatchFoundPayload {
   /** joinDelayMs: ms after receipt when each bot pops into the lineup —
    *  bots arrive staggered like a real queue (absent = show immediately). */
   botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   formation: AuctionFormationName;
   /** Server clock used to compensate for local clock skew. Optional during a
    * rolling deploy; older backends only sent countdownEndsAt. */
@@ -1297,7 +1299,7 @@ export interface AuctionMatchFoundPayload {
 
 export interface AuctionMatchStartedPayload {
   matchId: string;
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr';
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el';
   state: PublicAuctionMatchState;
   serverNow?: string;
 }
@@ -1838,7 +1840,7 @@ export interface ClientToServerEvents {
     friendlyCategoryBId?: string | null;
     isPublic?: boolean;
   }) => void;
-  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' }) => void;
+  'lobby:start': (data?: { lobbyId?: string; seen?: LobbySeenGame; locale?: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el' }) => void;
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;
@@ -2072,7 +2074,7 @@ export interface WlSubscribeSnapshot {
   game_index: number;
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
-  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string } | null;
   /** money_drop in-flight attempt only: the server-derived budget carried
       into it — reconnects must not reset the client's display chain. */
   money_budget?: number;
@@ -2093,7 +2095,8 @@ export type WlSubscribeAck = {
 
 export type WlAnswerAck =
   /** carry: money-drop only — the amount that survived this question. */
-  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number }
+  /** answer_id: the option the server accepted (one-tap kinds), which a retry or second tab may not have tapped. */
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number; answer_id?: string; correct_id?: string }
   | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
 
 export interface ServerToClientEvents {

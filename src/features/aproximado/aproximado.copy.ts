@@ -1,6 +1,6 @@
 import type { AproximadoQuestion } from "./aproximado.rules";
 
-type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr";
+type Locale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
 type Kind = AproximadoQuestion["kind"];
 
 const es = {
@@ -591,11 +591,84 @@ const fr: Copy = {
   finishedText: "Ce match est déjà terminé.",
 };
 
-const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt, de, fr };
+const el: Copy = {
+  ...en,
+  brandA: "Ποιος πλησιάζει",
+  brandB: "περισσότερο;",
+  round: (n, total) => `Γύρος ${n}/${total}`,
+  kinds: { fee: "Κόστος μεταγραφής", value: "Αξία", goals: "Γκολ", attendance: "Θεατές", height: "Ύψος", apps: "Συμμετοχές", age: "Ηλικία" },
+  inputLabel: "Ο αριθμός σου",
+  inputHint: "Η πιο κοντινή απάντηση δίνει πόντους. Αν πετύχεις ακριβώς, +1.",
+  invalid: "Γράψε έναν αριθμό.",
+  confirm: "Κλείδωσε",
+  you: "Εσύ",
+  answered: "Απάντησε",
+  thinking: "Σκέφτεται…",
+  away: "Εκτός σύνδεσης",
+  withdrawn: "Αποχώρησε",
+  idle: "Απών",
+  waiting: (n) => `Αναμονή παικτών: ${n}…`,
+  revealing: "Απάντησαν όλοι! Αποκάλυψη…",
+  yourGuess: (v) => `Η απάντησή σου: ${v}`,
+  itWas: "Ήταν",
+  off: (v) => `Διαφορά: ${v}`,
+  exact: "Ακριβώς!",
+  noGuess: "Χωρίς απάντηση",
+  roundWinner: (name) => `${name} κερδίζει τον γύρο`,
+  youWonRound: "Κέρδισες τον γύρο!",
+  roundTie: "Ισοπαλία στην κορυφή",
+  nobody: "Δεν απάντησε κανείς",
+  introTitle: (n) => (n === 2 ? "1 εναντίον 1" : `${n} ${n === 1 ? "παίκτης" : "παίκτες"}`),
+  introRules: (top) => [
+    "10 ερωτήσεις με αριθμούς στο ποδόσφαιρο: μεταγραφές, γκολ, θεατές…",
+    "Γράψε τον αριθμό σου πριν τελειώσει ο χρόνος. Κανείς δεν βλέπει την απάντησή σου πριν τελειώσει ο γύρος.",
+    top === 1 ? "Ο πιο κοντινός παίρνει 1 πόντο. Ακριβώς, +1." : `Ο πιο κοντινός παίρνει ${top} πόντους, ο επόμενος ${top - 1}… Ακριβώς, +1.`,
+  ],
+  startsIn: (s) => `Έναρξη σε ${s}`,
+  finalTitle: "Τελικό αποτέλεσμα",
+  youWon: "Νίκησες!",
+  youPlace: (p) => `Τερμάτισες στη θέση ${p}`,
+  tieFirst: "Ισοπαλία στην πρώτη θέση!",
+  colPoints: "Πόντοι",
+  colWins: "Κερδισμένοι γύροι",
+  resultDetail: (wins, error) => `${wins} ${wins === 1 ? "νίκη σε γύρο" : "νίκες σε γύρους"} · μέσο σφάλμα ${error}%`,
+  colError: "Μέσο σφάλμα",
+  backToRoom: "Πίσω στο δωμάτιο",
+  exit: "Έξοδος",
+  scoringPodium: "Βάθρο (3-2-1)",
+  scoringClosest: "Μόνο η κοντινότερη απάντηση",
+  colPlayer: "Παίκτης",
+  cancelledTitle: "Ο αγώνας ακυρώθηκε",
+  cancelledText: "Δεν έμειναν αρκετοί παίκτες για να παίξουν.",
+  hurry: "Μένουν 5 δευτερόλεπτα!",
+  answeredOf: (a, b) => `Απαντήσεις: ${a}/${b}`,
+  willSend: (v) => `Θα στείλεις ${v}`,
+  sending: "Αποστολή",
+  waitingClock: "Αναμονή να τελειώσει ο χρόνος…",
+  leave: "Αποχώρηση από τον αγώνα",
+  leaveConfirm: "Να φύγεις από τον αγώνα; Δεν θα μπορέσεις να επιστρέψεις.",
+  leaveYes: "Αποχώρηση",
+  leaveNo: "Συνέχισε να παίζεις",
+  offline: "Χάθηκε η σύνδεση: επανασύνδεση… Μπορείς να απαντήσεις όταν επιστρέψεις, αν η ερώτηση είναι ακόμη ανοιχτή.",
+  errors: { stale_round: "Αυτή η ερώτηση τελείωσε.", excluded: "Ο αγώνας ξεκίνησε χωρίς εσένα.", not_active: "Ο αγώνας δεν είναι σε εξέλιξη.", rate_limited: "Πολύ γρήγορα. Περίμενε λίγο.", room_not_found: "Αυτός ο αγώνας δεν υπάρχει ή έχει τελειώσει.", not_in_match: "Δεν συμμετέχεις σε αυτόν τον αγώνα.", not_open: "Αυτή η ερώτηση έκλεισε.", already_answered: "Έχεις ήδη απαντήσει σε αυτή την ερώτηση.", withdrawn: "Έχεις ήδη αποχωρήσει από τον αγώνα.", invalid: "Αυτός ο αριθμός δεν είναι έγκυρος για αυτή την ερώτηση.", default: "Δεν στάλθηκε. Δοκίμασε ξανά." },
+  youLeftTitle: "Αποχώρησες από τον αγώνα",
+  youLeftText: "Οι απαντήσεις σου μετρούν, αλλά βρίσκεσαι κάτω από όσους ολοκλήρωσαν.",
+  excludedTitle: "Ο αγώνας ξεκίνησε χωρίς εσένα",
+  excludedText: "Δεν επιβεβαίωσες εγκαίρως. Περίμενε στο δωμάτιο για τον επόμενο αγώνα.",
+  gateTitle: "Περιμένουμε να μπουν όλοι…",
+  gateReady: "Έτοιμος",
+  gateWaiting: "Σύνδεση…",
+  connecting: "Σύνδεση…",
+  retry: "Δοκίμασε ξανά",
+  finishedTitle: "Ο αγώνας τελείωσε",
+  finishedText: "Αυτός ο αγώνας έχει ήδη τελειώσει.",
+};
+
+const COPY: Record<Locale, Copy> = { es, en, ka, tr, ru, pt, de, fr, el };
 export const aproximadoCopy = (locale: string): Copy => COPY[(locale in COPY ? locale : "en") as Locale];
 export type AproximadoCopy = Copy;
 
-const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR", de: "de-DE", fr: "fr-FR" };
+const NUMBER_LOCALE: Record<Locale, string> = { es: "es-AR", en: "en-GB", ka: "ka-GE", tr: "tr-TR", ru: "ru-RU", pt: "pt-BR", de: "de-DE", fr: "fr-FR", el: "el-GR" };
 /** "85,5 M€", "74.500 espectadores": the number in the reader's locale with the question's unit. */
 /** es/en/pt/de pool units take a singular after exactly 1; fr after 0 or 1; ka and tr keep the singular after any number. */
 const SINGULAR_UNIT: Record<string, string> = {
@@ -612,7 +685,7 @@ export function intlNumberLocale(locale: string): string {
 }
 
 /** A French reader writes M€; content can still carry the English form. */
-export const displayUnit = (unit: string, locale: string): string => (locale === "fr" && unit === "€M" ? "M€" : unit);
+export const displayUnit = (unit: string, locale: string): string => (locale === "fr" && unit === "€M" ? "M€" : locale === "el" && unit === "€M" ? "εκατ. €" : unit);
 
 export function formatValue(value: number, rawUnit: string, precision: number, locale: string): string {
   const unit = displayUnit(rawUnit, locale);

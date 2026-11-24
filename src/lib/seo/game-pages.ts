@@ -35,7 +35,7 @@ export interface GamePageEntry {
 }
 
 /** Locales with a public game page body; the rest (tr today) get the hub only and English pages from the cards. */
-export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr", "ru", "pt", "de", "fr"] as const satisfies readonly Locale[];
+export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr", "ru", "pt", "de", "fr", "el"] as const satisfies readonly Locale[];
 export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
 export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
 
@@ -49,47 +49,47 @@ export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO
  * FR (docs/SEO-GAME-NAMING-FR-2026-11-06.md): French search names, accents stripped, apostrophes as hyphens.
  */
 const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
-  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox", ru: "futbolnye-krestiki-noliki", pt: "jogo-da-velha-de-futebol", de: "fussball-tic-tac-toe" , fr: "morpion-foot" },
-  auction: { es: "subasta", ru: "futbolnyy-auktsion", pt: "leilao-de-jogadores", de: "fussball-auktion" , fr: "encheres-foot" },
-  friendly: { es: "partido-amistoso", ru: "viktorina-s-drugom", pt: "quiz-de-futebol-com-amigos", de: "fussball-quiz-mit-freunden" , fr: "quiz-foot-entre-amis" },
-  "true-or-false-football": { es: "verdadero-o-falso", ru: "pravda-ili-lozh", pt: "verdadeiro-ou-falso-futebol", de: "wahr-oder-falsch-fussball" , fr: "vrai-ou-faux-foot" },
-  "higher-or-lower": { es: "higher-or-lower-futbolero", ru: "higher-or-lower", pt: "higher-or-lower", de: "higher-or-lower" , fr: "higher-or-lower" },
-  "card-detective": { es: "cartas-de-jugadores", ru: "ugaday-po-kartochke", pt: "adivinhe-o-jogador-pela-carta", de: "spielerkarte-erraten" , fr: "devine-la-carte-foot" },
-  "guess-the-goal": { es: "adivina-el-gol", ru: "ugaday-gol", pt: "adivinhe-o-gol", de: "tor-erraten" , fr: "devine-le-but" },
-  "who-am-i": { es: "quien-soy", ru: "ugaday-futbolista-po-faktam", pt: "quem-sou-eu-futebol", de: "wer-bin-ich-fussball" , fr: "qui-suis-je-foot" },
-  "career-path": { es: "trayectoria-del-jugador", ru: "ugaday-futbolista-po-karere", pt: "adivinhe-o-jogador-pela-carreira", de: "karrierestationen-erraten" , fr: "devine-le-joueur-avec-les-clubs" },
-  "football-timeline": { es: "linea-de-tiempo", ru: "chto-bylo-ranshe", pt: "o-que-aconteceu-primeiro", de: "fussball-zeitstrahl" , fr: "frise-chronologique-foot" },
-  "football-logic": { es: "logica-futbolera", ru: "futbolnye-zagadki", pt: "charadas-de-futebol", de: "fussballer-bilderraetsel" , fr: "rebus-foot" },
-  "missing-xi": { es: "adivina-el-11", ru: "ugaday-sostav", pt: "adivinhe-a-escalacao", de: "aufstellung-erraten" , fr: "devine-le-11" },
-  "pass-chain": { es: "conectando-jugadores", ru: "soedini-futbolistov", pt: "conectando-jogadores", de: "fussballer-verbinden" , fr: "relie-les-joueurs" },
+  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox", ru: "futbolnye-krestiki-noliki", pt: "jogo-da-velha-de-futebol", de: "fussball-tic-tac-toe" , fr: "morpion-foot", el: "podosfairiki-triliza" },
+  auction: { es: "subasta", ru: "futbolnyy-auktsion", pt: "leilao-de-jogadores", de: "fussball-auktion" , fr: "encheres-foot", el: "dimoprasia-podosfairiston" },
+  friendly: { es: "partido-amistoso", ru: "viktorina-s-drugom", pt: "quiz-de-futebol-com-amigos", de: "fussball-quiz-mit-freunden" , fr: "quiz-foot-entre-amis", el: "podosfairiko-kouiz-me-filous" },
+  "true-or-false-football": { es: "verdadero-o-falso", ru: "pravda-ili-lozh", pt: "verdadeiro-ou-falso-futebol", de: "wahr-oder-falsch-fussball" , fr: "vrai-ou-faux-foot", el: "sosto-i-lathos-podosfairo" },
+  "higher-or-lower": { es: "higher-or-lower-futbolero", ru: "higher-or-lower", pt: "higher-or-lower", de: "higher-or-lower" , fr: "higher-or-lower", el: "higher-or-lower" },
+  "card-detective": { es: "cartas-de-jugadores", ru: "ugaday-po-kartochke", pt: "adivinhe-o-jogador-pela-carta", de: "spielerkarte-erraten" , fr: "devine-la-carte-foot", el: "vres-ton-paikti-apo-tin-karta" },
+  "guess-the-goal": { es: "adivina-el-gol", ru: "ugaday-gol", pt: "adivinhe-o-gol", de: "tor-erraten" , fr: "devine-le-but", el: "vres-to-gkol" },
+  "who-am-i": { es: "quien-soy", ru: "ugaday-futbolista-po-faktam", pt: "quem-sou-eu-futebol", de: "wer-bin-ich-fussball" , fr: "qui-suis-je-foot", el: "poios-eimai-podosfairo" },
+  "career-path": { es: "trayectoria-del-jugador", ru: "ugaday-futbolista-po-karere", pt: "adivinhe-o-jogador-pela-carreira", de: "karrierestationen-erraten" , fr: "devine-le-joueur-avec-les-clubs", el: "vres-ton-paikti-apo-tin-kariera" },
+  "football-timeline": { es: "linea-de-tiempo", ru: "chto-bylo-ranshe", pt: "o-que-aconteceu-primeiro", de: "fussball-zeitstrahl" , fr: "frise-chronologique-foot", el: "podosfairiki-xronogrammi" },
+  "football-logic": { es: "logica-futbolera", ru: "futbolnye-zagadki", pt: "charadas-de-futebol", de: "fussballer-bilderraetsel" , fr: "rebus-foot", el: "podosfairikoi-grifoi" },
+  "missing-xi": { es: "adivina-el-11", ru: "ugaday-sostav", pt: "adivinhe-a-escalacao", de: "aufstellung-erraten" , fr: "devine-le-11", el: "poios-leipei-apo-tin-endekada" },
+  "pass-chain": { es: "conectando-jugadores", ru: "soedini-futbolistov", pt: "conectando-jogadores", de: "fussballer-verbinden" , fr: "relie-les-joueurs", el: "syndese-tous-podosfairistes" },
   // en/tr renamed 2026-10-05 to what people search ("closest wins", "en yakın tahmin oyunu"); ka keeps the brand slug.
-  "stat-sniper": { es: "aproximado-futbolero", en: "closest-wins", tr: "en-yakin-tahmin-oyunu", ru: "ugaday-statistiku", pt: "quem-chega-mais-perto", de: "schaetzfragen-fussball" , fr: "au-plus-proche-foot" },
-  ranked: { es: "quien-sabe-mas-de-futbol", ru: "viktorina-s-sopernikom", pt: "quem-sabe-mais-de-futebol", de: "fussball-quiz-duell" , fr: "quiz-foot-1v1" },
-  "free-kicks": { es: "tiros-libres", ru: "shtrafnye-udary", pt: "cobranca-de-falta", de: "freistoss-spiel" , fr: "jeu-de-coup-franc" },
-  "road-to-goal": { es: "camino-al-gol", ru: "doroga-k-golu", pt: "rumo-ao-gol", de: "weg-zum-tor" , fr: "direction-le-but" },
-  "trivia-mines": { es: "minas-con-preguntas", ru: "minnoe-pole", pt: "minas-de-perguntas", de: "quiz-minenfeld" , fr: "quiz-terrain-mine" },
-  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi", ru: "futbolnyy-saper", pt: "campo-minado-de-futebol", de: "fussball-minesweeper" , fr: "demineur-foot" },
-  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu", ru: "ugaday-futbolista-po-podskazkam", pt: "adivinhe-o-jogador-pelas-dicas", de: "fussballer-erraten-mit-hinweisen" , fr: "devine-le-joueur-avec-des-indices" },
-  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu", ru: "kto-bolshe-nazovet", pt: "quem-lembra-mais", de: "nenne-alle" , fr: "cite-les-tous" },
-  "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu", ru: "na-kakoy-minute-gol", pt: "em-que-minuto-foi-o-gol", de: "in-welcher-minute-fiel-das-tor" , fr: "a-quelle-minute" },
-  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki", ru: "futbolnaya-ruletka", pt: "roleta-de-futebol", de: "fussball-gluecksrad" , fr: "roue-du-foot" },
+  "stat-sniper": { es: "aproximado-futbolero", en: "closest-wins", tr: "en-yakin-tahmin-oyunu", ru: "ugaday-statistiku", pt: "quem-chega-mais-perto", de: "schaetzfragen-fussball" , fr: "au-plus-proche-foot", el: "poios-plisiazei-perissotero" },
+  ranked: { es: "quien-sabe-mas-de-futbol", ru: "viktorina-s-sopernikom", pt: "quem-sabe-mais-de-futebol", de: "fussball-quiz-duell" , fr: "quiz-foot-1v1", el: "podosfairiko-kouiz-1v1" },
+  "free-kicks": { es: "tiros-libres", ru: "shtrafnye-udary", pt: "cobranca-de-falta", de: "freistoss-spiel" , fr: "jeu-de-coup-franc", el: "ekteleseis-faoul" },
+  "road-to-goal": { es: "camino-al-gol", ru: "doroga-k-golu", pt: "rumo-ao-gol", de: "weg-zum-tor" , fr: "direction-le-but", el: "dromos-gia-to-gkol" },
+  "trivia-mines": { es: "minas-con-preguntas", ru: "minnoe-pole", pt: "minas-de-perguntas", de: "quiz-minenfeld" , fr: "quiz-terrain-mine", el: "narkopedio-erotiseon" },
+  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi", ru: "futbolnyy-saper", pt: "campo-minado-de-futebol", de: "fussball-minesweeper" , fr: "demineur-foot", el: "podosfairikos-narkalieftis" },
+  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu", ru: "ugaday-futbolista-po-podskazkam", pt: "adivinhe-o-jogador-pelas-dicas", de: "fussballer-erraten-mit-hinweisen" , fr: "devine-le-joueur-avec-des-indices", el: "vres-ton-podosfairisti-me-stoixeia" },
+  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu", ru: "kto-bolshe-nazovet", pt: "quem-lembra-mais", de: "nenne-alle" , fr: "cite-les-tous", el: "vres-tous-olous" },
+  "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu", ru: "na-kakoy-minute-gol", pt: "em-que-minuto-foi-o-gol", de: "in-welcher-minute-fiel-das-tor" , fr: "a-quelle-minute", el: "se-poio-lepto-mpike-to-gkol" },
+  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki", ru: "futbolnaya-ruletka", pt: "roleta-de-futebol", de: "fussball-gluecksrad" , fr: "roue-du-foot", el: "podosfairikos-troxos" },
   // Names follow what people search (2026-10-08): "played for both clubs", "jugador en común", "ortak futbolcu oyunu",
   // "football name chain", "son harfle futbolcu". KA follows EN.
-  "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu", ru: "igravshie-za-oba-kluba", pt: "jogador-em-comum", de: "spieler-fuer-beide-vereine" , fr: "joueur-en-commun" },
-  "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu", ru: "futbolisty-na-poslednyuyu-bukvu", pt: "jogo-da-ultima-letra", de: "fussballer-wortkette" , fr: "jeu-de-la-derniere-lettre" },
-  "money-drop": { ru: "monety-na-otvety", pt: "moedas-nas-respostas", de: "muenzen-verteilen" , fr: "repartis-tes-pieces" },
-  countdown: { ru: "nazovi-futbolistov", pt: "fale-jogadores-de-futebol", de: "fussballer-aufzaehlen" , fr: "cite-le-plus-de-joueurs" },
-  imposter: { ru: "naydi-lishnego", pt: "encontre-o-intruso", de: "wer-passt-nicht-in-die-reihe" , fr: "trouve-l-intrus-foot" },
+  "played-for-both-clubs": { es: "jugador-en-comun", tr: "ortak-futbolcu-oyunu", ru: "igravshie-za-oba-kluba", pt: "jogador-em-comum", de: "spieler-fuer-beide-vereine" , fr: "joueur-en-commun", el: "epaiksan-kai-stis-dyo-omades" },
+  "football-name-chain": { es: "cadena-de-futbolistas", tr: "son-harfle-futbolcu", ru: "futbolisty-na-poslednyuyu-bukvu", pt: "jogo-da-ultima-letra", de: "fussballer-wortkette" , fr: "jeu-de-la-derniere-lettre", el: "alysida-podosfairiston" },
+  "money-drop": { ru: "monety-na-otvety", pt: "moedas-nas-respostas", de: "muenzen-verteilen" , fr: "repartis-tes-pieces", el: "moirase-ta-nomismata" },
+  countdown: { ru: "nazovi-futbolistov", pt: "fale-jogadores-de-futebol", de: "fussballer-aufzaehlen" , fr: "cite-le-plus-de-joueurs", el: "onomase-podosfairistes" },
+  imposter: { ru: "naydi-lishnego", pt: "encontre-o-intruso", de: "wer-passt-nicht-in-die-reihe" , fr: "trouve-l-intrus-foot", el: "poios-den-tairiazei" },
   // Google Suggest 2026-10-15: "adivina el top 10 de fútbol" (ar/es/mx), "futbol top 10" (tr); en/ka "football tenable"; ru "угадай топ-10".
-  "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10", pt: "acerte-o-top-10", de: "top-10-erraten" , fr: "quiz-top-10-foot" },
-  "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki", pt: "corrida-das-selecoes", de: "nationen-rennen" , fr: "course-des-nations" },
-  "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol", de: "fussball-codenames" , fr: "codenames-foot" },
-  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira", de: "welche-aussage-ist-falsch" , fr: "trouve-le-faux" },
-  "football-connections": { es: "conexiones-futboleras", tr: "futbol-connections", ru: "futbolnye-svyazi", pt: "conexoes-do-futebol", de: "fussball-connections" , fr: "connections-foot" },
+  "football-tenable": { es: "adivina-el-top-10", tr: "futbol-top-10", ru: "ugaday-top-10", pt: "acerte-o-top-10", de: "top-10-erraten" , fr: "quiz-top-10-foot", el: "vres-to-top-10" },
+  "football-horserace": { es: "carrera-de-caballos-futbolera", tr: "futbol-at-yarisi", ru: "futbolnye-skachki", pt: "corrida-das-selecoes", de: "nationen-rennen" , fr: "course-des-nations", el: "koursa-ethnikon" },
+  "football-codenames": { es: "codenames-futbolero", tr: "futbol-codenames", ru: "kodovye-imena-futbol", pt: "codenames-futebol", de: "fussball-codenames" , fr: "codenames-foot", el: "codenames-podosfairou" },
+  "football-odd-one-out": { es: "dato-falso-futbolero", tr: "hangisi-yanlis", ru: "lozhnyj-fakt", pt: "qual-e-a-mentira", de: "welche-aussage-ist-falsch" , fr: "trouve-le-faux", el: "poio-einai-to-psema" },
+  "football-connections": { es: "conexiones-futboleras", tr: "futbol-connections", ru: "futbolnye-svyazi", pt: "conexoes-do-futebol", de: "fussball-connections" , fr: "connections-foot", el: "connections-podosfairou" },
   // Owner brief 2026-10-28: every name keeps the word for darts. KA follows EN.
-  "football-darts-501": { es: "dardos-futboleros-501", tr: "futbol-dart-oyunu", ru: "futbolnyy-darts-501", pt: "dardos-com-jogadores-de-futebol", de: "fussball-darts-501" , fr: "flechettes-foot-501" },
+  "football-darts-501": { es: "dardos-futboleros-501", tr: "futbol-dart-oyunu", ru: "futbolnyy-darts-501", pt: "dardos-com-jogadores-de-futebol", de: "fussball-darts-501" , fr: "flechettes-foot-501", el: "podosfairika-velakia-501" },
   // Working names: the owner has not chosen the final ones. KA follows EN.
-  "football-draft-game": { es: "draft-de-futbol", tr: "futbol-draft-oyunu", ru: "futbolnyy-draft", pt: "draft-de-futebol", de: "fussball-draft-spiel", fr: "draft-de-foot" },
+  "football-draft-game": { es: "draft-de-futbol", tr: "futbol-draft-oyunu", ru: "futbolnyy-draft", pt: "draft-de-futebol", de: "fussball-draft-spiel", fr: "draft-de-foot", el: "podosfairiko-draft" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
@@ -109,7 +109,7 @@ const PREVIOUS_FOLDER: Partial<Record<Locale, { folder: string; dailyCollection:
   tr: { folder: "football-games", dailyCollection: "daily-challenges" },
 };
 
-const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna", ru: "Играть", pt: "Jogar agora", de: "Jetzt spielen", fr: "Jouer maintenant" } as const;
+const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna", ru: "Играть", pt: "Jogar agora", de: "Jetzt spielen", fr: "Jouer maintenant", el: "Παίξε τώρα" } as const;
 
 function daily(
   type: keyof typeof DAILY_CHALLENGE_SLUGS,
@@ -130,6 +130,7 @@ function daily(
       pt: { ...copy.pt, cta: cta.pt },
       de: { ...copy.de, cta: cta.de },
       fr: { ...copy.fr, cta: cta.fr },
+      el: { ...copy.el, cta: cta.el },
     },
   };
 }
@@ -155,6 +156,7 @@ function mode(
       pt: { ...copy.pt, cta: cta.pt },
       de: { ...copy.de, cta: cta.de },
       fr: { ...copy.fr, cta: cta.fr },
+      el: { ...copy.el, cta: cta.el },
     },
   };
 }
@@ -225,6 +227,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis le premier indice et saisis ta réponse.", "Tu t’es trompé ? Le prochain indice se débloque, mais rapporte moins de points.", "Devine les 5 joueurs avant la fin du chrono."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Ποιος είμαι; Βρες τον ποδοσφαιριστή σε 5 στοιχεία",
+      metaDescription: "Το παιχνίδι «Ποιος είμαι;»: μάντεψε ποιος είμαι από πέντε στοιχεία για έναν ποδοσφαιριστή. Όσο λιγότερα χρειαστείς, τόσο περισσότερους πόντους κερδίζεις.",
+      title: "Ποιος είμαι; Βρες τον ποδοσφαιριστή σε 5 στοιχεία",
+      intro: "Πέντε στοιχεία για έναν ποδοσφαιριστή. Βρες τον όσο πιο νωρίς μπορείς: όσο λιγότερα στοιχεία χρειαστείς, τόσο περισσότερους πόντους κερδίζεις.",
+      howToPlay: ["Διάβασε το πρώτο στοιχείο και γράψε την απάντησή σου.", "Έκανες λάθος; Ξεκλειδώνει το επόμενο στοιχείο, που αξίζει λιγότερους πόντους.", "Βρες και τους πέντε ποδοσφαιριστές πριν τελειώσει ο χρόνος."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   daily("moneyDrop", {
     en: {
@@ -290,6 +300,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Tu commences avec des pièces. Répartis-les sur les réponses auxquelles tu fais confiance ; celles de la bonne réponse passent à la question suivante.",
       howToPlay: ["Lis la question et ses 4 réponses.", "Répartis tes pièces sur une ou plusieurs réponses.", "Seules les pièces de la bonne réponse restent. Garde-les pour les 5 questions."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
+    },
+    el: {
+      metaTitle: "Μοίρασε τα νομίσματα: ποδοσφαιρικό κουίζ | QuizBall",
+      metaDescription: "Μοίρασε νομίσματα σε τέσσερις απαντήσεις στο ποδοσφαιρικό κουίζ. Κράτησε όσα μείνουν στη σωστή απάντηση και συνέχισε. Πέντε ερωτήσεις κάθε μέρα.",
+      title: "Μοίρασε τα νομίσματα: ποδοσφαιρικό κουίζ",
+      intro: "Ξεκινάς με νομίσματα. Μοίρασέ τα στις απαντήσεις που εμπιστεύεσαι· όσα βρεθούν στη σωστή απάντηση περνούν στην επόμενη ερώτηση.",
+      howToPlay: ["Διάβασε την ερώτηση και τις τέσσερις επιλογές.", "Βάλε νομίσματα σε μία ή περισσότερες απαντήσεις.", "Μόνο τα νομίσματα στη σωστή απάντηση μένουν. Κράτησέ τα για πέντε ερωτήσεις."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
     },
   }),
   daily("trueFalse", {
@@ -357,6 +375,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis l’affirmation.", "Appuie sur « Vrai » ou « Faux » avant la fin du chrono.", "Chaque bonne réponse compte pour ton score du jour."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Σωστό ή λάθος; Το ποδοσφαιρικό κουίζ | QuizBall",
+      metaDescription: "Κουίζ γνώσεων για το ποδόσφαιρο: απάντησε σωστό ή λάθος σε κάθε δήλωση μέσα σε 15 δευτερόλεπτα. Παίξε καθημερινά το παιχνίδι με νέα ερωτήματα.",
+      title: "Σωστό ή λάθος; Το ποδοσφαιρικό κουίζ",
+      intro: "Μία δήλωση για το ποδόσφαιρο, 15 δευτερόλεπτα και δύο κουμπιά. Εμπιστεύσου το ένστικτό σου και συγκέντρωσε σωστές απαντήσεις.",
+      howToPlay: ["Διάβασε τη δήλωση.", "Πάτησε «Σωστό» ή «Λάθος» πριν τελειώσει ο χρόνος.", "Κάθε σωστή απάντηση μετρά στη σημερινή βαθμολογία σου."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   daily("countdown", {
     en: {
@@ -422,6 +448,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Une catégorie, un chrono qui tourne et une case vide. Cite toutes les réponses valides qui te viennent avant la fin du temps.",
       howToPlay: ["Lis la catégorie, par exemple le onze de Manchester United en finale 2008.", "Saisis les réponses une par une ; chaque bonne réponse apparaît dans ta liste.", "Ton score correspond au nombre de réponses valides sur toutes les manches."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
+    },
+    el: {
+      metaTitle: "Ονόμασε ποδοσφαιριστές: πόσους ξέρεις κόντρα στον χρόνο;",
+      metaDescription: "Βρες ποδοσφαιριστές από κάθε γράμμα και γράψε ονόματα ποδοσφαιριστών για κάθε κατηγορία πριν τελειώσει ο χρόνος. Νέα πρόκληση κάθε μέρα στο QuizBall.",
+      title: "Ονόμασε ποδοσφαιριστές: πόσους ξέρεις κόντρα στον χρόνο;",
+      intro: "Μια κατηγορία, ένα χρονόμετρο που μετρά αντίστροφα και ένα κενό πεδίο. Γράψε κάθε σωστό όνομα που σου έρχεται πριν τελειώσει ο χρόνος.",
+      howToPlay: ["Διάβασε την κατηγορία, για παράδειγμα την ενδεκάδα της Manchester United στον τελικό του 2008.", "Γράψε ονόματα ένα ένα· κάθε σωστό εμφανίζεται στη λίστα σου.", "Η βαθμολογία είναι τα σωστά ονόματα σε όλους τους γύρους."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
     },
   }),
   daily("careerPath", {
@@ -489,6 +523,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Observe la suite de clubs.", "Saisis le joueur auquel tu penses.", "Chaque bonne réponse compte pour ton score du jour."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Βρες τον παίκτη από την καριέρα του",
+      metaDescription: "Μάντεψε τον παίκτη από την καριέρα του: ακολούθησε τους συλλόγους στη σειρά και βρες τον παίκτη από τη μεταγραφή. Νέα πρόκληση κάθε μέρα στο QuizBall.",
+      title: "Βρες τον παίκτη από την καριέρα του",
+      intro: "Οι σύλλογοι του παίκτη εμφανίζονται από τον παλαιότερο στον νεότερο. Ποιος ποδοσφαιριστής ακολούθησε αυτή τη διαδρομή; Γράψε το όνομα και μάθε.",
+      howToPlay: ["Μελέτησε τη σειρά των συλλόγων.", "Γράψε ποιος πιστεύεις ότι είναι ο παίκτης.", "Οι σωστές απαντήσεις μετρούν στη σημερινή βαθμολογία σου."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   daily("highLow", {
     en: {
@@ -554,6 +596,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Deux joueurs de foot côte à côte et une statistique. Devine lequel a la valeur la plus élevée et prolonge ta série.",
       howToPlay: ["Lis la statistique comparée.", "Choisis le joueur dont la valeur te semble la plus élevée.", "Chaque bonne réponse prolonge la manche."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
+    },
+    el: {
+      metaTitle: "Higher or Lower: ποιος ποδοσφαιριστής αξίζει περισσότερο;",
+      metaDescription: "Higher or Lower: σύγκρινε την αξία ποδοσφαιριστών στο Transfermarkt. Παίξε ποδοσφαιρικό κουίζ και βρες ποιος είναι ο πιο ακριβός ποδοσφαιριστής.",
+      title: "Higher or Lower: ποιος ποδοσφαιριστής αξίζει περισσότερο;",
+      intro: "Δύο ποδοσφαιριστές δίπλα δίπλα και ένα στατιστικό. Διάλεξε ποιος έχει τη μεγαλύτερη αξία και κράτησε το σερί σου.",
+      howToPlay: ["Διάβασε ποιο στατιστικό συγκρίνεται.", "Διάλεξε τον παίκτη που πιστεύεις ότι έχει τη μεγαλύτερη αξία.", "Οι σωστές επιλογές συνεχίζουν τον γύρο."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
     },
   }),
   daily("imposter", {
@@ -621,6 +671,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis la question et la liste de réponses.", "Sélectionne chaque option qui te semble correcte.", "Valide ta sélection : seul un choix parfaitement exact rapporte des points."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Ποιος δεν ταιριάζει; Βρες τον παρείσακτο | QuizBall",
+      metaDescription: "Παίξε το «Ποιος δεν ταιριάζει;» και βρες ποιο δεν ταιριάζει ανάμεσα σε ποδοσφαιρικές επιλογές. Έλεγξε τις δηλώσεις, εντόπισε την ψεύτικη και πρόλαβε τον χρόνο.",
+      title: "Ποιος δεν ταιριάζει; Βρες τον παρείσακτο",
+      intro: "Κάθε επιλογή φαίνεται πιθανή, αλλά κάποιες δεν ανήκουν στην ομάδα. Διάλεξε ακριβώς όσες ταιριάζουν και τίποτα άλλο.",
+      howToPlay: ["Διάβασε την ερώτηση και τη λίστα επιλογών.", "Πάτησε κάθε επιλογή που πιστεύεις ότι είναι σωστή.", "Υπόβαλε την απάντησή σου· βαθμολογείται μόνο η ακριβής αντιστοιχία."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   daily("statSniper", {
     en: {
@@ -686,6 +744,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Dix chiffres réels du foot, des transferts à l’affluence d’une finale de coupe. Joue au défi du jour ou contre des amis : le plus proche gagne la manche.",
       howToPlay: ["Lis la question chiffrée : transfert, valeur marchande, buts d’un joueur ou affluence.", "Donne ta réponse : règle le curseur dans le défi du jour ou saisis-la en jouant avec des amis.", "La réponse la plus proche rapporte le plus de points ; une réponse exacte donne un bonus."],
       reward: "Gagne des pièces et de l’XP dans le défi du jour et monte au classement ; avec des amis, joue pour le podium.",
+    },
+    el: {
+      metaTitle: "Ποιος πλησιάζει περισσότερο; Ποδοσφαιρικό κουίζ με αριθμούς",
+      metaDescription: "Μάντεψε ποδοσφαιρικούς αριθμούς, από μεταγραφές και γκολ έως θεατές σε τελικούς. Παίξε μόνος ή με 2–6 φίλους στην πρόκληση· κερδίζει η πιο κοντινή απάντηση.",
+      title: "Ποιος πλησιάζει περισσότερο; Ποδοσφαιρικό κουίζ με αριθμούς",
+      intro: "Δέκα πραγματικοί ποδοσφαιρικοί αριθμοί, από αξίες μεταγραφών μέχρι κόσμο σε τελικούς κυπέλλου. Πλησίασε όσο μπορείς: παίξε μόνος στην καθημερινή πρόκληση ή με φίλους, όπου η πιο κοντινή απάντηση κερδίζει τον γύρο.",
+      howToPlay: ["Διάβασε την ερώτηση με τον αριθμό: αξία μεταγραφής, αξία παίκτη, γκολ ή θεατές.", "Δώσε την απάντησή σου: σύρε στον αριθμό στην καθημερινή πρόκληση ή γράψε τον όταν παίζεις με φίλους.", "Η πιο κοντινή απάντηση παίρνει τους περισσότερους πόντους· η ακριβής δίνει επιπλέον."],
+      reward: "Κέρδισε νομίσματα και XP στην καθημερινή πρόκληση και ανέβα στην κατάταξη· με φίλους παίξε για την κορυφή.",
     },
   }),
   daily("passChain", {
@@ -753,6 +819,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Saisis un joueur qui a partagé un club avec le dernier de la suite.", "Continue jusqu’à ce qu’un joueur de la suite ait joué dans le même club que la cible.", "Relie-les avec le parcours le plus court possible pour obtenir le score parfait."],
       reward: "Gagne des pièces et de l’XP pour chaque parcours terminé.",
     },
+    el: {
+      metaTitle: "Σύνδεσε τους ποδοσφαιριστές μέσω συμπαικτών",
+      metaDescription: "Σύνδεσε δύο ποδοσφαιριστές μέσω συμπαικτών του ίδιου συλλόγου. Κάθε μέρα έχεις δύο αλυσίδες· παίξε μόνος ή με φίλους και χρησιμοποίησε λίγους συνδέσμους.",
+      title: "Σύνδεσε τους ποδοσφαιριστές μέσω συμπαικτών",
+      intro: "Δύο παίκτες, μία αλυσίδα. Πέρνα από συμπαίκτες που έπαιξαν στον ίδιο σύλλογο μέχρι να φτάσεις στον στόχο.",
+      howToPlay: ["Γράψε έναν παίκτη που έπαιξε στον ίδιο σύλλογο με τον προηγούμενο της αλυσίδας.", "Συνέχισε μέχρι κάποιος στην αλυσίδα να έχει παίξει στον ίδιο σύλλογο με τον τελικό παίκτη.", "Πέτυχε το ελάχιστο δυνατό μήκος αλυσίδας για τέλεια βαθμολογία."],
+      reward: "Κέρδισε νομίσματα και XP για κάθε αλυσίδα που ολοκληρώνεις.",
+    },
   }),
   daily("missingXi", {
     en: {
@@ -818,6 +892,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Une compo de légende dont les noms sont cachés. Complète chaque maillot de mémoire.",
       howToPlay: ["Appuie sur un maillot vide sur le terrain.", "Saisis le titulaire à ce poste : son nom de famille suffit.", "Complète les 11 avant la fin du chrono ou avant tes 3 erreurs."],
       reward: "Gagne des pièces et de l’XP pour chaque joueur que tu retrouves.",
+    },
+    el: {
+      metaTitle: "Ποιος λείπει από την ενδεκάδα; Θρυλικές ενδεκάδες",
+      metaDescription: "Βρες την ενδεκάδα του Euro 2004 και δοκίμασε την καλύτερη ενδεκάδα όλων των εποχών. Συμπλήρωσε κάθε θέση με τον βασικό ποδοσφαιριστή πριν τελειώσει ο χρόνος.",
+      title: "Ποιος λείπει από την ενδεκάδα; Θρυλικές ενδεκάδες",
+      intro: "Μια θρυλική ενδεκάδα με κρυμμένα ονόματα. Συμπλήρωσε κάθε φανέλα από μνήμης.",
+      howToPlay: ["Πάτησε μια άδεια φανέλα στο γήπεδο.", "Γράψε τον παίκτη που ξεκίνησε εκεί· αρκεί το επώνυμο.", "Συμπλήρωσε και τις 11 θέσεις πριν τελειώσει ο χρόνος ή εξαντληθούν τα τρία λάθη σου."],
+      reward: "Κέρδισε νομίσματα και XP για κάθε φανέλα που συμπληρώνεις.",
     },
   }),
   daily("footballLogic", {
@@ -885,6 +967,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Observe les deux images.", "Devine le joueur qu’elles désignent.", "Saisis son nom avant la fin du chrono."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Ποδοσφαιρικοί γρίφοι: 2 εικόνες, 1 ποδοσφαιριστής | QuizBall",
+      metaDescription: "Λύσε γρίφους λογικής με εικόνες και βρες τους γρίφους ποδοσφαίρου που οδηγούν σε έναν παίκτη. Συνδύασε τα οπτικά στοιχεία στην καθημερινή πρόκληση.",
+      title: "Ποδοσφαιρικοί γρίφοι: 2 εικόνες, 1 ποδοσφαιριστής",
+      intro: "Δύο εικόνες, ένας κρυμμένος ποδοσφαιριστής. Συνδύασε τα στοιχεία και γράψε το όνομα.",
+      howToPlay: ["Κοίτα και τις δύο εικόνες.", "Σκέψου ποιον παίκτη δείχνουν.", "Γράψε το όνομα πριν τελειώσει το χρονόμετρο."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   daily("putInOrder", {
     en: {
@@ -950,6 +1040,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Quatre événements de football sont dans le désordre. Replace-les dans le bon ordre avant la fin du chrono.",
       howToPlay: ["Lis ce que la manche classe, par exemple les montants de transfert.", "Fais glisser les éléments dans le bon ordre.", "Valide : chaque manche entièrement correcte rapporte des points."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
+    },
+    el: {
+      metaTitle: "Ποδοσφαιρική χρονογραμμή: τι έγινε πρώτα;",
+      metaDescription: "Δοκίμασε μια ποδοσφαιρική χρονογραμμή: βάλε γεγονότα, μεταγραφές και ρεκόρ στη σωστή σειρά και βρες τι έγινε πρώτα. Κάθε μέρα σε περιμένει νέο κουίζ.",
+      title: "Ποδοσφαιρική χρονογραμμή: τι έγινε πρώτα;",
+      intro: "Τέσσερα ποδοσφαιρικά γεγονότα σε λάθος σειρά. Βάλ' τα στη σωστή σειρά πριν τελειώσει ο χρόνος.",
+      howToPlay: ["Διάβασε τι βάζει σε σειρά ο γύρος, για παράδειγμα τις αξίες μεταγραφών.", "Σύρε τα στοιχεία στη σωστή σειρά.", "Υπόβαλε την απάντησή σου· κάθε γύρος που είναι εξ ολοκλήρου σωστός βαθμολογείται."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
     },
   }),
   daily("cardDetective", {
@@ -1017,6 +1115,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Ouvre un indice : note, poste, club ou nation, chacun a son prix en pièces.", "Saisis le nom du joueur dès que tu le reconnais.", "Plus tu gardes de pièces, plus tu marques de points."],
       reward: "Gagne des pièces et de l’XP chaque jour où tu joues.",
     },
+    el: {
+      metaTitle: "Βρες τον παίκτη από την κάρτα | QuizBall",
+      metaDescription: "Βρες κάρτα FC 26 από τα στοιχεία του παίκτη. Άνοιξε μόνο όσα στοιχεία χρειάζεσαι και κράτησε νομίσματα· ανακάλυψε κάρτες ποδοσφαιριστών στο καθημερινό κουίζ.",
+      title: "Βρες τον παίκτη από την κάρτα",
+      intro: "Μια κάρτα ποδοσφαιριστή με όλες τις θέσεις κλειδωμένες. Κάθε στοιχείο κοστίζει νομίσματα: αποκάλυψε όσο λιγότερα μπορείς και βρες τον παίκτη.",
+      howToPlay: ["Άνοιξε ένα στοιχείο: βαθμολογία, θέση, σύλλογος ή εθνικότητα, το καθένα με το κόστος του.", "Γράψε τον παίκτη μόλις τον αναγνωρίσεις.", "Όσα περισσότερα νομίσματα κρατήσεις, τόσο περισσότερους πόντους παίρνεις."],
+      reward: "Κέρδισε νομίσματα και XP κάθε μέρα που παίζεις.",
+    },
   }),
   mode("ranked", "/play", "match", {
     en: {
@@ -1082,6 +1188,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Le cœur de QuizBall : un duel de quiz foot en direct contre un véritable adversaire, avec possession, penalties et classement.",
       howToPlay: ["Lance la recherche et trouve un adversaire en quelques secondes.", "Réponds vite et juste pour garder la possession.", "Remporte le duel pour monter de division et progresser au classement."],
       reward: "Gagne des points de classement, des pièces et de l’XP à chaque match.",
+    },
+    el: {
+      metaTitle: "Ποδοσφαιρικό κουίζ 1v1 online | QuizBall",
+      metaDescription: "Μπες σε ποδοσφαιρικό κουίζ 1v1 online και αντιμετώπισε πραγματικό αντίπαλο. Κράτησε την κατοχή, απάντησε γρήγορα, εκτέλεσε πέναλτι και ανέβα στην κατάταξη.",
+      title: "Ποδοσφαιρικό κουίζ 1v1 online",
+      intro: "Στην καρδιά του QuizBall: ζωντανό ποδοσφαιρικό κουίζ 1v1 απέναντι σε πραγματικό αντίπαλο, με κατοχή, πέναλτι και αγώνα κατάταξης.",
+      howToPlay: ["Μπες στην αναζήτηση αγώνα και βρες αντίπαλο σε λίγα δευτερόλεπτα.", "Απάντησε πιο γρήγορα και σωστά για να κρατήσεις την κατοχή.", "Κέρδισε και ανέβα κατηγορία και θέση στην κατάταξη."],
+      reward: "Κέρδισε βαθμούς κατάταξης, νομίσματα και XP σε κάθε αγώνα.",
     },
   }),
   mode("auction", "/auction", "auction", {
@@ -1149,6 +1263,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Les joueurs apparaissent un par un avec des indices pour les reconnaître.", "Enchéris face aux autres entraîneurs ; l’offre la plus élevée recrute le joueur.", "Complète ta compo sans dépasser le budget.", "L’équipe complète la mieux notée remporte la partie."],
       reward: "Les récompenses en pièces et le rang nécessitent un compte ; les parties en invité servent à t’entraîner.",
     },
+    el: {
+      metaTitle: "Δημοπρασία ποδοσφαιριστών: φτιάξε την ομάδα των ονείρων σου",
+      metaDescription: "Παίξε τη Δημοπρασία ποδοσφαιριστών ως επισκέπτης, χωρίς εγγραφή. Διεκδίκησε παίκτες και φτιάξε ομάδα με το διαθέσιμο όριο· δες τους κανόνες πριν αρχίσεις.",
+      title: "Δημοπρασία ποδοσφαιριστών: φτιάξε την ομάδα των ονείρων σου",
+      intro: "Φτιάξε ποδοσφαιρική ομάδα σε δημοπρασία. Κάνε προσφορές, παρακολούθησε το διαθέσιμο όριο και διάλεξε τους παίκτες που θέλεις. Διάβασε τους κανόνες του γύρου πριν αρχίσεις και παίξε ως επισκέπτης χωρίς εγγραφή.",
+      howToPlay: ["Οι παίκτες εμφανίζονται ένας ένας μαζί με στοιχεία για το ποιοι είναι.", "Ανταγωνίσου τους άλλους προπονητές στις προσφορές· η υψηλότερη προσφορά αποκτά τον παίκτη.", "Συμπλήρωσε την ενδεκάδα σου μέσα στο διαθέσιμο όριο.", "Κερδίζει η καλύτερη πλήρης ομάδα."],
+      reward: "Για ανταμοιβές νομισμάτων και θέση χρειάζεται λογαριασμός· οι δημοπρασίες επισκεπτών είναι για εξάσκηση.",
+    },
   }),
   mode("friendly", "/friend", "match", {
     en: {
@@ -1214,6 +1336,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Joue à un quiz de foot avec un ami. Crée un salon privé ou rejoins-en un avec le lien d’invitation, puis répondez face à face. Les points de classement et les récompenses de la Weekend League sont réservés aux modes compétitifs.",
       howToPlay: ["Crée un salon et partage le lien d’invitation, ou rejoins celui d’un ami.", "Vous répondez tous les deux aux mêmes questions de foot avant la fin du chrono.", "Les bonnes réponses les plus rapides rapportent plus de points.", "Après la dernière question, le total le plus élevé l’emporte."],
       reward: "Les parties entre amis ne rapportent pas de points de classement ; joue pour le plaisir.",
+    },
+    el: {
+      metaTitle: "Ποδοσφαιρικό κουίζ με φίλους | QuizBall",
+      metaDescription: "Παίξε κουίζ με φίλους ή βρες παιχνίδια με φίλους online. Δημιούργησε δωμάτιο ή μπες με πρόσκληση από τον περιηγητή, χωρίς εγγραφή, για αγώνα 1v1 στο QuizBall.",
+      title: "Ποδοσφαιρικό κουίζ με φίλους",
+      intro: "Παίξε ποδοσφαιρικό κουίζ με έναν φίλο. Δημιούργησε δωμάτιο ή μπες με την πρόσκληση και απαντήστε ο ένας απέναντι στον άλλον. Οι βαθμοί κατάταξης και τα έπαθλα του Weekend League ανήκουν στις ανταγωνιστικές λειτουργίες.",
+      howToPlay: ["Δημιούργησε δωμάτιο και μοιράσου τον σύνδεσμο πρόσκλησης ή μπες στο δωμάτιο φίλου.", "Και οι δύο παίκτες απαντούν στις ίδιες ποδοσφαιρικές ερωτήσεις με χρονόμετρο.", "Οι πιο γρήγορες σωστές απαντήσεις δίνουν περισσότερους πόντους.", "Κερδίζει ο παίκτης με τους περισσότερους πόντους μετά την τελευταία ερώτηση."],
+      reward: "Οι αγώνες με φίλους δεν δίνουν βαθμούς κατάταξης· παίξτε για τη χαρά της νίκης.",
     },
   }),
   mode("football-tic-tac-toe", "/tic-tac-toe", "mini-football-grid", {
@@ -1281,6 +1411,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Choisis une case : sa ligne et sa colonne indiquent deux catégories, comme un club et une nation.", "Cite un joueur qui correspond aux deux. Son nom de famille suffit ; les petites fautes de frappe sont acceptées.", "Une bonne réponse te fait prendre la case ; aligne-en 3 pour remporter la partie.", "Une série au meilleur des 3 manches départage les matchs serrés."],
       reward: "Les récompenses en points de classement nécessitent un compte ; les parties en invité servent à t’entraîner.",
     },
+    el: {
+      metaTitle: "Ποδοσφαιρική τρίλιζα online | QuizBall",
+      metaDescription: "Παίξε ποδοσφαιρική τρίλιζα online: βρες παίκτες που ταιριάζουν στις δύο κατηγορίες του ταμπλό, πάρε θέσεις και διεκδίκησε τρεις στη σειρά. Ξεκίνα χωρίς εγγραφή.",
+      title: "Ποδοσφαιρική τρίλιζα online",
+      intro: "Δοκίμασε τις ποδοσφαιρικές γνώσεις σου στο ταμπλό. Διάλεξε ένα τετράγωνο, βρες παίκτη που ταιριάζει και στις δύο κατηγορίες και στόχευσε σε τρία στη σειρά. Ξεκίνα ως επισκέπτης και διάλεξε τις διαθέσιμες ρυθμίσεις.",
+      howToPlay: ["Διάλεξε τετράγωνο: η γραμμή και η στήλη του ορίζουν δύο κατηγορίες, όπως σύλλογο και εθνικότητα.", "Πες έναν παίκτη που ταιριάζει και στις δύο κατηγορίες.", "Το σωστό όνομα παίρνει το τετράγωνο· τρία στη σειρά κερδίζουν τον αγώνα.", "Οι σειρές αγώνων κρίνονται στις δύο νίκες."],
+      reward: "Οι ανταμοιβές βαθμών κατάταξης χρειάζονται λογαριασμό· τα παιχνίδια επισκεπτών είναι για εξάσκηση.",
+    },
   }),
   mode("free-kicks", "/free-kicks", "mini-final-third", {
     en: {
@@ -1346,6 +1484,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Chaque bonne réponse ouvre une zone du but. Place-toi et tire ton coup franc pour remporter des pièces.",
       howToPlay: ["Place tes pièces pour commencer une manche.", "Réponds aux questions pour ouvrir des zones.", "Tire : plus les zones sont ouvertes, plus tu as de chances de marquer."],
       reward: "Remporte des pièces à chaque coup franc marqué.",
+    },
+    el: {
+      metaTitle: "Εκτελέσεις φάουλ: απάντα σωστά και σούταρε | QuizBall",
+      metaDescription: "Ψάχνεις παιχνίδια με εκτελέσεις φάουλ online ή παιχνίδια πέναλτι; Απάντησε σε ποδοσφαιρικές ερωτήσεις, άνοιξε ζώνες στο τέρμα και σούταρε για νομίσματα.",
+      title: "Εκτελέσεις φάουλ: απάντα σωστά και σούταρε",
+      intro: "Κάθε σωστή απάντηση ανοίγει μια ζώνη στο τέρμα. Μετά εκτέλεσε το φάουλ και παίξε για νομίσματα.",
+      howToPlay: ["Βάλε νομίσματα για να αρχίσεις τον γύρο.", "Απάντησε στις ερωτήσεις για να ανοίξεις ζώνες.", "Σούταρε· όσο περισσότερες ζώνες είναι ανοιχτές, τόσο καλύτερα."],
+      reward: "Κέρδισε νομίσματα σε κάθε εύστοχο σουτ.",
     },
   }),
   mode("road-to-goal", "/road-to-goal", "mini-road-to-goal", {
@@ -1413,6 +1559,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Place tes pièces et engage la manche.", "Réponds pour avancer de zone en zone.", "Sécurise tes pièces à tout moment ou marque un but pour le multiplicateur maximal."],
       reward: "Remporte des pièces à chaque avancée.",
     },
+    el: {
+      metaTitle: "Δρόμος για το γκολ: απάντα και προχώρα | QuizBall",
+      metaDescription: "Προχώρα την μπάλα στο γήπεδο με κάθε σωστή απάντηση, κλείδωσε τα νομίσματα ή συνέχισε για το γκολ. Παίξε τον Δρόμο για το γκολ και κέρδισε νομίσματα.",
+      title: "Δρόμος για το γκολ: απάντα και προχώρα",
+      intro: "Ξεκίνα από το δικό σου μισό. Κάθε σωστή απάντηση προχωρά την μπάλα· κάθε βήμα φέρνει περισσότερα νομίσματα. Κλείδωσέ τα ή συνέχισε για γκολ.",
+      howToPlay: ["Βάλε νομίσματα και ξεκίνα.", "Απάντησε για να προχωρήσεις ζώνη ζώνη.", "Κλείδωσε τα νομίσματα όποτε θέλεις ή σκόραρε για τον μεγαλύτερο πολλαπλασιαστή."],
+      reward: "Κέρδισε νομίσματα με κάθε βήμα μπροστά.",
+    },
   }),
   mode("guess-the-goal", "/guess-the-goal", "mini-guess-the-goal", {
     en: {
@@ -1478,6 +1632,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Un but célèbre se rejoue sur un tableau tactique, action après action, avec les noms cachés. Observe les passes et les courses, puis devine le but avant la finition.",
       howToPlay: ["Observe l’action se construire sur le tableau.", "Choisis le but parmi 4 propositions.", "Regarde le vrai clip, puis réponds à la question bonus.", "5 buts par jour."],
       reward: "Joue gratuitement sans compte ; connecte-toi pour gagner des pièces et de l’XP à chaque but deviné du premier coup.",
+    },
+    el: {
+      metaTitle: "Βρες το γκολ: αναγνωρίζεις το θρυλικό γκολ; | QuizBall",
+      metaDescription: "Θυμάσαι το γκολ Χαριστέα; Βρες θρυλικά γκολ από την κίνηση στον πίνακα τακτικής και παρακολούθησε το πραγματικό βίντεο. Πέντε γκολ κάθε μέρα, δωρεάν.",
+      title: "Βρες το γκολ: αναγνωρίζεις το θρυλικό γκολ;",
+      intro: "Ένα διάσημο γκολ αναπαράγεται στον πίνακα τακτικής, κίνηση κίνηση, με κρυμμένα ονόματα. Διάβασε τις πάσες και τις κινήσεις και διάλεξε ποιο είναι πριν αποκαλυφθεί το τελείωμα.",
+      howToPlay: ["Παρακολούθησε τη φάση να ξεδιπλώνεται στο ταμπλό.", "Διάλεξε το γκολ από τέσσερις επιλογές.", "Δες το πραγματικό βίντεο και απάντησε στην επιπλέον ερώτηση.", "Πέντε γκολ κάθε μέρα."],
+      reward: "Παίξε δωρεάν χωρίς εγγραφή· συνδέσου για να κερδίζεις νομίσματα και XP όταν βρίσκεις πρώτος κάθε γκολ.",
     },
   }),
   mode("football-minesweeper", "/buscaminas", "buscaminas", {
@@ -1545,6 +1707,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis l’indice : une saison de club, les joueurs d’une finale, un lieu de naissance…", "Appuie sur les joueurs qui correspondent. Chaque bonne réponse ajoute un point au total de la manche.", "Si tu touches une mine, tu perds les points de la manche. Sécurise-les quand tu veux.", "Trouve les 12 pour réussir la manche et gagner un bonus de +3. Partage tes 5 cases."],
       reward: "Joue au plateau de la veille sans compte ; connecte-toi pour jouer celui du jour, garder ta série et apparaître au classement quotidien.",
     },
+    el: {
+      metaTitle: "Ποδοσφαιρικός ναρκαλιευτής (Football Minesweeper) | QuizBall",
+      metaDescription: "Football Minesweeper online: βρες τους 12 παίκτες που ταιριάζουν σε 5 γύρους και απόφυγε τις 4 νάρκες. Παίξε καθημερινά ή συνέχισε σε προαιρετική επέκταση.",
+      title: "Ποδοσφαιρικός ναρκαλιευτής (Football Minesweeper)",
+      intro: "Κάθε γύρος δείχνει 16 ποδοσφαιριστές και ένα στοιχείο. Οι 12 ταιριάζουν, οι τέσσερις είναι νάρκες. Βρες τους σωστούς και κλείδωσε τους πόντους σου πριν πατήσεις νάρκη. Η καθημερινή διαδρομή έχει πέντε γρήγορους γύρους· έπειτα ακολουθούν 15 δυσκολότεροι γύροι επέκτασης.",
+      howToPlay: ["Διάβασε το στοιχείο: μια σεζόν συλλόγου, το ρόστερ τελικού ή τον τόπο γέννησης…", "Πάτησε τους παίκτες που ταιριάζουν. Κάθε εύρεση προσθέτει έναν πόντο στον γύρο.", "Αν πετύχεις νάρκη, χάνεις τους πόντους του γύρου. Κλείδωσέ τους όποτε θέλεις.", "Βρες και τους 12 για τέλειο γύρο και μπόνους +3. Μοιράσου τα πέντε τετράγωνά σου."],
+      reward: "Παίξε το χθεσινό ταμπλό χωρίς εγγραφή· συνδέσου για το σημερινό, το σερί σου και την καθημερινή κατάταξη.",
+    },
   }),
   mode("football-clues", "/pistas", "pistas", {
     en: {
@@ -1610,6 +1780,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Un joueur de foot caché et 10 indices, du plus difficile au plus facile. Révèle-les un à un, saisis son nom de famille dès que tu le reconnais et marque jusqu’à 10 points. 10 nouveaux joueurs chaque jour.",
       howToPlay: ["Le premier indice est gratuit : nationalité, poste, fait peu précis…", "Révèle les indices un par un. Chaque indice ouvert fait passer les points de 10 à 1.", "Saisis le nom de famille. Une mauvaise réponse te laisse un essai de plus et au plus 3 indices supplémentaires.", "10 joueurs par jour, 100 points au maximum. Partage tes 10 cases."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les indices du jour, ta série et le classement quotidien.",
+    },
+    el: {
+      metaTitle: "Βρες τον ποδοσφαιριστή με 10 στοιχεία | QuizBall",
+      metaDescription: "Παίξε καθημερινό κουίζ με 10 κρυμμένους ποδοσφαιριστές και 10 στοιχεία για τον καθένα. Βρες τον από το πρώτο στοιχείο για 10 πόντους ή παίξε 1v1 online.",
+      title: "Βρες τον ποδοσφαιριστή με 10 στοιχεία",
+      intro: "Ένας κρυμμένος ποδοσφαιριστής και δέκα στοιχεία, από το δυσκολότερο στο ευκολότερο. Άνοιξέ τα ένα ένα, γράψε το επώνυμο όταν τον αναγνωρίσεις και κέρδισε έως 10 πόντους ανά παίκτη. Δέκα νέοι παίκτες κάθε μέρα.",
+      howToPlay: ["Το πρώτο στοιχείο είναι δωρεάν: εθνικότητα, θέση ή μια αόριστη πληροφορία…", "Άνοιγε στοιχεία ένα ένα. Κάθε νέο στοιχείο μειώνει τους διαθέσιμους πόντους από 10 σε 1.", "Γράψε το επώνυμο όταν αναγνωρίσεις τον παίκτη. Ένα λάθος αφήνει μία ακόμη προσπάθεια και έως τρία επιπλέον στοιχεία.", "Δέκα παίκτες την ημέρα, έως 100 πόντοι. Μοιράσου τα δέκα τετράγωνά σου."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τα σημερινά στοιχεία, το σερί σου και την καθημερινή κατάταξη.",
     },
   }),
   mode("guess-the-goal-minute", "/minuto", "minuto", {
@@ -1677,6 +1855,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis la fiche : le match, le score final, la phase et le buteur.", "Saisis la minute du but. Le temps additionnel compte : 90+3 correspond à la 93e minute.", "Minute exacte : 3 points. À 2 minutes près : 2. À 5 minutes près : 1.", "10 buts par jour, 30 points au maximum. Partage tes 10 cases ou défie un ami en duel 1v1."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les buts du jour, ta série et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Σε ποιο λεπτό μπήκε το γκολ; | QuizBall",
+      metaDescription: "Σε ποιο λεπτό μπήκε το γκολ; Μάντεψε 10 γκολ από Μουντιάλ, Champions League και Copa América. Το ακριβές λεπτό δίνει 3 πόντους· παίξε μόνος ή 1v1 με φίλο.",
+      title: "Σε ποιο λεπτό μπήκε το γκολ;",
+      intro: "Ένα διάσημο γκολ, ο αγώνας και ο σκόρερ: εσύ λες το λεπτό. Δέκα γκολ κάθε μέρα από τελικούς Μουντιάλ, βραδιές Champions League και κλασικά Copa América. Το ακριβές λεπτό αξίζει 3 πόντους, η κοντινή απάντηση επίσης βαθμολογείται και μπορείς να προκαλέσεις φίλο σε 1v1 για να βρείτε ποιος πλησιάζει περισσότερο.",
+      howToPlay: ["Διάβασε την κάρτα: αγώνας, τελικό σκορ, φάση και σκόρερ.", "Γράψε το λεπτό που πιστεύεις ότι μπήκε το γκολ. Οι καθυστερήσεις μετρούν: το 90+3 είναι το 93ο λεπτό.", "Ακριβές λεπτό: 3 πόντοι. Απόκλιση έως 2 λεπτά: 2. Έως 5: 1.", "Δέκα γκολ την ημέρα, έως 30 πόντοι. Μοιράσου τα δέκα τετράγωνά σου ή παίξε 1v1 με φίλο."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τα σημερινά γκολ, το σερί σου και την καθημερινή κατάταξη.",
+    },
   }),
   mode("last-answer-standing", "/ultimo", "ultimo", {
     en: {
@@ -1742,6 +1928,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Chaque jour, 5 catégories de foot avec une liste fermée : un effectif de Coupe du monde, les vainqueurs de la Copa Libertadores ou les meilleurs buteurs d’un club. Cite les réponses à la suite tandis que le chrono passe de 20 à 6 secondes. Trois erreurs consécutives ou la fin du temps clôt la catégorie.",
       howToPlay: ["Lis la catégorie : la liste est fermée, chaque réponse est donc juste ou fausse.", "Cite les réponses à la suite. Le chrono démarre à 20 secondes et descend jusqu’à 6.", "Trois erreurs consécutives ou la fin du chrono clôt la catégorie. Chaque réponse vaut 1 point.", "Cite toute la liste pour obtenir un bonus de +5. Partage tes 5 cases."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les catégories du jour, ta série et le classement quotidien.",
+    },
+    el: {
+      metaTitle: "Βρες τους όλους! Ποδοσφαιρικές λίστες κόντρα στον χρόνο",
+      metaDescription: "Πέντε ποδοσφαιρικές λίστες κάθε μέρα, από αποστολές Μουντιάλ έως πρωταθλητές Copa Libertadores. Βρες τους όλους κόντρα στον χρόνο ή παίξε 1v1 με φίλο.",
+      title: "Βρες τους όλους! Ποδοσφαιρικές λίστες κόντρα στον χρόνο",
+      intro: "Κάθε μέρα έχει πέντε ποδοσφαιρικές κατηγορίες με κλειστή λίστα: αποστολή Μουντιάλ, πρωταθλητές Copa Libertadores ή πρώτοι σκόρερ συλλόγου. Ονόμασε τις απαντήσεις διαδοχικά καθώς ο χρόνος μικραίνει από 20 σε 6 δευτερόλεπτα. Τρία λάθη στη σειρά ή η λήξη του χρόνου τελειώνουν την κατηγορία.",
+      howToPlay: ["Διάβασε την κατηγορία: η λίστα είναι κλειστή, άρα κάθε απάντηση είναι σωστή ή λάθος.", "Ονόμασε απαντήσεις διαδοχικά. Το χρονόμετρο αρχίζει στα 20 δευτερόλεπτα και πέφτει στα 6 με κάθε απάντηση.", "Τρία λάθη στη σειρά ή η λήξη του χρόνου τελειώνουν την κατηγορία. Κάθε απάντηση δίνει 1 πόντο.", "Ονόμασε όλη τη λίστα για μπόνους +5. Μοιράσου τα πέντε τετράγωνά σου."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τις σημερινές κατηγορίες, το σερί σου και την καθημερινή κατάταξη.",
     },
   }),
   mode("played-for-both-clubs", "/ortak-futbolcu", "shared-player", {
@@ -1809,6 +2003,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Deux écussons de club apparaissent en même temps.", "Saisis un joueur ayant joué dans les deux clubs. Son nom de famille suffit ; les petites fautes de frappe sont acceptées.", "Tu as 20 secondes par paire. Une mauvaise réponse te bloque 1 seconde : répondre au hasard ne sert à rien.", "Trouve une paire pour marquer 1 point. À égalité, le joueur le plus rapide passe devant. Partage ton résultat ou défie tes amis dans un salon."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les 10 paires du jour et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Παίκτες που έπαιξαν και στις δύο ομάδες | QuizBall",
+      metaDescription: "Ψάχνεις παίκτες που έπαιξαν σε Ολυμπιακό και Παναθηναϊκό; Βρες όσους αγωνίστηκαν και στους δύο συλλόγους. Δέκα ζευγάρια την ημέρα, μόνος ή με φίλους.",
+      title: "Παίκτες που έπαιξαν και στις δύο ομάδες",
+      intro: "Εμφανίζονται δύο σύλλογοι: Arsenal και Barcelona, Milan και Inter, Galatasaray και Fenerbahçe. Έχεις 20 δευτερόλεπτα για να γράψεις ποδοσφαιριστή που έπαιξε και στους δύο. Δέκα ζευγάρια κάθε μέρα, ένας πόντος για το καθένα και καθημερινή κατάταξη για τους πιο γρήγορους.",
+      howToPlay: ["Τα εμβλήματα των δύο συλλόγων εμφανίζονται ταυτόχρονα.", "Γράψε ποδοσφαιριστή που έπαιξε και στους δύο συλλόγους.", "Έχεις 20 δευτερόλεπτα για κάθε ζευγάρι. Μια λάθος απάντηση σε σταματά για 1 δευτερόλεπτο, οπότε οι τυχαίες απαντήσεις δεν βοηθούν.", "Βρες ένα ζευγάρι για 1 πόντο. Σε ισοβαθμία, προηγείται ο πιο γρήγορος. Μοιράσου το αποτέλεσμα ή κάλεσε φίλους στο δωμάτιο."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τα σημερινά δέκα ζευγάρια και την καθημερινή κατάταξη.",
+    },
   }),
   mode("football-name-chain", "/son-harfle", "name-chain", {
     en: {
@@ -1874,6 +2076,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Le jeu te donne un joueur de foot ; à toi d’en citer un autre avec la bonne initiale — un « joueur de foot commençant par la lettre… ». Kane, puis Eto’o, puis Ozil, puis Lewandowski. Tu as 10 secondes par nom, et le chrono raccourcit à mesure que la suite s’allonge. 3 suites par jour : combien de joueurs peux-tu citer ?",
       howToPlay: ["Le jeu te donne un premier joueur et affiche la lettre à utiliser.", "Saisis un joueur dont le prénom ou le nom commence par cette lettre. Anthony Martial fonctionne avec A ou M.", "Tu as 10 secondes par nom ; toutes les 5 réponses, le chrono perd une seconde. Chaque joueur ne peut être cité qu’une fois.", "À la fin du chrono, la suite s’arrête et une nouvelle commence. 3 suites par jour ; ton score compte tous les joueurs cités."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les suites du jour et le classement quotidien.",
+    },
+    el: {
+      metaTitle: "Αλυσίδα ποδοσφαιριστών: τελευταίο γράμμα, επόμενο όνομα",
+      metaDescription: "Ποδοσφαιριστές από κάθε γράμμα: συνέχισε την αλυσίδα με το τελευταίο γράμμα του προηγούμενου ονόματος. 10 δευτερόλεπτα ανά παίκτη, τρεις αλυσίδες τη μέρα.",
+      title: "Αλυσίδα ποδοσφαιριστών: τελευταίο γράμμα, επόμενο όνομα",
+      intro: "Σου δίνουμε έναν ποδοσφαιριστή· απαντάς με άλλον, του οποίου το όνομα αρχίζει από το τελευταίο γράμμα του προηγούμενου. Kane, μετά Eto'o, Ozil και Lewandowski. Έχεις 10 δευτερόλεπτα ανά όνομα και ο χρόνος μικραίνει όσο μεγαλώνει η αλυσίδα. Τρεις αλυσίδες την ημέρα: πόσους ποδοσφαιριστές μπορείς να ονομάσεις;",
+      howToPlay: ["Το παιχνίδι δίνει τον πρώτο ποδοσφαιριστή και εμφανίζει το γράμμα που χρειάζεσαι.", "Γράψε ποδοσφαιριστή που ταιριάζει με το γράμμα που εμφανίζεται.", "Έχεις 10 δευτερόλεπτα ανά όνομα· κάθε πέντε ονόματα ο χρόνος μειώνεται κατά ένα δευτερόλεπτο. Δεν μπορείς να χρησιμοποιήσεις ξανά τον ίδιο παίκτη.", "Όταν τελειώσει ο χρόνος, η αλυσίδα σταματά και ξεκινά νέα. Τρεις αλυσίδες την ημέρα· η βαθμολογία σου μετρά τους παίκτες που ονόμασες."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τις σημερινές αλυσίδες και την καθημερινή κατάταξη.",
     },
   }),
   mode("football-horserace", "/horserace", "football-horserace", {
@@ -1941,6 +2151,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Chaque course du jour porte sur un tournoi et 4 nations, identiques pour tous : choisis la tienne, les 3 autres sont tes rivales. Tu dois avancer de 5 cases, elles de 3.", "Choisis une statistique dans la liste ou saisis-en une : victoires, penalties, défenses ayant concédé le moins de buts, cartons rouges, retournements de situation et plus encore. Chaque statistique correspond à un vrai record du tournoi.", "La nation en tête de la statistique avance d’une case, quelle que soit la personne qui l’a choisie. En cas d’égalité, chaque nation en tête avance.", "Atteins le but avant tes rivales, avec le moins de choix possible. Réussir 5 choix sur 5, c’est une course parfaite."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour la course du jour et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Κούρσα εθνικών ομάδων: διάλεξε στατιστικό, προχώρα τη σημαία σου",
+      metaDescription: "Διάλεξε εθνική ομάδα στην κούρσα και τα στατιστικά που προηγείται για να φτάσεις πρώτη. Μία νέα διοργάνωση κάθε μέρα ή δωμάτιο για 2–4 φίλους.",
+      title: "Κούρσα εθνικών ομάδων: διάλεξε στατιστικό, προχώρα τη σημαία σου",
+      intro: "Διάλεξε εθνική ομάδα σε διοργάνωση: Δανία στο Euro ή Μαρόκο στο Μουντιάλ. Τρεις αντίπαλες εθνικές ομάδες τρέχουν απέναντί σου. Διάλεξε στατιστικό στο οποίο πιστεύεις ότι προηγείται η δική σου, όπως τα περισσότερα γκολ σε έναν αγώνα ή τα λιγότερα γκολ παθητικό. Αν έχεις δίκιο, η σημαία σου προχωρά μία θέση. Αν όχι, προχωρά η ομάδα που πράγματι προηγείται.",
+      howToPlay: ["Η καθημερινή κούρσα έχει μία διοργάνωση και τέσσερις εθνικές ομάδες, ίδιες για όλους: διάλεξε τη δική σου και οι άλλες τρεις είναι αντίπαλοι. Εσύ χρειάζεσαι πέντε θέσεις, κάθε αντίπαλος τρεις.", "Διάλεξε στατιστικό από τη λίστα ή γράψε ένα: νίκες, πέναλτι, ανέπαφη εστία, κόκκινες κάρτες, ανατροπές και άλλα. Κάθε στατιστικό είναι πραγματικό ρεκόρ της διοργάνωσης.", "Η ομάδα που προηγείται στο στατιστικό προχωρά μία θέση, όποιος κι αν το διάλεξε. Σε ισοβαθμία προχωρούν όλες οι ομάδες που μοιράζονται την πρώτη θέση.", "Φτάσε στον τερματισμό πριν από τους αντιπάλους με όσο το δυνατόν λιγότερες επιλογές. Πέντε σωστές στις πέντε σημαίνει τέλεια κούρσα."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τη σημερινή κούρσα και την καθημερινή κατάταξη.",
+    },
   }),
   mode("football-codenames", "/codenames", "football-codenames", {
     en: {
@@ -2006,6 +2224,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "20 cartes images de foot : caricatures de légendes, stades célèbres et mèmes du football. Ton éclaireur donne un indice et un nombre, comme « Ferguson · 2 » ou « Hand of God · 1 », puis tu retrouves les cartes visées. Huit appartiennent à ton équipe et l’une est le but contre son camp : retourne-la et la partie s’arrête.",
       howToPlay: ["Le plateau du jour compte 20 cartes, identiques pour tous : 8 pour ton équipe, 7 pour l’équipe adverse, 4 neutres et un but contre son camp. Seul l’éclaireur connaît leur répartition.", "L’éclaireur bot donne 3 indices, un à la fois : un mot de football et un nombre, comme « Real Madrid · 3 ». Le nombre indique combien de tes cartes sont visées.", "Retourne une carte qui te semble correspondre. Une bonne carte prolonge l’indice ; une carte adverse ou neutre y met fin et laisse place au suivant.", "Trouve les 8 cartes avant la fin des indices. Le but contre son camp arrête la partie immédiatement. Partage ton plateau et monte au classement quotidien."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour le plateau du jour et le classement quotidien.",
+    },
+    el: {
+      metaTitle: "Codenames ποδοσφαίρου: κάρτες με παίκτες, ένα στοιχείο, δύο ομάδες",
+      metaDescription: "Παίξε Codenames στα ελληνικά online με εικόνες και στοιχεία. Βρες 8 κάρτες της ομάδας σου, απόφυγε το αυτογκόλ και δοκίμασε Codenames ποδοσφαίρου με φίλους.",
+      title: "Codenames ποδοσφαίρου: κάρτες με παίκτες, ένα στοιχείο, δύο ομάδες",
+      intro: "Είκοσι κάρτες με ποδοσφαιρικές εικόνες: καρικατούρες θρύλων, διάσημα γήπεδα και μιμίδια. Ο ανιχνευτής σου δίνει ένα ποδοσφαιρικό στοιχείο και έναν αριθμό, όπως «Ferguson · 2» ή «Hand of God · 1», κι εσύ βρίσκεις τις κάρτες που δείχνει. Οκτώ κάρτες ανήκουν στην ομάδα σου και μία είναι το αυτογκόλ: αν την ανοίξεις, ο αγώνας τελειώνει.",
+      howToPlay: ["Κάθε ημερήσιο ταμπλό έχει 20 κάρτες, ίδιο για όλους: 8 δικές σου, 7 της αντίπαλης ομάδας, 4 ουδέτερες και μία αυτογκόλ. Μόνο ο ανιχνευτής ξέρει ποιες είναι ποιες.", "Ο bot ανιχνευτής δίνει τρία στοιχεία, ένα κάθε φορά: ποδοσφαιρική λέξη και αριθμό, όπως «Real Madrid · 3». Ο αριθμός δείχνει πόσες δικές σου κάρτες υποδεικνύει.", "Άνοιξε κάρτα που πιστεύεις ότι ταιριάζει. Αν είναι σωστή, συνεχίζεται το στοιχείο· αν είναι αντίπαλη ή ουδέτερη, το στοιχείο τελειώνει και έρχεται το επόμενο.", "Βρες και τις 8 πριν τελειώσουν τα στοιχεία. Το αυτογκόλ σταματά αμέσως την προσπάθεια. Μοιράσου το ταμπλό και ανέβα στην καθημερινή κατάταξη."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για το σημερινό ταμπλό και την καθημερινή κατάταξη.",
     },
   }),
   mode("football-odd-one-out", "/dato-falso-futbolero", "dato-falso", {
@@ -2073,6 +2299,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Chaque carte montre un joueur et une affirmation — ses clubs, ses championnats, ses sélections en Coupe du monde, ses numéros de maillot ou ses trophées — avec 5 propositions.", "Quatre propositions sont vraies et une est fausse. Sélectionne celle que tu crois fausse et confirme. Tu as 30 secondes par carte.", "Une bonne réponse rapporte +1. Chaque jour, tu as 2 jokers, utilisables une fois chacun : « Retirer 2 » grise deux propositions vraies ; « Doubler » vaut +2 si tu as raison et −1 si tu te trompes.", "10 cartes par jour, identiques pour tous. Termine pour voir ton score, partager ton résultat et monter au classement quotidien."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour les cartes du jour et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Ποιο είναι το ψέμα; Βρες τη λάθος ποδοσφαιρική πρόταση",
+      metaDescription: "Στο «Ποιο είναι το ψέμα;» βρες την ψεύτικη από πέντε ποδοσφαιρικές επιλογές. Τέσσερις είναι σωστές και μία λάθος. Παίξε 10 κάρτες τη μέρα ή με φίλους.",
+      title: "Ποιο είναι το ψέμα; Βρες τη λάθος ποδοσφαιρική πρόταση",
+      intro: "Ένας ποδοσφαιριστής, μία δήλωση και πέντε επιλογές: «έπαιξε σε ΟΛΟΥΣ αυτούς τους συλλόγους», «φόρεσε ΟΛΟΥΣ αυτούς τους αριθμούς φανέλας». Τέσσερις είναι σωστές και μία ψεύτικη. Βρες την πριν τελειώσουν τα 30 δευτερόλεπτα.",
+      howToPlay: ["Κάθε κάρτα δείχνει έναν ποδοσφαιριστή, μια δήλωση και πέντε επιλογές, όπως συλλόγους, πρωταθλήματα, αποστολές Μουντιάλ, αριθμούς φανέλας ή τρόπαια.", "Τέσσερις επιλογές είναι σωστές και μία ψεύτικη. Πάτησε αυτή που πιστεύεις και επιβεβαίωσε. Έχεις 30 δευτερόλεπτα ανά κάρτα.", "Η σωστή απάντηση δίνει +1. Έχεις δύο βοήθειες την ημέρα: «Αφαίρεσε 2» γκριζάρει δύο σωστές επιλογές, ενώ το «Όλα ή τίποτα» δίνει +2 αν έχεις δίκιο και −1 αν έχεις λάθος.", "Δέκα κάρτες την ημέρα, ίδιες για όλους. Ολοκλήρωσε τον γύρο για να δεις τη βαθμολογία σου, μοιράσου το ταμπλό και ανέβα στην καθημερινή κατάταξη."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τις σημερινές κάρτες και την καθημερινή κατάταξη.",
+    },
   }),
   mode("football-connections", "/conexiones-futboleras", "conexiones-futboleras", {
     en: {
@@ -2138,6 +2372,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "16 joueurs de foot, 4 groupes cachés de 4 et un point commun par groupe. Devine ce qui les relie, sélectionne les 4 joueurs et valide. Attention aux pièges : certains semblent appartenir à deux groupes.",
       howToPlay: ["Chaque plateau compte 16 joueurs répartis en 4 groupes de 4. Sélectionne 4 joueurs liés par un point commun et valide.", "Un groupe correct est verrouillé. Une mauvaise réponse compte comme une erreur ; si 3 joueurs sur 4 sont corrects, tu verras « À un joueur près… ». Quatre erreurs mettent fin au plateau. Une sélection déjà tentée ne coûte rien.", "Tout le monde reçoit le même plateau chaque jour. Le classement départage selon les groupes trouvés en premier, le nombre d’erreurs, puis le temps. Partage ton plateau à la fin et rejoue aux anciens quand tu veux.", "Avec un ami, joue un duel 1v1 sur 5 plateaux. Chacun joue à son tour, avec un essai par tour. Quand il reste un groupe, le joueur dont c’est le tour choisit le dernier lien parmi 4 options pour marquer 1 point. Aucune pièce ni aucun RP n’est en jeu."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour le plateau du jour et le classement quotidien.",
+    },
+    el: {
+      metaTitle: "Connections ποδοσφαίρου: βρες τις 4 ομάδες | QuizBall",
+      metaDescription: "Στο Connections ποδοσφαίρου, 16 παίκτες κρύβουν 4 ομάδες των 4. Βρες τον κοινό δεσμό πριν από 4 λάθη. Νέο ταμπλό κάθε μέρα ή αγώνας 1v1 με φίλο.",
+      title: "Connections ποδοσφαίρου: βρες τις 4 ομάδες",
+      intro: "Δεκαέξι ποδοσφαιριστές, τέσσερις κρυφές ομάδες των τεσσάρων και ένας κοινός δεσμός σε κάθε ομάδα. Βρες τι τους συνδέει, διάλεξε τους τέσσερις και υπέβαλε. Πρόσεχε τις παγίδες: κάποιοι παίκτες φαίνεται να ταιριάζουν σε δύο ομάδες.",
+      howToPlay: ["Κάθε ταμπλό έχει 16 ποδοσφαιριστές που κρύβουν 4 ομάδες των 4. Διάλεξε 4 με κοινό δεσμό και πάτησε «Υποβολή».", "Η σωστή ομάδα κλειδώνει. Μια λάθος επιλογή μετρά ως λάθος· αν τρεις από τους τέσσερις είναι σωστοί, θα δεις «Ένα έμεινε…». Τέσσερα λάθη τελειώνουν το ταμπλό. Μια τετράδα που δοκίμασες ήδη δεν μετρά ως λάθος.", "Όλοι έχουν το ίδιο ταμπλό κάθε μέρα. Η κατάταξη μετρά πρώτα τις ομάδες που βρέθηκαν, μετά τα λιγότερα λάθη και τέλος τον χρόνο. Μοιράσου το ταμπλό σου και παίξε ξανά παλαιότερα όποτε θέλεις.", "Με φίλο, παίξτε 1v1 σε 5 ταμπλό. Παίζετε εναλλάξ, μία προσπάθεια ανά σειρά. Όταν έχουν βρεθεί τρεις ομάδες, ο παίκτης που παίζει διαλέγει τον τελευταίο δεσμό από 4 επιλογές για έναν πόντο. Δεν παίζετε για νομίσματα ή RP."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για το σημερινό ταμπλό και την καθημερινή κατάταξη.",
     },
   }),
   mode("football-darts-501", "/football-darts-501", "football-darts-501", {
@@ -2205,6 +2447,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Tu commences à 501. Cite un joueur de la catégorie : il représente ta fléchette et son total (matchs joués, buts ou statistique choisie) est retiré de ton score.", "Termine entre 0 et −10. Un total supérieur à 180 ne rapporte rien ; passer sous −10 annule la fléchette et ton score reste inchangé. Un joueur hors catégorie consomme aussi une fléchette sans rapporter de points.", "Tu as 10 fléchettes. Un joueur déjà cité ou introuvable ne consomme rien : vérifie l’orthographe et réessaie. Le classement quotidien privilégie le moins de fléchettes, puis le score le plus proche de 0.", "Avec des amis, ouvre un salon pour 2 à 6 joueurs. Vous jouez chacun votre tour avec votre propre score de 501. Dès qu’un joueur termine, le tour en cours se finit, puis le score le plus proche de 0 remporte la manche ; à égalité, le premier à avoir terminé l’emporte. La partie se joue au meilleur des 3 manches."],
       reward: "Joue aux défis des jours précédents sans compte ; connecte-toi pour le jeu du jour et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Ποδοσφαιρικά βελάκια 501: darts με ποδοσφαιριστές | QuizBall",
+      metaDescription: "Βελάκια darts 501 με ποδοσφαιριστές: ξεκίνα από 501 και αφαίρεσε τους αριθμούς τους από τη βαθμολογία. Ένα σκέλος την ημέρα ή δωμάτια 2–6 παικτών.",
+      title: "Ποδοσφαιρικά βελάκια 501: darts με ποδοσφαιριστές",
+      intro: "Βελάκια με ποδοσφαιριστές. Ξεκινάς από 501 και κάθε βολή είναι ποδοσφαιριστής της σημερινής κατηγορίας: ο αριθμός του αφαιρείται από τη βαθμολογία σου. Τερμάτισε από 0 έως −10 με όσο το δυνατόν λιγότερα βελάκια.",
+      howToPlay: ["Ξεκινάς από 501. Ονόμασε ποδοσφαιριστή της κατηγορίας: είναι το βελάκι σου και ο αριθμός του αφαιρείται από τη βαθμολογία.", "Τερμάτισε από 0 έως −10. Αριθμός πάνω από 180 δεν δίνει πόντους, ενώ κάτω από −10 ακυρώνει τη βολή και κρατά τη βαθμολογία σου. Όνομα εκτός κατηγορίας επίσης δεν δίνει πόντους.", "Έχεις 10 βελάκια. Αν επαναλάβεις όνομα ή δώσεις όνομα που δεν αναγνωρίζεται, δεν χάνεις βελάκι· έλεγξε το όνομα και ξαναπροσπάθησε. Η καθημερινή κατάταξη βάζει πρώτους όσους χρειάστηκαν λιγότερα βελάκια και πλησίασαν περισσότερο το 0.", "Με φίλους, άνοιξε δωμάτιο για 2–6 παίκτες. Παίζετε με τη σειρά, ο καθένας με δικό του 501. Όταν κάποιος τερματίσει, ολοκληρώνεται ο γύρος και κερδίζει το σκέλος όποιος είναι πιο κοντά στο 0. Η σειρά αγώνων κρίνεται στις δύο νίκες."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για το σημερινό παιχνίδι και την καθημερινή κατάταξη.",
+    },
   }),
   mode("football-draft-game", "/football-draft", "football-draft", {
     en: {
@@ -2212,64 +2462,72 @@ export const GAME_PAGES: GamePageEntry[] = [
       metaDescription: "Football Draft: spin a real club and season, sign a player, build your XI, then play a league season. A new daily draft, free play and rooms of 2 to 6.",
       title: "Football Draft",
       intro: "Spin a real club and season, sign one of its players and repeat until you have a full XI of 11. Then your team plays a simulated league season and you find out how good your picks really were.",
-      howToPlay: ["Spin a real club and season and sign one of its players. Repeat until all 11 places in your XI are filled.", "Pick a version. Budget: buy your XI with €300M; better players cost more, so a lower-rated bargain can be the smart buy. Classic: ratings are shown, so pick the best. Ball Knowledge: ratings and stats are hidden, so you must remember who was good that season.", "Your team then plays a simulated league season. There is a new daily draft every day, with the same draws for everyone and a leaderboard for each version. After you have played today, open any team on the leaderboard and play your XI against it.", "In free play you choose the league (Premier League, LaLiga, Serie A, Bundesliga or Ligue 1), the era and the formation. With friends, challenge someone on the same draws or open a live room of 2 to 6, where a player taken is gone and team against team is decided over two legs, home and away."],
-      reward: "Free to play, no download. Play past days and free play without an account; sign in for today's draft and the leaderboards.",
+      howToPlay: ["Spin a real club and season and sign one of its players. Repeat until all 11 places in your XI are filled.", "You have €300M to buy your XI. Better players cost more, so a lower-rated bargain can be the smart buy, and a 50-rated academy kid is always free.", "Your team then plays a simulated league season. There is a new daily draft every day, with the same draws for everyone and one leaderboard. After you have played today, open any team on the leaderboard and play your XI against it.", "In free play you choose the league (Premier League, LaLiga, Serie A, Bundesliga or Ligue 1), the era and the formation. With friends, challenge someone on the same draws or open a live room of 2 to 6, where a player taken is gone and team against team is decided over two legs, home and away."],
+      reward: "Free to play, no download. Play past days and free play without an account; sign in for today's draft and the leaderboard.",
     },
     ka: {
       metaTitle: "ფეხბურთის დრაფტი: შეკრიბე 11 ნამდვილი სეზონებიდან | QuizBall",
-      metaDescription: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე ფეხბურთელი, შეკრიბე 11 და ითამაშე ლიგის სეზონი. ყოველდღე ახალი დრაფტი, თავისუფალი თამაში და ოთახები 2–6-ზე.",
+      metaDescription: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე ფეხბურთელი, შეკრიბე 11 და ითამაშე ლიგის სეზონი. ყოველდღე ახალი დრაფტი, თავისუფალი თამაში და ოთახები 2–6 მოთამაშისთვის.",
       title: "ფეხბურთის დრაფტი",
       intro: "დაატრიალე ნამდვილი კლუბი და სეზონი, აიყვანე მისი ერთი ფეხბურთელი და გაიმეორე, სანამ 11-კაციანი გუნდი არ შეგივსდება. შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს და ნახავ, რამდენად კარგი იყო შენი არჩევანი.",
-      howToPlay: ["დაატრიალე ნამდვილი კლუბი და სეზონი და აიყვანე მისი ერთი ფეხბურთელი. გაიმეორე, სანამ გუნდის 11-ვე ადგილი არ შეივსება.", "აირჩიე ვერსია. ბიუჯეტი: შენს 11-ს €300M-ით ყიდულობ; უკეთესი ფეხბურთელები უფრო ძვირია, ამიტომ დაბალი რეიტინგის იაფი ვარიანტი შეიძლება ჭკვიანური შენაძენი იყოს. კლასიკური: რეიტინგები ჩანს, აირჩიე საუკეთესო. ფეხბურთის მცოდნე: რეიტინგები და სტატისტიკა დამალულია, უნდა გახსოვდეს, ვინ იყო კარგი იმ სეზონში.", "შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს. ყოველდღე ახალი დრაფტია, ყველასთვის ერთი და იგივე დატრიალებებით და ცალკე რეიტინგით თითოეულ ვერსიაზე. დღევანდელის თამაშის შემდეგ შეგიძლია რეიტინგის ნებისმიერი გუნდი გახსნა და მის წინააღმდეგ შენი 11-ით ითამაშო.", "თავისუფალ თამაშში შენ ირჩევ ლიგას (Premier League, LaLiga, Serie A, Bundesliga ან Ligue 1), ეპოქას და ფორმაციას. მეგობრებთან გამოიწვიე ვინმე იმავე დატრიალებებზე ან გახსენი ცოცხალი ოთახი 2-დან 6 მოთამაშემდე: აყვანილი ფეხბურთელი სხვისთვის აღარ არის ხელმისაწვდომი, გუნდი გუნდის წინააღმდეგ კი ორ მატჩში წყდება, სახლში და გასვლაზე."],
-      reward: "უფასოა, ჩამოტვირთვა არ სჭირდება. წინა დღეები და თავისუფალი თამაში ანგარიშის გარეშე ითამაშე; დღევანდელი დრაფტისა და რეიტინგებისთვის შედი ანგარიშში.",
+      howToPlay: ["დაატრიალე ნამდვილი კლუბი და სეზონი და აიყვანე მისი ერთი ფეხბურთელი. გაიმეორე, სანამ გუნდის 11-ვე ადგილი არ შეივსება.", "შენს 11-ს €300M-ით ყიდულობ. უკეთესი ფეხბურთელები უფრო ძვირია, ამიტომ დაბალი რეიტინგის იაფი ვარიანტი შეიძლება ჭკვიანური შენაძენი იყოს, 50 რეიტინგის აკადემიელი კი ყოველთვის უფასოა.", "შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს. ყოველდღე ახალი დრაფტია, ყველასთვის ერთი და იგივე დატრიალებებით და ერთი საერთო რეიტინგით. დღევანდელის თამაშის შემდეგ შეგიძლია რეიტინგის ნებისმიერი გუნდი გახსნა და მის წინააღმდეგ შენი 11-ით ითამაშო.", "თავისუფალ თამაშში შენ ირჩევ ლიგას (Premier League, LaLiga, Serie A, Bundesliga ან Ligue 1), ეპოქას და სქემას. მეგობრებთან გამოიწვიე ვინმე იმავე დატრიალებებზე ან გახსენი ცოცხალი ოთახი 2-დან 6 მოთამაშემდე: აყვანილი ფეხბურთელი სხვისთვის აღარ არის ხელმისაწვდომი, გუნდებს შორის გამარჯვებული ორი მატჩის ჯამით ვლინდება, შინ და გასვლაზე."],
+      reward: "უფასოა, ჩამოტვირთვა არ სჭირდება. წინა დღეები და თავისუფალი თამაში ანგარიშის გარეშე ითამაშე; დღევანდელი დრაფტისა და რეიტინგისთვის შედი ანგარიშში.",
     },
     es: {
       metaTitle: "Draft futbolero: armá tu once con temporadas reales | QuizBall",
       metaDescription: "Draft futbolero: girá un club y una temporada reales, fichá un jugador, armá tu once y jugá la temporada. Un draft por día, juego libre y salas de 2 a 6.",
       title: "Draft futbolero",
       intro: "Girá un club y una temporada reales, fichá a uno de sus jugadores y repetí hasta tener tu once completo. Después tu equipo juega una temporada de liga simulada y ves cuánto valían tus elecciones.",
-      howToPlay: ["Girá un club y una temporada reales y fichá a uno de sus jugadores. Repetí hasta completar los 11 puestos de tu equipo.", "Elegí una versión. Presupuesto: comprás tu once con €300M; los mejores jugadores cuestan más, así que una ganga con menos valoración puede ser la compra inteligente. Clásico: las valoraciones se ven, elegí a los mejores. Sabelotodo: las valoraciones y las estadísticas están ocultas, tenés que acordarte de quién la rompió esa temporada.", "Después tu equipo juega una temporada de liga simulada. Cada día hay un draft nuevo, con los mismos giros para todos y un ranking por versión. Cuando ya jugaste el de hoy, podés abrir cualquier equipo del ranking y jugar tu once contra él.", "En juego libre elegís la liga (Premier League, LaLiga, Serie A, Bundesliga o Ligue 1), la época y la formación. Con amigos, desafiá a alguien con los mismos giros o abrí una sala en vivo de 2 a 6, donde un jugador elegido ya no está disponible y los cruces de equipo contra equipo se definen a dos partidos, ida y vuelta."],
-      reward: "Gratis y sin descargas. Sin cuenta jugás los días anteriores y el juego libre; con tu cuenta, el draft de hoy y los rankings.",
+      howToPlay: ["Girá un club y una temporada reales y fichá a uno de sus jugadores. Repetí hasta completar los 11 puestos de tu equipo.", "Tenés €300M para comprar tu once. Los mejores jugadores cuestan más, así que una ganga con menos valoración puede ser la compra inteligente, y un juvenil de 50 siempre es gratis.", "Después tu equipo juega una temporada de liga simulada. Cada día hay un draft nuevo, con los mismos giros para todos y un ranking. Cuando ya jugaste el de hoy, podés abrir cualquier equipo del ranking y jugar tu once contra él.", "En juego libre elegís la liga (Premier League, LaLiga, Serie A, Bundesliga o Ligue 1), la época y la formación. Con amigos, desafiá a alguien con los mismos giros o abrí una sala en vivo de 2 a 6, donde un jugador elegido ya no está disponible y los cruces de equipo contra equipo se definen a dos partidos, ida y vuelta."],
+      reward: "Gratis y sin descargas. Sin cuenta jugás los días anteriores y el juego libre; con tu cuenta, el draft de hoy y el ranking.",
     },
     tr: {
       metaTitle: "Futbol Draftı: Gerçek Sezonlardan İlk 11 Kur | QuizBall",
       metaDescription: "Futbol Draftı: gerçek bir kulüp ve sezon çevir, oyuncu al, ilk 11'ini kur ve lig sezonunu oyna. Her gün yeni draft, serbest oyun ve 2-6 kişilik odalar.",
       title: "Futbol Draftı",
       intro: "Gerçek bir kulüp ve sezon çevir, o kadrodan bir oyuncu al ve ilk 11'in tamamlanana kadar tekrarla. Sonra takımın simüle edilen bir lig sezonu oynar ve seçimlerinin ne kadar iyi olduğunu görürsün.",
-      howToPlay: ["Gerçek bir kulüp ve sezon çevir, o kadrodan bir oyuncu al. İlk 11'indeki 11 yer dolana kadar tekrarla.", "Bir sürüm seç. Bütçe: ilk 11'ini €300M ile alırsın; iyi oyuncular daha pahalıdır, bu yüzden reytingi düşük bir kelepir akıllıca bir alım olabilir. Klasik: reytingler açıktır, en iyisini seç. Futbol Bilgisi: reytingler ve istatistikler gizlidir, o sezon kimin iyi olduğunu hatırlaman gerekir.", "Sonra takımın simüle edilen bir lig sezonu oynar. Her gün yeni bir draft var; çevirmeler herkes için aynı ve her sürümün kendi sıralaması var. Bugünkünü oynadıktan sonra sıralamadaki herhangi bir takımı açıp ilk 11'inle ona karşı oynayabilirsin.", "Serbest oyunda ligi (Premier League, LaLiga, Serie A, Bundesliga veya Ligue 1), dönemi ve dizilişi sen seçersin. Arkadaşlarınla aynı çevirmelerde meydan okuyabilir ya da 2 ile 6 kişilik canlı bir oda açabilirsin; alınan oyuncu başkasına kalmaz, takım takıma eşleşmeler ise iç saha ve deplasman olmak üzere iki maçta belirlenir."],
-      reward: "Ücretsiz, indirme yok. Önceki günleri ve serbest oyunu hesapsız oyna; bugünün draftı ve sıralamalar için giriş yap.",
+      howToPlay: ["Gerçek bir kulüp ve sezon çevir, o kadrodan bir oyuncu al. İlk 11'indeki 11 yer dolana kadar tekrarla.", "İlk 11'ini almak için €300M'un var. İyi oyuncular daha pahalıdır, bu yüzden reytingi düşük bir kelepir akıllıca bir alım olabilir; 50 reytingli altyapı oyuncusu ise her zaman ücretsizdir.", "Sonra takımın simüle edilen bir lig sezonu oynar. Her gün yeni bir draft var; çevirmeler herkes için aynı ve tek bir sıralama var. Bugünkünü oynadıktan sonra sıralamadaki herhangi bir takımı açıp ilk 11'inle ona karşı oynayabilirsin.", "Serbest oyunda ligi (Premier League, LaLiga, Serie A, Bundesliga veya Ligue 1), dönemi ve dizilişi sen seçersin. Arkadaşlarınla aynı çevirmelerde meydan okuyabilir ya da 2 ile 6 kişilik canlı bir oda açabilirsin; alınan oyuncu başkasına kalmaz, takım takıma eşleşmeler ise iç saha ve deplasman olmak üzere iki maçta belirlenir."],
+      reward: "Ücretsiz, indirme yok. Önceki günleri ve serbest oyunu hesapsız oyna; bugünün draftı ve sıralama için giriş yap.",
     },
     ru: {
       metaTitle: "Футбольный драфт: собери состав из реальных сезонов | QuizBall",
       metaDescription: "Крути реальный клуб и сезон, бери игрока, собери состав из 11 и сыграй сезон в лиге. Новый драфт каждый день, свободная игра и комнаты на 2–6 игроков.",
       title: "Футбольный драфт",
       intro: "Крути реальный клуб и сезон, бери одного из его игроков и повторяй, пока не соберёшь полный состав из 11. Затем твоя команда играет симулированный сезон в лиге, и ты узнаёшь, насколько хорош был твой выбор.",
-      howToPlay: ["Покрути реальный клуб и сезон и возьми одного из его игроков. Повторяй, пока не заполнишь все 11 мест в составе.", "Выбери версию. Бюджет: ты покупаешь состав на €300 млн; лучшие игроки стоят дороже, поэтому недорогой игрок с рейтингом пониже может оказаться умной покупкой. Классика: рейтинги видны, бери лучших. Знаток: рейтинги и статистика скрыты, придётся вспомнить, кто был хорош в том сезоне.", "Затем твоя команда играет симулированный сезон в лиге. Каждый день выходит новый драфт: прокруты одинаковы для всех, а у каждой версии свой рейтинг. Сыграв сегодняшний драфт, можно открыть любую команду из рейтинга и сыграть против неё своим составом.", "В свободной игре ты выбираешь лигу (Premier League, LaLiga, Serie A, Bundesliga или Ligue 1), эпоху и схему. С друзьями можно бросить вызов на тех же прокрутах или открыть живую комнату на 2–6 игроков, где взятый игрок уже никому не достанется, а противостояния команд решаются в двух матчах, дома и в гостях."],
-      reward: "Бесплатно и без скачивания. Прошлые дни и свободная игра доступны без аккаунта; войди, чтобы сыграть сегодняшний драфт и попасть в рейтинги.",
+      howToPlay: ["Покрути реальный клуб и сезон и возьми одного из его игроков. Повторяй, пока не заполнишь все 11 мест в составе.", "У тебя €300 млн на покупку состава. Лучшие игроки стоят дороже, поэтому недорогой игрок с рейтингом пониже может оказаться умной покупкой, а воспитанник академии с рейтингом 50 всегда бесплатен.", "Затем твоя команда играет симулированный сезон в лиге. Каждый день выходит новый драфт: прокруты одинаковы для всех, а рейтинг общий. Сыграв сегодняшний драфт, можно открыть любую команду из рейтинга и сыграть против неё своим составом.", "В свободной игре ты выбираешь лигу (Premier League, LaLiga, Serie A, Bundesliga или Ligue 1), эпоху и схему. С друзьями можно бросить вызов на тех же прокрутах или открыть живую комнату на 2–6 игроков, где взятый игрок уже никому не достанется, а противостояния команд решаются в двух матчах, дома и в гостях."],
+      reward: "Бесплатно и без скачивания. Прошлые дни и свободная игра доступны без аккаунта; войди, чтобы сыграть сегодняшний драфт и попасть в рейтинг.",
     },
     pt: {
       metaTitle: "Draft de futebol: monte seu time com temporadas reais",
       metaDescription: "Draft de futebol: gire um clube e uma temporada reais, contrate um jogador, monte seu time e jogue a liga. Um draft novo por dia, jogo livre e salas de 2 a 6.",
       title: "Draft de futebol",
       intro: "Gire um clube e uma temporada reais, contrate um dos jogadores e repita até ter um time completo de 11. Depois, seu time joga uma temporada simulada da liga e você descobre se escolheu bem.",
-      howToPlay: ["Gire um clube e uma temporada reais e contrate um dos jogadores. Repita até preencher as 11 vagas do seu time.", "Escolha uma versão. Orçamento: você compra seu time com €300M; jogadores melhores custam mais, então uma pechincha com nota menor pode ser a compra certa. Clássico: as notas aparecem, escolha os melhores. Entendido: notas e estatísticas ficam ocultas, e você precisa lembrar quem foi bem naquela temporada.", "Depois, seu time joga uma temporada simulada da liga. Todo dia tem um draft novo, com os mesmos giros para todos e um ranking para cada versão. Depois de jogar o de hoje, você pode abrir qualquer time do ranking e jogar com o seu contra ele.", "No jogo livre, você escolhe a liga (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), a época e a formação. Com amigos, desafie alguém nos mesmos giros ou abra uma sala ao vivo de 2 a 6, onde um jogador escolhido sai da disputa e time contra time se decide em dois jogos, ida e volta."],
-      reward: "Grátis e sem download. Jogue os dias anteriores e o jogo livre sem conta; entre para acessar o draft de hoje e os rankings.",
+      howToPlay: ["Gire um clube e uma temporada reais e contrate um dos jogadores. Repita até preencher as 11 vagas do seu time.", "Você tem €300M para comprar seu time. Jogadores melhores custam mais, então uma pechincha com nota menor pode ser a compra certa, e um garoto da base com nota 50 é sempre de graça.", "Depois, seu time joga uma temporada simulada da liga. Todo dia tem um draft novo, com os mesmos giros para todos e um ranking. Depois de jogar o de hoje, você pode abrir qualquer time do ranking e jogar com o seu contra ele.", "No jogo livre, você escolhe a liga (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), a época e a formação. Com amigos, desafie alguém nos mesmos giros ou abra uma sala ao vivo de 2 a 6, onde um jogador escolhido sai da disputa e time contra time se decide em dois jogos, ida e volta."],
+      reward: "Grátis e sem download. Jogue os dias anteriores e o jogo livre sem conta; entre para acessar o draft de hoje e o ranking.",
     },
     de: {
       metaTitle: "Fußball-Draft: Stell deine Elf aus echten Saisons auf",
       metaDescription: "Fußball-Draft: Dreh einen echten Verein mit Saison, verpflichte einen Spieler, stell deine Elf auf und spiel die Liga. Täglich neu, freies Spiel, Räume für 2–6.",
       title: "Fußball-Draft",
       intro: "Dreh einen echten Verein und eine Saison, verpflichte einen seiner Spieler und wiederhole das, bis deine Elf komplett ist. Dann spielt dein Team eine simulierte Ligasaison, und du siehst, wie gut deine Wahl wirklich war.",
-      howToPlay: ["Dreh einen echten Verein und eine Saison und verpflichte einen seiner Spieler. Wiederhole das, bis alle 11 Plätze deiner Elf besetzt sind.", "Wähl eine Version. Budget: Du kaufst deine Elf für 300 Mio. €; bessere Spieler kosten mehr, ein Schnäppchen mit niedrigerer Wertung kann also der kluge Kauf sein. Klassisch: Die Wertungen sind sichtbar, nimm die Besten. Fußballwissen: Wertungen und Statistiken sind versteckt, du musst wissen, wer in jener Saison gut war.", "Dann spielt dein Team eine simulierte Ligasaison. Jeden Tag gibt es einen neuen Draft, mit denselben Drehs für alle und einer Rangliste pro Version. Hast du heute gespielt, kannst du jedes Team der Rangliste öffnen und mit deiner Elf dagegen antreten.", "Im freien Spiel wählst du Liga (Premier League, LaLiga, Serie A, Bundesliga oder Ligue 1), Ära und Formation. Mit Freunden forderst du jemanden mit denselben Drehs heraus oder öffnest einen Live-Raum für 2 bis 6, in dem ein vergebener Spieler weg ist. Team gegen Team wird in Hin- und Rückspiel entschieden."],
-      reward: "Kostenlos und ohne Download. Spiele frühere Tage und das freie Spiel ohne Konto; melde dich für den heutigen Draft und die Ranglisten an.",
+      howToPlay: ["Dreh einen echten Verein und eine Saison und verpflichte einen seiner Spieler. Wiederhole das, bis alle 11 Plätze deiner Elf besetzt sind.", "Du hast 300 Mio. € für deine Elf. Bessere Spieler kosten mehr, ein Schnäppchen mit niedrigerer Wertung kann also der kluge Kauf sein, und ein Jugendspieler mit Wertung 50 ist immer gratis.", "Dann spielt dein Team eine simulierte Ligasaison. Jeden Tag gibt es einen neuen Draft, mit denselben Drehs für alle und einer Rangliste. Hast du heute gespielt, kannst du jedes Team der Rangliste öffnen und mit deiner Elf dagegen antreten.", "Im freien Spiel wählst du Liga (Premier League, LaLiga, Serie A, Bundesliga oder Ligue 1), Ära und Formation. Mit Freunden forderst du jemanden mit denselben Drehs heraus oder öffnest einen Live-Raum für 2 bis 6, in dem ein vergebener Spieler weg ist. Team gegen Team wird in Hin- und Rückspiel entschieden."],
+      reward: "Kostenlos und ohne Download. Spiele frühere Tage und das freie Spiel ohne Konto; melde dich für den heutigen Draft und die Rangliste an.",
     },
     fr: {
       metaTitle: "Draft foot : compose ton onze avec de vraies saisons | QuizBall",
       metaDescription: "Fais tourner un vrai club et une saison, recrute un joueur, compose ton onze et joue la saison. Un draft par jour, mode libre et salons de 2 à 6 entre amis.",
       title: "Draft foot",
       intro: "Fais tourner un vrai club et une saison, recrute l’un de ses joueurs et recommence jusqu’à former un onze complet. Ton équipe joue ensuite une saison de championnat simulée, et tu découvres ce que valaient tes choix.",
-      howToPlay: ["Fais tourner un vrai club et une saison, puis recrute l’un de ses joueurs. Recommence jusqu’à remplir les 11 postes de ton équipe.", "Choisis une version. Budget : tu achètes ton onze avec 300 M€ ; les meilleurs joueurs coûtent plus cher, donc une bonne affaire moins bien notée peut être le bon achat. Classique : les notes sont affichées, prends les meilleurs. Culture foot : notes et statistiques sont cachées, à toi de te souvenir de qui était bon cette saison-là.", "Ton équipe joue ensuite une saison de championnat simulée. Chaque jour, un nouveau draft arrive, avec les mêmes tirages pour tout le monde et un classement par version. Une fois le draft du jour joué, tu peux ouvrir n’importe quelle équipe du classement et l’affronter avec ton onze.", "En mode libre, tu choisis le championnat (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), l’époque et la formation. Entre amis, défie quelqu’un sur les mêmes tirages ou ouvre un salon en direct de 2 à 6, où un joueur pris n’est plus disponible ; équipe contre équipe se joue sur deux matchs, aller et retour."],
-      reward: "Gratuit et sans téléchargement. Joue aux jours précédents et au mode libre sans compte ; connecte-toi pour le draft du jour et les classements.",
+      howToPlay: ["Fais tourner un vrai club et une saison, puis recrute l’un de ses joueurs. Recommence jusqu’à remplir les 11 postes de ton équipe.", "Tu as 300 M€ pour acheter ton onze. Les meilleurs joueurs coûtent plus cher, donc une bonne affaire moins bien notée peut être le bon achat, et un jeune du centre de formation noté 50 est toujours gratuit.", "Ton équipe joue ensuite une saison de championnat simulée. Chaque jour, un nouveau draft arrive, avec les mêmes tirages pour tout le monde et un classement. Une fois le draft du jour joué, tu peux ouvrir n’importe quelle équipe du classement et l’affronter avec ton onze.", "En mode libre, tu choisis le championnat (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), l’époque et la formation. Entre amis, défie quelqu’un sur les mêmes tirages ou ouvre un salon en direct de 2 à 6, où un joueur pris n’est plus disponible ; équipe contre équipe se joue sur deux matchs, aller et retour."],
+      reward: "Gratuit et sans téléchargement. Joue aux jours précédents et au mode libre sans compte ; connecte-toi pour le draft du jour et le classement.",
+    },
+    el: {
+      metaTitle: "Football Draft: φτιάξε ενδεκάδα από πραγματικές σεζόν",
+      metaDescription: "Football Draft: φτιάξε ενδεκάδα από πραγματικούς συλλόγους και σεζόν. Παίξε πρωτάθλημα, δωρεάν draft κάθε μέρα ή δωμάτιο με 2–6 φίλους.",
+      title: "Football Draft: φτιάξε ενδεκάδα από πραγματικές σεζόν",
+      intro: "Γύρνα σε πραγματικό σύλλογο και σεζόν, απόκτησε έναν παίκτη του και συνέχισε μέχρι να συμπληρώσεις ενδεκάδα 11 παικτών. Έπειτα η ομάδα σου παίζει μια προσομοιωμένη σεζόν πρωταθλήματος και βλέπεις πόσο καλές ήταν οι επιλογές σου.",
+      howToPlay: ["Γύρνα σε πραγματικό σύλλογο και σεζόν και απόκτησε έναν παίκτη του. Συνέχισε ώσπου να γεμίσουν και οι 11 θέσεις της ενδεκάδας.", "Έχεις 300 εκατ. € για να φτιάξεις ενδεκάδα. Οι καλύτεροι παίκτες κοστίζουν περισσότερο, οπότε μια χαμηλότερα βαθμολογημένη ευκαιρία μπορεί να είναι έξυπνη επιλογή, ενώ ένας παίκτης ακαδημίας με βαθμολογία 50 είναι πάντα δωρεάν.", "Η ομάδα σου παίζει προσομοιωμένη σεζόν πρωταθλήματος. Κάθε μέρα υπάρχει νέο draft, με τις ίδιες κληρώσεις για όλους και κοινή κατάταξη. Αφού παίξεις σήμερα, διάλεξε ομάδα από την κατάταξη και παίξε την ενδεκάδα σου απέναντί της.", "Στο ελεύθερο παιχνίδι διάλεξε πρωτάθλημα (Premier League, La Liga, Serie A, Bundesliga ή Ligue 1), εποχή και σύστημα. Με φίλους, παίξτε με τις ίδιες κληρώσεις ή ανοίξτε δωμάτιο 2–6 παικτών, όπου κάθε παίκτης που επιλέγεται φεύγει από τη λίστα και η ομάδα που περνά κρίνεται σε δύο αγώνες, εντός και εκτός έδρας."],
+      reward: "Δωρεάν, χωρίς λήψη. Παίξε παλαιότερες μέρες και ελεύθερα χωρίς εγγραφή· συνδέσου για το σημερινό draft και την κατάταξη.",
     },
   }),
   mode("football-tenable", "/football-tenable", "tenable", {
@@ -2337,6 +2595,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Lis le titre de la liste du jour : il indique ce que les 10 noms ont en commun.", "Saisis un nom ou choisis-le parmi les suggestions. Une bonne réponse apparaît à son rang, avec son chiffre.", "Un vrai joueur absent de la liste te coûte une vie. Un nom déjà présent ou inconnu ne coûte rien. Tu as 3 vies.", "Ton score compte les noms trouvés. Partage ton classement ou joue avec des amis : chacun joue à son tour sur le même tableau, et chaque place vaut son numéro."],
       reward: "Joue aux listes des jours précédents sans compte ; connecte-toi pour celle du jour et le classement quotidien.",
     },
+    el: {
+      metaTitle: "Βρες το Top 10: ποδοσφαιρικό κουίζ δεκάδας | QuizBall",
+      metaDescription: "Κουίζ Top 10 ποδοσφαίρου: βρες τους 10 καλύτερους ποδοσφαιριστές σε κρυφή λίστα. Έχεις 3 ζωές, καθημερινή κατάταξη και δωμάτια για παιχνίδι με 2–6 φίλους.",
+      title: "Βρες το Top 10: ποδοσφαιρικό κουίζ δεκάδας",
+      intro: "Κάθε μέρα υπάρχει μία κρυφή λίστα Top 10: πρώτοι σκόρερ Champions League, ακριβότερες μεταγραφές ή προπονητές με τους περισσότερους τίτλους. Βρες ποιοι είναι στη λίστα. Κάθε σωστή απάντηση ανεβαίνει στη θέση της στον πύργο· τρία λάθη και κερδίζει ο πύργος. Θα τους βρεις και τους δέκα;",
+      howToPlay: ["Διάβασε τον τίτλο της σημερινής λίστας: λέει τι κοινό έχουν οι δέκα απαντήσεις.", "Γράψε ένα όνομα ή διάλεξέ το από τις προτάσεις. Η σωστή απάντηση εμφανίζεται στη θέση της μαζί με τον αριθμό της.", "Ένας πραγματικός παίκτης που δεν είναι στη λίστα κοστίζει μία ζωή. Όνομα που υπάρχει ήδη στον πύργο ή δεν αναγνωρίζεται δεν κοστίζει. Έχεις 3 ζωές.", "Η βαθμολογία σου είναι πόσους από τους δέκα βρήκες. Μοιράσου τον πύργο ή παίξε το ίδιο παιχνίδι με φίλους: παίρνετε σειρά στον ίδιο πύργο και κάθε θέση αξίζει όσο ο αριθμός της."],
+      reward: "Παίξε παλαιότερες μέρες χωρίς εγγραφή· συνδέσου για τη σημερινή λίστα και την καθημερινή κατάταξη.",
+    },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {
     en: {
@@ -2403,6 +2669,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       howToPlay: ["Choisis combien de pièces placer pour commencer une manche ; en invité, tu joues avec des points d’entraînement.", "Ouvre une case : si elle est sûre, tes pièces augmentent ; un défenseur met fin à la manche.", "Repère la position d’un défenseur jusqu’à 3 fois en répondant à une question de foot.", "Après ta première case sûre, tu peux sécuriser tes pièces quand tu veux."],
       reward: "Les pièces nécessitent un compte ; en invité, tu joues uniquement avec des points d’entraînement.",
     },
+    el: {
+      metaTitle: "Ναρκοπέδιο ερωτήσεων: ποδοσφαιρικό κουίζ με κρυμμένους αμυντικούς",
+      metaDescription: "Άνοιξε τετράγωνα, απόφυγε 4 αμυντικούς και απάντησε σε ποδοσφαιρικές ερωτήσεις για να βρεις πού κρύβονται. Εξασκήσου ως επισκέπτης ή παίξε με νομίσματα.",
+      title: "Ναρκοπέδιο ερωτήσεων: ποδοσφαιρικό κουίζ με κρυμμένους αμυντικούς",
+      intro: "Είκοσι πέντε τετράγωνα κρύβουν τέσσερις αμυντικούς. Άνοιξε ασφαλή τετράγωνα για να αυξήσεις τους πόντους, απάντησε σε ποδοσφαιρικές ερωτήσεις για να εντοπίσεις τον κίνδυνο και κλείδωσε τους πόντους πριν σε σταματήσουν.",
+      howToPlay: ["Διάλεξε πόσα νομίσματα θα χρησιμοποιήσεις· ως επισκέπτης παίζεις με δοκιμαστικούς πόντους.", "Άνοιξε τετράγωνο: το ασφαλές αυξάνει τους πόντους, ο αμυντικός τελειώνει τον γύρο.", "Χρησιμοποίησε έως τρεις βοήθειες απαντώντας σε ποδοσφαιρικές ερωτήσεις.", "Κλείδωσε τους πόντους όποτε θέλεις μετά το πρώτο ασφαλές τετράγωνο."],
+      reward: "Για νομίσματα χρειάζεται λογαριασμός· οι γύροι επισκεπτών χρησιμοποιούν μόνο δοκιμαστικούς πόντους.",
+    },
   }),
   mode("squad-spin", "/squad-spin", "mini-squad-spin", {
     en: {
@@ -2468,6 +2742,14 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "La roue s’arrête sur un club, un poste et une nation. Cite un joueur qui correspond à tous les critères avant la fin du chrono ; chaque bonne réponse multiplie tes pièces.",
       howToPlay: ["Choisis 3, 4 ou 5 critères : plus il y en a, plus les indices sont précis et le multiplicateur élevé.", "Saisis en 15 secondes un joueur qui correspond à tous les critères.", "Sécurise tes pièces ou relance la roue avant l’arrivée des prochains critères.", "Une erreur met fin à la série."],
       reward: "Les pièces nécessitent un compte ; en invité, tu joues uniquement avec des points d’entraînement.",
+    },
+    el: {
+      metaTitle: "Ποδοσφαιρικός τροχός: γύρνα και βρες τον παίκτη | QuizBall",
+      metaDescription: "Γύρνα τον τροχό με ομάδες ποδοσφαίρου, θέση και χώρα. Βρες παίκτη που ταιριάζει και στα τρία σε 15 δευτερόλεπτα· εξασκήσου ως επισκέπτης ή παίξε με νομίσματα.",
+      title: "Ποδοσφαιρικός τροχός: γύρνα και βρες τον παίκτη",
+      intro: "Οι κύλινδροι σταματούν σε σύλλογο, θέση και χώρα. Βρες παίκτη που ταιριάζει και στα τρία πριν τελειώσει ο χρόνος· κάθε σωστή απάντηση πολλαπλασιάζει τα νομίσματα.",
+      howToPlay: ["Διάλεξε 3, 4 ή 5 κυλίνδρους: περισσότεροι κύλινδροι, πιο συγκεκριμένα στοιχεία και μεγαλύτερος πολλαπλασιαστής.", "Γράψε μέσα σε 15 δευτερόλεπτα παίκτη που ταιριάζει σε όλους τους κυλίνδρους.", "Κλείδωσε τα νομίσματα ή γύρισε ξανά πριν εμφανιστούν οι επόμενοι κύλινδροι.", "Ένα λάθος τελειώνει το σερί."],
+      reward: "Για νομίσματα χρειάζεται λογαριασμός· ως επισκέπτης παίζεις μόνο με δοκιμαστικούς πόντους.",
     },
   }),
 ];

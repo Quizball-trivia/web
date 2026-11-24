@@ -12,6 +12,7 @@
  * this hook returns.
  */
 
+import { useImmersiveStore } from '@/stores/immersive.store';
 import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
@@ -97,9 +98,10 @@ export function useAppShellViewModel() {
   // can't be reached and content can't scroll behind them. The hub
   // (`/daily/challenges`) keeps both.
   const inDailyChallengeGame = currentPath.startsWith('/daily/challenges/');
-  const showHeader = !inDailyChallengeGame && showsHeader(currentPath);
+  const immersive = useImmersiveStore((s) => s.count > 0);
+  const showHeader = !inDailyChallengeGame && !immersive && showsHeader(currentPath);
   const navPath = navPathOf(currentPath);
-  const showNav = !inDailyChallengeGame && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
+  const showNav = !inDailyChallengeGame && !immersive && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith('/friend/room');
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
@@ -421,6 +423,7 @@ export function useAppShellViewModel() {
     navPath,
     showHeader,
     showNav,
+    immersive,
     isPathActive,
     // Lobby / draft / match data
     lobby,

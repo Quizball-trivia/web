@@ -896,6 +896,110 @@ export const FOOTBALL_GRID_COPY = {
     famWildcard: 'Spécial',
     retry: 'Réessayer',
   },
+  el: {
+    title: 'Ποδοσφαιρική τρίλιζα',
+    opponentThinking: 'Ο αντίπαλος σκέφτεται…',
+    searching: 'Αναζήτηση αντιπάλου',
+    searchingBody: 'Αναζήτηση παίκτη…',
+    cancel: 'Ακύρωση αναζήτησης',
+    cancelPick: 'Ακύρωση',
+    matching: 'Ετοιμασία ταμπλό…',
+    ready: 'Βρέθηκε αντίπαλος',
+    loading: 'Φόρτωση αγώνα',
+    getReady: 'Ετοιμάσου',
+    yourTurn: 'Η σειρά σου',
+    theirTurn: 'Η σειρά του αντιπάλου',
+    pickCell: 'Διάλεξε ένα κενό τετράγωνο και πες έναν ποδοσφαιριστή που ταιριάζει και στα δύο στοιχεία.',
+    answerPlaceholder: 'Γράψε έναν ποδοσφαιριστή…',
+    submit: 'Υποβολή',
+    submitShort: 'Υποβολή',
+    correct: 'Το τετράγωνο είναι δικό σου!',
+    wrong: 'Αυτή η απάντηση δεν ταιριάζει και στα δύο στοιχεία.',
+    ambiguous: 'Γίνε πιο συγκεκριμένος — γράψε ολόκληρο το όνομα.',
+    alreadyUsed: 'Αυτός ο ποδοσφαιριστής έχει ήδη χρησιμοποιηθεί.',
+    paused: 'Ο αγώνας έχει παγώσει',
+    pausedBody: 'Περιμένουμε να αποκατασταθεί η σύνδεση. Ο χρόνος της σειράς σου παραμένει προστατευμένος.',
+    opponentDisconnected: 'Ο αντίπαλος αποσυνδέθηκε',
+    opponentDisconnectedBody: 'Αν δεν επιστρέψει πριν τελειώσει το χρονόμετρο, κερδίζεις τον αγώνα.',
+    selfDisconnected: 'Η σύνδεση χάθηκε',
+    selfDisconnectedBody: 'Επανασύνδεση… επέστρεψε πριν τελειώσει το χρονόμετρο, αλλιώς ο αγώνας χάνεται με εγκατάλειψη.',
+    reconnectingStrip: 'Επανασύνδεση…',
+    reconnectWindow: 'Χρόνος που απομένει για επανασύνδεση',
+    interrupted: 'Ο αγώνας διακόπηκε προσωρινά',
+    interruptedBody: 'Ο αγώνας έχει παγώσει με ασφάλεια όσο αποκαθιστούμε την υπηρεσία του παιχνιδιού.',
+    report: 'Αναφορά απάντησης που λείπει',
+    reported: 'Αναφέρθηκε — ευχαριστούμε',
+    quit: 'Αποχώρηση από τον αγώνα',
+    resultWin: 'Νίκη στο ταμπλό',
+    resultLoss: 'Νίκη του αντιπάλου',
+    resultDraw: 'Ισοπαλία στο ταμπλό',
+    noteOpponentLeft: 'Ο αντίπαλος αποχώρησε από τον αγώνα',
+    noteYouLeft: 'Αποχώρηση από τον αγώνα',
+    noteOpponentDisconnected: 'Ο αντίπαλος έχασε τη σύνδεση',
+    noteYouDisconnected: 'Απώλεια σύνδεσης',
+    noteOpponentIdle: 'Ο αντίπαλος έχασε 3 συνεχόμενες σειρές — η σειρά αγώνων χάθηκε με εγκατάλειψη',
+    noteYouIdle: 'Απουσία σε 3 συνεχόμενες σειρές — η σειρά αγώνων χάθηκε με εγκατάλειψη',
+    noteOpponentNoShow: 'Ο αντίπαλος δεν συνδέθηκε',
+    noteYouNoShow: 'Δεν έγινε σύνδεση εγκαίρως',
+    noteBothDisconnected: 'Αποσυνδέθηκαν και οι δύο παίκτες',
+    noteNoShow: 'Ο αγώνας δεν ξεκίνησε εγκαίρως',
+    turnPillYou: 'Η σειρά σου',
+    turnPillOpponent: 'Η σειρά του αντιπάλου',
+    skip: 'Παράλειψη',
+    requestDraw: 'Πρότεινε ισοπαλία',
+    drawRequested: 'Προτάθηκε ισοπαλία…',
+    drawLocked: 'Απορρίφθηκε — δοκίμασε ξανά σε λίγες σειρές',
+    drawOfferTitle: 'Ο αντίπαλος προτείνει ισοπαλία',
+    drawOfferBody: 'Αποδέξου για να λήξει αυτός ο αγώνας ισόπαλος και να περάσετε στο επόμενο ταμπλό.',
+    acceptDraw: 'Αποδοχή',
+    declineDraw: 'Απόρριψη',
+    drawDeclinedNote: 'Η ισοπαλία απορρίφθηκε',
+    gameOf: 'Αγώνας {n} από {m}',
+    seriesLead: 'Προηγείσαι',
+    seriesTrail: 'Προηγείται ο αντίπαλος',
+    seriesLevel: 'Ισοπαλία',
+    nextGameSoon: 'Το επόμενο ταμπλό ξεκινά σύντομα…',
+    gameWon: 'Νίκη στον αγώνα {n}',
+    gameLost: 'Νίκη του αντιπάλου στον αγώνα {n}',
+    gameDrawn: 'Ισοπαλία στον αγώνα {n}',
+    noteBoardDead: 'Κανείς από τους δύο δεν μπορεί πλέον να σχηματίσει γραμμή',
+    noteDrawAgreed: 'Συμφωνήθηκε ισοπαλία',
+    seriesWin: 'Νίκη στη σειρά αγώνων',
+    seriesLoss: 'Νίκη του αντιπάλου στη σειρά αγώνων',
+    seriesDraw: 'Ισοπαλία στη σειρά αγώνων',
+    tapCellHint: 'Πάτησε ένα τετράγωνο και πες έναν ποδοσφαιριστή που ταιριάζει και στα δύο στοιχεία',
+    rematch: 'Ρεβάνς',
+    waitingRematch: 'Αναμονή αντιπάλου…',
+    rematchAccepted: 'Η ρεβάνς έγινε αποδεκτή',
+    declineRematch: 'Απόρριψη ρεβάνς',
+    newOpponent: 'Βρες νέο αντίπαλο',
+    backToPlay: 'Επιστροφή στην αρχική',
+    you: 'Εσύ',
+    opponent: 'Αντίπαλος',
+    claimed: 'Κατειλημμένο',
+    sampleAnswers: 'Άλλες αποδεκτές απαντήσεις',
+    sampleAnswersBody: 'Διαφορετικά παραδείγματα για κάθε διασταύρωση',
+    xp: 'XP που κέρδισες',
+    coins: 'Νομίσματα που κέρδισες',
+    signIn: 'Συνδέσου για να παίξεις online',
+    signInBody: 'Η Ποδοσφαιρική τρίλιζα είναι μια ζωντανή λειτουργία 1 εναντίον 1. Συνδέσου για να παίξεις με άλλον παίκτη ή ένα έξυπνο bot.',
+    goSignIn: 'Σύνδεση',
+    unavailable: 'Η Ποδοσφαιρική τρίλιζα δεν είναι προσωρινά διαθέσιμη',
+    unavailableBody: 'Δεν μπορέσαμε να ξεκινήσουμε την αναζήτηση αντιπάλου τώρα. Ο λογαριασμός και η πρόοδός σου είναι ασφαλή.',
+    pickOne: 'Διάλεξε τον ποδοσφαιριστή που ταιριάζει και στα δύο στοιχεία',
+    typeInstead: 'Ξέρω έναν — προτιμώ να τον γράψω',
+    showOptions: 'Δες τέσσερις επιλογές',
+    loadingOptions: 'Αναζήτηση τεσσάρων ποδοσφαιριστών…',
+    rulesTitle: 'Πώς μετράνε οι απαντήσεις',
+    famClub: 'Σύλλογος',
+    famCountry: 'Χώρα',
+    famLeague: 'Πρωτάθλημα',
+    famManager: 'Προπονητής',
+    famTeammate: 'Συμπαίκτης',
+    famTrophy: 'Τίτλος',
+    famWildcard: 'Ειδικό',
+    retry: 'Δοκίμασε ξανά',
+  },
 } as const;
 
 type FootballGridCopy = (typeof FOOTBALL_GRID_COPY)[keyof typeof FOOTBALL_GRID_COPY];
@@ -1199,7 +1303,7 @@ export function CriterionHeader({
   );
 }
 
-function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string }) {
+function ClaimedCell({ claim, isMine, claimedLabel, displayName }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string; displayName?: string | null }) {
   return (
     <motion.div
       initial={{ scale: 0.4, opacity: 0 }}
@@ -1213,7 +1317,7 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
         className="size-11 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-12"
       />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
-        {claim.displayName ?? claimedLabel}
+        {displayName ?? claim.displayName ?? claimedLabel}
       </span>
       <motion.span
         className="pointer-events-none absolute inset-0 rounded-xl border-2"
@@ -1252,6 +1356,14 @@ export function MatchBoard({
   highlightCells?: number[] | null;
 }) {
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
+  // Claims carry the canonical English name; Georgian, Russian and Greek players see the roster's name in their alphabet.
+  const localizedNames = LOCALIZED_NAME_LOCALES.has(locale);
+  const roster = useGridTypeaheadRoster(localizedNames);
+  const rosterById = useMemo(() => new Map(roster.map((player) => [player.id, player])), [roster]);
+  const claimName = (claim: FootballGridClaimState) => {
+    const player = localizedNames ? rosterById.get(claim.footballPlayerId) : undefined;
+    return player ? localizedPlayerName(locale, claim.displayName ?? player.nameEn, player) : null;
+  };
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === (activeUserId ?? selfUserId);
   return (
     <motion.div
@@ -1296,7 +1408,7 @@ export function MatchBoard({
                 !selectable && !claim && 'opacity-60',
               )}
             >
-              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} /> : (
+              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} displayName={claimName(claim)} /> : (
                 <span className="absolute inset-0 grid place-items-center font-poppins text-lg font-black text-white/15">·</span>
               )}
             </motion.button>
@@ -1547,6 +1659,8 @@ function OptionName({ name }: { name: string }) {
     </span>
   );
 }
+
+const LOCALIZED_NAME_LOCALES = new Set<string>(['ka', 'ru', 'el']);
 
 function useGridTypeaheadRoster(enabled = true): GridTypeaheadPreparedPlayer[] {
   const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);

@@ -1,9 +1,6 @@
-import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ t: (key: string) => key }) }));
-type TableProps = ComponentProps<typeof import("@/features/leaderboard/components/LeaderboardTable").LeaderboardTable>;
-const Table = (props: TableProps) => <div>{props.entries.length}</div>;
 const target = "../WordDailyLeaderboardTable";
 
 beforeEach(() => vi.resetModules());
@@ -18,17 +15,17 @@ describe("real word leaderboard code cache", () => {
     const failed = code.load();
     expect(code.load()).toBe(failed);
     await expect(failed).rejects.toThrow();
-    let finish!: () => void;
-    const gate = new Promise<void>(resolve => { finish = resolve; });
-    const retryFactory = vi.fn(async () => { await gate; return { default: Table }; });
     vi.doUnmock(target);
-    vi.doMock(target, retryFactory);
     const retry = code.load();
     expect(retry).not.toBe(failed);
     expect(code.load()).toBe(retry);
-    finish();
-    expect(await retry).toEqual({ default: Table });
-    expect(await code.load()).toEqual({ default: Table });
-    expect(retryFactory).toHaveBeenCalledOnce();
+    const resolved = await retry;
+    const { LeaderboardTable } = await import("@/features/leaderboard/components/LeaderboardTable");
+    expect(resolved.default).toBe(LeaderboardTable);
+
+    const unexpectedImport = vi.fn(() => { throw new Error("reloaded a cached chunk"); });
+    vi.doMock(target, unexpectedImport);
+    expect(await code.load()).toEqual(resolved);
+    expect(unexpectedImport).not.toHaveBeenCalled();
   });
 });

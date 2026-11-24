@@ -58,9 +58,18 @@
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/draft-de-futbol/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/juegos-de-futbol/jugador-en-comun/page.tsx";
 @source "../app/[locale]/(hub)/(word-shell)/layout.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/alysida-podosfairiston/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/codenames-podosfairou/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/connections-podosfairou/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/epaiksan-kai-stis-dyo-omades/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/koursa-ethnikon/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/podosfairika-velakia-501/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/podosfairiko-draft/page.tsx";
+@source "../app/[locale]/(hub)/(word-shell)/podosfairika-paixnidia/poio-einai-to-psema/page.tsx";
 @source "../app/[locale]/(hub)/layout.tsx";
 @source "../app/layout.tsx";
 @source "../app/locale-asset-providers.de.tsx";
+@source "../app/locale-asset-providers.el.tsx";
 @source "../app/locale-asset-providers.es.tsx";
 @source "../app/locale-asset-providers.fr.tsx";
 @source "../app/locale-asset-providers.ka.tsx";
@@ -196,6 +205,7 @@
 @source "../features/mini-games/data/guessFifaCard.ts";
 @source "../features/mini-games/lib/guessCard.ts";
 @source "../features/mini-games/lib/guessCardConstants.ts";
+@source "../features/mini-games/lib/i18n.el.ts";
 @source "../features/mini-games/lib/i18n.es.ts";
 @source "../features/mini-games/lib/i18n.fr.ts";
 @source "../features/mini-games/lib/i18n.ru.ts";
@@ -209,7 +219,6 @@
 @source "../features/store/components/CoinIcon.tsx";
 @source "../features/tenable/tenable.copy.ts";
 @source "../features/tenable/tenable.game.ts";
-@source "../features/weekend-league/paused.ts";
 @source "../features/weekend-league/rewards/WlFrame.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremony.tsx";
 @source "../features/weekend-league/rewards/WlRewardCeremonyHost.tsx";
@@ -294,6 +303,7 @@
 @source "../lib/i18n/runtime-messages.ts";
 @source "../lib/i18n/secondsShort.ts";
 @source "../lib/i18n/signupLocale.ts";
+@source "../lib/i18n/typography.ts";
 @source "../lib/i18n/useChangeLanguage.ts";
 @source "../lib/i18n/useDocumentLanguage.ts";
 @source "../lib/match/rankedGeoHint.ts";
@@ -351,6 +361,7 @@
 @source "../stores/friendDuelHandoff.store.ts";
 @source "../stores/friendRoomHandoff.store.ts";
 @source "../stores/gameSession.store.ts";
+@source "../stores/immersive.store.ts";
 @source "../stores/rankedMatchmaking.store.ts";
 @source "../stores/realtime-match/draft.slice.ts";
 @source "../stores/realtime-match/lobby.slice.ts";

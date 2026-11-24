@@ -19,9 +19,9 @@ export const TRAINING_FORMATION: Formation = {
   ],
 };
 
-// These lots describe real players, so they stay out of French: fr reads English.
-type LocalizedHints = Record<Exclude<Locale, 'fr'>, [string, string]> & { fr?: [string, string] };
-type LocalizedName = Record<Exclude<Locale, 'fr'>, string> & { fr?: string };
+// These lots describe real players, so they stay out of French and Greek: fr and el read English.
+type LocalizedHints = Record<Exclude<Locale, 'fr' | 'el'>, [string, string]> & { fr?: [string, string]; el?: [string, string] };
+type LocalizedName = Record<Exclude<Locale, 'fr' | 'el'>, string> & { fr?: string; el?: string };
 
 interface LotFixture {
   id: string;

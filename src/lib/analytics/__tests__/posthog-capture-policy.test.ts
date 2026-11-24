@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CaptureResult } from 'posthog-js';
-import { preparePostHogCapture } from '../posthog-capture-policy';
+import { isLoopbackHost, preparePostHogCapture } from '../posthog-capture-policy';
 
 function webVitals(url?: string): CaptureResult {
   return {
@@ -97,4 +97,34 @@ describe('event diet: DB-duplicated gameplay events and retry-storm throttles', 
     expect(preparePostHogCapture(ev('socket_reconnected'))?.event).toBe('socket_reconnected');
     expect(preparePostHogCapture(ev('socket_reconnected'))).toBeNull();
   });
+});
+
+
+it('excludes local browser hosts even with the production key', () => {
+  for (const host of ['localhost', 'dev.localhost', '127.0.0.1', '127.0.0.2', '127.255.255.255', '[::1]']) expect(isLoopbackHost(host)).toBe(true);
+  for (const host of ['quizball.io', '127.example.com', '127.0.0.2.example.com', '128.0.0.1']) expect(isLoopbackHost(host)).toBe(false);
+});
+
+it('keeps the first socket report per identity and UTC hour and samples eligible repeats', () => {
+  vi.useFakeTimers();
+  const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+  const report = (id: string) => preparePostHogCapture({ uuid: 'e', event: 'socket_reconnected', properties: { distinct_id: id } });
+  try {
+    vi.setSystemTime(new Date('2026-11-24T03:58:30Z'));
+    expect(report('a')).not.toBeNull();
+    expect(report('b')).not.toBeNull();
+    expect(report('a')).toBeNull();
+    vi.advanceTimersByTime(60_000);
+    expect(report('a')).toBeNull();
+    expect(report('b')).toBeNull();
+    vi.advanceTimersByTime(30_000);
+    expect(report('b')).not.toBeNull();
+    vi.advanceTimersByTime(60_000);
+    random.mockReturnValue(0.05);
+    expect(report('b')).not.toBeNull();
+    expect(report('b')).toBeNull();
+  } finally {
+    vi.useRealTimers();
+    random.mockRestore();
+  }
 });

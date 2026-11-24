@@ -13,6 +13,7 @@ const roster: GridTypeaheadPreparedPlayer[] = players.map((player) => ({ ...play
   wordsEn: normalizeGridAnswerText(player.nameEn).split(' '),
   wordsKa: normalizeGridAnswerText(player.nameKa).split(' '),
   wordsRu: [],
+  wordsEl: [],
 }));
 
 describe('Grid name suggestions across interface languages', () => {
@@ -35,12 +36,23 @@ describe('Grid name suggestions across interface languages', () => {
     expect(normalizeGridAnswerText('IŞIK')).toBe('isik');
   });
 
+  it('finds a player by the Greek name with or without accents and either final sigma', () => {
+    // Invented footballer: the repository is public.
+    const el: GridTypeaheadPreparedPlayer[] = [{
+      id: 'varkadakis', nameEn: 'Lefteris Varkadakis', nameKa: null, nameEl: 'Λευτέρης Βαρκαδάκης',
+      wordsEn: ['lefteris', 'varkadakis'], wordsKa: [], wordsRu: [], wordsEl: normalizeGridAnswerText('Λευτέρης Βαρκαδάκης').split(' '),
+    }];
+    expect(searchGridPlayers(el, 'Βαρκα', 'el').map((player) => player.nameEl)).toEqual(['Λευτέρης Βαρκαδάκης']);
+    expect(searchGridPlayers(el, 'βαρκαδακησ', 'el').map((player) => player.id)).toEqual(['varkadakis']);
+    expect(searchGridPlayers(el, 'ΛΕΥΤΕΡΗΣ ΒΑΡ', 'el').map((player) => player.id)).toEqual(['varkadakis']);
+  });
+
   it('finds a player by the Russian name and keeps it on the suggestion', () => {
     const ru: GridTypeaheadPreparedPlayer[] = [{
       id: 'haaland', nameEn: 'Erling Haaland', nameKa: null, nameRu: 'Эрлинг Холанд',
-      wordsEn: ['erling', 'haaland'], wordsKa: [], wordsRu: normalizeGridAnswerText('Эрлинг Холанд').split(' '),
+      wordsEn: ['erling', 'haaland'], wordsKa: [], wordsRu: normalizeGridAnswerText('Эрлинг Холанд').split(' '), wordsEl: [],
     }];
-    expect(searchGridPlayers(ru, 'ХОЛ', 'ru')).toEqual([{ id: 'haaland', nameEn: 'Erling Haaland', nameKa: null, nameRu: 'Эрлинг Холанд' }]);
+    expect(searchGridPlayers(ru, 'ХОЛ', 'ru')).toEqual([{ id: 'haaland', nameEn: 'Erling Haaland', nameKa: null, nameRu: 'Эрлинг Холанд', nameEl: null }]);
     expect(searchGridPlayers(ru, 'эрлинг хол', 'ru').map((player) => player.id)).toEqual(['haaland']);
     expect(searchGridPlayers(ru, 'холанн', 'ru')).toEqual([]);
   });

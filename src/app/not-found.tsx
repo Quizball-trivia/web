@@ -5,6 +5,7 @@ import { localeFromPathname } from "@/lib/i18n/locale";
 const MESSAGE: Partial<Record<string, string>> = {
   fr: "Cette page est introuvable.",
   de: "Diese Seite wurde nicht gefunden.",
+  el: "Η σελίδα δεν βρέθηκε.",
 };
 
 export const metadata: Metadata = { title: "404", robots: { index: false } };

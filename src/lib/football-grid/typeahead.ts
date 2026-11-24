@@ -6,6 +6,7 @@ export interface GridTypeaheadPlayer {
   nameEn: string;
   nameKa: string | null;
   nameRu?: string | null;
+  nameEl?: string | null;
 }
 
 interface GridTypeaheadPayload {
@@ -18,6 +19,7 @@ interface PreparedPlayer extends GridTypeaheadPlayer {
   wordsEn: string[];
   wordsKa: string[];
   wordsRu: string[];
+  wordsEl: string[];
 }
 
 /** Search normalization follows the resolver's accents and Turkish keyboard fallback.
@@ -35,6 +37,7 @@ export function normalizeGridAnswerText(value: string): string {
     .normalize('NFC')
     .replace(/ı/g, 'i')
     .replace(/ß/g, 'ss')
+    .replace(/ς/g, 'σ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -49,6 +52,7 @@ function prepare(players: GridTypeaheadPlayer[]): PreparedPlayer[] {
     wordsEn: normalizeGridAnswerText(player.nameEn).split(' ').filter(Boolean),
     wordsKa: player.nameKa ? normalizeGridAnswerText(player.nameKa).split(' ').filter(Boolean) : [],
     wordsRu: player.nameRu ? normalizeGridAnswerText(player.nameRu).split(' ').filter(Boolean) : [],
+    wordsEl: player.nameEl ? normalizeGridAnswerText(player.nameEl).split(' ').filter(Boolean) : [],
   }));
 }
 
@@ -112,7 +116,7 @@ export function loadGridTypeaheadRoster(): Promise<PreparedPlayer[]> {
 export function searchGridPlayers(
   roster: PreparedPlayer[],
   query: string,
-  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr',
+  locale: 'en' | 'ka' | 'es' | 'tr' | 'ru' | 'pt' | 'de' | 'fr' | 'el',
   limit = 6,
 ): GridTypeaheadPlayer[] {
   const queryWords = normalizeGridAnswerText(query).split(' ').filter(Boolean);
@@ -120,7 +124,7 @@ export function searchGridPlayers(
 
   const matches: Array<{ player: PreparedPlayer; score: number }> = [];
   for (const player of roster) {
-    const nameWordSets = [player.wordsEn, player.wordsKa, player.wordsRu];
+    const nameWordSets = [player.wordsEn, player.wordsKa, player.wordsRu, player.wordsEl];
     let best: number | null = null;
     for (const words of nameWordSets) {
       if (words.length === 0) continue;
@@ -145,7 +149,7 @@ export function searchGridPlayers(
     const key = normalizeGridAnswerText(match.player.nameEn);
     if (seenNames.has(key)) continue;
     seenNames.add(key);
-    deduped.push({ id: match.player.id, nameEn: match.player.nameEn, nameKa: match.player.nameKa, nameRu: match.player.nameRu ?? null });
+    deduped.push({ id: match.player.id, nameEn: match.player.nameEn, nameKa: match.player.nameKa, nameRu: match.player.nameRu ?? null, nameEl: match.player.nameEl ?? null });
     if (deduped.length >= limit) break;
   }
   return deduped;

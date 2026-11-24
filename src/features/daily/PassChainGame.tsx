@@ -15,6 +15,7 @@ import { footballGridAssetUrl } from "@/lib/football-grid/assets";
 import { optimizeSupabaseImage } from "@/lib/images/optimizeSupabaseImage";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import type { PassChainLinkResult, PassChainPlayer, PassChainSession } from "@/lib/domain/dailyChallenge";
+import { upperText } from "@/lib/i18n/typography";
 
 type LinkKind = "club" | "manager";
 type Link = { player: PassChainPlayer; viaClub: string; kind: LinkKind };
@@ -30,7 +31,7 @@ const defaultResolveLink: ResolveLink = (fromPlayerId, text, _targetId, puzzleId
 function faceSrc(imageUrl: string | null): string | null {
   return optimizeSupabaseImage(footballGridAssetUrl(imageUrl), { width: 128, height: 128, quality: 75, format: "webp", resize: "cover" });
 }
-const initials = (name: string) => name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+const initials = (name: string) => upperText(name.split(" ").map((w) => w[0]).join("").slice(0, 2));
 const surname = (name: string) => name.split(" ").slice(-1)[0];
 
 /** Pass Chain daily: link the start player to the target through team-mates who shared a club.

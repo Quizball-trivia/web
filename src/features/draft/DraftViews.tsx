@@ -17,10 +17,7 @@ import {
 } from "./draft.rules";
 
 const surname = (name: string) => name.split(" ").slice(1).join(" ") || name;
-const VARIANTS = ["budget", "classic", "knowledge"] as const;
 const variantName = (c: DraftText, v: Variant) => (v === "knowledge" ? c.knowledge : v === "budget" ? c.budget : c.classic);
-// Legends play with a smaller budget: the hint names the money the run will really have.
-const variantHint = (c: DraftText, v: Variant, era: Era = "all") => (v === "knowledge" ? c.knowledgeHint : v === "budget" ? c.budgetHint(budgetFor(era)) : c.classicHint);
 const euros = (m: number) => `€${m}M`;
 
 /** A phone with the browser's bars showing: the pick screen tightens so everything still fits without scrolling. */
@@ -34,12 +31,14 @@ const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page",
 
 // ── Intro ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, variant, onVariant, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn, resumeLabel, onResume }: {
+export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn, resumeLabel, onResume }: {
   /** The main button when today is already played, or for a guest (closed-day practice). */
   dailyLabel?: string; guestNote?: string | null; onSignIn?: () => void;
   /** An unfinished free draft waiting on the server. */
   resumeLabel?: string | null; onResume?: () => void;
-  locale: string; number: number; league: League; formation?: FormationId; best?: string | null; nextDaily?: string | null; variant: Variant; onVariant: (v: Variant) => void;
+  locale: string; number: number; league: League; formation?: FormationId; best?: string | null; nextDaily?: string | null;
+  /** Ignored: only Budget is offered now (kept so older callers still compile). */
+  variant?: Variant; onVariant?: (v: Variant) => void;
   onDaily: () => void; onFree: () => void; onFriends: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
@@ -55,16 +54,16 @@ export function DraftIntro({ locale, number, league, formation = "4-3-3", best, 
       <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number} · {c.tag}</p>
       </div>
       <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-      <div className="mt-4 grid grid-cols-3 gap-1.5 lg:mt-0" role="radiogroup" aria-label={VARIANTS.map((v) => variantName(c, v)).join(" / ")}>
-        {VARIANTS.map((v) => (
-          <button key={v} type="button" role="radio" aria-checked={variant === v} onClick={() => onVariant(v)}
-            className={cn("min-w-0 rounded-2xl px-2 py-2 text-left transition-colors", variant === v ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-white/[0.06] hover:bg-white/10")}>
-            <span className="block text-[13px] font-black leading-tight" style={poppins}>{variantName(c, v)}</span>
-            <span className="mt-0.5 block text-[11px] leading-tight text-white/60">{variantHint(c, v)}</span>
-          </button>
-        ))}
+      <div className="mt-4 rounded-2xl bg-brand-yellow/10 px-4 py-3 ring-1 ring-brand-yellow/40 lg:mt-0">
+        <div className="flex items-center gap-3">
+          <Coins className="size-7 shrink-0 text-brand-yellow" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-3xl font-black leading-none text-brand-yellow tabular-nums" style={poppins}>{euros(BUDGET.total)}</p>
+            <p className="mt-1 text-sm font-bold leading-tight text-white">{c.budgetHint(BUDGET.total)}</p>
+          </div>
+        </div>
+        <p className="mt-2 text-xs font-medium leading-snug text-white/75">{c.budgetRule}</p>
       </div>
-      {variant === "budget" && <p className="mt-2 text-xs font-semibold leading-snug text-brand-yellow">{c.budgetRule}</p>}
       <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-2.5">
         <Trophy className="size-5 shrink-0 text-brand-gold" aria-hidden />
         <div className="min-w-0">
@@ -123,24 +122,15 @@ export function DraftSetup({ locale, leagues, values, friends, onChange, onStart
         </SetupRow>
         <SetupRow label={c.setEra}>
           <div className="grid grid-cols-3 gap-2">
-            {eras.map(([e, label]) => <button key={e} type="button" aria-pressed={values.era === e} onClick={() => set({ era: e })} className={cn(CHIP, "px-1.5", chipTone(values.era === e))} style={poppins}>{label}</button>)}
+            {eras.map(([e, label]) => <button key={e} type="button" aria-pressed={values.era === e} onClick={() => set({ era: e, variant: "budget" })} className={cn(CHIP, "px-1.5", chipTone(values.era === e))} style={poppins}>{label}</button>)}
           </div>
+          <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-brand-yellow"><Coins className="size-3.5 shrink-0" aria-hidden />{c.budgetHint(budgetFor(values.era))}</p>
         </SetupRow>
         <SetupRow label={c.setFormation}>
           <div className="grid grid-cols-4 gap-2">
             {(Object.keys(FORMATIONS) as FormationId[]).map((f) => (
               <button key={f} type="button" aria-pressed={values.formation === f} onClick={() => set({ formation: f })} className={cn("flex flex-col items-center gap-1.5 rounded-2xl p-2 text-xs font-black transition-colors", chipTone(values.formation === f))} style={poppins}>
                 <FormationMark id={f} />{f}
-              </button>
-            ))}
-          </div>
-        </SetupRow>
-        <SetupRow label={c.setMode}>
-          <div className="grid grid-cols-3 gap-1.5">
-            {VARIANTS.map((m) => (
-              <button key={m} type="button" aria-pressed={values.variant === m} onClick={() => set({ variant: m })} className={cn("min-w-0 rounded-2xl px-2 py-2 text-left transition-colors", chipTone(values.variant === m))}>
-                <span className="block text-[13px] font-black leading-tight" style={poppins}>{variantName(c, m)}</span>
-                <span className="mt-0.5 block text-[11px] font-medium leading-tight text-white/70">{variantHint(c, m, values.era)}</span>
               </button>
             ))}
           </div>
@@ -307,7 +297,9 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
   const reduce = useReducedMotion();
   const isTaken = (id: string) => taken.find((t) => t.playerId === id)?.by;
   const rated = (p: DraftPlayer) => destination(p, slots, picks, target)?.rating ?? p.rating;
-  const maxPrice = variant === "budget" ? wallet(picks, budget ?? BUDGET.total).left : null;
+  const purse = variant === "budget" ? wallet(picks, budget ?? BUDGET.total) : null;
+  const maxPrice = purse ? purse.left : null;
+  const each = purse?.each ?? 0;
   const openSlots = slots.filter((_, i) => !picks[i]);
   const academySlot = maxPrice === null ? null : openSlots.find((x) => x.id === target) ?? openSlots.find((x) => x.pos === pos) ?? openSlots[0] ?? null;
   const academyRow = academySlot && onAcademy && (
@@ -327,7 +319,9 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
   return (
     <div className={cn("space-y-2", disabled && "pointer-events-none opacity-60")}>
       <PosTabs c={c} players={players} slots={slots} picks={picks} taken={taken} pos={pos} onPos={onPos} maxPrice={maxPrice} />
-      <ul key={`${pos}|${players[0]?.id ?? ""}`} className={cn("space-y-1", phone && (short ? "h-[max(9rem,calc(100dvh-31rem))]" : shared ? "h-[clamp(9rem,calc(100dvh-40.5rem),19rem)]" : "h-[clamp(9rem,calc(100dvh-38.75rem),19rem)]"), phone && roomBelow && "pb-14", phone && "overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}>
+      <ul key={`${pos}|${players[0]?.id ?? ""}`} className={cn("space-y-1", phone && (purse
+          ? (short ? "h-[max(9rem,calc(100dvh-33rem))]" : shared ? "h-[clamp(9rem,calc(100dvh-41.5rem),19rem)]" : "h-[clamp(9rem,calc(100dvh-39.75rem),19rem)]")
+          : (short ? "h-[max(9rem,calc(100dvh-31rem))]" : shared ? "h-[clamp(9rem,calc(100dvh-40.5rem),19rem)]" : "h-[clamp(9rem,calc(100dvh-38.75rem),19rem)]")), phone && roomBelow && "pb-14", phone && "overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}>
         {!list.some(signable) && academyRow}
         {list.map((p, i) => {
           const takenBy = isTaken(p.id);
@@ -342,11 +336,11 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
                     <span className="block truncate text-[11px] text-white/65">{tooDear(p) ? c.tooExpensive : !open ? unavailable(c, p, picks, takenBy) : hidden ? [p.pos, ...(p.alt ?? [])].map((x) => c.posShort[x]).join(" / ") : phone ? shortStat(c, p).join(" · ") : statLine(c, p)}</span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-0.5">
-                    {maxPrice !== null && <span className={cn("text-xs font-black tabular-nums", tooDear(p) ? "text-brand-red-light" : "text-brand-yellow")} style={poppins}>{euros(priceOf(p))}</span>}
+                    {maxPrice !== null && <span className={cn("text-sm font-black tabular-nums", priceTone(priceOf(p), tooDear(p), each))} style={poppins}>{euros(priceOf(p))}</span>}
                     {open && <DestinationTag c={c} player={p} slots={slots} picks={picks} target={target} />}
                   </span>
                 </button>
-                {!hidden && <button type="button" onClick={() => onWhy(p)} aria-label={c.ratingWhy} className="flex size-8 shrink-0 items-center justify-center rounded-full text-white/45 hover:bg-white/10 hover:text-white"><Info className="size-4" /></button>}
+                {!hidden && <button type="button" onClick={() => onWhy(p)} aria-label={c.ratingWhy} className="flex size-10 shrink-0 items-center justify-center rounded-full text-white/45 hover:bg-white/10 hover:text-white"><Info className="size-4" /></button>}
               </div>
             </motion.li>
           );
@@ -356,6 +350,10 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
     </div>
   );
 }
+
+/** Green within the even share per place, yellow up to the stretch our sims still rate well (1.7x), orange beyond. */
+const priceTone = (price: number, unaffordable: boolean, each: number) =>
+  unaffordable ? "text-brand-red-light" : price <= each ? "text-brand-green-light" : price <= each * 1.7 ? "text-brand-yellow" : "text-orange-400";
 
 const csText = (c: DraftText, p: DraftPlayer) => `${p.cleanSheetsEstimated ? "≈ " : ""}${c.cs(p.cleanSheets)}`;
 
@@ -443,7 +441,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
     if (dest) { onPick(id, dest.slot.id); setTarget(null); }
   };
   const money = variant === "budget" ? wallet(myPicks, budget) : null;
-  const hint = armed ? c.spinHint : waitingFor ? c.rivalPicking(waitingFor) : targetSlot ? c.tapFor(targetSlot.label) : money ? c.perPlace(money.each, money.open) : c.tapPlayer;
+  const hint = armed ? c.spinHint : waitingFor ? c.rivalPicking(waitingFor) : targetSlot ? c.tapFor(targetSlot.label) : c.tapPlayer;
   const short = useShortPhone();
   const purse = money;
   // On a short phone a duel or room gets one status line, so the board does not jump between turns.
@@ -452,10 +450,10 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
     <div className={cn("flex flex-1 flex-col", short && "-mb-3")}>
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap seconds={seconds ?? null}
         right={<span className="flex shrink-0 flex-col items-end text-xs font-bold leading-tight text-white/70 tabular-nums" style={poppins}>
-          {purse && <span className="text-sm font-black text-brand-yellow">{euros(purse.left)}{short && <span className="ml-1 text-[10px] font-bold text-white/70">{c.eachPlace(purse.each)}</span>}</span>}
           {shared ? c.round(round + 1) : c.pickN(Math.min(XI, round + 1), XI)}
         </span>} />
       <ProgressStrip picks={myPicks} hidden={hidden} />
+      {purse && <WalletStrip c={c} money={purse} total={budget} />}
       {shared && (
         <>
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -487,8 +485,8 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
               <div className="grid grid-cols-2 gap-2">
                 {(["club", "season"] as const).map((kind) => (
                   <motion.button key={kind} type="button" aria-label={kind === "club" ? c.newClub : c.newSeason} whileTap={{ scale: 0.96 }} onClick={() => onRespin(kind)} disabled={spinning || (respins === 0 && respinCost === null)}
-                    className={cn("flex min-w-0 items-center justify-center gap-1.5 rounded-full bg-brand-blue px-2 text-xs font-black uppercase text-white shadow-lg hover:bg-brand-blue/90 disabled:opacity-40", short ? "h-9" : "h-10")} style={poppins}>
-                    <RefreshCw className={cn("size-3.5 shrink-0", spinning && "animate-spin")} aria-hidden /><span>{kind === "club" ? c.newClub : c.newSeason}</span>
+                    className={cn("flex min-w-0 items-center justify-center gap-1.5 rounded-full bg-brand-blue px-2 text-xs font-black text-white shadow-lg hover:bg-brand-blue/90 disabled:opacity-40", short ? "h-9" : "h-10")} style={poppins}>
+                    <RefreshCw className={cn("size-3.5 shrink-0", spinning && "animate-spin")} aria-hidden /><span className="min-w-0 truncate">{kind === "club" ? c.newClub : c.newSeason}</span>
                   </motion.button>
                 ))}
               </div>
@@ -515,12 +513,29 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
         <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.15 }} className={cn("pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4", armed ? "bottom-20 lg:bottom-4" : "bottom-4")} role="status">
           <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-full bg-white py-1.5 pl-4 pr-1.5 text-sm font-bold text-surface-page shadow-xl">
             <span className="min-w-0 truncate">{c.signed(surname(undoName))}</span>
-            <button type="button" onClick={onUndo} className="shrink-0 rounded-full bg-brand-blue px-3 py-1.5 text-xs font-black uppercase text-white" style={poppins}>{c.undo}</button>
+            <button type="button" onClick={onUndo} className="h-9 shrink-0 rounded-full bg-brand-blue px-4 text-xs font-black uppercase text-white" style={poppins}>{c.undo}</button>
           </div>
         </motion.div>
       )}
-      {openSeat && <TeamSheet c={c} name={openSeat.me ? c.you : openSeat.name} slots={slots} picks={openSeat.picks} hidden={hidden} seconds={seconds} onClose={() => setTeamSeat(null)} />}
+      {openSeat && <TeamSheet c={c} name={openSeat.name} me={openSeat.me} slots={slots} picks={openSeat.picks} hidden={hidden} seconds={seconds} onClose={() => setTeamSeat(null)} />}
       {why && <RatingSheet c={c} player={why} spin={spin} teams={league.teams} onClose={() => setWhy(null)} />}
+    </div>
+  );
+}
+
+/** Budget: money left, places to fill and the even share per place, with a bar of what is spent. */
+function WalletStrip({ c, money, total }: { c: DraftText; money: { left: number; open: number; each: number }; total: number }) {
+  const reduce = useReducedMotion();
+  const spentShare = Math.min(1, Math.max(0, (total - money.left) / total));
+  return (
+    <div className="mt-2 rounded-xl bg-white/[0.05] px-3 py-1.5" role="status" aria-live="polite">
+      <div className="flex items-baseline justify-between gap-2 text-xs font-bold tabular-nums" style={poppins}>
+        <motion.span key={money.left} initial={reduce ? false : { opacity: 0.4, y: -4 }} animate={{ opacity: 1, y: 0 }} className="shrink-0 text-base font-black text-brand-yellow">{euros(money.left)}</motion.span>
+        {money.open > 0 && <span className="min-w-0 truncate text-right text-white/80">{c.eachPlace(money.each)}</span>}
+      </div>
+      <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
+        <motion.div className="h-full rounded-full bg-brand-yellow" initial={false} animate={{ width: `${spentShare * 100}%` }} transition={{ duration: reduce ? 0 : 0.35 }} />
+      </div>
     </div>
   );
 }
@@ -545,7 +560,7 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
   // With six seats most chips are off screen on a phone: keep whoever is picking in view.
   useEffect(() => { if (seat.active) self.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); }, [seat.active]);
   return (
-    <button ref={self} type="button" onClick={onOpen} aria-label={c.teamOf(seat.me ? c.you : seat.name)} className={cn("flex min-w-[8.5rem] flex-1 items-center gap-2 rounded-2xl px-2.5 text-left", tight ? "py-1" : "py-2", seat.active ? (seat.me ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-brand-blue/25 ring-2 ring-brand-blue") : "bg-surface-card")}>
+    <button ref={self} type="button" onClick={onOpen} aria-label={seat.me ? c.yourTeam : c.teamOf(seat.name)} className={cn("flex min-w-[8.5rem] flex-1 items-center gap-2 rounded-2xl px-2.5 text-left", tight ? "py-1" : "py-2", seat.active ? (seat.me ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-brand-blue/25 ring-2 ring-brand-blue") : "bg-surface-card")}>
       {seat.avatar ? <DuelAvatar customization={seat.avatar} size="xs" /> : <span className="size-8 rounded-full bg-white/15" />}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-bold text-white/80">{seat.me ? c.you : seat.name}{seat.note ? ` · ${seat.note}` : ""}</span>
@@ -556,14 +571,15 @@ function SeatChip({ seat, slots, c, hidden, tight, onOpen }: { seat: BoardSeat; 
 }
 
 /** Anyone's XI, from a seat chip or the final table: seeing each other's teams is what starts the arguing. */
-export function TeamSheet({ c, name, slots, picks, hidden, seconds, onPlay, onClose }: { c: DraftText; name: string; slots: Slot[]; picks: (Pick | null)[]; hidden?: boolean; seconds?: number | null; onPlay?: () => void; onClose: () => void }) {
+export function TeamSheet({ c, name, me, slots, picks, hidden, seconds, onPlay, onClose }: { c: DraftText; name: string; me?: boolean; slots: Slot[]; picks: (Pick | null)[]; hidden?: boolean; seconds?: number | null; onPlay?: () => void; onClose: () => void }) {
   useEscape(onClose);
   const team = lines(slots, picks);
+  const title = me ? c.yourTeam : c.teamOf(name);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" role="dialog" aria-modal aria-label={c.teamOf(name)} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center" role="dialog" aria-modal aria-label={title} onClick={onClose}>
       <div className="max-h-full w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface-card p-4 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="min-w-0 text-sm font-black uppercase" style={poppins}>{c.teamOf(name)}</h2>
+          <h2 className="min-w-0 text-sm font-black uppercase" style={poppins}>{title}</h2>
           {!hidden && picks.some(Boolean) && <span className="shrink-0 text-xs font-bold text-white/80">{c.teamRating} <span className="text-lg font-black tabular-nums text-white" style={poppins}>{Math.round(team.overall)}</span></span>}
         </div>
         {seconds != null && <p role="timer" className="mt-2 rounded-xl bg-brand-yellow px-3 py-1.5 text-center text-xs font-black text-surface-page" style={poppins}>{c.yourTurn} · {seconds} s</p>}
@@ -601,8 +617,12 @@ export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPla
         <DraftPitch slots={slots} picks={picks} hideRatings={hidden} academy={c.academy} tight={short} className={short ? "h-[14.5rem]" : "aspect-[4/3.6]"} />
         {!hidden && <LineBars c={c} team={lines(slots, picks)} />}
       </div>
-      {variant === "budget" && <p className="mt-3 text-center text-sm font-black text-brand-yellow" style={poppins}>{c.spent(spentOn(picks), budget)}</p>}
-      {prediction && !hidden && <p className="mt-2 text-center text-sm font-semibold text-white/85">{c.forecast(prediction.position, prediction.points, prediction.titlePct)}</p>}
+      {(variant === "budget" || (prediction && !hidden)) && (
+        <div className="mt-3 space-y-1 rounded-2xl bg-white/[0.05] px-4 py-3 text-center">
+          {variant === "budget" && <p className="text-sm font-black text-brand-yellow tabular-nums" style={poppins}>{c.spent(spentOn(picks), budget)}</p>}
+          {prediction && !hidden && <p className="text-sm font-semibold text-white/85">{c.forecast(prediction.position, prediction.points, prediction.titlePct)}</p>}
+        </div>
+      )}
       <div className="mt-auto space-y-2 pt-4">
         {undoName && onUndo && <QuietButton onClick={onUndo}>{c.undo}: {surname(undoName)}</QuietButton>}
         <GreenButton onClick={onPlay}>{c.playSeason}</GreenButton>
@@ -832,6 +852,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
             {newBest && <p className={cn("mt-2 text-sm font-black", perfect ? "text-surface-page" : "text-brand-green-light")} style={poppins}>{c.newBest}</p>}
             {nextDaily && <p className={cn("mt-1 text-xs font-semibold", perfect ? "text-surface-page/70" : "text-white/70")}>{c.nextDaily(nextDaily)}</p>}
           </motion.div>
+          {variant === "budget" && <BudgetSummary c={c} picks={picks} total={budget} />}
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <GreenButton onClick={() => setSharing(true)} className="flex items-center justify-center gap-2"><Share2 className="size-4" aria-hidden />{c.share}</GreenButton>
@@ -843,7 +864,6 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
             </div>
           </div>
           {variant === "knowledge" && <PicksReveal c={c} slots={slots} picks={picks} />}
-          {variant === "budget" && <BudgetSummary c={c} picks={picks} total={budget} />}
           {prediction && (
             <div className="rounded-2xl bg-surface-card px-4 py-3 text-sm">
               <p className="font-semibold text-white/85">{c.forecast(prediction.position, prediction.points, prediction.titlePct)}</p>
@@ -1198,7 +1218,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
       <ol className="mt-4 space-y-2">
         {rows.map((r, i) => (
           <li key={r.seat.name}>
-           <button type="button" onClick={() => setTeamSeat(r.seat.name)} aria-label={c.teamOf(r.seat.me ? c.you : r.seat.name)} className={cn("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", r.seat.me ? "bg-brand-green/15 ring-1 ring-brand-green" : "bg-surface-card")}>
+           <button type="button" onClick={() => setTeamSeat(r.seat.name)} aria-label={r.seat.me ? c.yourTeam : c.teamOf(r.seat.name)} className={cn("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", r.seat.me ? "bg-brand-green/15 ring-1 ring-brand-green" : "bg-surface-card")}>
             <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-black", medal[i] ?? "bg-white/10")} style={poppins}>{i + 1}</span>
             {r.seat.avatar ? <DuelAvatar customization={r.seat.avatar} size="xs" /> : <span className="size-8 rounded-full bg-white/15" />}
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{r.seat.me ? c.you : r.seat.name}</p><p className="text-[11px] text-white/70">{c.teamRating} {Math.round(r.team)} · {c.finish[r.season.finish]}</p></div>
@@ -1208,7 +1228,7 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
         ))}
       </ol>
       <GreenButton onClick={onAgain} className="mt-auto">{againLabel ?? c.again}</GreenButton>
-      {open && <TeamSheet c={c} name={open.me ? c.you : open.name} slots={slots} picks={open.picks} onClose={() => setTeamSeat(null)} />}
+      {open && <TeamSheet c={c} name={open.name} me={open.me} slots={slots} picks={open.picks} onClose={() => setTeamSeat(null)} />}
     </div>
   );
 }
@@ -1217,8 +1237,8 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
 
 export interface BoardRow { userId?: string; rank: number; name: string; avatar: AvatarCustomization | null; season: { w: number; d: number; l: number; points: number }; me?: boolean; picks?: (Pick | null)[] }
 
-export function DraftLeaderboard({ locale, rows, variant, onVariant, title, compact, onOpen }: {
-  locale: string; rows: BoardRow[]; variant: Variant; onVariant: (v: Variant) => void; title?: string; compact?: boolean;
+export function DraftLeaderboard({ locale, rows, title, compact, onOpen }: {
+  locale: string; rows: BoardRow[]; variant?: Variant; onVariant?: (v: Variant) => void; title?: string; compact?: boolean;
   /** Only once you have played: today's teams would give away today's draw. */
   onOpen?: (row: BoardRow) => void;
 }) {
@@ -1228,11 +1248,6 @@ export function DraftLeaderboard({ locale, rows, variant, onVariant, title, comp
       <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <Shield className="size-4 text-brand-green-light" aria-hidden />
         <h3 className="min-w-0 flex-1 basis-40 text-sm font-black uppercase" style={poppins}>{title ?? c.board}</h3>
-        <div className="flex rounded-full bg-black/25 p-0.5 text-[11px] font-bold">
-          {VARIANTS.map((v) => (
-            <button key={v} type="button" onClick={() => onVariant(v)} aria-pressed={variant === v} className={cn("rounded-full px-2 py-1", variant === v ? "bg-white/15 text-white" : "text-white/55")}>{variantName(c, v)}</button>
-          ))}
-        </div>
       </div>
       <ol className="space-y-1">
         {[...rows.slice(0, compact ? 5 : 10), ...rows.slice(compact ? 5 : 10).filter((r) => r.me)].map((r) => (

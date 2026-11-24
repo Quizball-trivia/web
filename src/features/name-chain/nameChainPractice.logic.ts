@@ -7,8 +7,13 @@ export type PracticeVerdict = "ok" | "unknown" | "letter" | "repeat";
 export interface PracticeLink { pid: string; name: string; game: string; given: boolean }
 
 /** The server's answer to one practice step. */
+/** The names and letters a practice chain froze at its start; sent back with every later step so they cannot change mid-chain. */
+export interface PracticeFrozen { ov?: string; oe?: string; al?: "cy" | "gr" }
+
 export interface PracticeStepResponse {
-  alphabet: "latin" | "cyrillic";
+  alphabet: "latin" | "cyrillic" | "greek";
+  /** Returned by servers that freeze practice chains (absent from older ones). */
+  frozen?: PracticeFrozen;
   result: PracticeVerdict | null;
   links: PracticeLink[];
   letter: string;
@@ -19,8 +24,8 @@ export interface PracticeStepResponse {
 
 export type PracticeRequest =
   | { op: "start"; locale: string; used: string[] }
-  | { op: "answer"; locale: string; used: string[]; tail: string; answer: string }
-  | { op: "pass"; locale: string; used: string[]; tail: string };
+  | { op: "answer"; locale: string; used: string[]; tail: string; answer: string; frozen?: PracticeFrozen }
+  | { op: "pass"; locale: string; used: string[]; tail: string; frozen?: PracticeFrozen };
 
 export interface PracticeState {
   links: PracticeLink[];
@@ -34,6 +39,8 @@ export interface PracticeState {
   results: number[];
   /** Bumps on every answer judged, so the same refusal twice still animates. */
   attempt: number;
+  /** What the current chain's start froze (echoed on its answers and passes). */
+  frozen?: PracticeFrozen;
 }
 
 /** The server takes at most this many used ids; older ones fall off (and those names become free again). */
@@ -53,15 +60,16 @@ export function practiceRequest(s: PracticeState, locale: string, action: { op: 
   if (action.op === "start") return { op: "start", locale, used };
   const tail = s.links.at(-1)?.pid;
   if (!tail || s.ended) return null;
-  return action.op === "pass" ? { op: "pass", locale, used, tail } : { op: "answer", locale, used, tail, answer: action.answer.slice(0, 60) };
+  const frozen = s.frozen ? { frozen: s.frozen } : {};
+  return action.op === "pass" ? { op: "pass", locale, used, tail, ...frozen } : { op: "answer", locale, used, tail, answer: action.answer.slice(0, 60), ...frozen };
 }
 
 /** Folds one server step into the practice. A start replaces the chain (finishing the one on screen, if any). */
 export function applyPractice(s: PracticeState, op: PracticeRequest["op"], res: PracticeStepResponse): PracticeState {
   if (op === "start") {
     const results = s.links.length > 0 && !s.ended ? [...s.results, namedIn(s)] : s.results;
-    if (res.exhausted || res.links.length === 0) return { ...s, results, links: [], letter: "", last: null, ended: { could: [], named: 0 } };
-    return { ...s, results, links: res.links, used: withUsed(s.used, res.links), letter: res.letter, last: null, ended: null };
+    if (res.exhausted || res.links.length === 0) return { ...s, results, links: [], letter: "", last: null, ended: { could: [], named: 0 }, frozen: undefined };
+    return { ...s, results, links: res.links, used: withUsed(s.used, res.links), letter: res.letter, last: null, ended: null, frozen: res.frozen };
   }
   if (op === "pass") {
     const named = namedIn(s);

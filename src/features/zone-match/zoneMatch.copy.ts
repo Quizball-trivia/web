@@ -9,6 +9,7 @@
 import type { Locale } from '@/lib/i18n/locale-config';
 import { de } from './copy/de';
 import { fr } from './copy/fr';
+import { el } from './copy/el';
 import { en, type BySide, type Plural, type ZoneMatchCopy } from './copy/en';
 import { es } from './copy/es';
 import { ka } from './copy/ka';
@@ -20,7 +21,7 @@ import type { CardEvent } from './zoneMatch.machine';
 
 export type { ZoneMatchCopy };
 
-export const ZONE_MATCH_COPY: Record<Locale, ZoneMatchCopy> = { en, ka, es, tr, ru, pt, de, fr };
+export const ZONE_MATCH_COPY: Record<Locale, ZoneMatchCopy> = { en, ka, es, tr, ru, pt, de, fr, el };
 
 export const zoneMatchCopy = (locale: string): ZoneMatchCopy => ZONE_MATCH_COPY[(locale in ZONE_MATCH_COPY ? locale : 'en') as Locale];
 

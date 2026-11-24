@@ -13,6 +13,7 @@ export const BOTH_CLUES_EXPLANATION: Translations = {
   pt: 'As duas dicas precisam se aplicar ao mesmo jogador, mas podem se referir a temporadas diferentes da carreira dele.',
   de: 'Beide Hinweise müssen auf denselben Spieler zutreffen, können sich aber auf verschiedene Saisons seiner Karriere beziehen.',
   fr: 'Les deux indices doivent correspondre au même joueur, mais peuvent concerner différentes saisons de sa carrière.',
+  el: 'Και τα δύο στοιχεία πρέπει να ταιριάζουν στον ίδιο παίκτη, αλλά μπορεί να αφορούν διαφορετικές σεζόν της καριέρας του.',
 };
 
 // These describe the published membership rules, not the player's current club
@@ -28,6 +29,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite um jogador de futebol que tenha atuado pelo time principal deste clube em qualquer momento da carreira. Ter jogado apenas nas categorias de base não conta.',
     de: 'Nenne einen Fußballspieler, der irgendwann in seiner Karriere für die erste Mannschaft dieses Vereins gespielt hat. Einsätze nur in der Jugend zählen nicht.',
     fr: 'Nomme un joueur de foot qui a joué dans l’équipe première de ce club, à un moment de sa carrière. Les passages en équipes de jeunes uniquement ne comptent pas.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε στην πρώτη ομάδα αυτού του συλλόγου σε κάποια φάση της καριέρας του. Μόνο συμμετοχές σε ομάδες νέων δεν μετρούν.',
   },
   country: {
     en: 'Name a footballer with this nationality or who represented this country’s national team. Playing for a club in the country is not enough.',
@@ -38,6 +40,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite um jogador de futebol com essa nacionalidade ou que tenha defendido a seleção desse país. Jogar por um clube do país não é suficiente.',
     de: 'Nenne einen Fußballspieler mit dieser Staatsangehörigkeit oder einen, der für die Nationalmannschaft dieses Landes gespielt hat. Für einen Verein im Land zu spielen, reicht nicht.',
     fr: 'Nomme un joueur de foot de cette nationalité ou qui a représenté cette sélection. Jouer dans un club du pays ne suffit pas.',
+    el: 'Ονόμασε ποδοσφαιριστή με αυτή την εθνικότητα ή που έχει αγωνιστεί σε αυτή την εθνική ομάδα. Το να παίξει σε σύλλογο της χώρας δεν αρκεί.',
   },
   league: {
     en: 'Name a footballer who made a senior appearance in this league. Past seasons count; winning the league is not required.',
@@ -48,6 +51,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite um jogador de futebol que tenha atuado nesta liga pelo time principal. Temporadas anteriores também contam; não é preciso ter sido campeão.',
     de: 'Nenne einen Fußballspieler, der in dieser Liga für die erste Mannschaft gespielt hat. Frühere Saisons zählen; die Liga muss nicht gewonnen worden sein.',
     fr: 'Nomme un joueur de foot qui a disputé un match dans ce championnat avec l’équipe première. Les saisons passées comptent ; il n’est pas nécessaire d’avoir été champion.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε σε αυτό το πρωτάθλημα με την πρώτη ομάδα. Μετρούν και οι προηγούμενες σεζόν· δεν χρειάζεται να έχει κατακτήσει τον τίτλο.',
   },
   manager: {
     en: 'Name a footballer who played under this manager during their career.',
@@ -58,6 +62,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite um jogador de futebol que tenha jogado sob o comando deste técnico durante a carreira.',
     de: 'Nenne einen Fußballspieler, der im Laufe seiner Karriere unter diesem Trainer gespielt hat.',
     fr: 'Nomme un joueur de foot qui a joué sous les ordres de cet entraîneur au cours de sa carrière.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε με αυτόν τον προπονητή στην καριέρα του.',
   },
   teammate: {
     en: 'Name a different footballer who played for the same club in the same season as this player. Being national-team teammates alone does not count.',
@@ -68,6 +73,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite outro jogador de futebol que tenha jogado pelo mesmo clube, na mesma temporada que este jogador. Ter sido companheiro apenas na seleção não conta.',
     de: 'Nenne einen anderen Fußballspieler, der in derselben Saison für denselben Verein wie dieser Spieler gespielt hat. Gemeinsam in der Nationalmannschaft zu spielen, zählt nicht.',
     fr: 'Nomme un autre joueur de foot qui a joué dans le même club, lors de la même saison que ce joueur. Être coéquipiers uniquement en sélection ne compte pas.',
+    el: 'Ονόμασε διαφορετικό ποδοσφαιριστή που αγωνίστηκε στον ίδιο σύλλογο την ίδια σεζόν με αυτόν τον παίκτη. Δεν μετρά αν ήταν συμπαίκτες μόνο στην εθνική ομάδα.',
   },
   trophy_award: {
     en: 'Name a footballer who appeared in this competition for the winning team during a title-winning season. Simply playing in the competition is not enough.',
@@ -78,6 +84,7 @@ const FAMILY_RULES: Record<Exclude<FootballGridCriterionView['family'], 'wildcar
     pt: 'Cite um jogador de futebol que tenha atuado nesta competição pelo time campeão na temporada do título. Apenas participar da competição não é suficiente.',
     de: 'Nenne einen Fußballspieler, der in der Saison des Titelgewinns für das Siegerteam in diesem Wettbewerb gespielt hat. Nur die Teilnahme am Wettbewerb reicht nicht.',
     fr: 'Nomme un joueur de foot qui a disputé cette compétition avec l’équipe victorieuse pendant une saison où elle a remporté le titre. Participer à la compétition ne suffit pas.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε σε αυτή τη διοργάνωση με την ομάδα που κατέκτησε τον τίτλο τη σεζόν της κατάκτησης. Η απλή συμμετοχή στη διοργάνωση δεν αρκεί.',
   },
 };
 
@@ -91,6 +98,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que atua ou já atuou como goleiro.',
     de: 'Nenne einen Fußballspieler, der Torwart ist oder war.',
     fr: 'Nomme un joueur de foot qui joue ou a joué au poste de gardien.',
+    el: 'Ονόμασε ποδοσφαιριστή που παίζει ή έπαιξε ως τερματοφύλακας.',
   },
   'position-def': {
     en: 'Name a footballer who plays or played as a defender, such as a centre-back or full-back.',
@@ -101,6 +109,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que atua ou já atuou na defesa, como zagueiro ou lateral.',
     de: 'Nenne einen Fußballspieler, der als Verteidiger spielt oder gespielt hat, etwa als Innenverteidiger oder Außenverteidiger.',
     fr: 'Nomme un joueur de foot qui joue ou a joué en défense, par exemple comme défenseur central ou latéral.',
+    el: 'Ονόμασε ποδοσφαιριστή που παίζει ή έπαιξε στην άμυνα, όπως στόπερ ή μπακ.',
   },
   'position-mid': {
     en: 'Name a footballer who plays or played in midfield, including defensive, central and attacking midfielders.',
@@ -111,6 +120,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que atua ou já atuou no meio-campo, como volante, meia central ou meia-atacante.',
     de: 'Nenne einen Fußballspieler, der als Mittelfeldspieler spielt oder gespielt hat, defensiv, zentral oder offensiv.',
     fr: 'Nomme un joueur de foot qui joue ou a joué au milieu de terrain, comme milieu défensif, central ou offensif.',
+    el: 'Ονόμασε ποδοσφαιριστή που παίζει ή έπαιξε στη μεσαία γραμμή, ως αμυντικός, κεντρικός ή επιθετικός μέσος.',
   },
   'position-fwd': {
     en: 'Name a footballer who plays or played in attack, including strikers and attacking wingers.',
@@ -121,6 +131,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que atua ou já atuou no ataque, como centroavante ou ponta.',
     de: 'Nenne einen Fußballspieler, der im Angriff spielt oder gespielt hat, etwa als Stürmer oder Flügelspieler.',
     fr: 'Nomme un joueur de foot qui joue ou a joué en attaque, notamment comme avant-centre ou ailier offensif.',
+    el: 'Ονόμασε ποδοσφαιριστή που παίζει ή έπαιξε στην επίθεση, ως σέντερ φορ ή επιθετικός εξτρέμ.',
   },
   'international-caps-100': {
     en: 'Name a footballer with at least 100 appearances for their senior national team. Club and youth-team matches do not count.',
@@ -131,6 +142,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol com pelo menos 100 partidas pela seleção principal. Partidas por clubes e seleções de base não contam.',
     de: 'Nenne einen Fußballspieler mit mindestens 100 Einsätzen für seine A-Nationalmannschaft. Spiele für Vereine oder Jugendmannschaften zählen nicht.',
     fr: 'Nomme un joueur de foot qui a disputé au moins 100 matchs avec sa sélection nationale A. Les matchs en club et en équipe de jeunes ne comptent pas.',
+    el: 'Ονόμασε ποδοσφαιριστή με τουλάχιστον 100 συμμετοχές στην εθνική ομάδα ανδρών. Οι αγώνες σε συλλόγους και στις ομάδες νέων δεν μετρούν.',
   },
   'major-leagues-3': {
     en: 'Name a footballer who played in at least three of these five leagues: Premier League, La Liga, Serie A, Bundesliga and Ligue 1.',
@@ -141,6 +153,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha atuado em pelo menos três destas cinco ligas: Premier League, La Liga, Serie A, Bundesliga e Ligue 1.',
     de: 'Nenne einen Fußballspieler, der in mindestens drei dieser fünf Ligen gespielt hat: Premier League, La Liga, Serie A, Bundesliga und Ligue 1.',
     fr: 'Nomme un joueur de foot qui a joué dans au moins trois de ces cinq championnats : Premier League, La Liga, Serie A, Bundesliga et Ligue 1.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε σε τουλάχιστον τρία από αυτά τα πέντε πρωταθλήματα: Premier League, La Liga, Serie A, Bundesliga και Ligue 1.',
   },
   'titles-multiple-countries': {
     en: 'Name a footballer who played in league-title-winning campaigns in at least two different countries. Cup wins alone do not count.',
@@ -151,6 +164,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha atuado em campanhas campeãs de liga em pelo menos dois países diferentes. Títulos de copa, por si só, não contam.',
     de: 'Nenne einen Fußballspieler, der in mindestens zwei verschiedenen Ländern in einer Saison mit Meistertitel gespielt hat. Nur Pokalsiege zählen nicht.',
     fr: 'Nomme un joueur de foot qui a joué dans une équipe championne dans au moins deux pays différents. Les victoires en coupe seules ne comptent pas.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε σε σεζόν κατάκτησης πρωταθλήματος σε τουλάχιστον δύο διαφορετικές χώρες. Οι κατακτήσεις κυπέλλου από μόνες τους δεν μετρούν.',
   },
   'ballon-dor-winner': {
     en: 'Name a footballer who won the Ballon d’Or. Being nominated is not enough.',
@@ -161,6 +175,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha vencido o Ballon d’Or. Apenas ser indicado não basta.',
     de: 'Nenne einen Fußballspieler, der den Ballon d’Or gewonnen hat. Eine Nominierung reicht nicht.',
     fr: 'Nomme un joueur de foot qui a remporté le Ballon d’Or. Une nomination ne suffit pas.',
+    el: 'Ονόμασε ποδοσφαιριστή που κατέκτησε τη Χρυσή Μπάλα. Η υποψηφιότητα δεν αρκεί.',
   },
   'champions-league-2plus': {
     en: 'Name a footballer who played in at least two Champions League-winning campaigns.',
@@ -171,6 +186,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha atuado em pelo menos duas campanhas de título da Champions League.',
     de: 'Nenne einen Fußballspieler, der in mindestens zwei Saisons gespielt hat, in denen sein Team die Champions League gewann.',
     fr: 'Nomme un joueur de foot qui a joué lors d’au moins deux saisons où son équipe a remporté la Ligue des champions.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε σε τουλάχιστον δύο σεζόν κατά τις οποίες η ομάδα του κατέκτησε το Champions League.',
   },
   'treble-winner': {
     en: 'Name a footballer who won the domestic league, main domestic cup and Champions League in the same season.',
@@ -181,6 +197,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha vencido o campeonato nacional, a principal copa nacional e a Champions League na mesma temporada.',
     de: 'Nenne einen Fußballspieler, der in derselben Saison die nationale Meisterschaft, den wichtigsten nationalen Pokal und die Champions League gewonnen hat.',
     fr: 'Nomme un joueur de foot qui a remporté le championnat national, la principale coupe nationale et la Ligue des champions au cours de la même saison.',
+    el: 'Ονόμασε ποδοσφαιριστή που κατέκτησε το εγχώριο πρωτάθλημα, το βασικό εγχώριο κύπελλο και το Champions League την ίδια σεζόν.',
   },
   'played-for-rivals': {
     en: 'Name a footballer who played for the senior teams of both clubs in a derby rivalry, at any time in their career.',
@@ -191,6 +208,7 @@ const WILDCARD_RULES: Record<string, Translations> = {
     pt: 'Cite um jogador de futebol que tenha atuado pelos times principais dos dois clubes de um clássico, em qualquer momento da carreira.',
     de: 'Nenne einen Fußballspieler, der im Laufe seiner Karriere für die erste Mannschaft beider an einem Derby beteiligten Vereine gespielt hat.',
     fr: 'Nomme un joueur de foot qui a joué en équipe première dans les deux clubs rivaux d’un derby, à un moment de sa carrière.',
+    el: 'Ονόμασε ποδοσφαιριστή που αγωνίστηκε στις πρώτες ομάδες και των δύο συλλόγων που είναι αντίπαλοι σε ντέρμπι, οποιαδήποτε στιγμή στην καριέρα του.',
   },
 };
 
@@ -212,6 +230,7 @@ export function criterionExplanation(criterion: FootballGridCriterionView, local
       pt: `Cite um jogador de futebol nascido entre ${start} e ${end}, inclusive. O critério é o ano de nascimento, não o período em que ele jogou.`,
       de: `Nenne einen Fußballspieler, der zwischen ${start} und ${end} geboren wurde (einschließlich). Gemeint ist das Geburtsjahr, nicht der Zeitraum, in dem er gespielt hat.`,
       fr: `Nomme un joueur de foot né entre ${start} et ${end}, années incluses. Il s’agit de son année de naissance, pas de la période où il a joué.`,
+      el: `Ονόμασε ποδοσφαιριστή που γεννήθηκε από ${start} έως και ${end}. Πρόκειται για το έτος γέννησής του, όχι για το πότε αγωνίστηκε.`,
     }[locale];
   }
   return WILDCARD_RULES[key]?.[locale] ?? null;

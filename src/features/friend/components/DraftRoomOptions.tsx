@@ -59,7 +59,7 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   }, [q.inFlight, onAbandoned]);
   const set = (patch: Partial<DraftRoomChoice>) => {
     if (!canEdit) return;
-    setQ((current) => ({ ...current, want: { ...(current.want ?? server), ...patch } }));
+    setQ((current) => ({ ...current, want: { ...(current.want ?? server), ...patch, variant: "budget" } }));
   };
   const row = <T extends string>(label: string, items: ReadonlyArray<readonly [T, string]>, current: T, pick: (v: T) => void) => (
     <div>
@@ -71,7 +71,6 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   );
   return (
     <div className="mt-3 space-y-3">
-      {row(c.setMode, VARIANTS.map((v) => [v, v === "budget" ? c.budget : v === "knowledge" ? c.knowledge : c.classic] as const), value.variant, (variant) => set({ variant }))}
       {row(c.setLeague, LEAGUES, value.leagueId, (leagueId) => set({ leagueId }))}
       {row(c.setEra, ERAS.map((e) => [e, e === "all" ? c.allTime : e === "modern" ? c.modern : c.legends] as const), value.era, (era) => set({ era }))}
       {row(c.setFormation, (Object.keys(FORMATIONS) as FormationId[]).map((f) => [f, f] as const), value.formation, (formation) => set({ formation }))}

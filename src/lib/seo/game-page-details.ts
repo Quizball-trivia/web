@@ -56,6 +56,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Une victoire rapporte des RP et te fait monter dans les divisions, de l’Académie jusqu’aux plus hautes ; une défaite te fait perdre des RP. Les nouveaux comptes disputent 3 matchs de placement avant d’obtenir un rang. Tes matchs, ton taux de victoire et ton rang figurent au classement, et la compétition du week-end attribue ses points de qualification grâce aux parties classées.",
       "La manche d’entraînement de cette page te guide dans ce même déroulement : la phase d’exclusion, les manches de possession et une séance de tirs au but contre CoachBot, avec des indices à chaque étape. Elle ne rapporte rien et n’est pas sauvegardée. Le Duel classé nécessite un compte.",
     ],
+    el: [
+      "Ο Αγώνας κατάταξης είναι ο ανταγωνιστικός τρόπος παιχνιδιού του Quizball: ένα ζωντανό ποδοσφαιρικό κουίζ ένας εναντίον ενός με πραγματικό αντίπαλο, για βαθμούς κατάταξης (RP). Επιλέγονται τυχαία τρεις κατηγορίες από τον κατάλογο· κάθε παίκτης αποκλείει μία και ο αγώνας παίζεται στην κατηγορία που μένει. Δώδεκα ερωτήσεις σε δύο ημίχρονα, με νέα επιλογή κατηγορίας στην ανάπαυλα.",
+      "Κάθε ερώτηση είναι μάχη για την κατοχή. Και οι δύο παίκτες απαντούν στην ίδια ερώτηση· η ταχύτερη σωστή απάντηση κερδίζει έδαφος. Στείλε την μπάλα στη γραμμή της αντίπαλης εστίας για να σου δοθεί σουτ· αν το σουτ νικήσει τον τερματοφύλακα, είναι γκολ. Αν το σκορ είναι ισόπαλο στη λήξη, ο αγώνας κρίνεται στα πέναλτι: μία ερώτηση καθορίζει κάθε εκτέλεση.",
+      "Οι νίκες δίνουν RP και σε ανεβάζουν στις κατηγορίες, από την Ακαδημία ως τις κορυφαίες κατηγορίες· οι ήττες αφαιρούν RP. Οι νέοι λογαριασμοί παίζουν τρεις αγώνες κατάταξης πριν αποκτήσουν κατηγορία. Οι αγώνες σου, το ποσοστό νικών και η θέση σου εμφανίζονται στην κατάταξη, ενώ η διοργάνωση του Σαββατοκύριακου δίνει βαθμούς πρόκρισης από τους αγώνες κατάταξης.",
+      "Η προπόνηση σε αυτή τη σελίδα σε καθοδηγεί στην ίδια ακριβώς ροή: ίδια φάση αποκλεισμού, ίδιοι γύροι κατοχής και διαδικασία πέναλτι απέναντι στο CoachBot, με βοήθεια σε κάθε βήμα. Δεν απονέμει τίποτα και δεν αποθηκεύεται. Ο Αγώνας κατάταξης απαιτεί λογαριασμό.",
+    ],
   },
   "football-tic-tac-toe": {
     en: [
@@ -97,6 +103,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Le Morpion foot se joue sur un plateau de 3 × 3. Chaque ligne et chaque colonne correspond à une catégorie : un club, une sélection, un championnat, un trophée ou un entraîneur. Chaque case associe donc deux catégories. Pour la prendre, cite un joueur qui correspond aux deux, par exemple un Brésilien qui a joué à Chelsea.",
       "Les tours sont chronométrés. Saisis un nom : le jeu accepte les noms de famille, les noms complets, les surnoms courants et les petites fautes de frappe. Si personne ne peut remplir une case, tu peux passer ; s’il ne reste aucune ligne gagnante possible, la partie est nulle. Les matchs serrés se jouent au meilleur des 3 manches, pour qu’un plateau chanceux ne décide pas de la journée.",
       "Sur cette page, la manche d’entraînement se joue contre un bot, avec les mêmes règles. Dans l’app, les joueurs connectés affrontent de vrais adversaires, conservent leur historique et gagnent des points de classement ; l’entraînement en mode invité ne rapporte rien et n’est pas sauvegardé.",
+    ],
+    el: [
+      "Η Ποδοσφαιρική τρίλιζα παίζεται σε ταμπλό 3×3. Κάθε σειρά και κάθε στήλη αντιστοιχεί σε μια κατηγορία: σύλλογος, εθνική ομάδα, πρωτάθλημα, τρόπαιο ή προπονητής. Κάθε τετράγωνο συνδυάζει δύο κατηγορίες και το κατακτάς ονομάζοντας έναν ποδοσφαιριστή που ταιριάζει και στις δύο, για παράδειγμα έναν Βραζιλιάνο που έπαιξε στην Τσέλσι.",
+      "Οι γύροι έχουν χρονικό όριο. Γράψε ένα όνομα: το παιχνίδι δέχεται επώνυμα, πλήρη ονόματα, συνηθισμένα παρατσούκλια και μικρά ορθογραφικά λάθη. Αν κανείς δεν μπορεί να συμπληρώσει το τετράγωνο, μπορείς να πας πάσο· αν δεν απομένει νικητήρια γραμμή, η παρτίδα είναι ισόπαλη. Οι αμφίρροποι αγώνες κρίνονται σε σειρά καλύτερου των τριών, ώστε μια τυχερή διάταξη να μη χαλάσει τη μέρα.",
+      "Η προπόνηση αυτής της σελίδας παίζεται με bot και τους ίδιους κανόνες. Οι συνδεδεμένοι παίκτες αντιμετωπίζουν πραγματικούς αντιπάλους στην εφαρμογή, κρατούν το ιστορικό τους και κερδίζουν βαθμούς κατάταξης· η προπόνηση ως επισκέπτης δεν απονέμει τίποτα και δεν αποθηκεύεται.",
     ],
   },
   auction: {
@@ -140,6 +151,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Avec la formation choisie, ton objectif est de composer un onze complet. Si tu proposes trop tôt un montant élevé, tes adversaires peuvent obtenir les joueurs qu’il te faudra ensuite ; si tu attends trop, les meilleurs seront partis. Quand tous les effectifs sont complets, les équipes sont évaluées et le meilleur onze remporte la manche.",
       "Sur cette page, la partie d’entraînement se déroule contre des bots avec un budget virtuel, sans résultat sauvegardé. Dans l’app, les joueurs connectés font des offres face à de vrais entraîneurs, gagnent des pièces et montent dans le classement des Enchères foot.",
     ],
+    el: [
+      "Η Δημοπρασία ποδοσφαιριστών είναι παιχνίδι δημοπρασίας για έως τέσσερις προπονητές. Οι ποδοσφαιριστές εμφανίζονται ένας ένας, κρυμμένοι πίσω από στοιχεία για την καριέρα, τη θέση και την αξία τους. Οι προπονητές κάνουν προσφορές από κοινό αρχικό απόθεμα νομισμάτων· η υψηλότερη προσφορά όταν κλείσει η δημοπρασία αποκτά τον παίκτη, και τα στοιχεία αποκαλύπτουν ποιον πήρες.",
+      "Στόχος είναι να συμπληρώσεις ενδεκάδα με τον σχηματισμό που διάλεξες. Αν ξοδέψεις πολλά από νωρίς, θα σου λείψουν νομίσματα για τους παίκτες που χρειάζεσαι μετά· αν περιμένεις πολύ, οι καλοί θα έχουν φύγει. Όταν συμπληρωθούν όλα τα ρόστερ, οι ομάδες αξιολογούνται και κερδίζει η καλύτερη πλήρης ομάδα.",
+      "Η προπόνηση στη δημοπρασία αυτής της σελίδας γίνεται απέναντι σε bot, με εικονικά νομίσματα και χωρίς αποθηκευμένο αποτέλεσμα. Στην εφαρμογή, οι συνδεδεμένοι παίκτες κάνουν προσφορές απέναντι σε πραγματικούς προπονητές, κερδίζουν νομίσματα και ανεβαίνουν στην κατάταξη της δημοπρασίας.",
+    ],
   },
   "money-drop": {
     en: [
@@ -181,6 +197,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Dans Répartis tes pièces, tu commences avec un stock virtuel de pièces et 5 questions de foot. Chaque question propose 4 réponses ; répartis tes pièces entre celles que tu crois justes. Les pièces placées sur une mauvaise réponse tombent dans les trappes, tandis que celles de la bonne réponse restent avec toi.",
       "Si tu as confiance en une réponse, tu peux y placer toutes tes pièces : tu gardes tout si tu as raison et tu perds tout si tu te trompes. Les répartir te protège, mais réduit le total conservé. Chaque aide peut une fois éliminer 2 mauvaises réponses, révéler un indice ou passer une question.",
       "Ton score correspond au total restant après la cinquième chute. La manche d’entraînement utilise un exemple de série de questions ; le défi du jour dans l’app propose une nouvelle série chaque jour, te rapporte des pièces pour ce que tu conserves et compte pour ta série.",
+    ],
+    el: [
+      "Το Μοίρασε τα νομίσματα ξεκινά με εικονικά νομίσματα και πέντε ποδοσφαιρικές ερωτήσεις. Κάθε ερώτηση έχει τέσσερις πιθανές απαντήσεις και μοιράζεις τα νομίσματά σου στις απαντήσεις που θεωρείς σωστές. Τα νομίσματα στις λάθος απαντήσεις πέφτουν από τις καταπακτές· της σωστής μένουν σε εσένα.",
+      "Η σιγουριά σε βοηθά: αν βάλεις όλα τα νομίσματα σε μία απάντηση, τα κρατάς όλα αν είναι σωστή και τα χάνεις όλα αν είναι λάθος. Το μοίρασμα σε προστατεύει, αλλά μειώνει όσα κρατάς. Κάθε βοήθεια μπορεί μία φορά να αφαιρέσει δύο λάθος απαντήσεις, να αποκαλύψει ένα στοιχείο ή να παραλείψει μια ερώτηση.",
+      "Η βαθμολογία σου είναι όσα απομένουν μετά την πέμπτη πτώση. Η προπόνηση χρησιμοποιεί ένα ενδεικτικό σύνολο ερωτήσεων· το καθημερινό παιχνίδι στην εφαρμογή φέρνει νέο σύνολο κάθε μέρα, δίνει νομίσματα για όσα κρατήσεις και μετρά στο σερί σου.",
     ],
   },
   "true-or-false-football": {
@@ -224,6 +245,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Les affirmations sont conçues pour sembler plausibles dans les deux cas : le jeu récompense donc les connaissances plutôt que les suppositions. Chaque bonne réponse rapporte un point et prolonge ta série ; le défi du jour s’arrête après la dernière affirmation ou à ta première erreur, selon les règles affichées au début.",
       "Sur cette page, l’entraînement utilise un exemple fixe. Dans l’app, une nouvelle série d’affirmations arrive chaque jour ; les bonnes réponses rapportent des pièces et alimentent ta série quotidienne.",
     ],
+    el: [
+      "Το Σωστό ή λάθος είναι το πιο γρήγορο καθημερινό παιχνίδι του Quizball. Εμφανίζεται μια ποδοσφαιρική δήλωση, από στοιχεία μεταγραφών ως ρεκόρ σκόρερ, και έχεις λίγα δευτερόλεπτα για να αποφασίσεις αν είναι σωστή ή λάθος. Απάντησε πριν τελειώσει το χρονόμετρο· η καθυστερημένη απάντηση μετρά ως αστοχία.",
+      "Οι δηλώσεις είναι γραμμένες ώστε να ακούγονται εύλογες και με τους δύο τρόπους, γι' αυτό το παιχνίδι επιβραβεύει την πραγματική γνώση και όχι τις εικασίες. Κάθε σωστή απάντηση δίνει έναν βαθμό και συνεχίζει το σερί σου· το καθημερινό σύνολο τελειώνει μετά την τελευταία δήλωση ή την πρώτη λάθος απάντηση, ανάλογα με τους κανόνες του γύρου που εμφανίζονται στην αρχή.",
+      "Η προπόνηση εδώ χρησιμοποιεί ένα σταθερό δείγμα. Στην εφαρμογή έρχεται κάθε μέρα νέο σύνολο δηλώσεων, οι σωστές απαντήσεις δίνουν νομίσματα και τα αποτελέσματά σου μετρούν στο καθημερινό σερί.",
+    ],
   },
   countdown: {
     en: [
@@ -265,6 +291,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Dans Cite le plus de joueurs, une liste de foot et un chrono t’attendent. La catégorie peut demander tous les clubs de Zlatan Ibrahimović ou les 10 derniers Ballons d’Or. Saisis autant de noms valides que possible avant la fin du temps ; chaque réponse acceptée rapporte un point.",
       "Le jeu reconnaît les noms avec souplesse : noms de famille, formes courtes habituelles et petites fautes de frappe sont acceptés. Une réponse déjà donnée est simplement ignorée. La manche se termine quand le chrono arrive à zéro ou quand la liste est complète.",
       "Sur cette page, l’entraînement utilise des exemples de listes. Dans l’app, le défi du jour propose de nouvelles listes chaque jour, rapporte des pièces pour chaque réponse trouvée et alimente ta série.",
+    ],
+    el: [
+      "Το Ονόμασε ποδοσφαιριστές σου δίνει μία ποδοσφαιρική λίστα και ένα χρονόμετρο που μετρά αντίστροφα. Η λίστα μπορεί να ζητά όλους τους συλλόγους στους οποίους έπαιξε ο Ζλάταν Ιμπραΐμοβιτς ή τους δέκα τελευταίους νικητές της Χρυσής Μπάλας. Γράψε όσες έγκυρες απαντήσεις μπορείς πριν τελειώσει ο χρόνος· κάθε απάντηση που γίνεται δεκτή αξίζει έναν βαθμό.",
+      "Τα ονόματα αντιστοιχίζονται με ευελιξία: γίνονται δεκτά επώνυμα, συνηθισμένες σύντομες μορφές και μικρά ορθογραφικά λάθη, ενώ μια απάντηση που έχεις ήδη δώσει απλώς αγνοείται. Ο γύρος τελειώνει όταν το χρονόμετρο μηδενίσει ή συμπληρωθεί η λίστα.",
+      "Η προπόνηση χρησιμοποιεί ενδεικτικές λίστες. Η καθημερινή έκδοση στην εφαρμογή αλλάζει λίστες κάθε μέρα, δίνει νομίσματα για κάθε απάντηση που βρίσκεις και προσθέτει στο σερί σου.",
     ],
   },
   "higher-or-lower": {
@@ -308,6 +339,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Une bonne réponse prolonge la série et affiche la paire suivante ; la première erreur termine la manche. Les manches sont courtes et les chiffres proviennent de données vérifiées : il faut connaître le foot, pas compter sur la chance.",
       "La manche d’entraînement utilise des exemples de paires. Dans l’app, le défi du jour change chaque jour ; les manches terminées rapportent des pièces et comptent pour ta série.",
     ],
+    el: [
+      "Το Higher or Lower βάζει δίπλα δίπλα δύο ποδοσφαιριστές και κρύβει έναν αριθμό: γκολ σε μία σεζόν, ποσό μεταγραφής, συμμετοχές, ηλικία ή αξία. Βλέπεις τον αριθμό του πρώτου παίκτη και αποφασίζεις αν του δεύτερου είναι μεγαλύτερος ή μικρότερος.",
+      "Μια σωστή πρόβλεψη συνεχίζει το σερί και φέρνει το επόμενο ζευγάρι· η πρώτη λάθος απάντηση τελειώνει τον γύρο. Οι γύροι είναι σύντομοι και οι αριθμοί προέρχονται από επαληθευμένα στοιχεία, οπότε το παιχνίδι βασίζεται στη γνώση του ποδοσφαίρου και όχι στην τύχη.",
+      "Η προπόνηση χρησιμοποιεί ενδεικτικά ζευγάρια. Στην εφαρμογή, το καθημερινό σύνολο αλλάζει κάθε μέρα, οι γύροι που ολοκληρώνεις δίνουν νομίσματα και τα αποτελέσματά σου μετρούν στο σερί.",
+    ],
   },
   imposter: {
     en: [
@@ -349,6 +385,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Dans Trouve l’intrus, tu dois répondre à une question sur le foot et examiner une liste de réponses. Certaines sont justes ; les autres sont des intrus qui semblent plausibles. Sélectionne toutes les bonnes réponses et laisse les intrus de côté avant la fin du chrono.",
       "Tu marques des points uniquement si ta sélection est exacte : tu as choisi chaque bonne réponse sans inclure d’intrus. Le score est calculé quand tu confirmes ou quand le temps est écoulé.",
       "Sur cette page, l’entraînement utilise des groupes d’exemple. Dans l’app, les groupes changent chaque jour, les manches réussies rapportent des pièces et tes résultats font progresser ta série quotidienne.",
+    ],
+    el: [
+      "Το Ποιος δεν ταιριάζει; σου δίνει μια ποδοσφαιρική ερώτηση και μια λίστα απαντήσεων. Μερικές είναι σωστές· οι υπόλοιπες απλώς μοιάζουν πιθανές. Διάλεξε κάθε σωστή απάντηση και άφησε έξω όσες δεν ταιριάζουν πριν τελειώσει ο χρόνος.",
+      "Ο γύρος βαθμολογείται μόνο αν η επιλογή σου είναι ακριβώς σωστή: όλες οι σωστές απαντήσεις επιλεγμένες και καμία απάντηση που δεν ταιριάζει. Η βαθμολογία καταγράφεται όταν επιβεβαιώσεις ή όταν τελειώσει ο χρόνος.",
+      "Η προπόνηση χρησιμοποιεί ενδεικτικές ομάδες απαντήσεων. Στην εφαρμογή οι ομάδες αλλάζουν καθημερινά, οι σωστοί γύροι δίνουν νομίσματα και τα αποτελέσματά σου χτίζουν το καθημερινό σερί.",
     ],
   },
   "card-detective": {
@@ -392,6 +433,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Tu disposes d’un budget pour chaque carte. Les indices bon marché en révèlent peu ; les plus chers donnent presque la réponse. À toi de savoir quelle révélation unique suffit pour deviner. Si tu nommes correctement le joueur, tu conserves les pièces non dépensées ; si ton budget est épuisé, la carte t’échappe.",
       "Dix cartes composent le défi du jour. Sur cette page, l’entraînement utilise un exemple de série de cartes ; dans l’app, les cartes changent chaque jour, les pièces conservées te rapportent une récompense et comptent pour ta série.",
     ],
+    el: [
+      "Το Βρες τον παίκτη από την κάρτα σού δείχνει μια κάρτα ποδοσφαιριστή με κλειδωμένα όλα τα πεδία: συνολική βαθμολογία, θέση, σύλλογος, εθνική ομάδα, πρωτάθλημα και έκδοση κάρτας. Κάθε πεδίο είναι στοιχείο με δικό του κόστος σε νομίσματα. Άνοιξε όσα στοιχεία χρειάζεσαι και μετά πες το όνομα του παίκτη.",
+      "Ξεκινάς κάθε κάρτα με συγκεκριμένο αριθμό νομισμάτων. Τα φθηνά στοιχεία αποκαλύπτουν λίγα, τα ακριβά σχεδόν αποκαλύπτουν την απάντηση, οπότε χρειάζεται να ξέρεις ποια πληροφορία θα σε βοηθήσει να μαντέψεις. Αν βρεις σωστά τον παίκτη, κρατάς όσα δεν ξόδεψες· αν τελειώσουν τα νομίσματα, χάνεις την κάρτα.",
+      "Μια μέρα έχει δέκα κάρτες. Η προπόνηση σε αυτή τη σελίδα χρησιμοποιεί ενδεικτικό σύνολο καρτών· το καθημερινό παιχνίδι στην εφαρμογή αλλάζει τις κάρτες κάθε μέρα, δίνει νομίσματα για όσα κρατήσεις και μετρά στο σερί σου.",
+    ],
   },
   "guess-the-goal": {
     en: [
@@ -433,6 +479,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Dans Devine le but, un but célèbre est rejoué sur un tableau tactique. Les anneaux rouges représentent l’équipe qui attaque, les bleu marine la défense : tu vois chaque passe, course et dribble dans l’ordre, sans nom. Entre la première touche et la frappe, le mouvement finit par révéler de quel but il s’agit.",
       "Choisis le but parmi 4 options : buteur, match et année. Après ta réponse, tu regardes la vraie séquence ; une bonne réponse débloque une question bonus sur un détail de l’action, par exemple le nom du passeur décisif.",
       "5 buts sont proposés chaque jour. Sans inscription, tu joues gratuitement et gardes ta collection sur cet appareil ; les joueurs connectés gagnent des pièces et de l’XP la première fois qu’ils nomment chaque but.",
+    ],
+    el: [
+      "Το Βρες το γκολ αναπαριστά ένα διάσημο γκολ σε πίνακα προπονητή. Οι κόκκινοι κύκλοι είναι η επιτιθέμενη ομάδα και οι σκούροι μπλε οι αμυντικοί· βλέπεις κάθε πάσα, κίνηση και ντρίμπλα με τη σειρά, αλλά χωρίς ονόματα. Κάπου ανάμεσα στην πρώτη επαφή και στο τελείωμα, η φάση αποκαλύπτεται.",
+      "Διάλεξε το γκολ από τέσσερις επιλογές: σκόρερ, αγώνας και χρονιά. Μετά την απάντησή σου βλέπεις το πραγματικό βίντεο, ενώ η σωστή απάντηση φέρνει μια επιπλέον ερώτηση για λεπτομέρεια της φάσης, όπως ποιος έδωσε την ασίστ.",
+      "Έχεις πέντε γκολ την ημέρα. Χωρίς λογαριασμό παίζεις δωρεάν και κρατάς τη συλλογή σου σε αυτή τη συσκευή· οι συνδεδεμένοι παίκτες κερδίζουν νομίσματα και XP την πρώτη φορά που αναγνωρίζουν κάθε γκολ.",
     ],
   },
   "football-clues": {
@@ -484,6 +535,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "10 nouveaux joueurs arrivent chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer aux jours précédents et voir toutes les réponses ; les joueurs connectés ont accès aux indices du jour, à une manche classée dans le classement quotidien et à leur série. À la fin, tu obtiens 10 cases colorées à partager.",
       "Tu peux aussi jouer à Devine le joueur en duel 1v1 contre un ami en ligne : envoie-lui le lien du salon. Vous voyez les mêmes indices au même moment ; le premier à saisir le bon nom de famille marque les points. En cas d’erreur, ton rival dispose d’au plus 3 indices supplémentaires pour trouver.",
     ],
+    el: [
+      "Το Βρες τον ποδοσφαιριστή είναι παιχνίδι μαντεψιάς με μια σκάλα στοιχείων. Κάθε μέρα υπάρχουν δέκα κρυφοί ποδοσφαιριστές, και ο καθένας έχει δέκα στοιχεία που αρχίζουν αόριστα — την ήπειρο για την οποία παίζει, τη θέση του, το δυνατό του πόδι — και τελειώνουν με λεπτομέρειες που τον αποκαλύπτουν: έναν διάσημο τελικό, μια μεταγραφή ή ένα ρεκόρ.",
+      "Εσύ αποφασίζεις πόσα στοιχεία χρειάζεσαι. Το σωστό επώνυμο με το πρώτο στοιχείο αξίζει δέκα βαθμούς και κάθε στοιχείο που αποκαλύπτεις μειώνει τους διαθέσιμους βαθμούς κατά έναν, μέχρι τον έναν βαθμό στο δέκατο. Μια λάθος μαντεψιά δεν σε σταματά: έχεις άλλη μία προσπάθεια και έως τρία επιπλέον στοιχεία για να διορθώσεις την απάντησή σου.",
+      "Δέκα νέοι παίκτες εμφανίζονται κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες και βλέπεις κάθε απάντηση· οι συνδεδεμένοι παίκτες παίρνουν τα σημερινά στοιχεία, μία προσπάθεια κατάταξης στον ημερήσιο πίνακα και το σερί τους. Στο τέλος παίρνεις δέκα χρωματιστά τετράγωνα για κοινοποίηση.",
+      "Μπορείς επίσης να παίξεις το Βρες τον ποδοσφαιριστή 1v1 online με φίλο: στείλε του τον σύνδεσμο του δωματίου, βλέπετε τα ίδια στοιχεία ταυτόχρονα και όποιος γράψει πρώτος το σωστό επώνυμο παίρνει τους βαθμούς. Αν αστοχήσεις, ο αντίπαλός σου έχει έως τρία επιπλέον στοιχεία για να το βρει.",
+    ],
   },
   "guess-the-goal-minute": {
     en: [
@@ -533,6 +590,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "3 points pour la minute exacte. À 2 minutes près, tu marques encore 2 points ; à 5 minutes près, 1 point ; au-delà, aucun point. Une journée parfaite vaut donc 30 points. Le temps additionnel se compte dans la minute : un but à 90+3 correspond à la 93e minute et un but à 45+2 à la 47e.",
       "Chaque minute est vérifiée dans deux archives de match indépendantes avant qu’un but soit utilisé. 10 nouveaux buts arrivent chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer aux jours précédents ; les joueurs connectés ont accès aux buts du jour, à une manche classée dans le classement quotidien et à leur série. À la fin, tu obtiens 10 cases colorées à partager.",
       "Tu peux aussi jouer en duel 1v1 en ligne contre un ami, comme dans les diffusions : envoie-lui le lien du salon et vous voyez le même but au même moment. Vous saisissez chacun une minute sans voir la réponse de l’autre, puis les deux sont révélées : la minute exacte rapporte 3 points ; sinon, l’estimation la plus proche en rapporte 1.",
+    ],
+    el: [
+      "Στο Σε ποιο λεπτό; εμφανίζεται ένα διάσημο γκολ μαζί με τον αγώνα, το τελικό σκορ, τη φάση και τον σκόρερ, κι εσύ λες σε ποιο λεπτό μπήκε. Δέκα γκολ την ημέρα από τελικούς Μουντιάλ και βραδιές νοκ άουτ Champions League, από το Euro και το Copa América.",
+      "Το ακριβές λεπτό αξίζει 3 βαθμούς. Αν πέσεις μέσα σε δύο λεπτά παίρνεις 2, σε πέντε λεπτά 1, ενώ πιο μακριά δεν παίρνεις βαθμούς· έτσι μια τέλεια μέρα αξίζει 30 βαθμούς. Οι καθυστερήσεις προστίθενται στο λεπτό: γκολ στο 90+3 είναι το 93ο λεπτό και γκολ στο 45+2 το 47ο.",
+      "Κάθε λεπτό ελέγχεται σε δύο ανεξάρτητα αρχεία αγώνων πριν χρησιμοποιηθεί ένα γκολ. Δέκα νέα γκολ εμφανίζονται κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν τα σημερινά γκολ, μία προσπάθεια κατάταξης στον ημερήσιο πίνακα και το σερί τους. Στο τέλος παίρνεις δέκα χρωματιστά τετράγωνα για κοινοποίηση.",
+      "Μπορείς επίσης να παίξεις 1v1 online με φίλο, στείλε του τον σύνδεσμο του δωματίου και βλέπετε το ίδιο γκολ ταυτόχρονα. Γράφετε από ένα λεπτό χωρίς να βλέπετε την απάντηση του άλλου και μετά αποκαλύπτονται και οι δύο: το ακριβές λεπτό παίρνει 3 βαθμούς, αλλιώς ο πιο κοντινός παίρνει 1.",
     ],
   },
   "played-for-both-clubs": {
@@ -584,6 +647,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "De nouvelles paires arrivent chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer aux jours précédents et voir des exemples de réponses pour chaque paire ; les joueurs connectés ont accès aux 10 paires du jour et à une manche classée dans le classement quotidien, où les égalités sont départagées à la vitesse. Les réponses du jour restent cachées jusqu’à la fin de la journée.",
       "Entre amis, ouvre un salon, partage le lien et jouez jusqu’à 6 sur les mêmes paires : en duel 1v1, la première bonne réponse marque le point ; à 3 joueurs ou plus, la première rapporte 3 points, la deuxième 2, et chaque autre joueur qui trouve la réponse en marque 1. L’hôte choisit le championnat : Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig ou les plus grands clubs mélangés.",
     ],
+    el: [
+      "Στο Έπαιξαν και στις δύο έχεις δύο συλλόγους και μία ερώτηση: ποιος έπαιξε και στους δύο; Κάθε μέρα υπάρχουν δέκα ζευγάρια, από αντιπάλους που σπάνια έχουν κοινό παίκτη μέχρι συλλόγους με δεκάδες κοινά ονόματα.",
+      "Έχεις 20 δευτερόλεπτα για κάθε ζευγάρι και χρειάζεσαι μόνο έναν ποδοσφαιριστή. Γράψε το επώνυμο, το πλήρες όνομα ή το όνομα με το οποίο είναι γνωστός· οι τόνοι δεν έχουν σημασία και μικρά λάθη στην πληκτρολόγηση συγχωρούνται. Μια λάθος απάντηση κλειδώνει το πλαίσιο για ένα δευτερόλεπτο. Οι δανεικοί μετρούν: αν ήταν παίκτης της πρώτης ομάδας εκεί, η απάντηση είναι σωστή.",
+      "Νέα ζευγάρια εμφανίζονται κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες και βλέπεις ενδεικτικές απαντήσεις για κάθε ζευγάρι· οι συνδεδεμένοι παίκτες παίρνουν τα σημερινά δέκα ζευγάρια και μία προσπάθεια κατάταξης στον ημερήσιο πίνακα, όπου οι ισόβαθμοι χωρίζονται με βάση την ταχύτητα. Οι σημερινές απαντήσεις μένουν κρυφές ως το τέλος της ημέρας.",
+      "Με φίλους είναι ακόμα καλύτερο. Άνοιξε ένα δωμάτιο, κοινοποίησε τον σύνδεσμο και έως έξι παίκτες συναγωνιστείτε στα ίδια ζευγάρια: σε 1v1 η πρώτη σωστή απάντηση παίρνει τον βαθμό, ενώ με τρεις ή περισσότερους η πρώτη παίρνει 3, η δεύτερη 2 και οι υπόλοιποι που βρίσκουν απάντηση 1. Ο οικοδεσπότης διαλέγει πρωτάθλημα: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Süper Lig ή τους μεγαλύτερους συλλόγους μαζί.",
+    ],
   },
   "football-tenable": {
     en: [
@@ -633,6 +702,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Chaque bonne réponse prend sa place dans le classement, avec le chiffre associé : tu découvres l’ordre en jouant. Un vrai joueur qui ne figure pas dans la liste te coûte l’une de tes 3 vies ; un nom déjà dans le classement, un nom qui peut correspondre à plusieurs joueurs ou un nom inconnu ne coûte rien. Des suggestions apparaissent pendant la saisie parmi tous les joueurs connus du jeu ; elles ne révèlent donc jamais la liste.",
       "Une nouvelle liste arrive chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer aux jours précédents ; les joueurs connectés ont accès à la liste du jour et au classement quotidien, établi selon le nombre de joueurs trouvés parmi les 10, puis le nombre de vies restantes. Les réponses manquantes du jour restent cachées jusqu’à la fin de la journée.",
       "Entre amis, c’est une course aux places : ouvre un salon pour 2 à 6 joueurs et jouez à tour de rôle sur un classement partagé. Chaque place vaut le nombre indiqué : la dixième rapporte 10 points ; une mauvaise réponse ou la fin du chrono coûte l’une de tes 2 vies pour la liste. 3 listes, et le meilleur total l’emporte.",
+    ],
+    el: [
+      "Το Βρες το Top 10 είναι παιχνίδι δεκάδας: κάθε μέρα υπάρχει μία κρυφή λίστα και πρέπει να ονομάσεις όσους περιλαμβάνει. Οι λίστες βασίζονται σε ποδοσφαιρικά ρεκόρ: πρώτοι σκόρερ όλων των εποχών στο Champions League, συμμετοχές στην Premier League, μεγαλύτερα ποσά μεταγραφών, πρώτοι σκόρερ Μουντιάλ, προπονητές με τα περισσότερα τρόπαια και σύλλογοι ή χώρες με τις περισσότερες νίκες.",
+      "Κάθε σωστή απάντηση ανεβαίνει στη θέση της στη λίστα μαζί με τον αριθμό της, ώστε να μαθαίνεις τη σειρά παίζοντας. Ένας πραγματικός ποδοσφαιριστής που δεν βρίσκεται στη λίστα κοστίζει μία από τις τρεις ζωές σου· όνομα που υπάρχει ήδη στον πύργο, όνομα που ταιριάζει σε περισσότερους από έναν ή όνομα που δεν γνωρίζουμε δεν κοστίζει τίποτα. Καθώς γράφεις, εμφανίζονται προτάσεις από όλους τους ποδοσφαιριστές που γνωρίζουμε, χωρίς να αποκαλύπτουν τη λίστα.",
+      "Κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής, εμφανίζεται νέα λίστα. Χωρίς λογαριασμό μπορείς να παίξεις τις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν τη σημερινή λίστα και τον ημερήσιο πίνακα κατάταξης, όπου προηγείται όποιος βρήκε περισσότερα από τα δέκα ονόματα και μετά όποιος έχει περισσότερες ζωές. Οι σημερινές απαντήσεις που λείπουν μένουν κρυφές ως το τέλος της ημέρας.",
+      "Με φίλους γίνεται αγώνας για τις θέσεις. Άνοιξε δωμάτιο για 2 έως 6 παίκτες και παίξτε με έναν κοινό πύργο: κάθε θέση αξίζει όσους βαθμούς δείχνει, οπότε η δέκατη αξίζει δέκα· μια λάθος απάντηση ή η λήξη του χρόνου αφαιρεί μία από τις δύο ζωές σου ανά λίστα. Τρεις λίστες, και κερδίζει το μεγαλύτερο σύνολο βαθμών.",
     ],
   },
   "football-name-chain": {
@@ -684,6 +759,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Chaque jour propose 3 suites, chacune commencée par un joueur de foot connu. Ton score correspond au nombre total de noms trouvés dans les 3 suites ; le chrono raccourcit d’une seconde tous les 5 noms, jusqu’à 6 secondes. De nouvelles suites arrivent à minuit, heure d’Argentine ; sans inscription, tu peux jouer aux jours précédents, et les joueurs connectés ont accès aux suites du jour et au classement quotidien.",
       "Entre amis, joue en élimination : ouvre un salon pour 2 à 6 joueurs et jouez à tour de rôle sur une même suite. Le temps est écoulé ? Tu quittes la manche ; le dernier encore en jeu marque le point, et le premier à 3 points gagne le duel.",
     ],
+    el: [
+      "Η Αλυσίδα ποδοσφαιριστών είναι παιχνίδι λέξεων με ποδοσφαιριστές. Κάθε όνομα αρχίζει από το τελευταίο γράμμα του προηγούμενου, οπότε κάθε απάντηση προετοιμάζει την επόμενη: αν η αλυσίδα τελειώσει σε δύσκολο γράμμα, έχεις παγιδέψει τον εαυτό σου.",
+      "Μετρά τόσο το μικρό όνομα όσο και το επώνυμο, οπότε ο Anthony Martial αντιστοιχεί στα A και M· το επόμενο γράμμα είναι το τελευταίο του ονόματος με το οποίο είναι γνωστός. Οι τόνοι αγνοούνται: το Özil αρχίζει από O. Έχεις 10 δευτερόλεπτα για κάθε όνομα, μια λάθος απάντηση κοστίζει μόνο τον χρόνο που χρειάστηκε και δεν μπορείς να χρησιμοποιήσεις τον ίδιο ποδοσφαιριστή δύο φορές στην ημερήσια προσπάθεια.",
+      "Κάθε μέρα έχει τρεις αλυσίδες, καθεμία από διαφορετικό γνωστό ποδοσφαιριστή. Η βαθμολογία σου είναι όλα τα ονόματα και στις τρεις, ενώ το χρονόμετρο μειώνεται κατά ένα δευτερόλεπτο κάθε πέντε ονόματα, μέχρι τα έξι δευτερόλεπτα. Νέες αλυσίδες εμφανίζονται τα μεσάνυχτα, ώρα Αργεντινής· χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες, ενώ οι συνδεδεμένοι παίκτες παίρνουν τις σημερινές αλυσίδες και τον ημερήσιο πίνακα κατάταξης.",
+      "Με φίλους γίνεται νοκ άουτ. Άνοιξε δωμάτιο για 2 έως 6 παίκτες και παίξτε με μία κοινή αλυσίδα: αν τελειώσει ο χρόνος σου, βγαίνεις από τον γύρο· ο τελευταίος που μένει παίρνει τον βαθμό και κερδίζει όποιος φτάσει πρώτος στους 3 βαθμούς.",
+    ],
   },
   "football-horserace": {
     en: [
@@ -733,6 +814,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Les statistiques viennent des archives ouvertes de chaque match international : Coupe du monde, Euro, Copa América, Coupe d’Afrique des nations, Coupe d’Asie, Gold Cup, qualifications pour la Coupe du monde et l’Euro, et Ligue des nations, des premiers matchs internationaux à aujourd’hui. 69 types de stats dans 10 compétitions, des buts et victoires aux penalties concédés, buts contre son camp et joueur le plus âgé ; chacune peut être consultée sur toute la période ou sur une période récente. Après chaque choix, tu vois les chiffres de chaque nation et le match correspondant.",
       "Une nouvelle course arrive chaque jour à minuit, heure d’Argentine ; les nations sont attribuées pour équilibrer la course. Sans inscription, tu peux jouer aux jours précédents ; les joueurs connectés ont accès à la course du jour et au classement quotidien, où une victoire obtenue en moins de choix est mieux classée.",
       "Entre amis, affronte de vrais joueurs. Ouvre un salon pour 2 à 4 personnes et choisis la compétition, ou laisse le choix au hasard. Vous choisissez vos nations à tour de rôle, puis à chaque manche, tout le monde choisit une statistique en même temps et en secret. Les choix sont révélés du plus rapide au plus lent et chacun fait avancer sa nation : le premier drapeau à franchir la ligne gagne.",
+    ],
+    el: [
+      "Η Κούρσα εθνικών είναι παιχνίδι στατιστικών ποδοσφαίρου για να παίζεται κάθε μέρα. Κάθε παίκτης έχει μια εθνική ομάδα και κάθε επιλογή αφορά πραγματικά στοιχεία: προηγείται ή όχι η δική σου εθνική σε αυτό το στατιστικό; Προχωρά η εθνική που προηγείται, οπότε μια λάθος επιλογή σπρώχνει αντίπαλο μπροστά.",
+      "Τα στατιστικά προέρχονται από ανοιχτά αρχεία όλων των διεθνών αγώνων: Μουντιάλ, Euro, Copa América, Africa Cup of Nations, Asian Cup, Gold Cup, προκριματικά Μουντιάλ και Euro και Nations League, από τους πρώτους διεθνείς αγώνες ως σήμερα. Υπάρχουν 69 είδη στατιστικών σε 10 διοργανώσεις, από γκολ και νίκες ως πέναλτι που καταλογίστηκαν, αυτογκόλ και τον μεγαλύτερο σε ηλικία παίκτη· καθένα εξετάζεται συνολικά ή σε πρόσφατη περίοδο. Μετά από κάθε επιλογή βλέπεις τον αριθμό κάθε εθνικής και τον αγώνα που τον τεκμηριώνει.",
+      "Κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής, εμφανίζεται νέα κούρσα και οι εθνικές μοιράζονται ώστε ο αγώνας να είναι ισορροπημένος. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν τη σημερινή κούρσα και τον ημερήσιο πίνακα κατάταξης, όπου ψηλότερα βρίσκεται όποιος κερδίζει με λιγότερες επιλογές.",
+      "Με φίλους γίνεται πραγματικός αγώνας. Άνοιξε δωμάτιο για 2 έως 4 παίκτες και διάλεξε διοργάνωση ή άφησέ την να επιλεγεί τυχαία. Παίζετε με τη σειρά διαλέγοντας εθνικές και μετά, σε κάθε γύρο, επιλέγετε όλοι ταυτόχρονα και κρυφά ένα στατιστικό. Οι επιλογές εμφανίζονται με τη σειρά ταχύτητας και καθεμία κινεί την εθνική που προηγείται: κερδίζει η πρώτη σημαία που περνά τη γραμμή τερματισμού.",
     ],
   },
   "football-codenames": {
@@ -792,6 +879,13 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Entre amis, répartissez-vous en deux équipes, Domicile et Extérieur. Ouvre un salon pour 2 à 8 joueurs. Chacun choisit un camp et devient Éclaireur, qui voit l’équipe de chaque carte, ou devineur ; l’équipe sans Éclaireur reçoit l’aide du bot. L’Éclaireur saisit un indice de foot et un nombre, son équipe retourne les cartes, et la première équipe à trouver toutes les siennes gagne, sauf si quelqu’un retourne d’abord la carte But contre son camp. Aucune pièce ni aucun RP ne sont en jeu.",
       "Il y a deux plateaux. Images est le défi du jour : 20 dessins de foot. Mots en contient 25 qui ont un sens dans le foot et un sens courant, comme CROSS ou BENCH ; l’Éclaireur les relie à l’aide d’un seul indice. Les plateaux Mots servent à s’entraîner : un nouveau à chaque partie, sans limite. Dans un salon, l’hôte choisit le plateau et peut régler le chrono à 60 secondes, 90 secondes ou 2 minutes ; à la fin, chacun voit à quelles cartes se rapportait chaque indice.",
     ],
+    el: [
+      "Το Codenames ποδοσφαίρου είναι το κλασικό ομαδικό παιχνίδι λέξεων με κάρτες ποδοσφαιρικών εικόνων. Ένας παίκτης, ο Ανιχνευτής, ξέρει ποιες κάρτες ανήκουν σε κάθε ομάδα και δίνει ένα ποδοσφαιρικό στοιχείο μαζί με έναν αριθμό. Οι υπόλοιποι μαντεύουν ποιες κάρτες δείχνει το στοιχείο, και κάθε λάθος επιλογή βοηθά την αντίπαλη ομάδα ή τελειώνει τη σειρά.",
+      "Οι 20 κάρτες έχουν ποδοσφαιρικές εικόνες: καρικατούρες θρύλων, γνωστά γήπεδα και ποδοσφαιρικά memes. Το στοιχείο μπορεί να αφορά οτιδήποτε στο ποδόσφαιρο: παίκτη, σύλλογο, προπονητή, γήπεδο, εθνική ομάδα ή διάσημη στιγμή, όπως «Mourinho · 2» ή «Hand of God · 1». Σε κάθε ταμπλό υπάρχει μια κάρτα Αυτογκόλ και αν την επιλέξεις τελειώνει το παιχνίδι.",
+      "Κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής, εμφανίζεται το ίδιο νέο ταμπλό για όλους. Ο Ανιχνευτής bot δίνει τρία στοιχεία· βρες τις 8 κάρτες σου πριν τελειώσουν. Μια λάθος κάρτα τελειώνει το στοιχείο και το Αυτογκόλ τελειώνει την προσπάθεια. Χωρίς λογαριασμό παίζεις τα προηγούμενα ταμπλό· οι συνδεδεμένοι παίκτες παίρνουν το σημερινό και τον ημερήσιο πίνακα κατάταξης, όπου ψηλότερα βρίσκεται όποιος βρήκε περισσότερες κάρτες. Κοινοποίησε το ταμπλό σου όταν τελειώσεις.",
+      "Με φίλους παίζεται ομαδικά. Άνοιξε δωμάτιο για 2 έως 8 παίκτες και χωριστείτε σε δύο ομάδες, Εντός και Εκτός. Κάθε παίκτης διαλέγει πλευρά ως Ανιχνευτής, που βλέπει σε ποιον ανήκει κάθε κάρτα, ή ως παίκτης που μαντεύει· αν μια ομάδα δεν έχει Ανιχνευτή, αναλαμβάνει το bot. Οι Ανιχνευτές γράφουν όποιο ποδοσφαιρικό στοιχείο θέλουν μαζί με έναν αριθμό, οι ομάδες γυρίζουν κάρτες και κερδίζει η πρώτη που θα βρει όλες τις δικές της, εκτός αν κάποιος γυρίσει πρώτος το Αυτογκόλ. Δεν χρησιμοποιούνται νομίσματα ή RP.",
+      "Υπάρχουν δύο ταμπλό. Οι Εικόνες είναι το καθημερινό: 20 ποδοσφαιρικά σχέδια. Οι Λέξεις έχουν 25 λέξεις με μία ποδοσφαιρική και μία καθημερινή σημασία, όπως CROSS ή BENCH, και ο Ανιχνευτής τις συνδέει με ένα στοιχείο. Τα ταμπλό λέξεων είναι για προπόνηση: νέο κάθε φορά, όσες φορές θέλεις. Σε δωμάτιο ο οικοδεσπότης διαλέγει ταμπλό και χρονόμετρο σειράς 60 ή 90 δευτερολέπτων ή 2 λεπτών· όταν τελειώσει το παιχνίδι, όλοι βλέπουν ποιες κάρτες έδειχνε κάθε στοιχείο.",
+    ],
   },
   "football-odd-one-out": {
     en: [
@@ -841,6 +935,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Selon la carte, l’affirmation porte sur les clubs où un joueur a joué, les championnats des pays où il a joué, les Coupes du monde auxquelles il a participé, les numéros qu’il a portés ou les compétitions qu’il a remportées. Sélectionne l’option que tu crois inventée, puis confirme. Tu as 30 secondes par carte ; chaque bonne réponse vaut +1.",
       "Un nouveau lot de 10 cartes arrive chaque jour à minuit, heure d’Argentine, identique pour tout le monde. Deux aides sont utilisables une fois par jour chacune : la première grise 2 options vraies ; la seconde vaut +2 si tu as raison et −1 si tu te trompes. Sans inscription, tu peux jouer aux jours précédents ; les joueurs connectés ont accès aux cartes du jour et au classement quotidien. À la fin, partage le plateau de tes bonnes et mauvaises réponses.",
       "Entre amis, le but est de repérer l’option fausse : ouvre un salon pour 2 à 6 joueurs. Tout le monde reçoit la même carte au même moment et dispose de 20 secondes pour répondre. Une bonne réponse vaut +1. Les deux aides sont utilisables une fois chacune par match et restent invisibles aux autres jusqu’à la révélation de la carte.",
+    ],
+    el: [
+      "Το Ποιο είναι το ψέμα; είναι παιχνίδι εντοπισμού του ψεύτικου για ποδοσφαιριστές. Κάθε κάρτα δείχνει έναν παίκτη, έναν ισχυρισμό για την καριέρα του και πέντε επιλογές. Τέσσερις επιλογές είναι σωστές και μία ψεύτικη· πρέπει να βρεις την ψεύτικη.",
+      "Ο ισχυρισμός αλλάζει σε κάθε κάρτα: έχει παίξει σε ΟΛΟΥΣ αυτούς τους συλλόγους, σε πρωτάθλημα ΟΛΩΝ αυτών των χωρών, σε ΟΛΑ αυτά τα Μουντιάλ, με ΟΛΟΥΣ αυτούς τους αριθμούς φανέλας ή έχει κερδίσει ΟΛΕΣ αυτές τις διοργανώσεις. Πάτησε την επιλογή που θεωρείς ψεύτικη και επιβεβαίωσέ την. Έχεις 30 δευτερόλεπτα ανά κάρτα και κάθε σωστή απάντηση δίνει +1.",
+      "Ένα νέο σύνολο 10 καρτών εμφανίζεται κάθε μέρα τα μεσάνυχτα, ίδιο για όλους. Έχεις δύο βοήθειες, καθεμία μία φορά την ημέρα: η «Αφαίρεσε 2» γκριζάρει δύο σωστές επιλογές, ενώ η «Διπλή βαθμολογία» κάνει την κάρτα να αξίζει +2 αν απαντήσεις σωστά και −1 αν κάνεις λάθος. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν τις σημερινές κάρτες και τον ημερήσιο πίνακα κατάταξης. Όταν τελειώσεις, κοινοποίησε το πλέγμα με τις σωστές και τις λάθος απαντήσεις σου.",
+      "Με φίλους γίνεται αγώνας για το ψεύτικο. Άνοιξε δωμάτιο για 2 έως 6 παίκτες και όλοι παίρνετε την ίδια κάρτα ταυτόχρονα, με 20 δευτερόλεπτα για να απαντήσετε. Η σωστή απάντηση δίνει +1, έχεις τις ίδιες δύο βοήθειες μία φορά ανά αγώνα και κανείς δεν βλέπει τη βοήθεια που χρησιμοποίησες πριν αποκαλυφθεί η κάρτα.",
     ],
   },
   "football-connections": {
@@ -892,6 +992,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Un nouveau plateau arrive chaque jour, identique pour tout le monde. Sans inscription, tu peux jouer aux précédents ; les joueurs connectés ont accès au plateau du jour et au classement quotidien, selon les groupes trouvés, puis le moins d’erreurs, puis le temps. À la fin, partage ton plateau. Tu peux rejouer n’importe quel plateau passé.",
       "Entre amis, affronte un autre joueur sur 5 plateaux. Vous jouez chacun votre tour et disposez d’un essai par tour : trouver un groupe ou non. Quand il ne reste que 3 groupes à trouver, le joueur dont c’est le tour nomme le dernier point commun parmi 4 options pour marquer un point. Rien à remporter : ni pièces ni RP.",
     ],
+    el: [
+      "Το Connections ποδοσφαίρου είναι παιχνίδι ομαδοποίησης ποδοσφαιριστών. Κάθε ταμπλό δείχνει 16 παίκτες που κρύβουν τέσσερις ομάδες των τεσσάρων, με ένα κοινό στοιχείο σε κάθε ομάδα. Βρες και τις τέσσερις πριν τελειώσουν οι προσπάθειές σου.",
+      "Διάλεξε τέσσερις παίκτες και πάτησε Υποβολή. Αν έχουν κοινό στοιχείο, η ομάδα κλειδώνει. Η λάθος επιλογή κοστίζει μία προσπάθεια· αν τρεις από τους τέσσερις είναι σωστοί, θα δεις «Μία ακόμα…». Τέσσερις λάθος προσπάθειες τελειώνουν το ταμπλό, ενώ μια τετράδα που δοκίμασες ήδη δεν κοστίζει τίποτα. Πρόσεχε τις παγίδες: κάποιοι παίκτες μοιάζουν να ταιριάζουν σε περισσότερες από μία ομάδες.",
+      "Κάθε μέρα εμφανίζεται νέο ταμπλό, ίδιο για όλους. Χωρίς λογαριασμό παίζεις τα προηγούμενα· οι συνδεδεμένοι παίκτες παίρνουν το σημερινό και τον ημερήσιο πίνακα κατάταξης, με σειρά τις ομάδες που βρήκαν, μετά τις λιγότερες λάθος προσπάθειες και τέλος τον χρόνο. Όταν τελειώσεις, κοινοποίησε το πλέγμα σου. Μπορείς να ξαναπαίξεις οποιοδήποτε παλιό ταμπλό.",
+      "Με φίλο είναι 1v1 σε πέντε ταμπλό. Παίζετε εναλλάξ και κάθε σειρά είναι μία προσπάθεια: σωστή ή λάθος. Όταν έχουν βρεθεί τρεις ομάδες, ο παίκτης της σειράς διαλέγει τον τελευταίο κοινό σύνδεσμο από τέσσερις επιλογές και παίρνει έναν βαθμό. Δεν διακυβεύεται τίποτα: ούτε νομίσματα ούτε RP.",
+    ],
   },
   "football-darts-501": {
     en: [
@@ -942,55 +1048,67 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Une manche est proposée chaque jour, avec la même catégorie pour tout le monde. Sans inscription, tu peux jouer aux jours précédents ; les joueurs connectés ont accès au défi du jour et au classement quotidien, où les scores sont classés en donnant la priorité au moins de fléchettes, puis au score le plus proche de 0. Si tu ne termines pas, le jeu t’indique combien de joueurs auraient pu correspondre à ton score final ; leurs noms apparaissent à la clôture de la journée. À la fin, partage ton parcours de fléchettes.",
       "Entre amis, crée un salon pour 2 à 6 joueurs. Vous jouez à tour de rôle, chacun avec son propre total de 501 points et un chrono par tour. Dès qu’un joueur termine, la manche s’achève et celui dont le score est le plus proche de 0 la remporte ; si personne ne termine, le score le plus bas l’emporte. Chaque joueur a 10 fléchettes par manche et le match se joue au meilleur des 3 manches. Une valeur supérieure à 180, un score inférieur à −10, un nom incorrect ou la fin du chrono ne rapporte rien.",
     ],
+    el: [
+      "Τα Ποδοσφαιρικά βελάκια 501 παίζονται με ποδοσφαιριστές. Ξεκινάς από το 501 και κάθε βελάκι είναι ένας παίκτης από την κατηγορία της ημέρας: ο αριθμός του σε αυτή την κατηγορία, όπως συμμετοχές ή γκολ, αφαιρείται από τη βαθμολογία σου. Βρες παίκτες, δες το σύνολο να πέφτει και προσπάθησε να τελειώσεις με όσο το δυνατόν λιγότερα βελάκια.",
+      "Κερδίζεις όταν φτάσεις από το 0 ως το −10, οπότε δεν χρειάζεται να πετύχεις ακριβώς το μηδέν. Αριθμός πάνω από 180 δεν δίνει βαθμούς, ενώ κάτω από −10 σημαίνει άκυρη βολή: χάνεις το βελάκι και η βαθμολογία σου μένει ίδια. Όνομα που δεν ανήκει στην κατηγορία επίσης καταναλώνει βελάκι χωρίς βαθμούς. Αν έχεις ήδη ρίξει αυτό το όνομα, δεν μπορούμε να το βρούμε ή ταιριάζει σε περισσότερους από έναν παίκτες, δεν κοστίζει τίποτα και συνεχίζεις. Η ατομική προσπάθεια έχει 10 βελάκια.",
+      "Υπάρχει ένας γύρος την ημέρα, με την ίδια κατηγορία για όλους. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν το σημερινό παιχνίδι και τον ημερήσιο πίνακα κατάταξης, όπου προηγούνται όσοι χρειάστηκαν λιγότερα βελάκια και μετά όσοι έμειναν πιο κοντά στο 0. Αν δεν κερδίσεις, το παιχνίδι δείχνει πόσοι παίκτες θα μπορούσαν να βρεθούν από την τελική βαθμολογία σου και τα ονόματά τους εμφανίζονται όταν κλείσει η ημέρα. Κοινοποίησε τη σειρά των βελών σου όταν τελειώσεις.",
+      "Με φίλους παίζετε σε δωμάτιο για 2 έως 6 παίκτες. Παίζετε εναλλάξ, ο καθένας με το δικό του 501 και χρονόμετρο σειράς. Μετά από νίκη τελειώνει ο γύρος και κερδίζει όποιος είναι πιο κοντά στο 0· αν δεν κερδίσει κανείς, παίρνει τον γύρο όποιος έχει τη χαμηλότερη βαθμολογία. Κάθε παίκτης έχει 10 βελάκια ανά γύρο και ο αγώνας είναι καλύτερος των 3 γύρων. Πάνω από 180, κάτω από −10, λάθος όνομα ή λήξη χρόνου δεν δίνουν βαθμούς.",
+    ],
   },
   "football-draft-game": {
     en: [
       "Football Draft is a squad-building game played with real football history. Each turn you spin a real club and season and sign one of its players, and you repeat that until you have a full XI of 11. Then your team plays a simulated league season, and the table tells you how well you built it.",
-      "There are three versions. In Budget you buy your XI with €300M: better players cost more, so a lower-rated bargain can be the smart buy. In Classic the ratings are shown and you pick the best you can. In Ball Knowledge the ratings and stats are hidden, so you must remember who was good that season.",
-      "A new daily draft arrives every day, with the same draws for everyone and a leaderboard for each version. Without an account you play past days; signed-in players get today's draft and the leaderboards. After you have played today you can open any team on the leaderboard and play your XI against it. In free play you choose your league (Premier League, LaLiga, Serie A, Bundesliga or Ligue 1), era and formation.",
+      "You play with a transfer budget: you buy your XI with €300M. Better players cost more, so a lower-rated bargain can be the smart buy, and a 50-rated academy kid is always free. Spend it all on stars and the rest of your XI pays for it.",
+      "A new daily draft arrives every day, with the same draws for everyone and one leaderboard. Without an account you play past days; signed-in players get today's draft and the leaderboard. After you have played today you can open any team on the leaderboard and play your XI against it. In free play you choose your league (Premier League, LaLiga, Serie A, Bundesliga or Ligue 1), era and formation.",
       "With friends there are two ways to play. Challenge a friend on the same draws and compare what you each built, or open a live room of 2 to 6, where a player taken is gone for everyone else. Team against team is decided over two legs, home and away. Football Draft is free to play in your browser, with no download.",
     ],
     ka: [
       "ფეხბურთის დრაფტი გუნდის აწყობის თამაშია ფეხბურთის ნამდვილი ისტორიით. ყოველ სვლაზე ატრიალებ ნამდვილ კლუბსა და სეზონს და იყვან მის ერთ ფეხბურთელს, სანამ 11-კაციანი გუნდი არ შეივსება. შემდეგ შენი გუნდი ლიგის სიმულირებულ სეზონს თამაშობს და ცხრილი გაჩვენებს, რამდენად კარგად ააწყვე ის.",
-      "სამი ვერსიაა. ბიუჯეტში შენს 11-ს €300M-ით ყიდულობ: უკეთესი ფეხბურთელები უფრო ძვირია, ამიტომ დაბალი რეიტინგის იაფი ვარიანტი შეიძლება ჭკვიანური შენაძენი იყოს. კლასიკურში რეიტინგები ჩანს და საუკეთესოს ირჩევ. „ფეხბურთის მცოდნეში“ რეიტინგები და სტატისტიკა დამალულია, ამიტომ უნდა გახსოვდეს, ვინ იყო კარგი იმ სეზონში.",
-      "ყოველდღე ახალი დრაფტია, ყველასთვის ერთი და იგივე დატრიალებებით და ცალკე რეიტინგით თითოეულ ვერსიაზე. ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით დღევანდელ დრაფტს და რეიტინგებს. დღევანდელის თამაშის შემდეგ შეგიძლია რეიტინგის ნებისმიერი გუნდი გახსნა და მის წინააღმდეგ შენი 11-ით ითამაშო. თავისუფალ თამაშში შენ ირჩევ ლიგას (Premier League, LaLiga, Serie A, Bundesliga ან Ligue 1), ეპოქას და ფორმაციას.",
-      "მეგობრებთან თამაშის ორი გზა არსებობს. გამოიწვიე მეგობარი იმავე დატრიალებებზე და შეადარეთ თქვენი გუნდები, ან გახსენი ცოცხალი ოთახი 2-დან 6 მოთამაშემდე, სადაც აყვანილი ფეხბურთელი სხვისთვის აღარ არის ხელმისაწვდომი. გუნდი გუნდის წინააღმდეგ ორ მატჩში წყდება, სახლში და გასვლაზე. თამაში უფასოა, ბრაუზერში მუშაობს და ჩამოტვირთვა არ სჭირდება.",
+      "თამაშობ სატრანსფერო ბიუჯეტით: შენს 11-ს €300M-ით ყიდულობ. უკეთესი ფეხბურთელები უფრო ძვირია, ამიტომ დაბალი რეიტინგის იაფი ვარიანტი შეიძლება ჭკვიანური შენაძენი იყოს, 50 რეიტინგის აკადემიელი კი ყოველთვის უფასოა. თუ ყველაფერს ვარსკვლავებზე დახარჯავ, დანარჩენი პოზიციებისთვის თანხა აღარ დაგრჩება.",
+      "ყოველდღე ახალი დრაფტია, ყველასთვის ერთი და იგივე დატრიალებებით და ერთი საერთო რეიტინგით. ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშში შესვლის შემდეგ დღევანდელ დრაფტსაც ითამაშებ და რეიტინგშიც მოხვდები. დღევანდელის თამაშის შემდეგ შეგიძლია რეიტინგის ნებისმიერი გუნდი გახსნა და მის წინააღმდეგ შენი 11-ით ითამაშო. თავისუფალ თამაშში შენ ირჩევ ლიგას (Premier League, LaLiga, Serie A, Bundesliga ან Ligue 1), ეპოქას და სქემას.",
+      "მეგობრებთან თამაშის ორი გზა არსებობს. გამოიწვიე მეგობარი იმავე დატრიალებებზე და შეადარეთ თქვენი გუნდები, ან გახსენი ცოცხალი ოთახი 2-დან 6 მოთამაშემდე, სადაც აყვანილი ფეხბურთელი სხვისთვის აღარ არის ხელმისაწვდომი. გუნდებს შორის გამარჯვებული ორი მატჩის ჯამით ვლინდება, შინ და გასვლაზე. თამაში უფასოა, ბრაუზერში მუშაობს და ჩამოტვირთვა არ სჭირდება.",
     ],
     es: [
       "Draft futbolero es un juego de armar plantel con la historia real del fútbol. En cada turno girás un club y una temporada reales y fichás a uno de sus jugadores, hasta completar tu once. Después tu equipo juega una temporada de liga simulada y la tabla te dice qué tan bien lo armaste.",
-      "Hay tres versiones. En Presupuesto comprás tu once con €300M: los mejores jugadores cuestan más, así que una ganga con menos valoración puede ser la compra inteligente. En Clásico las valoraciones se ven y elegís a los mejores. En Sabelotodo las valoraciones y las estadísticas están ocultas, así que tenés que acordarte de quién la rompió esa temporada.",
-      "Cada día hay un draft nuevo, con los mismos giros para todos y un ranking por versión. Sin cuenta jugás los días anteriores; con tu cuenta jugás el draft de hoy y entrás a los rankings. Cuando ya jugaste el de hoy, podés abrir cualquier equipo del ranking y jugar tu once contra él. En juego libre elegís la liga (Premier League, LaLiga, Serie A, Bundesliga o Ligue 1), la época y la formación.",
+      "Jugás con presupuesto de fichajes: comprás tu once con €300M. Los mejores jugadores cuestan más, así que una ganga con menos valoración puede ser la compra inteligente, y un juvenil de 50 siempre es gratis. Si gastás todo en estrellas, el resto del once lo paga.",
+      "Cada día hay un draft nuevo, con los mismos giros para todos y un ranking. Sin cuenta jugás los días anteriores; con tu cuenta jugás el draft de hoy y entrás al ranking. Cuando ya jugaste el de hoy, podés abrir cualquier equipo del ranking y jugar tu once contra él. En juego libre elegís la liga (Premier League, LaLiga, Serie A, Bundesliga o Ligue 1), la época y la formación.",
       "Con amigos hay dos formas de jugar. Desafiá a un amigo con los mismos giros y comparen lo que armó cada uno, o abrí una sala en vivo de 2 a 6 jugadores, donde un futbolista elegido ya no está disponible para los demás. Los cruces de equipo contra equipo se definen a dos partidos, ida y vuelta. Es gratis, se juega en el navegador y no hay nada que descargar.",
     ],
     tr: [
       "Futbol Draftı, gerçek futbol tarihiyle oynanan bir kadro kurma oyunudur. Her turda gerçek bir kulüp ve sezon çevirir, o kadrodan bir oyuncu alırsın; bunu ilk 11'in tamamlanana kadar sürdürürsün. Sonra takımın simüle edilen bir lig sezonu oynar ve puan durumu kadroyu ne kadar iyi kurduğunu gösterir.",
-      "Üç sürüm var. Bütçe'de ilk 11'ini €300M ile alırsın: iyi oyuncular daha pahalıdır, bu yüzden reytingi düşük bir kelepir akıllıca bir alım olabilir. Klasik'te reytingler açıktır ve en iyisini seçersin. Futbol Bilgisi'nde reytingler ve istatistikler gizlidir, o sezon kimin iyi olduğunu hatırlaman gerekir.",
-      "Her gün yeni bir draft gelir; çevirmeler herkes için aynıdır ve her sürümün kendi sıralaması vardır. Hesapsız önceki günleri oynarsın; hesapla bugünün draftını oynar ve sıralamalara girersin. Bugünkünü oynadıktan sonra sıralamadaki herhangi bir takımı açıp ilk 11'inle ona karşı oynayabilirsin. Serbest oyunda ligi (Premier League, LaLiga, Serie A, Bundesliga veya Ligue 1), dönemi ve dizilişi sen seçersin.",
+      "Transfer bütçesiyle oynarsın: ilk 11'ini €300M ile alırsın. İyi oyuncular daha pahalıdır, bu yüzden reytingi düşük bir kelepir akıllıca bir alım olabilir; 50 reytingli altyapı oyuncusu ise her zaman ücretsizdir. Hepsini yıldızlara harcarsan ilk 11'in kalanı bedelini öder.",
+      "Her gün yeni bir draft gelir; çevirmeler herkes için aynıdır ve tek bir sıralama vardır. Hesapsız önceki günleri oynarsın; hesapla bugünün draftını oynar ve sıralamaya girersin. Bugünkünü oynadıktan sonra sıralamadaki herhangi bir takımı açıp ilk 11'inle ona karşı oynayabilirsin. Serbest oyunda ligi (Premier League, LaLiga, Serie A, Bundesliga veya Ligue 1), dönemi ve dizilişi sen seçersin.",
       "Arkadaşlarınla iki şekilde oynayabilirsin. Bir arkadaşına aynı çevirmelerde meydan oku ve kurduğunuz takımları karşılaştırın ya da 2 ile 6 oyunculu canlı bir oda aç; orada alınan oyuncu başkasına kalmaz. Takım takıma eşleşmeler iç saha ve deplasman olmak üzere iki maçta belirlenir. Oyun ücretsizdir, tarayıcıda oynanır ve indirme gerektirmez.",
     ],
     ru: [
       "Футбольный драфт: игра о сборке состава на реальной футбольной истории. На каждом ходу ты крутишь реальный клуб и сезон и берёшь одного из его игроков, пока не соберёшь полный состав из 11. Затем твоя команда играет симулированный сезон в лиге, а таблица показывает, насколько удачно ты её собрал.",
-      "Есть три версии. В «Бюджете» ты покупаешь состав на €300 млн: лучшие игроки стоят дороже, поэтому недорогой игрок с рейтингом пониже может оказаться умной покупкой. В «Классике» рейтинги видны, и ты выбираешь лучших. В «Знатоке» рейтинги и статистика скрыты, так что придётся вспомнить, кто был хорош в том сезоне.",
-      "Каждый день выходит новый драфт: прокруты одинаковы для всех, а у каждой версии свой рейтинг. Без аккаунта ты играешь за прошлые дни, а с аккаунтом доступны сегодняшний драфт и рейтинги. Сыграв сегодняшний драфт, можно открыть любую команду из рейтинга и сыграть против неё своим составом. В свободной игре ты выбираешь лигу (Premier League, LaLiga, Serie A, Bundesliga или Ligue 1), эпоху и схему.",
+      "Ты играешь с трансферным бюджетом: покупаешь состав на €300 млн. Лучшие игроки стоят дороже, поэтому недорогой игрок с рейтингом пониже может оказаться умной покупкой, а воспитанник академии с рейтингом 50 всегда бесплатен. Потратишь всё на звёзд, и за это заплатит остальной состав.",
+      "Каждый день выходит новый драфт: прокруты одинаковы для всех, а рейтинг общий. Без аккаунта ты играешь за прошлые дни, а с аккаунтом доступны сегодняшний драфт и рейтинг. Сыграв сегодняшний драфт, можно открыть любую команду из рейтинга и сыграть против неё своим составом. В свободной игре ты выбираешь лигу (Premier League, LaLiga, Serie A, Bundesliga или Ligue 1), эпоху и схему.",
       "С друзьями можно играть двумя способами. Брось другу вызов на тех же прокрутах и сравните, кто что собрал, или открой живую комнату на 2–6 игроков, где взятый игрок уже никому не достанется. Противостояния команд решаются в двух матчах, дома и в гостях. Игра бесплатная, работает в браузере, скачивать ничего не нужно.",
     ],
     pt: [
       "Draft de futebol é um jogo de montar elenco com a história real do futebol. A cada rodada você gira um clube e uma temporada reais e contrata um dos jogadores, até fechar um time completo de 11. Depois, seu time joga uma temporada simulada da liga, e a tabela mostra se você montou bem.",
-      "São três versões. No Orçamento, você compra seu time com €300M: jogadores melhores custam mais, então uma pechincha com nota menor pode ser a compra certa. No Clássico, as notas aparecem e você escolhe os melhores. No Entendido, notas e estatísticas ficam ocultas, e você precisa lembrar quem foi bem naquela temporada.",
-      "Todo dia tem um draft novo, com os mesmos giros para todos e um ranking para cada versão. Sem conta, você joga os dias anteriores; com uma conta, joga o draft de hoje e entra nos rankings. Depois de jogar o de hoje, você pode abrir qualquer time do ranking e jogar com o seu contra ele. No jogo livre, você escolhe a liga (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), a época e a formação.",
+      "Você joga com orçamento de transferências: compra seu time com €300M. Jogadores melhores custam mais, então uma pechincha com nota menor pode ser a compra certa, e um garoto da base com nota 50 é sempre de graça. Gaste tudo em estrelas e o resto do time paga a conta.",
+      "Todo dia tem um draft novo, com os mesmos giros para todos e um ranking. Sem conta, você joga os dias anteriores; com uma conta, joga o draft de hoje e entra no ranking. Depois de jogar o de hoje, você pode abrir qualquer time do ranking e jogar com o seu contra ele. No jogo livre, você escolhe a liga (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), a época e a formação.",
       "Com amigos, há dois jeitos de jogar. Desafie um amigo nos mesmos giros e comparem os times, ou abra uma sala ao vivo de 2 a 6 jogadores, onde um jogador escolhido não fica disponível para mais ninguém. Time contra time se decide em dois jogos, ida e volta. É grátis, roda no navegador e não precisa baixar nada.",
     ],
     de: [
       "Fußball-Draft ist ein Spiel, in dem du aus echter Fußballgeschichte einen Kader baust. In jedem Zug drehst du einen echten Verein und eine Saison und verpflichtest einen seiner Spieler, bis deine Elf komplett ist. Dann spielt dein Team eine simulierte Ligasaison, und die Tabelle zeigt dir, wie gut du gebaut hast.",
-      "Es gibt drei Versionen. In Budget kaufst du deine Elf für 300 Mio. €: Bessere Spieler kosten mehr, ein Schnäppchen mit niedrigerer Wertung kann also der kluge Kauf sein. In Klassisch sind die Wertungen sichtbar und du nimmst die Besten. In Fußballwissen sind Wertungen und Statistiken versteckt, du musst also wissen, wer in jener Saison gut war.",
-      "Jeden Tag gibt es einen neuen Draft, mit denselben Drehs für alle und einer Rangliste pro Version. Ohne Konto spielst du frühere Tage; angemeldete Spieler bekommen den heutigen Draft und die Ranglisten. Hast du heute gespielt, kannst du jedes Team der Rangliste öffnen und mit deiner Elf dagegen antreten. Im freien Spiel wählst du Liga (Premier League, LaLiga, Serie A, Bundesliga oder Ligue 1), Ära und Formation.",
+      "Du spielst mit einem Transferbudget: Du kaufst deine Elf für 300 Mio. €. Bessere Spieler kosten mehr, ein Schnäppchen mit niedrigerer Wertung kann also der kluge Kauf sein, und ein Jugendspieler mit Wertung 50 ist immer gratis. Gibst du alles für Stars aus, zahlt der Rest deiner Elf dafür.",
+      "Jeden Tag gibt es einen neuen Draft, mit denselben Drehs für alle und einer Rangliste. Ohne Konto spielst du frühere Tage; angemeldete Spieler bekommen den heutigen Draft und die Rangliste. Hast du heute gespielt, kannst du jedes Team der Rangliste öffnen und mit deiner Elf dagegen antreten. Im freien Spiel wählst du Liga (Premier League, LaLiga, Serie A, Bundesliga oder Ligue 1), Ära und Formation.",
       "Mit Freunden gibt es zwei Wege. Fordere einen Freund mit denselben Drehs heraus und vergleicht, was jeder gebaut hat, oder öffne einen Live-Raum für 2 bis 6 Spieler, in dem ein vergebener Spieler für alle anderen weg ist. Team gegen Team wird in Hin- und Rückspiel entschieden. Das Spiel ist kostenlos, läuft im Browser und braucht keinen Download.",
     ],
     fr: [
       "Draft foot est un jeu de construction d’effectif avec la vraie histoire du foot. À chaque tour, tu fais tourner un vrai club et une saison et tu recrutes l’un de ses joueurs, jusqu’à former un onze complet. Ton équipe joue ensuite une saison de championnat simulée, et le classement te dit si tu l’as bien construite.",
-      "Il existe trois versions. En Budget, tu achètes ton onze avec 300 M€ : les meilleurs joueurs coûtent plus cher, donc une bonne affaire moins bien notée peut être le bon achat. En Classique, les notes sont affichées et tu prends les meilleurs. En Culture foot, notes et statistiques sont cachées : à toi de te souvenir de qui était bon cette saison-là.",
-      "Chaque jour, un nouveau draft arrive, avec les mêmes tirages pour tout le monde et un classement par version. Sans compte, tu joues aux jours précédents ; avec un compte, tu accèdes au draft du jour et aux classements. Une fois le draft du jour joué, tu peux ouvrir n’importe quelle équipe du classement et l’affronter avec ton onze. En mode libre, tu choisis le championnat (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), l’époque et la formation.",
+      "Tu joues avec un budget transferts : tu achètes ton onze avec 300 M€. Les meilleurs joueurs coûtent plus cher, donc une bonne affaire moins bien notée peut être le bon achat, et un jeune du centre de formation noté 50 est toujours gratuit. Dépense tout pour des stars et le reste de ton onze en paie le prix.",
+      "Chaque jour, un nouveau draft arrive, avec les mêmes tirages pour tout le monde et un classement. Sans compte, tu joues aux jours précédents ; avec un compte, tu accèdes au draft du jour et au classement. Une fois le draft du jour joué, tu peux ouvrir n’importe quelle équipe du classement et l’affronter avec ton onze. En mode libre, tu choisis le championnat (Premier League, LaLiga, Serie A, Bundesliga ou Ligue 1), l’époque et la formation.",
       "Entre amis, il y a deux façons de jouer. Défie un ami sur les mêmes tirages et comparez vos équipes, ou ouvre un salon en direct de 2 à 6 joueurs, où un joueur pris n’est plus disponible pour les autres. Équipe contre équipe se joue sur deux matchs, aller et retour. Le jeu est gratuit, se joue dans le navigateur et ne demande aucun téléchargement.",
+    ],
+    el: [
+      "Το Football Draft είναι παιχνίδι δημιουργίας ρόστερ με πραγματική ποδοσφαιρική ιστορία. Σε κάθε σειρά η κλήρωση δείχνει έναν πραγματικό σύλλογο και σεζόν και αποκτάς έναν από τους παίκτες του· συνεχίζεις ώσπου να έχεις ενδεκάδα 11 παικτών. Έπειτα η ομάδα σου παίζει μια προσομοιωμένη σεζόν πρωταθλήματος και η βαθμολογία δείχνει πόσο καλά τη συγκρότησες.",
+      "Παίζεις με μεταγραφικό προϋπολογισμό: φτιάχνεις ενδεκάδα με 300 εκατ. €. Οι καλύτεροι παίκτες κοστίζουν περισσότερα, οπότε ένας παίκτης με χαμηλότερη βαθμολογία και καλή τιμή μπορεί να είναι έξυπνη επιλογή, ενώ ένας παίκτης ακαδημίας με βαθμολογία 50 είναι πάντα δωρεάν. Αν τα ξοδέψεις όλα σε σταρ, το πληρώνει η υπόλοιπη ενδεκάδα.",
+      "Κάθε μέρα εμφανίζεται νέο καθημερινό draft, με τις ίδιες κληρώσεις για όλους και κοινό πίνακα κατάταξης. Χωρίς λογαριασμό παίζεις προηγούμενες ημέρες· οι συνδεδεμένοι παίκτες παίρνουν το σημερινό draft και τον πίνακα κατάταξης. Αφού παίξεις το σημερινό, μπορείς να ανοίξεις οποιαδήποτε ομάδα στον πίνακα και να παίξεις την ενδεκάδα σου απέναντί της. Στο ελεύθερο παιχνίδι διαλέγεις πρωτάθλημα (Premier League, La Liga, Serie A, Bundesliga ή Ligue 1), εποχή και σχηματισμό.",
+      "Με φίλους υπάρχουν δύο τρόποι παιχνιδιού. Προκάλεσε έναν φίλο με τις ίδιες κληρώσεις και συγκρίνετε τις ομάδες που φτιάξατε ή άνοιξε ζωντανό δωμάτιο για 2 έως 6 παίκτες, όπου όποιος επιλεγεί δεν είναι διαθέσιμος στους υπόλοιπους. Οι ομάδες αναμετρώνται σε δύο αγώνες, εντός και εκτός έδρας. Το Football Draft παίζεται δωρεάν στον browser, χωρίς λήψη.",
     ],
   },
   "last-answer-standing": {
@@ -1042,6 +1160,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "De nouvelles catégories arrivent chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer aux jours précédents et voir toutes les réponses ; les joueurs connectés ont accès aux catégories du jour, à une manche classée dans le classement quotidien et à leur série. À la fin, tu obtiens 5 cases colorées à partager : jaune si la liste est complète, vert à partir de la moitié, bleu pour quelques réponses et noir pour aucune.",
       "Tu peux aussi jouer à Cite-les tous ! en duel 1v1 en ligne contre un ami, comme dans les diffusions : envoie-lui le lien du salon et nommez à tour de rôle des réponses de la même liste. Le dernier joueur qui ne s’est pas trompé remporte la catégorie ; le premier à en remporter 3 gagne le duel.",
     ],
+    el: [
+      "Το Βρες τους όλους! είναι παιχνίδι λιστών. Κάθε μέρα υπάρχουν πέντε ποδοσφαιρικές κατηγορίες και καθεμία έχει κλειστή λίστα: μια αποστολή Μουντιάλ, κάθε νικητή Copa Libertadores ή τους πρώτους σκόρερ ενός συλλόγου. Ονόμαζε απαντήσεις τη μία μετά την άλλη· κάθε σωστή απάντηση αξίζει έναν βαθμό.",
+      "Η ανατροπή είναι το χρονόμετρο. Η πρώτη απάντησή σου έχει 20 δευτερόλεπτα και κάθε απάντηση που βρίσκεις μειώνει τον επόμενο χρόνο, μέχρι τα 6 δευτερόλεπτα. Τρεις συνεχόμενες αστοχίες ή η λήξη του χρόνου τελειώνουν την κατηγορία. Αν βρεις ολόκληρη τη λίστα, παίρνεις μπόνους +5 επιπλέον βαθμούς.",
+      "Νέες κατηγορίες εμφανίζονται κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής. Χωρίς λογαριασμό παίζεις τις προηγούμενες ημέρες και βλέπεις όλες τις απαντήσεις· οι συνδεδεμένοι παίκτες παίρνουν τις σημερινές κατηγορίες, μία προσπάθεια κατάταξης στον ημερήσιο πίνακα και το σερί τους. Στο τέλος παίρνεις πέντε χρωματιστά τετράγωνα για κοινοποίηση: κίτρινο για ολόκληρη λίστα, πράσινο για τη μισή ή περισσότερη, μπλε για μερικές και μαύρο για καμία.",
+      "Μπορείς επίσης να παίξεις το Βρες τους όλους! 1v1 online με φίλο, στείλε του τον σύνδεσμο του δωματίου και πείτε εναλλάξ απαντήσεις από την ίδια λίστα. Κερδίζει την κατηγορία όποιος μείνει τελευταίος και τη μονομαχία όποιος κερδίσει πρώτος 3 κατηγορίες.",
+    ],
   },
   "football-minesweeper": {
     en: [
@@ -1092,6 +1216,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Un nouveau plateau arrive chaque jour à minuit, heure d’Argentine. Sans inscription, tu peux jouer au plateau du jour précédent et voir toutes les réponses après chaque manche ; les joueurs connectés ont accès au plateau du jour, à une manche classée dans le classement quotidien et à leur série. À la fin, tu obtiens 20 cases colorées à partager avec tes amis.",
       "Démineur foot se joue aussi en duel 1v1 contre un ami en ligne : vous choisissez les joueurs à tour de rôle, et si tu tombes sur une mine, ton rival récupère les points de la manche. Trouver les 12 joueurs rapporte des points aux deux.",
     ],
+    el: [
+      "Ο Ποδοσφαιρικός ναρκαλιευτής μετατρέπει ένα ποδοσφαιρικό κουίζ σε ταμπλό ναρκαλιευτή με παίκτες. Κάθε γύρος έχει ένα στοιχείο και δεκαέξι κάρτες με πορτρέτα. Δώδεκα παίκτες ταιριάζουν στο στοιχείο και τέσσερις είναι νάρκες. Τα στοιχεία μπορεί να αφορούν τη σεζόν ενός συλλόγου, την ενδεκάδα ενός διάσημου τελικού, τον τόπο γέννησης ενός παίκτη ή το Μουντιάλ στο οποίο σκόραρε.",
+      "Κάθε σωστό πάτημα προσθέτει έναν βαθμό στο σύνολο του γύρου. Αν πατήσεις νάρκη, ο γύρος τελειώνει και χάνεις το σύνολο, οπότε το ζητούμενο είναι πότε θα κλειδώσεις τα νομίσματά σου. Αν βρεις και τους δώδεκα, έχεις τέλειο γύρο που αξίζει δεκαπέντε βαθμούς. Η πλήρης μέρα έχει είκοσι γύρους, που δυσκολεύουν σταδιακά, για μέγιστο σύνολο τριακοσίων βαθμών.",
+      "Κάθε μέρα τα μεσάνυχτα, ώρα Αργεντινής, εμφανίζεται νέο ταμπλό. Χωρίς λογαριασμό παίζεις το ταμπλό της προηγούμενης ημέρας και βλέπεις όλες τις απαντήσεις μετά από κάθε γύρο· οι συνδεδεμένοι παίκτες παίρνουν το σημερινό ταμπλό, μία προσπάθεια κατάταξης στον ημερήσιο πίνακα και το σερί τους. Στο τέλος παίρνεις πλέγμα με είκοσι χρωματιστά τετράγωνα για κοινοποίηση σε φίλους.",
+      "Ο Ποδοσφαιρικός ναρκαλιευτής παίζεται επίσης 1v1 online με φίλο, διαλέγετε παίκτες εναλλάξ και όποιος βρει έναν παρείσακτο δίνει τους βαθμούς του γύρου στον αντίπαλο. Αν βρείτε και τους 12, παίρνετε και οι δύο βαθμούς.",
+    ],
   },
   "trivia-mines": {
     en: [
@@ -1133,6 +1263,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Terrain miné est un quiz foot sur un plateau de 25 cases où se cachent 4 défenseurs. Choisis le nombre de pièces à placer, ouvre les cases une à une ; chaque case sans défenseur multiplie le total selon un barème équitable. Si tu touches un défenseur, tu perds les pièces placées ; sécurise tes pièces avant pour conserver le total.",
       "Tu peux utiliser jusqu’à 3 indices par manche : réponds correctement à une question de foot pour signaler un défenseur caché. Cela réduit le risque des choix suivants ; le barème diminue aussi, afin de garder le même total possible quel que soit ton parcours. 3 % sont déduits quand tu sécurises tes pièces.",
       "Sur cette page, tu joues avec des points d’entraînement non récupérables et non convertibles. Dans l’app, les joueurs connectés placent entre 5 et 500 pièces depuis leur portefeuille, avec un total plafonné.",
+    ],
+    el: [
+      "Το Ναρκοπέδιο ερωτήσεων είναι ποδοσφαιρικός ναρκαλιευτής. Είκοσι πέντε πλακίδια κρύβουν τέσσερις αμυντικούς. Διαλέγεις πόσα νομίσματα θα βάλεις, ανοίγεις πλακίδια ένα ένα και κάθε ασφαλές πλακίδιο πολλαπλασιάζει το σύνολο σύμφωνα με την επιλογή σου. Αν βρεις αμυντικό, χάνεις όσα έβαλες· κλείδωσε τα νομίσματα πριν από αυτό για να κρατήσεις το σύνολο.",
+      "Μπορείς να κάνεις έως τρεις ανιχνεύσεις ανά γύρο: απάντησε σωστά σε ποδοσφαιρική ερώτηση και αποκαλύπτεται ένας κρυμμένος αμυντικός. Η ανίχνευση μειώνει τον κίνδυνο στις επόμενες επιλογές και μειώνει αντίστοιχα τους πολλαπλασιαστές, ώστε το αποτέλεσμα να μένει ίδιο όποιον τρόπο κι αν παίξεις. Το παιχνίδι κρατά τρία τοις εκατό όταν κλειδώνεις τα νομίσματα.",
+      "Σε αυτή τη σελίδα παίζεις μόνο με δοκιμαστικούς πόντους, που δεν μεταφέρονται ούτε μετατρέπονται. Στην εφαρμογή, οι συνδεδεμένοι παίκτες βάζουν νομίσματα από το πορτοφόλι τους, από 5 έως 500, με ανώτατο όριο στο σύνολο.",
     ],
   },
   "football-logic": {
@@ -1176,6 +1311,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Les devinettes ont 3 formes : un transfert évoqué par deux écussons, un parcours qui ne correspond qu’à un joueur, ou un jeu de mots dont les images font entendre un nom. Les noms de famille et les petites fautes de frappe sont acceptés ; en cas de mauvaise réponse, la réponse est affichée pour que tu comprennes l’astuce avant la suivante.",
       "Sur cette page, l’entraînement utilise un ensemble fixe de devinettes. Dans l’app, 5 nouvelles devinettes arrivent chaque jour ; chaque bonne réponse rapporte des pièces et le jour compte pour ta série.",
     ],
+    el: [
+      "Οι Ποδοσφαιρικοί γρίφοι είναι γρίφοι με εικόνες. Εμφανίζονται δύο εικόνες δίπλα δίπλα: ένα έμβλημα συλλόγου δίπλα σε ένα αξιοθέατο, μια σημαία δίπλα σε ένα αντικείμενο ή ένα ζευγάρι emoji. Μαζί δείχνουν έναν ποδοσφαιριστή, μια μεταγραφή ή μια διάσημη στιγμή. Δες το ζευγάρι, γράψε την απάντηση και εμφανίζεται ο επόμενος γρίφος.",
+      "Υπάρχουν τρία είδη γρίφων: μεταγραφή που δείχνουν δύο εμβλήματα, καριέρα που ταιριάζει μόνο σε έναν παίκτη και λογοπαίγνιο όπου οι εικόνες ακούγονται σαν όνομα. Γίνονται δεκτά επώνυμα και μικρά ορθογραφικά λάθη· μια λάθος μαντεψιά αποκαλύπτει την απάντηση, ώστε να μάθεις το κόλπο πριν από τον επόμενο γρίφο.",
+      "Η προπόνηση χρησιμοποιεί ένα σταθερό σύνολο γρίφων. Στην εφαρμογή εμφανίζονται κάθε μέρα πέντε νέοι γρίφοι, κάθε σωστή απάντηση δίνει νομίσματα και η μέρα μετρά στο σερί σου.",
+    ],
   },
   "missing-xi": {
     en: [
@@ -1217,6 +1357,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Devine le 11 présente une composition de départ célèbre sous la forme de 11 maillots sur le terrain, dans la formation réelle, tous les noms cachés. Le match est indiqué, par exemple une finale de Ligue des champions, et à toi de nommer le joueur titulaire à chaque poste. Appuie sur un maillot, saisis un nom et passe au suivant.",
       "Chaque composition est vérifiée avec le compte rendu officiel du match : la formation et les 11 titulaires sont exacts. Le jeu reconnaît les noms dans leur orthographe anglaise et géorgienne. Si un maillot ne te revient pas, passe : le visage et le nom apparaissent pour que l’onze soit complet à la fin.",
       "Trois compositions sont proposées par jour. L’entraînement utilise des exemples d’effectifs ; dans l’app, les compositions changent chaque jour, chaque maillot identifié rapporte des pièces et compte pour ta série.",
+    ],
+    el: [
+      "Το Ποιος λείπει από την ενδεκάδα; δείχνει μια διάσημη αρχική ενδεκάδα με έντεκα φανέλες στο γήπεδο, στον πραγματικό σχηματισμό, με όλα τα ονόματα κρυμμένα. Αναφέρεται ο αγώνας, για παράδειγμα ένας τελικός Champions League, και πρέπει να ονομάσεις τον παίκτη που ξεκίνησε σε κάθε θέση. Πάτησε μια φανέλα, γράψε το όνομα και συνέχισε.",
+      "Κάθε ενδεκάδα ελέγχεται με βάση το επίσημο αρχείο του αγώνα, ώστε ο σχηματισμός και οι έντεκα βασικοί να είναι ακριβείς. Τα ονόματα αντιστοιχίζονται με ευελιξία στις αγγλικές και γεωργιανές γραφές. Μπορείς να προσπεράσεις μια φανέλα που δεν θυμάσαι· το προσπέρασμα αποκαλύπτει το πρόσωπο και το όνομα, ώστε στο τέλος να συμπληρώνεται η ενδεκάδα.",
+      "Τρεις ενδεκάδες αποτελούν τη μέρα. Η προπόνηση χρησιμοποιεί ενδεικτικές ομάδες· το καθημερινό παιχνίδι στην εφαρμογή αλλάζει τις ομάδες κάθε μέρα, δίνει νομίσματα για κάθε φανέλα που αναγνωρίζεις και μετρά στο σερί σου.",
     ],
   },
   "pass-chain": {
@@ -1260,6 +1405,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Chaque lien est vérifié à partir d’un parcours de carrière documenté : les deux joueurs doivent avoir été réellement liés. Moins tu utilises de relais, meilleur est ton score : chaque énigme a un parcours le plus court connu, à égaler ou battre. Si tu bloques, révèle le parcours le plus court et passe à la suite.",
       "Chaque jour, 2 énigmes sont proposées : une pour s’échauffer et une où le lien est moins évident. L’entraînement utilise des énigmes d’exemple ; dans l’app, elles changent chaque jour, chaque énigme résolue rapporte des pièces et compte pour ta série.",
     ],
+    el: [
+      "Το Σύνδεσε τους παίκτες σού δίνει δύο ποδοσφαιριστές που δεν έπαιξαν ποτέ μαζί και σου ζητά να τους συνδέσεις. Γράψε έναν παίκτη που είχε κοινό σύλλογο, προπονητή ή αποδυτήρια με τον τελευταίο της αλυσίδας· αν η σύνδεση ισχύει, η αλυσίδα μεγαλώνει κατά έναν και ο νέος παίκτης γίνεται το άκρο της. Φτάσε στον στόχο για να λύσεις τον γρίφο.",
+      "Κάθε σύνδεση ελέγχεται με επαληθευμένο γράφημα καριέρας, οπότε η απάντηση μετρά μόνο όταν οι δύο παίκτες συνέπεσαν πραγματικά. Λιγότερες συνδέσεις δίνουν καλύτερη βαθμολογία: κάθε γρίφος έχει γνωστή συντομότερη διαδρομή και στόχος είναι να την ισοφαρίσεις ή να τη συντομεύσεις. Αν κολλήσεις, εμφάνισε τη συντομότερη αλυσίδα και συνέχισε.",
+      "Δύο γρίφοι αποτελούν τη μέρα: ένας για ζέσταμα κι ένας που χρειάζεται λιγότερο προφανή σύνδεση. Η προπόνηση χρησιμοποιεί ενδεικτικούς γρίφους· το καθημερινό παιχνίδι στην εφαρμογή αλλάζει γρίφους κάθε μέρα, δίνει νομίσματα για κάθε λύση και μετρά στο σερί σου.",
+    ],
   },
   "stat-sniper": {
     en: [
@@ -1301,6 +1451,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Au plus proche te fait deviner des chiffres du foot. Chaque question porte sur une vraie statistique : montant d’un transfert, valeur marchande maximale d’un joueur, buts inscrits en championnat sur une saison, matchs disputés pour un club, taille ou affluence d’une grande soirée européenne. Donne un chiffre : plus tu es proche, meilleur est ton résultat.",
       "En solo, le défi du jour comprend 10 questions, un curseur sur une fourchette plausible et un score basé sur la proximité : la valeur exacte rapporte 100 points ; à un quart de la fourchette, tu n’en marques aucun. Un classement quotidien mesure la précision. Entre amis, de 2 à 6 joueurs saisissent leurs réponses en même temps et le plus proche gagne la manche : en duel 1v1, il marque ; à 3 joueurs ou plus, un podium départage les joueurs ; une réponse exacte rapporte un bonus.",
       "Le principe rappelle la question subsidiaire d’un quiz : estime le montant d’un transfert, une valeur marchande ou une affluence. Chaque chiffre provient d’une source vérifiable. Les salons entre amis ont leur propre série de questions pour que personne ne puisse connaître les réponses grâce au défi du jour.",
+    ],
+    el: [
+      "Το Ποιος πλησιάζει περισσότερο; είναι ποδοσφαιρικό παιχνίδι αριθμών. Κάθε ερώτηση δίνει ένα πραγματικό στοιχείο: ποσό μεταγραφής, υψηλότερη αξία παίκτη, γκολ πρωταθλήματος σε μία σεζόν, συμμετοχές σε σύλλογο, ύψος ή προσέλευση σε μεγάλο ευρωπαϊκό αγώνα. Δώσε έναν αριθμό· όσο πιο κοντά είναι στην αλήθεια, τόσο καλύτερα.",
+      "Μόνος σου παίζεις καθημερινό παιχνίδι: δέκα ερωτήσεις, μια μπάρα επιλογής σε εύλογο εύρος και βαθμοί ανάλογα με την εγγύτητα — η ακριβής τιμή δίνει 100, ενώ απόσταση ίση με το ένα τέταρτο του εύρους δεν δίνει βαθμούς — μαζί με ημερήσιο πίνακα ακρίβειας. Με φίλους, 2 έως 6 παίκτες γράφετε ταυτόχρονα τις απαντήσεις σας και ο κοντινότερος κερδίζει τον γύρο: σε 1v1 βαθμολογείται ο πιο κοντινός, με τρεις ή περισσότερους υπάρχει βάθρο, ενώ η ακριβής απάντηση δίνει μπόνους.",
+      "Είναι η ίδια ιδέα με το παιχνίδι εκτίμησης τιμής και την ερώτηση «ποιος πλησιάζει περισσότερο» σε ισοπαλία ενός κουίζ παμπ, με θέμα το ποδόσφαιρο: βρες το ποσό μεταγραφής, την αξία παίκτη ή την προσέλευση. Κάθε αριθμός προέρχεται από σύνολο δεδομένων που μπορείς να ελέγξεις και τα δωμάτια φίλων χρησιμοποιούν δική τους δεξαμενή ερωτήσεων, ώστε να μη μαθαίνεις τις απαντήσεις από το καθημερινό παιχνίδι.",
     ],
   },
   "free-kicks": {
@@ -1344,6 +1499,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Pour tirer, choisis une zone ; le gardien plonge vers l’une des zones ouvertes et le total dépend de leur nombre. Ainsi, plus tu réponds juste, plus le tir est sûr, mais le coefficient diminue. Si tu rates, tu perds les pièces placées ; si tu marques, tu peux les sécuriser ou tenter une autre attaque avec ces pièces toujours placées.",
       "Sur cette page, tu joues avec des points d’entraînement non récupérables. Dans l’app, les joueurs connectés placent des pièces de leur portefeuille ; les mêmes probabilités équitables et la commission du jeu sont affichées à chaque étape.",
     ],
+    el: [
+      "Οι Εκτελέσεις φάουλ είναι παιχνίδι με νομίσματα και τέρμα-στόχο. Βάζεις νομίσματα και κάθε επίθεση αρχίζει με μια ποδοσφαιρική ερώτηση. Η σωστή απάντηση ανοίγει άλλο ένα τμήμα της εστίας και φέρνει την επόμενη ερώτηση· η λάθος απάντηση ή η λήξη του χρόνου σταματά τις απαντήσεις, οπότε σουτάρεις με όσα τμήματα είναι ανοιχτά.",
+      "Όταν σουτάρεις, διάλεξε ζώνη· ο τερματοφύλακας πέφτει σε μία από τις ανοιχτές ζώνες και τα νομίσματα που παίρνεις εξαρτώνται από το πόσες ήταν ανοιχτές. Περισσότερες σωστές απαντήσεις κάνουν το σουτ ασφαλέστερο, αλλά μειώνουν τον πολλαπλασιαστή. Αν αστοχήσεις, χάνεις όσα έβαλες· αν σκοράρεις, μπορείς να κλειδώσεις τα νομίσματα ή να συνεχίσεις με άλλη επίθεση, διατηρώντας το σύνολο σε αναμονή.",
+      "Σε αυτή τη σελίδα παίζεις μόνο με δοκιμαστικούς πόντους, που δεν μεταφέρονται. Στην εφαρμογή, οι συνδεδεμένοι παίκτες βάζουν νομίσματα από το πορτοφόλι τους, ενώ οι ίδιοι υπολογισμοί και το περιθώριο του παιχνιδιού εμφανίζονται σε κάθε κατάσταση.",
+    ],
   },
   "road-to-goal": {
     en: [
@@ -1386,6 +1546,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Après chaque zone, décide : sécurise les pièces accumulées ou continue avec les pièces placées vers la question suivante. Une mauvaise réponse ou la fin du chrono met fin au parcours et tu perds les pièces placées. Atteins les 11 zones pour obtenir la récompense maximale.",
       "Sur cette page, tu joues uniquement avec des points d’entraînement. Dans l’app, les joueurs connectés placent des montants fixes en pièces ; l’ordre des questions est établi avant le début et la preuve de la manche peut être vérifiée ensuite.",
     ],
+    el: [
+      "Ο Δρόμος για το γκολ είναι μια σκάλα με έντεκα ζώνες, από τη δική σου περιοχή ως την αντίπαλη εστία. Διαλέγεις σταθερό αριθμό νομισμάτων και απαντάς μία ποδοσφαιρική ερώτηση σε κάθε ζώνη, με χρονόμετρο δεκαπέντε δευτερολέπτων. Κάθε σωστή απάντηση σε προχωρά μία ζώνη και αυξάνει τον πολλαπλασιαστή· οι ερωτήσεις δυσκολεύουν όσο πλησιάζεις στο γκολ.",
+      "Μετά από κάθε ζώνη αποφασίζεις: κλείδωσε όσα νομίσματα έχεις συγκεντρώσει ή συνέχισε στην επόμενη ερώτηση με όλο το σύνολο να εξαρτάται από την απάντησή σου. Μια λάθος απάντηση ή η λήξη του χρόνου τελειώνει την προσπάθεια και χάνεις όσα έβαλες. Αν περάσεις και τις έντεκα ζώνες, παίρνεις το μέγιστο της σκάλας.",
+      "Σε αυτή τη σελίδα παίζεις μόνο με δοκιμαστικούς πόντους. Στην εφαρμογή, οι συνδεδεμένοι παίκτες βάζουν νομίσματα σε σταθερά ποσά, η σειρά των ερωτήσεων ορίζεται πριν ξεκινήσει η προσπάθεια και η απόδειξη του γύρου μπορεί να επαληθευτεί μετά.",
+    ],
   },
   "squad-spin": {
     en: [
@@ -1427,6 +1592,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "La roue du foot se joue sur une suite de tours. À chacun, la roue indique un club, un poste et un pays ; tu as 15 secondes pour citer un joueur correspondant aux 3, par exemple un attaquant brésilien qui a joué à Chelsea. Les parcours avec 4 ou 5 critères ajoutent un championnat, un entraîneur ou un trophée et rapportent plus de pièces par tour.",
       "Une bonne réponse multiplie le total ; choisis ensuite de sécuriser tes pièces ou de continuer avant que les prochains critères apparaissent : tu ne peux pas les voir à l’avance. Une erreur ou la fin du chrono met fin au parcours et te fait perdre les pièces placées. Chaque combinaison possède au moins une réponse vérifiée ; les noms sont reconnus en anglais et en géorgien, avec une tolérance aux fautes de frappe.",
       "Sur cette page, tu joues uniquement avec des points d’entraînement. Dans l’app, les joueurs connectés placent des pièces ; les coefficients dépendent de la précision mesurée à chaque niveau de difficulté, et chaque parcours est limité à 10 tours et à 40 fois le nombre de pièces placées.",
+    ],
+    el: [
+      "Ο Ποδοσφαιρικός τροχός είναι μια σειρά από περιστροφές. Σε κάθε περιστροφή εμφανίζονται τρεις επιλογές: σύλλογος, θέση και εθνική ομάδα, και έχεις δεκαπέντε δευτερόλεπτα για να ονομάσεις ποδοσφαιριστή που ταιριάζει και στα τρία, για παράδειγμα έναν Βραζιλιάνο επιθετικό που έπαιξε στην Τσέλσι. Οι γύροι με τέσσερις ή πέντε επιλογές προσθέτουν πρωτάθλημα, προπονητή ή τρόπαιο και δίνουν περισσότερα ανά γύρο.",
+      "Μια σωστή απάντηση πολλαπλασιάζει τα νομίσματα· μετά διαλέγεις αν θα κλειδώσεις όσα έχεις ή θα συνεχίσεις πριν εμφανιστούν οι επόμενες επιλογές, ώστε να μην μπορείς να τις δεις νωρίτερα. Μια λάθος απάντηση ή η λήξη του χρόνου τελειώνει την προσπάθεια και χάνεις όσα έβαλες. Κάθε συνδυασμός έχει τουλάχιστον μία επαληθευμένη απάντηση, και τα ονόματα γίνονται δεκτά στα αγγλικά και τα γεωργιανά με ανοχή σε ορθογραφικά λάθη.",
+      "Σε αυτή τη σελίδα παίζεις μόνο με δοκιμαστικούς πόντους. Στην εφαρμογή, οι συνδεδεμένοι παίκτες βάζουν νομίσματα, οι πολλαπλασιαστές βασίζονται στην καταγεγραμμένη ακρίβεια κάθε επιπέδου δυσκολίας και οι προσπάθειες έχουν όριο δέκα περιστροφών και σαράντα φορές τον αρχικό αριθμό νομισμάτων.",
     ],
   },
 };

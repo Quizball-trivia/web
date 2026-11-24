@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { nameChainCopy, wordDailyCopy, wordSharedCopy } from "@/features/wordgames/copy";
 import { AnswerBox, Chips, Frame, GreenButton, QuietButton, TopBar, poppins } from "@/features/wordgames/ui";
-import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
+import { createDailyGameCall, DailyGameApiError } from "@/lib/repositories/dailyGameApi";
 import { cn } from "@/lib/utils";
 import { Lettered } from "./Lettered";
 import { nameChainPracticeCopy } from "./nameChainPractice.copy";
@@ -30,22 +30,41 @@ export function NameChainPractice({ locale, brand, onBack }: { locale: string; b
   useEffect(() => { latest.current = state; }, [state]);
   const inFlight = useRef(false);
 
-  const run = useCallback(async (action: { op: "start" } | { op: "pass" } | { op: "answer"; answer: string }) => {
+  type Action = { op: "start" } | { op: "pass" } | { op: "answer"; answer: string };
+  const run = useCallback(async (first: Action) => {
     if (inFlight.current) return;
-    const body = practiceRequest(latest.current, locale, action);
-    if (!body) return;
     inFlight.current = true;
     setBusy(true);
-    setFailed(false);
+    let action: Action | null = first;
     try {
-      const res = await step(body);
-      // One step in flight at a time, so latest.current is the state this step was built on; keep the updater pure.
-      const next = applyPractice(latest.current, body.op, res);
-      latest.current = next;
-      setState(next);
-    } catch {
-      // Nothing is lost: the chain lives here, so the same step can simply be tried again.
-      setFailed(true);
+      while (action) {
+        const body = practiceRequest(latest.current, locale, action);
+        action = null;
+        if (!body) break;
+        setFailed(false);
+        try {
+          const res = await step(body);
+          // One step in flight at a time, so latest.current is the state this step was built on; keep the updater pure.
+          const next = applyPractice(latest.current, body.op, res);
+          latest.current = next;
+          setState(next);
+        } catch (error) {
+          if (error instanceof DailyGameApiError && error.message === "practice_restart" && body.op !== "start") {
+            // The names this chain froze are gone (a new version is live): drop the chain so its steps cannot be
+            // resent, and start a fresh one. If that start fails, the start retry shows (no chain is open).
+            // The chain on screen still counts towards the longest one, as when a start replaces it.
+            const prior = latest.current;
+            const results = prior.links.length > 0 && !prior.ended ? [...prior.results, namedIn(prior)] : prior.results;
+            const cleared: PracticeState = { ...prior, results, links: [], letter: "", last: null, ended: null };
+            latest.current = cleared;
+            setState(cleared);
+            action = { op: "start" };
+          } else {
+            // Nothing is lost: the chain lives here, so the same step can simply be tried again.
+            setFailed(true);
+          }
+        }
+      }
     } finally {
       inFlight.current = false;
       setBusy(false);

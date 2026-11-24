@@ -25,7 +25,7 @@ export interface paths {
                         /** Format: uri */
                         redirect_to?: string;
                         /** @enum {string} */
-                        locale?: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
+                        locale?: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
                     };
                 };
             };
@@ -8474,7 +8474,7 @@ export interface paths {
                         /** Format: uuid */
                         matchId: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
                         /** @enum {string} */
                         kind: "vote";
                         removeOrder: boolean;
@@ -8483,7 +8483,7 @@ export interface paths {
                         /** Format: uuid */
                         matchId: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr";
+                        locale: "en" | "ka" | "es" | "tr" | "ru" | "pt" | "de" | "fr" | "el";
                         /** @enum {string} */
                         kind: "idea";
                         idea: string;
@@ -11860,6 +11860,10 @@ export interface components {
                 break_until_ms: number | null;
                 spectator_delay_ms: number;
                 server_now_ms: number;
+                host_run?: boolean;
+                event_slug?: string | null;
+                scheduled_at?: string | null;
+                single_game?: boolean;
             } | null;
             you: {
                 entered: boolean;
@@ -11876,6 +11880,7 @@ export interface components {
                     target: number;
                     qualified: boolean;
                 };
+                is_host?: boolean;
             } | null;
         };
         WlQpResponse: {

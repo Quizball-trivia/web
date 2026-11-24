@@ -58,6 +58,13 @@ const practice = {
     endChain: "Terminer la suite", chainOver: "Suite terminée", newChain: "Nouvelle suite", back: "Retour au défi du jour", fromEnd: "Entraînement libre (sans chrono)",
     nobodyLeft: "Il ne reste aucun nom de départ. Bel entraînement !",
   },
+  el: {
+    open: "Χαλαρή εξάσκηση", hint: "Χωρίς χρονόμετρο και εκτός κατάταξης: μάθε τα ονόματα με τον ρυθμό σου.", badge: "Εξάσκηση",
+    banner: "Χωρίς χρονόμετρο. Με την ησυχία σου: η εξάσκηση δεν μετρά ποτέ στην κατάταξη.",
+    inChain: (n: number) => `Σε αυτή την αλυσίδα: ${n}`, best: (n: number) => `Μεγαλύτερη αλυσίδα: ${n}`,
+    endChain: "Τερμάτισε την αλυσίδα", chainOver: "Η αλυσίδα τελείωσε", newChain: "Νέα αλυσίδα", back: "Πίσω στην καθημερινή πρόκληση", fromEnd: "Χαλαρή εξάσκηση (χωρίς χρονόμετρο)",
+    nobodyLeft: "Δεν έμειναν ονόματα για να ξεκινήσεις. Καλή εξάσκηση!",
+  },
 } as const;
 
 export const nameChainPracticeCopy = (locale: string) => practice[asWordLocale(locale)];

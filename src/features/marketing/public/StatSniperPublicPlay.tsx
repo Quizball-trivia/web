@@ -19,6 +19,7 @@ const COPY: Record<Locale, { resultCta: string; loadError: string; retry: string
   pt: { resultCta: "Crie sua conta para entrar no ranking", loadError: "O jogo de hoje não carregou.", retry: "Tente de novo" },
   de: { resultCta: "Registriere dich für die Rangliste", loadError: "Das heutige Spiel konnte nicht geladen werden.", retry: "Nochmal versuchen" },
   fr: { resultCta: "Inscris-toi pour rejoindre le classement", loadError: "Le jeu du jour ne s’est pas chargé.", retry: "Réessayer" },
+  el: { resultCta: "Κάνε εγγραφή για την κατάταξη", loadError: "Το σημερινό παιχνίδι δεν φορτώθηκε.", retry: "Δοκίμασε ξανά" },
 };
 
 /** One request per locale and load while it is in flight (a remount must not POST the rate-limited guest API twice). */

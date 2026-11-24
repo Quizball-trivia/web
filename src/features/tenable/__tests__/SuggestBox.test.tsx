@@ -177,3 +177,94 @@ describe("toSoloState", () => {
     expect(toSoloState(run, "en").score).toBe(6);
   });
 });
+
+describe("SuggestBox with an answer floor (Darts)", () => {
+  const floor = { min: 3, known: 5 };
+  // Its own release: the suggestion cache is the page's, so these never reuse another test's answers.
+  let n = 0;
+  const floored = (lookup = vi.fn(async (_k: string, _r: string, q: string) => NAMES.filter((n) => n.label.toLowerCase().split(" ").some((w) => w.startsWith(q.toLowerCase()))))) => {
+    const onSubmit = vi.fn();
+    n += 1;
+    render(<SuggestBox kind="player" release={`rel-floor-${n}`} placeholder="Who is on the list?" say="Send" lookup={lookup} floor={floor} floorHint="Type more" onSubmit={onSubmit} />);
+    return { input: screen.getByRole("combobox"), button: screen.getByRole("button", { name: "Send" }), onSubmit, lookup };
+  };
+  const submit = (input: HTMLElement) => fireEvent.submit(input.closest("form")!);
+
+  it("Enter on text under the floor shows the hint, although the disabled Throw blocks the submit", async () => {
+    const { input, onSubmit } = floored(vi.fn(() => new Promise<never>(() => undefined)));
+    await type(input, "h");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByRole("status")).toHaveTextContent("Type more");
+    await type(input, "hu");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("never sends under three letters or digits, nor digits alone", async () => {
+    const { input, button, onSubmit } = floored();
+    for (const text of ["h", "Mi", "180", "12 4"]) {
+      await type(input, text);
+      expect(button).toBeDisabled();
+      submit(input);
+    }
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("a short text nobody is suggested for is held back once the suggestions are in; one with names goes as typed", async () => {
+    const { input, button, onSubmit } = floored();
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    await type(input, "Xov");
+    await waitFor(() => expect(button).toBeDisabled());
+    expect(screen.getByRole("status")).toHaveTextContent("Type more");
+    expect(input).toHaveAccessibleDescription("Type more");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    submit(input);
+    expect(onSubmit).not.toHaveBeenCalled();
+    await type(input, "Mil");
+    expect(await screen.findAllByRole("option")).toHaveLength(2);
+    expect(button).toBeEnabled();
+    submit(input);
+    expect(onSubmit).toHaveBeenCalledWith("Mil", null);
+  });
+
+  it("five letters or more go as typed, suggested or not", async () => {
+    const { input, lookup, onSubmit } = floored();
+    await type(input, "Xovar");
+    await waitFor(() => expect(lookup).toHaveBeenCalled());
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    submit(input);
+    expect(onSubmit).toHaveBeenCalledWith("Xovar", null);
+  });
+
+  it("a short text goes while its suggestions are on the way", async () => {
+    const { input, onSubmit, lookup } = floored(vi.fn(() => new Promise<never>(() => undefined)));
+    await type(input, "Pov");
+    await waitFor(() => expect(lookup).toHaveBeenCalled());
+    submit(input);
+    expect(onSubmit).toHaveBeenCalledWith("Pov", null);
+  });
+
+  it("a short text whose suggestions failed still goes", async () => {
+    const { input, onSubmit, lookup } = floored(vi.fn(async () => { throw new Error("offline"); }));
+    await type(input, "Qem");
+    await waitFor(() => expect(lookup).toHaveBeenCalled());
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    submit(input);
+    expect(onSubmit).toHaveBeenCalledWith("Qem", null);
+  });
+
+  it("a picked suggestion always goes, even a label the floor would hold back as typed text", async () => {
+    const { input, onSubmit } = floored(vi.fn(async () => [{ eid: "li", label: "Li", qualifier: null }, ...NAMES]));
+    await type(input, "Mil");
+    fireEvent.click(await screen.findByRole("option", { name: /^Li$/ }));
+    expect(onSubmit).toHaveBeenCalledWith("Li", "li");
+  });
+
+  it("without a floor (Tenable) short answers go as before", async () => {
+    const { input, onSubmit } = box();
+    await type(input, "Mi");
+    submit(input);
+    expect(onSubmit).toHaveBeenCalledWith("Mi", null);
+  });
+});

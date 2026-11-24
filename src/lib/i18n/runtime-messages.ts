@@ -195,9 +195,33 @@ const fr = {
   "errors.INSUFFICIENT_TICKETS": "Pas assez de tickets"
 } satisfies Record<keyof typeof en, string>;
 
+const el = {
+  "dailyChallenge.answerPrefix": "Απάντηση",
+  "dailyChallenge.chainComplete": "Το σερί ολοκληρώθηκε.",
+  "dailyChallenge.correct": "Σωστά.",
+  "dailyChallenge.correctAnswers": "Σωστές απαντήσεις",
+  "dailyChallenge.higherValueInstruction": "Διάλεξε ποιος έχει μεγαλύτερη αξία. Μια λάθος απάντηση τελειώνει το σερί.",
+  "dailyChallenge.imposterInstruction": "Διάλεξε ακριβώς το σωστό σύνολο απαντήσεων.",
+  "dailyChallenge.matchup": "Αναμέτρηση",
+  "dailyChallenge.pick": "Διάλεξε",
+  "dailyChallenge.round": "Γύρος",
+  "dailyChallenge.roundFailed": "Απέτυχες στον γύρο.",
+  "dailyChallenge.score": "Σκορ",
+  "common.submit": "Υποβολή",
+  "dailyChallenge.submitSelection": "Υποβολή επιλογής",
+  "dailyChallenge.typePlayerName": "Γράψε το όνομα του παίκτη",
+  "dailyChallenge.typeYourAnswer": "Γράψε την απάντησή σου",
+  "auth.sessionEnded": "Η συνεδρία σου έληξε",
+  "notifications.challengeReceivedToast": "Πρόκληση από {name}",
+  "notifications.challengeAccepted": "Η πρόκληση έγινε δεκτή",
+  "notifications.challengeDeclined": "Η πρόκληση απορρίφθηκε",
+  "notifications.challengeExpired": "Η πρόκληση έληξε",
+  "errors.INSUFFICIENT_TICKETS": "Δεν έχεις αρκετά εισιτήρια"
+} satisfies Record<keyof typeof en, string>;
+
 export type RuntimeMessageKey = keyof typeof en;
 export const RUNTIME_MESSAGE_KEYS = Object.keys(en) as RuntimeMessageKey[];
-const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru, pt, de, fr };
+const dictionaries: Record<Locale, Readonly<Record<RuntimeMessageKey, string>>> = { en, es, ka, tr, ru, pt, de, fr, el };
 
 export function translateRuntimeCopy(locale: Locale, key: RuntimeMessageKey, params?: Record<string, string | number>): string {
   const template = dictionaries[locale][key];

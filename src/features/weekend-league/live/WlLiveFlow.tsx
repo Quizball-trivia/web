@@ -110,6 +110,16 @@ export interface WlLiveFlowUiProps {
   onLateJoin?: () => void;
   /** "Your rewards" block for the final result screen. The simulator omits it. */
   finalRewards?: React.ReactNode;
+  /** Host-run event (Orshabatoba): rendered instead of the bare waiting card
+   *  while the event hasn't started (registration open, hosts not live yet). */
+  pregame?: React.ReactNode;
+  /** Host-run event: the check-in window is the short countdown the host's
+   *  Start opens. Everyone (player or spectator) gets the same big countdown. */
+  kickoffCountdown?: (kickoffMs: number | null) => React.ReactNode;
+  /** No WL rewards block (host-run events pay none). */
+  noRewards?: boolean;
+  /** One game and done (host-run event): game 0 is the final, nobody is cut. */
+  singleGame?: boolean;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
@@ -119,14 +129,15 @@ export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tourna
   // screen's own rewards block; this covers eliminated players watching as
   // spectators, who are owed one too and have no such block.
   const watchedToTheEnd = live.screen.kind === 'final_result' && ui.role !== 'player';
+  const expectsRewards = !ui.noRewards;
   useEffect(() => {
-    if (watchedToTheEnd && selfUserId) rewardSession.expect(tournamentId);
-  }, [watchedToTheEnd, selfUserId, tournamentId]);
+    if (watchedToTheEnd && selfUserId && expectsRewards) rewardSession.expect(tournamentId);
+  }, [watchedToTheEnd, selfUserId, tournamentId, expectsRewards]);
   return (
     <WlLiveFlowView
       live={live}
       selfUserId={selfUserId}
-      finalRewards={ui.role === 'player' ? <WlFinalRewards tournamentId={tournamentId} /> : undefined}
+      finalRewards={ui.role === 'player' && !ui.noRewards ? <WlFinalRewards tournamentId={tournamentId} /> : undefined}
       {...ui}
     />
   );
@@ -154,6 +165,9 @@ export function WlLiveFlowView({
   lateJoinUntilMs,
   onLateJoin,
   finalRewards,
+  pregame,
+  kickoffCountdown,
+  singleGame,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -178,15 +192,17 @@ export function WlLiveFlowView({
       ? (live.screen.attempt?.game_index ?? currentGameIndex ?? 0)
       : currentGameIndex ?? live.gameIndex;
   const ladderNow = wlLadder(checkedInCount ?? 0);
+  // A single-game event plays its only game as the final.
+  const isFinalGame = gameIdxNow >= 3 || singleGame === true;
   // Game 3: checkedInCount is now FINALIST-scoped (server change) — it IS the
   // field. Running it through the qualifier ladder shrank a 22-finalist final
   // to a phantom 19-player field (Codex review).
-  const rankField = gameIdxNow >= 3
+  const rankField = isFinalGame
     ? (checkedInCount ?? 0)
     : gameIdxNow <= 0
       ? (checkedInCount ?? 0)
       : ladderNow[Math.min(2, gameIdxNow - 1)] ?? 0;
-  const rankCut = gameIdxNow >= 3 ? 3 : ladderNow[gameIdxNow] ?? 0;
+  const rankCut = isFinalGame ? 3 : ladderNow[gameIdxNow] ?? 0;
   // Rank at the moment the question opened — the delta on reveal is measured
   // against it (render-time adjustment, same pattern as lastResult below).
   const [rankMark, setRankMark] = useState<{ key: string; rank: number } | null>(null);
@@ -204,7 +220,7 @@ export function WlLiveFlowView({
   const rankDelta = lastMove?.delta ?? 0;
   // The final eliminates nobody — a podium-sized cut painted the whole
   // field red; finalists ride green with rank + delta instead.
-  const zoneCut = gameIdxNow >= 3 ? Math.max(rankField, 1) : rankCut;
+  const zoneCut = isFinalGame ? Math.max(rankField, 1) : rankCut;
   // Below the truncated board the server rank is unknown: the pill degrades
   // to a neutral floor ("#25+") instead of vanishing (launch report).
   const rankInfo: RankInfo | null = rankField > 0 && zoneCut > 0
@@ -350,6 +366,14 @@ export function WlLiveFlowView({
         </Shell>
       </Immersive>
     );
+  }
+
+  const preGameStatuses = ['scheduled', 'content_pending', 'ready', 'entry_open', 'entry_closed'];
+  if (pregame && live.screen.kind === 'waiting' && (status == null || preGameStatuses.includes(status))) {
+    return <>{pregame}</>;
+  }
+  if (kickoffCountdown && status === 'checkin' && live.screen.kind === 'waiting') {
+    return <Immersive>{kickoffCountdown(kickoffMs ?? null)}</Immersive>;
   }
 
   const inCheckinWindow = status === 'checkin' || status === 'final_checkin';
@@ -1300,7 +1324,7 @@ function AnswerFeedback({ ack }: { ack: { accepted: boolean; correct?: boolean; 
 
 /** Reading grace: answers render dimmed + inert until the window opens, then
  *  fade to life — the question is readable the whole time. */
-function GraceReveal({ ready, children }: { ready: boolean; children: React.ReactNode }) {
+export function GraceReveal({ ready, children }: { ready: boolean; children: React.ReactNode }) {
   return (
     <div
       className={`transition-all duration-500 ${ready ? 'opacity-100 saturate-100' : 'pointer-events-none opacity-30 saturate-0'}`}
@@ -1488,7 +1512,7 @@ function HigherLowerQuestion({
 
 /** Shared driver for the typed kinds (career path, who-am-i): the designed
  *  blue input + green submit / red give-up, then the verdict box. */
-function TypedKindQuestion({
+export function TypedKindQuestion({
   card, locked, grace = false, spectator, onSubmit, feedback, evaluation, locale, revealed = false,
 }: {
   card: React.ReactNode;
@@ -1532,7 +1556,7 @@ function TypedKindQuestion({
   );
 }
 
-function WhoAmIQuestion({
+export function WhoAmIQuestion({
   attempt, locale, serverNow, locked, grace = false, badgeVisible = true, spectator, onSubmit, feedback, revealed = false,
 }: {
   grace?: boolean;

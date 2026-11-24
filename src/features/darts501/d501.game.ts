@@ -3,7 +3,7 @@ import type { WordDailyCalendar } from "@/features/wordgames/daily/wordDaily.log
 import { d501Copy } from "./d501.copy";
 
 /** Same calendar as the backend (darts501-daily.days.ts). */
-export const D501_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-24", rankedStart: "2026-10-27", publishedDays: 47 };
+export const D501_CALENDAR: WordDailyCalendar = { contentStart: "2026-10-24", rankedStart: "2026-10-27", publishedDays: 96 };
 
 export const d501DailyGame = (locale: string): WordDailyGame => {
   const c = d501Copy(locale);

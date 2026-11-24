@@ -34,9 +34,10 @@ const COPY = {
   pt: { done: "Demo concluída", round: "Rodada concluída", saved: "dinheiro salvo", score: "pontuação", again: "Jogue de novo", demos: "Voltar às demos", exit: "Sair" },
   de: { done: "Demo abgeschlossen", round: "Runde abgeschlossen", saved: "Münzen gesichert", score: "Punkte", again: "Nochmal spielen", demos: "Zurück zu den Demos", exit: "Verlassen" },
   fr: { done: "Démo terminée", round: "Manche terminée", saved: "pièces sécurisées", score: "score", again: "Rejouer", demos: "Retour aux démos", exit: "Quitter" },
+  el: { done: "Η δοκιμή ολοκληρώθηκε", round: "Ο γύρος ολοκληρώθηκε", saved: "νομίσματα που κράτησες", score: "σκορ", again: "Παίξε ξανά", demos: "Πίσω στα demos", exit: "Έξοδος" },
   tr: { done: "Demo tamamlandı", round: "Tur tamamlandı", saved: "kalan para", score: "puan", again: "Tekrar oyna", demos: "Demolara dön", exit: "Çık" },
 } as const;
-const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", pt: "Jogue o desafio real de hoje", de: "Spiel die echte Tages-Challenge", fr: "Jouer au vrai défi du jour", tr: "Bugünün gerçek görevini oyna" } as const;
+const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", pt: "Jogue o desafio real de hoje", de: "Spiel die echte Tages-Challenge", fr: "Jouer au vrai défi du jour", el: "Παίξε τη σημερινή πρόκληση", tr: "Bugünün gerçek görevini oyna" } as const;
 
 export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta, subtitle, secondary, extra }: DemoResultScreenProps) {
   const { locale } = useLocale();
@@ -59,7 +60,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
           {embedded ? c.round : c.done}
         </p>
         <div className="mt-5 text-4xl font-bold text-white" style={poppins}>
-          {isMoney ? `$${score.toLocaleString(locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "pt" ? "pt-BR" : undefined)}` : score}
+          {isMoney ? `$${score.toLocaleString(locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "el" ? "el-GR" : locale === "pt" ? "pt-BR" : undefined)}` : score}
         </div>
         <p className="mt-1 text-[12px] uppercase tracking-wide text-white/70" style={poppins}>
           {subtitle ?? (isMoney ? c.saved : c.score)}
