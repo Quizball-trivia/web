@@ -23,7 +23,7 @@ import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
 import { OrshabatobaShow } from './OrshabatobaShow';
 import { EventLobby, OrshabatobaEntryCard } from './OrshabatobaCard';
-import { useIsOrshabatobaAudience } from './useOrshabatobaAudience';
+import { useOrshabatobaAudience } from './useOrshabatobaAudience';
 
 export { EventLobby };
 import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
@@ -44,13 +44,19 @@ function pollMs(status: string | undefined): number {
  * `studio` = the /orshabatoba page: the whole event (register, host Start, countdown, game) inside the full-page 3D
  * studio. Without it (/events tab) a host-run event only shows the entry card that links to the studio.
  */
-export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactNode; studio?: boolean }) {
+export function LiveEventScreen({ fallback, studio = false, studioEmpty }: {
+  fallback: ReactNode;
+  studio?: boolean;
+  /** Studio page, Georgian visitor, no event open at this moment (between a finished show and the next one opening). */
+  studioEmpty?: ReactNode;
+}) {
   // Georgian only: the show is a Georgian podcast, so its screens never switch language.
   const copy = liveEventCopy('ka');
   const router = useRouter();
   const queryClient = useQueryClient();
   const authStatus = useAuthStore((s) => s.status);
-  const georgian = useIsOrshabatobaAudience();
+  const audience = useOrshabatobaAudience();
+  const georgian = audience === true;
   const authed = authStatus === 'authenticated';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
@@ -127,10 +133,10 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() }),
   });
 
-  // Shown to Georgian users only; everyone else gets the usual Events tab.
-  if (!georgian) return <>{fallback}</>;
+  // Shown only to players located in Georgia; everyone else gets the usual Events tab.
+  if (audience === false) return <>{fallback}</>;
 
-  if (authStatus === 'loading' || (authed && query.isLoading)) {
+  if (audience === 'loading' || authStatus === 'loading' || (authed && query.isLoading)) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-5 px-4 py-5">
         <div className="h-72 animate-pulse rounded-[24px] bg-white/5" />
@@ -178,7 +184,7 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
       </div>
     );
   }
-  if (!activeId) return studio ? <>{fallback}</> : <OrshabatobaEntryCard live={false} />;
+  if (!activeId) return studio ? <>{studioEmpty ?? fallback}</> : <OrshabatobaEntryCard live={false} />;
 
   const status = tournament?.id === activeId ? tournament.status : null;
   const entered = you?.entered === true;
