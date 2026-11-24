@@ -101,8 +101,8 @@ describe('event diet: DB-duplicated gameplay events and retry-storm throttles', 
 
 
 it('excludes local browser hosts even with the production key', () => {
-  for (const host of ['localhost', 'dev.localhost', '127.0.0.1', '[::1]']) expect(isLoopbackHost(host)).toBe(true);
-  expect(isLoopbackHost('quizball.io')).toBe(false);
+  for (const host of ['localhost', 'dev.localhost', '127.0.0.1', '127.0.0.2', '127.255.255.255', '[::1]']) expect(isLoopbackHost(host)).toBe(true);
+  for (const host of ['quizball.io', '127.example.com', '127.0.0.2.example.com', '128.0.0.1']) expect(isLoopbackHost(host)).toBe(false);
 });
 
 it('keeps the first socket report per identity and UTC hour and samples eligible repeats', () => {
@@ -112,9 +112,11 @@ it('keeps the first socket report per identity and UTC hour and samples eligible
   try {
     vi.setSystemTime(new Date('2026-11-24T03:58:30Z'));
     expect(report('a')).not.toBeNull();
+    expect(report('b')).not.toBeNull();
+    expect(report('a')).toBeNull();
     vi.advanceTimersByTime(60_000);
     expect(report('a')).toBeNull();
-    expect(report('b')).not.toBeNull();
+    expect(report('b')).toBeNull();
     vi.advanceTimersByTime(30_000);
     expect(report('b')).not.toBeNull();
     vi.advanceTimersByTime(60_000);

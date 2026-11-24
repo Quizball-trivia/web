@@ -48,22 +48,35 @@ const DB_DUPLICATED_EVENTS = new Set([
 
 // Preserve hourly unique-user alerts. Sample subsequent eligible reports so
 // diagnostics still include examples from longer outages.
-const socketReports = new Map<string, { identity: unknown; lastEligible: number }>();
+const socketReports = new Map<string, Map<unknown, number>>();
+let socketReportHour = -1;
 
 function keepSocketReport(result: CaptureResult): boolean {
   const now = Date.now();
+  const hour = Math.floor(now / 3_600_000);
+  if (hour !== socketReportHour) {
+    socketReports.clear();
+    socketReportHour = hour;
+  }
+
+  let reports = socketReports.get(result.event);
+  if (!reports) {
+    reports = new Map();
+    socketReports.set(result.event, reports);
+  }
   const identity = result.properties?.distinct_id;
-  const previous = socketReports.get(result.event);
-  const sameUserHour = previous && previous.identity === identity
-    && Math.floor(previous.lastEligible / 3_600_000) === Math.floor(now / 3_600_000);
-  if (sameUserHour && now - previous.lastEligible < 60_000) return false;
-  socketReports.set(result.event, { identity, lastEligible: now });
-  return !sameUserHour || Math.random() < 0.1;
+  const previous = reports.get(identity);
+  if (previous !== undefined && now - previous < 60_000) return false;
+  reports.set(identity, now);
+  return previous === undefined || Math.random() < 0.1;
 }
 
 export function isLoopbackHost(hostname: string): boolean {
-  return hostname === 'localhost' || hostname.endsWith('.localhost')
-    || hostname === '127.0.0.1' || hostname === '[::1]';
+  if (hostname.startsWith('127.')) {
+    const octets = hostname.split('.');
+    return octets.length === 4 && octets.every(octet => /^\d{1,3}$/.test(octet) && Number(octet) <= 255);
+  }
+  return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '[::1]';
 }
 
 /**
