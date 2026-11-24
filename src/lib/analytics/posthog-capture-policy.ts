@@ -46,13 +46,25 @@ const DB_DUPLICATED_EVENTS = new Set([
   'wl_banner_viewed',
 ]);
 
-/** Retry storms: one client can emit hundreds of socket failures in minutes;
- *  the alert on these counts unique users per hour, so 1/min/event loses nothing. */
-const THROTTLED_EVENTS: Record<string, number> = {
-  socket_connection_failed: 60_000,
-  socket_reconnected: 60_000,
-};
-const lastSentAt = new Map<string, number>();
+// Preserve hourly unique-user alerts. Sample subsequent eligible reports so
+// diagnostics still include examples from longer outages.
+const socketReports = new Map<string, { identity: unknown; lastEligible: number }>();
+
+function keepSocketReport(result: CaptureResult): boolean {
+  const now = Date.now();
+  const identity = result.properties?.distinct_id;
+  const previous = socketReports.get(result.event);
+  const sameUserHour = previous && previous.identity === identity
+    && Math.floor(previous.lastEligible / 3_600_000) === Math.floor(now / 3_600_000);
+  if (sameUserHour && now - previous.lastEligible < 60_000) return false;
+  socketReports.set(result.event, { identity, lastEligible: now });
+  return !sameUserHour || Math.random() < 0.1;
+}
+
+export function isLoopbackHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname.endsWith('.localhost')
+    || hostname === '127.0.0.1' || hostname === '[::1]';
+}
 
 /**
  * Keep production analytics lean: Core Web Vitals are useful for the public
@@ -66,13 +78,8 @@ export function preparePostHogCapture(result: CaptureResult | null): CaptureResu
   if (DB_DUPLICATED_EVENTS.has(sanitized.event)) return null;
   if (sanitized.event === 'match_started' && sanitized.properties?.mode === 'football_grid') return null;
 
-  const throttleMs = THROTTLED_EVENTS[sanitized.event];
-  if (throttleMs) {
-    const last = lastSentAt.get(sanitized.event) ?? 0;
-    const now = Date.now();
-    if (now - last < throttleMs) return null;
-    lastSentAt.set(sanitized.event, now);
-  }
+  if ((sanitized.event === 'socket_connection_failed' || sanitized.event === 'socket_reconnected')
+    && !keepSocketReport(sanitized)) return null;
 
   if (sanitized.event !== '$web_vitals') return sanitized;
   return isFootballQuizUrl(sanitized.properties?.$current_url) ? sanitized : null;
