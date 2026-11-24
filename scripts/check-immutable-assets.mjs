@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Images under public/assets (except store art, which has its own content-hash
+// Numbered Buscaminas portraits and images under public/assets (except store art with content-hash
 // versioning) are served with a one-year immutable Cache-Control (next.config.ts).
 // A browser that saw a URL keeps its bytes for a year, so a pull request may add
 // images under new names but never change what an existing or retired name serves:
@@ -13,10 +13,12 @@ if (!base) {
 }
 
 const git = (...args) => execFileSync("git", args, { encoding: "utf8" });
-const isLongCachedImage = (path) =>
-  path.startsWith("public/assets/")
+const isLongCachedImage = (path) => {
+  if (/^public\/buscaminas\/v1\/p\/\d+\.webp$/.test(path)) return true;
+  return path.startsWith("public/assets/")
   && !path.startsWith("public/assets/store/")
   && /\.(?:png|webp|avif|jpe?g|svg|gif)$/i.test(path);
+};
 
 // Commits and trees only (no file contents): enough to see every path the base ever had.
 const shallow = git("rev-parse", "--is-shallow-repository").trim() === "true";
@@ -28,7 +30,7 @@ if (shallow || !haveBase) {
 
 const modified = [];
 const reused = [];
-for (const line of git("diff", "--name-status", "-M", base, "HEAD", "--", "public/assets").split("\n")) {
+for (const line of git("diff", "--name-status", "-M", base, "HEAD", "--", "public/assets", "public/buscaminas/v1/p").split("\n")) {
   if (!line) continue;
   const [status, ...paths] = line.split("\t");
   const target = paths.at(-1);
@@ -47,4 +49,4 @@ if (modified.length + reused.length > 0) {
   console.error("Save the new art under a new file name and update its references.");
   process.exit(1);
 }
-console.log("No long-cached /assets image URL changes what it serves.");
+console.log("No long-cached image URL changes what it serves.");

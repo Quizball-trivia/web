@@ -46,13 +46,38 @@ const DB_DUPLICATED_EVENTS = new Set([
   'wl_banner_viewed',
 ]);
 
-/** Retry storms: one client can emit hundreds of socket failures in minutes;
- *  the alert on these counts unique users per hour, so 1/min/event loses nothing. */
-const THROTTLED_EVENTS: Record<string, number> = {
-  socket_connection_failed: 60_000,
-  socket_reconnected: 60_000,
-};
-const lastSentAt = new Map<string, number>();
+// Preserve hourly unique-user alerts. Sample subsequent eligible reports so
+// diagnostics still include examples from longer outages.
+const socketReports = new Map<string, Map<unknown, number>>();
+let socketReportHour = -1;
+
+function keepSocketReport(result: CaptureResult): boolean {
+  const now = Date.now();
+  const hour = Math.floor(now / 3_600_000);
+  if (hour !== socketReportHour) {
+    socketReports.clear();
+    socketReportHour = hour;
+  }
+
+  let reports = socketReports.get(result.event);
+  if (!reports) {
+    reports = new Map();
+    socketReports.set(result.event, reports);
+  }
+  const identity = result.properties?.distinct_id;
+  const previous = reports.get(identity);
+  if (previous !== undefined && now - previous < 60_000) return false;
+  reports.set(identity, now);
+  return previous === undefined || Math.random() < 0.1;
+}
+
+export function isLoopbackHost(hostname: string): boolean {
+  if (hostname.startsWith('127.')) {
+    const octets = hostname.split('.');
+    return octets.length === 4 && octets.every(octet => /^\d{1,3}$/.test(octet) && Number(octet) <= 255);
+  }
+  return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '[::1]';
+}
 
 /**
  * Keep production analytics lean: Core Web Vitals are useful for the public
@@ -66,13 +91,8 @@ export function preparePostHogCapture(result: CaptureResult | null): CaptureResu
   if (DB_DUPLICATED_EVENTS.has(sanitized.event)) return null;
   if (sanitized.event === 'match_started' && sanitized.properties?.mode === 'football_grid') return null;
 
-  const throttleMs = THROTTLED_EVENTS[sanitized.event];
-  if (throttleMs) {
-    const last = lastSentAt.get(sanitized.event) ?? 0;
-    const now = Date.now();
-    if (now - last < throttleMs) return null;
-    lastSentAt.set(sanitized.event, now);
-  }
+  if ((sanitized.event === 'socket_connection_failed' || sanitized.event === 'socket_reconnected')
+    && !keepSocketReport(sanitized)) return null;
 
   if (sanitized.event !== '$web_vitals') return sanitized;
   return isFootballQuizUrl(sanitized.properties?.$current_url) ? sanitized : null;
