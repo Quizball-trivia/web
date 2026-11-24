@@ -13,6 +13,7 @@
     "test:ci": "vitest run --reporter=verbose",
     "api:sync:local": "node scripts/api-sync-local.mjs",
     "api:check": "node scripts/api-check.mjs",
+    "seo:indexnow": "node scripts/indexnow-submit.mjs",
     "colors:audit": "node scripts/audit-brand-colors.mjs --report",
     "colors:check": "node scripts/audit-brand-colors.mjs",
     "colors:update": "node scripts/audit-brand-colors.mjs --update",
