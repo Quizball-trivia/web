@@ -23,7 +23,7 @@ import { WlLiveFlow } from '@/features/weekend-league/live/WlLiveFlow';
 import { liveEventCopy } from './liveEvent.copy';
 import { OrshabatobaShow } from './OrshabatobaShow';
 import { EventLobby, OrshabatobaEntryCard } from './OrshabatobaCard';
-import { useIsOrshabatobaAudience } from './useOrshabatobaAudience';
+import { useOrshabatobaAudience } from './useOrshabatobaAudience';
 
 export { EventLobby };
 import type { ShowRound } from '@/features/live-show/live/showLive.adapter';
@@ -50,7 +50,8 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
   const router = useRouter();
   const queryClient = useQueryClient();
   const authStatus = useAuthStore((s) => s.status);
-  const georgian = useIsOrshabatobaAudience();
+  const audience = useOrshabatobaAudience();
+  const georgian = audience === true;
   const authed = authStatus === 'authenticated';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
 
@@ -127,10 +128,10 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.current() }),
   });
 
-  // Shown to Georgian users only; everyone else gets the usual Events tab.
-  if (!georgian) return <>{fallback}</>;
+  // Shown only to players located in Georgia; everyone else gets the usual Events tab.
+  if (audience === false) return <>{fallback}</>;
 
-  if (authStatus === 'loading' || (authed && query.isLoading)) {
+  if (audience === 'loading' || authStatus === 'loading' || (authed && query.isLoading)) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-5 px-4 py-5">
         <div className="h-72 animate-pulse rounded-[24px] bg-white/5" />

@@ -11,6 +11,7 @@ import { CalendarDays, Check, Loader2, Play, Tv, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { orshabatobaDisplay } from '@/features/orshabatoba/fonts';
 import type { liveEventCopy } from './liveEvent.copy';
+import { OrshabatobaNextLine, OrshabatobaPastNights, useOrshabatobaHistory } from './OrshabatobaHistory';
 
 type Copy = ReturnType<typeof liveEventCopy>;
 
@@ -113,6 +114,7 @@ export function EventLobby({
   const open = status === 'entry_open';
   const notYet = status === 'scheduled' || status === 'content_pending' || status === 'ready';
   const live = status != null && LIVE_STATUSES.has(status);
+  const next = useOrshabatobaHistory().data?.next;
 
   const action = signedOut ? (
     <CtaButton onClick={onSignIn}>{copy.signIn}</CtaButton>
@@ -152,6 +154,7 @@ export function EventLobby({
         {!compact && <Hosts copy={copy} />}
 
         <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white first:mt-0 sm:text-[24px]">{copy.cardTitle}</h2>
+        {next && !live && <OrshabatobaNextLine next={next} />}
         {registered != null && (
           <p className="mt-2 inline-flex items-center gap-1.5 font-poppins text-[13px] font-semibold text-white/55">
             <Users className="size-4" aria-hidden /> {copy.registered(registered)}
@@ -188,6 +191,7 @@ export function EventLobby({
  * registration, the host's Start, the countdown and the game all happen. Georgian only.
  */
 export function OrshabatobaEntryCard({ live }: { live: boolean }) {
+  const history = useOrshabatobaHistory().data;
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6">
       <section
@@ -237,6 +241,7 @@ export function OrshabatobaEntryCard({ live }: { live: boolean }) {
           <h2 className="mt-5 font-poppins text-[22px] font-bold leading-snug text-white sm:text-[24px]">
             ლაივ ტურნირი ორშაბათობასთან ერთად
           </h2>
+          {history && !live && <OrshabatobaNextLine next={history.next} />}
 
           <Link
             href="/orshabatoba"
@@ -246,6 +251,7 @@ export function OrshabatobaEntryCard({ live }: { live: boolean }) {
           </Link>
         </div>
       </section>
+      {history && <OrshabatobaPastNights editions={history.editions} />}
     </div>
   );
 }
