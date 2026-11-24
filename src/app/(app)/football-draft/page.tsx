@@ -12,7 +12,6 @@ function Route() {
   const router = useRouter();
   const { locale } = useLocale();
   const params = useSearchParams();
-  const day = params.get("dia");
   const challenge = params.get("challenge");
   const access = useAuthStore((s) => (s.status === "authenticated" ? "member" : "guest"));
   const session = useRef<{ id: string; startedAt: number } | null>(null);
@@ -23,18 +22,9 @@ function Route() {
     if (event === "complete") trackGameComplete({ modeId: "draft", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
     if (event === "replay") { trackGameReplay({ modeId: "draft", previousSessionId: s.id }); session.current = { id: createRealtimeCommandId(), startedAt: Date.now() }; }
   }, [access]);
-  // An older day chosen from the archive is kept in the address, so a reload opens it again; the newest day has none.
-  const onDay = useCallback((chosen: string, newest: boolean) => {
-    const url = new URL(window.location.href);
-    if ((url.searchParams.get("dia") ?? null) === (newest ? null : chosen)) return;
-    if (newest) url.searchParams.delete("dia");
-    else url.searchParams.set("dia", chosen);
-    window.history.replaceState(null, "", url);
-  }, []);
   // Read once: the game owns the day from here on (the address only follows it).
-  const [initialDay] = useState(day);
   const [initialChallenge] = useState(challenge);
-  return <DraftGame locale={locale} initialDay={initialDay} initialChallenge={initialChallenge} onDay={onDay} onEvent={onEvent} onExit={() => router.push("/play")} />;
+  return <DraftGame locale={locale} initialChallenge={initialChallenge} onEvent={onEvent} onExit={() => router.push("/play")} />;
 }
 
 /** Football Draft in the app shell; the same game as the public page. */

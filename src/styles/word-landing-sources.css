@@ -168,6 +168,7 @@
 @source "../features/draft/DraftViews.tsx";
 @source "../features/draft/draft.api.ts";
 @source "../features/draft/draft.copy.ts";
+@source "../features/draft/draft.league-copy.ts";
 @source "../features/draft/draft.rules.ts";
 @source "../features/duel/ActiveDuelBanner.tsx";
 @source "../features/duel/DuelAvatar.tsx";

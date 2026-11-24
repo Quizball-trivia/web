@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, Coins, Crown, Info, RefreshCw, Share2, Shield, Trophy } from "lucide-react";
+import { ChevronDown, Coins, Crown, Info, RefreshCw, Share2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DuelAvatar } from "@/features/duel/DuelAvatar";
 import { GreenButton, QuietButton, TopBar, poppins } from "@/features/wordgames/ui";
@@ -13,12 +12,14 @@ import type { ChallengeTarget } from "./draft.engine";
 import { ShareSheet, useEscape } from "./DraftShareCard";
 import {
   ACADEMY_RATING, BUDGET, FORMATIONS, XI, budgetFor, destination, effective, inXi, lines, matchDayGoals, matchGoals, priceOf, rateSeason, seasonStats, shareSquares, spentOn, wallet,
-  type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Prediction, type Pos, type SeasonResult, type Slot, type Variant,
+  type ClubSeason, type DraftPlayer, type Era, type FormationId, type League, type Lines, type MatchDay, type MatchResult, type Pick, type Pos, type SeasonResult, type Slot, type Variant,
 } from "./draft.rules";
 
 const surname = (name: string) => name.split(" ").slice(1).join(" ") || name;
 const variantName = (c: DraftText, v: Variant) => (v === "knowledge" ? c.knowledge : v === "budget" ? c.budget : c.classic);
 const euros = (m: number) => `€${m}M`;
+/** What a player costs: the server's price (it knows his reputation), or the rating's price for older states. */
+const costOf = (p: DraftPlayer & { price?: number }) => p.price ?? priceOf(p);
 
 /** A phone with the browser's bars showing: the pick screen tightens so everything still fits without scrolling. */
 const SHORT_PHONE = "(max-height: 720px) and (max-width: 1023px)";
@@ -29,68 +30,184 @@ const POS_ORDER: Pos[] = ["GK", "DEF", "MID", "FWD"];
 type PickerTab = Pos | "ALL";
 const POS_CHIP: Record<Pos, string> = { GK: "bg-brand-yellow text-surface-page", DEF: "bg-brand-blue text-white", MID: "bg-brand-green text-white", FWD: "bg-brand-red-soft text-white" };
 
-// ── Intro ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── Home: choose a league ──────────────────────────────────────────────────────────────────────────────────────────
 
-export function DraftIntro({ locale, number, league, formation = "4-3-3", best, nextDaily, onDaily, onFree, onFriends, onExit, dailyLabel, guestNote, onSignIn, resumeLabel, onResume }: {
-  /** The main button when today is already played, or for a guest (closed-day practice). */
-  dailyLabel?: string; guestNote?: string | null; onSignIn?: () => void;
-  /** An unfinished free draft waiting on the server. */
+/** Each league's colours on its crest: a nod to the real competition, nothing more (their own colours, so set inline, not as theme classes). */
+const LEAGUE_TONE: Record<string, { bg: string; fg: string; stripe: string }> = {
+  pl: { bg: "#3d195b", fg: "#ffffff", stripe: "#00ff85" },
+  laliga: { bg: "#ee3124", fg: "#ffffff", stripe: "#ffd200" },
+  seriea: { bg: "#0a2e6e", fg: "#ffffff", stripe: "#29a8e0" },
+  bundesliga: { bg: "#d20515", fg: "#ffffff", stripe: "#ffffff" },
+  ligue1: { bg: "#0e1e3c", fg: "#dae025", stripe: "#dae025" },
+  europe: { bg: "#0b1f6b", fg: "#ffd400", stripe: "#ffd400" },
+};
+const CREST = "[clip-path:polygon(0_0,100%_0,100%_62%,50%_100%,0_62%)]";
+
+/** A club crest of the competition: its short name on a shield in its colours. */
+function LeagueCrest({ league, className }: { league: League; className?: string }) {
+  // Iconic Clubs and any league without its own colours wear the site's.
+  const tone = LEAGUE_TONE[league.id];
+  const own = league.id === "iconic" ? "bg-brand-yellow text-surface-page" : "bg-brand-blue text-white";
+  return (
+    <span aria-hidden className={cn("relative flex shrink-0 items-start justify-center pt-1.5", CREST, !tone && own, className ?? "h-12 w-10")} style={tone ? { backgroundColor: tone.bg, color: tone.fg } : undefined}>
+      <span className={cn("absolute inset-x-0 top-0 h-1", !tone && (league.id === "iconic" ? "bg-brand-yellow" : "bg-brand-blue"))} style={tone ? { backgroundColor: tone.stripe } : undefined} />
+      {league.id === "iconic" ? <Crown className="mt-1 size-5" /> : <span className="mt-1 text-[11px] font-black tracking-tight" style={poppins}>{league.short}</span>}
+    </span>
+  );
+}
+
+/** A section title with the chalk underline of a matchday programme. */
+function ProgrammeTitle({ n, children }: { n?: number; children: ReactNode }) {
+  return (
+    <h3 className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-white/80" style={poppins}>
+      {n != null && <span className="flex size-5 items-center justify-center rounded-full bg-brand-yellow text-[10px] text-surface-page">{n}</span>}
+      {children}
+      <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-white/25 to-transparent" />
+    </h3>
+  );
+}
+
+/**
+ * The first screen, laid out like a matchday programme: the stadium and the budget on the scoreboard, then the league
+ * (crests; Iconic Clubs in gold across the row), the formation on a chalk tactics board, kick-off, and the league's
+ * weekly table.
+ */
+export function DraftHome({ locale, leagues, mine, leagueId, formation, onLeague, onFormation, onStart, onFriends, onExit, board, guestNote, onSignIn, resumeLabel, onResume, pending }: {
+  locale: string; leagues: League[];
+  /** The member's best record of the week, by league. */
+  mine: Record<string, string>;
+  leagueId: string; formation: FormationId; onLeague: (id: string) => void; onFormation: (f: FormationId) => void;
+  onStart: () => void; onFriends: () => void; onExit: () => void;
+  /** The chosen league's weekly board. */
+  board?: ReactNode;
+  guestNote?: string | null; onSignIn?: () => void;
+  /** An unfinished draft waiting on the server. */
   resumeLabel?: string | null; onResume?: () => void;
-  locale: string; number: number; league: League; formation?: FormationId; best?: string | null; nextDaily?: string | null;
-  /** Ignored: only Budget is offered now (kept so older callers still compile). */
-  variant?: Variant; onVariant?: (v: Variant) => void;
-  onDaily: () => void; onFree: () => void; onFriends: () => void; onExit: () => void;
+  pending?: boolean;
 }) {
   const c = draftCopy(locale);
+  const chosen = leagues.find((l) => l.id === leagueId) ?? leagues[0];
+  const iconic = leagues.find((l) => l.id === "iconic");
+  const national = leagues.filter((l) => l.id !== "iconic");
+  const reduce = useReducedMotion();
   return (
     <div className="flex flex-1 flex-col">
       <TopBar brand={c.brand} exitLabel={c.exit} onExit={onExit} wrap />
       <div className="lg:mt-3 lg:grid lg:grid-cols-2 lg:gap-x-8">
-      <div>
-      <div className="relative mt-3 aspect-video w-full overflow-hidden rounded-2xl bg-game-art-night lg:mt-0" aria-hidden>
-        <Image src="/assets/demos/game-modes/football-draft.webp" alt="" fill sizes="(max-width: 1023px) 100vw, 480px" className="object-cover" priority />
-      </div>
-      <p className="mt-3 text-3xl font-black uppercase leading-none" style={poppins}>{c.brand[0]} <span className="text-brand-green-light">{c.brand[1]}</span></p>
-      <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number} · {c.tag}</p>
-      </div>
-      <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-      <div className="mt-4 rounded-2xl bg-brand-yellow/10 px-4 py-3 ring-1 ring-brand-yellow/40 lg:mt-0">
-        <div className="flex items-center gap-3">
-          <Coins className="size-7 shrink-0 text-brand-yellow" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-3xl font-black leading-none text-brand-yellow tabular-nums" style={poppins}>{euros(BUDGET.total)}</p>
-            <p className="mt-1 text-sm font-bold leading-tight text-white">{c.budgetHint(BUDGET.total)}</p>
+        <div>
+          {/* The ground on matchday: turf, floodlight glow and the old two-stripe kit across the title. */}
+          <div className="relative mt-3 overflow-hidden rounded-3xl ring-1 ring-white/10 lg:mt-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/stadium-green.webp" alt="" aria-hidden draggable={false} className="absolute inset-0 size-full object-cover" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-surface-page/95" />
+            <div aria-hidden className="absolute -left-10 -top-16 size-48 rounded-full bg-white/20 blur-3xl" />
+            <div aria-hidden className="absolute -right-10 -top-16 size-48 rounded-full bg-white/15 blur-3xl" />
+            <div className="relative px-4 pb-4 pt-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-yellow" style={poppins}>{c.tag}</p>
+              <p className="mt-1 text-4xl font-black uppercase italic leading-[0.9] drop-shadow-[0_3px_0_rgba(0,0,0,0.45)] sm:text-5xl" style={poppins}>
+                {c.brand[0]}<br /><span className="text-brand-green-light">{c.brand[1]}</span>
+              </p>
+              <div aria-hidden className="mt-3 flex gap-1"><span className="h-1.5 w-16 rounded-full bg-brand-yellow" /><span className="h-1.5 w-8 rounded-full bg-white/80" /></div>
+              {/* The scoreboard: the budget in lights. */}
+              <div className="mt-4 flex items-stretch gap-3 rounded-2xl border border-white/10 bg-black/70 p-2.5 shadow-[inset_0_0_24px_rgba(0,0,0,0.6)]">
+                <div className="flex flex-col justify-center rounded-xl bg-black/80 px-3 py-1.5 ring-1 ring-brand-yellow/30">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-yellow/70" style={poppins}>{c.budget}</span>
+                  <span className="font-mono text-3xl font-black leading-none tracking-tight text-brand-yellow tabular-nums [text-shadow:0_0_10px_rgba(255,200,0,0.65)]">{euros(BUDGET.total)}</span>
+                </div>
+                <p className="min-w-0 self-center text-xs font-semibold leading-snug text-white/85">{c.hiddenRule}</p>
+              </div>
+            </div>
           </div>
+          <ol className="mt-4 hidden space-y-2 lg:block">
+            {c.rules.map((line, i) => <RuleStep key={line} n={i + 1} line={line} />)}
+          </ol>
         </div>
-        <p className="mt-2 text-xs font-medium leading-snug text-white/75">{c.budgetRule}</p>
-      </div>
-      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-2.5">
-        <Trophy className="size-5 shrink-0 text-brand-gold" aria-hidden />
-        <div className="min-w-0">
-          <p className="text-sm"><span className="text-white/60">{c.leagueOfDay}: </span><span className="font-bold">{league.name}</span></p>
-          <p className="text-xs text-white/70">{c.dailySetup(formation)} · {c.perfectTarget(league.games)}</p>
-          {(best || nextDaily) && <p className="mt-0.5 text-xs font-semibold text-brand-green-light">{[best && c.personalBest(best), nextDaily && c.nextDaily(nextDaily)].filter(Boolean).join(" · ")}</p>}
+        <div className="lg:col-start-2">
+          <section className="mt-5 lg:mt-0">
+            <ProgrammeTitle n={1}>{c.chooseLeague}</ProgrammeTitle>
+            {iconic && (
+              <motion.button type="button" aria-pressed={iconic.id === chosen?.id} onClick={() => onLeague(iconic.id)} whileTap={reduce ? undefined : { scale: 0.98 }}
+                className={cn("relative mb-2 flex w-full items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-left transition-colors",
+                  iconic.id === chosen?.id ? "bg-gradient-to-r from-brand-yellow to-amber-500 text-surface-page ring-2 ring-white/70" : "bg-gradient-to-r from-brand-yellow/25 to-brand-yellow/5 text-white ring-1 ring-brand-yellow/60 hover:from-brand-yellow/35")}>
+                <span aria-hidden className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-white/20 blur-2xl" />
+                <LeagueCrest league={iconic} className="h-14 w-12 shadow-lg" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-black uppercase leading-tight" style={poppins}>{c.leagueName(iconic)}</span>
+                  <span className={cn("block text-xs font-semibold leading-tight", iconic.id === chosen?.id ? "text-surface-page/75" : "text-white/75")}>{mine[iconic.id] ? c.yourWeek(mine[iconic.id]) : c.iconicNote}</span>
+                </span>
+              </motion.button>
+            )}
+            {/* Two to a row; an odd last league takes the whole row. */}
+            <div className="grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
+              {national.map((l) => {
+                const on = l.id === chosen?.id;
+                return (
+                  <motion.button key={l.id} type="button" aria-pressed={on} onClick={() => onLeague(l.id)} whileTap={reduce ? undefined : { scale: 0.97 }}
+                    className={cn("flex min-h-[4.5rem] items-center gap-2.5 rounded-2xl border-b-4 px-2.5 py-2 text-left transition-colors",
+                      on ? "border-brand-green-deep bg-brand-green/20 ring-2 ring-brand-green" : "border-black/40 bg-surface-card hover:bg-white/10")}>
+                    <LeagueCrest league={l} />
+                    <span className="min-w-0 flex-1">
+                      <span className="line-clamp-2 block text-sm font-black leading-tight" style={poppins}>{c.leagueName(l)}</span>
+                      {mine[l.id] && <span className="mt-0.5 block truncate text-[11px] font-semibold leading-tight text-brand-green-light">{c.boardYou} · {mine[l.id]}</span>}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </section>
+          <section className="mt-5">
+            <ProgrammeTitle n={2}>{c.setFormation}</ProgrammeTitle>
+            {/* The tactics board: chalk on slate. */}
+            <div className="grid grid-cols-4 gap-2 rounded-2xl bg-emerald-950 p-2 ring-1 ring-white/10 shadow-[inset_0_0_30px_rgba(0,0,0,0.55)]">
+              {(Object.keys(FORMATIONS) as FormationId[]).map((f) => (
+                <button key={f} type="button" aria-pressed={formation === f} onClick={() => onFormation(f)}
+                  className={cn("flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-xs font-black transition-colors", formation === f ? "bg-white/10 text-brand-yellow ring-2 ring-brand-yellow" : "text-white/75 hover:bg-white/5")} style={poppins}>
+                  <ChalkFormation id={f} on={formation === f} />{f}
+                </button>
+              ))}
+            </div>
+          </section>
+          <div className="mt-5 space-y-2">
+            {resumeLabel && onResume && <QuietButton onClick={onResume}>{resumeLabel}</QuietButton>}
+            <GreenButton onClick={onStart} disabled={pending || !chosen} className="border-b-4 border-brand-green-deep shadow-[0_8px_24px_rgba(88,204,2,0.25)]">
+              <span className="inline-flex items-center gap-2">{chosen && <LeagueCrest league={chosen} className="h-7 w-6" />}{chosen ? c.draftIn(c.leagueName(chosen)) : c.start}</span>
+            </GreenButton>
+            {guestNote && <button type="button" onClick={onSignIn} className="w-full text-center text-xs font-semibold text-brand-green-light underline underline-offset-2">{guestNote}</button>}
+            <QuietButton onClick={onFriends}>{c.withFriends}</QuietButton>
+          </div>
+          {board && <div className="mt-5">{board}</div>}
         </div>
-      </div>
-      <div className="mt-4 space-y-2">
-        {resumeLabel && onResume && <QuietButton onClick={onResume}>{resumeLabel}</QuietButton>}
-        <GreenButton onClick={onDaily}>{dailyLabel ?? c.playDaily}</GreenButton>
-        {guestNote && <button type="button" onClick={onSignIn} className="w-full text-center text-xs font-semibold text-brand-green-light underline underline-offset-2">{guestNote}</button>}
-        <div className="grid grid-cols-2 gap-2">
-          <QuietButton onClick={onFree}>{c.freePlay}</QuietButton>
-          <QuietButton onClick={onFriends}>{c.withFriends}</QuietButton>
-        </div>
-      </div>
-      </div>
-      <ul className="mt-5 space-y-2 pb-2 text-sm leading-snug text-white/85 lg:col-start-1">
-        {c.rules.map((line) => <li key={line} className="flex gap-2"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>)}
-      </ul>
+        <ol className="mt-5 space-y-2 pb-2 lg:hidden">
+          {c.rules.map((line, i) => <RuleStep key={line} n={i + 1} line={line} />)}
+        </ol>
       </div>
     </div>
   );
 }
 
-/** Free play and friends: choose what to play. The daily has no such screen because everyone plays the same setup. */
+/** A numbered step, like the notes in an old programme. */
+function RuleStep({ n, line }: { n: number; line: string }) {
+  return (
+    <li className="flex gap-3 rounded-2xl bg-white/[0.04] px-3 py-2.5 text-sm leading-snug text-white/85">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-brand-yellow/70 text-xs font-black text-brand-yellow" style={poppins}>{n}</span>
+      <span className="self-center">{line}</span>
+    </li>
+  );
+}
+
+/** A formation drawn in chalk: pitch lines and the eleven as dots. */
+function ChalkFormation({ id, on }: { id: FormationId; on: boolean }) {
+  return (
+    <span aria-hidden className="relative block aspect-[3/4] w-full max-w-[3.75rem] overflow-hidden rounded-md border border-white/40">
+      <span className="absolute inset-x-0 top-1/2 h-px bg-white/35" />
+      <span className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/35" />
+      <span className="absolute bottom-0 left-1/2 h-[18%] w-[52%] -translate-x-1/2 border border-b-0 border-white/35" />
+      {FORMATIONS[id].map((slot) => <span key={slot.id} className={cn("absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full", on ? "bg-brand-yellow" : "bg-white/90")} style={{ left: `${slot.x}%`, top: `${slot.y}%` }} />)}
+    </span>
+  );
+}
+
+/** A room's setup in the playground: league, era, formation and seats. */
 export interface DraftSetupValues { leagueId: string; era: Era; formation: FormationId; variant: Variant; seats: number }
 const CHIP = "rounded-2xl px-3 py-2.5 text-sm font-black transition-colors";
 const chipTone = (on: boolean) => (on ? "bg-brand-green/15 text-white ring-2 ring-brand-green" : "bg-surface-card text-white/85 hover:bg-white/10");
@@ -173,7 +290,7 @@ export function SpinCard({ c, spin, league, spinning, armed, pool = [], tight }:
   const rollingSeason = `${1995 + ((tick * 7) % 31)}/${String((1996 + ((tick * 7) % 31)) % 100).padStart(2, "0")}`;
   return (
     <div className="grid grid-cols-[1fr_auto] items-stretch gap-2" aria-live="polite">
-      <Reel label={c.club} value={armed ? "?" : spinning ? rollingClub : spin.club} spinning={spinning} sub={league.name} tone="blue" tight={tight} />
+      <Reel label={c.club} value={armed ? "?" : spinning ? rollingClub : spin.club} spinning={spinning} sub={!armed && !spinning && spin.honour ? c.honours[spin.honour] : c.leagueName(league)} tone="blue" tight={tight} />
       <Reel label={c.season} value={armed ? "?" : spinning ? rollingSeason : spin.season} spinning={spinning} sub={!armed && spin.legend ? c.legendTag : undefined} tone="yellow" tight={tight} />
     </div>
   );
@@ -268,7 +385,7 @@ function DestinationTag({ c, player, slots, picks, target }: { c: DraftText; pla
 const unavailable = (c: DraftText, p: DraftPlayer, picks: (Pick | null)[], by?: string) => (by ? c.takenBy(by) : inXi(p, picks) ? c.alreadyIn : c.noSlot);
 
 function PosTabs({ c, players, slots, picks, taken, pos, onPos, maxPrice }: { c: DraftText; players: DraftPlayer[]; slots: Slot[]; picks: (Pick | null)[]; taken: { playerId: string; by: string }[]; pos: PickerTab; onPos: (p: PickerTab) => void; maxPrice: number | null }) {
-  const signable = (p: DraftPlayer) => !taken.some((t) => t.playerId === p.id) && !!destination(p, slots, picks) && (maxPrice === null || priceOf(p) <= maxPrice);
+  const signable = (p: DraftPlayer) => !taken.some((t) => t.playerId === p.id) && !!destination(p, slots, picks) && (maxPrice === null || costOf(p) <= maxPrice);
   const tabs = POS_ORDER.map((at) => ({ at, open: slots.filter((x, i) => !picks[i] && x.pos === at).length, count: players.filter((p) => signable(p) && destination(p, slots, picks)?.slot.pos === at).length }));
   return (
     <div role="tablist" aria-label={c.squad} className="grid grid-cols-5 gap-1.5">
@@ -285,15 +402,16 @@ function PosTabs({ c, players, slots, picks, taken, pos, onPos, maxPrice }: { c:
 }
 
 /** The tabs over one flat list: the best of every position at the top, and on a phone it scrolls inside its own box so the page stays still. */
-export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos, target, onSelect, onWhy, disabled, phone, shared, short, roomBelow, budget, onAcademy }: {
+export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos, target, onSelect, onWhy, disabled, phone, shared, short, roomBelow, budget, onAcademy, hidden = variant === "knowledge" }: {
   c: DraftText; players: DraftPlayer[]; slots: Slot[]; picks: (Pick | null)[]; taken: { playerId: string; by: string }[]; variant: Variant;
+  /** The squad shows names (and prices) only: each rating appears when that player is signed. */
+  hidden?: boolean;
   pos: PickerTab; onPos: (p: PickerTab) => void; target: string | null; onSelect: (id: string) => void; onWhy: (p: DraftPlayer) => void; disabled?: boolean; phone?: boolean; shared?: boolean; short?: boolean;
   /** A notice floats over the end of the phone list: the last rows must still scroll clear of it. */
   roomBelow?: boolean;
   /** Transfer budget: the seat's money, and signing a free academy kid into a chosen place. */
   budget?: number; onAcademy?: (slotId: string) => void;
 }) {
-  const hidden = variant === "knowledge";
   const reduce = useReducedMotion();
   const isTaken = (id: string) => taken.find((t) => t.playerId === id)?.by;
   const rated = (p: DraftPlayer) => destination(p, slots, picks, target)?.rating ?? p.rating;
@@ -312,10 +430,10 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
     </li>
   );
   const fits = (p: DraftPlayer) => !isTaken(p.id) && !!destination(p, slots, picks);
-  const tooDear = (p: DraftPlayer) => fits(p) && maxPrice !== null && priceOf(p) > maxPrice;
+  const tooDear = (p: DraftPlayer) => fits(p) && maxPrice !== null && costOf(p) > maxPrice;
   const signable = (p: DraftPlayer) => fits(p) && !tooDear(p);
   const list = players.filter((p) => (pos === "ALL" ? fits(p) : (destination(p, slots, picks)?.slot.pos ?? p.pos) === pos))
-    .sort((a, b) => Number(signable(b)) - Number(signable(a)) || (hidden ? a.name.localeCompare(b.name) : rated(b) - rated(a)));
+    .sort((a, b) => Number(signable(b)) - Number(signable(a)) || (hidden ? (maxPrice !== null ? costOf(b) - costOf(a) : 0) || a.name.localeCompare(b.name) : rated(b) - rated(a)));
   return (
     <div className={cn("space-y-2", disabled && "pointer-events-none opacity-60")}>
       <PosTabs c={c} players={players} slots={slots} picks={picks} taken={taken} pos={pos} onPos={onPos} maxPrice={maxPrice} />
@@ -336,7 +454,7 @@ export function SquadList({ c, players, slots, picks, taken, variant, pos, onPos
                     <span className="block truncate text-[11px] text-white/65">{tooDear(p) ? c.tooExpensive : !open ? unavailable(c, p, picks, takenBy) : hidden ? [p.pos, ...(p.alt ?? [])].map((x) => c.posShort[x]).join(" / ") : phone ? shortStat(c, p).join(" · ") : statLine(c, p)}</span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-0.5">
-                    {maxPrice !== null && <span className={cn("text-sm font-black tabular-nums", priceTone(priceOf(p), tooDear(p), each))} style={poppins}>{euros(priceOf(p))}</span>}
+                    {maxPrice !== null && <span className={cn("text-sm font-black tabular-nums", priceTone(costOf(p), tooDear(p), each))} style={poppins}>{euros(costOf(p))}</span>}
                     {open && <DestinationTag c={c} player={p} slots={slots} picks={picks} target={target} />}
                   </span>
                 </button>
@@ -399,7 +517,7 @@ export function RatingSheet({ c, player, spin, teams, onClose }: { c: DraftText;
 
 export interface BoardSeat { name: string; avatar: AvatarCustomization | null; picks: (Pick | null)[]; me: boolean; active: boolean; note?: string | null }
 
-export function DraftBoard({ locale, slots, spin, league, variant, round, seats, myPicks, taken, respins, respinCost, coins, mode, notice, spinning, armed = false, seconds, waitingFor, side, pool, feed = null, initialWhy = null, initialTeam = null, undoName = null, onUndo, onSpin, onPick, onRespin, onExit, budget = BUDGET.total, onAcademy }: {
+export function DraftBoard({ locale, slots, spin, league, variant, round, seats, myPicks, taken, respins, respinCost, coins, mode, notice, spinning, armed = false, seconds, waitingFor, side, pool, feed = null, initialWhy = null, initialTeam = null, undoName = null, onUndo, onSpin, onPick, onRespin, onExit, budget = BUDGET.total, onAcademy, hideSquad, hidePicks }: {
   locale: string; slots: Slot[]; spin: ClubSeason; league: League; variant: Variant; round: number; seats: BoardSeat[]; myPicks: (Pick | null)[];
   taken: { playerId: string; by: string }[]; respins: number; respinCost: number | null; coins: number | null; mode: "daily" | "free" | "duel" | "room" | "challenge";
   notice: string | null; spinning?: boolean;
@@ -416,9 +534,12 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
   undoName?: string | null; onUndo?: () => void;
   onPick: (playerId: string, slotId: string) => void; onRespin: (kind: "club" | "season") => void; onExit: () => void;
   budget?: number; onAcademy?: (slotId: string) => void;
+  /** Names and prices only in the squad; ratings of signed players too (Ball Knowledge). Default from the version. */
+  hideSquad?: boolean; hidePicks?: boolean;
 }) {
   const c = draftCopy(locale);
-  const hidden = variant === "knowledge";
+  const hidden = hidePicks ?? variant === "knowledge";
+  const squadHidden = hideSquad ?? variant === "knowledge";
   const [target, setTarget] = useState<string | null>(null);
   const [why, setWhy] = useState<DraftPlayer | null>(() => spin.players.find((p) => p.id === initialWhy) ?? null);
   const [pos, setPos] = useState<PickerTab>("ALL");
@@ -477,7 +598,7 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
           )}
           <div className={cn("lg:hidden", armed && "hidden")}>
             <p className={cn("mb-1.5 text-center text-[11px] font-semibold text-white/70", short && "hidden")} aria-live="polite">{hint}</p>
-            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab}
+            <SquadList phone shared={shared} short={short} roomBelow={!!notice} budget={budget} hidden={squadHidden} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab}
               target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
           </div>
           {!shared && !armed && (
@@ -503,9 +624,9 @@ export function DraftBoard({ locale, slots, spin, league, variant, round, seats,
         <div className="hidden lg:block">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-sm font-black uppercase" style={poppins}>{c.squad}</h2>
-            <p className="text-xs text-white/70">{hint}</p>
+            <p className="text-xs text-white/70">{squadHidden && !hidden && !armed ? c.ratingOnSign : hint}</p>
           </div>
-          <SquadList budget={budget} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
+          <SquadList budget={budget} hidden={squadHidden} onAcademy={armed || spinning || waitingFor ? undefined : onAcademy} c={c} players={players} slots={slots} picks={myPicks} taken={taken} variant={variant} pos={pos} onPos={changeTab} target={target} onSelect={choose} onWhy={setWhy} disabled={!!waitingFor || spinning} />
         </div>
       </div>
       {/* No exit animation: a button still fading out could be pressed after the next squad is on screen. */}
@@ -533,6 +654,8 @@ function WalletStrip({ c, money, total }: { c: DraftText; money: { left: number;
         <motion.span key={money.left} initial={reduce ? false : { opacity: 0.4, y: -4 }} animate={{ opacity: 1, y: 0 }} className="shrink-0 text-base font-black text-brand-yellow">{euros(money.left)}</motion.span>
         {money.open > 0 && <span className="min-w-0 truncate text-right text-white/80">{c.eachPlace(money.each)}</span>}
       </div>
+      {/* Under €2M nobody can be bought; under €3M a place it soon will be. */}
+      {money.open > 0 && (money.left < 2 || money.each < 3) && <p className="mt-1 text-[11px] font-semibold leading-snug text-brand-yellow">{money.left < 2 ? c.walletEmpty : c.walletLow}</p>}
       <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
         <motion.div className="h-full rounded-full bg-brand-yellow" initial={false} animate={{ width: `${spentShare * 100}%` }} transition={{ duration: reduce ? 0 : 0.35 }} />
       </div>
@@ -598,15 +721,15 @@ export function TeamSheet({ c, name, me, slots, picks, hidden, seconds, onPlay, 
 }
 
 /** The XI complete, before the season: a moment to look at it, take back the last signing, and press play. */
-export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPlay, onExit, budget = BUDGET.total, prediction = null, notice = null }: {
+export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPlay, onExit, budget = BUDGET.total, notice = null, hidePicks }: {
   locale: string; slots: Slot[]; picks: (Pick | null)[]; variant: Variant; undoName?: string | null; onUndo?: () => void; onPlay: () => void; onExit: () => void; budget?: number;
   /** Why the XI is complete when the last squads had nobody to sign and academy kids filled it. */
   notice?: string | null;
-  /** Not in Ball Knowledge: it would give the hidden ratings away. */
-  prediction?: Prediction | null;
+  /** Ball Knowledge: the signed players' ratings stay hidden until the season is played. */
+  hidePicks?: boolean;
 }) {
   const c = draftCopy(locale);
-  const hidden = variant === "knowledge";
+  const hidden = hidePicks ?? variant === "knowledge";
   const short = useShortPhone();
   return (
     <div className="flex flex-1 flex-col">
@@ -617,10 +740,9 @@ export function XiReady({ locale, slots, picks, variant, undoName, onUndo, onPla
         <DraftPitch slots={slots} picks={picks} hideRatings={hidden} academy={c.academy} tight={short} className={short ? "h-[14.5rem]" : "aspect-[4/3.6]"} />
         {!hidden && <LineBars c={c} team={lines(slots, picks)} />}
       </div>
-      {(variant === "budget" || (prediction && !hidden)) && (
-        <div className="mt-3 space-y-1 rounded-2xl bg-white/[0.05] px-4 py-3 text-center">
-          {variant === "budget" && <p className="text-sm font-black text-brand-yellow tabular-nums" style={poppins}>{c.spent(spentOn(picks), budget)}</p>}
-          {prediction && !hidden && <p className="text-sm font-semibold text-white/85">{c.forecast(prediction.position, prediction.points, prediction.titlePct)}</p>}
+      {variant === "budget" && (
+        <div className="mt-3 rounded-2xl bg-white/[0.05] px-4 py-3 text-center">
+          <p className="text-sm font-black text-brand-yellow tabular-nums" style={poppins}>{c.spent(spentOn(picks), budget)}</p>
         </div>
       )}
       <div className="mt-auto space-y-2 pt-4">
@@ -813,9 +935,9 @@ function BudgetSummary({ c, picks, total }: { c: DraftText; picks: (Pick | null)
 
 export const beatsTarget = (season: SeasonResult, t: ChallengeTarget) => season.points - t.points || (season.gf - season.ga) - (t.gf - t.ga) || season.gf - t.gf;
 
-export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, prediction = null, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit }: {
+export function SeasonResultView({ locale, number, season, slots, picks, league, variant, coinsEarned, ranked, leaderboard, shareLink, challenge, newBest, nextDaily, initialShare = false, onPlayTarget, seed, budget = BUDGET.total, onShare, onAgain, onFriends, onChallenge, onExit }: {
   locale: string; number: number; season: SeasonResult; slots: Slot[]; picks: (Pick | null)[]; league: League; variant: Variant; coinsEarned: number; ranked: boolean;
-  leaderboard?: ReactNode; shareLink: string; challenge?: ChallengeTarget | null; newBest?: boolean; nextDaily?: string | null; initialShare?: boolean; onPlayTarget?: () => void; seed?: string; prediction?: Prediction | null; budget?: number; onShare: (text: string) => void; onAgain: () => void; onFriends: () => void; onChallenge?: () => void; onExit: () => void;
+  leaderboard?: ReactNode; shareLink: string; challenge?: ChallengeTarget | null; newBest?: boolean; nextDaily?: string | null; initialShare?: boolean; onPlayTarget?: () => void; seed?: string; budget?: number; onShare: (text: string) => void; onAgain: () => void; onFriends: () => void; onChallenge?: () => void; onExit: () => void;
 }) {
   const c = draftCopy(locale);
   const team = lines(slots, picks);
@@ -839,7 +961,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
           <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className={cn("relative overflow-hidden rounded-3xl px-5 py-5 text-center shadow-xl", perfect ? "bg-brand-yellow text-surface-page" : "bg-gradient-to-br from-brand-blue to-surface-card text-white")}>
             {(perfect || season.finish === "champions") && <Confetti />}
-            <p className={cn("text-xs font-bold uppercase tracking-[0.12em]", perfect ? "text-surface-page/70" : "text-white/70")} style={poppins}>{league.name} · {c.record}</p>
+            <p className={cn("text-xs font-bold uppercase tracking-[0.12em]", perfect ? "text-surface-page/70" : "text-white/70")} style={poppins}>{c.leagueName(league)} · {c.record}</p>
             <p className="mt-1 flex items-baseline justify-center gap-1 text-6xl font-black tabular-nums leading-none" style={poppins}>
               <CountUp to={season.w} className={perfect ? "" : "text-brand-green-light"} /><span className="opacity-50">–</span><CountUp to={season.d} /><span className="opacity-50">–</span><CountUp to={season.l} className={perfect ? "" : "text-brand-red-light"} />
             </p>
@@ -864,12 +986,6 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
             </div>
           </div>
           {variant === "knowledge" && <PicksReveal c={c} slots={slots} picks={picks} />}
-          {prediction && (
-            <div className="rounded-2xl bg-surface-card px-4 py-3 text-sm">
-              <p className="font-semibold text-white/85">{c.forecast(prediction.position, prediction.points, prediction.titlePct)}</p>
-              <p className={cn("mt-0.5 font-black", season.points >= prediction.points ? "text-brand-green-light" : "text-brand-red-light")} style={poppins}>{c.againstForecast(season.points - prediction.points)}</p>
-            </div>
-          )}
           {seed && <SeasonAwards c={c} seed={seed} season={season} slots={slots} picks={picks} />}
           {challenge && onPlayTarget && <GreenButton onClick={onPlayTarget}>{c.playMatch}</GreenButton>}
           {season.weak && (
@@ -902,7 +1018,7 @@ export function SeasonResultView({ locale, number, season, slots, picks, league,
       </div>
       {sharing && (
         <ShareSheet c={c} text={shareText} defaultNames={!ranked && !onChallenge} onClose={() => setSharing(false)} onDone={() => onShare(shareText)}
-          data={{ brand: c.brand, number, league: league.name, mode: modeName, record: record(season), finish: c.finish[season.finish], position: c.position(season.position), perfect, slots, picks, academy: c.academy, cta: c.shareCta, link: shareLink }} />
+          data={{ brand: c.brand, number, league: c.leagueName(league), mode: modeName, record: record(season), finish: c.finish[season.finish], position: c.position(season.position), perfect, slots, picks, academy: c.academy, cta: c.shareCta, link: shareLink }} />
       )}
     </div>
   );
@@ -1078,8 +1194,10 @@ function LineBars({ c, team }: { c: DraftText; team: Lines }) {
 const LEG_REVEAL_MS = 8000;
 const LEG_BEAT_MS = 1200;
 
-export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = false, onFinish, onGoal, onBack, backLabel, onAgain, onExit, resultNote }: {
+export function MatchDayView({ locale, match, me, rival, slots, rivalSlots = slots, seed, reveal = false, onFinish, onGoal, onBack, backLabel, onAgain, onExit, resultNote }: {
   locale: string; match: MatchDay; me: BoardSeat; rival: BoardSeat; slots: Slot[];
+  /** The rival's formation, when they drafted in another shape. */
+  rivalSlots?: Slot[];
   /** Names the scorers; the same pairing always shows the same goals. */
   seed?: string;
   /** Play both legs out on a clock before showing the result. */
@@ -1108,7 +1226,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
     finished.current = true;
     onFinish?.(won);
   }, [over, won, onFinish]);
-  const legGoals = useMemo(() => (seed ? match.legs.map((score, i) => matchDayGoals(`${seed}|${i}`, score, slots, me.picks, rival.picks)) : [[], []]), [seed, match.legs, slots, me.picks, rival.picks]);
+  const legGoals = useMemo(() => (seed ? match.legs.map((score, i) => matchDayGoals(`${seed}|${i}`, score, slots, me.picks, rival.picks, rivalSlots)) : [[], []]), [seed, match.legs, slots, me.picks, rival.picks, rivalSlots]);
   // Each leg's score so far; a finished leg counts in full.
   const sofar = (i: 0 | 1): [number, number] => {
     if (over || i < leg) return match.legs[i];
@@ -1127,7 +1245,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
     heard.current.count = shown.length;
   }, [shown, leg, over, onGoal]);
   const nameOf = (g: { side: 0 | 1; slotId: string | null }) => {
-    const p = (g.side === 0 ? me.picks : rival.picks)[slots.findIndex((x) => x.id === g.slotId)];
+    const p = (g.side === 0 ? me.picks : rival.picks)[(g.side === 0 ? slots : rivalSlots).findIndex((x) => x.id === g.slotId)];
     return !p || p.academy ? c.academy : surname(p.player.name);
   };
   const legRow = (i: 0 | 1, s: [number, number]) => (
@@ -1139,7 +1257,7 @@ export function MatchDayView({ locale, match, me, rival, slots, seed, reveal = f
   const pitches = (
     <div className="mt-5 grid grid-cols-2 gap-3">
       <div><p className="mb-1 text-center text-xs font-bold text-white/60">{c.you}</p><DraftPitch slots={slots} picks={me.picks} academy={c.academy} compact /></div>
-      <div><p className="mb-1 truncate text-center text-xs font-bold text-white/60">{rival.name}</p><DraftPitch slots={slots} picks={rival.picks} academy={c.academy} compact /></div>
+      <div><p className="mb-1 truncate text-center text-xs font-bold text-white/60">{rival.name}</p><DraftPitch slots={rivalSlots} picks={rival.picks} academy={c.academy} compact /></div>
     </div>
   );
   return (
@@ -1235,10 +1353,12 @@ export function RoomTable({ locale, rows, slots, initialTeam = null, againLabel,
 
 // ── Leaderboard (main board tab + public page mirror) ──────────────────────────────────────────────────────────────
 
-export interface BoardRow { userId?: string; rank: number; name: string; avatar: AvatarCustomization | null; season: { w: number; d: number; l: number; points: number }; me?: boolean; picks?: (Pick | null)[] }
+export interface BoardRow { userId?: string; runId?: string; rank: number; name: string; avatar: AvatarCustomization | null; season: { w: number; d: number; l: number; points: number }; me?: boolean; picks?: (Pick | null)[] }
 
-export function DraftLeaderboard({ locale, rows, title, compact, onOpen }: {
+export function DraftLeaderboard({ locale, rows, title, compact, onOpen, footer }: {
   locale: string; rows: BoardRow[]; variant?: Variant; onVariant?: (v: Variant) => void; title?: string; compact?: boolean;
+  /** Under the list: when the board resets, or how to get on it. */
+  footer?: ReactNode;
   /** Only once you have played: today's teams would give away today's draw. */
   onOpen?: (row: BoardRow) => void;
 }) {
@@ -1249,6 +1369,7 @@ export function DraftLeaderboard({ locale, rows, title, compact, onOpen }: {
         <Shield className="size-4 text-brand-green-light" aria-hidden />
         <h3 className="min-w-0 flex-1 basis-40 text-sm font-black uppercase" style={poppins}>{title ?? c.board}</h3>
       </div>
+      {rows.length === 0 && <p className="px-2 py-3 text-center text-xs font-semibold text-white/65">{c.boardEmpty}</p>}
       <ol className="space-y-1">
         {[...rows.slice(0, compact ? 5 : 10), ...rows.slice(compact ? 5 : 10).filter((r) => r.me)].map((r) => (
           <li key={`${r.rank}-${r.name}`}>
@@ -1268,7 +1389,8 @@ export function DraftLeaderboard({ locale, rows, title, compact, onOpen }: {
           </li>
         ))}
       </ol>
-      {onOpen && <p className="mt-2 text-center text-xs font-semibold text-brand-green-light">{c.boardTap}</p>}
+      {onOpen && rows.some((r) => !r.me) && <p className="mt-2 text-center text-xs font-semibold text-brand-green-light">{c.boardTap}</p>}
+      {footer && <div className="mt-2 text-center text-[11px] font-semibold text-white/55">{footer}</div>}
     </section>
   );
 }

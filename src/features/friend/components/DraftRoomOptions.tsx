@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 /** What a Football Draft room plays: mirrors the backend's room options. */
 export interface DraftRoomChoice { leagueId: string; era: Era; formation: FormationId; variant: Variant }
-const LEAGUES: ReadonlyArray<readonly [string, string]> = [["pl", "Premier League"], ["laliga", "LaLiga"], ["seriea", "Serie A"], ["bundesliga", "Bundesliga"], ["ligue1", "Ligue 1"]];
+const LEAGUES: ReadonlyArray<readonly [string, string]> = [["pl", "Premier League"], ["laliga", "LaLiga"], ["seriea", "Serie A"], ["bundesliga", "Bundesliga"], ["ligue1", "Ligue 1"], ["iconic", "Iconic Clubs"]];
 const ERAS: readonly Era[] = ["all", "modern", "legends"];
 const VARIANTS: readonly Variant[] = ["budget", "classic", "knowledge"];
 
@@ -71,7 +71,7 @@ export function DraftRoomOptions({ options, canEdit, onChange, hostOnly, onPendi
   );
   return (
     <div className="mt-3 space-y-3">
-      {row(c.setLeague, LEAGUES, value.leagueId, (leagueId) => set({ leagueId }))}
+      {row(c.setLeague, LEAGUES.map(([id, name]) => [id, c.leagueName({ id, name })] as const), value.leagueId, (leagueId) => set({ leagueId }))}
       {row(c.setEra, ERAS.map((e) => [e, e === "all" ? c.allTime : e === "modern" ? c.modern : c.legends] as const), value.era, (era) => set({ era }))}
       {row(c.setFormation, (Object.keys(FORMATIONS) as FormationId[]).map((f) => [f, f] as const), value.formation, (formation) => set({ formation }))}
       {!canEdit && <p className="text-[11px] text-white/50">{hostOnly}</p>}

@@ -3,7 +3,7 @@
 import { draftCopy } from "@/features/draft/draft.copy";
 import { activeSeat, botPick, finish, leagueOf, newDraft, respin, slotsOf, type ChallengeTarget, type DraftMode, type DraftState } from "@/features/draft/draft.engine";
 import { RESPIN_COST, lines, matchDay, rankKey, type Era, type Variant } from "@/features/draft/draft.rules";
-import { ChallengeIntro, DraftBoard, DraftIntro, DraftLeaderboard, DraftSetup, MatchDayView, RoomTable, SeasonResultView, SeasonTicker, XiReady } from "@/features/draft/DraftViews";
+import { ChallengeIntro, DraftBoard, DraftHome, DraftLeaderboard, DraftSetup, MatchDayView, RoomTable, SeasonResultView, SeasonTicker, XiReady } from "@/features/draft/DraftViews";
 import { Frame } from "@/features/wordgames/ui";
 import { DraftSim, UNIVERSE, boardRows, boardSeats, challengeLink, seatsFor, takenView, type DraftSimConfig } from "./DraftSim";
 import { scenario, type Scenario } from "./types";
@@ -93,8 +93,10 @@ export const DRAFT_SOLO: Scenario<never>[] = [
   scenario<{ friends: boolean; formation: "4-3-3" | "4-4-2" | "4-2-3-1" | "3-5-2"; era: Era }>({ id: "setup-friends", name: "With friends: same, plus number of players", data: { friends: true, formation: "4-3-3", era: "all" }, render: (d, ctx) => (
     <Frame lang={ctx.locale} wide><DraftSetup locale={ctx.locale} leagues={UNIVERSE.leagues} values={{ leagueId: "sol", era: d.era, formation: d.formation, variant: "classic", seats: 4 }} friends={d.friends} onChange={(v) => ctx.log("onChange", v)} onStart={() => ctx.log("onStart")} onExit={() => ctx.log("onExit")} /></Frame>
   ) }),
-  scenario<{ variant: Variant }>({ id: "intro", name: "Intro", data: { variant: "classic" }, render: (d, ctx) => (
-    <Frame lang={ctx.locale} wide><DraftIntro locale={ctx.locale} number={12} league={UNIVERSE.leagues[1]} best="31–4–3" nextDaily="08:14:22" variant={d.variant} onVariant={(v) => ctx.log("onVariant", v)} onDaily={() => ctx.log("onDaily")} onFree={() => ctx.log("onFree")} onFriends={() => ctx.log("onFriends")} onExit={() => ctx.log("onExit")} /></Frame>
+  scenario<{ guest: boolean }>({ id: "intro", name: "Home: choose a league", data: { guest: false }, render: (d, ctx) => (
+    <Frame lang={ctx.locale} wide><DraftHome locale={ctx.locale} leagues={[...UNIVERSE.leagues, { id: "iconic", name: "Iconic Clubs", short: "ICO", teams: 20, games: 38 }]} mine={{ [UNIVERSE.leagues[0].id]: "31–4–3" }} leagueId={UNIVERSE.leagues[0].id} formation="4-3-3"
+      onLeague={(id) => ctx.log("onLeague", id)} onFormation={(f) => ctx.log("onFormation", f)} onStart={() => ctx.log("onStart")} onFriends={() => ctx.log("onFriends")} onExit={() => ctx.log("onExit")}
+      guestNote={d.guest ? draftCopy(ctx.locale).signInBoard : null} onSignIn={() => ctx.log("onSignIn")} board={<DraftLeaderboard locale={ctx.locale} rows={[]} title={draftCopy(ctx.locale).boardWeek(UNIVERSE.leagues[0].name)} />} /></Frame>
   ) }),
   board("armed", "Before the spin: press Spin to see the squad", at("daily", 0), { armed: true }),
   board("first", "Pick 1: empty XI", at("daily", 0)),

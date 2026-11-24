@@ -6,8 +6,8 @@ import { DRAFT_SOUNDS, preloadDraftSounds, type DraftSoundMoment } from "@/featu
 import { randomBotAvatar } from "@/features/auction/data/botAvatars";
 import { draftCopy } from "@/features/draft/draft.copy";
 import { activeSeat, botPick, finish, isShared, leagueOf, newDraft, pick, respin, signAcademy, slotsOf, type ChallengeTarget, type DraftMode, type DraftState, type DraftUniverse } from "@/features/draft/draft.engine";
-import { FREE_RESPINS, RESPIN_COST, SEASON_PACE, lines, matchDay, matchMs, pickSeconds, predictSeason, rankKey, type Era, type FormationId, type MatchDay, type SeasonResult, type Variant } from "@/features/draft/draft.rules";
-import { ChallengeIntro, DraftBoard, DraftIntro, DraftLeaderboard, DraftSetup, type DraftSetupValues, MatchDayView, RoomTable, SeasonResultView, SeasonTicker, TeamSheet, XiReady, type BoardRow, type BoardSeat } from "@/features/draft/DraftViews";
+import { FREE_RESPINS, RESPIN_COST, SEASON_PACE, lines, matchDay, matchMs, pickSeconds, rankKey, type Era, type FormationId, type MatchDay, type SeasonResult, type Variant } from "@/features/draft/draft.rules";
+import { ChallengeIntro, DraftBoard, DraftHome, DraftLeaderboard, DraftSetup, type DraftSetupValues, MatchDayView, RoomTable, SeasonResultView, SeasonTicker, TeamSheet, XiReady, type BoardRow, type BoardSeat } from "@/features/draft/DraftViews";
 import { Frame } from "@/features/wordgames/ui";
 import { LEAGUES, RIVAL_NAMES, opponents, otherClubOf, otherSeasonOf, spinFrom } from "./fixtures/draft";
 import { REAL_PACK_URL, realUniverse, type RealPack } from "./fixtures/draftReal";
@@ -109,7 +109,9 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
     seed: o.target?.seed ?? (mode === "daily" && config.intro ? `daily-${dailyKey()}` : `${config.seed}-${Date.now()}`), respins: o.target?.respins,
     seats: seatsFor(mode === "duel" ? 2 : mode === "room" ? Math.max(3, Math.min(6, o.seats ?? config.seats)) : 1), coins: config.coins,
   });
-  const [variant, setVariant] = useState<Variant>(config.variant);
+  const [variant] = useState<Variant>(config.variant);
+  // A draft started from the home plays like the real one: Budget, with the squad's ratings hidden until signing.
+  const [fromHome, setFromHome] = useState(false);
   const [screen, setScreen] = useState<"intro" | "setup" | "challenge" | "draft" | "season" | "result" | "versus">(config.intro ? "intro" : "draft");
   const [openRival, setOpenRival] = useState<BoardRow | null>(null);
   const [versus, setVersus] = useState<{ seat: BoardSeat; match: MatchDay; seed: string } | null>(null);
@@ -208,15 +210,14 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
     if (done) { recorded.current = done.seasons; setS(done); setScreen("result"); return; }
     begin(make(mode, mode === "daily" ? { variant, era: "all", formation: "4-3-3", leagueId: dailyLeague(u.leagues, dailyKey()) } : { leagueId: s.leagueId, era: s.era, formation: s.formation, variant: s.variant, seats: s.seats.length }));
   };
-  const openSetup = (kind: "free" | "friends") => { setSetupFor(kind); setSetup((x) => ({ ...x, variant })); setScreen("setup"); };
+  const openSetup = (kind: "free" | "friends") => { setFromHome(false); setSetupFor(kind); setSetup((x) => ({ ...x, variant })); setScreen("setup"); };
   const startSetup = () => { setTarget(null); begin(make(setupFor === "free" ? "free" : setup.seats === 2 ? "duel" : "room", setup)); };
   const exit = () => { log("onExit"); setTarget(null); setScreen("intro"); };
   const undo = () => { if (!undoFrom) return; log("onUndo"); lastSpin.current = undoFrom.state.spin.id; setArmed(false); setRolling(null); setS(undoFrom.state); setUndoFrom(null); };
-  const notice = s.notice === "no_coins" ? c.noCoins : s.notice === "no_fit" ? c.noFit : s.notice === "academy" ? c.academyNotice : s.notice === "no_other_season" ? c.noOtherSeason : s.notice === "no_money" ? c.noMoney : null;
+  const notice = s.notice === "no_coins" ? c.noCoins : s.notice === "no_fit" ? c.noFit : s.notice === "academy" ? c.academyNotice : s.notice === "no_other_season" ? c.noOtherSeason : s.notice === "no_money" ? c.noMoneyChoice : s.notice === "academy_money" ? c.academyMoneyAny : null;
   // Each row is a real team drafted from the same draw, so it can be opened and played.
   const rows = useMemo(() => (s.seasons && !isShared(s.mode) ? rivalBoard(u, s) : []), [u, s]);
   // The forecast for the XI just built: shown before the season (not in Ball Knowledge, it would give ratings away) and held against the result.
-  const prediction = useMemo(() => (!isShared(s.mode) && s.seats[0].picks.every(Boolean) ? predictSeason(slots, s.seats[0].picks, league, u.opponents(s.leagueId, s.seed), s.seed) : null), [u, s.mode, s.leagueId, s.seed, s.seats, slots, league]);
   const [seenVersus, setSeenVersus] = useState<string[]>([]);
   const playAgainst = (name: string, avatar: BoardSeat["avatar"], picks: BoardSeat["picks"]) => {
     log("onVersus", name);
@@ -262,16 +263,17 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
   return (
     <Frame lang={locale} wide>
       {screen === "intro" ? (
-        <DraftIntro locale={locale} number={12} league={u.leagues.find((l) => l.id === dailyLeague(u.leagues, dailyKey())) ?? league} best={best?.rec ?? null} nextDaily={nextDaily} variant={variant} onVariant={setVariant} onExit={() => log("onExit")}
-          onDaily={() => restart("daily")} onFree={() => openSetup("free")} onFriends={() => openSetup("friends")} />
+        <DraftHome locale={locale} leagues={u.leagues} mine={best?.rec ? { [setup.leagueId]: best.rec } : {}} leagueId={setup.leagueId} formation={setup.formation}
+          onLeague={(id) => setSetup((x) => ({ ...x, leagueId: id }))} onFormation={(f) => setSetup((x) => ({ ...x, formation: f }))}
+          onStart={() => { setTarget(null); setFromHome(true); begin(make("free", { ...setup, era: "all", variant: "budget" })); }} onFriends={() => openSetup("friends")} onExit={() => log("onExit")} />
       ) : screen === "setup" ? (
         <DraftSetup locale={locale} leagues={u.leagues} values={setup} friends={setupFor === "friends"} onChange={setSetup} onStart={startSetup} onExit={exit} />
       ) : screen === "challenge" && target ? (
         <ChallengeIntro locale={locale} target={target} league={league} onStart={accept} onExit={exit} />
       ) : screen === "draft" && s.phase === "ready" && !multi ? (
-        <XiReady locale={locale} slots={slots} picks={s.seats[0].picks} variant={s.variant} budget={s.budget} prediction={prediction} undoName={undoFrom?.name ?? null} onUndo={undo} onPlay={playOn} onExit={exit} />
+        <XiReady locale={locale} slots={slots} picks={s.seats[0].picks} variant={s.variant} budget={s.budget} notice={s.notice === "academy_money" ? c.academyMoneyAny : s.notice === "academy" ? c.academyNotice : null} undoName={undoFrom?.name ?? null} onUndo={undo} onPlay={playOn} onExit={exit} />
       ) : screen === "draft" ? (
-        <DraftBoard locale={locale} slots={slots} spin={s.spin} league={league} variant={s.variant} round={s.round} seats={boardSeats(s)} myPicks={s.seats[0].picks}
+        <DraftBoard locale={locale} slots={slots} spin={s.spin} league={league} variant={s.variant} round={s.round} seats={boardSeats(s)} myPicks={s.seats[0].picks} hideSquad={fromHome || undefined}
           taken={takenView(s, c.you)} respins={s.respins} respinCost={s.mode === "free" ? RESPIN_COST : null} coins={s.mode === "free" ? s.coins : null} mode={s.mode} notice={notice}
           spinning={spinning} armed={armed} onSpin={spinNow} pool={pool} feed={multi ? feedText : null} seconds={multi && !s.seats[seat].bot ? seconds : null} waitingFor={multi && s.seats[seat].bot ? s.seats[seat].name : null}
           undoName={undoFrom?.name ?? null} onUndo={undo}
@@ -300,7 +302,7 @@ function DraftSimInner({ config, locale, log, u }: { config: DraftSimConfig; loc
         <RoomTable locale={locale} slots={slots} onAgain={() => restart()} onExit={exit}
           rows={boardSeats(s).map((seatView, i) => ({ seat: seatView, season: s.seasons![i], team: lines(slots, seatView.picks).overall })).sort((a, b) => rankKey(b.season) - rankKey(a.season))} />
       ) : s.seasons ? (
-        <SeasonResultView locale={locale} number={12} seed={s.seed} prediction={prediction} budget={s.budget} season={s.seasons[0]} slots={slots} picks={s.seats[0].picks} league={league} variant={s.variant} coinsEarned={s.coinsEarned} ranked={s.mode === "daily"}
+        <SeasonResultView locale={locale} number={12} seed={s.seed} budget={s.budget} season={s.seasons[0]} slots={slots} picks={s.seats[0].picks} league={league} variant={s.variant} coinsEarned={s.coinsEarned} ranked={s.mode === "daily"}
           shareLink={challengeLink(s)} challenge={s.mode === "challenge" ? target : null} newBest={newBest} nextDaily={s.mode === "daily" ? nextDaily : null} onChallenge={s.mode === "challenge" ? undefined : challengeFriend}
           onPlayTarget={s.mode === "challenge" && target ? () => playAgainst(target.from, null, target.picks) : undefined}
           leaderboard={<DraftLeaderboard locale={locale} rows={rows} variant={s.variant} onVariant={(v) => log("onBoardVariant", v)} onOpen={setOpenRival} />}
