@@ -44,7 +44,12 @@ function pollMs(status: string | undefined): number {
  * `studio` = the /orshabatoba page: the whole event (register, host Start, countdown, game) inside the full-page 3D
  * studio. Without it (/events tab) a host-run event only shows the entry card that links to the studio.
  */
-export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactNode; studio?: boolean }) {
+export function LiveEventScreen({ fallback, studio = false, studioEmpty }: {
+  fallback: ReactNode;
+  studio?: boolean;
+  /** Studio page, Georgian visitor, no event open at this moment (between a finished show and the next one opening). */
+  studioEmpty?: ReactNode;
+}) {
   // Georgian only: the show is a Georgian podcast, so its screens never switch language.
   const copy = liveEventCopy('ka');
   const router = useRouter();
@@ -179,7 +184,7 @@ export function LiveEventScreen({ fallback, studio = false }: { fallback: ReactN
       </div>
     );
   }
-  if (!activeId) return studio ? <>{fallback}</> : <OrshabatobaEntryCard live={false} />;
+  if (!activeId) return studio ? <>{studioEmpty ?? fallback}</> : <OrshabatobaEntryCard live={false} />;
 
   const status = tournament?.id === activeId ? tournament.status : null;
   const entered = you?.entered === true;

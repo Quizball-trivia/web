@@ -5,7 +5,7 @@
  * past show nights with their podium below it. Georgian only, like the rest of the show.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Trophy, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -104,12 +104,8 @@ function FullBoard({ edition }: { edition: OrshabatobaHistoryResponse['editions'
     queryFn: () => getOrshabatobaLeaderboard(edition.episode),
     staleTime: 60_000,
   });
-  const youRef = useRef<HTMLLIElement>(null);
-  const hasYou = board.data?.rows.some((r) => r.is_you) === true;
-  // Open on your own row when you played.
-  useEffect(() => {
-    if (hasYou) youRef.current?.scrollIntoView({ block: 'center' });
-  }, [hasYou]);
+  // Open on your own row when you played: scroll when that row actually mounts (the dialog portal mounts late).
+  const youRef = useCallback((el: HTMLLIElement | null) => { el?.scrollIntoView({ block: 'center' }); }, []);
 
   return (
     <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden border-white/10 bg-[#0f1530] p-0 text-white sm:max-w-md">
