@@ -108,7 +108,7 @@ function FullBoard({ edition }: { edition: OrshabatobaHistoryResponse['editions'
   const youRef = useCallback((el: HTMLLIElement | null) => { el?.scrollIntoView({ block: 'center' }); }, []);
 
   return (
-    <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden border-white/10 bg-[#0f1530] p-0 text-white sm:max-w-md">
+    <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden border-white/10 bg-game-stadium-night p-0 text-white sm:max-w-md">
       <div className="border-b border-white/10 px-5 pb-3 pt-5 pr-12">
         <DialogTitle className="font-poppins text-[18px] font-bold">ორშაბათობა #{edition.episode}</DialogTitle>
         <DialogDescription className="mt-1 font-poppins text-[13px] text-white/55">
