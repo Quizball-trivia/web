@@ -53,6 +53,29 @@ export interface WlHallOfFameResponse {
   editions: WlHallOfFameEdition[];
   all_time: WlHallOfFameEntry[];
 }
+export interface OrshabatobaHistoryResponse {
+  next: { episode: number; event_date: string };
+  editions: Array<{
+    episode: number;
+    event_date: string;
+    players: number;
+    podium: Array<{ rank: number; nickname: string | null; avatar_url: string | null; points: number }>;
+  }>;
+}
+/** Past ორშაბათობა show nights + the next one (public, same for everyone). */
+export function getOrshabatobaHistory(): Promise<OrshabatobaHistoryResponse> {
+  // Path not yet in api.generated.ts (regenerate on the next openapi pass).
+  return apiFetch("get", "/api/v1/weekend-league/orshabatoba/history" as never) as Promise<OrshabatobaHistoryResponse>;
+}
+export interface OrshabatobaLeaderboardResponse {
+  episode: number;
+  event_date: string;
+  rows: Array<{ rank: number; nickname: string | null; avatar_url: string | null; points: number; is_you: boolean }>;
+}
+/** One past ორშაბათობა show night's full leaderboard (public; marks the signed-in caller's row). */
+export function getOrshabatobaLeaderboard(episode: number): Promise<OrshabatobaLeaderboardResponse> {
+  return apiFetch("get", `/api/v1/weekend-league/orshabatoba/history/${episode}` as never) as Promise<OrshabatobaLeaderboardResponse>;
+}
 export function getWeekendLeagueHallOfFame(): Promise<WlHallOfFameResponse> {
   // Path not yet in api.generated.ts (regenerate on the next openapi pass).
   return apiFetch("get", "/api/v1/weekend-league/hall-of-fame" as never) as Promise<WlHallOfFameResponse>;

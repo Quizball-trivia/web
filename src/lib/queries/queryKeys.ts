@@ -112,6 +112,9 @@ export const queryKeys = {
     current: () => [...queryKeys.weekendLeague.all, "current"] as const,
     qp: () => [...queryKeys.weekendLeague.all, "qp"] as const,
     hallOfFame: () => [...queryKeys.weekendLeague.all, "hallOfFame"] as const,
+    orshabatobaHistory: () => [...queryKeys.weekendLeague.all, "orshabatobaHistory"] as const,
+    orshabatobaBoard: (episode: number, userId: string | null) =>
+      [...queryKeys.weekendLeague.all, "orshabatobaBoard", episode, userId] as const,
     rewards: (userId: string) => [...queryKeys.weekendLeague.all, "rewards", userId] as const,
   },
 };
