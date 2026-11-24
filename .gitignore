@@ -74,3 +74,4 @@ dev-server.log
 # Buscaminas boards are served by the backend only once their day opens; never commit day files.
 /public/buscaminas/v1/days/
 /public/buscaminas/v1/index.json
+.indexnow/
