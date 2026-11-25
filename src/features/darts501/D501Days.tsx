@@ -145,6 +145,7 @@ function ResultPill({ mine, c, compact = false }: { mine: MyResult; c: D501DaysC
     </span>
   );
   if (mine.state === "gaveUp") return <span className={cn(base, "text-center text-[11px] font-bold text-white/40")}>{c.pillGaveUp}</span>;
+  if (mine.state === "unknown") return <span className={cn(base, "bg-white/[0.04] text-white/30")}>…</span>;
   if (mine.state === "started") return (
     <span className={cn(base, "bg-brand-yellow/15 text-brand-yellow")}>
       <span className="text-[11px] font-black uppercase" style={poppins}>{c.pillResume}</span>
@@ -279,7 +280,7 @@ function MonthGrid({ month, model, selected, filter, c, f, onSelect, guard }: {
           <button key={id} type="button" data-day={id} aria-label={`#${d.number} · ${f.long(id)}`}
             onClick={() => { if (!guard.current) onSelect(d); }}
             className={cn("relative flex aspect-square flex-col items-center justify-center rounded-xl transition-[opacity,background-color] lg:aspect-[5/4]",
-              d.mine.state === "out" ? "bg-brand-green/20 hover:bg-brand-green/30" : isDone(d.mine) ? "bg-white/[0.08] hover:bg-white/[0.12]" : d.mine.state === "started" ? "bg-brand-yellow/10" : "border border-white/12 hover:bg-white/[0.06]",
+              d.mine.state === "out" ? "bg-brand-green/20 hover:bg-brand-green/30" : isDone(d.mine) ? "bg-white/[0.08] hover:bg-white/[0.12]" : d.mine.state === "started" ? "bg-brand-yellow/10" : d.mine.state === "unknown" ? "bg-white/[0.04] hover:bg-white/[0.08]" : "border border-white/12 hover:bg-white/[0.06]",
               isToday ? "ring-2 ring-brand-blue" : selected === id && "ring-2 ring-white",
               dim && "opacity-20 grayscale")}>
             <span className={cn("absolute left-1 top-0.5 text-[9px] font-bold tabular-nums lg:left-1.5 lg:top-1 lg:text-[11px]", isToday ? "text-white" : "text-white/45")}>{i + 1}</span>
@@ -333,7 +334,7 @@ function MonthPicker({ model, month, firstMonth, lastMonth, c, f, onPick, onClos
                     key === month ? "bg-white text-black" : inRange ? "bg-white/[0.06] hover:bg-white/[0.12]" : "text-white/15",
                     key === current && key !== month && "ring-2 ring-brand-blue")}>
                   <span style={poppins} className="font-black capitalize">{f.monthShort(key)}</span>
-                  {inRange && <span className={cn("mt-0.5 text-[10px] tabular-nums", key === month ? "text-black/60" : "text-white/45")}>{s ? `${s.played}/${s.total}` : c.soon}</span>}
+                  {inRange && <span className={cn("mt-0.5 text-[10px] tabular-nums", key === month ? "text-black/60" : "text-white/45")}>{s ? (model.history === "ready" ? `${s.played}/${s.total}` : s.total) : c.soon}</span>}
                 </button>
               );
             })}
@@ -645,8 +646,8 @@ function Tile({ icon, value, label }: { icon: ReactNode; value: string; label: s
   );
 }
 
-function DayDetail({ day, model, c, f, locale, guest, game, canPlay, onPlay, onClose }: {
-  day: CalDay; model: CalModel; c: D501DaysCopy; f: Formats; locale: string; guest: boolean; game: WordDailyGame; canPlay: boolean; onPlay: (d: CalDay) => void; onClose?: () => void;
+function DayDetail({ day, model, c, f, locale, guest, game, onPlay, onClose }: {
+  day: CalDay; model: CalModel; c: D501DaysCopy; f: Formats; locale: string; guest: boolean; game: WordDailyGame; onPlay: (d: CalDay) => void; onClose?: () => void;
 }) {
   const isToday = day.day === model.today;
   const m = day.mine;
@@ -685,7 +686,8 @@ function DayDetail({ day, model, c, f, locale, guest, game, canPlay, onPlay, onC
         {m.state === "left" && <p className="mt-1 text-2xl font-black tabular-nums" style={poppins}>{c.resultLeft(m.left)}</p>}
         {m.state === "gaveUp" && <p className="mt-1 text-xl font-black" style={poppins}>{c.resultGaveUp(m.left)}</p>}
         {m.state === "started" && <p className="mt-1 text-lg font-black text-brand-yellow" style={poppins}>{c.resultStarted(m.left, m.darts)}</p>}
-        {m.state === "none" && <p className="mt-1 text-base font-bold text-white/80">{model.history === "failed" ? c.historyFailed : model.history === "loading" ? "…" : isToday ? c.notThrownToday : c.notPlayed}</p>}
+        {m.state === "unknown" && <p className="mt-1 text-base font-bold text-white/80">{model.history === "failed" ? c.historyFailed : "…"}</p>}
+        {m.state === "none" && <p className="mt-1 text-base font-bold text-white/80">{isToday ? c.notThrownToday : c.notPlayed}</p>}
         {day.stale && <p className={cn("mt-1 text-[11px]", m.state === "out" ? "text-black/65" : "text-white/60")}>{c.staleNote}</p>}
       </div>
 
@@ -700,7 +702,7 @@ function DayDetail({ day, model, c, f, locale, guest, game, canPlay, onPlay, onC
       <div className="mt-5 space-y-2">
         {isToday && guest && m.state === "none"
           ? <DailySignIn game={game} placement="days_detail" className="flex h-12 w-full items-center justify-center rounded-full bg-brand-yellow text-sm font-black uppercase text-black hover:bg-brand-yellow-deep">{c.signUpToday}</DailySignIn>
-          : canPlay && <GreenButton className="h-12 text-sm" onClick={() => onPlay(day)}>{m.state === "started" ? c.continueRun : isDone(m) ? c.seeResult : c.play(day.number)}</GreenButton>}
+          : <GreenButton className="h-12 text-sm" onClick={() => onPlay(day)}>{m.state === "started" ? c.continueRun : isDone(m) ? c.seeResult : m.state === "unknown" ? c.pillPlay : c.play(day.number)}</GreenButton>}
         {!isToday && <p className="text-center text-[11px] text-white/45">{c.practiceNote}</p>}
       </div>
       <button type="button" onClick={() => { void copyLink(); }} className="mt-4 flex items-center gap-1.5 truncate rounded-xl bg-white/[0.04] px-3 py-2 text-left text-[11px] text-white/45 hover:bg-white/[0.08]" aria-label={c.copyLink}>
@@ -750,11 +752,8 @@ function useCalendar(locale: string, owner: string, today: string) {
  * Football Darts 501's days calendar: one month at a time (swipe or arrows), a list as the second view, the player's own
  * results on every day, and today's board kept secret until its day closes.
  */
-export function D501Days({ game, locale, today, owner, openable, onBack, onOpenDay }: {
-  game: WordDailyGame; locale: string; today: string; owner: string;
-  /** Days the game screen can open now; a past day outside it (its footballers failed to load) offers no Play. */
-  openable: readonly string[];
-  onBack: () => void; onOpenDay: (day: string) => void;
+export function D501Days({ game, locale, today, owner, onBack, onOpenDay }: {
+  game: WordDailyGame; locale: string; today: string; owner: string; onBack: () => void; onOpenDay: (day: string) => void;
 }) {
   const c = d501DaysCopy(locale);
   const w = wordDailyCopy(locale);
@@ -788,6 +787,12 @@ export function D501Days({ game, locale, today, owner, openable, onBack, onOpenD
   const selectedDay = model?.days.find((d) => d.day === selected) ?? todayDay ?? model?.days[0] ?? null;
   const navigate = useCallback((m: string, d: number) => { setDir(d); setMonth(m); }, []);
   const closeSheet = useCallback(() => setSheet(false), []);
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => { if (wide.matches) setSheet(false); };
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, []);
   const closeFilter = useCallback(() => setFilterOpen(false), []);
   const select = useCallback((d: CalDay) => { setSelected(d.day); if (window.matchMedia("(max-width: 1023px)").matches) setSheet(true); }, []);
   const play = useCallback((d: CalDay) => onOpenDay(d.day), [onOpenDay]);
@@ -864,7 +869,7 @@ export function D501Days({ game, locale, today, owner, openable, onBack, onOpenD
               </main>
               <aside className="hidden lg:block">
                 <div className="sticky top-2 mt-2 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-                  {selectedDay && <DayDetail day={selectedDay} model={model} c={c} f={f} locale={locale} guest={guest} game={game} canPlay={selectedDay.day === model.today || openable.includes(selectedDay.day)} onPlay={play} />}
+                  {selectedDay && <DayDetail day={selectedDay} model={model} c={c} f={f} locale={locale} guest={guest} game={game} onPlay={play} />}
                 </div>
               </aside>
             </div>
@@ -881,7 +886,7 @@ export function D501Days({ game, locale, today, owner, openable, onBack, onOpenD
           </AnimatePresence>
 
           <Sheet open={sheet && !!selectedDay} onClose={closeSheet} title={selectedDay ? `#${selectedDay.number}` : c.todayBoard} closeLabel={c.close}>
-            {selectedDay && <DayDetail day={selectedDay} model={model} c={c} f={f} locale={locale} guest={guest} game={game} canPlay={selectedDay.day === model.today || openable.includes(selectedDay.day)} onPlay={play} onClose={closeSheet} />}
+            {selectedDay && <DayDetail day={selectedDay} model={model} c={c} f={f} locale={locale} guest={guest} game={game} onPlay={play} onClose={closeSheet} />}
           </Sheet>
           <Sheet open={filterOpen} onClose={closeFilter} title={c.findBoard} closeLabel={c.close} desktop>
             <FilterPanel filter={chosenFilter} setFilter={setFilter} kinds={kindsPresent} count={matchCount} c={c} onDone={closeFilter} />

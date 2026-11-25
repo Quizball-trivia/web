@@ -53,28 +53,38 @@ export function D501Daily({ locale, onExit, onEvent, initialDay, onDay }: {
       onExit={onExit ?? (() => daily.setView("intro"))} />
   ) : null;
 
-  const end = solo && day && state?.done ? (
-    <D501EndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard && !todayMissing}
-      leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadBoard} day={isLiveDay(D501_CALENDAR, day, daily.today) ? day : undefined}
-        refreshKey={daily.boardRefresh} placement="end" className="mt-6" pointsLabel={c.boardLabel} pointsHint={c.boardHint} formatPoints={formatPoints} />}
-      onArchive={() => daily.setView("archive")} onExit={onExit} />
-  ) : null;
-
   const dc = d501DaysCopy(locale);
-  const banner = todayMissing && day !== daily.today ? (
+  const gapNote = todayMissing && day !== daily.today ? (
     <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-3">
       <p className="text-sm font-bold text-white/90">{dc.noBoardToday}</p>
       <p className="mt-0.5 text-xs text-white/60">{dc.pastOpen}</p>
     </div>
   ) : null;
   // A day the calendar shows but this screen's index does not have yet (seeded since it loaded): the index is fetched
-  // again; the chosen day is kept and opens once the index has it.
+  // again and the chosen day kept, so it opens once the index has it. If it still cannot be opened (its footballers
+  // failed to load), the screen says so instead of passing another day off as the one chosen.
+  const [wanted, setWanted] = useState<string | null>(null);
   const openFromCalendar = (target: string) => {
-    if (!daily.days.includes(target)) daily.reload();
+    if (daily.days.includes(target)) setWanted(null);
+    else { setWanted(target); daily.reload(); }
     daily.openDay(target);
   };
+  const unavailable = wanted !== null && daily.versions != null && !daily.days.includes(wanted) && day !== wanted;
+  const banner = unavailable ? (
+    <p role="status" className="rounded-2xl bg-brand-red-soft/15 px-4 py-3 text-sm font-semibold text-brand-red-light">{dc.unavailable}</p>
+  ) : gapNote;
+
+  const end = solo && day && state?.done ? (
+    <div className="flex flex-1 flex-col">
+      {banner && <div className="mb-3">{banner}</div>}
+      <D501EndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard && !todayMissing}
+        leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadBoard} day={isLiveDay(D501_CALENDAR, day, daily.today) ? day : undefined}
+          refreshKey={daily.boardRefresh} placement="end" className="mt-6" pointsLabel={c.boardLabel} pointsHint={c.boardHint} formatPoints={formatPoints} />}
+        onArchive={() => daily.setView("archive")} onExit={onExit} />
+    </div>
+  ) : null;
   const archive = (
-    <D501Days game={game} locale={locale} today={daily.today} owner={daily.owner} openable={daily.days}
+    <D501Days game={game} locale={locale} today={daily.today} owner={daily.owner}
       onBack={() => daily.setView(day && status === "done" ? "end" : "intro")} onOpenDay={openFromCalendar} />
   );
   // No board today: a guest is not invited to sign in "to play today", and the shell shows the note wherever it lands.

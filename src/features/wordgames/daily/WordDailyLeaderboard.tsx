@@ -42,18 +42,24 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
   const [nudgeBy, setNudge] = useState<{ day: string; n: number }>({ day: today, n: 0 });
   const nudge = nudgeBy.day === today ? nudgeBy.n : 0;
   const myId = useAuthStore((s) => s.user?.id);
-  const boardKey = boardDay === null ? null : `${open ? `latest:${today}:${nudge}` : boardDay}|${myId ?? ""}`;
-  const [loaded, setLoaded] = useState<{ day: string; board: WordBoard | null } | null>(null);
+  const baseKey = boardDay === null ? null : `${open ? `latest:${today}` : boardDay}|${myId ?? ""}`;
+  const boardKey = baseKey === null ? null : `${baseKey}:${nudge}`;
+  const [loaded, setLoaded] = useState<{ day: string; base: string | null; board: WordBoard | null } | null>(null);
   const authStatus = useAuthStore((s) => s.status);
   useEffect(() => {
     if (authStatus === "loading" || boardDay === null || boardKey === null) return;
     let cancelled = false;
-    load(boardDay, locale).then((data) => { if (!cancelled) setLoaded({ day: boardKey, board: data }); }).catch(() => { if (!cancelled) setLoaded({ day: boardKey, board: null }); });
+    const base = baseKey;
+    load(boardDay, locale).then((data) => { if (!cancelled) setLoaded({ day: boardKey, base, board: data }); }).catch(() => {
+      // A failed re-ask keeps the board it was asked to refresh; only a first failure hides the section.
+      if (!cancelled) setLoaded((prev) => (prev && prev.base === base && prev.board ? { ...prev, day: boardKey } : { day: boardKey, base, board: null }));
+    });
     return () => { cancelled = true; };
-  }, [boardDay, boardKey, refreshKey, authStatus, myId, locale, load]);
+  }, [boardDay, boardKey, baseKey, refreshKey, authStatus, myId, locale, load]);
 
   // Rows fetched for another day are never shown under this day's heading.
-  const board = loaded && loaded.day === boardKey ? loaded.board : undefined;
+  // While a re-ask is in flight the board it refreshes stays on screen.
+  const board = loaded && (loaded.day === boardKey || (loaded.base === baseKey && loaded.board)) ? loaded.board : undefined;
   const stale = open && board != null && board.day < today && nudge < 3;
   useEffect(() => {
     if (!stale) return;

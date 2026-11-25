@@ -6,7 +6,9 @@ export type MyResult =
   | { state: "left"; left: number }
   | { state: "gaveUp"; left: number }
   | { state: "started"; left: number; darts: number }
-  | { state: "none" };
+  | { state: "none" }
+  /** The player's results have not loaded (or failed): nothing is shown as played or unplayed. */
+  | { state: "unknown" };
 
 /**
  * One day on the calendar. `closed: false` (today, until both clocks close it): only number and tier are known, the
@@ -44,8 +46,8 @@ export function mineOf(r: D501MyDay | undefined): MyResult {
   return { state: "left", left: r.remaining };
 }
 
-function calDay(d: D501CalendarDay, mine: D501MyDay | undefined): CalDay {
-  const base = { day: d.day, number: d.number, tier: d.tier, closed: d.closed, mine: mineOf(mine), stale: mine?.stale === true && mine.done };
+function calDay(d: D501CalendarDay, mine: D501MyDay | undefined, known: boolean): CalDay {
+  const base = { day: d.day, number: d.number, tier: d.tier, closed: d.closed, mine: known ? mineOf(mine) : { state: "unknown" as const }, stale: mine?.stale === true && mine.done };
   if (!d.closed) return { ...base, title: null, unit: null, kind: null, subject: null, competition: null, stats: null };
   const card = d.card;
   return {
@@ -56,7 +58,7 @@ function calDay(d: D501CalendarDay, mine: D501MyDay | undefined): CalDay {
 }
 
 export function buildModel(index: D501Days, mine: Record<string, D501MyDay> | null | undefined): CalModel {
-  const days = index.days.filter((d) => d.day <= index.today).map((d) => calDay(d, mine?.[d.day])).reverse();
+  const days = index.days.filter((d) => d.day <= index.today).map((d) => calDay(d, mine?.[d.day], mine != null)).reverse();
   return {
     history: mine === undefined ? "loading" : mine === null ? "failed" : "ready",
     today: index.today,

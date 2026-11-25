@@ -3,6 +3,7 @@ import type { D501BoardKind, D501Tier } from "./d501.api";
 
 /** The Football Darts 501 days calendar (D501Days). */
 const en = {
+  unavailable: "That board can't be opened right now. Try again in a minute.",
   historyFailed: "Your results couldn't load",
   units: { apps: "Appearances", goals: "Goals", caps: "Caps", apps_minus_goals: "Apps − goals", market_value_eur_m: "Market value (€m)" } as Record<string, string>,
   kinds: { apps: "Club apps", goals: "Goals", cl: "Champions League", nt: "National team", combined: "Combined", value: "€m value", minus: "Apps − goals" } as Record<D501BoardKind, string>,
@@ -43,6 +44,7 @@ const en = {
 export type D501DaysCopy = typeof en;
 
 const es: D501DaysCopy = {
+  unavailable: "Ese tablero no se puede abrir ahora. Probá de nuevo en un minuto.",
   historyFailed: "No se pudieron cargar tus resultados",
   units: { apps: "Partidos", goals: "Goles", caps: "Partidos con la selección", apps_minus_goals: "Partidos − goles", market_value_eur_m: "Valor de mercado (M€)" } as Record<string, string>,
   kinds: { apps: "Partidos en club", goals: "Goles", cl: "Champions League", nt: "Selección", combined: "Combinado", value: "Valor €m", minus: "Partidos − goles" },
@@ -81,6 +83,7 @@ const es: D501DaysCopy = {
 };
 
 const ka: D501DaysCopy = {
+  unavailable: "ეს დაფა ახლა ვერ იხსნება. სცადე ერთ წუთში.",
   historyFailed: "შენი შედეგები ვერ ჩაიტვირთა",
   units: { apps: "მატჩები", goals: "გოლები", caps: "მატჩები ნაკრებში", apps_minus_goals: "მატჩები − გოლები", market_value_eur_m: "საბაზრო ღირებულება (მლნ €)" } as Record<string, string>,
   kinds: { apps: "კლუბის მატჩები", goals: "გოლები", cl: "ჩემპიონთა ლიგა", nt: "ნაკრები", combined: "შერეული", value: "ღირებულება €m", minus: "მატჩები − გოლები" },
@@ -119,6 +122,7 @@ const ka: D501DaysCopy = {
 };
 
 const tr: D501DaysCopy = {
+  unavailable: "Bu oyun şu an açılamıyor. Bir dakika sonra tekrar dene.",
   historyFailed: "Sonuçların yüklenemedi",
   units: { apps: "Maç", goals: "Gol", caps: "Milli maç", apps_minus_goals: "Maç − gol", market_value_eur_m: "Piyasa değeri (M€)" } as Record<string, string>,
   kinds: { apps: "Kulüp maçı", goals: "Gol", cl: "Şampiyonlar Ligi", nt: "Milli takım", combined: "Karma", value: "Değer €m", minus: "Maç − gol" },
@@ -157,6 +161,7 @@ const tr: D501DaysCopy = {
 };
 
 const ru: D501DaysCopy = {
+  unavailable: "Эту игру сейчас не открыть. Попробуйте через минуту.",
   historyFailed: "Не удалось загрузить ваши результаты",
   units: { apps: "Матчи", goals: "Голы", caps: "Матчи за сборную", apps_minus_goals: "Матчи − голы", market_value_eur_m: "Стоимость (млн €)" } as Record<string, string>,
   kinds: { apps: "Матчи за клуб", goals: "Голы", cl: "Лига чемпионов", nt: "Сборная", combined: "Микс", value: "Стоимость €m", minus: "Матчи − голы" },
@@ -195,6 +200,7 @@ const ru: D501DaysCopy = {
 };
 
 const pt: D501DaysCopy = {
+  unavailable: "Esse jogo não pode ser aberto agora. Tente de novo em um minuto.",
   historyFailed: "Não foi possível carregar seus resultados",
   units: { apps: "Jogos", goals: "Gols", caps: "Jogos pela seleção", apps_minus_goals: "Jogos − gols", market_value_eur_m: "Valor de mercado (M€)" } as Record<string, string>,
   kinds: { apps: "Jogos pelo clube", goals: "Gols", cl: "Champions League", nt: "Seleção", combined: "Combinado", value: "Valor €m", minus: "Jogos − gols" },
@@ -233,6 +239,7 @@ const pt: D501DaysCopy = {
 };
 
 const de: D501DaysCopy = {
+  unavailable: "Dieses Spiel lässt sich gerade nicht öffnen. Versuch es in einer Minute erneut.",
   historyFailed: "Deine Ergebnisse konnten nicht geladen werden",
   units: { apps: "Einsätze", goals: "Tore", caps: "Länderspiele", apps_minus_goals: "Einsätze − Tore", market_value_eur_m: "Marktwert (Mio. €)" } as Record<string, string>,
   kinds: { apps: "Vereinsspiele", goals: "Tore", cl: "Champions League", nt: "Nationalteam", combined: "Kombiniert", value: "Wert €m", minus: "Spiele − Tore" },
@@ -271,6 +278,7 @@ const de: D501DaysCopy = {
 };
 
 const fr: D501DaysCopy = {
+  unavailable: "Ce jeu ne peut pas s'ouvrir pour l'instant. Réessaie dans une minute.",
   historyFailed: "Impossible de charger tes résultats",
   units: { apps: "Matchs", goals: "Buts", caps: "Sélections", apps_minus_goals: "Matchs − buts", market_value_eur_m: "Valeur marchande (M€)" } as Record<string, string>,
   kinds: { apps: "Matchs en club", goals: "Buts", cl: "Ligue des champions", nt: "Équipe nationale", combined: "Combiné", value: "Valeur €m", minus: "Matchs − buts" },
@@ -309,6 +317,7 @@ const fr: D501DaysCopy = {
 };
 
 const el: D501DaysCopy = {
+  unavailable: "Αυτό το παιχνίδι δεν ανοίγει τώρα. Δοκίμασε ξανά σε ένα λεπτό.",
   historyFailed: "Δεν φορτώθηκαν τα αποτελέσματά σου",
   units: { apps: "Συμμετοχές", goals: "Γκολ", caps: "Συμμετοχές με την εθνική", apps_minus_goals: "Συμμετοχές − γκολ", market_value_eur_m: "Αγοραία αξία (εκ. €)" } as Record<string, string>,
   kinds: { apps: "Αγώνες συλλόγου", goals: "Γκολ", cl: "Champions League", nt: "Εθνική", combined: "Μικτό", value: "Αξία €m", minus: "Αγώνες − γκολ" },
