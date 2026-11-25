@@ -7,7 +7,7 @@ import { DailyEnd } from "@/features/wordgames/daily/WordDailyShell";
 import { TopBar, poppins } from "@/features/wordgames/ui";
 import { SuggestBox, type SuggestLookup } from "@/features/tenable/SuggestBox";
 import { DartFeedback, DartLog, Dartboard, ScorePanel, dartEmoji } from "./D501Board";
-import { d501Copy } from "./d501.copy";
+import { d501Copy, d501UnitLabel } from "./d501.copy";
 import { D501_CALENDAR, d501DailyGame } from "./d501.game";
 import { D501, D501_ANSWER_FLOOR } from "./d501.rules";
 import { dartsThrown, type D501Category, type D501SoloState } from "./d501.view";
@@ -17,10 +17,11 @@ export { D501_CALENDAR, d501DailyGame };
 /** The leg's category, as the darts player's "game on" card. */
 export function CategoryCard({ locale, category, className }: { locale: string; category: D501Category; className?: string }) {
   const c = d501Copy(locale);
+  const unit = d501UnitLabel(category.unit, locale);
   return (
     <div className={cn("rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5", className)}>
       <p className="text-sm font-black leading-snug" style={poppins}>{category.title}</p>
-      <p className="mt-0.5 text-[11px] font-semibold text-white/50">{c.maxHint}{category.asOf && !category.note && ` · ${c.asOf(category.asOf)}`}</p>
+      <p className="mt-0.5 text-[11px] font-semibold text-white/50">{c.maxHint}{unit && ` · ${unit}`}{category.asOf && !category.note && ` · ${c.asOf(category.asOf)}`}</p>
       {category.note && <p className="mt-0.5 text-[11px] text-white/45">{category.note}</p>}
     </div>
   );
@@ -85,6 +86,7 @@ export function D501EndView({ locale, number, state, guestOnPastBoard, leaderboa
   const c = d501Copy(locale);
   const used = dartsThrown(state.darts);
   const out = state.endReason === "checkout";
+  const unit = d501UnitLabel(state.category.unit, locale);
   const result = out ? c.darts(used) : c.endLeft(state.remaining);
   return (
     <DailyEnd game={d501DailyGame(locale)} locale={locale} day={state.day} shareText={c.shareText(number, result, dartEmoji(state.darts))}
@@ -100,7 +102,7 @@ export function D501EndView({ locale, number, state, guestOnPastBoard, leaderboa
         </div>
         <p className={cn("mt-3 text-sm font-bold", out ? "text-black/80" : "text-white/85")}>{endLine(locale, state)}</p>
         <p className="mt-2 text-lg tracking-widest" aria-hidden>{dartEmoji(state.darts)}</p>
-        <p className={cn("mt-2 text-xs", out ? "text-black/65" : "text-white/70")}>{state.category.title}</p>
+        <p className={cn("mt-2 text-xs", out ? "text-black/65" : "text-white/70")}>{state.category.title}{unit && ` · ${unit}`}</p>
       </div>
       {!out && state.finishes && state.finishes.length > 0 && (
         <div className="mt-4">
