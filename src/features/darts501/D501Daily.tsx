@@ -13,6 +13,8 @@ import { toSoloState } from "./d501.adapt";
 import { d501Copy } from "./d501.copy";
 import { D501_CALENDAR, d501DailyGame } from "./d501.game";
 import { D501EndView, D501PlayView } from "./D501Solo";
+import { D501Days } from "./D501Days";
+import { d501DaysCopy } from "./d501.days.copy";
 
 const loadBoard = (day: string, locale: string) => darts501DailyApi.leaderboard(day, locale);
 
@@ -36,6 +38,8 @@ export function D501Daily({ locale, onExit, onEvent, initialDay, onDay }: {
   // Compared with the current run's key: a result seen on another day or account does not carry over.
   const runKey = `${daily.owner}:${day}`;
   const status = state?.done ? "done" : state && (state.darts.length > 0 || state.last) ? "started" : "new";
+  // The calendar is open-ended: when today's board is not seeded (yet), say so instead of quietly opening an older day.
+  const todayMissing = daily.versions != null && daily.today >= D501_CALENDAR.contentStart && !(daily.today in daily.versions);
   const number = day ? puzzleNumber(D501_CALENDAR, day) : 0;
   const formatPoints = (row: WordBoardRow) => c.boardPoints(row.checkedOut ?? false, row.darts ?? 0, row.remaining ?? 0);
 
@@ -50,14 +54,34 @@ export function D501Daily({ locale, onExit, onEvent, initialDay, onDay }: {
   ) : null;
 
   const end = solo && day && state?.done ? (
-    <D501EndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard}
+    <D501EndView locale={locale} number={number} state={solo} guestOnPastBoard={daily.guestOnPastBoard && !todayMissing}
       leaderboard={<WordDailyLeaderboard game={game} locale={locale} load={loadBoard} day={isLiveDay(D501_CALENDAR, day, daily.today) ? day : undefined}
         refreshKey={daily.boardRefresh} placement="end" className="mt-6" pointsLabel={c.boardLabel} pointsHint={c.boardHint} formatPoints={formatPoints} />}
       onArchive={() => daily.setView("archive")} onExit={onExit} />
   ) : null;
 
+  const dc = d501DaysCopy(locale);
+  const banner = todayMissing && day !== daily.today ? (
+    <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-3">
+      <p className="text-sm font-bold text-white/90">{dc.noBoardToday}</p>
+      <p className="mt-0.5 text-xs text-white/60">{dc.pastOpen}</p>
+    </div>
+  ) : null;
+  // A day the calendar shows but this screen's index does not have yet (seeded since it loaded): the index is fetched
+  // again; the chosen day is kept and opens once the index has it.
+  const openFromCalendar = (target: string) => {
+    if (!daily.days.includes(target)) daily.reload();
+    daily.openDay(target);
+  };
+  const archive = (
+    <D501Days game={game} locale={locale} today={daily.today} owner={daily.owner} openable={daily.days}
+      onBack={() => daily.setView(day && status === "done" ? "end" : "intro")} onOpenDay={openFromCalendar} />
+  );
+  // No board today: a guest is not invited to sign in "to play today", and the shell shows the note wherever it lands.
+  const shown = todayMissing ? { ...daily, guestOnPastBoard: false, guestLockedOut: false } : daily;
+
   return (
-    <WordDailyScreen game={game} locale={locale} daily={daily} status={status}
+    <WordDailyScreen game={game} locale={locale} daily={shown} status={status} archive={archive} banner={banner}
       onStart={() => { void daily.play().then((run) => { if (run) daily.setView(run.state.done && resultFor === runKey ? "end" : "play"); }); }}
       onExit={onExit}
       play={play} end={daily.view === "end" ? end : null} />
