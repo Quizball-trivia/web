@@ -22,6 +22,8 @@ describe("buscaminas result grid and share code", () => {
     expect(decodeShare("3-100-" + "p".repeat(19) + "-es")).toBeNull();
     expect(decodeShare("3-100-" + "p".repeat(20) + "-xx")).toBeNull();
     expect(decodeShare("<script>")).toBeNull();
+    // The calendar is open-ended: puzzle numbers past #999 still round-trip.
+    expect(decodeShare(encodeShare(1000, results, "en"))?.number).toBe(1000);
     expect(MAX_SCORE).toBe(300);
   });
 
