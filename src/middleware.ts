@@ -4,7 +4,7 @@ import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
 import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug, previousGamePagePaths } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
-import { canAccessDemos } from "@/lib/demos-access";
+import { canAccessDemos, gamePreviewFrameAncestors, isGamePreviewPath } from "@/lib/demos-access";
 import { isPartnerNamespacePath, partnerBasePath, partnerFromHost, type PartnerSlug } from "@/features/partner/partnerHosts";
 import { partnerFrameAncestors } from "@/features/partner/partnerOrigins";
 import { PARTNER_LAUNCH_TOKEN_PARAM } from "@/features/partner/partnerLaunchToken";
@@ -91,15 +91,16 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
-function frameAncestors(pathname: string, partner: PartnerSlug | null, isDevelopment: boolean): string {
+function frameAncestors(pathname: string, partner: PartnerSlug | null, host: string | null): string {
   // Only the partner host may be embedded, and only by the partner; next.config drops X-Frame-Options for the same hosts.
   if (partner) return `frame-ancestors ${partnerFrameAncestors().join(" ")}`;
-  // Local development only: the games playground frames its own preview page.
-  if (isDevelopment && pathname.startsWith("/dev/games/preview")) return "frame-ancestors 'self'";
+  // Staging and local development only: HQ (in the CMS) shows the game previews, and the playground frames its own preview page.
+  const previews = gamePreviewFrameAncestors(pathname, host);
+  if (previews) return `frame-ancestors ${previews}`;
   return "frame-ancestors 'none'";
 }
 
-function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = null): string {
+function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = null, host: string | null = null): string {
   const isDevelopment = process.env.NODE_ENV === "development";
   const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
   const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
@@ -144,7 +145,7 @@ function buildCsp(nonce: string, pathname = "", partner: PartnerSlug | null = nu
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    frameAncestors(pathname, partner, isDevelopment),
+    frameAncestors(pathname, partner, host),
     "form-action 'self'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -213,7 +214,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
   const partner = partnerFromHost(req.headers.get("host"));
-  const csp = buildCsp(nonce, pathname, partner);
+  const csp = buildCsp(nonce, pathname, partner, req.headers.get("host"));
 
   if (partner) return partnerHostResponse(req, partner, nonce, csp);
 
@@ -232,7 +233,7 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("Content-Security-Policy", csp);
 
   // Return a real 404 before streaming; the layout also protects this tree.
-  if (pathname === "/demos" || pathname.startsWith("/demos/")) {
+  if (isGamePreviewPath(pathname)) {
     const demoHeaders = {
       "Content-Security-Policy": csp,
       "X-Robots-Tag": "noindex, nofollow",

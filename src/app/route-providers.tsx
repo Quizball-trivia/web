@@ -73,8 +73,10 @@ export function RouteProviders({
     return <SeoProviders>{children}</SeoProviders>;
   }
 
-  // The local games playground renders game components from fixtures: no auth, profile, socket or analytics providers.
-  if (process.env.NODE_ENV === "development" && /^\/dev\/games(\/|$)/.test(pathname ?? "")) {
+  // The games playground renders game components from fixtures: no auth, profile, socket or analytics providers.
+  // That holds wherever it is served (local development and staging; the middleware answers 404 everywhere else),
+  // so a tester's saved staging session is never loaded into it.
+  if (/^\/dev\/games(\/|$)/.test(pathname ?? "")) {
     return <>{children}</>;
   }
 
