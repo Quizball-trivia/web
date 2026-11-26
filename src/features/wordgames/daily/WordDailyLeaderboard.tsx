@@ -35,26 +35,45 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
     window.addEventListener("focus", check);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", check); };
   }, [day]);
-  const boardDay = day ?? latestDay(game.calendar, today);
-  const [loaded, setLoaded] = useState<{ day: string; board: WordBoard | null } | null>(null);
-  const authStatus = useAuthStore((s) => s.status);
+  // An open calendar may have no board today: the server picks the newest seeded day ("" asks it), keyed by today.
+  const open = game.calendar.publishedDays === "open" && !day;
+  const boardDay = day ?? (open ? (today >= game.calendar.contentStart ? "" : null) : latestDay(game.calendar, today));
+  // A board from before midnight (a cached copy) on an open calendar is asked again a few times.
+  const [nudgeBy, setNudge] = useState<{ day: string; n: number }>({ day: today, n: 0 });
+  const nudge = nudgeBy.day === today ? nudgeBy.n : 0;
   const myId = useAuthStore((s) => s.user?.id);
+  const baseKey = boardDay === null ? null : `${open ? `latest:${today}` : boardDay}|${myId ?? ""}`;
+  const boardKey = baseKey === null ? null : `${baseKey}:${nudge}`;
+  const [loaded, setLoaded] = useState<{ day: string; base: string | null; board: WordBoard | null } | null>(null);
+  const authStatus = useAuthStore((s) => s.status);
   useEffect(() => {
-    if (authStatus === "loading" || !boardDay) return;
+    if (authStatus === "loading" || boardDay === null || boardKey === null) return;
     let cancelled = false;
-    load(boardDay, locale).then((data) => { if (!cancelled) setLoaded({ day: boardDay, board: data }); }).catch(() => { if (!cancelled) setLoaded({ day: boardDay, board: null }); });
+    const base = baseKey;
+    load(boardDay, locale).then((data) => { if (!cancelled) setLoaded({ day: boardKey, base, board: data }); }).catch(() => {
+      // A failed re-ask keeps the board it was asked to refresh; only a first failure hides the section.
+      if (!cancelled) setLoaded((prev) => (prev && prev.base === base && prev.board ? { ...prev, day: boardKey } : { day: boardKey, base, board: null }));
+    });
     return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, myId, locale, load]);
+  }, [boardDay, boardKey, baseKey, refreshKey, authStatus, myId, locale, load]);
 
   // Rows fetched for another day are never shown under this day's heading.
-  const board = loaded && loaded.day === boardDay ? loaded.board : undefined;
-  if (board === null || !boardDay) return null;
+  // While a re-ask is in flight the board it refreshes stays on screen.
+  const board = loaded && (loaded.day === boardKey || (loaded.base === baseKey && loaded.board)) ? loaded.board : undefined;
+  const stale = open && board != null && board.day < today && nudge < 3;
+  useEffect(() => {
+    if (!stale) return;
+    const t = window.setTimeout(() => setNudge({ day: today, n: nudge + 1 }), 20_000);
+    return () => window.clearTimeout(t);
+  }, [stale, today, nudge]);
+  if (board === null || boardDay === null) return null;
+  const shownDay = board?.day ?? boardDay;
   const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId, formatPoints)) ?? [];
   const meOutside = board?.me && !entries.some((entry) => entry.isCurrentUser) ? toEntry(board.me, myId, formatPoints) : null;
   return (
     <section aria-label={c.title} className={className}>
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(game.calendar, boardDay)}</span></h2>
+        <h2 className="text-lg font-bold uppercase">{c.title} {shownDay && <span className="text-white/60">#{puzzleNumber(game.calendar, shownDay)}</span>}</h2>
         {board && board.players > 0 && <span className="text-xs text-white/60">{c.players(board.players)}</span>}
       </div>
       {board === undefined ? (

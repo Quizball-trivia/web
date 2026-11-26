@@ -22,6 +22,8 @@ describe("buscaminas result grid and share code", () => {
     expect(decodeShare("3-100-" + "p".repeat(19) + "-es")).toBeNull();
     expect(decodeShare("3-100-" + "p".repeat(20) + "-xx")).toBeNull();
     expect(decodeShare("<script>")).toBeNull();
+    // The calendar is open-ended: puzzle numbers past #999 still round-trip.
+    expect(decodeShare(encodeShare(1000, results, "en"))?.number).toBe(1000);
     expect(MAX_SCORE).toBe(300);
   });
 
@@ -79,10 +81,10 @@ describe("buscaminas calendar", () => {
     expect(releaseDay(new Date("2026-09-28T03:30:00Z"))).toBe("2026-09-28");
   });
 
-  it("clamps to the published range instead of cycling", () => {
+  it("clamps before launch and is open-ended after it (the seeded days are the end)", () => {
     expect(puzzleDayFor("2026-09-01")).toBe("2026-09-26");
     expect(puzzleDayFor("2026-10-05")).toBe("2026-10-05");
-    expect(puzzleDayFor("2027-01-01")).toBe("2026-12-24");
+    expect(puzzleDayFor("2027-01-01")).toBe("2027-01-01");
     expect(playableDays("2026-09-29")).toEqual(["2026-09-29", "2026-09-28", "2026-09-27", "2026-09-26"]);
   });
 
@@ -102,7 +104,8 @@ describe("buscaminas guest board", () => {
     expect(defaultDayFor("2026-09-30", false)).toBe("2026-09-29");
     // Launch day has no yesterday: guests see the launch board (the server answers sign_in_for_today).
     expect(defaultDayFor("2026-09-26", false)).toBe("2026-09-26");
-    // After the last published day nothing is live, so guests play the last board.
-    expect(defaultDayFor("2027-01-10", false)).toBe("2026-12-24");
+    // Open-ended calendar: past the first 90 days the same rule holds.
+    expect(defaultDayFor("2027-01-10", true)).toBe("2027-01-10");
+    expect(defaultDayFor("2027-01-10", false)).toBe("2027-01-09");
   });
 });

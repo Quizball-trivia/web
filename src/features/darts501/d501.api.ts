@@ -1,3 +1,5 @@
+import { peekGuestToken } from "@/lib/guest/guestSession";
+import { useAuthStore } from "@/stores/auth.store";
 import { createWordDailyApi, DailyGameApiError, isNetworkFailure, type WordRunStateBase } from "@/features/wordgames/daily/wordDaily.api";
 import { createDailyGameCall } from "@/lib/repositories/dailyGameApi";
 import type { DartVerdict } from "./d501.rules";
@@ -64,4 +66,39 @@ export const darts501DailyApi: typeof base = {
   current: (day, locale) => withRetry(() => base.current(day, locale)),
   review: (day, locale) => withRetry(() => base.review(day, locale)),
   leaderboard: (day, locale) => withRetry(() => base.leaderboard(day, locale)),
+};
+
+export type D501BoardKind = "apps" | "goals" | "cl" | "nt" | "combined" | "value" | "minus";
+export type D501Tier = "easy" | "medium" | "hard";
+
+/** A calendar card (backend darts501_cards): the board's type, competition and short subject, with a crest, crests or a flag. */
+export interface D501Card { kind: D501BoardKind; competition: string; subject: string; crest?: string; crests?: string[]; flag?: string }
+
+/** A day on the calendar (GET /darts501/days). Until both clocks close it, only its number and difficulty: the category is today's ranked secret. */
+export type D501CalendarDay =
+  | { day: string; number: number; tier: D501Tier; closed: false }
+  | {
+    day: string; number: number; tier: D501Tier; closed: true; title: string; unit: string; card: D501Card | null;
+    stats: { players: number; checkouts: number; bestDarts: number | null } | null;
+  };
+
+export interface D501Days {
+  today: string; contentStart: string; rankedFrom: string;
+  todaySeeded: boolean; tomorrowSeeded: boolean;
+  /** Last day of the unbroken seeded run from today, or null when today has no board. */
+  seededThrough: string | null;
+  nextOpensAt: string | null;
+  days: D501CalendarDay[];
+}
+
+/** The player's own result of a day (GET /darts501/me/days). `stale`: the day was corrected after this run. */
+export interface D501MyDay { done: boolean; checkedOut: boolean; gaveUp: boolean; darts: number; remaining: number; stale: boolean }
+
+export const darts501CalendarApi = {
+  days: (locale: string) => withRetry(() => call<D501Days>(`/days?locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, { identity: "none" })),
+  /** Members and guests alike. A visitor with no guest session yet has no runs: none is created just to look. */
+  myDays: (locale: string): Promise<{ days: Record<string, D501MyDay> }> =>
+    useAuthStore.getState().status !== "authenticated" && !peekGuestToken()
+      ? Promise.resolve({ days: {} })
+      : withRetry(() => call<{ days: Record<string, D501MyDay> }>("/me/days", "GET", undefined, locale, { identity: "optional" })),
 };

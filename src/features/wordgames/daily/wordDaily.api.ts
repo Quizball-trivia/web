@@ -41,7 +41,8 @@ export function createWordDailyApi<State extends WordRunStateBase, Result extend
       call<null>("/report", "POST", { day, text: text.slice(0, 60), ...(pair === undefined ? {} : { pair }) }, locale, "player", MOVE_TIMEOUT_MS).then(() => true, () => false),
     // The interface language picks the Russian edition (Russian names; Name Chain's Russian-letter board).
     review: (day: string, locale: string) => call<Review>(`/review?day=${encodeURIComponent(day)}&locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, "none"),
-    leaderboard: (day: string, locale: string) => call<WordBoard>(`/leaderboard?day=${encodeURIComponent(day)}&locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, "optional"),
+    /** No `day` (an empty one): the server's default board, the newest seeded day up to today. */
+    leaderboard: (day: string, locale: string) => call<WordBoard>(`/leaderboard?${day ? `day=${encodeURIComponent(day)}&` : ""}locale=${encodeURIComponent(locale)}`, "GET", undefined, locale, "optional"),
   };
 }
 export type WordDailyApi<State extends WordRunStateBase, Result extends string, Review = unknown> = ReturnType<typeof createWordDailyApi<State, Result, Review>>;

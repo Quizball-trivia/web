@@ -26,7 +26,8 @@ export const dailyMaxScore = (rounds: number): number => rounds * (TARGETS_PER_R
 /** The release calendar follows Buenos Aires: the launch audience is Argentine, so the new board lands at their midnight. */
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
 export const LAUNCH_DAY = "2026-09-26";
-export const PUBLISHED_DAYS = 90;
+/** Open-ended, mirroring the backend: a day exists once it is seeded; the content team keeps days ahead. */
+export const PUBLISHED_DAYS = "open";
 
 export type Difficulty = "easy" | "medium" | "hard";
 
@@ -111,12 +112,9 @@ export function addDays(day: string, delta: number): string {
   return new Date(Date.parse(`${day}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
 }
 
-/** Published puzzle for a release day: before launch → the first; after the last → the last (never a silent re-run). */
+/** Published puzzle for a release day: before launch → the first; from launch on, today. */
 export function puzzleDayFor(today: string): string {
-  const n = dayNumber(today);
-  if (n < 1) return LAUNCH_DAY;
-  if (n > PUBLISHED_DAYS) return addDays(LAUNCH_DAY, PUBLISHED_DAYS - 1);
-  return today;
+  return dayNumber(today) < 1 ? LAUNCH_DAY : today;
 }
 
 /** Days a player may open: launch through today's puzzle, newest first. */
@@ -135,8 +133,8 @@ export const puzzleNumber = (day: string) => dayNumber(day);
  */
 export const GUESTS_PLAY_LIVE = false;
 
-/** Today's board is live (ranked) only inside the published range. */
-export const isLiveDay = (day: string, today: string) => day === today && dayNumber(today) >= 1 && dayNumber(today) <= PUBLISHED_DAYS;
+/** Today's board is live (ranked) from launch on. */
+export const isLiveDay = (day: string, today: string) => day === today && dayNumber(today) >= 1;
 
 /** The board a player lands on: today's for accounts, yesterday's for guests while today's is live. */
 export function defaultDayFor(today: string, signedIn: boolean): string {
