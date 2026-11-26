@@ -4,7 +4,7 @@ export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr" 
 const LETTER: Record<RoundOutcome, string> = { perfect: "p", banked: "b", mine: "m" };
 const OUTCOME: Record<string, RoundOutcome> = { p: "perfect", b: "banked", m: "mine" };
 /** A daily run shares its 5 squares; links shared before the daily run existed carry all 20. */
-const CODE = /^(\d{1,3})-(\d{1,3})-([pbm]{5}|[pbm]{20})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
+const CODE = /^(\d{1,5})-(\d{1,3})-([pbm]{5}|[pbm]{20})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
 const MAX_FOR: Record<number, number> = { [DAILY_ROUNDS]: DAILY_MAX_SCORE, [ROUNDS_PER_DAY]: MAX_SCORE };
 
 export interface ShareResult {
