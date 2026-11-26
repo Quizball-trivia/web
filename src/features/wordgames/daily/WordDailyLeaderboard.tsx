@@ -42,8 +42,9 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
   const [nudgeBy, setNudge] = useState<{ day: string; n: number }>({ day: today, n: 0 });
   const nudge = nudgeBy.day === today ? nudgeBy.n : 0;
   const myId = useAuthStore((s) => s.user?.id);
-  const baseKey = boardDay === null ? null : `${open ? `latest:${today}` : boardDay}|${myId ?? ""}`;
-  const boardKey = baseKey === null ? null : `${baseKey}:${nudge}`;
+  // `baseKey` is what a shown board stays valid for (across midnight for the default board); `boardKey` is one request.
+  const baseKey = boardDay === null ? null : `${game.modeId}|${open ? "latest" : boardDay}|${myId ?? ""}`;
+  const boardKey = baseKey === null ? null : `${baseKey}|${open ? today : ""}:${nudge}`;
   const [loaded, setLoaded] = useState<{ day: string; base: string | null; board: WordBoard | null } | null>(null);
   const authStatus = useAuthStore((s) => s.status);
   useEffect(() => {
@@ -60,7 +61,8 @@ export function WordDailyLeaderboard({ game, locale, load, day, refreshKey = 0, 
   // Rows fetched for another day are never shown under this day's heading.
   // While a re-ask is in flight the board it refreshes stays on screen.
   const board = loaded && (loaded.day === boardKey || (loaded.base === baseKey && loaded.board)) ? loaded.board : undefined;
-  const stale = open && board != null && board.day < today && nudge < 3;
+  // Re-asked only once the current request has settled, so a slow answer is never dropped by the timer.
+  const stale = open && loaded?.day === boardKey && board != null && board.day < today && nudge < 3;
   useEffect(() => {
     if (!stale) return;
     const t = window.setTimeout(() => setNudge({ day: today, n: nudge + 1 }), 20_000);
