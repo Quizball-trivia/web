@@ -44,7 +44,7 @@ export function UltimoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   useEffect(() => {
     if (authStatus === "loading" || !boardDay) return;
     let cancelled = false;
-    ultimoApi.leaderboard(boardDay, locale)
+    ultimoApi.leaderboard(day, locale)
       .then((data) => { if (!cancelled) setBoard(data); })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
@@ -57,7 +57,7 @@ export function UltimoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   return (
     <section aria-label={c.title} className={cn("", className)}>
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(boardDay)}</span></h2>
+        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(board?.day ?? boardDay)}</span></h2>
         {board && board.players > 0 && <span className="text-xs text-white/60">{c.players(board.players)}</span>}
       </div>
       {board === undefined ? (

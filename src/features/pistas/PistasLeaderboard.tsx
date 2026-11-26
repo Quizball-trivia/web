@@ -45,11 +45,11 @@ export function PistasLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   useEffect(() => {
     if (authStatus === "loading" || !boardDay) return;
     let cancelled = false;
-    pistasApi.leaderboard(boardDay, locale)
+    pistasApi.leaderboard(day, locale)
       .then((data) => {
         if (cancelled) return;
         setBoard(data);
-        if (refreshKey === 0) trackLeaderboardView({ puzzleId: boardDay, placement, players: data.players, hasMe: Boolean(data.me) });
+        if (refreshKey === 0) trackLeaderboardView({ puzzleId: data.day, placement, players: data.players, hasMe: Boolean(data.me) });
       })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
@@ -62,7 +62,7 @@ export function PistasLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   return (
     <section aria-label={c.title} className={cn("", className)}>
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(boardDay)}</span></h2>
+        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(board?.day ?? boardDay)}</span></h2>
         {board && board.players > 0 && <span className="text-xs text-white/60">{c.players(board.players)}</span>}
       </div>
       {board === undefined ? (

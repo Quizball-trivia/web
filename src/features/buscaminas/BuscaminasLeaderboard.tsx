@@ -40,7 +40,7 @@ export function BuscaminasLeaderboard({ locale, day, refreshKey = 0, limit = 10,
       .then((data) => {
         if (cancelled) return;
         setBoard(data);
-        if (refreshKey === 0) trackLeaderboardView({ puzzleId: boardDay, placement, players: data.players, hasMe: Boolean(data.me) });
+        if (refreshKey === 0) trackLeaderboardView({ puzzleId: data.day, placement, players: data.players, hasMe: Boolean(data.me) });
       })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
