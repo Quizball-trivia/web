@@ -91,7 +91,7 @@ function BoardArt({ day, size = "md" }: { day: CalDay; size?: "sm" | "md" | "lg"
   const icon = size === "lg" ? "size-8" : "size-5";
   let art: ReactNode;
   if (!day.closed) art = <span className={cn("font-black text-white/50", size === "lg" ? "text-2xl" : "text-base")} style={poppins}>?</span>;
-  else if (day.crests) art = (
+  else if (day.crests?.length) art = (
     <span className="relative flex items-center">
       {day.crests.map((c, i) => <span key={c} className={cn(i > 0 && "-ml-2.5")}><Crest name={c} className={size === "lg" ? "size-7" : "size-[18px]"} /></span>)}
     </span>
@@ -112,7 +112,7 @@ function BoardArt({ day, size = "md" }: { day: CalDay; size?: "sm" | "md" | "lg"
 function CellArt({ day }: { day: CalDay }) {
   const crest = "size-6 lg:size-8";
   if (!day.closed) return <span className="text-base font-black text-white/60" style={poppins}>?</span>;
-  if (day.crests) return <Crest name={day.crests[0]} className={crest} />;
+  if (day.crests?.length) return <Crest name={day.crests[0]} className={crest} />;
   if (day.flag) return <FlagImg code={day.flag} className="h-4 w-6 lg:h-5 lg:w-7" />;
   if (day.crest) return <Crest name={day.crest} className={crest} />;
   if (day.kind === "value") return <Euro className="size-5 text-brand-orange" />;
@@ -579,12 +579,12 @@ function Sheet({ open, onClose, children, title, closeLabel, desktop = false }: 
   );
 }
 
-function Segmented<T extends string>({ value, options, onChange }: { value: T; options: Array<[T, ReactNode, string]>; onChange: (v: T) => void }) {
+function Segmented<T extends string>({ value, options, onChange, disabled = [] }: { value: T; options: Array<[T, ReactNode, string]>; onChange: (v: T) => void; disabled?: readonly T[] }) {
   return (
     <div className="flex w-fit shrink-0 rounded-full bg-white/[0.07] p-0.5">
       {options.map(([v, label, aria]) => (
-        <button key={v} type="button" onClick={() => onChange(v)} aria-label={aria} aria-pressed={value === v}
-          className={cn("flex h-8 items-center gap-1.5 rounded-full px-3 text-[11px] font-black uppercase tracking-wide transition-colors", value === v ? "bg-white text-black" : "text-white/65 hover:text-white")} style={poppins}>
+        <button key={v} type="button" onClick={() => onChange(v)} aria-label={aria} aria-pressed={value === v} disabled={disabled.includes(v)}
+          className={cn("flex h-8 items-center gap-1.5 rounded-full px-3 text-[11px] font-black uppercase tracking-wide transition-colors disabled:opacity-30", value === v ? "bg-white text-black" : "text-white/65 hover:text-white")} style={poppins}>
           {label}
         </button>
       ))}
@@ -601,7 +601,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-function FilterPanel({ filter, setFilter, kinds, count, c, onDone }: { filter: DayFilter; setFilter: (f: DayFilter) => void; kinds: D501BoardKind[]; count: number; c: D501DaysCopy; onDone: () => void }) {
+function FilterPanel({ filter, setFilter, kinds, count, statusReady, c, onDone }: { filter: DayFilter; setFilter: (f: DayFilter) => void; kinds: D501BoardKind[]; count: number; statusReady: boolean; c: D501DaysCopy; onDone: () => void }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -616,7 +616,7 @@ function FilterPanel({ filter, setFilter, kinds, count, c, onDone }: { filter: D
       </label>
       <div>
         <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/50" style={poppins}>{c.show}</p>
-        <Segmented value={filter.status} onChange={(status) => setFilter({ ...filter, status })} options={[["all", c.statusAll, c.statusAllAria], ["todo", c.statusTodo, c.statusTodoAria], ["done", c.statusDone, c.statusDone]]} />
+        <Segmented value={statusReady ? filter.status : "all"} disabled={statusReady ? [] : ["todo", "done"]} onChange={(status) => setFilter({ ...filter, status })} options={[["all", c.statusAll, c.statusAllAria], ["todo", c.statusTodo, c.statusTodoAria], ["done", c.statusDone, c.statusDone]]} />
       </div>
       {kinds.length > 1 && (
         <div>
@@ -700,7 +700,7 @@ function DayDetail({ day, model, c, f, locale, guest, game, onPlay, onClose }: {
       )}
 
       <div className="mt-5 space-y-2">
-        {isToday && guest && m.state === "none"
+        {isToday && guest && !isDone(m)
           ? <DailySignIn game={game} placement="days_detail" className="flex h-12 w-full items-center justify-center rounded-full bg-brand-yellow text-sm font-black uppercase text-black hover:bg-brand-yellow-deep">{c.signUpToday}</DailySignIn>
           : <GreenButton className="h-12 text-sm" onClick={() => onPlay(day)}>{m.state === "started" ? c.continueRun : isDone(m) ? c.seeResult : m.state === "unknown" ? c.pillPlay : c.play(day.number)}</GreenButton>}
         {!isToday && <p className="text-center text-[11px] text-white/45">{c.practiceNote}</p>}
@@ -742,6 +742,8 @@ function useCalendar(locale: string, owner: string, today: string) {
   }, [loaded, today, late]);
   // Results belong to the player and day they were fetched for: until those arrive they are "loading", never "none".
   const own = mine?.key === mineKey ? mine.value : undefined;
+  // The server's day is the one shown: a cached copy never outlives its day (its max-age ends at that midnight), so an
+  // earlier day here means this device's clock is ahead, and blocking the page would lock the player out.
   const model = useMemo(() => (loaded ? buildModel(loaded, own) : loaded), [loaded, own]);
   return { model, retry: () => setAttempt((n) => n + 1) };
 }
@@ -794,7 +796,11 @@ export function D501Days({ game, locale, today, owner, onBack, onOpenDay }: {
     return () => wide.removeEventListener("change", onChange);
   }, []);
   const closeFilter = useCallback(() => setFilterOpen(false), []);
-  const select = useCallback((d: CalDay) => { setSelected(d.day); if (window.matchMedia("(max-width: 1023px)").matches) setSheet(true); }, []);
+  const select = useCallback((d: CalDay) => {
+    setSelected(d.day);
+    if (monthOf(d.day) !== shownMonth) navigate(monthOf(d.day), monthOf(d.day) > shownMonth ? 1 : -1);
+    if (window.matchMedia("(max-width: 1023px)").matches) setSheet(true);
+  }, [shownMonth, navigate]);
   const play = useCallback((d: CalDay) => onOpenDay(d.day), [onOpenDay]);
   const randomUnplayed = () => {
     const pool = past.filter((d) => d.mine.state === "none");
@@ -889,7 +895,7 @@ export function D501Days({ game, locale, today, owner, onBack, onOpenDay }: {
             {selectedDay && <DayDetail day={selectedDay} model={model} c={c} f={f} locale={locale} guest={guest} game={game} onPlay={play} onClose={closeSheet} />}
           </Sheet>
           <Sheet open={filterOpen} onClose={closeFilter} title={c.findBoard} closeLabel={c.close} desktop>
-            <FilterPanel filter={chosenFilter} setFilter={setFilter} kinds={kindsPresent} count={matchCount} c={c} onDone={closeFilter} />
+            <FilterPanel filter={chosenFilter} setFilter={setFilter} kinds={kindsPresent} count={matchCount} statusReady={ready} c={c} onDone={closeFilter} />
           </Sheet>
         </>
       )}
