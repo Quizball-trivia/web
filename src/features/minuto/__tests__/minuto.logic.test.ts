@@ -20,7 +20,7 @@ describe("minuto logic", () => {
 
   it("mirrors the backend calendar: numbered from the first content day, never a future day", () => {
     expect(puzzleNumber(CONTENT_START)).toBe(1);
-    expect(LAST_DAY).toBe(addDays(CONTENT_START, PUBLISHED_DAYS - 1));
+    expect([PUBLISHED_DAYS, LAST_DAY]).toEqual(["open", "9999-12-31"]);
     expect(playableDays(addDays(CONTENT_START, 2))).toEqual([addDays(CONTENT_START, 2), addDays(CONTENT_START, 1), CONTENT_START]);
     expect(playableDays(addDays(CONTENT_START, -1))).toEqual([]);
     expect(isLiveDay(CONTENT_START, CONTENT_START)).toBe(false);

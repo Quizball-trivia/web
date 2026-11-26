@@ -14,8 +14,10 @@ export const MAX_SCORE = CATEGORIES_PER_DAY * 60 + CATEGORIES_PER_DAY * COMPLETE
 /** Same calendar as the backend (ultimo.days.ts): boards land at Argentine midnight, never ahead of time. */
 export const CONTENT_START = "2026-09-28";
 export const RANKED_START = "2026-09-30";
-export const PUBLISHED_DAYS = 74;
-export const LAST_DAY = addDays(CONTENT_START, PUBLISHED_DAYS - 1);
+/** Open-ended, mirroring the backend: a day exists once it is seeded. */
+export const PUBLISHED_DAYS = "open";
+/** No fixed end: the seeded days are the end. */
+export const LAST_DAY = "9999-12-31";
 
 export type LocalizedText = { es: string; en: string; ka?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string; el?: string };
 export type EndReason = "time" | "misses" | "complete";
