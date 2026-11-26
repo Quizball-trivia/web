@@ -40,6 +40,23 @@ export function GamesPlayground() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [resets, setResets] = useState(0);
+  // A link can open on one game: /dev/games?game=tenable&mode=room&locale=en (HQ opens each game this way).
+  // Read after mount, so the first paint matches what the server rendered.
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const wanted = GAMES.find((g) => g.id === query.get("game"));
+    const wantedMode = (["solo", "duel", "room"] as const).find((m) => m === query.get("mode"));
+    const wantedLocale = LOCALES.find((l) => l === query.get("locale"));
+    if (wanted) {
+      const startMode = wantedMode && wanted.scenarios[wantedMode]?.length ? wantedMode : (["solo", "duel", "room"] as const).find((m) => wanted.scenarios[m]?.length);
+      setGameId(wanted.id);
+      if (startMode) {
+        setMode(startMode);
+        setScenarioId(wanted.scenarios[startMode]?.[0]?.id ?? "");
+      }
+    }
+    if (wantedLocale) setLocale(wantedLocale);
+  }, []);
   /** Bumps on every Apply: clears a render error once a corrected state is applied. */
   const [applied, setApplied] = useState(0);
   const data = scenarioKey in overrides ? overrides[scenarioKey] : scenario?.data;

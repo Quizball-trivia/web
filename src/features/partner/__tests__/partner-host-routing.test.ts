@@ -121,22 +121,24 @@ describe("partner framing headers", () => {
   });
 
   it("sends X-Frame-Options DENY and the normal Referrer-Policy everywhere except the partner hosts", async () => {
-    const rules = (await nextConfig.headers!()).filter((rule) => rule.source === "/:path*");
-    const withHeader = (key: string) => rules.filter((rule) => rule.headers.some((header) => header.key === key));
+    const all = await nextConfig.headers!();
+    const withHeader = (key: string) => all.filter((rule) => rule.headers.some((header) => header.key === key));
 
-    const [quizball] = withHeader("X-Frame-Options");
+    // DENY covers every path but the staging game previews, whose framing the middleware's CSP decides alone.
+    const [noFraming] = withHeader("X-Frame-Options");
     expect(withHeader("X-Frame-Options")).toHaveLength(1);
-    expect(quizball.missing).toEqual([{ type: "host", value: partnerHostPattern() }]);
-    expect(quizball.has).toBeUndefined();
-    expect(quizball.headers).toEqual(
-      expect.arrayContaining([
-        { key: "X-Frame-Options", value: "DENY" },
-        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-      ]),
-    );
+    expect(noFraming.missing).toEqual([{ type: "host", value: partnerHostPattern() }]);
+    expect(noFraming.has).toBeUndefined();
+    expect(noFraming.headers).toEqual([{ key: "X-Frame-Options", value: "DENY" }]);
+    const covered = new RegExp(`^${noFraming.source}$`);
+    for (const path of ["/", "/play", "/en/football-games", "/demosx", "/dev/leaderboard", "/dev/gamesx"]) expect(covered.test(path)).toBe(true);
+    for (const path of ["/demos", "/demos/auction", "/dev/games", "/dev/games/preview"]) expect(covered.test(path)).toBe(false);
 
-    const referrerRules = withHeader("Referrer-Policy");
+    const referrerRules = withHeader("Referrer-Policy").filter((rule) => rule.source === "/:path*");
     expect(referrerRules).toHaveLength(2);
+    const quizball = referrerRules.find((rule) => rule.missing)!;
+    expect(quizball.missing).toEqual([{ type: "host", value: partnerHostPattern() }]);
+    expect(quizball.headers).toEqual([{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }]);
     const partner = referrerRules.find((rule) => rule !== quizball)!;
     expect(partner.has).toEqual([{ type: "host", value: partnerHostPattern() }]);
     expect(partner.headers).toEqual([{ key: "Referrer-Policy", value: "no-referrer" }]);

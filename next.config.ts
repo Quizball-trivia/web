@@ -38,13 +38,17 @@ const SECURITY_HEADERS = [
 
 // Partner hosts are embedded by the partner (CSP frame-ancestors, set in middleware from the same host list).
 // Every other host keeps DENY, so the two headers can never disagree about who may frame a page.
+// The game previews (/demos, /dev/games) are left to the CSP alone: on staging the middleware lets HQ frame them,
+// everywhere else it answers 404 with frame-ancestors 'none'. X-Frame-Options has no way to name an allowed site.
 const QUIZBALL_HOST_RULE = {
   source: "/:path*",
   missing: [{ type: "host" as const, value: partnerHostPattern() }],
-  headers: [
-    { key: "X-Frame-Options", value: "DENY" },
-    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  ],
+  headers: [{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }],
+};
+const QUIZBALL_NO_FRAMING_RULE = {
+  source: "/((?!demos(?:/|$)|dev/games(?:/|$)).*)",
+  missing: [{ type: "host" as const, value: partnerHostPattern() }],
+  headers: [{ key: "X-Frame-Options", value: "DENY" }],
 };
 
 // The partner launch URL carries a one-time token; no request from that page may repeat it in a Referer.
@@ -184,6 +188,7 @@ const nextConfig: NextConfig = {
           headers: SECURITY_HEADERS,
         },
         QUIZBALL_HOST_RULE,
+        QUIZBALL_NO_FRAMING_RULE,
         PARTNER_HOST_RULE,
         brandAssets,
         ...dailyCachedAssets,
@@ -202,6 +207,7 @@ const nextConfig: NextConfig = {
         ],
       },
       QUIZBALL_HOST_RULE,
+      QUIZBALL_NO_FRAMING_RULE,
       PARTNER_HOST_RULE,
       brandAssets,
       ...dailyCachedAssets,
@@ -209,10 +215,6 @@ const nextConfig: NextConfig = {
       ...criticalAssets,
       ...avatarAssetHeaders,
       fontLicense,
-      // Local development only: the games playground shows its preview page in a same-origin iframe.
-      ...(process.env.NODE_ENV === "development"
-        ? [{ source: "/dev/games/preview", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }]
-        : []),
     ];
   },
 };
