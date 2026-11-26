@@ -4,7 +4,7 @@ export type ShareLocale = "es" | "en" | "ka" | "tr" | "ru" | "pt" | "de" | "fr" 
 const LETTER: Record<Tier, string> = { complete: "c", good: "g", some: "s", none: "n" };
 const TIER: Record<string, Tier> = { c: "complete", g: "good", s: "some", n: "none" };
 /** `ue-` keeps these apart from Buscaminas and Pistas codes on the shared /r/ route. */
-const CODE = /^ue-(\d{1,3})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
+const CODE = /^ue-(\d{1,5})-(\d{1,3})-([cgsn]{5})-(es|en|ka|tr|ru|pt|de|fr|el)$/;
 
 export interface UltimoShareResult {
   number: number;

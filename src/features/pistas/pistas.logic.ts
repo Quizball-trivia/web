@@ -8,7 +8,8 @@ export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
 export const CONTENT_START = "2026-09-27";
 /** First ranked day. */
 export const RANKED_START = "2026-09-29";
-export const PUBLISHED_DAYS = 74;
+/** Open-ended, mirroring the backend: a day exists once it is seeded. */
+export const PUBLISHED_DAYS = "open";
 
 export type ClueKind = "confed" | "position" | "foot" | "decade" | "fact";
 export type LocalizedText = { es: string; en: string; ka?: string; tr?: string; ru?: string; pt?: string; de?: string; fr?: string; el?: string };
@@ -58,7 +59,8 @@ export function addDays(day: string, delta: number): string {
   return new Date(Date.parse(`${day}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
 }
 
-export const LAST_DAY = addDays(CONTENT_START, PUBLISHED_DAYS - 1);
+/** No fixed end: the seeded days are the end. */
+export const LAST_DAY = "9999-12-31";
 
 export const puzzleNumber = (day: string) => Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${CONTENT_START}T00:00:00Z`)) / DAY_MS) + 1;
 

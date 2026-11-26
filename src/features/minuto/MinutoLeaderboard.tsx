@@ -48,11 +48,11 @@ export function MinutoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   useEffect(() => {
     if (authStatus === "loading" || !boardDay) return;
     let cancelled = false;
-    minutoApi.leaderboard(boardDay, locale)
+    minutoApi.leaderboard(day, locale)
       .then((data) => {
         if (cancelled) return;
         setFetched({ key, board: data });
-        if (refreshKey === 0) trackLeaderboardView({ puzzleId: boardDay, placement, players: data.players, hasMe: Boolean(data.me) });
+        if (refreshKey === 0) trackLeaderboardView({ puzzleId: data.day, placement, players: data.players, hasMe: Boolean(data.me) });
       })
       .catch(() => { if (!cancelled) setFetched({ key, board: null }); });
     return () => { cancelled = true; };
@@ -65,7 +65,7 @@ export function MinutoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
   return (
     <section aria-label={c.title} className={cn("", className)}>
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(boardDay)}</span></h2>
+        <h2 className="text-lg font-bold uppercase">{c.title} <span className="text-white/60">#{puzzleNumber(board?.day ?? boardDay)}</span></h2>
         {board && board.players > 0 && <span className="text-xs text-white/60">{c.players(board.players)}</span>}
       </div>
       {board === undefined ? (
