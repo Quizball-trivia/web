@@ -2,7 +2,8 @@
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
 export const CONTENT_START = "2026-10-07";
 export const RANKED_START = "2026-10-10";
-export const PUBLISHED_DAYS = 90;
+/** Open-ended, mirroring the backend: a day exists once it is seeded. */
+export const PUBLISHED_DAYS = "open";
 export const TOTAL_CELLS = 9;
 export const SPEED_CAP_SECONDS = 3_600;
 
@@ -18,7 +19,8 @@ export function addDays(day: string, delta: number): string {
   return new Date(Date.parse(`${day}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
 }
 
-export const LAST_DAY = addDays(CONTENT_START, PUBLISHED_DAYS - 1);
+/** No fixed end: the seeded days are the end. */
+export const LAST_DAY = "9999-12-31";
 
 export const puzzleNumber = (day: string): number =>
   Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${CONTENT_START}T00:00:00Z`)) / DAY_MS) + 1;

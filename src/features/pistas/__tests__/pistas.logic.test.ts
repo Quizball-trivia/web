@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CONTENT_START, LAST_DAY, RANKED_START, addDays, defaultDayFor, isLiveDay, latestDay, normalizeGuess, playableDays, pointsFor, puzzleNumber, resultEmoji, resultGrid } from "../pistas.logic";
+import { CONTENT_START, RANKED_START, addDays, defaultDayFor, isLiveDay, latestDay, normalizeGuess, playableDays, pointsFor, puzzleNumber, resultEmoji, resultGrid } from "../pistas.logic";
+
+/** The last of the first 74 days; the calendar itself is open-ended. */
+const SHIPPED_LAST = "2026-12-09";
 import { decodePistasShare, encodePistasShare } from "../pistas.share";
 
 describe("pistas calendar", () => {
@@ -7,7 +10,7 @@ describe("pistas calendar", () => {
     expect(latestDay(addDays(CONTENT_START, -1))).toBeNull();
     expect(playableDays(addDays(CONTENT_START, -1))).toEqual([]);
     expect(playableDays(CONTENT_START)).toEqual([CONTENT_START]);
-    expect(latestDay(addDays(LAST_DAY, 5))).toBe(LAST_DAY);
+    expect(latestDay(addDays(SHIPPED_LAST, 5))).toBe(addDays(SHIPPED_LAST, 5));
   });
 
   it("ranks only today's board from the ranked start on", () => {
@@ -20,7 +23,7 @@ describe("pistas calendar", () => {
     expect(defaultDayFor(RANKED_START, true)).toBe(RANKED_START);
     expect(defaultDayFor(RANKED_START, false)).toBe(addDays(RANKED_START, -1));
     expect(defaultDayFor(CONTENT_START, false)).toBeNull();
-    expect(defaultDayFor(addDays(LAST_DAY, 3), false)).toBe(LAST_DAY);
+    expect(defaultDayFor(addDays(SHIPPED_LAST, 3), false)).toBe(addDays(SHIPPED_LAST, 2));
   });
 
   it("numbers boards from the first content day", () => {
@@ -46,20 +49,20 @@ describe("pistas scoring and share", () => {
     const results = Array.from({ length: 10 }, (_, i) => (i % 3 === 0 ? { outcome: "missed" as const, clues: 10, points: 0 } : { outcome: "solved" as const, clues: i, points: 11 - i }));
     const code = encodePistasShare(4, results, "es");
     expect(code.startsWith("pf-4-")).toBe(true);
-    expect(decodePistasShare(code, LAST_DAY)).toMatchObject({ number: 4, score: results.reduce((s, r) => s + r.points, 0), locale: "es" });
+    expect(decodePistasShare(code, SHIPPED_LAST)).toMatchObject({ number: 4, score: results.reduce((s, r) => s + r.points, 0), locale: "es" });
     expect(resultGrid(results)).toHaveLength(results.map(resultEmoji).join("").length);
-    expect(decodePistasShare("4-61-pbmpbmpbmpbmpbmpbmpb-es", LAST_DAY)).toBeNull();
-    expect(decodePistasShare("pf-4-101-gggggggggg-es", LAST_DAY)).toBeNull();
-    expect(decodePistasShare("pf-4-50-ggggg-es", LAST_DAY)).toBeNull();
+    expect(decodePistasShare("4-61-pbmpbmpbmpbmpbmpbmpb-es", SHIPPED_LAST)).toBeNull();
+    expect(decodePistasShare("pf-4-101-gggggggggg-es", SHIPPED_LAST)).toBeNull();
+    expect(decodePistasShare("pf-4-50-ggggg-es", SHIPPED_LAST)).toBeNull();
   });
 
   it("decodes every result the game can produce", () => {
     for (let clues = 1; clues <= 10; clues++) {
       const solved = Array.from({ length: 10 }, () => ({ outcome: "solved" as const, clues, points: pointsFor(clues) }));
-      expect(decodePistasShare(encodePistasShare(1, solved, "en"), LAST_DAY)).not.toBeNull();
+      expect(decodePistasShare(encodePistasShare(1, solved, "en"), SHIPPED_LAST)).not.toBeNull();
     }
     const missed = Array.from({ length: 10 }, () => ({ outcome: "missed" as const, clues: 10, points: 0 }));
-    expect(decodePistasShare(encodePistasShare(1, missed, "en"), LAST_DAY)).not.toBeNull();
+    expect(decodePistasShare(encodePistasShare(1, missed, "en"), SHIPPED_LAST)).not.toBeNull();
   });
 
   it("rejects boards that are not released yet", () => {
@@ -68,13 +71,13 @@ describe("pistas scoring and share", () => {
     expect(decodePistasShare(code(2), CONTENT_START)).toBeNull();
     expect(decodePistasShare(code(2), addDays(CONTENT_START, 1))).not.toBeNull();
     expect(decodePistasShare(code(1), addDays(CONTENT_START, -1))).toBeNull();
-    expect(decodePistasShare(code(0), LAST_DAY)).toBeNull();
-    expect(decodePistasShare(code(99), addDays(LAST_DAY, 30))).toBeNull();
-    expect(decodePistasShare(code(5), addDays(LAST_DAY, 30))).not.toBeNull();
+    expect(decodePistasShare(code(0), SHIPPED_LAST)).toBeNull();
+    expect(decodePistasShare(code(150), addDays(SHIPPED_LAST, 30))).toBeNull();
+    expect(decodePistasShare(code(5), addDays(SHIPPED_LAST, 30))).not.toBeNull();
   });
 
   it("rejects a score the colour grid cannot add up to", () => {
-    const at = (score: number, letters: string) => decodePistasShare(`pf-1-${score}-${letters}-en`, LAST_DAY);
+    const at = (score: number, letters: string) => decodePistasShare(`pf-1-${score}-${letters}-en`, SHIPPED_LAST);
     // ten greens pay 80–100
     expect(at(79, "gggggggggg")).toBeNull();
     expect(at(80, "gggggggggg")).not.toBeNull();
